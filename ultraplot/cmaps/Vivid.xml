@@ -1,0 +1,11 @@
+<ColorMaps>
+  <ColorMap space="CIELAB" indexedLookup="false" name="Vivid">
+    <Point x="0.0"  o="1"  r="0.0"    g="0.18" b="0.29"/>
+    <Point x="0.33" o="1"  r="0.84"   g="0.16" b="0.16"/>
+    <Point x="0.66" o="1"  r="0.97"   g="0.50" b="0.0"/>
+    <Point x="1.0"  o="1"  r="0.99"   g="0.75" b="0.29"/>
+    <Point x="1.0"  o="1"  r="0.918"  g="0.886" b="0.718"/>
+    <NaN r="0.25" g="0" b="0"/>
+  </ColorMap>
+</ColorMaps>
+
