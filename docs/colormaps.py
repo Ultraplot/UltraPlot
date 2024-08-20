@@ -31,15 +31,15 @@
 # Colormaps
 # =========
 #
-# Proplot defines **continuous colormaps** as color palettes that sample some
+# ultraplot defines **continuous colormaps** as color palettes that sample some
 # *continuous function* between two end colors. They are generally used
 # to encode data values on a pseudo-third dimension. They are implemented
-# in proplot with the `~proplot.colors.ContinuousColormap` and
-# `~proplot.colors.PerceptualColormap` classes, which are
+# in ultraplot with the `~ultraplot.colors.ContinuousColormap` and
+# `~ultraplot.colors.PerceptualColormap` classes, which are
 # :ref:`subclassed from <ug_cmaps_new>`
 # `matplotlib.colors.LinearSegmentedColormap`.
 #
-# Proplot :ref:`adds several features <why_colormaps_cycles>` to help you use
+# ultraplot :ref:`adds several features <why_colormaps_cycles>` to help you use
 # colormaps effectively in your figures. This section documents the new registered
 # colormaps, explains how to make and modify colormaps, and shows how to apply them
 # to your plots.
@@ -51,16 +51,16 @@
 # Included colormaps
 # ------------------
 #
-# On import, proplot registers a few sample
+# On import, ultraplot registers a few sample
 # :ref:`perceptually uniform colormaps <ug_perceptual>`, plus several
-# colormaps from other online data viz projects. Use `~proplot.demos.show_cmaps`
+# colormaps from other online data viz projects. Use `~ultraplot.demos.show_cmaps`
 # to generate a table of registered colormaps. The figure is broken down into
 # the following sections:
 #
-# * "User" colormaps created with `~proplot.constructor.Colormap`
-#   or loaded from `~proplot.config.Configurator.user_folder`.
+# * "User" colormaps created with `~ultraplot.constructor.Colormap`
+#   or loaded from `~ultraplot.config.Configurator.user_folder`.
 # * `Matplotlib <matplotlib_>`_ and `seaborn <seaborn_>`_ original colormaps.
-# * Proplot original :ref:`perceptually uniform colormaps <ug_perceptual>`.
+# * ultraplot original :ref:`perceptually uniform colormaps <ug_perceptual>`.
 # * The `cmOcean <cmocean_>`_ colormaps, designed for
 #   oceanographic data but useful for everyone.
 # * Fabio Crameri's `"scientific colour maps" <fabio_>`_.
@@ -72,21 +72,21 @@
 # Matplotlib colormaps with erratic color transitions like ``'jet'`` are still
 # registered, but they are hidden from this table by default, and their usage is
 # discouraged. If you need a list of colors associated with a registered or
-# on-the-fly colormap, simply use `~proplot.utils.get_colors`.
+# on-the-fly colormap, simply use `~ultraplot.utils.get_colors`.
 #
 # .. note::
 #
 #    Colormap and :ref:`color cycle <ug_cycles>` identification is more flexible in
-#    proplot. The names are are case-insensitive (e.g., ``'Viridis'``, ``'viridis'``,
+#    ultraplot. The names are are case-insensitive (e.g., ``'Viridis'``, ``'viridis'``,
 #    and ``'ViRiDiS'`` are equivalent), diverging colormap names can be specified in
 #    their "reversed" form (e.g., ``'BuRd'`` is equivalent to ``'RdBu_r'``), and
 #    appending ``'_r'`` or ``'_s'`` to *any* colormap name will return a
-#    `~proplot.colors.ContinuousColormap.reversed` or
-#    `~proplot.colors.ContinuousColormap.shifted` version of the colormap
-#    or color cycle. See `~proplot.colors.ColormapDatabase` for more info.
+#    `~ultraplot.colors.ContinuousColormap.reversed` or
+#    `~ultraplot.colors.ContinuousColormap.shifted` version of the colormap
+#    or color cycle. See `~ultraplot.colors.ColormapDatabase` for more info.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 
 fig, axs = pplt.show_cmaps(rasterized=True)
 
@@ -97,8 +97,8 @@ fig, axs = pplt.show_cmaps(rasterized=True)
 # Perceptually uniform colormaps
 # ------------------------------
 #
-# Proplot's custom colormaps are instances of the
-# `~proplot.colors.PerceptualColormap` class. These colormaps
+# ultraplot's custom colormaps are instances of the
+# `~ultraplot.colors.PerceptualColormap` class. These colormaps
 # generate colors by interpolating between coordinates in any
 # of the following three hue-saturation-luminance colorspaces:
 #
@@ -117,24 +117,24 @@ fig, axs = pplt.show_cmaps(rasterized=True)
 #   saturation *for a given hue and luminance*. HSL gives you access to the
 #   entire RGB colorspace, but often results in sharp jumps in chroma.
 #
-# The colorspace used by a `~proplot.colors.PerceptualColormap`
+# The colorspace used by a `~ultraplot.colors.PerceptualColormap`
 # is set with the `space` keyword arg. To plot arbitrary cross-sections of
-# these colorspaces, use `~proplot.demos.show_colorspaces` (the black
+# these colorspaces, use `~ultraplot.demos.show_colorspaces` (the black
 # regions represent impossible colors). To see how colormaps vary with
-# respect to each channel, use `~proplot.demos.show_channels`. Some examples
+# respect to each channel, use `~ultraplot.demos.show_channels`. Some examples
 # are shown below.
 #
 # In theory, "uniform" colormaps should have *straight* lines in hue, chroma,
 # and luminance (second figure, top row). In practice, this is
 # difficult to accomplish due to impossible colors. Matplotlib's and seaborn's
 # ``'magma'`` and ``'Rocket'`` colormaps are fairly linear with respect to
-# hue and luminance, but not chroma. Proplot's ``'Fire'`` is linear in hue,
+# hue and luminance, but not chroma. ultraplot's ``'Fire'`` is linear in hue,
 # luminance, and *HSL saturation* (bottom left), while ``'Dusk'`` is linear
 # in hue, luminance, and *HPL saturation* (bottom right).
 
 # %%
 # Colorspace demo
-import proplot as pplt
+import ultraplot as pplt
 
 fig, axs = pplt.show_colorspaces(refwidth=1.6, luminance=50)
 fig, axs = pplt.show_colorspaces(refwidth=1.6, saturation=60)
@@ -142,7 +142,7 @@ fig, axs = pplt.show_colorspaces(refwidth=1.6, hue=0)
 
 # %%
 # Compare colormaps
-import proplot as pplt
+import ultraplot as pplt
 
 for cmaps in (("magma", "rocket"), ("fire", "dusk")):
     fig, axs = pplt.show_channels(
@@ -156,35 +156,35 @@ for cmaps in (("magma", "rocket"), ("fire", "dusk")):
 # Making colormaps
 # ----------------
 #
-# Proplot includes tools for merging colormaps, modifying existing colormaps,
+# ultraplot includes tools for merging colormaps, modifying existing colormaps,
 # making new :ref:`perceptually uniform colormaps <ug_perceptual>`, and
 # saving colormaps for future use. Most of these features can be accessed via the
-# `~proplot.constructor.Colormap` :ref:`constructor function <why_constructor>`.
-# Note that every `~proplot.axes.PlotAxes` command that accepts a `cmap` keyword passes
+# `~ultraplot.constructor.Colormap` :ref:`constructor function <why_constructor>`.
+# Note that every `~ultraplot.axes.PlotAxes` command that accepts a `cmap` keyword passes
 # it through this function (see the :ref:`2D plotting section <ug_apply_cmap>`).
 #
-# To make `~proplot.colors.PerceptualColormap`\ s from
+# To make `~ultraplot.colors.PerceptualColormap`\ s from
 # scratch, you have the following three options:
 #
-# * Pass a color name, HEX string, or RGB tuple to `~proplot.constructor.Colormap`.
+# * Pass a color name, HEX string, or RGB tuple to `~ultraplot.constructor.Colormap`.
 #   This builds a monochromatic (single hue) colormap by calling
-#   `~proplot.colors.PerceptualColormap.from_color`. The colormap colors will
+#   `~ultraplot.colors.PerceptualColormap.from_color`. The colormap colors will
 #   progress from the specified color to a color with the same hue but changed
 #   saturation or luminance. These can be set with the `saturation` and `luminance`
 #   keywords (or their shorthands `s` and `l`). By default, the colormap will
 #   progress to pure white.
 # * Pass a list of color names, HEX strings, or RGB
-#   tuples to `~proplot.constructor.Colormap`. This calls
-#   `~proplot.colors.PerceptualColormap.from_list`, which linearly interpolates
+#   tuples to `~ultraplot.constructor.Colormap`. This calls
+#   `~ultraplot.colors.PerceptualColormap.from_list`, which linearly interpolates
 #   between the hues, saturations, and luminances of the input colors. To facillitate
 #   the construction of diverging colormaps, the hue channel values for nuetral
 #   colors (i.e., white, black, and gray) are adjusted to the hues of the preceding
 #   and subsequent colors in the list, with sharp hue cutoffs at the neutral colors.
 #   This permits generating diverging colormaps with e.g. ``['blue', 'white', 'red']``.
 # * Pass the keywords `hue`, `saturation`, or `luminance` (or their shorthands `h`,
-#   `s`, and `l`) to `~proplot.constructor.Colormap` without any positional arguments
+#   `s`, and `l`) to `~ultraplot.constructor.Colormap` without any positional arguments
 #   (or pass a dictionary containing these keys as a positional argument).
-#   This calls `~proplot.colors.PerceptualColormap.from_hsl`, which
+#   This calls `~ultraplot.colors.PerceptualColormap.from_hsl`, which
 #   linearly interpolates between the specified channel values. Channel values can be
 #   specified with numbers between ``0`` and ``100``, color strings, or lists thereof.
 #   For color strings, the value is *inferred* from the specified color. You can
@@ -193,12 +193,12 @@ for cmaps in (("magma", "rocket"), ("fire", "dusk")):
 #
 # To change the :ref:`colorspace <ug_perceptual>` used to construct the colormap,
 # use the `space` keyword. The default colorspace is ``'hsl'``. In the below example,
-# we use all of these methods to make `~proplot.colors.PerceptualColormap`\ s
+# we use all of these methods to make `~ultraplot.colors.PerceptualColormap`\ s
 # in the ``'hsl'`` and ``'hpl'`` colorspaces.
 
 # %%
 # Sample data
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -255,23 +255,23 @@ fig, axs = pplt.show_channels(cmap3, cmap4, refwidth=1.5, rgb=False)
 # -----------------
 #
 # To *merge* colormaps, you can pass multiple positional arguments to the
-# `~proplot.constructor.Colormap` constructor function. This calls the
-# `~proplot.colors.ContinuousColormap.append` method. Each positional
+# `~ultraplot.constructor.Colormap` constructor function. This calls the
+# `~ultraplot.colors.ContinuousColormap.append` method. Each positional
 # argument can be a colormap name, a colormap instance, or a
 # :ref:`special argument <ug_cmaps_new>` that generates a new colormap
 # on-the-fly. This lets you create new diverging colormaps and segmented
 # `SciVisColor <https://sciviscolor.org/home/colormoves/>`__ style colormaps
-# right inside proplot. Segmented colormaps are often desirable for complex
+# right inside ultraplot. Segmented colormaps are often desirable for complex
 # datasets with complex statistical distributions.
 #
 # In the below example, we create a new divering colormap and
 # reconstruct the colormap from `this SciVisColor example
 # <https://sciviscolor.org/media/filer_public/c7/27/c727e638-82eb-445b-bc96-e7b64c13efa2/colormoves.png>`__.
 # We also save the results for future use by passing ``save=True`` to
-# `~proplot.constructor.Colormap`.
+# `~ultraplot.constructor.Colormap`.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -314,35 +314,35 @@ for ax, cmap, title in zip(axs, (cmap1, cmap2, cmap3), (title1, title2, title3))
 # Modifying colormaps
 # -------------------
 #
-# Proplot lets you create modified versions of *existing* colormaps
-# using the `~proplot.constructor.Colormap` constructor function and the
-# new `~proplot.colors.ContinuousColormap` and
-# `~proplot.colors.DiscreteColormap` classes, which replace the native
+# ultraplot lets you create modified versions of *existing* colormaps
+# using the `~ultraplot.constructor.Colormap` constructor function and the
+# new `~ultraplot.colors.ContinuousColormap` and
+# `~ultraplot.colors.DiscreteColormap` classes, which replace the native
 # matplotlib colormap classes. They can be modified in the following ways:
 #
 # * To remove colors from the left or right ends of a colormap, pass `left`
-#   or `right` to `~proplot.constructor.Colormap`. This calls the
-#   `~proplot.colors.ContinuousColormap.truncate` method, and can be
+#   or `right` to `~ultraplot.constructor.Colormap`. This calls the
+#   `~ultraplot.colors.ContinuousColormap.truncate` method, and can be
 #   useful when you want to use colormaps as :ref:`color cycles <ug_cycles>`
 #   and need to remove the light part so that your lines stand out
 #   against the background.
 # * To modify the central colors of a diverging colormap, pass `cut` to
-#   `~proplot.constructor.Colormap`. This calls the
-#   `~proplot.colors.ContinuousColormap.cut` method, and can be used
+#   `~ultraplot.constructor.Colormap`. This calls the
+#   `~ultraplot.colors.ContinuousColormap.cut` method, and can be used
 #   to create a sharper cutoff between negative and positive values or (when
 #   `cut` is negative) to expand the "neutral" region of the colormap.
 # * To rotate a cyclic colormap,  pass `shift` to
-#   `~proplot.constructor.Colormap`. This calls the
-#   `~proplot.colors.ContinuousColormap.shifted` method. Proplot ensures
+#   `~ultraplot.constructor.Colormap`. This calls the
+#   `~ultraplot.colors.ContinuousColormap.shifted` method. ultraplot ensures
 #   the colors at the ends of "shifted" colormaps are *distinct* so that
 #   levels never blur together.
 # * To change the opacity of a colormap or add an opacity *gradation*, pass
-#   `alpha` to `~proplot.constructor.Colormap`. This calls the
-#   `~proplot.colors.ContinuousColormap.set_alpha` method, and can be
+#   `alpha` to `~ultraplot.constructor.Colormap`. This calls the
+#   `~ultraplot.colors.ContinuousColormap.set_alpha` method, and can be
 #   useful when *layering* filled contour or mesh elements.
-# * To change the "gamma" of a `~proplot.colors.PerceptualColormap`,
-#   pass `gamma` to `~proplot.constructor.Colormap`. This calls the
-#   `~proplot.colors.PerceptualColormap.set_gamma` method, and
+# * To change the "gamma" of a `~ultraplot.colors.PerceptualColormap`,
+#   pass `gamma` to `~ultraplot.constructor.Colormap`. This calls the
+#   `~ultraplot.colors.PerceptualColormap.set_gamma` method, and
 #   controls how the luminance and saturation channels vary between colormap
 #   segments. ``gamma > 1`` emphasizes high luminance, low saturation colors,
 #   while ``gamma < 1`` emphasizes low luminance, high saturation colors. This
@@ -350,7 +350,7 @@ for ax, cmap, title in zip(axs, (cmap1, cmap2, cmap3), (title1, title2, title3))
 #   <http://hclwizard.org:64230/hclwizard/>`__ "power" sliders.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -375,7 +375,7 @@ for ax, coord in zip(axs, (None, 0.3, 0.7)):
     )
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -417,7 +417,7 @@ for i, (ax, title, cut) in enumerate(zip(axs, titles, (None, None, 0.2, -0.1))):
     )
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -436,7 +436,7 @@ for ax, shift in zip(axs, (0, 90, 180)):
     ax.colorbar(m, loc="b", locator="null")
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -457,7 +457,7 @@ for ax, alpha in zip(axs, (1.0, 0.5, 0.0)):
     )
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -491,11 +491,11 @@ for ax, gamma in zip(axs, (0.7, 1.0, 1.4)):
 # and `CCC-tool <https://ccctool.com>`__.
 #
 # To add colormaps downloaded from any of these sources, save the color data file
-# to the ``cmaps`` subfolder inside `~proplot.config.Configurator.user_folder`,
-# or to a folder named ``proplot_cmaps`` in the same directory as your python session
-# or an arbitrary parent directory (see `~proplot.config.Configurator.local_folders`).
-# After adding the file, call `~proplot.config.register_cmaps` or restart your python
-# session. You can also use `~proplot.colors.ContinuousColormap.from_file` or manually
-# pass `~proplot.colors.ContinuousColormap` instances or file paths to
-# `~proplot.config.register_cmaps`. See `~proplot.config.register_cmaps`
+# to the ``cmaps`` subfolder inside `~ultraplot.config.Configurator.user_folder`,
+# or to a folder named ``ultraplot_cmaps`` in the same directory as your python session
+# or an arbitrary parent directory (see `~ultraplot.config.Configurator.local_folders`).
+# After adding the file, call `~ultraplot.config.register_cmaps` or restart your python
+# session. You can also use `~ultraplot.colors.ContinuousColormap.from_file` or manually
+# pass `~ultraplot.colors.ContinuousColormap` instances or file paths to
+# `~ultraplot.config.register_cmaps`. See `~ultraplot.config.register_cmaps`
 # for a table of recognized file extensions.

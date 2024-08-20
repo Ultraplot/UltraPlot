@@ -23,7 +23,7 @@ submitting your own changes.
 
    Please note that when classes, functions, keywords, or settings are deprecated,
    they are not removed -- using the old syntax will result in a warning rather than
-   an error and preserve the original functionality. Since proplot adheres to `semantic
+   an error and preserve the original functionality. Since ultraplot adheres to `semantic
    versioning <https://semver.org>`__, we will not consider removing the deprecated
    syntax until the first major release (i.e., version 1.0.0).
 
@@ -39,7 +39,7 @@ Version 0.10.0 (2022-##-##)
 Deprecated
 ----------
 
-* Remove the obscure `proplot.figure.Figure.format` keyword `mathtext_fallback`,
+* Remove the obscure `ultraplot.figure.Figure.format` keyword `mathtext_fallback`,
   so that :rcraw:`mathtext.fallback` can only be changed globally (:commit:`5ce23a59`).
 * Rename `rasterize` and :rcraw:`colorbar.rasterize` to `rasterized`, consistent
   with the existing matplotlib ``rasterized`` property (:commit:`31efafea`).
@@ -49,20 +49,20 @@ Deprecated
 * Rename :rcraw:`cartopy.autoextent`, :rcraw:`cartopy.circular` to :rcraw:`geo.extent`,
   :rcraw:`geo.round`, with :rcraw:`geo.extent` taking either of the values ``'globe'``
   or ``'auto'`` (``cartopy.autoextent`` is translated when used) (:commit:`c4b93c9d`).
-* Improve the `~proplot.gridspec.GridSpec` "panel" obfuscation by
-  renaming `~proplot.gridspec.GridSpec.get_subplot_geometry` to
-  `~proplot.gridspec.GridSpec.get_geometry`, `~proplot.gridspec.GridSpec.get_geometry`
-  to `~proplot.gridspec.GridSpec.get_total_geometry` (:commit:`52f57094`).
-* Improve the `~proplot.gridspec.GridSpec` "panel" obfuscation by having the public
-  `~proplot.gridspec.GridSpec` properties ``gs.nrows``, ``gs.ncols``, ``gs.wratios``,
+* Improve the `~ultraplot.gridspec.GridSpec` "panel" obfuscation by
+  renaming `~ultraplot.gridspec.GridSpec.get_subplot_geometry` to
+  `~ultraplot.gridspec.GridSpec.get_geometry`, `~ultraplot.gridspec.GridSpec.get_geometry`
+  to `~ultraplot.gridspec.GridSpec.get_total_geometry` (:commit:`52f57094`).
+* Improve the `~ultraplot.gridspec.GridSpec` "panel" obfuscation by having the public
+  `~ultraplot.gridspec.GridSpec` properties ``gs.nrows``, ``gs.ncols``, ``gs.wratios``,
   ``gs.hratios``, ``gs.wspace``, ``gs.hspace``, ``gs.wpad``, and ``gs.hpad`` refer to
   the reduced non-panel geometry (:commit:`52f57094`).
-* Deprecate `maxn` and `maxn_minor` passed to `~proplot.axes.Axes.colorbar` and
+* Deprecate `maxn` and `maxn_minor` passed to `~ultraplot.axes.Axes.colorbar` and
   recommend  the alternative ``locator_kw={'nbins': n}`` (:commit:`b94a9b1e`).
-  The new default locator `~proplot.ticker.DiscreteLocator` means that these
+  The new default locator `~ultraplot.ticker.DiscreteLocator` means that these
   settings should not need to be used as much (see below).
-* Constructor funcs `~proplot.constructor.Locator`, `~proplot.constructor.Formatter`,
-  `~proplot.constructor.Scale`, and `~proplot.constructor.Norm` now return a `copy.copy`
+* Constructor funcs `~ultraplot.constructor.Locator`, `~ultraplot.constructor.Formatter`,
+  `~ultraplot.constructor.Scale`, and `~ultraplot.constructor.Norm` now return a `copy.copy`
   when an instance of the relevant class is passed (:commit:`521351a2`). This helps
   prevent unexpected and hard-to-debug behavior caused by reusing mutable instances.
 
@@ -73,7 +73,7 @@ Style changes
   were previously fixed, and add documentation for this feature (:issue:`300`).
 * Automatically disable minor colorbar and axis ticks when applying non-numeric major
   tick labels with a `~matplotlib.ticker.FixedFormatter` (:commit:`c747ae44`).
-* Use `~proplot.ticker.DiscreteLocator` for major/minor discrete colorbar ticks instead
+* Use `~ultraplot.ticker.DiscreteLocator` for major/minor discrete colorbar ticks instead
   of `~matplotlib.ticker.FixedLocator` and auto-update the tick selection whenever
   the axes is drawn (:commit:`b94a9b1e`, :commit:`92bb937e`, :commit:`302c239e`).
 * Disable matplotlib's auto-removal of gridlines in presence of `pcolor` plots in all
@@ -85,7 +85,7 @@ Style changes
 * Put outer legends or colorbars on the same panel axes if their `align` values
   differ and (for colorbars only) their `length`\ s do not overlap (:commit:`91ac49b7`).
   This permits e.g. aligned "bottom left" and "bottom right" outer legends.
-* Change the sample `~proplot.demos.show_fonts` text with `math` keyword to show math
+* Change the sample `~ultraplot.demos.show_fonts` text with `math` keyword to show math
   or non-math, sort fonts by input order or by their appearance in the `rc` list, and
   permit `FontProperties` or fontspec input and property keywords (:commit:`34d6ec14`).
 * Change :rcraw:`mathtext.default` from ``'regular'`` to ``'it'``, and change ``'sans'``
@@ -99,79 +99,79 @@ Style changes
 Features
 --------
 
-* Support passing lists for the `proplot.axes.Axes.format` keywords `abc` and `title`,
-  in which case the label is picked by selecting the `~proplot.axes.Axes.number`
+* Support passing lists for the `ultraplot.axes.Axes.format` keywords `abc` and `title`,
+  in which case the label is picked by selecting the `~ultraplot.axes.Axes.number`
   (minus 1) entry from the list (:pr:`294`) by `Pratiman Patel`_.
 * Permit disabling a-b-c labels for a particular subplot by passing e.g. ``number=None``
   instead of ``number=False`` (:commit:`f7308cbe`). ``None`` is a bit more intuitive.
-* Add the modifiable `proplot.figure.Figure.tight` property to retrieve and optionally
+* Add the modifiable `ultraplot.figure.Figure.tight` property to retrieve and optionally
   toggle the tight layout setting (:commit:`46f46c26`).
-* Add a top-level `~proplot.ui.subplot` command that returns a figure and a single
-  subplot, analogous to `~proplot.ui.subplots` (:commit:`8459c24c`).
+* Add a top-level `~ultraplot.ui.subplot` command that returns a figure and a single
+  subplot, analogous to `~ultraplot.ui.subplots` (:commit:`8459c24c`).
 * Improve performance of the "tight layout" algorithm in cartopy axes by skipping
   artists clipped by the axes background patch boundary (:commit:`f891e4f0`).
 * Improve default appearance of figures with top/right panels and colorbars and with
   the tight layout algorithm disabled (:commit:`c4a3babb`).
-* Allow passing `wequal`, `hequal`, and `equal` to `~proplot.figure.Figure`
+* Allow passing `wequal`, `hequal`, and `equal` to `~ultraplot.figure.Figure`
   along with other scalar gridspec parameters (:commit:`d9e62c54`).
 * Add the :rcraw:`subplots.equalspace` and :rcraw:`subplots.groupspace` settings
   to control tight layout default values for `equal` and `group` (:commit:`b4bf072d`).
 * Add the `wgroup`, `hgroup`, and `group` keywords (analogous to `wequal`, etc.)
   to optionally disable tight layout behavior of comparing adjacent subplot "groups"
   rather than all subplots in the row or column (:commit:`b4bf072d`).
-* Permit passing `~proplot.gridspec.GridSpec` instances to
-  `~proplot.figure.Figure.add_subplots` to quickly draw a subplot
+* Permit passing `~ultraplot.gridspec.GridSpec` instances to
+  `~ultraplot.figure.Figure.add_subplots` to quickly draw a subplot
   inside each gridspec slot in row or column-major order (:commit:`a9ad7429`).
-* Add `~proplot.gridspec.GridSpec.copy` method to re-use the same gridspec geometry
+* Add `~ultraplot.gridspec.GridSpec.copy` method to re-use the same gridspec geometry
   for multiple figures (re-using an existing gridspec is otherwise not possible)
   (:commit:`8dc7fe3e`, :commit:`be410341`, :commit:`a82a512c`).
 * Permit adding additional outer panels or colorbars (or panels) by calling methods
   from the panel rather than the main subplot (:commit:`cfaeb177`).
 * Permit adding "filled" colorbars to non-subplots and `length` greater than one
   by implementing with a non-subplot child axes and inset locator (:commit:`9fc94d21`).
-* Allow using the `~proplot.constructor.Proj` keyword `latlim` as Mercator projection
+* Allow using the `~ultraplot.constructor.Proj` keyword `latlim` as Mercator projection
   limits and `lon0`, `lat0` aliases for `lon_0`, `lat_0` (:commit:`5f1c67cc`).
-* Add the `~proplot.axes.GeoAxes` `labels` side options ``'neither'``, ``'both'``, and
+* Add the `~ultraplot.axes.GeoAxes` `labels` side options ``'neither'``, ``'both'``, and
   ``'all'``, analogous to Cartesian axes `tickloc` options (:commit:`0f4e03d2`).
-* Add the `proplot.axes.GeoAxes.gridlines_major`, `proplot.axes.GeoAxes.gridlines_minor`
+* Add the `ultraplot.axes.GeoAxes.gridlines_major`, `ultraplot.axes.GeoAxes.gridlines_minor`
   properties for additional customization or debugging issues (:commit:`869f300f`).
 * Move the `extent` and `round` keywords (formerly `autoextent` and `circular` --
-  see above) from `~proplot.axes.GeoAxes.__init__` to `proplot.axes.GeoAxes.format`,
-  supporting toggling and passage to e.g. `~proplot.ui.subplots` (:commit:`5f1c67cc`).
+  see above) from `~ultraplot.axes.GeoAxes.__init__` to `ultraplot.axes.GeoAxes.format`,
+  supporting toggling and passage to e.g. `~ultraplot.ui.subplots` (:commit:`5f1c67cc`).
 * Add :rcraw:`grid.geolabels` setting that auto-includes cartopy ``'geo'`` location
   when toggling labels with e.g. ``lonlabels='left'`` or ``labels=True``, and support
   passing it explicitly with e.g. ``labels='geo'`` (:commit:`9040cde0`).
 * Add the :rcraw:`grid.checkoverlap` setting to optionally disable the auto-removal of
   overlapping cartopy grid labels (only works in cartopy >= 0.20) (:commit:`3ff02a38`).
-* Add the public proplot class `proplot.ticker.IndexFormatter`, since the matplotlib
+* Add the public ultraplot class `ultraplot.ticker.IndexFormatter`, since the matplotlib
   version was entirely removed in version 3.5 (:commit:`c2dd8b2e`).
-* Replace `matplotlib.ticker.IndexLocator` with `proplot.ticker.IndexLocator`,
-  consistent with `~proplot.ticker.IndexFormatter`, and remove the limitation
+* Replace `matplotlib.ticker.IndexLocator` with `ultraplot.ticker.IndexLocator`,
+  consistent with `~ultraplot.ticker.IndexFormatter`, and remove the limitation
   requiring data to be plotted on the axis (:commit:`c2dd8b2e`).
-* Permit picking the `~matplotlib.ticker.NullFormatter`, `~proplot.ticker.AutoFormatter`
+* Permit picking the `~matplotlib.ticker.NullFormatter`, `~ultraplot.ticker.AutoFormatter`
   `~matplotlib.ticker.NullLocator`, and `~matplotlib.ticker.AutoLocator` by passing
   ``True`` or ``False`` to the corresponding constructor functions (:commit:`92ae0575`).
-* Add `proplot.ticker.DiscreteLocator` analogous to `~matplotlib.ticker.FixedLocator`
+* Add `ultraplot.ticker.DiscreteLocator` analogous to `~matplotlib.ticker.FixedLocator`
   that ticks from a subset of fixed values, and add a `discrete` keyword and register
-  as ``'discrete'`` in `proplot.constructor.Locator` (:commit:`b94a9b1e`).
+  as ``'discrete'`` in `ultraplot.constructor.Locator` (:commit:`b94a9b1e`).
 * Support specifying `transform` plotting command arguments as registered cartopy
   projections rather than `~cartopy.crs.CRS` instances (:commit:`c7a9fc95`).
-* Permit passing `vmin` and `vmax` to `proplot.axes.Axes.colorbar`, as quick
+* Permit passing `vmin` and `vmax` to `ultraplot.axes.Axes.colorbar`, as quick
   alternative to using `norm_kw` (:commit:`eb9565bd`).
-* Permit discretizing continuous colormaps passed to `~proplot.axes.Axes.colorbar` using
+* Permit discretizing continuous colormaps passed to `~ultraplot.axes.Axes.colorbar` using
   `values`, instead of ignoring `values` when colormaps are passed (:commit:`503af4be`).
 * Ensure the default ticks are aligned with levels when passing discrete colormap
-  instances to `~proplot.axes.Axes.colorbar` (:commit:`503af4be`).
+  instances to `~ultraplot.axes.Axes.colorbar` (:commit:`503af4be`).
 * Emit warning when both a scalar mappable and `vmin`, `vmax`, `norm`, or `values`
-  are passed to `~proplot.axes.Axes.colorbar` (:commit:`503af4be`).
+  are passed to `~ultraplot.axes.Axes.colorbar` (:commit:`503af4be`).
 * Support TeX modifiers :rcraw:`mathtext.it`, :rcraw:`mathtext.bf`, etc. that act on
   the "regular" font ``'regular'`` rather than a global font family like ``'sans'``
   when :rcraw:`mathtext.fontset` is ``'custom'`` (:pr:`323`).
-* Automatically load from "local" folders named ``proplot_cmaps``, ``proplot_cycles``,
-  ``proplot_colors``, and ``proplot_fonts`` in current or parent directories,
-  consistent with "local" ``proplotrc`` files (:commit:`a3a7bb33`).
-* Add the `proplot.config.Configurator.local_folders` function, analogous to
-  `~proplot.config.Configurator.local_files`, and add a `local` keyword to
+* Automatically load from "local" folders named ``ultraplot_cmaps``, ``ultraplot_cycles``,
+  ``ultraplot_colors``, and ``ultraplot_fonts`` in current or parent directories,
+  consistent with "local" ``ultraplotrc`` files (:commit:`a3a7bb33`).
+* Add the `ultraplot.config.Configurator.local_folders` function, analogous to
+  `~ultraplot.config.Configurator.local_files`, and add a `local` keyword to
   each ``register`` function (:commit:`a3a7bb33`).
 
 Bug fixes
@@ -179,8 +179,8 @@ Bug fixes
 
 * Fix matplotlib >= 3.5 issue preventing basic application of "shared"
   axes with `share`, `sharex`, `sharey` (:issue:`305`).
-* Fix matplotlib >= 3.5 issue preventing basic usage of `proplot.colors.DiscreteNorm`
-  and colorbars scaled by `proplot.colors.DiscreteNorm` (:issue:`302`).
+* Fix matplotlib >= 3.5 issue preventing basic usage of `ultraplot.colors.DiscreteNorm`
+  and colorbars scaled by `ultraplot.colors.DiscreteNorm` (:issue:`302`).
 * Fix matplotlib >= 3.5 issue where date axes are not correctly detected
   due to a new default date converter (:commit:`63deee21`).
 * Fix matplotlib >= 3.4 issue with fixed-aspect log-log axes due to deprecation
@@ -211,46 +211,46 @@ Bug fixes
   with overlapping or identical subplotspecs (:commit:`87f098b6`).
 * Fix issue where super label settings (e.g. size) cannot be updated after they
   are initially created (:commit:`2cd72fd3`).
-* Fix issue where `proplot.axes.CartesianAxes.format` keyword arguments cannot be
-  passed to `~proplot.axes.Axes.panel_axes` (:commit:`1b3d0d48`).
+* Fix issue where `ultraplot.axes.CartesianAxes.format` keyword arguments cannot be
+  passed to `~ultraplot.axes.Axes.panel_axes` (:commit:`1b3d0d48`).
 * Fix issue where outer colorbars are drawn twice due to adding them as both
   figure-wide axes and child axes (:issue:`304`).
 * Fix issue where silently-deprecated `aspect` parameter passed to
-  `proplot.ui.subplots` is not translated to `refaspect` (:commit:`2406a2ae`).
-* Fix issue where `proplot.gridspec.GridSpec.figure` is allowed to change -- instead
-  raise error that recommends `~proplot.gridspec.GridSpec.copy` (:commit:`d8898f5f`).
-* Fix issue where `proplot.gridspec.GridSpec.update` cannot be called
-  on gridspecs without companion `~proplot.figure.Figure`\ s (:commit:`e69fd041`).
+  `ultraplot.ui.subplots` is not translated to `refaspect` (:commit:`2406a2ae`).
+* Fix issue where `ultraplot.gridspec.GridSpec.figure` is allowed to change -- instead
+  raise error that recommends `~ultraplot.gridspec.GridSpec.copy` (:commit:`d8898f5f`).
+* Fix issue where `ultraplot.gridspec.GridSpec.update` cannot be called
+  on gridspecs without companion `~ultraplot.figure.Figure`\ s (:commit:`e69fd041`).
 * Fix issues passing pandas datetime coordinates and object-type coordinate
   arrays to plotting methods (:issue:`320`).
-* Fix issue where list-of-string colors passed to `~proplot.axes.Axes.scatter`
+* Fix issue where list-of-string colors passed to `~ultraplot.axes.Axes.scatter`
   are interpreted as data values (:issue:`316`).
 * Fix issue where *x* and *y* axis limits are reversed when passing to
-  `~proplot.axes.PlotAxes.hexbin` and `~proplot.axes.PlotAxes.hist2d` (:issue:`334`).
+  `~ultraplot.axes.PlotAxes.hexbin` and `~ultraplot.axes.PlotAxes.hist2d` (:issue:`334`).
 * Fix regression where *x* or *y* axis limits are reversed when passing to
-  `~proplot.axes.PlotAxes.hist` and `~proplot.axes.PlotAxes.histh` (:issue:`334`).
-* Fix issue where settings passed to `~proplot.axes.Axes.colorbar` after calling e.g.
-  `~proplot.axes.PlotAxes.pcolor` with `colorbar_kw` are ignored (:issue:`314`).
+  `~ultraplot.axes.PlotAxes.hist` and `~ultraplot.axes.PlotAxes.histh` (:issue:`334`).
+* Fix issue where settings passed to `~ultraplot.axes.Axes.colorbar` after calling e.g.
+  `~ultraplot.axes.PlotAxes.pcolor` with `colorbar_kw` are ignored (:issue:`314`).
 * Fix issues where passing the colorbar `orientation` without a `loc`, or using a non-
   standard `orientation` for a given `loc`, triggers tickloc error (:issue:`314`).
 * Fix issue where background properties like `color` and `linewidth` cannot be
-  passed to `~proplot.axes.Axes` instantiation commands (:commit:`b67b046c`).
-* Fix issue where manual data aspect ratio passed with `~proplot.axes.Axes.format`
+  passed to `~ultraplot.axes.Axes` instantiation commands (:commit:`b67b046c`).
+* Fix issue where manual data aspect ratio passed with `~ultraplot.axes.Axes.format`
   or `~matplotlib.axes.Axes.set_aspect` is inverted (:commit:`7cda3b23`).
 * Fix issue where continuous normalizer `vmin` and `vmax` are not set to min and
-  max of `levels` when passed to `~proplot.colors.DiscreteNorm` (:commit:`e9ed16c1`).
+  max of `levels` when passed to `~ultraplot.colors.DiscreteNorm` (:commit:`e9ed16c1`).
 * Fix issue where unevenly-spaced `levels` combined with
-  `~proplot.colors.DiscreteColormap` incorrectly samples the color list (:issue:`299`).
-* Fix issue where `~proplot.axes.Axes.legend` ignores the user-input `fontsize`
+  `~ultraplot.colors.DiscreteColormap` incorrectly samples the color list (:issue:`299`).
+* Fix issue where `~ultraplot.axes.Axes.legend` ignores the user-input `fontsize`
   (:issue:`331`).
-* Fix issue where ``proplotrc`` settings are ignored if a subsequent line contains
+* Fix issue where ``ultraplotrc`` settings are ignored if a subsequent line contains
   an overlapping meta-setting (:issue:`333`).
 * Fix issue where setting :rcraw:`legend.facecolor` or :rcraw:`legend.edgecolor` to
   ``'inherit'`` (or passing as keyword argument) raises error (:issue:`298`).
 * Fix issue where settings :rcraw:`grid.pad` and :rcraw:`grid.labelpad` and settings
   :rcraw:`tick.pad` and :rcraw:`tick.labelpad` are not synced (:commit:`2b96eb0d`).
 * Fix issue where the unchanged :rcraw:`figure.figsize` setting is incorrectly included
-  in the `~proplot.rconfig.Configurator.changed` dictionary (:commit:`d862395b`).
+  in the `~ultraplot.rconfig.Configurator.changed` dictionary (:commit:`d862395b`).
 
 Documentation
 -------------
@@ -280,8 +280,8 @@ Features
   and `vmax` rather than levels (:commit:`fbca1063`). This permits using these keywords
   even when ``discrete=False`` and fixes too-few-levels issues when ``discrete=True``.
 * Improve default string representation of axes generated with
-  `~proplot.axes.CartesianAxes.altx`, `~proplot.axes.CartesianAxes.alty`,
-  or `~proplot.axes.Axes.inset_axes` (:commit:`a570fca7`).
+  `~ultraplot.axes.CartesianAxes.altx`, `~ultraplot.axes.CartesianAxes.alty`,
+  or `~ultraplot.axes.Axes.inset_axes` (:commit:`a570fca7`).
 
 Bug fixes
 ---------
@@ -302,7 +302,7 @@ Bug fixes
 * Fix issue where "qualitative" colormaps are allowed to have `discrete`
   set to ``False`` when specified with ``qualitative=True`` rather than
   passing a discrete `cmap` (:commit:`789f224b`).
-* Fix issue where `~proplot.colors.SegmentedNorm` cannot be specified with
+* Fix issue where `~ultraplot.colors.SegmentedNorm` cannot be specified with
   ``norm='segmented'`` and ``norm_kw={'levels': level}`` when `discrete`
   is also disabled (:commit:`a4f6e838`).
 * Fix issue where more than one of mutually-exclusive `sequential`, `diverging`,
@@ -316,47 +316,47 @@ Features
 --------
 
 * Permit passing arbitrary ``format`` arguments to multi-axes creation commands
-  like `~proplot.ui.subplots` (:commit:`0b801442`).
+  like `~ultraplot.ui.subplots` (:commit:`0b801442`).
 * Permit passing ``format`` arguments for different projections during the same
-  `proplot.gridspec.SubplotGrid.format` or `proplot.figure.Figure.format` call
+  `ultraplot.gridspec.SubplotGrid.format` or `ultraplot.figure.Figure.format` call
   (:commit:`f5e25598`). Invalid projection-specific keywords are ignored.
 * Update `Scientific Colour maps <https://www.fabiocrameri.ch/colourmaps/>`__
   to version 7.0 (adds ``'bam'``, ``'bamO'``, ``'batlowK'``, ``'batlowW'``,
   ``'bukavu'``, ``'fes'``, and ``'vanimo'``) (:commit:`c172a74b`).
 * Add `[xy]labelsize`, `[xy]labelweight`, `[xy]ticklabelsize`, `[xy]ticklabelweight`
-  keywords to `proplot.axes.CartesianAxes.format` (:commit:`975025df`).
-* Add `labelsize` and `labelweight` keywords to `proplot.axes.PolarAxes.format`,
-  `proplot.axes.GeoAxes.format` (:commit:`975025df`).
+  keywords to `ultraplot.axes.CartesianAxes.format` (:commit:`975025df`).
+* Add `labelsize` and `labelweight` keywords to `ultraplot.axes.PolarAxes.format`,
+  `ultraplot.axes.GeoAxes.format` (:commit:`975025df`).
 * Automatically set `xpineloc` and `yspineloc` to ``'bottom'`` and ``'left'``
-  when `xbounds` or `ybounds` are passed to `proplot.axes.CartesianAxes.format` only
+  when `xbounds` or `ybounds` are passed to `ultraplot.axes.CartesianAxes.format` only
   if both spines are currently visible (:commit:`a2396afe`).
 * Automatically use the top/right spine rather than the bottom/left spine when setting
   `xspineloc` or `yspineloc` to the position ``('axes', coord)`` or ``('data', coord)``
   when ``coord`` is more than halfway across the axis (:commit:`a2396afe`).
-* Passing ``[loninline|latinline|inlinelabels]=True`` to `~proplot.axes.GeoAxes.format`
+* Passing ``[loninline|latinline|inlinelabels]=True`` to `~ultraplot.axes.GeoAxes.format`
   now implies ``[lonlabels|latlabels|labels]=True`` unless specified otherwise
   (:commit:`ed372d64`). This fixes annoying redundancy when calling ``format``.
-* Improve default `~proplot.colors.ContinuousColormap.reversed` and
-  `~proplot.colors.ContinuousColormap.shifted` colormap names (:commit:`a4218e09`).
+* Improve default `~ultraplot.colors.ContinuousColormap.reversed` and
+  `~ultraplot.colors.ContinuousColormap.shifted` colormap names (:commit:`a4218e09`).
 
 Bug fixes
 ---------
 
-* Fix issue where arguments can only be passed to `~proplot.axes.CartesianAxes.altx`
-  and `~proplot.axes.CartesianAxes.alty`, but not `~proplot.axes.CartesianAxes.twinx`
-  and `~proplot.axes.CartesianAxes.twiny` (:commit:`223b55a6`).
+* Fix issue where arguments can only be passed to `~ultraplot.axes.CartesianAxes.altx`
+  and `~ultraplot.axes.CartesianAxes.alty`, but not `~ultraplot.axes.CartesianAxes.twinx`
+  and `~ultraplot.axes.CartesianAxes.twiny` (:commit:`223b55a6`).
 * Fix issue where `xbounds`, `ybounds`, and `fixticks` fail due to
   errors in tick restriction algorithm (:commit:`a2396afe`).
-* Fix issue where passing `fontsize` to `~proplot.axes.Axes.format` fails to
+* Fix issue where passing `fontsize` to `~ultraplot.axes.Axes.format` fails to
   update fontsize-relative title and a-b-c label sizes (:commit:`64406726`).
 * Fix issue where `lonlim`, `latlim`, and `latbounds` cannot be passed to e.g.
-  ``add_subplot`` during `~proplot.axes.GeoAxes` initialization (:commit:`d9d3c91a`)
+  ``add_subplot`` during `~ultraplot.axes.GeoAxes` initialization (:commit:`d9d3c91a`)
 * Fix issue where `vmin` and `vmax` are ignored when making plots
   with discrete levels (:issue:`276`).
 * Fix issue where `autodiverging` is disabled even when known diverging colormaps
-  are passed to `~proplot.axes.PlotAxes` commands (:commit:`2eca2198`).
-* Fix issue where colormaps made with `~proplot.constructor.Colormap` with unspecified
-  `name` cannot be assigned as `~proplot.config.rc` defaults (:commit:`0e93b7fa`).
+  are passed to `~ultraplot.axes.PlotAxes` commands (:commit:`2eca2198`).
+* Fix issue where colormaps made with `~ultraplot.constructor.Colormap` with unspecified
+  `name` cannot be assigned as `~ultraplot.config.rc` defaults (:commit:`0e93b7fa`).
 * Fix issue where registered colormaps with trailing ``_r`` or ``_s`` cannot be
   retrieved due to automatic reversing/shifting feature (:commit:`345680c9`).
 
@@ -374,7 +374,7 @@ Version 0.9.3 (2021-10-09)
 Style changes
 -------------
 
-* Stop changing default background of figure when `~proplot.axes.ThreeAxes` is present
+* Stop changing default background of figure when `~ultraplot.axes.ThreeAxes` is present
   -- instead just set the default axes background to transparent (:commit:`e933614d`).
 
 Features
@@ -387,51 +387,51 @@ Features
   and :rcraw:`innerborders.alpha` settings to change opacity of geographic
   features (:commit:`8bb49a02`). Also add missing :rcraw:`coast.zorder`.
 * Add `xtickcolor`, `ytickcolor`, `xticklabelcolor`, and `yticklabelcolor`
-  `~proplot.axes.CartesianAxes.format` keywords to control tick mark and label colors
+  `~ultraplot.axes.CartesianAxes.format` keywords to control tick mark and label colors
   (:commit:`68cba1af`). Also add documentation for `xlabelcolor` and `ylabelcolor`.
-* Add `xticklenratio` and `yticklenratio` `~proplot.axes.CartesianAxes.format`
+* Add `xticklenratio` and `yticklenratio` `~ultraplot.axes.CartesianAxes.format`
   keywords to scale minor tick lengths (:commit:`26fdadf6`).
 * Add `xtickwidth`, `ytickwidth`, `xtickwidthratio`, and `ytickwidthratio` keywords
-  to `~proplot.axes.CartesianAxes.format`  to scale tick widths (:commit:`30a250f0`).
+  to `~ultraplot.axes.CartesianAxes.format`  to scale tick widths (:commit:`30a250f0`).
 * Set default `gridlabelcolor` to `color` when latter is passed to polar or geo
-  axes ``format`` methods, consistent with `proplot.axes.CartesianAxes` `color`.
+  axes ``format`` methods, consistent with `ultraplot.axes.CartesianAxes` `color`.
 * Add `ticklen`, `ticklenratio`, `tickwidth`, `tickwidthratio` keywords to
-  `~proplot.axes.Axes.colorbar` to manage colorbar ticks (:commit:`08498abf`).
-* Add `labelloc` keyword to `~proplot.axes.Axes.colorbar` to change
+  `~ultraplot.axes.Axes.colorbar` to manage colorbar ticks (:commit:`08498abf`).
+* Add `labelloc` keyword to `~ultraplot.axes.Axes.colorbar` to change
   the colorbar label location separately from `tickloc` (:commit:`32069370`).
 * Permit specifying `linewidth` and `markersize` keywords (and aliases) with arbitrary
   physical units for format/colorbar/plotting commands (:commit:`c1ffbc8c`).
-* Add `absolute_size` key to `~proplot.axes.PlotAxes.scatter` (analogous to
-  `absolute_width` used with `~proplot.axes.PlotAxes.bar`) to bypass
+* Add `absolute_size` key to `~ultraplot.axes.PlotAxes.scatter` (analogous to
+  `absolute_width` used with `~ultraplot.axes.PlotAxes.bar`) to bypass
   auto-scaling of array input (:commit:`b4701411`).
 * Add more intuitive ``bars``, ``boxes``, ``shade``, ``fade`` keywords as alternatives
   to ``barstds``, ``boxstds``, ``shadestds``, and ``fadestds`` (:commit:`15812cd4`).
 * Ignore masked and invalid values in datasets passed to ``boxplot`` and
   ``violinplot`` (:commit:`daa666e2`).
-* Convert ``showextrema=True`` passed to `~proplot.axes.Axes.violinplot` to
+* Convert ``showextrema=True`` passed to `~ultraplot.axes.Axes.violinplot` to
   ``barpctiles=True`` (i.e., show 0--100 percentile range) (:commit:`42f613d6`).
-* Add `borderstyle` `~proplot.axes.Axes.text` keyword to change the `joinstyle` used
+* Add `borderstyle` `~ultraplot.axes.Axes.text` keyword to change the `joinstyle` used
   for the path effects border (:commit:`25e21c76`).
 
 Bug fixes
 ---------
 
-* Fix fatal error instantiating `~proplot.axes.ThreeAxes` (:issue:`389`).
-* Fix issue with plotting in `~proplot.axes.ThreeAxes` by inheriting from from
-  `~proplot.axes.Axes` instead of `~proplot.axes.PlotAxes` (:commit:`64623d92`).
-* Fix issue where `~proplot.axes.CartesianAxes.format` ignores `margin` rather than
+* Fix fatal error instantiating `~ultraplot.axes.ThreeAxes` (:issue:`389`).
+* Fix issue with plotting in `~ultraplot.axes.ThreeAxes` by inheriting from from
+  `~ultraplot.axes.Axes` instead of `~ultraplot.axes.PlotAxes` (:commit:`64623d92`).
+* Fix issue where `~ultraplot.axes.CartesianAxes.format` ignores `margin` rather than
   using it for both `xmargin` and `ymargin` (:commit:`ba32fd1a`).
 * Fix issue where `color` passed to ``format`` triggers deprecation warning even
   though it is a valid background patch property (:commit:`a50eab0e`).
-* Fix issue where calling `~proplot.axes.PlotAxes.violinplot` always emits
+* Fix issue where calling `~ultraplot.axes.PlotAxes.violinplot` always emits
   warning due to masked array input (:commit:`daa666e2`).
-* Fix issue where calling `~proplot.axes.PlotAxes.pcolorfast` with image
+* Fix issue where calling `~ultraplot.axes.PlotAxes.pcolorfast` with image
   output emits warning (:commit:`5d081306`).
 * Fix issue where passing ``tickwidth=0`` to ``format`` changes the tick
   length persistently outside of context block (:commit:`4966c8ab`).
 * Fix issue where ``tickratio`` and ``lenratio`` applied in successive calls to
-  `~proplot.axes.CartesianAxes.format` fails to update properly (:commit:`26fdadf6`).
-* Fix issue with default `~proplot.axes.PlotAxes.scatter` `smin` and `smax` (used
+  `~ultraplot.axes.CartesianAxes.format` fails to update properly (:commit:`26fdadf6`).
+* Fix issue with default `~ultraplot.axes.PlotAxes.scatter` `smin` and `smax` (used
   to convert array-like input sizes `s` from data units to ``points ** 2``) by
   switching defaults to ``1`` and :rcraw:`lines.markersize` rather than the
   data minimum and maximum (:commit:`b4701411`).
@@ -439,7 +439,7 @@ Bug fixes
 Documentation
 -------------
 
-* Change stylized name "ProPlot" to simply lowercase "proplot", consistent
+* Change stylized name "ultraplot" to simply lowercase "ultraplot", consistent
   with matplotlib, cartopy, numpy, etc. (:commit:`b876b214`).
 
 Version 0.9.2 (2021-09-30)
@@ -449,13 +449,13 @@ Features
 --------
 
 * Permit passing `includepanels` and `mathtext_fallback` as
-  `proplot.figure.Figure.format` keywords instead of just
+  `ultraplot.figure.Figure.format` keywords instead of just
   ``__init__`` keywords (:commit:`33bff576`).
-* Permit passing ``loc`` `proplot.axes.CartesianAxes.format` keyword argument(s) to
+* Permit passing ``loc`` `ultraplot.axes.CartesianAxes.format` keyword argument(s) to
   ``alt[xy]`` (:commit:`eaab8658`). For example ``ax.alty(loc='left')`` changes the
   spine, tick mark, tick label, axis label, and offset label sides to the opposite of
   the default: *left* for the new alternate axes, *right* for the original axes.
-* Improve documentation for ``loc`` `proplot.axes.CartesianAxes.format` keywords
+* Improve documentation for ``loc`` `ultraplot.axes.CartesianAxes.format` keywords
   (:commit:`1fa90f87`, :commit:`48dc346d`). Inheritance order is ``loc`` or
   ``spineloc`` --> ``tickloc`` --> ``ticklabelloc`` --> ``labelloc`` and ``offsetloc``,
   e.g. ``xloc='bottom'`` implies ``xtickloc='bottom'`` unless specified otherwise.
@@ -464,14 +464,14 @@ Features
   from updated rc settings, and issue error message if ``tickloc`` or ``ticklabelloc``
   are invalid (:commit:`616d81fa`, :commit:`219e4b21`, :commit:`bc5a692c`).
 * Add documentation for previously-hidden `xticklabelloc`, `yticklabelloc`, `xlabelloc`,
-  and `ylabelloc` `proplot.axes.CartesianAxes.format` keywords (:commit:`1fa90f87`).
+  and `ylabelloc` `ultraplot.axes.CartesianAxes.format` keywords (:commit:`1fa90f87`).
 * Add `xoffsetloc`, `yoffsetloc` keywords to control position of order-of-magnitude
   indicator location for x and y axes (with large numbers) (:commit:`96a37e53`).
 * Add `xlabelcolor` and `ylabelcolor` keywords as alternatives to `xcolor` and `ycolor`
   to change just the label color and nothing else (:commit:`d2f20970`).
-* Add `base` keyword to `~proplot.ticker.SigFigFormatter` to optionally round to
+* Add `base` keyword to `~ultraplot.ticker.SigFigFormatter` to optionally round to
   multiples other than factors of 10 (:commit:`3b00e8a0`).
-* Pass ``[major|minor]_[locator|formatter]`` `~proplot.scale.FuncScale` arguments
+* Pass ``[major|minor]_[locator|formatter]`` `~ultraplot.scale.FuncScale` arguments
   through the constructor functions (:commit:`e238d4db`).
 * Support single-color parametric plots with e.g. ``ax.parametric(x, y, color='red')``
   as quick alternative to `plot` without "sticky edges" (:commit:`98504b86`).
@@ -481,9 +481,9 @@ Features
   e.g. text contour labels (:commit:`77fa01da`).
 * Ensure contour `labels` appear on top of inner titles/a-b-c labels by decreasing
   default `zorder` from ``cntr_zorder + 2`` to ``cntr_zorder + 1`` (:commit:`59222164`).
-* Implement "descending level" support directly inside `~proplot.colors.DiscreteNorm`
-  rather than cmap parser in `~proplot.axes.PlotAxes` commands, and auto-reverse
-  descending levels passed to `~proplot.colors.SegmentedNorm` (:commit:`46d8bedc`).
+* Implement "descending level" support directly inside `~ultraplot.colors.DiscreteNorm`
+  rather than cmap parser in `~ultraplot.axes.PlotAxes` commands, and auto-reverse
+  descending levels passed to `~ultraplot.colors.SegmentedNorm` (:commit:`46d8bedc`).
 * Improve ``show_cmaps`` and ``show_cycles``: Stop passing arguments through
   constructor functions, preserve case for user colormap labels, and avoid
   showing leading ``_`` and trailing ``_copy`` in labels (:commit:`c41db8d8`).
@@ -498,26 +498,26 @@ Bug fixes
 * Fix issue where default outer legend axes-relative `loc` does not take into
   account the underlying "panel" side (:commit:`2446acc1`).
 * Fix issue where axis label color is overwritten during ``__init__``
-  call to `proplot.axes.CartesianAxes.format` (:commit:`b454a513`).
+  call to `ultraplot.axes.CartesianAxes.format` (:commit:`b454a513`).
 * Fix issue where setting `xspineloc` or `yspineloc` to invalid `tickloc`
   (e.g., ``'zero'`` or ``'center'``) also disables the ticks (:commit:`616d81fa`).
 * Fix issue where setting axis label color without specifying label
   text erases the old label text (:commit:`7a7852f9`).
 * Fix issue where axis label settings are overridden by settings from
   invisible x/y axis on alternate axes (:commit:`c6db292b`).
-* Fix `~proplot.ticker.AutoFormatter` issue where `orderOfMagnitude` is
+* Fix `~ultraplot.ticker.AutoFormatter` issue where `orderOfMagnitude` is
   not taken into account when correcting small tick values truncated to
   zero on (usually logarithmic) axis scales (:commit:`54fbef0b`).
-* Fix issue where `proplot.utils.arange` is not endpoint-inclusive
+* Fix issue where `ultraplot.utils.arange` is not endpoint-inclusive
   for negative (descending) step size (:commit:`ec1f8410`).
 * Fix confusing behavior where explicitly passed `vmin` and `vmax` are ignored
   if `norm` was passed as an already-instantiated class (:commit:`1ee79d36`).
 * Fix issue where segment data of ``matplotlib.cm`` colormap instances
-  is overwritten during conversion to proplot subclasses (:issue:`283`).
+  is overwritten during conversion to ultraplot subclasses (:issue:`283`).
 * Fix issue where color of contour `labels` cannot be changed
   with `labels_kw` (:commit:`d101575d`).
 * Fix keyword conflict where `sizes` are interpreted as ``Collection``
-  marker sizes when passed to `~proplot.axes.PlotAxes.barb` (:issue:`287`).
+  marker sizes when passed to `~ultraplot.axes.PlotAxes.barb` (:issue:`287`).
 * Fix issue where "sticky edges" fail for datetime data
   (:commit:`33fa9654`).
 
@@ -538,7 +538,7 @@ Features
 * Permit passing ``format`` keywords when instantiating figures and axes
   (:commit:`ae98378d`). For example: ``pplt.figure(suptitle='Super title')``
   or ``fig.add_subplot(111, xcolor='gray', xticks=10)`` .
-* Add back `color` as a valid `proplot.axes.CartesianAxes.format` keyword
+* Add back `color` as a valid `ultraplot.axes.CartesianAxes.format` keyword
   arg for consistency with `xcolor` and `ycolor` (:commit:`ecb6fa3f`).
 
 Bug fixes
@@ -547,7 +547,7 @@ Bug fixes
 * Fix issue where single-level single-color contour plots
   do not draw the contour (:issue:`281`).
 * Fix issue with dictionaries passed to `proj` when calling
-  `~proplot.figure.Figure.add_subplots` (:commit:`21b165df`).
+  `~ultraplot.figure.Figure.add_subplots` (:commit:`21b165df`).
 * Fix issue with `includepanels` disabling spanning axis labels
   in the presence of panels (:commit:`332ba702`).
 * Remove useless "unexpected version" warning when cartopy
@@ -576,13 +576,13 @@ Deprecated
 * The ``violinplot`` functions now return `~matplotlib.collection.PolyCollection`
   of violin bodies or tuples of (bodies, error bars) instead of a singleton
   dictionary containing just the ``'bodies'`` entry (:commit:`45774536`).
-* Deprecate recently-introduced `proplot.gridspec.SubplotGrid.legend` and
-  `proplot.gridspec.SubplotGrid.colorbar` methods (:commit:`d21a61a3`). Idea
+* Deprecate recently-introduced `ultraplot.gridspec.SubplotGrid.legend` and
+  `ultraplot.gridspec.SubplotGrid.colorbar` methods (:commit:`d21a61a3`). Idea
   was this could be used to add an auto-legend to each subplot with ``axs.legend()``
   or identical colorbars with ``axs.colorbar(m)``, but in the future want to
   instead use these methods to add colorbars and legends along the edge of
   arbitrary subplots with e.g. ``axs[0, :2].colorbar(m, loc='bottom')``.
-* Deprecate recently-introduced `proplot.gridspec.SubplotGrid.text`
+* Deprecate recently-introduced `ultraplot.gridspec.SubplotGrid.text`
   (:commit:`80deb71a`). Idea was this could be used to add identical text to
   each subplot but that is pretty niche, does not need a dedicated command.
 
@@ -593,11 +593,11 @@ Style changes
   e.g. ``'yellow'`` different from ``'y'`` (:commit:`01db1223`, :commit:`b90bee8c`).
 * Make default label rotation for colorbar-of-artist string labels ``0``, consistent
   with string tick labels applied with ``autoformat=True`` (:commit:`3f191f3b`).
-* Use default ``discrete=False`` for `~proplot.axes.PlotAxes.hist2d` plots,
-  consistent with `~proplot.axes.PlotAxes.hexbin` (:commit:`267dd161`). Now
+* Use default ``discrete=False`` for `~ultraplot.axes.PlotAxes.hist2d` plots,
+  consistent with `~ultraplot.axes.PlotAxes.hexbin` (:commit:`267dd161`). Now
   "discrete" levels are only enabled for pcolor/contour plots by default.
 * Trigger ``adjust_grays`` hue adjustments for gray-like color names passed to
-  `~proplot.colors.PerceptualColormap.from_list` that aren't technically pure
+  `~ultraplot.colors.PerceptualColormap.from_list` that aren't technically pure
   gray, including ``'charcoal'``, ``'light gray'``/``'light grey'``, and
   ``'gray[0-9]'``/``'grey[0-9]'`` (:commit:`6cf42896`, :commit:`49bb9370`).
 * Implement "edgefix" and add `edgefix` keyword for ``bar``, ``hist``, ``area``, and
@@ -620,7 +620,7 @@ Features
 * Add `align` keyword with options ``'bottom'``, ``'top'``, ``'left'``, ``'right'``,
   or ``'center'`` (with optional single-char shorthands) to change alignment for
   outer legends/colorbars (:commit:`4a50b4b2`). Previously they had to be centered.
-* Add `transpose` keyword as alternative to `order` for 2D `~proplot.axes.PlotAxes`
+* Add `transpose` keyword as alternative to `order` for 2D `~ultraplot.axes.PlotAxes`
   commands (:issue:`72`). ``transpose=True`` is equivalent to ``order='F'``.
 * Return homogeneous groupings of matplotlib artists in `~matplotlib.cbook.silent_list`
   objects to simplify repr (:commit:`d59f9c40`, :commit:`667cc068`,
@@ -629,11 +629,11 @@ Features
   support for `stack` as alias of `stacked` and `width` as alias of `rwidth`
   (consistent with `bar` keywords) (:commit:`734329a5`). By default, histograms
   for successive columns are now grouped side-by-side instead of overlaid.
-* Add `fill` and `filled` keywords to `~proplot.axes.PlotAxes.hist`, analogous to
+* Add `fill` and `filled` keywords to `~ultraplot.axes.PlotAxes.hist`, analogous to
   `stack` and `stacked`, and make passage of these keywords set the corresponding
   default `histtype` (:commit:`4a85773b`). Also add `filled` alias of `fill`
   to `boxplot` for consistency (:commit:`b5caf550`).
-* Always copy colormaps returned by `~proplot.constructor.Colormap`
+* Always copy colormaps returned by `~ultraplot.constructor.Colormap`
   to avoid subsequently changing global colormap properties with e.g.
   ``set_alpha`` (:commit:`7a3c3f64`).
 * Add leading underscore to all default colormap names (``_name_r`` for reversed,
@@ -646,9 +646,9 @@ Features
   (:commit:`58ce2c95`). Colorbar outline is now controlled with `linewidth`
   and `color`. Previously these settings had to be in sync.
 * Auto-expand components of `~matplotlib.cbook.silent_list` and
-  `~matplotlib.collection.Collection` passed to `~proplot.axes.Axes.legend`
+  `~matplotlib.collection.Collection` passed to `~ultraplot.axes.Axes.legend`
   that have valid labels, similar to tuple group expansion (:issue:`277`)
-* Add `handle_kw` to `~proplot.axes.Axes.legend` to optionally control
+* Add `handle_kw` to `~ultraplot.axes.Axes.legend` to optionally control
   handle settings that conflict with frame settings (:commit:`58ce2c95`).
   Example: ``handle_kw={'edgecolor': 'k'}``.
 * Interpret ``'grey'`` as a synonym of ``'gray'`` by translating substrings in color
@@ -656,7 +656,7 @@ Features
 * Permit loading color names from files without ``.txt`` extension
   (:commit:`55481a9c`). This restriction was unnecessary.
 * Set ``default=True`` automatically if users pass `margin` or `space` to
-  `~proplot.config.register_colors` to permit quickly/succinctly experimenting
+  `~ultraplot.config.register_colors` to permit quickly/succinctly experimenting
   with XKCD color filtering algorithm (:commit:`cfc3cef6`).
 * Add cartopy-based ``LongitudeLocator``, ``LatitudeLocator``, ``DegreeLocator``,
   ``LongitudeFormatter``, ``LatitudeFormatter``, ``DegreeFormatter`` to
@@ -665,32 +665,32 @@ Features
 Bug fixes
 ---------
 
-* Fix issue where tuple `~proplot.config.rc` values are truncated
-  to first scalar value when saving a ``proplotrc`` (:commit:`e731c709`).
+* Fix issue where tuple `~ultraplot.config.rc` values are truncated
+  to first scalar value when saving a ``ultraplotrc`` (:commit:`e731c709`).
 * Fix issue where channel-setting and scaling functions like ``scale_luminance``
   drop the opacity channel (:commit:`58ce2c95`).
 * Fix issue where line plot coordinates get unnecessarily offset by ``360``
   by removing unnecessary ``_geo_monotonic`` standardization (:issue:`274`).
 * Fix regression where `vmin` is ignored without explicitly specifying `vmax` and
   vice versa (:issue:`276`).
-* Fix issue where `~proplot.axes.PlotAxes.scatter` ignores ``facecolors``
+* Fix issue where `~ultraplot.axes.PlotAxes.scatter` ignores ``facecolors``
   input by treating it the same as other color aliases (:issue:`275`).
 * Fix issue where calling ``legend()`` without arguments generates
   duplicate labels for histograms (:issue:`277`).
-* Fix issue where list-of-list style input to `~proplot.axes.Axes.legend`
+* Fix issue where list-of-list style input to `~ultraplot.axes.Axes.legend`
   fails to trigger centered legend (:commit:`e598b470`).
 * Fix issue where `alpha` passed to contour/pcolor/vlines/hlines commands was
   ignored due to translating as `alphas` rather than `alpha` (:commit:`e5faf4d6`).
-* Fix unexpected behavior where `~proplot.axes.PlotAxes` tries to make
+* Fix unexpected behavior where `~ultraplot.axes.PlotAxes` tries to make
   list-of-artist style colorbars from successive calls to 2D plotting
   commands rather than making individual colorbars (:commit:`20ce93a1`).
 * Fix issue where ``diverging=True`` is applied for datasets with both
   ``discrete=False`` and `vmin` or `vmax` equivalent to ``0`` (:commit:`84b9f86e`).
-* Fix issue where `~proplot.axes.PlotAxes.scatter` does not accept N x 3 or
+* Fix issue where `~ultraplot.axes.PlotAxes.scatter` does not accept N x 3 or
   N x 4 RGB[A] style arrays (:commit:`13df1841`).
 * Fix issue where importing seaborn issues 100 warnings due to overwriting
-  seaborn colormaps added by proplot (:commit:`006aef5f`).
-* Fix issue where `inbounds` passed to `~proplot.axes.PlotAxes.scatter` applies
+  seaborn colormaps added by ultraplot (:commit:`006aef5f`).
+* Fix issue where `inbounds` passed to `~ultraplot.axes.PlotAxes.scatter` applies
   only to axis-limit scaling, not cmap normalization scaling (:commit:`3d7636f2`).
 * Fix issue with color-parsing due to ``_plot_errorshading`` coming after
   ``_parse_cycle`` rather than before (:commit:`acf545e2`).
@@ -708,10 +708,10 @@ Internals
 * Improve warning message when users pass both `colors` and `cmap`
   by recommending they use `edgecolor` to set edges (:commit:`1067eddf`).
 * Improve universal "rebuilding font cache" warning message when new
-  users import proplot for the first time (:commit:`9abc894e`).
+  users import ultraplot for the first time (:commit:`9abc894e`).
 * Remove unused, mostly undocumented :rcraw:`axes.titleabove` setting
   (:commit:`9d9d0db7`). Users should be using :rcraw:`title.above` instead.
-* Move `~proplot.gridspec.SubplotGrid` from ``figure.py`` to ``gridspec.py``
+* Move `~ultraplot.gridspec.SubplotGrid` from ``figure.py`` to ``gridspec.py``
   (:commit:`7b688fc8`). Makes more sense there.
 * Improve organization of internal functions, add ``data.py``, ``context.py``,
   and ``text.py`` to ``internals`` and rename and re-sort related ``PlotAxes``
@@ -726,8 +726,8 @@ Documentation
 * Update napoleon type aliases and specifiers (:commit:`c20ed1d1`). Use `sequence`
   instead of `list` wherever params accept arbitrary sequences (:commit:`e627e95b`).
 * Improve documentation of style-type arguments like `lw`, `linewidth`,
-  etc. on `~proplot.axes.PlotAxes` commands (:commit:`cc602349`).
-* Improve documentation of `proplot.gridspec.SubplotGrid` methods
+  etc. on `~ultraplot.axes.PlotAxes` commands (:commit:`cc602349`).
+* Improve documentation of `ultraplot.gridspec.SubplotGrid` methods
   (:commit:`902502cc`). Docstrings are no longer stubs.
 
 Version 0.8.1 (2021-08-22)
@@ -736,7 +736,7 @@ Version 0.8.1 (2021-08-22)
 Features
 --------
 
-* Add `~proplot.colors.PerceptualColormap.from_list` ``adjust_grays`` option
+* Add `~ultraplot.colors.PerceptualColormap.from_list` ``adjust_grays`` option
   (enabled by default) to help make diverging colormaps with an intermediate
   hueless white, gray, or black color (:commit:`2e8cb495`).
 * Add the axis sharing level ``4`` or ``'all'`` to share the limits, scales,
@@ -746,7 +746,7 @@ Features
 * Extend mixed auto-manual legend label input (e.g. ``labels=[None, 'override']``)
   to case where legend handles are automatically retrieved from the axes
   rather than manually passed to ``legend()`` (:commit:`26bc77a4`).
-* Add `inlinelabels` option to `~proplot.axes.GeoAxes.format` to set both
+* Add `inlinelabels` option to `~ultraplot.axes.GeoAxes.format` to set both
   ``loninline=True`` and ``latinline=True`` at once, and change the
   :rcraw:`grid.loninline` and :rcraw:`grid.latinline` settings to the
   single :rcraw:`grid.inlinelabels` (consistent with :rcraw:`grid.rotatelabels`
@@ -802,9 +802,9 @@ Deprecated
   of ``1`` (integer conversion of ``True``) (:issue:`51967ce3`). This is more
   intuitive and matches convention elsewhere. Also allow specifying level 1 with
   ``'labels'`` and level 2 with ``'limits'``.
-* Rename `~proplot.ui.SubplotsContainer` to simpler `~proplot.figure.SubplotGrid`
+* Rename `~ultraplot.ui.SubplotsContainer` to simpler `~ultraplot.figure.SubplotGrid`
   and move definition to ``figure.py`` (:commit:`51967ce3`).
-* Deprecate arbitrary ``__getattr__`` override for `~proplot.figure.SubplotGrid`
+* Deprecate arbitrary ``__getattr__`` override for `~ultraplot.figure.SubplotGrid`
   (:commit:`51967ce3`). Instead have dedicated ``format``, ``colorbar``, ``legend``,
   ``[alt|dual|twin][xy]``, ``panel[_axes]``, and ``inset[_axes]`` methods.
 * Rename setting :rcraw:`abc.style` to :rcraw:`abc` (:commit:`a50d5264`). Setting this
@@ -826,30 +826,30 @@ Deprecated
   (:commit:`41b5e400`). Axes can still be updated by passing `alpha`, `linewidth`,
   `facecolor`, and `edgecolor` to ``format``, and now ``format`` supports *arbitrary*
   patch artist settings and aliases like `lw`, `ec`, `fc`, `hatch`, etc.
-* Change `~proplot.config.Configurator` iteration behavior to loop over keys, not
+* Change `~ultraplot.config.Configurator` iteration behavior to loop over keys, not
   item pairs, and make it a `~collections.abc.MutableMapping` (:commit:`5626bc88`).
-* Rename `proplot.config.Configurator.load_file` to `proplot.config.Configurator.load`
+* Rename `ultraplot.config.Configurator.load_file` to `ultraplot.config.Configurator.load`
   in order to match ``save`` (:commit:`1769d349`).
-* Change the default `~proplot.config.Configurator` save location from the home
+* Change the default `~ultraplot.config.Configurator` save location from the home
   directory to the *current directory* and change the default filename to
-  ``proplotrc`` (without the leading dot) (:commit:`41b5e400`).
-* Rename `~proplot.config.Configurator.get` to `~proplot.config.Configurator.find`
+  ``ultraplotrc`` (without the leading dot) (:commit:`41b5e400`).
+* Rename `~ultraplot.config.Configurator.get` to `~ultraplot.config.Configurator.find`
   (:commit:`e8559f3d`). Confusing since ``get`` didn't accept a "fallback" second
   positional argument. Now ``get`` is the "dictionary-like" inherited method.
 * Rename obscure `LinearSegmentedColormap`, `PerceptuallyUniformColormap`, and
-  `ListedColormap` to more intuitive/succinct `~proplot.colors.ContinuousColormap`,
-  `~proplot.colors.PerceptualColormap`, and `~proplot.colors.DiscreteColormap`
+  `ListedColormap` to more intuitive/succinct `~ultraplot.colors.ContinuousColormap`,
+  `~ultraplot.colors.PerceptualColormap`, and `~ultraplot.colors.DiscreteColormap`
   (:commit:`ade787f9`). Important due to the "qualitative colormap" behaviors triggered
-  when a `~proplot.colors.DiscreteColormap` is passed to plot commands (see features).
+  when a `~ultraplot.colors.DiscreteColormap` is passed to plot commands (see features).
 * Following above change, rename `LinearSegmentedNorm` to simpler `SegmentedNorm`,
-  rename `~proplot.constructor.Colormap` argument `to_listed` to `discrete`,
+  rename `~ultraplot.constructor.Colormap` argument `to_listed` to `discrete`,
   change `listmode` options from ``'listed'``, ``'linear'`` to ``'discrete'``,
   ``'continuous'``, and add `filemode` option (:commit:`ade787f9`, :commit:`5ccd6c01`).
 * Deprecate ``boxes`` and ``violins`` shorthands in favor of singular
-  `~proplot.axes.PlotAxes.box` and `~proplot.axes.PlotAxes.violin`
+  `~ultraplot.axes.PlotAxes.box` and `~ultraplot.axes.PlotAxes.violin`
   (:commit:`6382cf91`). This feel analogous to existing ``bar`` and ``barh``.
-* Rename the confusingly-capitalized `~proplot.constructor.Colors` to
-  `~proplot.utils.get_colors` and move to ``utils.py`` (:commit:`51d480da`). This
+* Rename the confusingly-capitalized `~ultraplot.constructor.Colors` to
+  `~ultraplot.utils.get_colors` and move to ``utils.py`` (:commit:`51d480da`). This
   is not a "class constructor" -- it just returns lists of colors.
 * Rename the ``show`` function keyword `categories` to `include`,
   consistent with the new `ignore` keyword (:commit:`c45d5fa1`).
@@ -870,9 +870,9 @@ Style changes
 * Exclude out-of-bounds data when determining automatic y (x) axis limits when x (y)
   limits have been explicitly set for `plot` and `scatter` plots (:commit:`6382cf91`).
   Controlled by the :rcraw:`axes.inbounds` property, analogous to :rcraw:`cmap.inbounds`
-  used for cmap scaling. This feature leverages proplot's input standardization.
+  used for cmap scaling. This feature leverages ultraplot's input standardization.
 * Capture `colors` passed to commands like ``contour`` and ``pcolor`` and use
-  it to build qualitative `~proplot.colors.DiscreteColormap` maps (:commit:`6382cf91`).
+  it to build qualitative `~ultraplot.colors.DiscreteColormap` maps (:commit:`6382cf91`).
   This matches the behavior of xarray plotting utilities. No longer use `color`
   to change "edge color" of filled contours/grid boxes.
 * Add special qualitative cmap handling when ``colors=colors``, ``qualitative=True``,
@@ -880,7 +880,7 @@ Style changes
   and warn if user passed ``discrete=False``), truncate or wrap colors if there are too
   many/not enough for the levels, and add default extremes with ``set_under`` or
   ``set_over`` depending on user `extend` (:commit:`6382cf91`).
-* Select :rcraw:`cmap.diverging` and apply `~proplot.colors.DivergingNorm` automatically
+* Select :rcraw:`cmap.diverging` and apply `~ultraplot.colors.DivergingNorm` automatically
   based on input data, similar to xarray and seaborn (:commit:`6382cf91`). This is
   controlled with `autodiverging` and the :rcraw:`cmap.autodiverging` setting. It is
   also disabled when a cmap is explicitly passed (unless it is a known diverging cmap).
@@ -907,28 +907,28 @@ Features
 
 * Dynamically add classes that are "registered" by contructor functions
   to the top-level namespace (:commit:`4382a1b1`). This is consistent with
-  behavior of importing custom-proplot tickers, norms, etc. to top-level namespace.
+  behavior of importing custom-ultraplot tickers, norms, etc. to top-level namespace.
   Now e.g. ``pplt.MultipleLocator`` or ``pplt.LogNorm`` are allowed.
-* Allow creating subplots with `~proplot.ui.figure` and either (1) subsequently
-  calling `~proplot.figure.Fiugure.subplots` or (2) passing integers or subplot specs
-  generated by `~proplot.gridspec.GridSpec` to `~proplot.figure.Figure.add_subplot`
+* Allow creating subplots with `~ultraplot.ui.figure` and either (1) subsequently
+  calling `~ultraplot.figure.Fiugure.subplots` or (2) passing integers or subplot specs
+  generated by `~ultraplot.gridspec.GridSpec` to `~ultraplot.figure.Figure.add_subplot`
   (:commit:`51967ce3`). This is convenient for complex grids or mixed proj types.
-* Add consistent/intuitive aliases `~proplot.figure.Figure.subplot` and
-  `~proplot.figure.Figure.add_subplots` for native matplotlib commands
-  `~proplot.figure.Figure.add_subplot` and `~proplot.figure.Figure.subplots`
+* Add consistent/intuitive aliases `~ultraplot.figure.Figure.subplot` and
+  `~ultraplot.figure.Figure.add_subplots` for native matplotlib commands
+  `~ultraplot.figure.Figure.add_subplot` and `~ultraplot.figure.Figure.subplots`
   (:commit:`51967ce3`).
-* Add `~proplot.figure.Figure.subplotgrid` property to access a
-  `~proplot.figure.SubplotGrid` after drawing subplots one-by-one
+* Add `~ultraplot.figure.Figure.subplotgrid` property to access a
+  `~ultraplot.figure.SubplotGrid` after drawing subplots one-by-one
   (:commit:`fb83384f`).
 * Implement physical-units `left`, `right`, `top`, `bottom`, `wspace`, and `hspace`
-  spaces directly on the `~proplot.gridspec.GridSpec` rather than externally
+  spaces directly on the `~ultraplot.gridspec.GridSpec` rather than externally
   (:commit:`20502345`). Now absolute spaces are always preserved when figure size
   changes even if tight layout is disabled.
-* Have `~proplot.gridspec.GridSpec` directly handle "panel slots" (:commit:`20502345`).
+* Have `~ultraplot.gridspec.GridSpec` directly handle "panel slots" (:commit:`20502345`).
   Adding panels to a figure adds row or column "panel slots" to the gridspec and
   subsequently indexing the gridspec ignores those slots.
-* Add tight layout "padding" arguments to `~proplot.gridspec.GridSpec` and add gridspec
-  parameters as optional arguments to `~proplot.figure.Figure` (:commit:`20502345`).
+* Add tight layout "padding" arguments to `~ultraplot.gridspec.GridSpec` and add gridspec
+  parameters as optional arguments to `~ultraplot.figure.Figure` (:commit:`20502345`).
   When a gridspec is added to the figure the arguments are passed to the gridspec. This
   replaces matplotlib's `subplotpars` and ``subplots_adjust``.
 * Allow variable tight layout padding between subplot panels using `wpad` and
@@ -941,13 +941,13 @@ Features
   always ignore panel and colorbar spaces (:commit:`20502345`).
 * Improve default behavior in presence of 'outer' colorbars + legends when
   :rcraw:`subplots.tight` is disabled (:commit:`20502345`).
-* Add a `~proplot.figure.Figure.format` method for formatting every subplot in
+* Add a `~ultraplot.figure.Figure.format` method for formatting every subplot in
   the figure when you don't have a ``SubplotGrid`` available (:commit:`20502345`).
   Also move internal implementation of figure-wide settings there. Figure-wide
   settings like `suptitle` can still be updated from ``Axes.format``.
-* Permit mutability of `~proplot.figure.SubplotGrid` (:commit:`51967ce3`).
+* Permit mutability of `~ultraplot.figure.SubplotGrid` (:commit:`51967ce3`).
   Power users may want to manipulate their own grids.
-* Permit 2d indexing of `~proplot.figure.SubplotGrid` with arbitrary gridspec
+* Permit 2d indexing of `~ultraplot.figure.SubplotGrid` with arbitrary gridspec
   geometry by looking up subplotspec indices (:commit:`51967ce3`). Previously 2d
   indexing of ``SubplotGrid`` with complex geometry would just return a wrong result.
 * Issue warning message when users try ``fig.subplots_adjust()`` or
@@ -980,62 +980,62 @@ Features
   colorbar solids are rasterized (:commit:`a50d5264`).
 * Allow omitting the colormap name when instantiating colormap classes or using
   class methods like ``from_list`` (:commit:`ade787f9`). This is more intuitive.
-* Improve matplotlib-proplot colormap translation by converting
-  `matplotlib.colors.ListedColormap` to `proplot.colors.DiscreteColormap` only if it
+* Improve matplotlib-ultraplot colormap translation by converting
+  `matplotlib.colors.ListedColormap` to `ultraplot.colors.DiscreteColormap` only if it
   has fewer than :rcraw:`cmap.listedthresh` levels (:commit:`ade787f9`). This is
   critical in case users import cmaps from other projects.
-* Permit constructing property cycles with `~proplot.constructor.Cycle` by passing
+* Permit constructing property cycles with `~ultraplot.constructor.Cycle` by passing
   ``color`` as keyword argument (:commit:`86a50eb2`). This is matplotlib-like workflow.
 * Permit disabling property cycling with e.g. ``cycle=False``, ``cycle='none'``,
   or ``cycle=()``, and re-enabling the default with ``cycle=True`` (:commit:`86a50eb2`).
 * Override `~matplotlib.axes.Axes.set_prop_cycle` to pass the input arguments
-  through `~proplot.constructor.Cycle` (:commit:`86a50eb2`). Features are a superset
+  through `~ultraplot.constructor.Cycle` (:commit:`86a50eb2`). Features are a superset
   and this also lets me cache the cycler for comparison with on-the-fly inputs.
 * Add shorthands :rcraw:`grid.width`, :rcraw:`grid.style`, :rcraw:`gridminor.width`,
   and :rcraw:`gridminor.style` for the respective ``linewidth`` and ``linestyle``
   settings (:commit:`a50d5264`)
 * Permit "registering stuff" by passing files or objects to
-  `~proplot.config.register_cmaps`, `~proplot.config.register_cycles`,
-  `~proplot.config.register_colors`, and `~proplot.config.register_fonts`
-  rather than forcing users to use the ``.proplot`` folder (:commit:`ad999e95`).
+  `~ultraplot.config.register_cmaps`, `~ultraplot.config.register_cycles`,
+  `~ultraplot.config.register_colors`, and `~ultraplot.config.register_fonts`
+  rather than forcing users to use the ``.ultraplot`` folder (:commit:`ad999e95`).
 * Support case insensitivity when calling matplotlib's ``unregister_cmap``
-  by improving `~proplot.colors.ColormapDatabase` so it derives from a
+  by improving `~ultraplot.colors.ColormapDatabase` so it derives from a
   `~collections.abc.MutableMapping` rather than `dict` (:commit:`ade787f9`).
-* Add public `~proplot.config.Configurator.changed` property to display a dictionary
-  of settings changed from proplot defaults (:commit:`41b5e400`).
-* Add public `~proplot.config.Configurator.user_file` and
-  `~proplot.config.Configurator.user_folder` static methods for displaying
+* Add public `~ultraplot.config.Configurator.changed` property to display a dictionary
+  of settings changed from ultraplot defaults (:commit:`41b5e400`).
+* Add public `~ultraplot.config.Configurator.user_file` and
+  `~ultraplot.config.Configurator.user_folder` static methods for displaying
   folder locations (:commit:`b11d744a`).
-* Support XDG directories for proplot config files on Linux (:issue:`204`,
-  :commit:`5e6367dc`). Also accept the file ``~/.proplotrc`` and the folder
-  ``~/.proplot`` on all systems and raise a warning if duplicate valid files
+* Support XDG directories for ultraplot config files on Linux (:issue:`204`,
+  :commit:`5e6367dc`). Also accept the file ``~/.ultraplotrc`` and the folder
+  ``~/.ultraplot`` on all systems and raise a warning if duplicate valid files
   or folders are found.
-* Make `~proplot.config.rc_proplot` and `~proplot.config.rc_matplotlib` containers
-  of proplot/matplotlib settings part of the public API (:commit:`a50d5264`).
-* Allow conversion of numeric inputs with `~proplot.utils.units` using e.g.
+* Make `~ultraplot.config.rc_ultraplot` and `~ultraplot.config.rc_matplotlib` containers
+  of ultraplot/matplotlib settings part of the public API (:commit:`a50d5264`).
+* Allow conversion of numeric inputs with `~ultraplot.utils.units` using e.g.
   ``pplt.units(num, 'in', 'cm')`` (:commit:`88f3dc88`).
 * Add more intuitive :rcraw:`grid.labelpad` and :rcraw:`tick.labelpad`
   as aliases for :rcraw:`grid.pad` and :rcraw:`tick.pad` (:commit:`a50d5264`).
-* Add `~proplot.axes.PlotAxes.line` and `~proplot.axes.PlotAxes.linex` command
-  aliases for `~proplot.axes.PlotAxes.plot` and `~proplot.axes.PlotAxes.plotx`
+* Add `~ultraplot.axes.PlotAxes.line` and `~ultraplot.axes.PlotAxes.linex` command
+  aliases for `~ultraplot.axes.PlotAxes.plot` and `~ultraplot.axes.PlotAxes.plotx`
   (:commit:`6382cf91`). This is more intuitive.
-* Add `~proplot.axes.PlotAxes.stepx` and `~proplot.axes.PlotAxes.stemx` commands
-  analogous to `~proplot.axes.PlotAxes.plotx`, and add `~proplot.axes.PlotAxes.histh`,
-  `~proplot.axes.PlotAxes.boxploth` (shorthand `~proplot.axes.PlotAxes.boxh`),
-  and `~proplot.axes.PlotAxes.violinploth` (shorthand `~proplot.axes.PlotAxes.violinh`)
-  commands analogous to `~proplot.axes.PlotAxes.barh` (:commit:`6382cf91`).
-* Let 1D `~proplot.axes.PlotAxes` commands iterate over columns of 2D *x* and *y*
+* Add `~ultraplot.axes.PlotAxes.stepx` and `~ultraplot.axes.PlotAxes.stemx` commands
+  analogous to `~ultraplot.axes.PlotAxes.plotx`, and add `~ultraplot.axes.PlotAxes.histh`,
+  `~ultraplot.axes.PlotAxes.boxploth` (shorthand `~ultraplot.axes.PlotAxes.boxh`),
+  and `~ultraplot.axes.PlotAxes.violinploth` (shorthand `~ultraplot.axes.PlotAxes.violinh`)
+  commands analogous to `~ultraplot.axes.PlotAxes.barh` (:commit:`6382cf91`).
+* Let 1D `~ultraplot.axes.PlotAxes` commands iterate over columns of 2D *x* and *y*
   coordinate arrays instead of only 2D *y* coordinate arrays (:commit:`6382cf91`.)
 * Support expanded and consistent artist synonyms throughout plotting overrides,
   e.g. ``ec`` for `edgecolor`, `lw` for `linewidth`, `fc` and `fillcolor` for
   `facecolor` (:commit:`6382cf91`). This is a superset of matplotlib.
-* Support passing positional fifth-argument colors to `~proplot.axes.PlotAxes.barbs`
-  and `~proplot.axes.PlotAxes.quiver`, just like `~proplot.axes.PlotAxes.scatter`
+* Support passing positional fifth-argument colors to `~ultraplot.axes.PlotAxes.barbs`
+  and `~ultraplot.axes.PlotAxes.quiver`, just like `~ultraplot.axes.PlotAxes.scatter`
   (:commit:`6382cf91`). This was previously not possible.
 * Support automatic labels for ``tricontour`` and ``tripcolor`` plots alongside
   the more common ``contour`` and ``pcolor``. (:commit:`6382cf91`).
 * Add `rasterize` keyword to `colorbar` so that colorbar solids rasterization can
-  be turned on (proplot turns off by default) (:commit:`6382cf91`).
+  be turned on (ultraplot turns off by default) (:commit:`6382cf91`).
 * Add `edgefix` keyword to `colorbar` to control colorbar-solid edges and
   use shared ``_fix_edges`` function (:commit:`6382cf91`).
 * Add `location` keyword as alternative to `loc` for legend and
@@ -1060,11 +1060,11 @@ Features
   with ``['label', None]`` overrides the artist label for ``h1`` but uses
   the artist label for ``h2`` (:commit:`6382cf91`).
 * Interpret all native matplotlib `legend` spacing arguments (e.g., `borderpad`
-  and `columnspacing`) with `~proplot.utils.units` (:commit:`6382cf91`).
+  and `columnspacing`) with `~ultraplot.utils.units` (:commit:`6382cf91`).
 * Control edge width for legend frames with `ew` or `edgewidth` rather than
   `lw` and `linewidth` to avoid conflict with feature that permits modifying
   legend handle properties (:commit:`6382cf91`).
-* Make `proplot.axes.Axes.colorbar` capture matplotlib-native `format`
+* Make `ultraplot.axes.Axes.colorbar` capture matplotlib-native `format`
   keyword as alias for `formatter` and `ticklabels` (:issue:`262`).
 * Support list-of-string parametric coordinates and format on-the-fly colorbar
   ticks with those string labels (:commit:`02fbda45`). This may be a common
@@ -1077,18 +1077,18 @@ Features
 * Support restricting cartopy bounds in cartopy 0.19 by leveraging the
   `ylim` `~cartopy.mpl.gridliner.Gridliner` property (:commit:`e190b66c`).
 * Add `xlabelpad`, `ylabelpad`, `xticklabelpad`, `yticklabelpad` keywords
-  to `~proplot.axes.CartesianAxes.format` and read and apply changed
+  to `~ultraplot.axes.CartesianAxes.format` and read and apply changed
   :rcraw:`axes.labelpad` (:commit:`e7d86b8f`).
 * Add support for "minor" radial and azimuthal gridlines in
-  `proplot.axes.PolarAxes.format`, controlled with keywords like
+  `ultraplot.axes.PolarAxes.format`, controlled with keywords like
   `rminorlocator`, and `thetaminorlocator` (:commit:`59c85f0e`).
 * Add `thetagrid`, `rgrid`, `thetagridminor`, and `rgridminor` keys to
-  `proplot.axes.PolarAxes.format` to toggle gridlines, and read and apply changed
+  `ultraplot.axes.PolarAxes.format` to toggle gridlines, and read and apply changed
   toggles from rc settings -- consistent with Cartesian axes (:commit:`59c85f0e`).
 * Add `title_kw`, `suptitle_kw`, `leftlabels_kw`, `rightlabels_kw`, `toplabels_kw`,
-  and `bottomlabels_kw` to `proplot.axes.Axes.format` for arbitrarily modifying
+  and `bottomlabels_kw` to `ultraplot.axes.Axes.format` for arbitrarily modifying
   label text objects -- consistent with `xlabel_kw` and `ylabel_kw` used
-  for `proplot.axes.CartesianAxes.format` (:commit:`6382cf91`).
+  for `ultraplot.axes.CartesianAxes.format` (:commit:`6382cf91`).
 
 Bug fixes
 ---------
@@ -1101,10 +1101,10 @@ Bug fixes
   ``set_position`` automatically calling ``set_in_layout(False)`` (:commit:`20502345`).
 * Fix issue where thin pyplot-function wrappers e.g. ``isinteractive``
   do not return results (:commit:`e62e3655`).
-* Fix issue where `proplot.config.Configurator.save` preserves the ``'#'``
+* Fix issue where `ultraplot.config.Configurator.save` preserves the ``'#'``
   in HEX strings, resulting in values that cannot be read back in with
-  `proplot.config.Configurator.load` (:commit:`41b5e400`).
-* Fix issue where deprecated `aspect` `~proplot.ui.subplots` argument
+  `ultraplot.config.Configurator.load` (:commit:`41b5e400`).
+* Fix issue where deprecated `aspect` `~ultraplot.ui.subplots` argument
   is ignored (:commit:`70a8b87d`).
 * Fix issue where explicit user-input ``width`` is ignored when creating
   colorbars or panels and gridspec slot already exists (:commit:`51967ce3`).
@@ -1130,7 +1130,7 @@ Bug fixes
   in masked numpy arrays (:commit:`6382cf91`).
 * Fix issue where error shading objects are grouped into lists rather than tuples
   and are not combined into single handle when passed to ``legend`` (:issue:`260`).
-* Fix issue where `~proplot.axes.Axes.parametric` ignores `interp` when
+* Fix issue where `~ultraplot.axes.Axes.parametric` ignores `interp` when
   selecting `DiscreteNorm` colormap levels (:commit:`152a3a81`).
 * Fix issue where tight layout padding is not respected for panels created from
   twin axes by ensuring panel parent is always the main axes (:commit:`e7d86b8f`).
@@ -1146,23 +1146,23 @@ Internals
 ---------
 
 * Convert all plotting wrappers to dedicated overrides of individual functions
-  in `~proplot.axes.PlotAxes` class (:commit:`6382cf91`). This massively simplifies
-  the internals and makes learning and adopting proplot much easier for users.
+  in `~ultraplot.axes.PlotAxes` class (:commit:`6382cf91`). This massively simplifies
+  the internals and makes learning and adopting ultraplot much easier for users.
 * Implement "panel" tracking and translation of physical spacing units directly
-  on the `~proplot.gridspec.GridSpec` instead of cumbersome hidden methods
-  in `~proplot.figure.Figure` (:commit:`20502345`).
-* Validate all setting assignments to `~proplot.config.Configurator` using a new
-  `~proplot.config.rc_proplot` dictionary, analogous to ``rcParams``
+  on the `~ultraplot.gridspec.GridSpec` instead of cumbersome hidden methods
+  in `~ultraplot.figure.Figure` (:commit:`20502345`).
+* Validate all setting assignments to `~ultraplot.config.Configurator` using a new
+  `~ultraplot.config.rc_ultraplot` dictionary, analogous to ``rcParams``
   (:pr:`109`, :commit:`5626bc88`). This helps avoid mysterious delayed bugs.
-* Move ``text``, ``legend``, and ``colorbar`` overrides to base `~proplot.axes.Axes`
-  class separate from `~proplot.axes.PlotAxes` (:commit:`6382cf91`).
+* Move ``text``, ``legend``, and ``colorbar`` overrides to base `~ultraplot.axes.Axes`
+  class separate from `~ultraplot.axes.PlotAxes` (:commit:`6382cf91`).
 * Automatically redirect all internal plotting calls to native matplotlib methods
   (:commit:`6382cf91`). This significantly improves stability.
 * Move ``register_colors`` internals from ``config.py`` to ``colors.py``
   by breaking up into smaller functions (:commit:`ad999e95`).
 * Move ``_version`` to a separate ``dependencies.py`` file and
   allow more versatile comparison operations (:commit:`8806631d`).
-* Efficiently impose `~proplot.axes.GeoAxes` defaults ``latlon=True`` and
+* Efficiently impose `~ultraplot.axes.GeoAxes` defaults ``latlon=True`` and
   ``transform=PlateCarree()`` in 90% fewer lines by looping over funcs.
 
 Documentation
@@ -1170,27 +1170,27 @@ Documentation
 
 * Move all plotting wrapper documentation to dedicated methods and remove
   references to wrappers in User Guide and Getting Started.
-* Embed `proplot.figure.Figure` documentation inside `proplot.ui.subplots`
+* Embed `ultraplot.figure.Figure` documentation inside `ultraplot.ui.subplots`
   instead of just referencing it.
-* Embed `proplot.axes.Axes.format` documentation inside ``format``
+* Embed `ultraplot.axes.Axes.format` documentation inside ``format``
   documentation for subclasses instead of just referencing it.
 * Document the relative font size scalings with a table in
-  `~proplot.axes.Axes.text` (:commit:`6382cf91`).
-* Deprecate scattershot `~proplot.figure.Figure` immutable/documented
+  `~ultraplot.axes.Axes.text` (:commit:`6382cf91`).
+* Deprecate scattershot `~ultraplot.figure.Figure` immutable/documented
   properties (:commit:`51967ce3`). These properties were just for documentation.
 * Remove ancient deprecated getters and setters for ``sharex``, ``spanx``, etc.
   once used with figure objects (:commit:`51967ce3`). These properties were
   just for introspection, did not add any functionality.
-* Rename `~proplot.config.RcConfigurator` to `~proplot.config.Configurator`
+* Rename `~ultraplot.config.RcConfigurator` to `~ultraplot.config.Configurator`
   (:commit:`5626bc88`). Previous name was redundant and needlessly verbose
   (the ``c`` in ``rc`` already stands for "configuration"...). This class
   is public just for documentation -- was not directly used by users.
-* Rename `~proplot.axes.Axes3D` to `~proplot.axes.ThreeAxes` so that class name
+* Rename `~ultraplot.axes.Axes3D` to `~ultraplot.axes.ThreeAxes` so that class name
   fits more nicely amongst other class names (:commit:`30a112bd`).
-* Make `~proplot.axes.CartopyAxes` and `~proplot.axes.BasemapAxes` private and
+* Make `~ultraplot.axes.CartopyAxes` and `~ultraplot.axes.BasemapAxes` private and
   remove the documentation (:commit:`25e759b0`). These classes are just for internal
   implementation of different cartographic "backends" -- behavior of public
-  methods is the same for both. Instead just document `proplot.axes.GeoAxes`.
+  methods is the same for both. Instead just document `ultraplot.axes.GeoAxes`.
 
 Version 0.7.0 (2021-07-11)
 ==========================
@@ -1210,15 +1210,15 @@ Deprecated
   the ``Yellows`` category from the ``Oranges`` maps (:commit:`8be0473f`). Requesting
   the old names (case-sensitive) redirects to the new names (:commit:`3f0794d0`).
 * Add :rcraw:`image.discrete` options and `discrete` keyword for toggling
-  `~proplot.colors.DiscreteNorm` application, and disable by default for `imshow`,
+  `~ultraplot.colors.DiscreteNorm` application, and disable by default for `imshow`,
   `matshow`, `spy`, `hexbin`, and `hist2d` plots (:issue:`233`, :commit:`5a7e05e4`).
   Also make `hexbin` and `hist2d` behavior with ``discrete=True`` more sane by using
-  maximum possible counts for autoscaling, and change `~proplot.colors.DiscreteNorm`
+  maximum possible counts for autoscaling, and change `~ultraplot.colors.DiscreteNorm`
   argument `extend` to more intuitive name `unique`.
 * Rename :rcraw:`subplots.pad` and :rcraw:`subplots.axpad` to more intuitive
   :rcraw:`subplots.outerpad` and :rcraw:`subplots.innerpad` (:commit:`3c7a33a8`).
-  Also rename `~proplot.figure.Figure` keywords.
-* Rename `width` and `height` `~proplot.subplots.subplots` keyword args to `figwidth`
+  Also rename `~ultraplot.figure.Figure` keywords.
+* Rename `width` and `height` `~ultraplot.subplots.subplots` keyword args to `figwidth`
   and `figheight` to avoid confusion with `refwidth`/`refheight` (:commit:`12d01996`).
   Will accept old keyword args without warning since they are used heavily.
 * Rename `aspect`, `axwidth`, and `axheight` keyword args to more intuitive
@@ -1227,25 +1227,25 @@ Deprecated
 * Rename `abovetop` keyword for moving title/abc labels above top panels, colorbars,
   and legends to :rcraw:`title.above` (:commit:`9ceacb7b`). Example usage:
   ``ax.format(title='Title', titleabove=True)``.
-* Rename the `proplot.colors.PerceptuallyUniformColormap.from_color` keywords `shade`,
+* Rename the `ultraplot.colors.PerceptuallyUniformColormap.from_color` keywords `shade`,
   `fade` to `luminance`, `saturation` keyword (:commit:`3d8e7dd0`). These can also
-  be passed to `~proplot.contructor.Colormap` when it is called with positional arguments.
+  be passed to `~ultraplot.contructor.Colormap` when it is called with positional arguments.
 * Rename seldom-used `Figure` argument `fallback_to_cm` to more understandable
   `mathtext_fallback` (:pr:`251`).
 * `legend_extras` no longer returns the background patch generated for centered-row
   legends (:pr:`254`). This is consistent with `colorbar_extras` not returning
-  background patches generated for inset colorbars. Until proplot adds new subclasses,
+  background patches generated for inset colorbars. Until ultraplot adds new subclasses,
   it makes more sense if these functions only return `~matplotlib.legend.Legend` and
   `~matplotlib.colorbar.Colorbar` instances.
 
 Style changes
 -------------
 
-* Use proplot TeX Gyre fonts with `~proplot.config.use_style` styles unless
+* Use ultraplot TeX Gyre fonts with `~ultraplot.config.use_style` styles unless
   specified otherwise (:commit:`6d7444fe`). Styles build on matplotlib defaults
-  rather than proplot defaults for all other settings.
+  rather than ultraplot defaults for all other settings.
 * Change default :rcraw:`savefig.transparent` back to ``False`` (:pr:`252`). Dubious
-  justification for ``True`` in the first place, and makes default PNG proplot figures
+  justification for ``True`` in the first place, and makes default PNG ultraplot figures
   unreadable wherever "dark mode" is enabled.
 * Reduce default :rcraw:`savefig.dpi` to 1000 (:commit:`bfda9c98`). Nature recommends
   1000, Science recommends "more than 300", PNAS recommends 1000--1200. So 1000 is fine.
@@ -1255,7 +1255,7 @@ Style changes
   error bars by default instead of bars and "boxes" (:commit:`4e30f415`). Only plot
   "boxes" with central "markers" by default for violin plots (:commit:`13b45ccd`).
 * Determine colormap levels using only in-bounds data if the *x* or *y* axis limits
-  were explicitly set (:issue:`209`). Add `inbounds` `~proplot.axes.apply_cmap`
+  were explicitly set (:issue:`209`). Add `inbounds` `~ultraplot.axes.apply_cmap`
   keyword and :rcraw:`image.inbounds` setting to control this.
 * Use `Artist` labels for the default list-of-artist colorbar tick labels if `values`
   was not passed -- and if labels are non-numeric, rotate them 90 degrees for horizontal
@@ -1275,44 +1275,44 @@ Features
 --------
 
 * Add the remaining commonly-used backend-related `pyplot` functions `ion`, `ioff`,
-  `isinteractive`, and `switch_backend` to the top-level `proplot` namespace
-  (:commit:`cd440155`). This avoids forcing users to import pyplot inside a proplot
+  `isinteractive`, and `switch_backend` to the top-level `ultraplot` namespace
+  (:commit:`cd440155`). This avoids forcing users to import pyplot inside a ultraplot
   session (the remaining pyplot functions are related to the "non-object-oriented"
-  workflow, which proplot explicitly discourages).
-* Add support for local ``proplotrc`` files in addition to "hidden"
-  ``.proplotrc`` files with leading dot (:commit:`8a989aca`).
+  workflow, which ultraplot explicitly discourages).
+* Add support for local ``ultraplotrc`` files in addition to "hidden"
+  ``.ultraplotrc`` files with leading dot (:commit:`8a989aca`).
 * Add minimal support for "3D" `~matplotlib.mpl_toolkits.mplot3d.Axes3D` axes
   (:issue:`249`). Example usage: ``fig.subplots(proj='3d')``.
 * Add `wequal`, `hequal`, and `equal` options to still use automatic spacing but
   force the tight layout algorithm to make spacings equal (:pr:`215`, :issue:`64`)
   by `Zachary Moon`_.
-* Allow calling `proplot.colors.PerceptuallyUniformColormap.from_hsl` by passing
-  `hue`, `saturation`, or `luminance` to `~proplot.constructor.Colormap` without
+* Allow calling `ultraplot.colors.PerceptuallyUniformColormap.from_hsl` by passing
+  `hue`, `saturation`, or `luminance` to `~ultraplot.constructor.Colormap` without
   any positional arguments (:commit:`3d8e7dd0`).
-* Allow passing `alpha`, `luminance`, `saturation` to `~proplot.constructor.Colormap`
+* Allow passing `alpha`, `luminance`, `saturation` to `~ultraplot.constructor.Colormap`
   as lists to be applied to each component cmap (:commit:`3d8e7dd0`).
 * Add convenient shorthands for channel references throughout colormap functions --
   e.g. `h` for hue, `l` for `luminance`, etc. (:commit:`3d8e7dd0`).
 * Add the ``'Flare'`` and ``'Crest'`` seaborn colormaps (:commit:`14bc16c9`). These
   are seaborn's color cycle-friendly alternatives to existing maps.
-* Add the `~proplot.utils.shift_hue` function analogous to `scale_saturation`
+* Add the `~ultraplot.utils.shift_hue` function analogous to `scale_saturation`
   and `scale_luminance` (:commit:`67488bb1`).
-* Add the `~proplot.utils.to_hex` function and make all color-manipulation funcs return
+* Add the `~ultraplot.utils.to_hex` function and make all color-manipulation funcs return
   HEX strings by default (:commit:`67488bb1`). Otherwise `scatter` throws warnings.
 * Use ``90`` as the default `luminance` when creating monochromatic colormaps with
-  `to_listed` set to ``True`` (as when `~proplot.constructor.Cycle` calls
-  `~proplot.constructor.Colormap`; :commit:`3d8e7dd0`).
-* Add `~proplot.axes.Axes.plotx` and `~proplot.axes.Axes.scatterx` commands that
+  `to_listed` set to ``True`` (as when `~ultraplot.constructor.Cycle` calls
+  `~ultraplot.constructor.Colormap`; :commit:`3d8e7dd0`).
+* Add `~ultraplot.axes.Axes.plotx` and `~ultraplot.axes.Axes.scatterx` commands that
   interpret plotting args as ``(y, x)`` rather than ``(x, y)``, analogous to
-  `~proplot.axes.Axes.areax` (:pr:`258`).
-* Add support for `~proplot.axes.indicate_error` *horizontal* error bars and shading
+  `~ultraplot.axes.Axes.areax` (:pr:`258`).
+* Add support for `~ultraplot.axes.indicate_error` *horizontal* error bars and shading
   for *horizontal* plotting commands `barh`, `plotx`, and `scatterx` (:pr:`258`).
 * Add support for ``ax.plot_command('x_key', 'y_key', data=dataset)`` for virtually
   all plotting commands using `standardize_1d` and `standardize_2d` (:pr:`258`).
   This was an existing `~matplotlib.axes.Axes.plot` feature.
 * Add support for the plotting style ``ax.plot(x1, y1, fmt1, x2, y2, fmt2, ...)``
   as allowed by matplotlib (:pr:`258`).
-* Add `absolute_width` keyword to `~proplot.plot.bar_extras` to make `width`
+* Add `absolute_width` keyword to `~ultraplot.plot.bar_extras` to make `width`
   argument absolute (:pr:`258`). Remains ``False`` by default.
 * Add support for "stacked" plots to `~matplotlib.axes.Axes.vlines` and
   `~matplotlib.axes.Axes.hlines` (:pr:`258`).
@@ -1345,7 +1345,7 @@ Features
 * Add new :rcraw:`suptitle.pad`, :rcraw:`leftlabel.pad`, :rcraw:`toplabel.pad`,
   :rcraw:`bottomlabel.pad`, :rcraw:`rightlabel.pad` settings to control padding
   used when aligning super labels (:commit:`402214f9`). These can also be passed
-  to `~proplot.axes.Axes.format` and applied locally. The new defaults increase
+  to `~ultraplot.axes.Axes.format` and applied locally. The new defaults increase
   super title padding by a bit.
 * More robust interpretation of :rcraw:`abc.style` -- now match case with first
   ``'a'`` or ``'A'`` in string, and only replace that one (:issue:`201`).
@@ -1356,7 +1356,7 @@ Features
 * Add :rcraw:`cartopy.circular` setting for optionally disabling the "circular bounds
   on polar projections" feature (:commit:`c9ca0bdd`).
 * Support the standard aliases ``'ls'``, ``'linestyle'``, ``'linestyles'``, etc.
-  in `~proplot.constructor.Cycle` calls (:commit:`3d8e7dd0`).
+  in `~ultraplot.constructor.Cycle` calls (:commit:`3d8e7dd0`).
 * Add `queue` keyword to `colorbar` and `legend` to support workflow where users
   successively add handles to location (:pr:`254`).
 * Add `nozero` keyword arg to `apply_cmap` to remove the zero contour
@@ -1376,7 +1376,7 @@ Features
 * Add suffix ``'_copy'`` to colormaps converted with `to_listed` and
   `to_linear_segmented` to avoid accidental overwriting (:commit:`91998e93`).
 * Add `xmin`, `xmax`, `ymin`, and `ymax` keyword args to
-  `~proplot.axes.CartesianAxes.format` as alternatives to `xlim` and `ylim`
+  `~ultraplot.axes.CartesianAxes.format` as alternatives to `xlim` and `ylim`
   (:commit:`ae0719b7`). Example usage: ``ax.format(xmin=0)`` as opposed to
   ``ax.format(xlim=(0, None))``.
 * Allow passing full "side" names to `lonlabels` and `latlabels` rather than
@@ -1388,14 +1388,14 @@ Features
 Bug fixes
 ---------
 
-* Fix 3 fatal issues preventing proplot import and basic usage in matplotlib >= 3.4
+* Fix 3 fatal issues preventing ultraplot import and basic usage in matplotlib >= 3.4
   (:pr:`251`).
 * Fix deprecation warnings associated with matplotlib 3.4 refactoring of
   subplot classes (:pr:`251`).
 * Fix deprecated reference to :rc:`fallback_to_cm` in matplotlib >= 3.3
   (:pr:`251`).
 * Fix `~matplotlib.ticker.IndexFormatter` deprecation warning in matplotlib >= 3.3 by
-  replacing with proplot-local copy (:pr:`251`).
+  replacing with ultraplot-local copy (:pr:`251`).
 * Fix deprecation warning in matplotlib >= 3.3 -- add `extend` as mappable attribute
   rather than passing it to `colorbar()` (:commit:`a23e7043`).
 * Fix issue where figures with fixed-aspect axes don't scale properly
@@ -1435,13 +1435,13 @@ Bug fixes
   with tick marks on top x-axis (:commit:`402214f9`).
 * Fix issue where non-Cartesian `heatmap` errors rather than warns (:issue:`238`).
 * Fix issue where ``labels=True`` with no contours causes error (:issue:`238`).
-* Fix issue where `~proplot.colors.Cycle` fails to register new names and fails to
-  display in `~proplot.demos.show_cycles` (:commit:`94ffc1dc`, :commit:`4a7a3c79`).
-* Fix issue where proplot ignores `set_under` and `set_over` values when translating
-  matplotlib colormap classes to proplot subclasses (:issue:`190`).
-* Fix issue where `~proplot.colors.DiscreteNorm` does not account for `set_under` and
+* Fix issue where `~ultraplot.colors.Cycle` fails to register new names and fails to
+  display in `~ultraplot.demos.show_cycles` (:commit:`94ffc1dc`, :commit:`4a7a3c79`).
+* Fix issue where ultraplot ignores `set_under` and `set_over` values when translating
+  matplotlib colormap classes to ultraplot subclasses (:issue:`190`).
+* Fix issue where `~ultraplot.colors.DiscreteNorm` does not account for `set_under` and
   `set_over` colors distinct from adjacent in-bounds colors (:issue:`190`).
-* Fix issue where proplot fails to detect legend entries for "outer"
+* Fix issue where ultraplot fails to detect legend entries for "outer"
   legends (:issue:`189`).
 * Fix issue where list-of-list-style `legend()` handle and label input fails completely
   (:commit:`a298f81f`). This input style is used to specify "centered" legend rows.
@@ -1461,7 +1461,7 @@ Bug fixes
 * Fix issue where `show_cmaps` cannot display reversed colormaps (:commit:`2dd51177`).
 * Fix issue where ``'grays_r'`` translated to ``'greys'`` (:commit:`074c6aef`).
 * First reverse, *then* shift ``cmap_r_s`` colormaps (:commit:`e5156294`).
-* Fix obscure `~proplot.axes.Axes.parametric` bug where `numpy.stack` tries to make
+* Fix obscure `~ultraplot.axes.Axes.parametric` bug where `numpy.stack` tries to make
   nested ragged arrays from parametric coords (:commit:`b16d56a8`).
 * Fix issue where where `SubplotSpec.get_active_rows_columns` returned incorrect
   number of "active" rows and columns (:commit:`5cf20b84`).
@@ -1476,7 +1476,7 @@ Internals
   things into manageable chunks (:pr:`258`, :commit:`6af22567`, :commit:`d3352720`).
 * Refactor `colorbar` and `legend` methods and their massive wrappers to clean
   things up and expand the "queueing" feature beyond wrappers (:pr:`254`).
-* Add prefix ``'proplot_'`` to registered axes "projections" (:commit:`be7ef21e`). More
+* Add prefix ``'ultraplot_'`` to registered axes "projections" (:commit:`be7ef21e`). More
   clear and guards against conflicts with external packages and other mpl versions.
 * Add system for processing flexible keyword arguments across different commands
   to ``internals/__init__.py``. Analogous to mpl ``_alias`` processing.
@@ -1484,8 +1484,8 @@ Internals
 Documentation
 -------------
 
-* Finally use ``pplt`` as the recommended abbreviation: ``import proplot as pplt``.
-* Major clean up of "Why proplot?" page and user guide pages.
+* Finally use ``pplt`` as the recommended abbreviation: ``import ultraplot as pplt``.
+* Major clean up of "Why ultraplot?" page and user guide pages.
 * Fix incomplete ``cmap.from_file`` docstrings (:commit:`54f1bc7c`).
 * Rename "Changelog" to "What's New?" and list all contributors in "About the Authors".
 * Remove v0.6.0 renamed classes (e.g. `ProjAxes`) from top-level namespace
@@ -1524,7 +1524,7 @@ Bug fixes
   (:issue:`177`).
 * Use :rcraw:`patch.linewidth` for default bar edge width, stop setting
   default histogram plot linewidth to zero, and set :rcraw:`patch.linewidth`
-  to ``0.6`` to match proplot's default line width for lines, axes edges, and
+  to ``0.6`` to match ultraplot's default line width for lines, axes edges, and
   hatches (:issue:`186`).
 
 Version 0.6.3 (2020-06-02)
@@ -1533,7 +1533,7 @@ Version 0.6.3 (2020-06-02)
 Bug fixes
 ---------
 
-* Fix issue where proplot import fails if cartopy is not installed (:commit:`e29d49e8`).
+* Fix issue where ultraplot import fails if cartopy is not installed (:commit:`e29d49e8`).
 
 Version 0.6.2 (2020-06-02)
 ==========================
@@ -1541,17 +1541,17 @@ Version 0.6.2 (2020-06-02)
 Features
 --------
 
-* Add `autoformat` as `~proplot.axes.standardize_1d` and
-  `~proplot.axes.standardize_2d` keyword arg, so inheriting labels can
+* Add `autoformat` as `~ultraplot.axes.standardize_1d` and
+  `~ultraplot.axes.standardize_2d` keyword arg, so inheriting labels can
   be turned on/off for individual plots (:commit:`61258280`).
 * Share *initial* limits/scales/tickers from parent subplots when making
   new panels (:commit:`cf0d5d4e`).
-* Permit negative "cuts" with `~proplot.colors.LinearSegmentedColormap.cut`
+* Permit negative "cuts" with `~ultraplot.colors.LinearSegmentedColormap.cut`
   to expand the neutral zone of a diverging cmap (:commit:`94548d09`).
 * Add valid `format` arguments to `altx` and `alty`, including ``[x|y]lim``
   (:commit:`734f5940`).
 * Pass string `dual[x|y]` arguments like ``'inverse'`` through the
-  `~proplot.constructor.Scale` constructor (:commit:`413e1781`).
+  `~ultraplot.constructor.Scale` constructor (:commit:`413e1781`).
 * Add ``'dms'`` locator and formatter, for degree-minute-second labels
   without cardinal direction indicators (:commit:`1b180cd2`).
 * Add `"tau" formatter <https://tauday.com/tau-manifesto>`__
@@ -1589,8 +1589,8 @@ Documentation
 * Improve overall website style (:commit:`89d6f5bd`).
 * Make website "dark mode" darker (:commit:`979c8188`).
 * Prevent website from flashing light mode when changing pages (:commit:`75e4d6a1`).
-* Add documentation for `proplot.figure.Figure.save` method (:commit:`da25266a`).
-* Remove `~proplot.figure.Figure` setters like `set_sharex`, replace with
+* Add documentation for `ultraplot.figure.Figure.save` method (:commit:`da25266a`).
+* Remove `~ultraplot.figure.Figure` setters like `set_sharex`, replace with
   read-only properties (:commit:`7b455008`). The getters were only for object
   introspection. The setters never worked properly/were unused in examples.
 
@@ -1618,17 +1618,17 @@ Deprecated
 * Remove the ``geoaxes`` and ``geogrid`` rc settings (:pr:`168`). Gridline
   settings are now controlled with ``grid``.
 * Remove the ``lonstep`` and ``latstep`` settings -- we now use
-  `~proplot.ticker.LongitudeLocator` and `~proplot.ticker.LatitudeLocator`
+  `~ultraplot.ticker.LongitudeLocator` and `~ultraplot.ticker.LatitudeLocator`
   to select "nice" gridline locations even when zoomed in (:pr:`168`)
 * Rename the ``cartopy.global`` rc setting to ``cartopy.autoextent``
   (:commit:`7c0f118a`) and add an `autoextent` keyword (:commit:`23db0498`).
 * Rename several "error indication" keyword arguments and rename `add_errorbars`
-  wrapper to `~proplot.axes.indicate_error` (:pr:`166`, :commit:`d8c50a8d`).
+  wrapper to `~ultraplot.axes.indicate_error` (:pr:`166`, :commit:`d8c50a8d`).
 * Remove ``'rgbcycle'`` setting (:pr:`166`, :commit:`6653b7f0`).
   This was complicated to implement/did not add critical functionality.
 * Deprecate support for "parametric" plots inside `~matplotlib.axes.Axes.plot`,
-  instead use `~proplot.axes.Axes.parametric` (:commit:`64210bce`).
-* Change `~proplot.utils.units` ``units`` keyword argument to more natural
+  instead use `~ultraplot.axes.Axes.parametric` (:commit:`64210bce`).
+* Change `~ultraplot.utils.units` ``units`` keyword argument to more natural
   ``dest`` (:commit:`62903b48`).
 * Drop support for ``.xrgb`` and ``.xrgba`` files (:commit:`4fa72b0c`).  Not
   sure if any online sources produce these kinds of files.
@@ -1636,27 +1636,27 @@ Deprecated
   from ``.rgb`` and ``.txt`` files (:commit:`4fa72b0c`).
 * Remove ``'Blue0'`` SciVisColor colormap (:pr:`149`, :commit:`7cb4ce0f`). It was odd
   man out in the table, and not even really perceptually uniform.
-* Remove custom proplot cycles -- these should be thought out much more
+* Remove custom ultraplot cycles -- these should be thought out much more
   carefully (:commit:`43f65d17`).
-* Remove "crayola" colors and clean up the `~proplot.setup.register_colors` algorithm
+* Remove "crayola" colors and clean up the `~ultraplot.setup.register_colors` algorithm
   (:pr:`149`, :commit:`8922d6de`). Crayola color names less intuitive than XKCD.
 * Use ``'cmap_s'`` instead of ``'cmap_shifted'`` to quickly get a 180
   degree-shifted colormap, similar to ``'cmap_r'`` (:pr:`149`, :commit:`da4ccb08`).
 * Rename ``GrayCycle`` colormap to ``MonoCycle`` to more accurately reflect
   colormap design origins (:pr:`149`, :commit:`d67e45bf`).
-* Rename `~proplot.colors.MidpointNorm` to more intuitive
-  `~proplot.colors.DivergingNorm`, and make "fair" color scaling the default
+* Rename `~ultraplot.colors.MidpointNorm` to more intuitive
+  `~ultraplot.colors.DivergingNorm`, and make "fair" color scaling the default
   behavior (:commit:`2f549c9`).
-* Rename `BinNorm` to `~proplot.styletools.DiscreteNorm`
+* Rename `BinNorm` to `~ultraplot.styletools.DiscreteNorm`
   and fix issues with diverging norm color scaling (:pr:`149`, :commit:`98a976f1`).
-* Rename `~proplot.styletools.LinearSegmentedColormap.concatenate` to
-  `~proplot.styletools.LinearSegmentedColormap.append`,
-  `~proplot.styletools.LinearSegmentedColormap.updated` to
-  `~proplot.styletools.LinearSegmentedColormap.copy`,
-  `~proplot.styletools.LinearSegmentedColormap.truncated` to
-  `~proplot.styletools.LinearSegmentedColormap.truncate`, and
-  `~proplot.styletools.LinearSegmentedColormap.punched` to
-  `~proplot.styletools.LinearSegmentedColormap.cut` (:pr:`149`, :commit:`e1a08930`).
+* Rename `~ultraplot.styletools.LinearSegmentedColormap.concatenate` to
+  `~ultraplot.styletools.LinearSegmentedColormap.append`,
+  `~ultraplot.styletools.LinearSegmentedColormap.updated` to
+  `~ultraplot.styletools.LinearSegmentedColormap.copy`,
+  `~ultraplot.styletools.LinearSegmentedColormap.truncated` to
+  `~ultraplot.styletools.LinearSegmentedColormap.truncate`, and
+  `~ultraplot.styletools.LinearSegmentedColormap.punched` to
+  `~ultraplot.styletools.LinearSegmentedColormap.cut` (:pr:`149`, :commit:`e1a08930`).
   The old method names remain with a deprecation warning.
 
 Style changes
@@ -1664,7 +1664,7 @@ Style changes
 
 * Increase default :rcraw:`savefig.dpi` to 1200, matching recommendations from academic
   journals (:pr:`167`, :commit:`c00e7314`). Also add detailed discussion to user guide.
-* Stop reversing the ``'Spectral'`` colormap when proplot is imported
+* Stop reversing the ``'Spectral'`` colormap when ultraplot is imported
   (:pr:`149`, :commit:`ce4ef6a0`).
 * Change default rc settings closer to matplotlib, including margins and line
   width (:pr:`166`, :commit:`f801852b`). Many were changed for no good reason.
@@ -1674,7 +1674,7 @@ Style changes
   histograms and barplots (:pr:`166`). Also make `vlines` and `hlines`
   perpendicular bounds sticky if either the min/max coordinates are scalar.
 * *Hide* bad colormaps like ``'jet'`` from the
-  `~proplot.styletools.show_cmaps` table instead of deleting them outright,
+  `~ultraplot.styletools.show_cmaps` table instead of deleting them outright,
   just like CSS4 colors (:pr:`149`, :commit:`ce4ef6a0`).
 
 Features
@@ -1697,31 +1697,31 @@ Features
   locators, formatters, deprecations, and new labelling features (:pr:`158`).
 * Add :rcraw:`geogrid.labelpad` and :rcraw:`geogrid.rotatelabels` settings
   for cartopy gridline labels (:pr:`158`).
-* Add `~proplot.ticker.SigFigFormatter` (:pr:`149`, :commit:`da6105d2`) and
-  `~proplot.ticker.SciFormatter` (:pr:`175`, :commit:`c43f7f91`) axis formatters.
-* Support more `~proplot.ticker.AutoFormatter` features on
-  `~proplot.ticker.SimpleFormatter` (:pr:`152`, :commit:`6decf962`).
-* Enable passing callables to `~proplot.axistools.Formatter` to create a
-  `~proplot.axistools.FuncFormatter` instance.
-* Add `proplot.config.RcConfigurator.save` and
-  `proplot.config.RcConfigurator.from_file` methods (:pr:`167`, :commit:`e6dd8314`).
-* No longer distinguish between "quick" settings and proplot's "added"
+* Add `~ultraplot.ticker.SigFigFormatter` (:pr:`149`, :commit:`da6105d2`) and
+  `~ultraplot.ticker.SciFormatter` (:pr:`175`, :commit:`c43f7f91`) axis formatters.
+* Support more `~ultraplot.ticker.AutoFormatter` features on
+  `~ultraplot.ticker.SimpleFormatter` (:pr:`152`, :commit:`6decf962`).
+* Enable passing callables to `~ultraplot.axistools.Formatter` to create a
+  `~ultraplot.axistools.FuncFormatter` instance.
+* Add `ultraplot.config.RcConfigurator.save` and
+  `ultraplot.config.RcConfigurator.from_file` methods (:pr:`167`, :commit:`e6dd8314`).
+* No longer distinguish between "quick" settings and ultraplot's "added"
   settings (:pr:`167`, :commit:`e6dd8314`). Quick settings, added settings, and
   matplotlib settings can all have "children" so the distinction no longer makes sense.
-* Add opacity-preserving functions `~proplot.utils.to_rgba`
-  and `~proplot.utils.to_xyza`, plus `~proplot.utils.set_alpha` for
+* Add opacity-preserving functions `~ultraplot.utils.to_rgba`
+  and `~ultraplot.utils.to_xyza`, plus `~ultraplot.utils.set_alpha` for
   changing alpha channel of arbitrary color (:pr:`171`, :commit:`81c647da`).
-* Add to `~proplot.colors.LinearSegmentedColormap.set_alpha` the ability to
+* Add to `~ultraplot.colors.LinearSegmentedColormap.set_alpha` the ability to
   create an *opacity gradation*, rather than just an opacity for the entire
   colormap (:pr:`171`, :commit:`4583736`).
-* Support passing colormap objects, not just names, to `~proplot.demos.show_cmaps`
-  and `~proplot.demos.show_cycles` (:pr:`171`, :commit:`7f8ca59f`).
-* Add options to `~proplot.axes.indicate_error` for adding *shading*
+* Support passing colormap objects, not just names, to `~ultraplot.demos.show_cmaps`
+  and `~ultraplot.demos.show_cycles` (:pr:`171`, :commit:`7f8ca59f`).
+* Add options to `~ultraplot.axes.indicate_error` for adding *shading*
   to arbitrary plots (:pr:`166`, :commit:`d8c50a8d`). Also support automatic legend
   entries for shading and ensure `indicate_error` preserves metadata.
 * Wrap ``pcolorfast`` just like ``pcolor`` and ``pcolormesh`` are
   wrapped (:pr:`166`, :commit:`50a262dd`).
-* Add ``negpos`` feature to `~proplot.axes.bar_wrapper` and new :rcraw:`negcolor`
+* Add ``negpos`` feature to `~ultraplot.axes.bar_wrapper` and new :rcraw:`negcolor`
   and :rcraw:`poscolor` rc keyword arguments (:pr:`166`, :commit:`ab4d6746`).
 * Support `~matplotlib.axes.Axes.vlines` and `~matplotlib.axes.Axes.hlines`
   flexible arguments and add ``negpos`` feature
@@ -1732,27 +1732,27 @@ Features
   colormap-colored contour plots, just like contourf (:pr:`149`, :commit:`054cceb5`).
 * Support drawing colorbars with descending levels when input `levels`/`values`
   are monotonically descending lists (:pr:`149`, :commit:`10763146`)
-* Add support for matplotlib stylesheets with `~proplot.config.use_style`
+* Add support for matplotlib stylesheets with `~ultraplot.config.use_style`
   function and ``style`` rc param (:pr:`149`, :commit:`edc6f3c9`).
 * Make ``'Grays'`` and ``'Greys'`` synonyms for the same ColorBrewer colormap
   (:pr:`149`, :commit:`da4ccb08`).
-* Add `~proplot.styletools.LinearSegmentedColormap.to_listed` and
-  `~proplot.styletools.PerceptuallyUniformColormap.to_linear_segmented`
+* Add `~ultraplot.styletools.LinearSegmentedColormap.to_listed` and
+  `~ultraplot.styletools.PerceptuallyUniformColormap.to_linear_segmented`
   methods for handling conversions (:pr:`149`, :commit:`e1a08930`).
-* Permit merging mixed colormap types `~proplot.styletools.LinearSegmentedColormap`
-  with `~proplot.styletools.PerceptuallyUniformColormap` (:commit:`972956b1`).
+* Permit merging mixed colormap types `~ultraplot.styletools.LinearSegmentedColormap`
+  with `~ultraplot.styletools.PerceptuallyUniformColormap` (:commit:`972956b1`).
 * Include the `alpha` channel when saving colormaps and cycles by default
   (:pr:`149`, :commit:`117e05f2`).
 * Permit 8-character hex strings with alpha channels when loading colormaps
   and color cycles from hex files (:pr:`149`, :commit:`381a84d4`).
 * Support sampling `~prolot.styletools.LinearSegmentedColormap` into
-  `~proplot.styletools.ListedColormap` inside of
-  `~proplot.styletools.Colormap` rather than `~proplot.styletools.Cycle`
+  `~ultraplot.styletools.ListedColormap` inside of
+  `~ultraplot.styletools.Colormap` rather than `~ultraplot.styletools.Cycle`
   (:issue:`84`, :commit:`972956b1`).
-* Add `categories` keyword arg to `~proplot.styletools.show_cmaps` and
-  `~proplot.styletools.show_cycles` (:pr:`149`, :commit:`79be642d`).
-* Draw `~proplot.styletools.show_colors` table as single figure with category
-  labels, similar to `~proplot.styletools.show_cmaps` (:pr:`149`, :commit:`c8ca2909`).
+* Add `categories` keyword arg to `~ultraplot.styletools.show_cmaps` and
+  `~ultraplot.styletools.show_cycles` (:pr:`149`, :commit:`79be642d`).
+* Draw `~ultraplot.styletools.show_colors` table as single figure with category
+  labels, similar to `~ultraplot.styletools.show_cmaps` (:pr:`149`, :commit:`c8ca2909`).
 * Return both figure and axes in ``show_`` functions; this gives users access
   to the axes and prevents drawing them twice in notebooks
   (:pr:`149`, :commit:`2f600bc9`).
@@ -1765,11 +1765,11 @@ Bug fixes
 * Fix various issues with axis label sharing and axis sharing for
   twinned axes and panel axes (:pr:`164`).
 * Permit modifying existing cartopy geographic features with successive
-  calls to `~proplot.axes.GeoAxes.format` (:pr:`168`).
+  calls to `~ultraplot.axes.GeoAxes.format` (:pr:`168`).
 * Fix issue drawing bar plots with datetime *x* axes (:pr:`156`).
-* Fix issue where `~proplot.ticker.AutoFormatter` tools were not locale-aware, i.e. use
+* Fix issue where `~ultraplot.ticker.AutoFormatter` tools were not locale-aware, i.e. use
   comma as decimal point sometimes (:pr:`152`, :commit:`c7636296`).
-* Fix issue where `~proplot.ticker.AutoFormatter` nonzero-value correction algorithm was
+* Fix issue where `~ultraplot.ticker.AutoFormatter` nonzero-value correction algorithm was
   right for wrong reasons and could be wrong in rare circumstances
   (:pr:`152`, :commit:`c7636296`).
 * Fix issue where ``matplotlib.style.use`` resets backend
@@ -1779,24 +1779,24 @@ Bug fixes
 * Fix deprecation of direct access to ``matplotlib.cm.cmap_d``
   in matplotlib >=3.2.0 (:pr:`149`, :commit:`a69c16da`).
 * Fix issues with string font sizes (:pr:`149`, :commit:`6121de03`). Add hidden
-  `~proplot.config.RcConfigurator._get_font_size` method to
+  `~ultraplot.config.RcConfigurator._get_font_size` method to
   translate font size to numeric.
 * Fix issue where passing actual projection instances generated with
-  `~proplot.constructor.Proj` to `~proplot.ui.subplots` could incorrectly
+  `~ultraplot.constructor.Proj` to `~ultraplot.ui.subplots` could incorrectly
   pair cartopy projections with basemap axes and vice versa (:pr:`149`).
 * Fix issue where could not draw colorbar from list of single-color
   `~matplotlib.collections.PathCollection`\ s, i.e.
   scatter plots (:pr:`149`, :commit:`e893900b`).
-* Fix issue where importing proplot in jupyter notebooks resets the default
+* Fix issue where importing ultraplot in jupyter notebooks resets the default
   inline backend (:pr:`149`, :commit:`6121de03`).
 * Improve axis label sharing algorithm (:commit:`6535b219`).
 * Fix main axis label sharing bugs in presence of panels
   (:commit:`7b709db9`).
 * Fix v0.4.0 regression where panel sharing no longer works
   (:commit:`289e5538`).
-* Fix `~proplot.axistools.AutoFormatter` bug with values close
+* Fix `~ultraplot.axistools.AutoFormatter` bug with values close
   to zero (:issue:`124`, :commit:`9b7f89fd`)
-* Fix `~proplot.axistools.AutoFormatter` bug with small negative
+* Fix `~ultraplot.axistools.AutoFormatter` bug with small negative
   numbers (:issue:`117`).
 * Fix issue where Scientific colour maps not interpreted as cyclic, so end
   colors not standardized properly (:commit:`e10a3109`).
@@ -1806,13 +1806,13 @@ Internals
 
 * **Major** internal change: Move functions into smaller separate
   files to mimic how matplotlib library is divided up (:pr:`149`).
-* Add `internals` folder containing default proplot rc params, deprecation
+* Add `internals` folder containing default ultraplot rc params, deprecation
   helper functions, and other internal tools (:pr:`149`).
-* Make colorbar axes instances of `~proplot.axes.CartesianAxes`, just
+* Make colorbar axes instances of `~ultraplot.axes.CartesianAxes`, just
   like panel axes.
 * Rename ubiquitous `_notNone` function to `_not_none` and change to more
   sensible behavior.
-* Turn some private `~proplot.config` functions into static
+* Turn some private `~ultraplot.config` functions into static
   methods (:commit:`6121de03`).
 * Remove "smart bounds" feature from `FuncScale` (:pr:`166`, :commit:`9ac149ea`).
 * Clean up axes iterators (:pr:`149`, :commit:`c8a0768a`).
@@ -1822,22 +1822,22 @@ Documentation
 
 * Call figure objects `fig` instead of `f`.
 * Major clean up of notebook examples (:commit:`f86542b5`).
-* Major clean up `~proplot.wrappers` documentation (:commit:`9648c18f`)
+* Major clean up `~ultraplot.wrappers` documentation (:commit:`9648c18f`)
 * Fix dead "See Also" links (:commit:`d32c6506`).
 * Use "Other parameters" tables more often (:commit:`d32c6506`).
 * Remove the public objects `normalizers`, `locators`, `formatters`,
   `cartopy_projs`, `basemap_kwargs`, `cmaps`, `colors`, and `fonts` (:pr:`149`).
   These objects were public just for introspection/documentation.
-* Rename `~proplot.config.rc_configurator` and `~proplot.ui.subplot_grid` to
-  `~proplot.config.RcConfigurator` and `~proplot.ui.SubplotsContainer`
+* Rename `~ultraplot.config.rc_configurator` and `~ultraplot.ui.subplot_grid` to
+  `~ultraplot.config.RcConfigurator` and `~ultraplot.ui.SubplotsContainer`
   to match capitalized class naming convention (:pr:`149`). These
   classes are public just for documentation.
-* Rename `XYAxes` to `~proplot.axes.CartesianAxes`, `~proplot.axes.GeoAxes`
-  to `~proplot.axes.CartopyAxes`, and `~proplot.axes.ProjAxes` to
-  `~proplot.axes.GeoAxes` (:pr:`149`, :commit:`4a6a0e34`). These classes
+* Rename `XYAxes` to `~ultraplot.axes.CartesianAxes`, `~ultraplot.axes.GeoAxes`
+  to `~ultraplot.axes.CartopyAxes`, and `~ultraplot.axes.ProjAxes` to
+  `~ultraplot.axes.GeoAxes` (:pr:`149`, :commit:`4a6a0e34`). These classes
   are public just for documentation.
-* Rename `ColorDict` to `~proplot.colors.ColorDatabase`, `CmapDict` to
-  `~proplot.colors.ColormapDatabase` (:pr:`149`, :commit:`9d7fd3e0`).
+* Rename `ColorDict` to `~ultraplot.colors.ColorDatabase`, `CmapDict` to
+  `~ultraplot.colors.ColormapDatabase` (:pr:`149`, :commit:`9d7fd3e0`).
   These classes are public just for documentation.
 
 Version 0.5.0 (2020-02-10)
@@ -1846,10 +1846,10 @@ Version 0.5.0 (2020-02-10)
 Deprecated
 ----------
 
-* Remove `abcformat` from `~proplot.axes.Axes.format` (:commit:`2f295e18`).
-* Rename `top` to `abovetop` in `~proplot.axes.Axes.format` (:commit:`500dd381`).
+* Remove `abcformat` from `~ultraplot.axes.Axes.format` (:commit:`2f295e18`).
+* Rename `top` to `abovetop` in `~ultraplot.axes.Axes.format` (:commit:`500dd381`).
 * Rename `abc.linewidth` and `title.linewidth` to ``borderwidth`` (:commit:`54eb4bee`).
-* Rename `~proplot.wrappers.text_wrapper` `linewidth` and `invert` to
+* Rename `~ultraplot.wrappers.text_wrapper` `linewidth` and `invert` to
   `borderwidth` and `borderinvert` (:commit:`54eb4bee`).
 
 Features
@@ -1858,37 +1858,37 @@ Features
 * Add back `Fabio Crameri's scientific colour maps
   <http://www.fabiocrameri.ch/colourmaps.php>`__ (:pr:`116`).
 * Permit both e.g. `locator` and `xlocator` as keyword arguments to
-  `~proplot.axes.Axes.altx`, etc. (:commit:`57fab860`).
-* Permit *descending* `~proplot.styletools.BinNorm` and
-  `~proplot.styletools.LinearSegmentedNorm` levels (:pr:`119`).
+  `~ultraplot.axes.Axes.altx`, etc. (:commit:`57fab860`).
+* Permit *descending* `~ultraplot.styletools.BinNorm` and
+  `~ultraplot.styletools.LinearSegmentedNorm` levels (:pr:`119`).
 * Permit overriding the font weight, style, and stretch in the
-  `~proplot.styletools.show_fonts` table (:commit:`e8b9ee38`).
+  `~ultraplot.styletools.show_fonts` table (:commit:`e8b9ee38`).
 * Permit hiding "unknown" colormaps and color cycles in the
-  `~proplot.styletools.show_cmaps` and `~proplot.styletools.show_cycles`
+  `~ultraplot.styletools.show_cmaps` and `~ultraplot.styletools.show_cycles`
   tables (:commit:`cb206f19`).
 
 Bug fixes
 ---------
 
-* Fix issue where `~proplot.styletools.show_cmaps` and
-  `~proplot.styletools.show_cycles` colormap names were messed up
+* Fix issue where `~ultraplot.styletools.show_cmaps` and
+  `~ultraplot.styletools.show_cycles` colormap names were messed up
   (:commit:`13045599`)
-* Fix issue where `~proplot.styletools.show_cmaps` and
-  `~proplot.styletools.show_cycles` did not return figure instance
+* Fix issue where `~ultraplot.styletools.show_cmaps` and
+  `~ultraplot.styletools.show_cycles` did not return figure instance
   (:commit:`98209e87`).
 * Fix issue where user `values` passed to
-  `~proplot.wrappers.colorbar_wrapper` were sometimes ignored
+  `~ultraplot.wrappers.colorbar_wrapper` were sometimes ignored
   (:commit:`fd4f8d5f`).
 * Permit passing *lists of colors* to manually shade line contours and filled
-  contours in `~proplot.wrappers.cmap_changer`.
+  contours in `~ultraplot.wrappers.cmap_changer`.
 * Prevent formatting rightmost meridian label as ``1e-10`` on cartopy map
   projections (:commit:`37fdd1eb`).
-* Support CF-time axes by fixing bug in `~proplot.wrappers.standardize_1d`
-  and `~proplot.wrappers.standardize_2d` (:issue:`103`, :pr:`121`).
+* Support CF-time axes by fixing bug in `~ultraplot.wrappers.standardize_1d`
+  and `~ultraplot.wrappers.standardize_2d` (:issue:`103`, :pr:`121`).
 * Redirect to the "default" location when using ``legend=True`` and
   ``colorbar=True`` to generate on-the-fly legends and colorbars
   (:commit:`c2c5c58d`). This feature was accidentally removed.
-* Let `~proplot.wrappers.colorbar_wrapper` accept lists of colors
+* Let `~ultraplot.wrappers.colorbar_wrapper` accept lists of colors
   (:commit:`e5f11591`). This feature was accidentally removed.
 
 Internals
@@ -1910,17 +1910,17 @@ Features
 
 * Permit comments at the head of colormap and color files
   (:commit:`0ffc1d15`).
-* Make `~proplot.axes.Axes.parametric` match ``plot`` autoscaling behavior
+* Make `~ultraplot.axes.Axes.parametric` match ``plot`` autoscaling behavior
   (:commit:`ecdcba82`).
 
 Internals
 ---------
 
-* Use `~proplot.axes.Axes.colorbar` instead of `~matplotlib.axes.Axes.imshow`
-  for `~proplot.styletools.show_cmaps` and `~proplot.styletools.show_cycles`
+* Use `~ultraplot.axes.Axes.colorbar` instead of `~matplotlib.axes.Axes.imshow`
+  for `~ultraplot.styletools.show_cmaps` and `~ultraplot.styletools.show_cycles`
   displays (:pr:`107`).
-* Remove `~proplot.rctools.ipython_autoreload`,
-  `~proplot.rctools.ipython_autosave`, and `~proplot.rctools.ipython_matplotlib`
+* Remove `~ultraplot.rctools.ipython_autoreload`,
+  `~ultraplot.rctools.ipython_autosave`, and `~ultraplot.rctools.ipython_matplotlib`
   (:issue:`112`, :pr:`113`). Move inline backend configuration to a hidden
   method that gets called whenever the ``rc_configurator`` is initalized.
 
@@ -1930,9 +1930,9 @@ Version 0.4.2 (2020-01-09)
 Features
 --------
 
-* Add ``family`` keyword arg to `~proplot.styletools.show_fonts` (:pr:`106`).
+* Add ``family`` keyword arg to `~ultraplot.styletools.show_fonts` (:pr:`106`).
 * Package the `TeX Gyre <http://www.gust.org.pl/projects/e-foundry/tex-gyre>`__
-  font series with proplot (:pr:`106`). Remove a couple other fonts.
+  font series with ultraplot (:pr:`106`). Remove a couple other fonts.
 * Put the TeX Gyre fonts at the head of the serif, sans-serif, monospace,
   cursive, and fantasy ``rcParams`` font family lists (:issue:`104`, :pr:`106`).
 
@@ -1949,13 +1949,13 @@ Features
 
 * Comments (lines starting with ``#``) are now permitted in all RGB and HEX style
   colormap and cycle files (:pr:`100`).
-* Break down `~proplot.styletools.show_cycles` bars into categories, just
-  like `~proplot.styletools.show_cmaps` (:pr:`100`).
+* Break down `~ultraplot.styletools.show_cycles` bars into categories, just
+  like `~ultraplot.styletools.show_cmaps` (:pr:`100`).
 
 Bug fixes
 ---------
 
-* Fix issue where `~proplot.styletools.show_cmaps` and `~proplot.styletools.show_cycles`
+* Fix issue where `~ultraplot.styletools.show_cmaps` and `~ultraplot.styletools.show_cycles`
   draw empty axes (:pr:`100`).
 * Add back the default .proplorc file section to docs (:pr:`101`).
   To do this, ``conf.py`` auto-generates a file in ``_static``.
@@ -1965,14 +1965,14 @@ Internals
 
 * Add ``geogrid.color/linewidth/etc`` and ``gridminor.color/linewidth/etc``
   props as *children* of ``grid.color/linewidth/etc`` (:pr:`101`).
-* Change the default ``.proplotrc`` format from YAML to the ``.matplotlibrc``
+* Change the default ``.ultraplotrc`` format from YAML to the ``.matplotlibrc``
   syntax (:pr:`101`).
-* Various `~proplot.rctools.rc_configurator` improvements, remove outdated
+* Various `~ultraplot.rctools.rc_configurator` improvements, remove outdated
   global variables (:pr:`101`).
 * Better error handling when loading colormap/cycle files, and calls to
-  `~proplot.styletools.Colormap` and `~proplot.styletools.Cycle` now raise
-  errors while calls to `~proplot.styletools.register_cmaps` and
-  `~proplot.styletools.register_cycles` still issue warnings (:pr:`100`).
+  `~ultraplot.styletools.Colormap` and `~ultraplot.styletools.Cycle` now raise
+  errors while calls to `~ultraplot.styletools.register_cmaps` and
+  `~ultraplot.styletools.register_cycles` still issue warnings (:pr:`100`).
 
 Version 0.4.0 (2020-01-07)
 ==========================
@@ -1980,58 +1980,58 @@ Version 0.4.0 (2020-01-07)
 Deprecated
 ----------
 
-* Rename `basemap_defaults` to `~proplot.projs.basemap_kwargs` and
-  `cartopy_projs` to `~proplot.projs.cartopy_names` (:commit:`431a06ce`).
+* Rename `basemap_defaults` to `~ultraplot.projs.basemap_kwargs` and
+  `cartopy_projs` to `~ultraplot.projs.cartopy_names` (:commit:`431a06ce`).
 * Remove ``subplots.innerspace``, ``subplots.titlespace``,
   ``subplots.xlabspace``, and ``subplots.ylabspace`` spacing arguments,
-  automatically calculate default non-tight spacing using `~proplot.subplots._get_space`
+  automatically calculate default non-tight spacing using `~ultraplot.subplots._get_space`
   based on current tick lengths, label sizes, etc.
-* Remove redundant `~proplot.rctools.use_fonts`, use
+* Remove redundant `~ultraplot.rctools.use_fonts`, use
   ``rcParams['sans-serif']`` precedence instead (:pr:`95`).
-* `~proplot.axes.Axes.dualx` and `~proplot.axes.Axes.dualy` no longer accept
+* `~ultraplot.axes.Axes.dualx` and `~ultraplot.axes.Axes.dualy` no longer accept
   "scale-spec" arguments.  Must be a function, two functions, or an axis
   scale instance (:pr:`96`).
-* Remove `~proplot.axes.Axes` ``share[x|y]``, ``span[x|y]``, and
+* Remove `~ultraplot.axes.Axes` ``share[x|y]``, ``span[x|y]``, and
   ``align[x|y]`` kwargs (:pr:`99`).  These settings are now always
   figure-wide.
-* Rename `~proplot.styletools.Cycle` ``samples`` to ``N``, rename
-  `~proplot.styletools.show_colors` ``nbreak`` to ``nhues`` (:pr:`98`).
+* Rename `~ultraplot.styletools.Cycle` ``samples`` to ``N``, rename
+  `~ultraplot.styletools.show_colors` ``nbreak`` to ``nhues`` (:pr:`98`).
 
 Features
 --------
 
-* Add `~proplot.styletools.LinearSegmentedColormap.from_file` static methods
+* Add `~ultraplot.styletools.LinearSegmentedColormap.from_file` static methods
   (:pr:`98`).  You can now load files by passing a name to
-  `~proplot.styletools.Colormap`.
+  `~ultraplot.styletools.Colormap`.
 * Add TeX Gyre Heros as open source Helvetica-alternative; this is the new
   default font.  Add Fira Math as DejaVu Sans-alternative; has complete set
   of math characters (:pr:`95`).
 * Add `xlinewidth`, `ylinewidth`, `xgridcolor`, `ygridcolor` keyword args to
-  `~proplot.axes.XYAxes.format` (:pr:`95`).
-* Add getters and setters for various `~proplot.subplots.Figure` settings
+  `~ultraplot.axes.XYAxes.format` (:pr:`95`).
+* Add getters and setters for various `~ultraplot.subplots.Figure` settings
   like ``share[x|y]``, ``span[x|y]``, and ``align[x|y]`` (:pr:`99`).
-* Let `~proplot.axes.Axes.twinx`, `~proplot.axes.Axes.twiny`,
-  `~proplot.axes.Axes.altx`, and `~proplot.axes.Axes.alty` accept
-  `~proplot.axes.XYAxes.format` keyword args just like
-  `~proplot.axes.Axes.dualx` and `~proplot.axes.Axes.dualy` (:pr:`99`).
-* Add `~proplot.subplots.Figure` ``fallback_to_cm`` kwarg. This is used by
-  `~proplot.styletools.show_fonts` to show dummy glyphs to clearly illustrate
+* Let `~ultraplot.axes.Axes.twinx`, `~ultraplot.axes.Axes.twiny`,
+  `~ultraplot.axes.Axes.altx`, and `~ultraplot.axes.Axes.alty` accept
+  `~ultraplot.axes.XYAxes.format` keyword args just like
+  `~ultraplot.axes.Axes.dualx` and `~ultraplot.axes.Axes.dualy` (:pr:`99`).
+* Add `~ultraplot.subplots.Figure` ``fallback_to_cm`` kwarg. This is used by
+  `~ultraplot.styletools.show_fonts` to show dummy glyphs to clearly illustrate
   when fonts are missing characters, but preserve graceful fallback for user.
-* Improve `~proplot.projs.Proj` constructor function. It now accepts
+* Improve `~ultraplot.projs.Proj` constructor function. It now accepts
   `~cartopy.crs.Projection` and `~mpl_toolkits.basemap.Basemap` instances,
   just like other constructor functions, and returns only the projection
   instance (:pr:`92`).
-* `~proplot.rctools.rc` `~proplot.rctools.rc_configurator.__getitem__` always
+* `~ultraplot.rctools.rc` `~ultraplot.rctools.rc_configurator.__getitem__` always
   returns the setting. To get context block-restricted settings, you must
-  explicitly pass ``context=True`` to `~proplot.rctools.rc_configurator.get`,
-  `~proplot.rctools.rc_configurator.fill`, or
-  `~proplot.rctools.rc_configurator.category` (:pr:`91`).
+  explicitly pass ``context=True`` to `~ultraplot.rctools.rc_configurator.get`,
+  `~ultraplot.rctools.rc_configurator.fill`, or
+  `~ultraplot.rctools.rc_configurator.category` (:pr:`91`).
 
 Bug fixes
 ---------
 
-* Fix `~proplot.rctools.rc_configurator.context` bug (:issue:`80` and :pr:`91`).
-* Fix issues with `~proplot.axes.Axes.dualx` and `~proplot.axes.Axes.dualy`
+* Fix `~ultraplot.rctools.rc_configurator.context` bug (:issue:`80` and :pr:`91`).
+* Fix issues with `~ultraplot.axes.Axes.dualx` and `~ultraplot.axes.Axes.dualy`
   with non-linear parent scales (:pr:`96`).
 * Ignore TTC fonts because they cannot be saved in EPS/PDF figures
   (:issue:`94` and :pr:`95`).
@@ -2042,19 +2042,19 @@ Documentation
 -------------
 
 * Use the imperative mood for docstring summaries (:pr:`92`).
-* Fix `~proplot.styletools.show_cycles` bug (:pr:`90`) and show cycles using
+* Fix `~ultraplot.styletools.show_cycles` bug (:pr:`90`) and show cycles using
   colorbars rather than lines (:pr:`98`).
 
 Internals
 ---------
 
-* Define `~proplot.rctools.rc` default values with inline dictionaries rather
-  than with a default ``.proplotrc`` file, change the auto-generated user
-  ``.proplotrc`` (:pr:`91`).
+* Define `~ultraplot.rctools.rc` default values with inline dictionaries rather
+  than with a default ``.ultraplotrc`` file, change the auto-generated user
+  ``.ultraplotrc`` (:pr:`91`).
 * Remove useless `panel_kw` keyword arg from
-  `~proplot.wrappers.legend_wrapper` and `~proplot.wrappers.colorbar_wrapper`
+  `~ultraplot.wrappers.legend_wrapper` and `~ultraplot.wrappers.colorbar_wrapper`
   (:pr:`91`). Remove `wflush`, `hflush`, and `flush` keyword args from
-  `~proplot.subplots.subplots` that should have been removed long ago.
+  `~ultraplot.subplots.subplots` that should have been removed long ago.
 
 Version 0.3.1 (2019-12-16)
 ==========================
@@ -2077,7 +2077,7 @@ Deprecated
 Features
 --------
 
-* Add `~proplot.styletools.use_font`, only sync Google Fonts fonts
+* Add `~ultraplot.styletools.use_font`, only sync Google Fonts fonts
   (:pr:`87`).
 * New ``'DryWet'`` colormap is colorblind friendly (:commit:`0280e266`).
 * Permit shifting arbitrary colormaps by ``180`` degrees by appending the
@@ -2090,7 +2090,7 @@ Bug fixes
   (:commit:`8201a806`).
 * Fix issue with latest versions of matplotlib where ``%matplotlib inline``
   fails *silently* so the backend is not instantiated (:commit:`cc39dc56`).
-* Fix `~proplot.styletools.LinearSegmentedColormap.shifted` when `shift` is
+* Fix `~ultraplot.styletools.LinearSegmentedColormap.shifted` when `shift` is
   not ``180`` (:commit:`e2e2b2c7`).
 * Save the ``cyclic`` and ``gamma`` attributes in JSON files too
   (:commit:`8201a806`).
@@ -2111,23 +2111,23 @@ Version 0.2.7 (2019-12-09)
 Bug fixes
 ---------
 
-* Fix issue where `~proplot.styletools.AutoFormatter` logarithmic scale
+* Fix issue where `~ultraplot.styletools.AutoFormatter` logarithmic scale
   points are incorrect (:commit:`9b164733`).
 
 Documentation
 -------------
 
-* Improve :ref:`Configuring proplot` documentation (:commit:`9d50719b`).
+* Improve :ref:`Configuring ultraplot` documentation (:commit:`9d50719b`).
 
 Internals
 ---------
 
 * Remove `prefix`, `suffix`, and `negpos` keyword args from
-  `~proplot.styletools.SimpleFormatter`, remove `precision` keyword arg from
-  `~proplot.styletools.AutoFormatter` (:commit:`8520e363`).
+  `~ultraplot.styletools.SimpleFormatter`, remove `precision` keyword arg from
+  `~ultraplot.styletools.AutoFormatter` (:commit:`8520e363`).
 * Make ``'deglat'``, ``'deglon'``, ``'lat'``, ``'lon'``, and ``'deg'``
-  instances of `~proplot.styletools.AutoFormatter` instead of
-  `~proplot.styletools.SimpleFormatter` (:commit:`8520e363`). The latter
+  instances of `~ultraplot.styletools.AutoFormatter` instead of
+  `~ultraplot.styletools.SimpleFormatter` (:commit:`8520e363`). The latter
   should just be used for contours.
 
 Version 0.2.6 (2019-12-08)
@@ -2144,7 +2144,7 @@ Version 0.2.5 (2019-12-07)
 Features
 --------
 
-* Improve `~proplot.axistools.CutoffScale` algorithm,
+* Improve `~ultraplot.axistools.CutoffScale` algorithm,
   permit arbitrary cutoffs (:pr:`83`).
 
 Version 0.2.4 (2019-12-07)
@@ -2153,23 +2153,23 @@ Version 0.2.4 (2019-12-07)
 Deprecated
 ----------
 
-* Rename `ColorCacheDict` to `~proplot.styletools.ColorDict`
+* Rename `ColorCacheDict` to `~ultraplot.styletools.ColorDict`
   (:commit:`aee7d1be`).
-* Rename lower-case `colors` to `~proplot.styletools.Colors`
+* Rename lower-case `colors` to `~ultraplot.styletools.Colors`
   (:commit:`aee7d1be`)
-* Remove `fonts_system` and `fonts_proplot`, rename `colordict` to
-  `~proplot.styletools.colors`, make top-level variables more robust
+* Remove `fonts_system` and `fonts_ultraplot`, rename `colordict` to
+  `~ultraplot.styletools.colors`, make top-level variables more robust
   (:commit:`861583f8`).
 
 Documentation
 -------------
 
-* Add params table for `~proplot.styletools.show_fonts` (:commit:`861583f8`).
+* Add params table for `~ultraplot.styletools.show_fonts` (:commit:`861583f8`).
 
 Internals
 ---------
 
-* Improve `~proplot.styletools.register_colors` internals.
+* Improve `~ultraplot.styletools.register_colors` internals.
 
 Version 0.2.3 (2019-12-05)
 ==========================
@@ -2193,7 +2193,7 @@ Documentation
 Internals
 ---------
 
-* Major cleanup of the `~proplot.wrappers.colorbar_wrapper` source code,
+* Major cleanup of the `~ultraplot.wrappers.colorbar_wrapper` source code,
   handle minor ticks using the builtin matplotlib API just like major ticks
   (:commit:`b9976220`).
 
@@ -2203,7 +2203,7 @@ Version 0.2.2 (2019-12-04)
 Deprecated
 ----------
 
-* Rename `~proplot.subplots.axes_grid` to `~proplot.subplots.subplot_grid`
+* Rename `~ultraplot.subplots.axes_grid` to `~ultraplot.subplots.subplot_grid`
   (:commit:`ac14e9dd`).
 
 Bug fixes
@@ -2224,8 +2224,8 @@ Deprecated
 ----------
 
 * Rename `autoreload_setup`, `autosave_setup`, and `matplotlib_setup` to
-  `~proplot.rctools.ipython_autoreload`, `~proplot.rctools.ipython_autosave`,
-  and `~proplot.rctools.ipython_matplotlib`, respectively
+  `~ultraplot.rctools.ipython_autoreload`, `~ultraplot.rctools.ipython_autosave`,
+  and `~ultraplot.rctools.ipython_matplotlib`, respectively
   (:commit:`84e80c1e`).
 
 Version 0.2.0 (2019-12-02)
@@ -2260,7 +2260,7 @@ Bug fixes
 Internals
 ---------
 
-* Organize the ``rc`` documentation and the default ``.proplotrc`` file
+* Organize the ``rc`` documentation and the default ``.ultraplotrc`` file
   (:commit:`3a622887`).
 * Rename ``rcParamsCustom`` to ``rcParamsLong`` (:commit:`3a622887`; this is
   inaccessible to the user).
@@ -2279,7 +2279,7 @@ Internals
 * Enforce source code PEP8 compliance (:commit:`78da51a7`).
 * Use pre-commit for all future commits (:commit:`e14f6809`).
 * Implement tight layout stuff with canvas monkey patches (:commit:`67221d10`).
-  Proplot now works for arbitrary backends, not just inline and qt.
+  ultraplot now works for arbitrary backends, not just inline and qt.
 
 Documentation
 -------------
@@ -2291,7 +2291,7 @@ Documentation
 Version 0.0.0 (2019-11-27)
 ==========================
 
-The first version released on `PyPi <https://pypi.org/project/proplot/>`__.
+The first version released on `PyPi <https://pypi.org/project/ultraplot/>`__.
 
 .. _Luke Davis: https://github.com/lukelbd
 

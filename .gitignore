@@ -12,8 +12,9 @@ dist
 # Local docs builds
 docs/api
 docs/_build
-docs/_static/proplotrc
+docs/_static/ultraplotrc
 docs/_static/rctable.rst
+docs/_static/*
 
 # Development subfolders
 dev

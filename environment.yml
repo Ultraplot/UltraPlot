@@ -1,0 +1,11 @@
+name: ultraplot
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python >=3.9
+  - pytest
+  - pytest-mpl
+  - numpy
+  - matplotlib>=3.9.2
+  - pip

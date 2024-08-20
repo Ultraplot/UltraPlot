@@ -8,12 +8,14 @@ requires = ["setuptools>=64",
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "proplot"
+name = "ultraplot"
 authors = [
+    {name = "Casper van Elteren", email = "caspervanelteren@gmail.com"},
     {name = "Luke Davis", email = "lukelbd@gmail.com"},
 ]
+
 maintainers = [
-    {name = "Luke Davis", email = "lukelbd@gmail.com"},
+    {name = "Casper van Elteren", email = "caspervanelteren@gmail.com"},
 ]
 description = "A succinct matplotlib wrapper for making beautiful, publication-quality graphics."
 readme = "README.rst"
@@ -40,9 +42,9 @@ dynamic = ["version"]
 
 
 [project.urls]
-"Documentation" = "https://proplot.readthedocs.io"
-"Issue Tracker" = "https://github.com/proplot-dev/proplot/issues"
-"Source Code" = "https://github.com/proplot-dev/proplot"
+"Documentation" = "https://ultraplot.readthedocs.io"
+"Issue Tracker" = "https://github.com/ultraplot-dev/ultraplot/issues"
+"Source Code" = "https://github.com/ultraplot-dev/ultraplot"
 
 [project.entry-points."setuptools.finalize_distribution_options"]
 setuptools_scm = "setuptools_scm._integration.setuptools:infer_version"
@@ -50,10 +52,9 @@ setuptools_scm = "setuptools_scm._integration.setuptools:infer_version"
 
 
 [tool.setuptools]
-packages = ["proplot"]
+packages = ["ultraplot"]
 include-package-data = true
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
 local_scheme = "dirty-tag"
-

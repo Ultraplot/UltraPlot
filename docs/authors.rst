@@ -39,8 +39,8 @@ as an avid vim user.
 
 `Riley Brady`_ is the next-biggest contributor. He helped Luke set up automatic
 testing, deploy this project to PyPi, and improve new user experience. He is
-also proplot's earliest user and helped fix `lots of early bugs
-<https://github.com/proplot-dev/proplot/issues?q=is%3Aissue+is%3Aclosed>`__.
+also ultraplot's earliest user and helped fix `lots of early bugs
+<https://github.com/ultraplot-dev/ultraplot/issues?q=is%3Aissue+is%3Aclosed>`__.
 
 .. _Luke Davis: https://github.com/lukelbd
 

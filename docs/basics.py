@@ -24,40 +24,40 @@
 # Creating figures
 # ----------------
 #
-# Proplot works by `subclassing
+# ultraplot works by `subclassing
 # <https://docs.python.org/3/tutorial/classes.html#inheritance>`__
-# three fundamental matplotlib classes: `proplot.figure.Figure` replaces
-# `matplotlib.figure.Figure`, `proplot.axes.Axes` replaces `matplotlib.axes.Axes`,
-# and `proplot.gridspec.GridSpec` replaces `matplotlib.gridspec.GridSpec`
+# three fundamental matplotlib classes: `ultraplot.figure.Figure` replaces
+# `matplotlib.figure.Figure`, `ultraplot.axes.Axes` replaces `matplotlib.axes.Axes`,
+# and `ultraplot.gridspec.GridSpec` replaces `matplotlib.gridspec.GridSpec`
 # (see this `tutorial
 # <https://matplotlib.org/stable/tutorials/intermediate/gridspec.html>`__
 # for more on gridspecs).
 #
 # To make plots with these classes, you must start with the top-level commands
-# `~proplot.ui.figure`, `~proplot.ui.subplot`, or `~proplot.ui.subplots`. These are
+# `~ultraplot.ui.figure`, `~ultraplot.ui.subplot`, or `~ultraplot.ui.subplots`. These are
 # modeled after the `~matplotlib.pyplot` commands of the same name. As in
-# `~matplotlib.pyplot`, `~proplot.ui.subplot` creates a figure and a single
-# subplot, `~proplot.ui.subplots` creates a figure and a grid of subplots, and
-# `~proplot.ui.figure` creates an empty figure that can be subsequently filled
+# `~matplotlib.pyplot`, `~ultraplot.ui.subplot` creates a figure and a single
+# subplot, `~ultraplot.ui.subplots` creates a figure and a grid of subplots, and
+# `~ultraplot.ui.figure` creates an empty figure that can be subsequently filled
 # with subplots. A minimal example with just one subplot is shown below.
 #
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. note::
 #
-#    Proplot changes the default :rcraw:`figure.facecolor`
+#    ultraplot changes the default :rcraw:`figure.facecolor`
 #    so that the figure backgrounds shown by the `matplotlib backend
 #    <https://matplotlib.org/faq/usage_faq#what-is-a-backend>`__ are light gray
 #    (the :rcraw:`savefig.facecolor` applied to saved figures is still white).
-#    Proplot also controls the appearance of figures in Jupyter notebooks
+#    ultraplot also controls the appearance of figures in Jupyter notebooks
 #    using the new :rcraw:`inlineformat` setting, which is passed to
-#    `~proplot.config.config_inline_backend` on import. This
+#    `~ultraplot.config.config_inline_backend` on import. This
 #    imposes a higher-quality default `"inline" format
 #    <https://ipython.readthedocs.io/en/stable/interactive/plotting.html>`__
 #    and disables the backend-specific settings ``InlineBackend.rc`` and
 #    ``InlineBackend.print_figure_kwargs``, ensuring that the figures you save
 #    look like the figures displayed by the backend.
 #
-#    Proplot also changes the default :rcraw:`savefig.format`
+#    ultraplot also changes the default :rcraw:`savefig.format`
 #    from PNG to PDF for the following reasons:
 #
 #        #. Vector graphic formats are infinitely scalable.
@@ -67,17 +67,17 @@
 #        #. The EPS format is outdated and does not support transparent graphic
 #           elements.
 #
-#    In case you *do* need a raster format like PNG, proplot increases the
+#    In case you *do* need a raster format like PNG, ultraplot increases the
 #    default :rcraw:`savefig.dpi` to 1000 dots per inch, which is
 #    `recommended <https://www.pnas.org/page/authors/format>`__ by most journals
 #    as the minimum resolution for figures containing lines and text. See the
-#    :ref:`configuration section <ug_proplotrc>` for how to change these settings.
+#    :ref:`configuration section <ug_ultraplotrc>` for how to change these settings.
 #
 
 # %%
 # Simple subplot
 import numpy as np
-import proplot as pplt
+import ultraplot as pplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
@@ -95,47 +95,47 @@ ax.plot(data, lw=2)
 #
 # Similar to matplotlib, subplots can be added to figures one-by-one
 # or all at once. Each subplot will be an instance of
-# `proplot.axes.Axes`. To add subplots all at once, use
-# `proplot.figure.Figure.add_subplots` (or its shorthand,
-# `proplot.figure.Figure.subplots`). Note that under the hood, the top-level
-# proplot command `~proplot.ui.subplots` simply calls `~proplot.ui.figure`
-# followed by `proplot.figure.Figure.add_subplots`.
+# `ultraplot.axes.Axes`. To add subplots all at once, use
+# `ultraplot.figure.Figure.add_subplots` (or its shorthand,
+# `ultraplot.figure.Figure.subplots`). Note that under the hood, the top-level
+# ultraplot command `~ultraplot.ui.subplots` simply calls `~ultraplot.ui.figure`
+# followed by `ultraplot.figure.Figure.add_subplots`.
 #
-# * With no arguments, `~proplot.figure.Figure.add_subplots` returns a subplot
-#   generated from a 1-row, 1-column `~proplot.gridspec.GridSpec`.
-# * With `ncols` or `nrows`, `~proplot.figure.Figure.add_subplots` returns a
-#   simple grid of subplots from a `~proplot.gridspec.GridSpec` with
+# * With no arguments, `~ultraplot.figure.Figure.add_subplots` returns a subplot
+#   generated from a 1-row, 1-column `~ultraplot.gridspec.GridSpec`.
+# * With `ncols` or `nrows`, `~ultraplot.figure.Figure.add_subplots` returns a
+#   simple grid of subplots from a `~ultraplot.gridspec.GridSpec` with
 #   matching geometry in either row-major or column-major `order`.
-# * With `array`, `~proplot.figure.Figure.add_subplots` returns an arbitrarily
-#   complex grid of subplots from a `~proplot.gridspec.GridSpec` with matching
+# * With `array`, `~ultraplot.figure.Figure.add_subplots` returns an arbitrarily
+#   complex grid of subplots from a `~ultraplot.gridspec.GridSpec` with matching
 #   geometry. Here `array` is a 2D array representing a "picture" of the subplot
 #   layout, where each unique integer indicates a `~matplotlib.gridspec.GridSpec`
 #   slot occupied by the corresponding subplot and ``0`` indicates an empty space.
-#   The returned subplots are contained in a `~proplot.gridspec.SubplotGrid`
+#   The returned subplots are contained in a `~ultraplot.gridspec.SubplotGrid`
 #   (:ref:`see below <ug_subplotgrid>` for details).
 #
-# To add subplots one-by-one, use the `proplot.figure.Figure.add_subplot`
-# command (or its shorthand `proplot.figure.Figure.subplot`).
+# To add subplots one-by-one, use the `ultraplot.figure.Figure.add_subplot`
+# command (or its shorthand `ultraplot.figure.Figure.subplot`).
 #
-# * With no arguments, `~proplot.figure.Figure.add_subplot` returns a subplot
-#   generated from a 1-row, 1-column `~proplot.gridspec.GridSpec`.
-# * With integer arguments, `~proplot.figure.Figure.add_subplot` returns
-#   a subplot matching the corresponding `~proplot.gridspec.GridSpec` geometry,
+# * With no arguments, `~ultraplot.figure.Figure.add_subplot` returns a subplot
+#   generated from a 1-row, 1-column `~ultraplot.gridspec.GridSpec`.
+# * With integer arguments, `~ultraplot.figure.Figure.add_subplot` returns
+#   a subplot matching the corresponding `~ultraplot.gridspec.GridSpec` geometry,
 #   as in matplotlib. Note that unlike matplotlib, the geometry must be compatible
-#   with the geometry implied by previous `~proplot.figure.Figure.add_subplot` calls.
+#   with the geometry implied by previous `~ultraplot.figure.Figure.add_subplot` calls.
 # * With a `~matplotlib.gridspec.SubplotSpec` generated by indexing a
-#   `proplot.gridspec.GridSpec`, `~proplot.figure.Figure.add_subplot` returns a
+#   `ultraplot.gridspec.GridSpec`, `~ultraplot.figure.Figure.add_subplot` returns a
 #   subplot at the corresponding location. Note that unlike matplotlib, only
-#   one `~proplot.figure.Figure.gridspec` can be used with each figure.
+#   one `~ultraplot.figure.Figure.gridspec` can be used with each figure.
 #
 # As in matplotlib, to save figures, use `~matplotlib.figure.Figure.savefig` (or its
-# shorthand `proplot.figure.Figure.save`). User paths in the filename are expanded
+# shorthand `ultraplot.figure.Figure.save`). User paths in the filename are expanded
 # with `os.path.expanduser`. In the following examples, we add subplots to figures
 # with a variety of methods and then save the results to the home directory.
 #
 # .. warning::
 #
-#    Proplot employs :ref:`automatic axis sharing <ug_share>` by default. This lets
+#    ultraplot employs :ref:`automatic axis sharing <ug_share>` by default. This lets
 #    subplots in the same row or column share the same axis limits, scales, ticks,
 #    and labels. This is often convenient, but may be annoying for some users. To
 #    keep this feature turned off, simply :ref:`change the default settings <ug_rc>`
@@ -145,7 +145,7 @@ ax.plot(data, lw=2)
 # %%
 # Simple subplot grid
 import numpy as np
-import proplot as pplt
+import ultraplot as pplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
@@ -163,7 +163,7 @@ fig.format(
 # %%
 # Complex grid
 import numpy as np
-import proplot as pplt
+import ultraplot as pplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
@@ -188,7 +188,7 @@ axs[2].plot(data, lw=2)
 # %%
 # Really complex grid
 import numpy as np
-import proplot as pplt
+import ultraplot as pplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
@@ -209,7 +209,7 @@ axs[0].plot(data, lw=2)
 # %%
 # Using a GridSpec
 import numpy as np
-import proplot as pplt
+import ultraplot as pplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
@@ -231,44 +231,44 @@ fig.format(
 # Multiple subplots
 # -----------------
 #
-# If you create subplots all-at-once with e.g. `~proplot.ui.subplots`,
-# proplot returns a `~proplot.gridspec.SubplotGrid` of subplots. This list-like,
+# If you create subplots all-at-once with e.g. `~ultraplot.ui.subplots`,
+# ultraplot returns a `~ultraplot.gridspec.SubplotGrid` of subplots. This list-like,
 # array-like object provides some useful features and unifies the behavior of the
 # three possible return types used by `matplotlib.pyplot.subplots`:
 #
-# * `~proplot.gridspec.SubplotGrid` behaves like a scalar when it is singleton.
+# * `~ultraplot.gridspec.SubplotGrid` behaves like a scalar when it is singleton.
 #   In other words, if you make a single subplot with ``fig, axs = pplt.subplots()``,
 #   then ``axs[0].method(...)`` is equivalent to ``axs.method(...)``.
-# * `~proplot.gridspec.SubplotGrid` permits list-like 1D indexing, e.g. ``axs[1]``
+# * `~ultraplot.gridspec.SubplotGrid` permits list-like 1D indexing, e.g. ``axs[1]``
 #   to return the second subplot. The subplots in the grid are sorted by
-#   `~proplot.axes.Axes.number` (see :ref:`this page <ug_abc>` for details
-#   on changing the `~proplot.axes.Axes.number` order).
-# * `~proplot.gridspec.SubplotGrid` permits array-like 2D indexing, e.g.
+#   `~ultraplot.axes.Axes.number` (see :ref:`this page <ug_abc>` for details
+#   on changing the `~ultraplot.axes.Axes.number` order).
+# * `~ultraplot.gridspec.SubplotGrid` permits array-like 2D indexing, e.g.
 #   ``axs[1, 0]`` to return the subplot in the second row, first column, or
-#   ``axs[:, 0]`` to return a `~proplot.gridspec.SubplotGrid` of every subplot
+#   ``axs[:, 0]`` to return a `~ultraplot.gridspec.SubplotGrid` of every subplot
 #   in the first column. The 2D indexing is powered by the underlying
-#   `~proplot.gridspec.SubplotGrid.gridspec`.
+#   `~ultraplot.gridspec.SubplotGrid.gridspec`.
 #
-# `~proplot.gridspec.SubplotGrid` includes methods for working
+# `~ultraplot.gridspec.SubplotGrid` includes methods for working
 # simultaneously with different subplots. Currently, this includes
-# the commands `~proplot.gridspec.SubplotGrid.format`,
-# `~proplot.gridspec.SubplotGrid.panel_axes`,
-# `~proplot.gridspec.SubplotGrid.inset_axes`,
-# `~proplot.gridspec.SubplotGrid.altx`, and `~proplot.gridspec.SubplotGrid.alty`.
-# In the below example, we use `proplot.gridspec.SubplotGrid.format` on the grid
-# returned by `~proplot.ui.subplots` to format different subgroups of subplots
+# the commands `~ultraplot.gridspec.SubplotGrid.format`,
+# `~ultraplot.gridspec.SubplotGrid.panel_axes`,
+# `~ultraplot.gridspec.SubplotGrid.inset_axes`,
+# `~ultraplot.gridspec.SubplotGrid.altx`, and `~ultraplot.gridspec.SubplotGrid.alty`.
+# In the below example, we use `ultraplot.gridspec.SubplotGrid.format` on the grid
+# returned by `~ultraplot.ui.subplots` to format different subgroups of subplots
 # (:ref:`see below <ug_format>` for more on the format command).
 #
 # .. note::
 #
-#    If you create subplots one-by-one with `~proplot.figure.Figure.subplot` or
-#    `~proplot.figure.Figure.add_subplot`, a `~proplot.gridspec.SubplotGrid`
+#    If you create subplots one-by-one with `~ultraplot.figure.Figure.subplot` or
+#    `~ultraplot.figure.Figure.add_subplot`, a `~ultraplot.gridspec.SubplotGrid`
 #    containing the numbered subplots is available via the
-#    `proplot.figure.Figure.subplotgrid` property. As with subplots made
-#    all-at-once, the subplots in the grid are sorted by `~proplot.axes.Axes.number`.
+#    `ultraplot.figure.Figure.subplotgrid` property. As with subplots made
+#    all-at-once, the subplots in the grid are sorted by `~ultraplot.axes.Axes.number`.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -307,29 +307,29 @@ axs[0].plot((state.rand(50, 10) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
 # a python-style object-oriented interface with axes-level commands
 # like `matplotlib.axes.Axes.plot`, and a MATLAB-style `~matplotlib.pyplot` interface
 # with global commands like `matplotlib.pyplot.plot` that track the "current" axes.
-# Proplot builds upon the python-style interface using the `proplot.axes.PlotAxes`
-# class. Since every axes used by proplot is a child of `~proplot.axes.PlotAxes`, we
+# ultraplot builds upon the python-style interface using the `ultraplot.axes.PlotAxes`
+# class. Since every axes used by ultraplot is a child of `~ultraplot.axes.PlotAxes`, we
 # are able to add features directly to the axes-level commands rather than relying
 # on a separate library of commands  (note that while some of these features may be
 # accessible via `~matplotlib.pyplot` commands, this is not officially supported).
 #
-# For the most part, the features added by `~proplot.axes.PlotAxes` represent
+# For the most part, the features added by `~ultraplot.axes.PlotAxes` represent
 # a *superset* of matplotlib. If you are not interested, you can use the plotting
 # commands just like you would in matplotlib. Some of the core added features include
 # more flexible treatment of :ref:`data arguments <ug_1dstd>`, recognition of
 # :ref:`xarray and pandas <ug_1dintegration>` data structures, integration with
-# proplot's :ref:`colormap <ug_apply_cmap>` and :ref:`color cycle <ug_apply_cycle>`
+# ultraplot's :ref:`colormap <ug_apply_cmap>` and :ref:`color cycle <ug_apply_cycle>`
 # tools, and on-the-fly :ref:`legend and colorbar generation <ug_guides_plot>`.
 # In the below example, we create a 4-panel figure with the
-# familiar "1D" plotting commands `~proplot.axes.PlotAxes.plot` and
-# `~proplot.axes.PlotAxes.scatter`, along with the "2D" plotting commands
-# `~proplot.axes.PlotAxes.pcolormesh` and `~proplot.axes.PlotAxes.contourf`.
+# familiar "1D" plotting commands `~ultraplot.axes.PlotAxes.plot` and
+# `~ultraplot.axes.PlotAxes.scatter`, along with the "2D" plotting commands
+# `~ultraplot.axes.PlotAxes.pcolormesh` and `~ultraplot.axes.PlotAxes.contourf`.
 # See the :ref:`1D plotting <ug_1dplots>` and :ref:`2D plotting <ug_2dplots>`
-# sections for details on the features added by proplot.
+# sections for details on the features added by ultraplot.
 
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -368,43 +368,43 @@ fig.colorbar(m, loc="b", label="label")
 # that tracks current axes and provides global commands like
 # `matplotlib.pyplot.title`.
 #
-# Proplot provides the ``format`` command as an
+# ultraplot provides the ``format`` command as an
 # alternative "python-style" command for formatting a variety of plot elements.
 # While matplotlib's one-liner commands still work, ``format`` only needs to be
 # called once and tends to cut down on boilerplate code. You can call
 # ``format`` manually or pass ``format`` parameters to axes-creation commands
-# like `~proplot.figure.Figure.subplots`, `~proplot.figure.Figure.add_subplot`,
-# `~proplot.axes.Axes.inset_axes`, `~proplot.axes.Axes.panel_axes`, and
-# `~proplot.axes.CartesianAxes.altx` or `~proplot.axes.CartesianAxes.alty`. The
+# like `~ultraplot.figure.Figure.subplots`, `~ultraplot.figure.Figure.add_subplot`,
+# `~ultraplot.axes.Axes.inset_axes`, `~ultraplot.axes.Axes.panel_axes`, and
+# `~ultraplot.axes.CartesianAxes.altx` or `~ultraplot.axes.CartesianAxes.alty`. The
 # keyword arguments accepted by ``format`` can be grouped as follows:
 #
 # * Figure settings. These are related to row labels, column labels, and
 #   figure "super" titles -- for example, ``fig.format(suptitle='Super title')``.
-#   See `proplot.figure.Figure.format` for details.
+#   See `ultraplot.figure.Figure.format` for details.
 #
 # * General axes settings. These are related to background patches,
 #   a-b-c labels, and axes titles -- for example, ``ax.format(title='Title')``
-#   See `proplot.axes.Axes.format` for details.
+#   See `ultraplot.axes.Axes.format` for details.
 #
-# * Cartesian axes settings (valid only for `~proplot.axes.CartesianAxes`).
+# * Cartesian axes settings (valid only for `~ultraplot.axes.CartesianAxes`).
 #   These are related to *x* and *y* axis ticks, spines, bounds, and labels --
 #   for example, ``ax.format(xlim=(0, 5))`` changes the x axis bounds.
-#   See `proplot.axes.CartesianAxes.format` and
+#   See `ultraplot.axes.CartesianAxes.format` and
 #   :ref:`this section <ug_cartesian>` for details.
 #
-# * Polar axes settings (valid only for `~proplot.axes.PolarAxes`).
+# * Polar axes settings (valid only for `~ultraplot.axes.PolarAxes`).
 #   These are related to azimuthal and radial grid lines, bounds, and labels --
 #   for example, ``ax.format(rlim=(0, 10))`` changes the radial bounds.
-#   See `proplot.axes.PolarAxes.format`
+#   See `ultraplot.axes.PolarAxes.format`
 #   and :ref:`this section <ug_polar>` for details.
 #
-# * Geographic axes settings (valid only for `~proplot.axes.GeoAxes`).
+# * Geographic axes settings (valid only for `~ultraplot.axes.GeoAxes`).
 #   These are related to map bounds, meridian and parallel lines and labels,
 #   and geographic features -- for example, ``ax.format(latlim=(0, 90))``
-#   changes the meridional bounds. See `proplot.axes.GeoAxes.format`
+#   changes the meridional bounds. See `ultraplot.axes.GeoAxes.format`
 #   and :ref:`this section <ug_geoformat>` for details.
 #
-# * `~proplot.config.rc` settings. Any keyword matching the name
+# * `~ultraplot.config.rc` settings. Any keyword matching the name
 #   of an rc setting is locally applied to the figure and axes.
 #   If the name has "dots", you can pass it as a keyword argument with
 #   the "dots" omitted, or pass it to `rc_kw` in a dictionary. For example, the
@@ -414,10 +414,10 @@ fig.colorbar(m, loc="b", label="label")
 #   See :ref:`this section <ug_config>` for more on rc settings.
 #
 # A ``format`` command is available on every figure and axes.
-# `proplot.figure.Figure.format` accepts both figure and axes
+# `ultraplot.figure.Figure.format` accepts both figure and axes
 # settings (applying them to each numbered subplot by default).
-# Similarly, `proplot.axes.Axes.format` accepts both axes and figure
-# settings. There is also a `proplot.gridspec.SubplotGrid.format`
+# Similarly, `ultraplot.axes.Axes.format` accepts both axes and figure
+# settings. There is also a `ultraplot.gridspec.SubplotGrid.format`
 # command that can be used to change settings for a subset of
 # subplots -- for example, ``axs[:2].format(xtickminor=True)``
 # turns on minor ticks for the first two subplots (see
@@ -427,7 +427,7 @@ fig.colorbar(m, loc="b", label="label")
 # used to succinctly and efficiently customize plots.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 fig, axs = pplt.subplots(ncols=2, nrows=2, refwidth=2, share=False)
@@ -470,29 +470,29 @@ axs.format(
 # Settings and styles
 # -------------------
 #
-# A dictionary-like object named `~proplot.config.rc` is created when you import
-# proplot. `~proplot.config.rc` is similar to the matplotlib `~matplotlib.rcParams`
+# A dictionary-like object named `~ultraplot.config.rc` is created when you import
+# ultraplot. `~ultraplot.config.rc` is similar to the matplotlib `~matplotlib.rcParams`
 # dictionary, but can be used to change both `matplotlib settings
 # <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__ and
-# :ref:`proplot settings <ug_rcproplot>`. The matplotlib-specific settings are
-# stored in `~proplot.config.rc_matplotlib` (our name for `matplotlib.rcParams`) and
-# the proplot-specific settings are stored in `~proplot.config.rc_proplot`.
-# Proplot also includes a :rcraw:`style` setting that can be used to
+# :ref:`ultraplot settings <ug_rcultraplot>`. The matplotlib-specific settings are
+# stored in `~ultraplot.config.rc_matplotlib` (our name for `matplotlib.rcParams`) and
+# the ultraplot-specific settings are stored in `~ultraplot.config.rc_ultraplot`.
+# ultraplot also includes a :rcraw:`style` setting that can be used to
 # switch between `matplotlib stylesheets
 # <https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html>`__.
 # See the :ref:`configuration section <ug_config>` for details.
 #
 # To modify a setting for just one subplot or figure, you can pass it to
-# `proplot.axes.Axes.format` or `proplot.figure.Figure.format`. To temporarily
-# modify setting(s) for a block of code, use `~proplot.config.Configurator.context`.
+# `ultraplot.axes.Axes.format` or `ultraplot.figure.Figure.format`. To temporarily
+# modify setting(s) for a block of code, use `~ultraplot.config.Configurator.context`.
 # To modify setting(s) for the entire python session, just assign it to the
-# `~proplot.config.rc` dictionary or use `~proplot.config.Configurator.update`.
-# To reset everything to the default state, use `~proplot.config.Configurator.reset`.
+# `~ultraplot.config.rc` dictionary or use `~ultraplot.config.Configurator.update`.
+# To reset everything to the default state, use `~ultraplot.config.Configurator.reset`.
 # See the below example.
 
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Update global settings in several different ways
@@ -500,7 +500,7 @@ pplt.rc.metacolor = "gray6"
 pplt.rc.update({"fontname": "Source Sans Pro", "fontsize": 11})
 pplt.rc["figure.facecolor"] = "gray3"
 pplt.rc.axesfacecolor = "gray4"
-# pplt.rc.save()  # save the current settings to ~/.proplotrc
+# pplt.rc.save()  # save the current settings to ~/.ultraplotrc
 
 # Apply settings to figure with context()
 with pplt.rc.context({"suptitle.size": 13}, toplabelcolor="gray6", metawidth=1.5):
@@ -536,7 +536,7 @@ pplt.rc.reset()
 
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # pplt.rc.style = 'style'  # set the style everywhere

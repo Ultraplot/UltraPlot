@@ -1,4 +1,4 @@
-<!-- Thanks for helping us make proplot a better package! If this is a bug report, please use the template provided below. If this is a feature request, you can delete the template text (just try to be descriptive with your request). -->
+<!-- Thanks for helping us make ultraplot a better package! If this is a bug report, please use the template provided below. If this is a feature request, you can delete the template text (just try to be descriptive with your request). -->
 
 ### Description
 
@@ -19,13 +19,13 @@ A "[Minimal, Complete and Verifiable Example](http://matthewrocklin.com/blog/wor
 
 ### Equivalent steps in matplotlib
 
-Please try to make sure this bug is related to a proplot-specific feature. If you're not sure, try to replicate it with the [native matplotlib API](https://matplotlib.org/3.1.1/api/index.html). Matplotlib bugs belong on the [matplotlib github page](https://github.com/matplotlib/matplotlib).
+Please try to make sure this bug is related to a ultra-specific feature. If you're not sure, try to replicate it with the [native matplotlib API](https://matplotlib.org/3.1.1/api/index.html). Matplotlib bugs belong on the [matplotlib github page](https://github.com/matplotlib/matplotlib).
 
 ```python
 # your code here, if applicable
 import matplotlib.pyplot as plt
 ```
 
-### Proplot version
+### Ultra version
 
-Paste the results of `import matplotlib; print(matplotlib.__version__); import proplot; print(proplot.version)` here.
+Paste the results of `import matplotlib; print(matplotlib.__version__); import ultra; print(ultra.version)` here.

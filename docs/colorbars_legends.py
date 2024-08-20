@@ -18,7 +18,7 @@
 # Colorbars and legends
 # =====================
 #
-# Proplot includes some useful changes to the matplotlib API that make
+# ultraplot includes some useful changes to the matplotlib API that make
 # working with colorbars and legends :ref:`easier <why_colorbars_legends>`.
 # Notable features include "inset" colorbars, "outer" legends,
 # on-the-fly colorbars and legends, colorbars built from artists,
@@ -36,26 +36,26 @@
 # posssible using the somewhat opaque `bbox_to_anchor` keyword (see `here
 # <https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html#legend-location>`__)
 # and "inset" colorbars are not possible without manually creating and positioning
-# the associated axes. Proplot tries to improve this behavior:
+# the associated axes. ultraplot tries to improve this behavior:
 #
-# * `proplot.axes.Axes.legend` can draw both "inset" legends when you request an inset
+# * `ultraplot.axes.Axes.legend` can draw both "inset" legends when you request an inset
 #   location (e.g., ``loc='upper right'`` or the shorthand ``loc='ur'``) and "outer"
 #   legends along a subplot edge when you request a :ref:`side location <legend_table>`
 #   (e.g., ``loc='right'`` or the shorthand ``loc='r'``). If you draw multiple legends
 #   or colorbars on one side, they are "stacked" on top of each other. Unlike using
 #   `bbox_to_anchor`, the "outer" legend position is adjusted automatically when the
 #   :ref:`tight layout algorithm <ug_tight>` is active.
-# * Proplot adds the axes command `proplot.axes.Axes.colorbar`,
-#   analogous to `proplot.axes.Axes.legend` and equivalent to
-#   calling `proplot.figure.Figure.colorbar` with an `ax` keyword.
-#   `~proplot.axes.Axes.colorbar` can draw both "outer" colorbars when you request
+# * ultraplot adds the axes command `ultraplot.axes.Axes.colorbar`,
+#   analogous to `ultraplot.axes.Axes.legend` and equivalent to
+#   calling `ultraplot.figure.Figure.colorbar` with an `ax` keyword.
+#   `~ultraplot.axes.Axes.colorbar` can draw both "outer" colorbars when you request
 #   a side location (e.g., ``loc='right'`` or the shorthand ``loc='r'``) and "inset"
 #   colorbars when you request an :ref:`inset location <colorbar_table>`
 #   (e.g., ``loc='upper right'`` or the shorthand ``loc='ur'``). Inset
 #   colorbars have optional background "frames" that can be configured
-#   with various `~proplot.axes.Axes.colorbar` keywords.
+#   with various `~ultraplot.axes.Axes.colorbar` keywords.
 
-# `~proplot.axes.Axes.colorbar` and `~proplot.axes.Axes.legend` also both accept
+# `~ultraplot.axes.Axes.colorbar` and `~ultraplot.axes.Axes.legend` also both accept
 # `space` and `pad` keywords. `space` controls the absolute separation of the
 # "outer" colorbar or legend from the parent subplot edge and `pad` controls the
 # :ref:`tight layout <ug_tight>` padding relative to the subplot's tick and axis labels
@@ -65,20 +65,20 @@
 #
 # .. important::
 #
-#    Unlike matplotlib, proplot adds "outer" colorbars and legends by allocating
-#    new rows and columns in the `~proplot.gridspec.GridSpec` rather than
+#    Unlike matplotlib, ultraplot adds "outer" colorbars and legends by allocating
+#    new rows and columns in the `~ultraplot.gridspec.GridSpec` rather than
 #    "stealing" space from the parent subplot (note that subsequently indexing
-#    the `~proplot.gridspec.GridSpec` will ignore the slots allocated for
+#    the `~ultraplot.gridspec.GridSpec` will ignore the slots allocated for
 #    colorbars and legends). This approach means that "outer" colorbars and
 #    legends :ref:`do not affect subplot aspect ratios <ug_autosize>`
 #    and :ref:`do not affect subplot spacing <ug_tight>`, which lets
-#    proplot avoid relying on complicated `"constrained layout" algorithms
+#    ultraplot avoid relying on complicated `"constrained layout" algorithms
 #    <https://matplotlib.org/stable/tutorials/intermediate/constrainedlayout_guide.html>`__
 #    and tends to improve the appearance of figures with even the most
 #    complex arrangements of subplots, colorbars, and legends.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -112,15 +112,15 @@ fig.format(
 # On-the-fly colorbars and legends
 # --------------------------------
 #
-# In proplot, you can add colorbars and legends on-the-fly by supplying keyword
-# arguments to various `~proplot.axes.PlotAxes` commands. To plot data and
+# In ultraplot, you can add colorbars and legends on-the-fly by supplying keyword
+# arguments to various `~ultraplot.axes.PlotAxes` commands. To plot data and
 # draw a colorbar or legend in one go, pass a location (e.g., ``colorbar='r'``
-# or ``legend='b'``) to the plotting command (e.g., `~proplot.axes.PlotAxes.plot`
-# or `~proplot.axes.PlotAxes.contour`). To pass keyword arguments to the colorbar
+# or ``legend='b'``) to the plotting command (e.g., `~ultraplot.axes.PlotAxes.plot`
+# or `~ultraplot.axes.PlotAxes.contour`). To pass keyword arguments to the colorbar
 # and legend commands, use the `legend_kw` and `colorbar_kw` arguments (e.g.,
-# ``legend_kw={'ncol': 3}``). Note that `~proplot.axes.Axes.colorbar` can also
+# ``legend_kw={'ncol': 3}``). Note that `~ultraplot.axes.Axes.colorbar` can also
 # build colorbars from lists of arbitrary matplotlib artists, for example the
-# lines generated by `~proplot.axes.PlotAxes.plot` or `~proplot.axes.PlotAxes.line`
+# lines generated by `~ultraplot.axes.PlotAxes.plot` or `~ultraplot.axes.PlotAxes.line`
 # (see :ref:`below <ug_colorbars>`).
 #
 # .. note::
@@ -134,7 +134,7 @@ fig.format(
 #    the same legend rather than creating "stacks".
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 
 labels = list("xyzpq")
 state = np.random.RandomState(51423)
@@ -183,7 +183,7 @@ ax.contour(
 )
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 N = 10
@@ -217,10 +217,10 @@ for j, ax in enumerate(axs):
 # Figure-wide colorbars and legends
 # ---------------------------------
 #
-# In proplot, colorbars and legends can be added to the edge of figures using the
-# figure methods `proplot.figure.Figure.colorbar` and `proplot.figure.Figure.legend`.
+# In ultraplot, colorbars and legends can be added to the edge of figures using the
+# figure methods `ultraplot.figure.Figure.colorbar` and `ultraplot.figure.Figure.legend`.
 # These methods align colorbars and legends between the edges
-# of the `~proplot.figure.Figure.gridspec` rather than the figure.
+# of the `~ultraplot.figure.Figure.gridspec` rather than the figure.
 # As with :ref:`axes colorbars and legends <ug_guides_loc>`, if you
 # draw multiple colorbars or legends on the same side, they are stacked on
 # top of each other. To draw a colorbar or legend alongside particular row(s) or
@@ -233,7 +233,7 @@ for j, ax in enumerate(axs):
 # and the tight layout padding can be controlled with the `pad` keyword.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -255,7 +255,7 @@ fig.colorbar(m, label="stacked colorbar", ticks=0.1, loc="b", minorticks=0.05)
 fig.colorbar(m, label="colorbar with length <1", ticks=0.1, loc="r", length=0.7)
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -291,33 +291,33 @@ for ax, title in zip(axs, ("2D {} #1", "2D {} #2", "Line {} #1", "Line {} #2")):
 # Added colorbar features
 # -----------------------
 #
-# The `proplot.axes.Axes.colorbar` and `proplot.figure.Figure.colorbar` commands are
+# The `ultraplot.axes.Axes.colorbar` and `ultraplot.figure.Figure.colorbar` commands are
 # somehwat more flexible than their matplotlib counterparts. The following core
-# features are unique to proplot:
+# features are unique to ultraplot:
 
 # * Calling ``colorbar`` with a list of `~matplotlib.artist.Artist`\ s,
 #   a `~matplotlib.colors.Colormap` name or object, or a list of colors
 #   will build the required `~matplotlib.cm.ScalarMappable` on-the-fly. Lists
 #   of `~matplotlib.artist.Artists`\ s are used when you use the `colorbar`
-#   keyword with :ref:`1D commands <ug_1dplots>` like `~proplot.axes.PlotAxes.plot`.
+#   keyword with :ref:`1D commands <ug_1dplots>` like `~ultraplot.axes.PlotAxes.plot`.
 # * The associated :ref:`colormap normalizer <ug_norm>` can be specified with the
-#   `vmin`, `vmax`, `norm`, and `norm_kw` keywords. The `~proplot.colors.DiscreteNorm`
-#   levels can be specified with `values`, or proplot will infer them from the
+#   `vmin`, `vmax`, `norm`, and `norm_kw` keywords. The `~ultraplot.colors.DiscreteNorm`
+#   levels can be specified with `values`, or ultraplot will infer them from the
 #   `~matplotlib.artist.Artist` labels (non-numeric labels will be applied to
 #   the colorbar as tick labels). This can be useful for labeling discrete plot
 #   elements that bear some numeric relationship to each other.
 #
-# Proplot also includes improvements for adding ticks and tick labels to colorbars.
-# Similar to `proplot.axes.CartesianAxes.format`, you can flexibly specify
+# ultraplot also includes improvements for adding ticks and tick labels to colorbars.
+# Similar to `ultraplot.axes.CartesianAxes.format`, you can flexibly specify
 # major tick locations, minor tick locations, and major tick labels using the
 # `locator`, `minorlocator`, `formatter`, `ticks`, `minorticks`, and `ticklabels`
-# keywords. These arguments are passed through the `~proplot.constructor.Locator` and
-# `~proplot.constructor.Formatter` :ref:`constructor functions <why_constructor>`.
+# keywords. These arguments are passed through the `~ultraplot.constructor.Locator` and
+# `~ultraplot.constructor.Formatter` :ref:`constructor functions <why_constructor>`.
 # Unlike matplotlib, the default ticks for :ref:`discrete colormaps <ug_discrete>`
-# are restricted based on the axis length using `~proplot.ticker.DiscreteLocator`.
+# are restricted based on the axis length using `~ultraplot.ticker.DiscreteLocator`.
 # You can easily toggle minor ticks using ``tickminor=True``.
 #
-# Similar to :ref:`axes panels <ug_panels>`, the geometry of proplot colorbars is
+# Similar to :ref:`axes panels <ug_panels>`, the geometry of ultraplot colorbars is
 # specified with :ref:`physical units <ug_units>` (this helps avoid the common issue
 # where colorbars appear "too skinny" or "too fat" and preserves their appearance
 # when the figure size changes). You can specify the colorbar width locally using the
@@ -330,10 +330,10 @@ for ax, title in zip(axs, ("2D {} #1", "2D {} #2", "Line {} #1", "Line {} #2")):
 # than relative units using the `extendsize` keyword rather than matplotlib's
 # `extendfrac`. The default `extendsize` values are :rcraw:`colorbar.extend` (for
 # outer colorbars) and :rcraw:`colorbar.insetextend` (for inset colorbars).
-# See `~proplot.axes.Axes.colorbar` for details.
+# See `~ultraplot.axes.Axes.colorbar` for details.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 fig = pplt.figure(share=False, refwidth=2)
@@ -380,34 +380,34 @@ fig.format(
 # Added legend features
 # ---------------------
 #
-# The `proplot.axes.Axes.legend` and `proplot.figure.Figure.legend` commands are
+# The `ultraplot.axes.Axes.legend` and `ultraplot.figure.Figure.legend` commands are
 # somewhat more flexible than their matplotlib counterparts. The following core
 # features are the same as matplotlib:
 
 # * Calling ``legend`` without positional arguments will
 #   automatically fill the legend with the labeled artist in the
-#   the parent axes (when using `proplot.axes.Axes.legend`) or
-#   or the parent figure (when using `proplot.figure.Figure.legend`).
+#   the parent axes (when using `ultraplot.axes.Axes.legend`) or
+#   or the parent figure (when using `ultraplot.figure.Figure.legend`).
 # * Legend labels can be assigned early by calling plotting comamnds with
 #   the `label` keyword (e.g., ``ax.plot(..., label='label')``) or on-the-fly by
 #   passing two positional arguments to ``legend`` (where the first argument is the
 #   "handle" list and the second is the "label" list).
 
-# The following core features are unique to proplot:
+# The following core features are unique to ultraplot:
 
 # * Legend labels can be assigned for each column of a
 #   :ref:`2D array passed to a 1D plotting command <ug_1dstd>`
 #   using the `labels` keyword (e.g., ``labels=['label1', 'label2', ...]``).
 # * Legend labels can be assigned to `~matplotlib.contour.ContourSet`\ s by passing
-#   the `label` keyword to a contouring command (e.g., `~proplot.axes.PlotAxes.contour`
-#   or `~proplot.axes.PlotAxes.contourf`).
+#   the `label` keyword to a contouring command (e.g., `~ultraplot.axes.PlotAxes.contour`
+#   or `~ultraplot.axes.PlotAxes.contourf`).
 # * A "handle" list can be passed to ``legend`` as the sole
 #   positional argument and the labels will be automatically inferred
 #   using `~matplotlib.artist.Artist.get_label`. Valid "handles" include
-#   `~matplotlib.lines.Line2D`\ s returned by `~proplot.axes.PlotAxes.plot`,
-#   `~matplotlib.container.BarContainer`\ s returned by `~proplot.axes.PlotAxes.bar`,
+#   `~matplotlib.lines.Line2D`\ s returned by `~ultraplot.axes.PlotAxes.plot`,
+#   `~matplotlib.container.BarContainer`\ s returned by `~ultraplot.axes.PlotAxes.bar`,
 #   and `~matplotlib.collections.PolyCollection`\ s
-#   returned by `~proplot.axes.PlotAxes.fill_between`.
+#   returned by `~ultraplot.axes.PlotAxes.fill_between`.
 # * A composite handle can be created by grouping the "handle"
 #   list objects into tuples (see this `matplotlib guide
 #   <https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html#legend-handlers>`__
@@ -415,7 +415,7 @@ fig.format(
 #   inferred from the objects in the group. If multiple distinct
 #   labels are found then the group is automatically expanded.
 #
-# `proplot.axes.Axes.legend` and `proplot.figure.Figure.legend` include a few other
+# `ultraplot.axes.Axes.legend` and `ultraplot.figure.Figure.legend` include a few other
 # useful features. To draw legends with centered rows, pass ``center=True`` or
 # a list of lists of "handles" to ``legend`` (this stacks several single-row,
 # horizontally centered legends and adds an encompassing frame behind them).
@@ -423,12 +423,12 @@ fig.format(
 # use the `order` keyword (the default ``order='C'`` is row-major,
 # unlike matplotlib's column-major ``order='F'``). To alphabetize the legend
 # entries, pass ``alphabetize=True`` to ``legend``. To modify the legend handles
-# (e.g., `~proplot.axes.PlotAxes.plot` or `~proplot.axes.PlotAxes.scatter` handles)
+# (e.g., `~ultraplot.axes.PlotAxes.plot` or `~ultraplot.axes.PlotAxes.scatter` handles)
 # pass the relevant properties like `color`, `linewidth`, or `markersize` to ``legend``
-# (or use the `handle_kw` keyword). See `proplot.axes.Axes.legend` for details.
+# (or use the `handle_kw` keyword). See `ultraplot.axes.Axes.legend` for details.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 pplt.rc.cycle = "538"

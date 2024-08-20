@@ -5,11 +5,11 @@ How to contribute?
 ==================
 
 Contributions of any size are greatly appreciated! You can
-make a significant impact on proplot by just using it and
-reporting `issues <https://github.com/lukelbd/proplot/issues>`__.
+make a significant impact on ultraplot by just using it and
+reporting `issues <https://github.com/ultraplot/ultraplot/issues>`__.
 
 The following sections cover some general guidelines
-regarding proplot development for new contributors. Feel
+regarding ultraplot development for new contributors. Feel
 free to suggest improvements or changes to this workflow.
 
 .. _contrib_features:
@@ -19,7 +19,7 @@ Feature requests
 
 We are eager to hear your requests for new features and
 suggestions regarding the current API. You can submit these as
-`issues <https://github.com/lukelbd/proplot/issues/new>`__ on Github.
+`issues <https://github.com/ultraplot/ultraplot/issues/new>`__ on Github.
 Please make sure to explain in detail how the feature should work and keep the scope as
 narrow as possible. This will make it easier to implement in small pull requests.
 
@@ -32,7 +32,7 @@ Report bugs
 ===========
 
 Bugs should be reported using the Github
-`issues <https://github.com/lukelbd/proplot/issues>`__ page. When reporting a
+`issues <https://github.com/ultraplot/ultraplot/issues>`__ page. When reporting a
 bug, please follow the template message and include copy-pasteable code that
 reproduces the issue. This is critical for contributors to fix the bug quickly.
 
@@ -46,14 +46,14 @@ Write tests
 
 Most modern python packages have ``test_*.py`` scripts that are run by `pytest`
 via continuous integration services like `Travis <https://travis-ci.com>`__
-whenever commits are pushed to the repository. Currently, proplot's continuous
+whenever commits are pushed to the repository. Currently, ultraplot's continuous
 integration includes only the examples that appear on the website User Guide (see
-`.travis.yml`), and `Luke Davis <https://github.com/lukelbd>` runs additional tests
+`.travis.yml`), and `Casper van Elteren <https://github.com/cvanelteren>` runs additional tests
 manually. This approach leaves out many use cases and leaves the project more
-vulnerable to bugs. Improving proplot's continuous integration using `pytest`
+vulnerable to bugs. Improving ultraplot's continuous integration using `pytest`
 and `pytest-mpl` is a *critical* item on our to-do list.
 
-If you can think of a useful test for proplot, feel free to submit a pull request.
+If you can think of a useful test for ultraplot, feel free to submit a pull request.
 Your test will be used in the future.
 
 .. _contrib_docs:
@@ -76,8 +76,8 @@ documentation files directly in the GitHub web interface without using a local c
 * The `default ReST role <https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-default_role>`__
   is ``py:obj``. Please include ``py:obj`` links whenever discussing particular
   functions or classes -- for example, if you are discussing the
-  `~proplot.axes.Axes.format` method, please write
-  ```~proplot.axes.Axes.format``` rather than ``format``. Proplot also uses
+  `~ultraplot.axes.Axes.format` method, please write
+  ```~ultraplot.axes.Axes.format``` rather than ``format``. ultraplot also uses
   `intersphinx <http://www.sphinx-doc.org/en/stable/ext/intersphinx.html>`__
   so you can link to external packages like matplotlib and cartopy.
 
@@ -89,8 +89,8 @@ To build the documentation locally, use the following commands:
    # Install dependencies to the base conda environment..
    conda env update -f environment.yml
    # ...or create a new conda environment
-   # conda env create -n proplot-dev --file docs/environment.yml
-   # source activate proplot-dev
+   # conda env create -n ultraplot-dev --file docs/environment.yml
+   # source activate ultraplot-dev
    # Create HTML documentation
    make html
 
@@ -105,8 +105,8 @@ New features and bug fixes should be addressed using pull requests.
 Here is a quick guide for submitting pull requests:
 
 #. Fork the
-   `proplot GitHub repository <https://github.com/lukelbd/proplot>`__.  It's
-   fine to keep "proplot" as the fork repository name because it will live
+   `ultraplot GitHub repository <https://github.com/ultraplot/ultraplot>`__.  It's
+   fine to keep "ultraplot" as the fork repository name because it will live
    under your account.
 
 #. Clone your fork locally using `git <https://git-scm.com/>`__, connect your
@@ -114,27 +114,27 @@ Here is a quick guide for submitting pull requests:
 
    .. code-block:: bash
 
-      git clone git@github.com:YOUR_GITHUB_USERNAME/proplot.git
-      cd proplot
-      git remote add upstream git@github.com:lukelbd/proplot.git
+      git clone git@github.com:YOUR_GITHUB_USERNAME/ultraplot.git
+      cd ultraplot
+      git remote add upstream git@github.com:ultraplot/ultraplot.git
       git checkout -b your-branch-name master
 
    If you need some help with git, follow the
    `quick start guide <https://git.wiki.kernel.org/index.php/QuickStart>`__.
 
-#. Make an editable install of proplot by running:
+#. Make an editable install of ultraplot by running:
 
    .. code-block:: bash
 
       pip install -e .
 
-   This way ``import proplot`` imports your local copy,
+   This way ``import ultraplot`` imports your local copy,
    rather than the stable version you last downloaded from PyPi.
-   You can ``import proplot; print(proplot.__file__)`` to verify your
+   You can ``import ultraplot; print(ultraplot.__file__)`` to verify your
    local copy has been imported.
 
 #. Install `pre-commit <https://pre-commit.com>`__ and its hook on the
-   ``proplot`` repo as follows:
+   ``ultraplot`` repo as follows:
 
    .. code-block:: bash
 
@@ -168,7 +168,7 @@ Here is a quick guide for submitting pull requests:
    ..
       #. Run all the tests. Now running tests is as simple as issuing this command:
          .. code-block:: bash
-            coverage run --source proplot -m py.test
+            coverage run --source ultraplot -m py.test
          This command will run tests via the ``pytest`` tool against Python 3.7.
 
 #. If you intend to make changes or add examples to the user guide, you may want to
@@ -196,14 +196,14 @@ Here is a quick guide for submitting pull requests:
 
    .. code-block::
 
-      head-fork: YOUR_GITHUB_USERNAME/proplot
+      head-fork: YOUR_GITHUB_USERNAME/ultraplot
       compare: your-branch-name
 
-      base-fork: lukelbd/proplot
+      base-fork: ultraplot/ultraplot
       base: master
 
 Note that you can create the pull request before you're finished with your
-feature addition or bug fix. The PR will update as you add more commits. Proplot
+feature addition or bug fix. The PR will update as you add more commits. ultraplot
 developers and contributors can then review your code and offer suggestions.
 
 .. _contrib_release:
@@ -211,17 +211,17 @@ developers and contributors can then review your code and offer suggestions.
 Release procedure
 =================
 
-Once version 1.0 is released, proplot will follow semantic versioning. That is, given
+Once version 1.0 is released, ultraplot will follow semantic versioning. That is, given
 a version number ``X.Y.Z``, the major version ``X`` will be incremented when something
 is deprecated, the minor version ``Y`` will be incremented when features are added,
 and the patch number ``Z`` will be incremented when bugs are fixed.
 
-Currently, proplot's major version number is ``0``, reflecting the fact that the API
+Currently, ultraplot's major version number is ``0``, reflecting the fact that the API
 is new and subject to rapid changes. Similar to semantic versioning, the minor version
 number is incremented when something is deprecated or the style is changed, and the
 patch number is incremented only when features are added or bugs are fixed.
 
-For now, `Luke Davis <https://github.com/lukelbd>`__ is the only one who can
+For now, `Casper van Eltern <https://github.com/cvanelteren>`__ is the only one who can
 publish releases on PyPi, but this will change in the future. Releases should
 be carried out as follows:
 
@@ -264,8 +264,8 @@ be carried out as follows:
       # Check the source and upload to the test repository
       twine check dist/*
       twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-      # Go to https://test.pypi.org/project/proplot/ and make sure everything looks ok
+      # Go to https://test.pypi.org/project/ultraplot/ and make sure everything looks ok
       # Then make sure the package is installable
-      pip install --index-url https://test.pypi.org/simple/ proplot
+      pip install --index-url https://test.pypi.org/simple/ ultraplot
       # Register and push to pypi
       twine upload dist/*

@@ -1,0 +1,26 @@
+name: ultraplot-dev
+channels:
+  - conda-forge
+dependencies:
+  - python==3.12
+  - numpy>=2.2
+  - matplotlib>=3.9.3
+  - cartopy
+  - xarray
+  - seaborn
+  - pandas
+  - pytest
+  - pytest-mpl
+  - jupyter
+  - pip
+  - pip:
+      - basemap
+      - pint
+      - sphinx
+      - jupytext
+      - nbsphinx
+      - sphinx-copybutton
+      - sphinx-autoapi
+      - "sphinx-rtd-theme @ git+https://github.com/cvanelteren/sphinx-rtd-light-dark.git@mplv3.9.1"
+      - sphinx-rtd-light-dark
+      - sphinx-automodapi

@@ -1,2 +1,4 @@
-# Just matplotlib :)
-matplotlib>=3.0.0
+pytest
+pytest-mpl
+numpy
+matplotlib>=3.9.3

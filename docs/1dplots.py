@@ -24,13 +24,13 @@
 # 1D plotting commands
 # ====================
 #
-# Proplot adds :ref:`several new features <why_plotting>` to matplotlib's
-# plotting commands using the intermediate `~proplot.axes.PlotAxes` class.
+# ultraplot adds :ref:`several new features <why_plotting>` to matplotlib's
+# plotting commands using the intermediate `~ultraplot.axes.PlotAxes` class.
 # For the most part, these additions represent a *superset* of matplotlib -- if
 # you are not interested, you can use the plotting commands just like you would
 # in matplotlib. This section documents the features added for 1D plotting commands
-# like `~proplot.axes.PlotAxes.plot`, `~proplot.axes.PlotAxes.scatter`,
-# and `~proplot.axes.PlotAxes.bar`.
+# like `~ultraplot.axes.PlotAxes.plot`, `~ultraplot.axes.PlotAxes.scatter`,
+# and `~ultraplot.axes.PlotAxes.bar`.
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -39,14 +39,14 @@
 # Data arguments
 # --------------
 #
-# The treatment of data arguments passed to the 1D `~proplot.axes.PlotAxes`
+# The treatment of data arguments passed to the 1D `~ultraplot.axes.PlotAxes`
 # commands is standardized. For each command, you can optionally omit
 # the dependent variable coordinates, in which case they are inferred from the data
 # (see :ref:`xarray and pandas integration <ug_1dintegration>`), or pass
 # 2D dependent or independent variable coordinates, in which case the
 # plotting command is called for each column of the 2D array(s). If coordinates
 # are string labels, they are converted to indices and tick labels using
-# `~proplot.ticker.IndexLocator` and `~proplot.ticker.IndexFormatter`.
+# `~ultraplot.ticker.IndexLocator` and `~ultraplot.ticker.IndexFormatter`.
 # If coordinates are descending and the axis limits are unset, the axis
 # direction is automatically reversed. All positional arguments can also be
 # specified as keyword arguments (see the documentation for each plotting command).
@@ -54,16 +54,16 @@
 # .. note::
 #
 #    By default, when choosing the *x* or *y* axis limits,
-#    proplot ignores out-of-bounds data along the other axis if it was explicitly
+#    ultraplot ignores out-of-bounds data along the other axis if it was explicitly
 #    fixed by `~matplotlib.axes.Axes.set_xlim` or `~matplotlib.axes.Axes.set_ylim` (or,
-#    equivalently, by passing `xlim` or `ylim` to `proplot.axes.CartesianAxes.format`).
+#    equivalently, by passing `xlim` or `ylim` to `ultraplot.axes.CartesianAxes.format`).
 #    This can be useful if you wish to restrict the view along a "dependent" variable
 #    axis within a large dataset. To disable this feature, pass ``inbounds=False`` to
 #    the plotting command or set :rcraw:`axes.inbounds` to ``False`` (see also
 #    the :rcraw:`cmap.inbounds` setting and the :ref:`user guide <ug_2dstd>`).
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 N = 5
@@ -92,7 +92,7 @@ with pplt.rc.context({"axes.prop_cycle": pplt.Cycle("Grays", N=N, left=0.3)}):
     fig.format(xlabel="xlabel", ylabel="ylabel")
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -128,14 +128,13 @@ fig.format(
     suptitle="Default ylim restricted to in-bounds data",
 )
 
-
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_1dintegration:
 #
 # Pandas and xarray integration
 # -----------------------------
 #
-# The 1D `~proplot.axes.PlotAxes` commands recognize `pandas`_
+# The 1D `~ultraplot.axes.PlotAxes` commands recognize `pandas`_
 # and `xarray`_ data structures. If you omit dependent variable coordinates,
 # the commands try to infer them from the `pandas.Series`, `pandas.DataFrame`,
 # or `xarray.DataArray`. If you did not explicitly set the *x* or *y* axis label
@@ -146,7 +145,7 @@ fig.format(
 #
 # These features restore some of the convenience you get with the builtin
 # `pandas`_ and `xarray`_ plotting functions. They are also *optional* --
-# installation of pandas and xarray are not required to use proplot. The
+# installation of pandas and xarray are not required to use ultraplot. The
 # automatic labels can be disabled by setting :rcraw:`autoformat` to ``False``
 # or by passing ``autoformat=False`` to any plotting command.
 #
@@ -158,7 +157,7 @@ fig.format(
 #    ``ax.plot(y='y', data=dataset)`` are translated to ``ax.plot(dataset['y'])``.
 #    This is the preferred input style for most `seaborn`_ plotting commands.
 #    Also, if you pass a `pint.Quantity` or `~xarray.DataArray`
-#    containing a `pint.Quantity`, proplot will automatically call
+#    containing a `pint.Quantity`, ultraplot will automatically call
 #    `~pint.UnitRegistry.setup_matplotlib` so that the axes become unit-aware.
 
 # %%
@@ -192,7 +191,7 @@ df.index.name = "date"
 df.columns.name = "category"
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 
 fig = pplt.figure(share=False, suptitle="Automatic subplot formatting")
 
@@ -217,8 +216,8 @@ ax.plot(df, cycle=cycle, lw=3, legend="t", legend_kw={"frame": False})
 # <https://matplotlib.org/stable/tutorials/intermediate/color_cycle.html#sphx-glr-tutorials-intermediate-color-cycle-py>`__
 # on-the-fly and use different property cycles for different plot elements.
 # You can do so using the `cycle` and `cycle_kw` keywords, available
-# with most 1D `~proplot.axes.PlotAxes` commands. `cycle` and `cycle_kw` are
-# passed to the `~proplot.constructor.Cycle` :ref:`constructor function
+# with most 1D `~ultraplot.axes.PlotAxes` commands. `cycle` and `cycle_kw` are
+# passed to the `~ultraplot.constructor.Cycle` :ref:`constructor function
 # <why_constructor>`, and the resulting property cycle is used for the plot. You
 # can specify `cycle` once with 2D input data (in which case each column is
 # plotted in succession according to the property cycle) or call a plotting
@@ -231,7 +230,7 @@ ax.plot(df, cycle=cycle, lw=3, legend="t", legend_kw={"frame": False})
 # <https://matplotlib.org/stable/tutorials/intermediate/color_cycle.html#sphx-glr-tutorials-intermediate-color-cycle-py>`__.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -267,24 +266,24 @@ with pplt.rc.context({"lines.linewidth": 3}):
 # Line plots
 # ----------
 #
-# Line plots can be drawn with `~proplot.axes.PlotAxes.plot` or
-# `~proplot.axes.PlotAxes.plotx` (or their aliases, `~proplot.axes.PlotAxes.line`
-# or `~proplot.axes.PlotAxes.linex`). For the ``x`` commands, positional
+# Line plots can be drawn with `~ultraplot.axes.PlotAxes.plot` or
+# `~ultraplot.axes.PlotAxes.plotx` (or their aliases, `~ultraplot.axes.PlotAxes.line`
+# or `~ultraplot.axes.PlotAxes.linex`). For the ``x`` commands, positional
 # arguments are interpreted as *x* coordinates or (*y*, *x*) pairs. This is analogous
-# to `~proplot.axes.PlotAxes.barh` and `~proplot.axes.PlotAxes.fill_betweenx`.
-# Also, the default *x* bounds for lines drawn with `~proplot.axes.PlotAxes.plot`
-# and *y* bounds for lines drawn with `~proplot.axes.PlotAxes.plotx` are now
+# to `~ultraplot.axes.PlotAxes.barh` and `~ultraplot.axes.PlotAxes.fill_betweenx`.
+# Also, the default *x* bounds for lines drawn with `~ultraplot.axes.PlotAxes.plot`
+# and *y* bounds for lines drawn with `~ultraplot.axes.PlotAxes.plotx` are now
 # "sticky", i.e. there is no padding between the lines and axes edges by default.
 #
-# Step and stem plots can be drawn with `~proplot.axes.PlotAxes.step`,
-# `~proplot.axes.PlotAxes.stepx`, `~proplot.axes.PlotAxes.stem`, and
-# `~proplot.axes.PlotAxes.stemx`. Plots of parallel vertical and horizontal
-# lines can be drawn with `~proplot.axes.PlotAxes.vlines` and
-# `~proplot.axes.PlotAxes.hlines`. You can have different colors for "negative" and
+# Step and stem plots can be drawn with `~ultraplot.axes.PlotAxes.step`,
+# `~ultraplot.axes.PlotAxes.stepx`, `~ultraplot.axes.PlotAxes.stem`, and
+# `~ultraplot.axes.PlotAxes.stemx`. Plots of parallel vertical and horizontal
+# lines can be drawn with `~ultraplot.axes.PlotAxes.vlines` and
+# `~ultraplot.axes.PlotAxes.hlines`. You can have different colors for "negative" and
 # "positive" lines using ``negpos=True`` (see :ref:`below <ug_negpos>` for details).
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -329,38 +328,38 @@ fig.format(suptitle="Line plots demo", xlabel="xlabel", ylabel="ylabel")
 # Scatter plots
 # -------------
 #
-# The `~proplot.axes.PlotAxes.scatter` command now permits omitting *x*
-# coordinates and accepts 2D *y* coordinates, just like `~proplot.axes.PlotAxes.plot`.
-# As with `~proplot.axes.PlotAxes.plotx`, the `~proplot.axes.PlotAxes.scatterx`
-# command is just like `~proplot.axes.PlotAxes.scatter`, except positional
+# The `~ultraplot.axes.PlotAxes.scatter` command now permits omitting *x*
+# coordinates and accepts 2D *y* coordinates, just like `~ultraplot.axes.PlotAxes.plot`.
+# As with `~ultraplot.axes.PlotAxes.plotx`, the `~ultraplot.axes.PlotAxes.scatterx`
+# command is just like `~ultraplot.axes.PlotAxes.scatter`, except positional
 # arguments are interpreted as *x* coordinates and (*y*, *x*) pairs.
-# `~proplot.axes.PlotAxes.scatter` also now accepts keywords
-# that look like `~proplot.axes.PlotAxes.plot` keywords (e.g., `color` instead of
-# `c` and `markersize` instead of `s`). This way, `~proplot.axes.PlotAxes.scatter`
+# `~ultraplot.axes.PlotAxes.scatter` also now accepts keywords
+# that look like `~ultraplot.axes.PlotAxes.plot` keywords (e.g., `color` instead of
+# `c` and `markersize` instead of `s`). This way, `~ultraplot.axes.PlotAxes.scatter`
 # can be used to simply "plot markers, not lines" without changing the input
-# arguments relative to `~proplot.axes.PlotAxes.plot`.
+# arguments relative to `~ultraplot.axes.PlotAxes.plot`.
 #
-# The property cycler used by `~proplot.axes.PlotAxes.scatter` can be changed
+# The property cycler used by `~ultraplot.axes.PlotAxes.scatter` can be changed
 # using the `cycle` keyword argument, and unlike matplotlib it can include
 # properties like `marker` and `markersize`. The colormap `cmap` and normalizer
 # `norm` used with the optional `c` color array are now passed through the
-# `~proplot.constructor.Colormap` and `~proplot.constructor.Norm` constructor
+# `~ultraplot.constructor.Colormap` and `~ultraplot.constructor.Norm` constructor
 # functions.
 
 # .. important::
 #
 #    In matplotlib, arrays passed to the marker size keyword `s` always represent the
-#    area in units ``points ** 2``. In proplot, arrays passed to `s` are scaled so
+#    area in units ``points ** 2``. In ultraplot, arrays passed to `s` are scaled so
 #    that the minimum data value has the area ``1`` while the maximum data value
 #    has the area :rcraw:`lines.markersize` squared. These minimum and maximum marker
 #    sizes can also be specified manually with the `smin` and `smax` keywords,
 #    analogous to `vmin` and `vmax` used to scale the color array `c`. This feature
-#    can be disabled by passing ``absolute_size=True`` to `~proplot.axes.Axes.scatter`
-#    or `~proplot.axes.Axes.scatterx`. This is done automatically when `seaborn`_
-#    calls `~proplot.axes.Axes.scatter` internally.
+#    can be disabled by passing ``absolute_size=True`` to `~ultraplot.axes.Axes.scatter`
+#    or `~ultraplot.axes.Axes.scatterx`. This is done automatically when `seaborn`_
+#    calls `~ultraplot.axes.Axes.scatter` internally.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 import pandas as pd
 
@@ -414,17 +413,17 @@ fig.format(suptitle="Scatter plot demo", xlabel="xlabel", ylabel="ylabel")
 # Parametric plots
 # ----------------
 #
-# Parametric plots can be drawn using the new `~proplot.axes.PlotAxes.parametric`
+# Parametric plots can be drawn using the new `~ultraplot.axes.PlotAxes.parametric`
 # command. This creates `~matplotlib.collections.LineCollection`\ s that map
 # individual line segments to individual colors, where each segment represents a
 # "parametric" coordinate (e.g., time). The parametric coordinates are specified with
 # a third positional argument or with the keywords `c`, `color`, `colors` or `values`.
 # Representing parametric coordinates with colors instead of text labels can be
-# cleaner. The below example makes a simple `~proplot.axes.PlotAxes.parametric`
+# cleaner. The below example makes a simple `~ultraplot.axes.PlotAxes.parametric`
 # plot with a colorbar indicating the parametric coordinate.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 import pandas as pd
 
@@ -484,7 +483,7 @@ ax.colorbar(m, loc="b", locator=2, label="parametric coordinate")
 # Bar plots and area plots
 # ------------------------
 #
-# The `~proplot.axes.PlotAxes.bar` and `~proplot.axes.PlotAxes.barh` commands
+# The `~ultraplot.axes.PlotAxes.bar` and `~ultraplot.axes.PlotAxes.barh` commands
 # apply default *x* or *y* coordinates if you failed to provide them explicitly
 # and can *group* or *stack* successive columns of data if you pass 2D arrays instead
 # of 1D arrays -- just like `pandas`_. When bars are grouped, their widths and
@@ -492,34 +491,34 @@ ax.colorbar(m, loc="b", locator=2, label="parametric coordinate")
 # is the default behavior and stacking can be enabled with ``stack=True``
 # or ``stacked=True``.
 #
-# The `~proplot.axes.PlotAxes.fill_between` and `~proplot.axes.PlotAxes.fill_betweenx`
-# commands have the new shorthands `~proplot.axes.PlotAxes.area`
-# and `~proplot.axes.PlotAxes.areax`. Similar to `~proplot.axes.PlotAxes.bar` and
-# `~proplot.axes.PlotAxes.barh`, they apply default *x* coordinates if you failed
+# The `~ultraplot.axes.PlotAxes.fill_between` and `~ultraplot.axes.PlotAxes.fill_betweenx`
+# commands have the new shorthands `~ultraplot.axes.PlotAxes.area`
+# and `~ultraplot.axes.PlotAxes.areax`. Similar to `~ultraplot.axes.PlotAxes.bar` and
+# `~ultraplot.axes.PlotAxes.barh`, they apply default *x* coordinates if you failed
 # to provide them explicitly, and can *overlay* or *stack* successive columns of
 # data if you pass 2D arrays instead of 1D arrays -- just like `pandas`_. Overlaying
 # is the default behavior but stacking can be enabled with ``stack=True`` or
 # ``stacked=True``. Also note the default *x* bounds for shading drawn with
-# `~proplot.axes.PlotAxes.area` and *y* bounds for shading drawn with
-# `~proplot.axes.PlotAxes.areax` is now "sticky", i.e. there is no padding
+# `~ultraplot.axes.PlotAxes.area` and *y* bounds for shading drawn with
+# `~ultraplot.axes.PlotAxes.areax` is now "sticky", i.e. there is no padding
 # between the shading and axes edges by default.
 
 # .. important::
 #
 #    In matplotlib, bar widths for horizontal `~matplotlib.axes.Axes.barh` plots
-#    are expressed with the `height` keyword. In proplot, bar widths are always
+#    are expressed with the `height` keyword. In ultraplot, bar widths are always
 #    expressed with the `width` keyword. Note that bar widths can also be passed
 #    as a third positional argument.
 #    Additionally, matplotlib bar widths are always expressed in data units,
-#    while proplot bar widths are expressed in step size-relative units by
+#    while ultraplot bar widths are expressed in step size-relative units by
 #    default. For example, ``width=1`` with a dependent coordinate step
 #    size of ``2`` fills 100% of the space between each bar rather than 50%. This
-#    can be disabled by passing ``absolute_width=True`` to `~proplot.axes.Axes.bar`
-#    or `~proplot.axes.Axes.barh`. This is done automatically when `seaborn`_ calls
-#    `~proplot.axes.Axes.bar` or `~proplot.axes.Axes.barh` internally.
+#    can be disabled by passing ``absolute_width=True`` to `~ultraplot.axes.Axes.bar`
+#    or `~ultraplot.axes.Axes.barh`. This is done automatically when `seaborn`_ calls
+#    `~ultraplot.axes.Axes.bar` or `~ultraplot.axes.Axes.barh` internally.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 import pandas as pd
 
@@ -558,7 +557,7 @@ fig.format(grid=False, suptitle="Bar plot demo")
 pplt.rc.reset()
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -605,16 +604,16 @@ pplt.rc.reset()
 #
 # You can use different colors for "negative" and
 # "positive" data by passing ``negpos=True`` to any of the
-# `~proplot.axes.PlotAxes.fill_between`, `~proplot.axes.PlotAxes.fill_betweenx`
-# (shorthands `~proplot.axes.PlotAxes.area`, `~proplot.axes.PlotAxes.areax`),
-# `~proplot.axes.PlotAxes.vlines`, `~proplot.axes.PlotAxes.hlines`,
-# `~proplot.axes.PlotAxes.bar`, or `~proplot.axes.PlotAxes.barh` commands.
+# `~ultraplot.axes.PlotAxes.fill_between`, `~ultraplot.axes.PlotAxes.fill_betweenx`
+# (shorthands `~ultraplot.axes.PlotAxes.area`, `~ultraplot.axes.PlotAxes.areax`),
+# `~ultraplot.axes.PlotAxes.vlines`, `~ultraplot.axes.PlotAxes.hlines`,
+# `~ultraplot.axes.PlotAxes.bar`, or `~ultraplot.axes.PlotAxes.barh` commands.
 # The default negative and positive colors are controlled with :rcraw:`negcolor` and
 # :rcraw:`poscolor` but the colors can be modified for particular plots by passing
-# ``negcolor=color`` and ``poscolor=color`` to the `~proplot.axes.PlotAxes` commands.
+# ``negcolor=color`` and ``poscolor=color`` to the `~ultraplot.axes.PlotAxes` commands.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
