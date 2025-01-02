@@ -21,6 +21,5 @@ dependencies:
       - nbsphinx
       - sphinx-copybutton
       - sphinx-autoapi
-      - "sphinx-rtd-theme @ git+https://github.com/cvanelteren/sphinx-rtd-light-dark.git@mplv3.9.1#egg=sphinx-rtd-light-dark"
-      - sphinx-rtd-light-dark
+      - "sphinx-rtd-theme @ git+https://github.com/cvanelteren/sphinx-rtd-light-dark.git@mplv3.9.1"
       - sphinx-automodapi
