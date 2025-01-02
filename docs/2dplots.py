@@ -24,22 +24,22 @@
 # 2D plotting commands
 # ====================
 #
-# Proplot adds :ref:`several new features <why_plotting>` to matplotlib's
-# plotting commands using the intermediate `~proplot.axes.PlotAxes` class.
+# ultraplot adds :ref:`several new features <why_plotting>` to matplotlib's
+# plotting commands using the intermediate `~ultraplot.axes.PlotAxes` class.
 # For the most part, these additions represent a *superset* of matplotlib -- if
 # you are not interested, you can use the plotting commands just like you would
 # in matplotlib. This section documents the features added for 2D plotting commands
-# like `~proplot.axes.PlotAxes.contour`, `~proplot.axes.PlotAxes.pcolor`,
-# and `~proplot.axes.PlotAxes.imshow`.
+# like `~ultraplot.axes.PlotAxes.contour`, `~ultraplot.axes.PlotAxes.pcolor`,
+# and `~ultraplot.axes.PlotAxes.imshow`.
 #
 # .. important::
 #
-#    By default, proplot automatically adjusts the width of
-#    `~proplot.axes.PlotAxes.contourf` and `~proplot.axes.PlotAxes.pcolor` edges
+#    By default, ultraplot automatically adjusts the width of
+#    `~ultraplot.axes.PlotAxes.contourf` and `~ultraplot.axes.PlotAxes.pcolor` edges
 #    to eliminate the appearance of `"white lines" in saved vector graphic files
 #    <https://github.com/jklymak/contourfIssues>`__. However, this can significantly
 #    slow down the drawing time for large datasets. To disable this feature,
-#    pass ``edgefix=False`` to the relevant `~proplot.axes.PlotAxes` command,
+#    pass ``edgefix=False`` to the relevant `~ultraplot.axes.PlotAxes` command,
 #    or set :rcraw:`edgefix` to ``False`` to disable globally.
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -48,18 +48,18 @@
 # Data arguments
 # --------------
 #
-# The treatment of data arguments passed to the 2D `~proplot.axes.PlotAxes`
+# The treatment of data arguments passed to the 2D `~ultraplot.axes.PlotAxes`
 # commands is standardized. For each command, you can optionally omit the *x*
 # and *y* coordinates, in which case they are inferred from the data
 # (see :ref:`xarray and pandas integration <ug_2dintegration>`). If coordinates
 # are string labels, they are converted to indices and tick labels using
-# `~proplot.ticker.IndexLocator` and `~proplot.ticker.IndexFormatter`.
+# `~ultraplot.ticker.IndexLocator` and `~ultraplot.ticker.IndexFormatter`.
 # If coordinates are descending and the axis limits are unset, the axis
 # direction is automatically reversed. If coordinate *centers* are passed to commands
-# like `~proplot.axes.PlotAxes.pcolor` and `~proplot.axes.PlotAxes.pcolormesh`, they
-# are automatically converted to edges using `~proplot.utils.edges` or
-# `~proplot.utils.edges2d`, and if coordinate *edges* are passed to commands like
-# `~proplot.axes.PlotAxes.contour` and `~proplot.axes.PlotAxes.contourf`, they are
+# like `~ultraplot.axes.PlotAxes.pcolor` and `~ultraplot.axes.PlotAxes.pcolormesh`, they
+# are automatically converted to edges using `~ultraplot.utils.edges` or
+# `~ultraplot.utils.edges2d`, and if coordinate *edges* are passed to commands like
+# `~ultraplot.axes.PlotAxes.contour` and `~ultraplot.axes.PlotAxes.contourf`, they are
 # automatically converted to centers (notice the locations of the rectangle edges
 # in the ``pcolor`` plots below). All positional arguments can also be specified
 # as keyword arguments (see the documentation for each plotting command).
@@ -67,17 +67,17 @@
 # .. note::
 #
 #    By default, when choosing the colormap :ref:`normalization
-#    range <ug_apply_cmap>`, proplot ignores data outside the *x* or *y* axis
+#    range <ug_apply_cmap>`, ultraplot ignores data outside the *x* or *y* axis
 #    limits if they were previously fixed by `~matplotlib.axes.Axes.set_xlim` or
 #    `~matplotlib.axes.Axes.set_ylim` (or, equivalently, by passing `xlim` or
-#    `ylim` to `proplot.axes.CartesianAxes.format`). This can be useful if you
+#    `ylim` to `ultraplot.axes.CartesianAxes.format`). This can be useful if you
 #    wish to restrict the view along the *x* or *y* axis within a large dataset.
 #    To disable this feature, pass ``inbounds=False`` to the plotting command or
 #    set :rcraw:`cmap.inbounds` to ``False`` (see also the :rcraw:`axes.inbounds`
 #    setting and the :ref:`user guide <ug_1dstd>`).
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -110,7 +110,7 @@ with pplt.rc.context({"cmap": "Grays", "cmap.levels": 21}):
     axs[3].contourf(xedges, yedges, data)
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -157,7 +157,7 @@ fig.format(
 # Pandas and xarray integration
 # -----------------------------
 #
-# The 2D `~proplot.axes.PlotAxes` commands recognize `pandas`_
+# The 2D `~ultraplot.axes.PlotAxes` commands recognize `pandas`_
 # and `xarray`_ data structures. If you omit *x* and *y* coordinates,
 # the commands try to infer them from the `pandas.DataFrame` or
 # `xarray.DataArray`. If you did not explicitly set the *x* or *y* axis label
@@ -168,7 +168,7 @@ fig.format(
 #
 # These features restore some of the convenience you get with the builtin
 # `pandas`_ and `xarray`_ plotting functions. They are also *optional* --
-# installation of pandas and xarray are not required to use proplot. The
+# installation of pandas and xarray are not required to use ultraplot. The
 # automatic labels can be disabled by setting :rcraw:`autoformat` to ``False``
 # or by passing ``autoformat=False`` to any plotting command.
 #
@@ -180,7 +180,7 @@ fig.format(
 #    ``ax.plot(y='y', data=dataset)`` are translated to ``ax.plot(dataset['y'])``.
 #    This is the preferred input style for most `seaborn`_ plotting commands.
 #    Also, if you pass a `pint.Quantity` or `~xarray.DataArray`
-#    containing a `pint.Quantity`, proplot will automatically call
+#    containing a `pint.Quantity`, ultraplot will automatically call
 #    `~pint.UnitRegistry.setup_matplotlib` so that the axes become unit-aware.
 
 # %%
@@ -223,7 +223,7 @@ df.index.name = "date"
 df.columns.name = "variable (units)"
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 
 fig = pplt.figure(refwidth=2.5, share=False, suptitle="Automatic subplot formatting")
 
@@ -244,15 +244,15 @@ ax.format(xtickminor=False, yformatter="%b", ytickminor=False)
 # ---------------------
 #
 # It is often useful to create custom colormaps on-the-fly,
-# without explicitly calling the `~proplot.constructor.Colormap`
+# without explicitly calling the `~ultraplot.constructor.Colormap`
 # :ref:`constructor function <why_constructor>`. You can do so using the `cmap`
-# and `cmap_kw` keywords, available with most `~proplot.axes.PlotAxes` 2D plot
+# and `cmap_kw` keywords, available with most `~ultraplot.axes.PlotAxes` 2D plot
 # commands. For example, to create and apply a monochromatic colormap, you can use
 # ``cmap='color_name'`` (see the :ref:`colormaps section <ug_cmaps_new>` for more info).
-# You can also create on-the-fly "qualitative" `~proplot.colors.DiscreteColormap`\ s
+# You can also create on-the-fly "qualitative" `~ultraplot.colors.DiscreteColormap`\ s
 # by passing lists of colors to the keyword `c`, `color`, or `colors`.
 #
-# Proplot defines :ref:`global defaults <ug_rc>` for four different colormap
+# ultraplot defines :ref:`global defaults <ug_rc>` for four different colormap
 # types: :ref:`sequential <ug_cmaps_included>` (setting :rcraw:`cmap.sequential`),
 # :ref:`diverging <ug_cmaps_included>` (setting :rcraw:`cmap.diverging`),
 # :ref:`cyclic <ug_cmaps_included>` (setting :rcraw:`cmap.cyclic`),
@@ -265,7 +265,7 @@ ax.format(xtickminor=False, yformatter="%b", ytickminor=False)
 # when the data limits or colormap levels cross zero (see :ref:`below <ug_autonorm>`).
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -294,7 +294,7 @@ for ax, typ in zip(axs, types):
 pplt.rc.reset()
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -322,7 +322,7 @@ ax.contourf(
     colorbar="b",
 )
 
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -347,14 +347,14 @@ ax.pcolormesh(data, cmap="magma", norm="log", colorbar="b")
 # Special normalizers
 # -------------------
 #
-# Proplot includes two new :ref:`"continuous" normalizers <ug_norm>`. The
-# `~proplot.colors.SegmentedNorm` normalizer provides even color gradations with respect
+# ultraplot includes two new :ref:`"continuous" normalizers <ug_norm>`. The
+# `~ultraplot.colors.SegmentedNorm` normalizer provides even color gradations with respect
 # to index for an arbitrary monotonically increasing or decreasing list of levels. This
 # is automatically applied if you pass unevenly spaced `levels` to a plotting command,
 # or it can be manually applied using e.g. ``norm='segmented'``. This can be useful for
 # datasets with unusual statistical distributions or spanning many orders of magnitudes.
 #
-# The `~proplot.colors.DivergingNorm` normalizer ensures that colormap midpoints lie
+# The `~ultraplot.colors.DivergingNorm` normalizer ensures that colormap midpoints lie
 # on some central data value (usually ``0``), even if `vmin`, `vmax`, or `levels`
 # are asymmetric with respect to the central value. This is automatically applied
 # if your data contains negative and positive values (see :ref:`below <ug_autonorm>`),
@@ -372,7 +372,7 @@ ax.pcolormesh(data, cmap="magma", norm="log", colorbar="b")
 # affect the interpretation of different datasets.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -395,7 +395,7 @@ for ax, norm in zip(axs, ("linear", "segmented")):
     )
     ax.format(title=norm.title() + " normalizer")
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -429,14 +429,14 @@ for data, mode, fair in zip(
 # Discrete levels
 # ---------------
 #
-# By default, proplot uses `~proplot.colors.DiscreteNorm` to "discretize"
-# the possible colormap colors for contour and pseudocolor `~proplot.axes.PlotAxes`
-# commands (e.g., `~proplot.axes.PlotAxes.contourf`, `~proplot.axes.PlotAxes.pcolor`).
+# By default, ultraplot uses `~ultraplot.colors.DiscreteNorm` to "discretize"
+# the possible colormap colors for contour and pseudocolor `~ultraplot.axes.PlotAxes`
+# commands (e.g., `~ultraplot.axes.PlotAxes.contourf`, `~ultraplot.axes.PlotAxes.pcolor`).
 # This is analogous to `matplotlib.colors.BoundaryNorm`, except
-# `~proplot.colors.DiscreteNorm` can be paired with arbitrary
+# `~ultraplot.colors.DiscreteNorm` can be paired with arbitrary
 # continuous normalizers specified by `norm` (see :ref:`above <ug_norm>`).
 # Discrete color levels can help readers discern exact numeric values and
-# tend to reveal qualitative structure in the data. `~proplot.colors.DiscreteNorm`
+# tend to reveal qualitative structure in the data. `~ultraplot.colors.DiscreteNorm`
 # also repairs the colormap end-colors by ensuring the following conditions are met:
 #
 # #. All colormaps always span the *entire color range*
@@ -447,8 +447,8 @@ for data, mode, fair in zip(
 # To explicitly toggle discrete levels on or off, change :rcraw:`cmap.discrete`
 # or pass ``discrete=False`` or ``discrete=True`` to any plotting command
 # that accepts a `cmap` argument. The level edges or centers used with
-# `~proplot.colors.DiscreteNorm` can be explicitly specified using the `levels` or
-# `values` keywords, respectively (`~proplot.utils.arange` and `~proplot.utils.edges`
+# `~ultraplot.colors.DiscreteNorm` can be explicitly specified using the `levels` or
+# `values` keywords, respectively (`~ultraplot.utils.arange` and `~ultraplot.utils.edges`
 # are useful for generating `levels` and `values` lists). You can also pass an integer
 # to these keywords (or to the `N` keyword) to automatically generate approximately this
 # many level edges or centers at "nice" intervals. The algorithm used to generate levels
@@ -460,10 +460,10 @@ for data, mode, fair in zip(
 # <ug_locators>` for more on locators). You can also use the keywords `negative`,
 # `positive`, or `symmetric` to ensure that your levels are strictly negative,
 # positive, or symmetric about zero, or use the `nozero` keyword to remove
-# the zero level (useful for single-color `~proplot.axes.PlotAxes.contour` plots).
+# the zero level (useful for single-color `~ultraplot.axes.PlotAxes.contour` plots).
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -485,7 +485,7 @@ m = axs[2].imshow(data, cmap="oslo", colorbar="b")
 axs[2].format(title="Imshow plot\ndiscrete=False (default)", yformatter="auto")
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Sample data
@@ -529,10 +529,10 @@ for i, extend in enumerate(("min", "max", "neither", "both")):
 #
 # By default, colormaps are normalized to span from roughly the minimum
 # data value to the maximum data value. However in the presence of outliers,
-# this is not desirable. Proplot adds the `robust` keyword to change this
+# this is not desirable. ultraplot adds the `robust` keyword to change this
 # behavior, inspired by the `xarray keyword
 # <http://xarray.pydata.org/en/stable/user-guide/plotting.html#robust>`__
-# of the same name. Passing ``robust=True`` to a `~proplot.axes.PlotAxes`
+# of the same name. Passing ``robust=True`` to a `~ultraplot.axes.PlotAxes`
 # 2D plot command will limit the default colormap normalization between
 # the 2nd and 98th data percentiles. This range can be customized by passing
 # an integer to `robust` (e.g. ``robust=90`` limits the normalization range
@@ -543,10 +543,10 @@ for i, extend in enumerate(("min", "max", "neither", "both")):
 #
 # Additionally, `similar to xarray
 # <http://xarray.pydata.org/en/stable/user-guide/plotting.html#colormaps>`__,
-# proplot can automatically detect "diverging" datasets. By default,
-# the 2D `~proplot.axes.PlotAxes` commands will apply the diverging colormap
+# ultraplot can automatically detect "diverging" datasets. By default,
+# the 2D `~ultraplot.axes.PlotAxes` commands will apply the diverging colormap
 # :rc:`cmap.diverging` (rather than :rc:`cmap.sequential`) and the diverging
-# normalizer `~proplot.colors.DivergingNorm` (rather than `~matplotlib.colors.Normalize`
+# normalizer `~ultraplot.colors.DivergingNorm` (rather than `~matplotlib.colors.Normalize`
 # -- see :ref:`above <ug_norm>`) if the following conditions are met:
 #
 # #. If discrete levels are enabled (see :ref:`above <ug_discrete>`) and the
@@ -560,7 +560,7 @@ for i, extend in enumerate(("min", "max", "neither", "both")):
 # setting :rcraw:`cmap.autodiverging` to ``False``.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 N = 20
@@ -592,20 +592,20 @@ pplt.rc.reset()
 # Quick labels
 # ------------
 #
-# You can now quickly add labels to `~proplot.axes.PlotAxes.contour`,
-# `~proplot.axes.PlotAxes.contourf`, `~proplot.axes.PlotAxes.pcolor`,
-# `~proplot.axes.PlotAxes.pcolormesh`, and `~proplot.axes.PlotAxes.heatmap`,
+# You can now quickly add labels to `~ultraplot.axes.PlotAxes.contour`,
+# `~ultraplot.axes.PlotAxes.contourf`, `~ultraplot.axes.PlotAxes.pcolor`,
+# `~ultraplot.axes.PlotAxes.pcolormesh`, and `~ultraplot.axes.PlotAxes.heatmap`,
 # plots by passing ``labels=True`` to the plotting command. The
 # label text is colored black or white depending on the luminance of the underlying
 # grid box or filled contour (see the section on :ref:`colorspaces <ug_perceptual>`).
 # Contour labels are drawn with `~matplotlib.axes.Axes.clabel` and grid box
-# labels are drawn with `~proplot.axes.Axes.text`. You can pass keyword arguments
+# labels are drawn with `~ultraplot.axes.Axes.text`. You can pass keyword arguments
 # to these functions by passing a dictionary to `labels_kw`, and you can
 # change the label precision using the `precision` keyword. See the plotting
 # command documentation for details.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import pandas as pd
 import numpy as np
 
@@ -653,17 +653,17 @@ ax.format(title="Line contours with labels")
 # Heatmap plots
 # -------------
 #
-# The `~proplot.axes.PlotAxes.heatmap` command can be used to draw "heatmaps" of
+# The `~ultraplot.axes.PlotAxes.heatmap` command can be used to draw "heatmaps" of
 # 2-dimensional data. This is a convenience function equivalent to
-# `~proplot.axes.PlotAxes.pcolormesh`, except the axes are configured with settings
+# `~ultraplot.axes.PlotAxes.pcolormesh`, except the axes are configured with settings
 # suitable for heatmaps: fixed aspect ratios (ensuring "square" grid boxes), no
 # gridlines, no minor ticks, and major ticks at the center of each box. Among other
 # things, this is useful for displaying covariance and correlation matrices, as shown
-# below. `~proplot.axes.PlotAxes.heatmap` should generally only be used with
-# `~proplot.axes.CartesianAxes`.
+# below. `~ultraplot.axes.PlotAxes.heatmap` should generally only be used with
+# `~ultraplot.axes.CartesianAxes`.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 import pandas as pd
 

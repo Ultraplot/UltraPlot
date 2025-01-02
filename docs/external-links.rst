@@ -9,8 +9,8 @@ This page contains links to related external projects.
 Python packages
 ===============
 
-The following packages inspired proplot, are required or optional
-dependencies of proplot, or are distributed with proplot:
+The following packages inspired ultraplot, are required or optional
+dependencies of ultraplot, or are distributed with ultraplot:
 
 * `matplotlib <https://matplotlib.org>`__ - The powerful data visualization
   package we all know and love.
@@ -33,22 +33,22 @@ dependencies of proplot, or are distributed with proplot:
   It is not generally suitable for geophysical data.
 * `hsluv-python <https://github.com/hsluv/hsluv-python/blob/master/hsluv.py>`__ -
   A python implementation of `HSLuv <https://www.hsluv.org>`__ used for
-  the hue, saturation, luminance math required by `~proplot.colors.PerceptualColormap`.
+  the hue, saturation, luminance math required by `~ultraplot.colors.PerceptualColormap`.
 * `TeX Gyre <https://ctan.org/pkg/tex-gyre?lang=en>`__ -
   An open source re-implementation of popular fonts like
   `Helvetica <https://en.wikipedia.org/wiki/Helvetica>`__
   and `Century <https://en.wikipedia.org/wiki/Century_type_family>`__.
-  These are distributed with proplot and used for its default font families.
+  These are distributed with ultraplot and used for its default font families.
 * `Fira Math <https://en.wikipedia.org/wiki/Century_type_family>`__ -
   An open source sans-serif font with a zillion glyphs for mathematical symbols.
-  This is distributed with proplot as a viable alternative to
+  This is distributed with ultraplot as a viable alternative to
   `DejaVu Sans <https://en.wikipedia.org/wiki/DejaVu_fonts>`__.
 
 Downloadable colormaps
 ======================
 
 The following colormap repositories are
-imported and registered by proplot.
+imported and registered by ultraplot.
 
 * `Color Brewer <http://colorbrewer2.org/#type=sequential&scheme=BuGn&n=3>`__ - The
   O.G. perceptually uniform colormap distribution. These are included with
@@ -71,12 +71,12 @@ Tools for making new colormaps
 ==============================
 
 Use these resources to make colormaps from scratch. Then import
-them into proplot by adding files to the ``.proplot/cmaps`` folder
+them into ultraplot by adding files to the ``.ultraplot/cmaps`` folder
 (see :ref:`this section <ug_cmaps_dl>` for details).
 
-* `The proplot API <https://proplot.readthedocs.io/en/latest/colormaps.html#Making-new-colormaps>`__ -
-  Namely, the `~proplot.colors.ContinuousColormap` class and
-  `~proplot.constructor.Colormap` constructor function.
+* `The ultraplot API <https://ultraplot.readthedocs.io/en/latest/colormaps.html#Making-new-colormaps>`__ -
+  Namely, the `~ultraplot.colors.ContinuousColormap` class and
+  `~ultraplot.constructor.Colormap` constructor function.
 * `HCL Wizard <http://hclwizard.org:64230/hclwizard/>`__ -
   An advanced interface for designing perceptually uniform colormaps,
   with example plots, channel plots, and lots of sliders.
@@ -97,12 +97,12 @@ Tools for making new color cycles
 =================================
 
 Use these resources to make color cycles from scratch. Then import
-them into proplot by adding files to the ``.proplot/cycles`` folder
+them into ultraplot by adding files to the ``.ultraplot/cycles`` folder
 (see :ref:`this section <ug_cycles_dl>` for details).
 
-* `The proplot API <https://proplot.readthedocs.io/en/latest/cycles.html#Making-new-color-cycles>`__ -
-  Namely, the `~proplot.colors.DiscreteColormap` class and
-  `~proplot.constructor.Cycle` constructor function.
+* `The ultraplot API <https://ultraplot.readthedocs.io/en/latest/cycles.html#Making-new-color-cycles>`__ -
+  Namely, the `~ultraplot.colors.DiscreteColormap` class and
+  `~ultraplot.constructor.Cycle` constructor function.
 * `i want hue <http://medialab.github.io/iwanthue/>`__ -
   An advanced interface for generating perceptually distinct color sets
   with options for restricting the hue, chroma, and luminance ranges.

@@ -42,7 +42,7 @@ VALIDATE_REGISTERED_COLORS = False
 # NOTE: Important that default values are equivalent to the *validated* values
 # used in the RcParams dictionaries. Otherwise _user_settings() detects changes.
 # NOTE: We *could* just leave some settings empty and leave it up to Configurator
-# to sync them when proplot is imported... but also sync them here so that we can
+# to sync them when ultraplot is imported... but also sync them here so that we can
 # simply compare any Configurator state to these dictionaries and use save() to
 # save only the settings changed by the user.
 BLACK = "black"
@@ -200,11 +200,11 @@ FONT_KEYS = set()  # dynamically add to this below
 def _get_default_param(key):
     """
     Get the default parameter from one of three places. This is used for
-    the :rc: role when compiling docs and when saving proplotrc files.
+    the :rc: role when compiling docs and when saving ultraplotrc files.
     """
     sentinel = object()
     for dict_ in (
-        _rc_proplot_default,
+        _rc_ultraplot_default,
         _rc_matplotlib_default,  # imposed defaults
         _rc_matplotlib_native,  # native defaults
     ):
@@ -423,20 +423,20 @@ def _rst_table():
     """
     # Initial stuff
     colspace = 2  # spaces between each column
-    descrips = tuple(descrip for (_, _, descrip) in _rc_proplot_table.values())
-    keylen = len(max((*_rc_proplot_table, "Key"), key=len)) + 4  # literal backticks
+    descrips = tuple(descrip for (_, _, descrip) in _rc_ultraplot_table.values())
+    keylen = len(max((*_rc_ultraplot_table, "Key"), key=len)) + 4  # literal backticks
     vallen = len(max((*descrips, "Description"), key=len))
     divider = "=" * keylen + " " * colspace + "=" * vallen + "\n"
     header = "Key" + " " * (keylen - 3 + colspace) + "Description\n"
 
     # Build table
     string = divider + header + divider
-    for key, (_, _, descrip) in _rc_proplot_table.items():
+    for key, (_, _, descrip) in _rc_ultraplot_table.items():
         spaces = " " * (keylen - (len(key) + 4) + colspace)
         string += f"``{key}``{spaces}{descrip}\n"
 
     string = string + divider
-    return ".. rst-class:: proplot-rctable\n\n" + string.strip()
+    return ".. rst-class:: ultraplot-rctable\n\n" + string.strip()
 
 
 def _to_string(value):
@@ -444,7 +444,7 @@ def _to_string(value):
     Translate setting to a string suitable for saving.
     """
     # NOTE: Never safe hex strings with leading '#'. In both matplotlibrc
-    # and proplotrc this will be read as comment character.
+    # and ultraplotrc this will be read as comment character.
     if value is None or isinstance(value, (str, bool, Integral)):
         value = str(value)
         if value[:1] == "#":  # i.e. a HEX string
@@ -483,7 +483,7 @@ def _yaml_table(rcdict, comment=True, description=False):
         if value is not None:
             data.append((key, value, descrip))
         else:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Failed to write rc setting {key} = {value!r}. Must be None, bool, "
                 "string, int, float, a list or tuple thereof, or a property cycler."
             )
@@ -522,7 +522,7 @@ class _RcParams(MutableMapping, dict):
         return dict.__len__(self)
 
     def __iter__(self):
-        # NOTE: Proplot doesn't add deprecated args to dictionary so
+        # NOTE: ultraplot doesn't add deprecated args to dictionary so
         # we don't have to suppress warning messages here.
         yield from sorted(dict.__iter__(self))
 
@@ -549,7 +549,7 @@ class _RcParams(MutableMapping, dict):
         # Currently the special cases are 'basemap' and 'cartopy.autoextent'.
         if key in _rc_renamed:
             key_new, version = _rc_renamed[key]
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"The rc setting {key!r} was deprecated in version {version} and may be "  # noqa: E501
                 f"removed in {warnings.next_release()}. Please use {key_new!r} instead."  # noqa: E501
             )
@@ -620,7 +620,7 @@ font_scalings["med"] = 1.0  # consistent shorthand
 font_scalings["med-small"] = 0.9  # add scaling
 font_scalings["med-large"] = 1.1  # add scaling
 if not hasattr(RcParams, "validate"):  # not mission critical so skip
-    warnings._warn_proplot("Failed to update matplotlib rcParams validators.")
+    warnings._warn_ultraplot("Failed to update matplotlib rcParams validators.")
 else:
     _validate = RcParams.validate
     _validate["image.cmap"] = _validate_cmap("continuous")
@@ -651,9 +651,9 @@ else:
                 _validate[_key] = _validate_or_none(_validator_replace)
 
 
-# Proplot overrides of matplotlib default style
+# ultraplot overrides of matplotlib default style
 # WARNING: Critical to include every parameter here that can be changed by a
-# "meta" setting so that _get_default_param returns the value imposed by *proplot*
+# "meta" setting so that _get_default_param returns the value imposed by *ultraplot*
 # and so that "changed" settings detected by Configurator.save are correct.
 _rc_matplotlib_default = {
     "axes.axisbelow": GRIDBELOW,
@@ -826,25 +826,25 @@ _rc_matplotlib_default = {
 if "mathtext.fallback" in _rc_matplotlib_native:
     _rc_matplotlib_default["mathtext.fallback"] = "stixsans"
 
-# Proplot pseudo-setting defaults, validators, and descriptions
+# ultraplot pseudo-setting defaults, validators, and descriptions
 # NOTE: Cannot have different a-b-c and title paddings because they are both controlled
 # by matplotlib's _title_offset_trans transform and want to keep them aligned anyway.
 _addendum_rotation = " Must be 'vertical', 'horizontal', or a float indicating degrees."
-_addendum_em = " Interpreted by `~proplot.utils.units`. Numeric units are em-widths."
-_addendum_in = " Interpreted by `~proplot.utils.units`. Numeric units are inches."
-_addendum_pt = " Interpreted by `~proplot.utils.units`. Numeric units are points."
+_addendum_em = " Interpreted by `~ultraplot.utils.units`. Numeric units are em-widths."
+_addendum_in = " Interpreted by `~ultraplot.utils.units`. Numeric units are inches."
+_addendum_pt = " Interpreted by `~ultraplot.utils.units`. Numeric units are points."
 _addendum_font = (
     " Must be a :ref:`relative font size <font_table>` or unit string "
-    "interpreted by `~proplot.utils.units`. Numeric units are points."
+    "interpreted by `~ultraplot.utils.units`. Numeric units are points."
 )
-_rc_proplot_table = {
+_rc_ultraplot_table = {
     # Stylesheet
     "style": (
         None,
         _validate_or_none(_validate_string),
         "The default matplotlib `stylesheet "
         "<https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html>`__ "  # noqa: E501
-        "name. If ``None``, a custom proplot style is used. "
+        "name. If ``None``, a custom ultraplot style is used. "
         "If ``'default'``, the default matplotlib style is used.",
     ),
     # A-b-c labels
@@ -1083,7 +1083,7 @@ _rc_proplot_table = {
     "cmap.discrete": (
         None,
         _validate_or_none(_validate_bool),
-        "If ``True``, `~proplot.colors.DiscreteNorm` is used for every colormap plot. "
+        "If ``True``, `~ultraplot.colors.DiscreteNorm` is used for every colormap plot. "
         "If ``False``, it is never used. If ``None``, it is used for all plot types "
         "except `imshow`, `matshow`, `spy`, `hexbin`, and `hist2d`.",
     ),
@@ -1101,15 +1101,15 @@ _rc_proplot_table = {
     "cmap.levels": (
         11,
         _validate_int,
-        "Default number of `~proplot.colors.DiscreteNorm` levels for plotting "
+        "Default number of `~ultraplot.colors.DiscreteNorm` levels for plotting "
         "commands that use colormaps.",
     ),
     "cmap.listedthresh": (
         64,
         _validate_int,
         "Native `~matplotlib.colors.ListedColormap`\\ s with more colors than "
-        "this are converted to `~proplot.colors.ContinuousColormap` rather than "
-        "`~proplot.colors.DiscreteColormap`. This helps translate continuous "
+        "this are converted to `~ultraplot.colors.ContinuousColormap` rather than "
+        "`~ultraplot.colors.DiscreteColormap`. This helps translate continuous "
         "colormaps from external projects.",
     ),
     "cmap.lut": (
@@ -1200,20 +1200,20 @@ _rc_proplot_table = {
     "geo.backend": (
         "cartopy",
         _validate_belongs("cartopy", "basemap"),
-        "The backend used for `~proplot.axes.GeoAxes`. Must be "
+        "The backend used for `~ultraplot.axes.GeoAxes`. Must be "
         "either 'cartopy' or 'basemap'.",
     ),
     "geo.extent": (
         "globe",
         _validate_belongs("globe", "auto"),
-        "If ``'globe'``, the extent of cartopy `~proplot.axes.GeoAxes` is always "
+        "If ``'globe'``, the extent of cartopy `~ultraplot.axes.GeoAxes` is always "
         "global. If ``'auto'``, the extent is automatically adjusted based on "
         "plotted content. Default is ``'globe'``.",
     ),
     "geo.round": (
         True,
         _validate_bool,
-        "If ``True`` (the default), polar `~proplot.axes.GeoAxes` like ``'npstere'`` "
+        "If ``True`` (the default), polar `~ultraplot.axes.GeoAxes` like ``'npstere'`` "
         "and ``'spstere'`` are bounded with circles rather than squares.",
     ),
     # Gridlines
@@ -1232,61 +1232,61 @@ _rc_proplot_table = {
         True,
         _validate_bool,
         "Whether to have cartopy automatically check for and remove overlapping "
-        "`~proplot.axes.GeoAxes` gridline labels.",
+        "`~ultraplot.axes.GeoAxes` gridline labels.",
     ),
     "grid.dmslabels": (
         True,
         _validate_bool,
         "Whether to use degrees-minutes-seconds rather than decimals for "
-        "cartopy `~proplot.axes.GeoAxes` gridlines.",
+        "cartopy `~ultraplot.axes.GeoAxes` gridlines.",
     ),
     "grid.geolabels": (
         True,
         _validate_bool,
         "Whether to include the ``'geo'`` spine in cartopy >= 0.20 when otherwise "
-        "toggling left, right, bottom, or top `~proplot.axes.GeoAxes` gridline labels.",
+        "toggling left, right, bottom, or top `~ultraplot.axes.GeoAxes` gridline labels.",
     ),
     "grid.inlinelabels": (
         False,
         _validate_bool,
-        "Whether to add inline labels for cartopy `~proplot.axes.GeoAxes` gridlines.",
+        "Whether to add inline labels for cartopy `~ultraplot.axes.GeoAxes` gridlines.",
     ),
     "grid.labels": (
         False,
         _validate_bool,
-        "Whether to add outer labels for `~proplot.axes.GeoAxes` gridlines.",
+        "Whether to add outer labels for `~ultraplot.axes.GeoAxes` gridlines.",
     ),
     "grid.labelcolor": (
         BLACK,
         _validate_color,
-        "Font color for `~proplot.axes.GeoAxes` gridline labels.",
+        "Font color for `~ultraplot.axes.GeoAxes` gridline labels.",
     ),
     "grid.labelpad": (
         GRIDPAD,
         _validate_pt,
-        "Padding between the map boundary and cartopy `~proplot.axes.GeoAxes` "
+        "Padding between the map boundary and cartopy `~ultraplot.axes.GeoAxes` "
         "gridline labels." + _addendum_pt,
     ),
     "grid.labelsize": (
         SMALLSIZE,
         _validate_fontsize,
-        "Font size for `~proplot.axes.GeoAxes` gridline labels." + _addendum_font,
+        "Font size for `~ultraplot.axes.GeoAxes` gridline labels." + _addendum_font,
     ),
     "grid.labelweight": (
         "normal",
         _validate_fontweight,
-        "Font weight for `~proplot.axes.GeoAxes` gridline labels.",
+        "Font weight for `~ultraplot.axes.GeoAxes` gridline labels.",
     ),
     "grid.nsteps": (
         250,
         _validate_int,
-        "Number of points used to draw cartopy `~proplot.axes.GeoAxes` gridlines.",
+        "Number of points used to draw cartopy `~ultraplot.axes.GeoAxes` gridlines.",
     ),
     "grid.pad": (GRIDPAD, _validate_pt, "Alias for :rcraw:`grid.labelpad`."),
     "grid.rotatelabels": (
         False,  # False limits projections where labels are available
         _validate_bool,
-        "Whether to rotate cartopy `~proplot.axes.GeoAxes` gridline labels.",
+        "Whether to rotate cartopy `~ultraplot.axes.GeoAxes` gridline labels.",
     ),
     "grid.style": (
         "-",
@@ -1474,7 +1474,7 @@ _rc_proplot_table = {
     "reso": (
         "lo",
         _validate_belongs("lo", "med", "hi", "x-hi", "xx-hi"),
-        "Resolution for `~proplot.axes.GeoAxes` geographic features. "
+        "Resolution for `~ultraplot.axes.GeoAxes` geographic features. "
         "Must be one of ``'lo'``, ``'med'``, ``'hi'``, ``'x-hi'``, or ``'xx-hi'``.",
     ),
     # Right subplot labels
@@ -1560,12 +1560,12 @@ _rc_proplot_table = {
         _validate_belongs(0, 1, 2, 3, 4, False, "labels", "limits", True, "all"),
         "The axis sharing level, one of ``0``, ``1``, ``2``, or ``3``, or the "
         "more intuitive aliases ``False``, ``'labels'``, ``'limits'``, or ``True``. "
-        "See `~proplot.figure.Figure` for details.",
+        "See `~ultraplot.figure.Figure` for details.",
     ),
     "subplots.span": (
         True,
         _validate_bool,
-        "Toggles spanning axis labels. See `~proplot.ui.subplots` for details.",
+        "Toggles spanning axis labels. See `~ultraplot.ui.subplots` for details.",
     ),
     "subplots.tight": (
         True,
@@ -1798,7 +1798,7 @@ if _version_mpl >= "3.4":
     _rc_children["meta.color"] += ("xtick.labelcolor", "ytick.labelcolor")
 
 # Setting synonyms. Changing one setting changes the other. Also account for existing
-# children. Most of these are aliased due to proplot settings overlapping with
+# children. Most of these are aliased due to ultraplot settings overlapping with
 # existing matplotlib settings.
 _rc_synonyms = (
     ("cmap", "image.cmap", "cmap.sequential"),
@@ -1905,29 +1905,29 @@ _rc_renamed = {  # {old_key: (new_key, version)} dictionary
     "colorbar.rasterize": ("colorbar.rasterized", "0.10.0"),
 }
 
-# Validate the default settings dictionaries using a custom proplot _RcParams
-# and the original matplotlib RcParams. Also surreptitiously add proplot
+# Validate the default settings dictionaries using a custom ultraplot _RcParams
+# and the original matplotlib RcParams. Also surreptitiously add ultraplot
 # font settings to the font keys list (beoolean below always evalutes to True)
 # font keys list whlie initializing.
-_rc_proplot_default = {key: value for key, (value, _, _) in _rc_proplot_table.items()}
-_rc_proplot_validate = {
+_rc_ultraplot_default = {key: value for key, (value, _, _) in _rc_ultraplot_table.items()}
+_rc_ultraplot_validate = {
     key: validator
-    for key, (_, validator, _) in _rc_proplot_table.items()
+    for key, (_, validator, _) in _rc_ultraplot_table.items()
     if not (validator is _validate_fontsize and FONT_KEYS.add(key))
 }
-_rc_proplot_default = _RcParams(_rc_proplot_default, _rc_proplot_validate)
+_rc_ultraplot_default = _RcParams(_rc_ultraplot_default, _rc_ultraplot_validate)
 _rc_matplotlib_default = RcParams(_rc_matplotlib_default)
 
-# Important joint matplotlib proplot constants
+# Important joint matplotlib ultraplot constants
 # NOTE: The 'nodots' dictionary should include removed and renamed settings
 _rc_categories = {
     ".".join(name.split(".")[: i + 1])
-    for dict_ in (_rc_proplot_default, _rc_matplotlib_native)
+    for dict_ in (_rc_ultraplot_default, _rc_matplotlib_native)
     for name in dict_
     for i in range(len(name.split(".")) - 1)
 }
 _rc_nodots = {
     name.replace(".", ""): name
-    for dict_ in (_rc_proplot_default, _rc_matplotlib_native, _rc_renamed, _rc_removed)
+    for dict_ in (_rc_ultraplot_default, _rc_matplotlib_native, _rc_renamed, _rc_removed)
     for name in dict_.keys()
 }

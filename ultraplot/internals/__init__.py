@@ -37,7 +37,7 @@ def _not_none(*args, default=None, **kwargs):
                 break
         kwargs = {name: arg for name, arg in kwargs.items() if arg is not None}
         if len(kwargs) > 1:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Got conflicting or duplicate keyword arguments: {kwargs}. "
                 "Using the first keyword argument."
             )
@@ -59,7 +59,7 @@ from . import (  # noqa: F401
     warnings,
 )
 from .versions import _version_mpl, _version_cartopy  # noqa: F401
-from .warnings import ProplotWarning  # noqa: F401
+from .warnings import UltraplotWarning  # noqa: F401
 
 
 # Style aliases. We use this rather than matplotlib's normalize_kwargs and _alias_maps.
@@ -170,7 +170,7 @@ _alias_maps = {
 # Unit docstrings
 # NOTE: Try to fit this into a single line. Cannot break up with newline as that will
 # mess up docstring indentation since this is placed in indented param lines.
-_units_docstring = "If float, units are {units}. If string, interpreted by `~proplot.utils.units`."  # noqa: E501
+_units_docstring = "If float, units are {units}. If string, interpreted by `~ultraplot.utils.units`."  # noqa: E501
 docstring._snippet_manager["units.pt"] = _units_docstring.format(units="points")
 docstring._snippet_manager["units.in"] = _units_docstring.format(units="inches")
 docstring._snippet_manager["units.em"] = _units_docstring.format(units="em-widths")
@@ -235,7 +235,7 @@ size, fontsize : unit-spec or str, optional
     This can also be a string indicating some scaling relative to
     :rcraw:`font.size`. The sizes and scalings are shown below. The
     scalings ``'med'``, ``'med-small'``, and ``'med-large'`` are
-    added by proplot while the rest are native matplotlib sizes.
+    added by ultraplot while the rest are native matplotlib sizes.
 
     .. _font_table:
 
@@ -370,7 +370,7 @@ def _pop_props(input, *categories, prefix=None, ignore=None, skip=None):
             if prop is None:
                 continue
             if any(string in key for string in ignore):
-                warnings._warn_proplot(f"Ignoring property {key}={prop!r}.")
+                warnings._warn_ultraplot(f"Ignoring property {key}={prop!r}.")
                 continue
             if isinstance(prop, str):  # ad-hoc unit conversion
                 if key in ("fontsize",):
@@ -408,7 +408,7 @@ def _pop_rc(src, *, ignore_conflicts=True):
     kw = src.pop("rc_kw", None) or {}
     if "mode" in src:
         src["rc_mode"] = src.pop("mode")
-        warnings._warn_proplot(
+        warnings._warn_ultraplot(
             "Keyword 'mode' was deprecated in v0.6. Please use 'rc_mode' instead."
         )
     mode = src.pop("rc_mode", None)

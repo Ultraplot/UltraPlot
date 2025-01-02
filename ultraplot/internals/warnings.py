@@ -10,10 +10,10 @@ import warnings
 from . import ic  # noqa: F401
 
 # Internal modules omitted from warning message
-REGEX_INTERNAL = re.compile(r"\A(matplotlib|mpl_toolkits|proplot)\.")
+REGEX_INTERNAL = re.compile(r"\A(matplotlib|mpl_toolkits|ultraplot)\.")
 
 # Trivial warning class meant only to communicate the source of the warning
-ProplotWarning = type("ProplotWarning", (UserWarning,), {})
+UltraplotWarning = type("UltraPlotWarning", (UserWarning,), {})
 
 # Add due to overwriting the module name
 catch_warnings = warnings.catch_warnings
@@ -38,10 +38,10 @@ def next_release():
     return string
 
 
-def _warn_proplot(message):
+def _warn_ultraplot(message):
     """
-    Emit a `ProplotWarning` and show the stack level outside of matplotlib and
-    proplot. This is adapted from matplotlib's warning system.
+    Emit a `UltraPlotWarning` and show the stack level outside of matplotlib and
+    ultraplot. This is adapted from matplotlib's warning system.
     """
     frame = sys._getframe()
     stacklevel = 1
@@ -50,7 +50,7 @@ def _warn_proplot(message):
             break  # this is the first external frame
         frame = frame.f_back
         stacklevel += 1
-    warnings.warn(message, ProplotWarning, stacklevel=stacklevel)
+    warnings.warn(message, UltraplotWarning, stacklevel=stacklevel)
 
 
 def _rename_objs(version, **kwargs):
@@ -70,7 +70,7 @@ def _rename_objs(version, **kwargs):
 
             class _deprecated_class(new_obj):
                 def __init__(self, *args, new_obj=new_obj, message=message, **kwargs):
-                    _warn_proplot(message)
+                    _warn_ultraplot(message)
                     super().__init__(*args, **kwargs)
 
             _deprecated_class.__name__ = old_name
@@ -78,7 +78,7 @@ def _rename_objs(version, **kwargs):
         elif callable(new_obj):
 
             def _deprecated_function(*args, new_obj=new_obj, message=message, **kwargs):
-                _warn_proplot(message)
+                _warn_ultraplot(message)
                 return new_obj(*args, **kwargs)
 
             _deprecated_function.__name__ = old_name
@@ -111,7 +111,7 @@ def _rename_kwargs(version, **kwargs_rename):
                 elif "{}" in key_new:
                     # Nice warning message, but user's desired behavior fails
                     key_new = key_new.format(value)
-                _warn_proplot(
+                _warn_ultraplot(
                     f"Keyword {key_old!r} was deprecated in version {version} and may "
                     f"be removed in {next_release()}. Please use {key_new!r} instead."
                 )

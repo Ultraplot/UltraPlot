@@ -136,7 +136,7 @@ class _Scale(object):
 class LinearScale(_Scale, mscale.LinearScale):
     """
     As with `~matplotlib.scale.LinearScale` but with
-    `~proplot.ticker.AutoFormatter` as the default major formatter.
+    `~ultraplot.ticker.AutoFormatter` as the default major formatter.
     """
 
     #: The registered scale name
@@ -146,7 +146,7 @@ class LinearScale(_Scale, mscale.LinearScale):
         """
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
         """
         super().__init__(**kwargs)
         self._transform = mtransforms.IdentityTransform()
@@ -154,7 +154,7 @@ class LinearScale(_Scale, mscale.LinearScale):
 
 class LogitScale(_Scale, mscale.LogitScale):
     """
-    As with `~matplotlib.scale.LogitScale` but with `~proplot.ticker.AutoFormatter`
+    As with `~matplotlib.scale.LogitScale` but with `~ultraplot.ticker.AutoFormatter`
     as the default major formatter.
     """
 
@@ -171,7 +171,7 @@ class LogitScale(_Scale, mscale.LogitScale):
 
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
         """
         super().__init__(**kwargs)
         # self._default_major_formatter = mticker.LogitFormatter()
@@ -181,7 +181,7 @@ class LogitScale(_Scale, mscale.LogitScale):
 
 class LogScale(_Scale, mscale.LogScale):
     """
-    As with `~matplotlib.scale.LogScale` but with `~proplot.ticker.AutoFormatter`
+    As with `~matplotlib.scale.LogScale` but with `~ultraplot.ticker.AutoFormatter`
     as the default major formatter. ``x`` and ``y`` versions of each keyword
     argument are no longer required.
     """
@@ -208,7 +208,7 @@ class LogScale(_Scale, mscale.LogScale):
 
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
         """
         keys = ("base", "nonpos", "subs")
         super().__init__(**_parse_logscale_args(*keys, **kwargs))
@@ -219,7 +219,7 @@ class LogScale(_Scale, mscale.LogScale):
 class SymmetricalLogScale(_Scale, mscale.SymmetricalLogScale):
     """
     As with `~matplotlib.scale.SymmetricalLogScale` but with
-    `~proplot.ticker.AutoFormatter` as the default major formatter.
+    `~ultraplot.ticker.AutoFormatter` as the default major formatter.
     ``x`` and ``y`` versions of each keyword argument are no longer
     required.
     """
@@ -253,7 +253,7 @@ class SymmetricalLogScale(_Scale, mscale.SymmetricalLogScale):
 
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
         """
         keys = ("base", "linthresh", "linscale", "subs")
         super().__init__(**_parse_logscale_args(*keys, **kwargs))
@@ -290,7 +290,7 @@ class FuncScale(_Scale, mscale.ScaleBase):
               functions are non-linear and non-involutory. The second function must
               be the inverse of the first. For example, to apply the square, use
               ``ax.dualx((lambda x: x ** 2, lambda x: x ** 0.5))``.
-            * A scale specification passed to the `~proplot.constructor.Scale`
+            * A scale specification passed to the `~ultraplot.constructor.Scale`
               constructor function. The transform and default locators and formatters
               are borrowed from the resulting `~matplotlib.scale.ScaleBase` instance.
               For example, to apply the inverse, use ``ax.dualx('inverse')``.
@@ -304,20 +304,20 @@ class FuncScale(_Scale, mscale.ScaleBase):
             is applied to the `FuncTransform`.
         major_locator, minor_locator : locator-spec, optional
             The default major and minor locator. Passed to the
-            `~proplot.constructor.Locator` constructor function. By default, these are
+            `~ultraplot.constructor.Locator` constructor function. By default, these are
             the same as the default locators on the input transform. If the input
             transform was not an axis scale, these are borrowed from `parent_scale`.
         major_formatter, minor_formatter : formatter-spec, optional
             The default major and minor formatter. Passed to the
-            `~proplot.constructor.Formatter` constructor function. By default, these are
+            `~ultraplot.constructor.Formatter` constructor function. By default, these are
             the same as the default formatters on the input transform. If the input
             transform was not an axis scale, these are borrowed from `parent_scale`.
 
         See also
         --------
-        proplot.constructor.Scale
-        proplot.axes.CartesianAxes.dualx
-        proplot.axes.CartesianAxes.dualy
+        ultraplot.constructor.Scale
+        ultraplot.axes.CartesianAxes.dualx
+        ultraplot.axes.CartesianAxes.dualy
         """
         # Parse input args
         # NOTE: Permit *arbitrary* parent axis scales and infer default locators and
@@ -328,7 +328,7 @@ class FuncScale(_Scale, mscale.ScaleBase):
             if transform is None:
                 transform = functions
             else:
-                warnings._warn_proplot("Ignoring keyword argument 'functions'.")
+                warnings._warn_ultraplot("Ignoring keyword argument 'functions'.")
         from .constructor import Formatter, Locator, Scale
 
         super().__init__()
@@ -527,7 +527,7 @@ class ExpScale(_Scale, mscale.ScaleBase):
 
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
         """
         super().__init__()
         if not inverse:
@@ -619,7 +619,7 @@ class MercatorLatitudeScale(_Scale, mscale.ScaleBase):
 
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
         """
         super().__init__()
         if thresh >= 90:
@@ -706,7 +706,7 @@ class SineLatitudeScale(_Scale, mscale.ScaleBase):
         """
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
         """
         super().__init__()
         self._transform = SineLatitudeTransform()
@@ -794,11 +794,11 @@ class CutoffScale(_Scale, mscale.ScaleBase):
 
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
 
         Example
         -------
-        >>> import proplot as pplt
+        >>> import ultraplot as pplt
         >>> import numpy as np
         >>> scale = pplt.CutoffScale(10, 0.5)  # move slower above 10
         >>> scale = pplt.CutoffScale(10, 2, 20)  # move faster between 10 and 20
@@ -890,7 +890,7 @@ class InverseScale(_Scale, mscale.ScaleBase):
         """
         See also
         --------
-        proplot.constructor.Scale
+        ultraplot.constructor.Scale
         """
         super().__init__()
         self._transform = InverseTransform()
@@ -946,7 +946,7 @@ def _scale_factory(scale, axis, *args, **kwargs):  # noqa: U100
     mapping = mscale._scale_mapping
     if isinstance(scale, mscale.ScaleBase):
         if args or kwargs:
-            warnings._warn_proplot(f"Ignoring args {args} and keyword args {kwargs}.")
+            warnings._warn_ultraplot(f"Ignoring args {args} and keyword args {kwargs}.")
         return scale  # do nothing
     else:
         scale = scale.lower()

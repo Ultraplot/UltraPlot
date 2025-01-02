@@ -65,7 +65,7 @@ _globals = globals()
 for _src in (NORMS, LOCATORS, FORMATTERS, SCALES, PROJS):
     for _key, _cls in _src.items():
         if isinstance(_cls, type):  # i.e. not a scale preset
-            _globals[_cls.__name__] = _cls  # may overwrite proplot names
+            _globals[_cls.__name__] = _cls  # may overwrite ultraplot names
 # Register objects
 from .config import register_cmaps, register_cycles, register_colors, register_fonts
 
@@ -95,21 +95,21 @@ for _key in (
     try:
         rc[_key] = rc[_key]
     except ValueError as err:
-        warnings._warn_proplot(f"Invalid user rc file setting: {err}")
+        warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
         rc[_key] = "Greys"  # fill value
 
 # Validate color names now that colors are registered
 # NOTE: This updates all settings with 'color' in name (harmless if it's not a color)
-from .config import rc_proplot, rc_matplotlib
+from .config import rc_ultraplot, rc_matplotlib
 
 rcsetup.VALIDATE_REGISTERED_COLORS = True
-for _src in (rc_proplot, rc_matplotlib):
+for _src in (rc_ultraplot, rc_matplotlib):
     for _key in _src:  # loop through unsynced properties
         if "color" not in _key:
             continue
         try:
             _src[_key] = _src[_key]
         except ValueError as err:
-            warnings._warn_proplot(f"Invalid user rc file setting: {err}")
+            warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
             _src[_key] = "black"  # fill value
 from .colors import _cmap_database as colormaps

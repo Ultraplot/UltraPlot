@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-The starting point for creating proplot figures.
+The starting point for creating ultraplot figures.
 """
 import matplotlib.pyplot as plt
 
@@ -32,7 +32,7 @@ docstring._snippet_manager["ui.pyplot"] = _pyplot_docstring
 
 def _parse_figsize(kwargs):
     """
-    Translate `figsize` into proplot-specific `figwidth` and `figheight` keys.
+    Translate `figsize` into ultraplot-specific `figwidth` and `figheight` keys.
     """
     # WARNING: Cannot have Figure.__init__() interpret figsize() because
     # the figure manager fills it with the matplotlib default.
@@ -120,7 +120,7 @@ def isinteractive():
 def figure(**kwargs):
     """
     Create an empty figure. Subplots can be subsequently added using
-    `~proplot.figure.Figure.add_subplot` or `~proplot.figure.Figure.subplots`.
+    `~ultraplot.figure.Figure.add_subplot` or `~ultraplot.figure.Figure.subplots`.
     This command is analogous to `matplotlib.pyplot.figure`.
 
     Parameters
@@ -130,14 +130,14 @@ def figure(**kwargs):
     Other parameters
     ----------------
     **kwargs
-        Passed to `proplot.figure.Figure.format`.
+        Passed to `ultraplot.figure.Figure.format`.
 
     See also
     --------
-    proplot.ui.subplots
-    proplot.figure.Figure.add_subplot
-    proplot.figure.Figure.subplots
-    proplot.figure.Figure
+    ultraplot.ui.subplots
+    ultraplot.figure.Figure.add_subplot
+    ultraplot.figure.Figure.subplots
+    ultraplot.figure.Figure
     matplotlib.figure.Figure
     """
     _parse_figsize(kwargs)
@@ -155,21 +155,21 @@ def subplot(**kwargs):
     ----------------
     %(figure.figure)s
     **kwargs
-        Passed to `proplot.figure.Figure.format` or the
+        Passed to `ultraplot.figure.Figure.format` or the
         projection-specific ``format`` command for the axes.
 
     Returns
     -------
-    fig : `proplot.figure.Figure`
+    fig : `ultraplot.figure.Figure`
         The figure instance.
-    ax : `proplot.axes.Axes`
+    ax : `ultraplot.axes.Axes`
         The axes instance.
 
     See also
     --------
-    proplot.ui.figure
-    proplot.figure.Figure.subplot
-    proplot.figure.Figure
+    ultraplot.ui.figure
+    ultraplot.figure.Figure.subplot
+    ultraplot.figure.Figure
     matplotlib.figure.Figure
     """
     _parse_figsize(kwargs)
@@ -189,7 +189,7 @@ def subplots(*args, **kwargs):
     """
     Return a figure and an arbitrary grid of subplots.
     This command is analogous to `matplotlib.pyplot.subplots`,
-    except the subplots are stored in a `~proplot.gridspec.SubplotGrid`.
+    except the subplots are stored in a `~ultraplot.gridspec.SubplotGrid`.
 
     Parameters
     ----------
@@ -199,22 +199,22 @@ def subplots(*args, **kwargs):
     ----------------
     %(figure.figure)s
     **kwargs
-        Passed to `proplot.figure.Figure.format` or the
+        Passed to `ultraplot.figure.Figure.format` or the
         projection-specific ``format`` command for each axes.
 
     Returns
     -------
-    fig : `proplot.figure.Figure`
+    fig : `ultraplot.figure.Figure`
         The figure instance.
-    axs : `proplot.gridspec.SubplotGrid`
-        The axes instances stored in a `~proplot.gridspec.SubplotGrid`.
+    axs : `ultraplot.gridspec.SubplotGrid`
+        The axes instances stored in a `~ultraplot.gridspec.SubplotGrid`.
 
     See also
     --------
-    proplot.ui.figure
-    proplot.figure.Figure.subplots
-    proplot.gridspec.SubplotGrid
-    proplot.figure.Figure
+    ultraplot.ui.figure
+    ultraplot.figure.Figure.subplots
+    ultraplot.gridspec.SubplotGrid
+    ultraplot.figure.Figure
     matplotlib.figure.Figure
     """
     _parse_figsize(kwargs)

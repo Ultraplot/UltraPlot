@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-The gridspec and subplot grid classes used throughout proplot.
+The gridspec and subplot grid classes used throughout ultraplot.
 """
 import inspect
 import itertools
@@ -55,7 +55,7 @@ wspace, hspace, space : unit-spec or sequence, default: None
     fixes the space between columns 1 and 2 but lets the tight layout algorithm
     determine the space between columns 2 and 3.
 wratios, hratios : float or sequence, optional
-    Passed to `~proplot.gridspec.GridSpec`, denotes the width and height
+    Passed to `~ultraplot.gridspec.GridSpec`, denotes the width and height
     ratios for the subplot grid. Length of `wratios` must match the number
     of columns, and length of `hratios` must match the number of rows.
 width_ratios, height_ratios
@@ -99,7 +99,7 @@ def _disable_method(attr):
     """
 
     def _dummy_method(*args):
-        raise RuntimeError(f"Method {attr}() is disabled on proplot gridspecs.")
+        raise RuntimeError(f"Method {attr}() is disabled on ultraplot gridspecs.")
 
     _dummy_method.__name__ = attr
     return _dummy_method
@@ -215,11 +215,11 @@ class GridSpec(mgridspec.GridSpec):
 
         See also
         --------
-        proplot.ui.figure
-        proplot.figure.Figure
-        proplot.ui.subplots
-        proplot.figure.Figure.subplots
-        proplot.figure.Figure.add_subplots
+        ultraplot.ui.figure
+        ultraplot.figure.Figure
+        ultraplot.ui.subplots
+        ultraplot.figure.Figure.subplots
+        ultraplot.figure.Figure.add_subplots
         matplotlib.gridspec.GridSpec
 
         Important
@@ -228,9 +228,9 @@ class GridSpec(mgridspec.GridSpec):
         quietly augments the gridspec geometry by inserting "panel slots". However,
         subsequently indexing the gridspec with ``gs[num]`` or ``gs[row, col]`` will
         ignore the "panel slots". This permits adding new subplots by passing
-        ``gs[num]`` or ``gs[row, col]`` to `~proplot.figure.Figure.add_subplot`
+        ``gs[num]`` or ``gs[row, col]`` to `~ultraplot.figure.Figure.add_subplot`
         even in the presence of panels (see `~GridSpec.__getitem__` for details).
-        This also means that each `GridSpec` is `~proplot.figure.Figure`-specific,
+        This also means that each `GridSpec` is `~ultraplot.figure.Figure`-specific,
         i.e. it can only be used once (if you are working with `GridSpec` instances
         manually and want the same geometry for multiple figures, you must create
         a copy with `GridSpec.copy` before working on the subsequent figure).
@@ -841,7 +841,7 @@ class GridSpec(mgridspec.GridSpec):
             return  # skip tight layout if there are no subplots in the figure
 
         # Get the tight bounding box around the whole figure.
-        # NOTE: This triggers proplot.axes.Axes.get_tightbbox which *caches* the
+        # NOTE: This triggers ultraplot.axes.Axes.get_tightbbox which *caches* the
         # computed bounding boxes used by _range_tightbbox below.
         pad = self._outerpad
         obox = fig.bbox_inches  # original bbox
@@ -955,7 +955,7 @@ class GridSpec(mgridspec.GridSpec):
         if all(np.isfinite(figsize)):
             return figsize
         else:
-            warnings._warn_proplot(f"Auto resize failed. Invalid figsize {figsize}.")
+            warnings._warn_ultraplot(f"Auto resize failed. Invalid figsize {figsize}.")
 
     def _update_params(
         self,
@@ -1061,7 +1061,7 @@ class GridSpec(mgridspec.GridSpec):
     @docstring._snippet_manager
     def copy(self, **kwargs):
         """
-        Return a copy of the `GridSpec` with the `~proplot.figure.Figure`-specific
+        Return a copy of the `GridSpec` with the `~ultraplot.figure.Figure`-specific
         "panel slots" removed. This can be useful if you want to draw multiple
         figures with the same geometry. Properties are inherited from this
         `GridSpec` by default but can be changed by passing keyword arguments.
@@ -1260,13 +1260,13 @@ class GridSpec(mgridspec.GridSpec):
     @property
     def figure(self):
         """
-        The `proplot.figure.Figure` uniquely associated with this `GridSpec`.
+        The `ultraplot.figure.Figure` uniquely associated with this `GridSpec`.
         On assignment the gridspec parameters and figure size are updated.
 
         See also
         --------
-        proplot.gridspec.SubplotGrid.figure
-        proplot.figure.Figure.gridspec
+        ultraplot.gridspec.SubplotGrid.figure
+        ultraplot.figure.Figure.gridspec
         """
         return self._figure
 
@@ -1275,7 +1275,7 @@ class GridSpec(mgridspec.GridSpec):
         from .figure import Figure
 
         if not isinstance(fig, Figure):
-            raise ValueError("Figure must be a proplot figure.")
+            raise ValueError("Figure must be a ultraplot figure.")
         if self._figure and self._figure is not fig:
             raise ValueError(
                 "Cannot use the same gridspec for multiple figures. "
@@ -1355,8 +1355,8 @@ class GridSpec(mgridspec.GridSpec):
 class SubplotGrid(MutableSequence, list):
     """
     List-like, array-like object used to store subplots returned by
-    `~proplot.figure.Figure.subplots`. 1D indexing uses the underlying list of
-    `~proplot.axes.Axes` while 2D indexing uses the `~SubplotGrid.gridspec`.
+    `~ultraplot.figure.Figure.subplots`. 1D indexing uses the underlying list of
+    `~ultraplot.axes.Axes` while 2D indexing uses the `~SubplotGrid.gridspec`.
     See `~SubplotGrid.__getitem__` for details.
     """
 
@@ -1382,18 +1382,18 @@ class SubplotGrid(MutableSequence, list):
         Parameters
         ----------
         sequence : sequence
-            A sequence of `proplot.axes.Axes` subplots or their children.
+            A sequence of `ultraplot.axes.Axes` subplots or their children.
 
         See also
         --------
-        proplot.ui.subplots
-        proplot.figure.Figure.subplots
-        proplot.figure.Figure.add_subplots
+        ultraplot.ui.subplots
+        ultraplot.figure.Figure.subplots
+        ultraplot.figure.Figure.add_subplots
         """
         n = kwargs.pop("n", None)
         order = kwargs.pop("order", None)
         if n is not None or order is not None:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Ignoring n={n!r} and order={order!r}. As of v0.8 SubplotGrid "
                 "handles 2D indexing by leveraging the subplotspec extents rather than "
                 "directly emulating 2D array indexing. These arguments are no longer "
@@ -1407,7 +1407,7 @@ class SubplotGrid(MutableSequence, list):
         """
         Get a missing attribute. Simply redirects to the axes if the `SubplotGrid`
         is singleton and raises an error otherwise. This can be convenient for
-        single-axes figures generated with `~proplot.figure.Figure.subplots`.
+        single-axes figures generated with `~ultraplot.figure.Figure.subplots`.
         """
         # Redirect to the axes
         if not self or attr[:1] == "_":
@@ -1420,7 +1420,7 @@ class SubplotGrid(MutableSequence, list):
         # dedicated relevant commands that can be called from the grid (see below).
         import functools
 
-        warnings._warn_proplot(
+        warnings._warn_ultraplot(
             "Calling arbitrary axes methods from SubplotGrid was deprecated in v0.8 "
             "and will be removed in a future release. Please index the grid or loop "
             "over the grid instead."
@@ -1464,13 +1464,13 @@ class SubplotGrid(MutableSequence, list):
 
         Returns
         -------
-        axs : proplot.axes.Axes or SubplotGrid
+        axs : ultraplot.axes.Axes or SubplotGrid
             The axes. If the index included slices then
             another `SubplotGrid` is returned.
 
         Example
         -------
-        >>> import proplot as pplt
+        >>> import ultraplot as pplt
         >>> fig, axs = pplt.subplots(nrows=3, ncols=3)
         >>> axs[5]  # the subplot in the second row, third column
         >>> axs[1, 2]  # the subplot in the second row, third column
@@ -1521,8 +1521,8 @@ class SubplotGrid(MutableSequence, list):
         ----------
         key : int or slice
             The 1D index.
-        value : `proplot.axes.Axes`
-            The proplot subplot or its child or panel axes,
+        value : `ultraplot.axes.Axes`
+            The ultraplot subplot or its child or panel axes,
             or a sequence thereof if the index was a slice.
         """
         if isinstance(key, Integral):
@@ -1571,7 +1571,7 @@ class SubplotGrid(MutableSequence, list):
         """
         gridspec = None
         message = (
-            "SubplotGrid can only be filled with proplot subplots "
+            "SubplotGrid can only be filled with ultraplot subplots "
             "belonging to the same GridSpec. Instead got {}."
         )
         items = np.atleast_1d(items)
@@ -1594,7 +1594,7 @@ class SubplotGrid(MutableSequence, list):
         elif items.size == 1:
             items = items.flat[0]
         else:
-            raise ValueError("Input must be a single proplot axes.")
+            raise ValueError("Input must be a single ultraplot axes.")
         return items
 
     @docstring._snippet_manager
@@ -1620,40 +1620,40 @@ class SubplotGrid(MutableSequence, list):
 
         See also
         --------
-        proplot.axes.Axes.format
-        proplot.axes.CartesianAxes.format
-        proplot.axes.PolarAxes.format
-        proplot.axes.GeoAxes.format
-        proplot.figure.Figure.format
-        proplot.config.Configurator.context
+        ultraplot.axes.Axes.format
+        ultraplot.axes.CartesianAxes.format
+        ultraplot.axes.PolarAxes.format
+        ultraplot.axes.GeoAxes.format
+        ultraplot.figure.Figure.format
+        ultraplot.config.Configurator.context
         """
         self.figure.format(axs=self, **kwargs)
 
     @property
     def figure(self):
         """
-        The `proplot.figure.Figure` uniquely associated with this `SubplotGrid`.
+        The `ultraplot.figure.Figure` uniquely associated with this `SubplotGrid`.
         This is used with the `SubplotGrid.format` command.
 
         See also
         --------
-        proplot.gridspec.GridSpec.figure
-        proplot.gridspec.SubplotGrid.gridspec
-        proplot.figure.Figure.subplotgrid
+        ultraplot.gridspec.GridSpec.figure
+        ultraplot.gridspec.SubplotGrid.gridspec
+        ultraplot.figure.Figure.subplotgrid
         """
         return self.gridspec.figure
 
     @property
     def gridspec(self):
         """
-        The `~proplot.gridspec.GridSpec` uniquely associated with this `SubplotGrid`.
+        The `~ultraplot.gridspec.GridSpec` uniquely associated with this `SubplotGrid`.
         This is used to resolve 2D indexing. See `~SubplotGrid.__getitem__` for details.
 
         See also
         --------
-        proplot.figure.Figure.gridspec
-        proplot.gridspec.SubplotGrid.figure
-        proplot.gridspec.SubplotGrid.shape
+        ultraplot.figure.Figure.gridspec
+        ultraplot.gridspec.SubplotGrid.figure
+        ultraplot.gridspec.SubplotGrid.shape
         """
         # Return the gridspec associatd with the grid
         if not self:
@@ -1665,12 +1665,12 @@ class SubplotGrid(MutableSequence, list):
     @property
     def shape(self):
         """
-        The shape of the `~proplot.gridspec.GridSpec` associated with the grid.
+        The shape of the `~ultraplot.gridspec.GridSpec` associated with the grid.
         See `~SubplotGrid.__getitem__` for details.
 
         See also
         --------
-        proplot.gridspec.SubplotGrid.gridspec
+        ultraplot.gridspec.SubplotGrid.gridspec
         """
         # NOTE: Considered deprecating this but on second thought since this is
         # a 2D array-like object it should definitely have a shape attribute.

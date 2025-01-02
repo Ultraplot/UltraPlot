@@ -61,7 +61,7 @@ class _UnicodeFonts(UnicodeFonts):
                 self.fontmap[texfont] = findfont(prop, fallback_to_default=False)
         elif WARN_MATHPARSER:
             # Suppress duplicate warnings in case API changes
-            warnings._warn_proplot("Failed to update the math text parser.")
+            warnings._warn_ultraplot("Failed to update the math text parser.")
             WARN_MATHPARSER = False
 
 
@@ -71,5 +71,5 @@ try:
     if mapping["custom"] is UnicodeFonts:
         mapping["custom"] = _UnicodeFonts
 except (KeyError, AttributeError):
-    warnings._warn_proplot("Failed to update math text parser.")
+    warnings._warn_ultraplot("Failed to update math text parser.")
     WARN_MATHPARSER = False

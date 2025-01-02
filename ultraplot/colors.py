@@ -445,7 +445,7 @@ def _clip_colors(colors, clip=True, gray=0.2, warn=False):
         msg = "Clipped" if clip else "Invalid"
         for i, name in enumerate("rgb"):
             if np.any(under[:, i]) or np.any(over[:, i]):
-                warnings._warn_proplot(f"{msg} {name!r} channel.")
+                warnings._warn_ultraplot(f"{msg} {name!r} channel.")
     return colors
 
 
@@ -518,7 +518,7 @@ def _make_segment_data(values, coords=None, ratios=None):
     if coords is not None:
         coords = np.atleast_1d(coords)
         if ratios is not None:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Segment coordinates were provided, ignoring " f"ratios={ratios!r}."
             )
         if len(coords) != len(values) or coords[0] != 0 or coords[-1] != 1:
@@ -665,7 +665,7 @@ def _load_colors(path, warn_on_failure=True):
     if not os.path.exists(path):
         message = f"Failed to load color data file {path!r}. File not found."
         if warn_on_failure:
-            warnings._warn_proplot(message)
+            warnings._warn_ultraplot(message)
         else:
             raise FileNotFoundError(message)
 
@@ -678,7 +678,7 @@ def _load_colors(path, warn_on_failure=True):
                 continue
             pair = tuple(item.strip().lower() for item in line.split(":"))
             if len(pair) != 2 or not REGEX_HEX_SINGLE.match(pair[1]):
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"Illegal line #{count + 1} in color file {path!r}:\n"
                     f"{line!r}\n"
                     f'Lines must be formatted as "name: hexcolor".'
@@ -707,7 +707,7 @@ def _standardize_colors(input, space, margin):
     channels = []
 
     # Always add these colors and ignore other colors that are too close
-    # We do this for colors with nice names or that proplot devs really like
+    # We do this for colors with nice names or that ultraplot devs really like
     for name in COLORS_KEEP:
         color = input.pop(name, None)
         if color is None:
@@ -855,7 +855,7 @@ class _Colormap(object):
         def _warn_or_raise(descrip, error=RuntimeError):
             prefix = f"Failed to load colormap or color cycle file {path!r}."
             if warn_on_failure:
-                warnings._warn_proplot(prefix + " " + descrip)
+                warnings._warn_ultraplot(prefix + " " + descrip)
             else:
                 raise error(prefix + " " + descrip)
 
@@ -1033,7 +1033,7 @@ class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
         --------
         DiscreteColormap
         matplotlib.colors.LinearSegmentedColormap
-        proplot.constructor.Colormap
+        ultraplot.constructor.Colormap
         """
         # NOTE: Additional keyword args should raise matplotlib error
         name, segmentdata, N, kwargs = self._pop_args(
@@ -1170,7 +1170,7 @@ class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
                 gamma.extend(igamma)
             if callable_:
                 if any(igamma != gamma[0] for igamma in gamma[1:]):
-                    warnings._warn_proplot(
+                    warnings._warn_ultraplot(
                         "Cannot use multiple segment gammas when concatenating "
                         f"callable segments. Using the first gamma of {gamma[0]}."
                     )
@@ -1304,7 +1304,7 @@ class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
         ----------
         path : path-like, optional
             The output filename. If not provided, the colormap is saved in the
-            ``cmaps`` subfolder in `~proplot.config.Configurator.user_folder`
+            ``cmaps`` subfolder in `~ultraplot.config.Configurator.user_folder`
             under the filename ``name.json`` (where ``name`` is the colormap
             name). Valid extensions are shown in the below table.
 
@@ -1414,7 +1414,7 @@ class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
         if name is None:
             name = self._make_name(suffix="s")
         if not self._cyclic:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Shifting non-cyclic colormap {self.name!r}. To suppress this "
                 "warning use cmap.set_cyclic(True) or Colormap(..., cyclic=True)."
             )
@@ -1501,7 +1501,7 @@ class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
             if np.iterable(gamma):
                 if callable(xyy):
                     if any(igamma != gamma[0] for igamma in gamma[1:]):
-                        warnings._warn_proplot(
+                        warnings._warn_ultraplot(
                             "Cannot use multiple segment gammas when "
                             "truncating colormap. Using the first gamma "
                             f"of {gamma[0]}."
@@ -1716,12 +1716,12 @@ class DiscreteColormap(mcolors.ListedColormap, _Colormap):
         --------
         ContinuousColormap
         matplotlib.colors.ListedColormap
-        proplot.constructor.Colormap
+        ultraplot.constructor.Colormap
         """
         # NOTE: This also improves 'monochrome' detection to test all items
         # in the list. Otherwise ContourSet does not apply negative_linestyle
         # to monochromatic colormaps generated by passing a 'colors' keyword.
-        # Also note that under the hood, just like proplot, ContourSet builds
+        # Also note that under the hood, just like ultraplot, ContourSet builds
         # identical monochromatic ListedColormaps when it receives scalar colors.
         N = _not_none(N, len(colors))
         name = _not_none(name, DEFAULT_NAME)
@@ -1778,7 +1778,7 @@ class DiscreteColormap(mcolors.ListedColormap, _Colormap):
         ----------
         path : path-like, optional
             The output filename. If not provided, the colormap is saved in the
-            ``cycles`` subfolder in `~proplot.config.Configurator.user_folder`
+            ``cycles`` subfolder in `~ultraplot.config.Configurator.user_folder`
             under the filename ``name.hex`` (where ``name`` is the color cycle
             name). Valid extensions are described in the below table.
 
@@ -2002,7 +2002,7 @@ class PerceptualColormap(ContinuousColormap):
         `segmentdata` dictionary that uses color names for the hue data,
         instead of channel values between ``0`` and ``360``.
 
-        >>> import proplot as pplt
+        >>> import ultraplot as pplt
         >>> data = {
         >>>     'h': [[0, 'red', 'red'], [1, 'blue', 'blue']],
         >>>     's': [[0, 100, 100], [1, 100, 100]],
@@ -2013,7 +2013,7 @@ class PerceptualColormap(ContinuousColormap):
         See also
         --------
         ContinuousColormap
-        proplot.constructor.Colormap
+        ultraplot.constructor.Colormap
         """
         # Checks
         name, segmentdata, N, kwargs = self._pop_args(
@@ -2472,13 +2472,13 @@ class DiscreteNorm(mcolors.BoundaryNorm):
             of the normalizer are set to the minimum and maximum values in `levels`.
         unique : {'neither', 'both', 'min', 'max'}, optional
             Which out-of-bounds regions should be assigned unique colormap colors.
-            Possible values are equivalent to the `extend` values. Internally, proplot
+            Possible values are equivalent to the `extend` values. Internally, ultraplot
             sets this depending on the user-input `extend`, whether the colormap is
             cyclic, and whether `~matplotlib.colors.Colormap.set_under`
             or `~matplotlib.colors.Colormap.set_over` were called for the colormap.
         step : float, optional
             The intensity of the transition to out-of-bounds colors as a fraction
-            of the adjacent step between in-bounds colors. Internally, proplot sets
+            of the adjacent step between in-bounds colors. Internally, ultraplot sets
             this to ``0.5`` for cyclic colormaps and ``1`` for all other colormaps.
             This only has an effect on lower colors when `unique` is ``'min'`` or
             ``'both'``, and on upper colors when `unique` is ``'max'`` or ``'both'``.
@@ -2506,9 +2506,9 @@ class DiscreteNorm(mcolors.BoundaryNorm):
 
         See also
         --------
-        proplot.constructor.Norm
-        proplot.colors.SegmentedNorm
-        proplot.ticker.DiscreteLocator
+        ultraplot.constructor.Norm
+        ultraplot.colors.SegmentedNorm
+        ultraplot.ticker.DiscreteLocator
         """
         # Parse input arguments
         # NOTE: This must be a subclass BoundaryNorm, so ColorbarBase will
@@ -2670,8 +2670,8 @@ class SegmentedNorm(mcolors.Normalize):
 
         See also
         --------
-        proplot.constructor.Norm
-        proplot.colors.DiscreteNorm
+        ultraplot.constructor.Norm
+        ultraplot.colors.DiscreteNorm
 
         Note
         ----
@@ -2686,7 +2686,7 @@ class SegmentedNorm(mcolors.Normalize):
         `~matplotlib.axes.Axes.contourf`, resulting in the automatic
         application of `SegmentedNorm`.
 
-        >>> import proplot as pplt
+        >>> import ultraplot as pplt
         >>> import numpy as np
         >>> levels = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]
         >>> data = 10 ** (3 * np.random.rand(10, 10))
@@ -2771,13 +2771,13 @@ class DivergingNorm(mcolors.Normalize):
 
         See also
         --------
-        proplot.constructor.Norm
+        ultraplot.constructor.Norm
         """
         # NOTE: This post is an excellent summary of matplotlib's DivergingNorm history:
         # https://github.com/matplotlib/matplotlib/issues/15336#issuecomment-535291287
         # NOTE: This is a stale PR that plans to implement the same features.
         # https://github.com/matplotlib/matplotlib/pull/15333#issuecomment-537545430
-        # Since proplot is starting without matplotlib's baggage we can just implement
+        # Since ultraplot is starting without matplotlib's baggage we can just implement
         # a diverging norm like they would prefer if they didn't have to worry about
         # confusing users: single class, default "fair" scaling that can be turned off.
         super().__init__(vmin, vmax, clip)
@@ -2862,7 +2862,7 @@ def _init_cmap_database():
     database = mcm._colormaps  # shallow copy of mpl's colormaps
     if not isinstance(database, ColormapDatabase):
         # Collect the mpl colormaps and include them
-        # in proplot's registry
+        # in ultraplot's registry
         database = {
             key: value
             for key, value in database.items()
@@ -2903,7 +2903,7 @@ def _get_cmap_subtype(name, subtype):
 
 def _translate_cmap(cmap, lut=None, cyclic=None, listedthresh=None):
     """
-    Translate the input argument to a proplot colormap subclass. Auto-detect
+    Translate the input argument to a ultraplot colormap subclass. Auto-detect
     cyclic colormaps based on names and re-apply default lookup table size.
     """
     # Parse args
@@ -2914,8 +2914,8 @@ def _translate_cmap(cmap, lut=None, cyclic=None, listedthresh=None):
     listedthresh = _not_none(listedthresh, rc["cmap.listedthresh"])
 
     # Translate the colormap
-    # WARNING: Here we ignore 'N' in order to respect proplotrc lut sizes
-    # when initializing proplot.
+    # WARNING: Here we ignore 'N' in order to respect ultraplotrc lut sizes
+    # when initializing ultraplot.
     bad = cmap._rgba_bad
     under = cmap._rgba_under
     over = cmap._rgba_over
@@ -3038,7 +3038,7 @@ class ColorDatabase(MutableMapping, dict):
 
         This works everywhere that colors are used in matplotlib, for
         example as `color`, `edgecolor', or `facecolor` keyword arguments
-        passed to `~proplot.axes.PlotAxes` commands.
+        passed to `~ultraplot.axes.PlotAxes` commands.
         """
         key = self._parse_key(key)
         return dict.__getitem__(self, key)
@@ -3092,7 +3092,7 @@ class ColormapDatabase(mcm.ColormapRegistry):
         super().__init__(kwargs)
         # The colormap is initialized with all the base colormaps
         # We have to change the classes internally to Perceptual, Continuous or Discrete
-        # such that proplot knows what these objects are. We piggy back on the registering mechanism
+        # such that ultraplot knows what these objects are. We piggy back on the registering mechanism
         # by overriding matplotlib's behavior
         for name in tuple(self._cmaps.keys()):
             self.register(self._cmaps[name], name=name)
@@ -3115,7 +3115,7 @@ class ColormapDatabase(mcm.ColormapRegistry):
             )
         if not self._has_item(test) and test in CMAPS_RENAMED:
             test_new, version = CMAPS_RENAMED[test]
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"The colormap name {test!r} was deprecated in version {version} "
                 f"and may be removed in {warnings.next_release()}. Please use "
                 f"the colormap name {test_new!r} instead."
@@ -3214,9 +3214,9 @@ class ColormapDatabase(mcm.ColormapRegistry):
         name = self._translate_key(name, mirror=False)
         cmap = _translate_cmap(cmap)
         # The builtin cmaps are a different class
-        # Proplot internally uses different classes for the different colormaps
+        # ultraplot internally uses different classes for the different colormaps
         if force and name in self._cmaps:
-            # surpress warning if the colormap is not generate by proplot
+            # surpress warning if the colormap is not generate by ultraplot
             if name not in self._builtin_cmaps:
                 print(f"Overwriting {name!r} that was already registered")
         self._cmaps[name] = cmap.copy()

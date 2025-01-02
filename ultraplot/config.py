@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tools for setting up proplot and configuring global settings.
+Tools for setting up ultraplot and configuring global settings.
 See the :ref:`configuration guide <ug_config>` for details.
 """
 # NOTE: The matplotlib analogue to this file is actually __init__.py
@@ -54,7 +54,7 @@ logging.getLogger("matplotlib.mathtext").setLevel(logging.ERROR)
 __all__ = [
     "Configurator",
     "rc",
-    "rc_proplot",
+    "rc_ultraplot",
     "rc_matplotlib",
     "use_style",
     "config_inline_backend",
@@ -76,15 +76,15 @@ local : bool, default: True
 user : bool, default: True
     Whether to load settings from the `~Configurator.user_file` file.
 default : bool, default: True
-    Whether to reload built-in default proplot settings.
+    Whether to reload built-in default ultraplot settings.
 """
 docstring._snippet_manager["rc.params"] = _rc_docstring
 
 # Registration docstrings
 _shared_docstring = """
-*args : path-spec or `~proplot.colors.{type}Colormap`, optional
+*args : path-spec or `~ultraplot.colors.{type}Colormap`, optional
     The {objects} to register. These can be file paths containing
-    RGB data or `~proplot.colors.{type}Colormap` instances. By default,
+    RGB data or `~ultraplot.colors.{type}Colormap` instances. By default,
     if positional arguments are passed, then `user` is set to ``False``.
 
     Valid file extensions are listed in the below table. Note that {objects}
@@ -132,7 +132,7 @@ local : bool, optional
     Whether to reload {objects} from `~Configurator.local_folders`. Default is
     ``False`` if positional arguments were passed and ``True`` otherwise.
 default : bool, default: False
-    Whether to reload the default {objects} packaged with proplot.
+    Whether to reload the default {objects} packaged with ultraplot.
     Default is always ``False``.
 """
 docstring._snippet_manager["rc.cmap_params"] = _register_docstring.format(
@@ -161,7 +161,7 @@ docstring._snippet_manager["rc.cycle_exts"] = _cycle_exts_docstring
 
 def _init_user_file():
     """
-    Initialize .proplotrc file.
+    Initialize .ultraplotrc file.
     """
     file = Configurator.user_file()
     if not os.path.exists(file):
@@ -170,7 +170,7 @@ def _init_user_file():
 
 def _init_user_folders():
     """
-    Initialize .proplot folder.
+    Initialize .ultraplot folder.
     """
     for subfolder in ("", "cmaps", "cycles", "colors", "fonts"):
         folder = Configurator.user_folder(subfolder)
@@ -224,14 +224,14 @@ def _filter_style_dict(rcdict, warn=True):
     Filter out blacklisted style parameters.
     """
     # NOTE: This implements bugfix: https://github.com/matplotlib/matplotlib/pull/17252
-    # This fix is *critical* for proplot because we always run style.use()
+    # This fix is *critical* for ultraplot because we always run style.use()
     # when the configurator is made. Without fix backend is reset every time
-    # you import proplot in jupyter notebooks. So apply retroactively.
+    # you import ultraplot in jupyter notebooks. So apply retroactively.
     rcdict_filtered = {}
     for key in rcdict:
         if key in mstyle.STYLE_BLACKLIST:
             if warn:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"Dictionary includes a parameter, {key!r}, that is not related "
                     "to style. Ignoring."
                 )
@@ -277,7 +277,7 @@ def _get_style_dict(style, filter=True):
     #    matplotlibrc changes and runtime rcParams changes) but the word 'style'
     #    implies a rigid static format. This makes more sense.
     # 3. Add a separate function that returns lists of style dictionaries so that
-    #    we can modify the active style in a context block. Proplot context is more
+    #    we can modify the active style in a context block. ultraplot context is more
     #    conservative than matplotlib's rc_context because it gets called a lot
     #    (e.g. every time you make an axes and every format() call). Instead of
     #    copying the entire rcParams dict we just track the keys that were changed.
@@ -332,12 +332,12 @@ def _get_style_dict(style, filter=True):
     return kw_matplotlib
 
 
-def _infer_proplot_dict(kw_params):
+def _infer_ultraplot_dict(kw_params):
     """
-    Infer values for proplot's "added" parameters from stylesheet parameters.
+    Infer values for ultraplot's "added" parameters from stylesheet parameters.
     """
-    kw_proplot = {}
-    mpl_to_proplot = {
+    kw_ultraplot = {}
+    mpl_to_ultraplot = {
         "xtick.labelsize": (
             "tick.labelsize",
             "grid.labelsize",
@@ -367,12 +367,12 @@ def _infer_proplot_dict(kw_params):
             "bottomlabel.color",
         ),
     }
-    for key, params in mpl_to_proplot.items():
+    for key, params in mpl_to_ultraplot.items():
         if key in kw_params:
             value = kw_params[key]
             for param in params:
-                kw_proplot[param] = value
-    return kw_proplot
+                kw_ultraplot[param] = value
+    return kw_ultraplot
 
 
 def config_inline_backend(fmt=None):
@@ -406,7 +406,7 @@ def config_inline_backend(fmt=None):
     ipython = get_ipython()
     if ipython is None:
         return
-    fmt = _not_none(fmt, rc_proplot["inlineformat"])
+    fmt = _not_none(fmt, rc_ultraplot["inlineformat"])
     if isinstance(fmt, str):
         fmt = [fmt]
     elif np.iterable(fmt):
@@ -438,13 +438,13 @@ def use_style(style):
     Configurator
     matplotlib.style.use
     """
-    # NOTE: This function is not really necessary but makes proplot's
+    # NOTE: This function is not really necessary but makes ultraplot's
     # stylesheet-supporting features obvious. Plus changing the style does
     # so much *more* than changing rc params or quick settings, so it is
     # nice to have dedicated function instead of just another rc_param name.
     kw_matplotlib = _get_style_dict(style)
     rc_matplotlib.update(kw_matplotlib)
-    rc_proplot.update(_infer_proplot_dict(kw_matplotlib))
+    rc_ultraplot.update(_infer_ultraplot_dict(kw_matplotlib))
 
 
 @docstring._snippet_manager
@@ -465,7 +465,7 @@ def register_cmaps(*args, user=None, local=None, default=False):
     register_cycles
     register_colors
     register_fonts
-    proplot.demos.show_cmaps
+    ultraplot.demos.show_cmaps
     """
     # Register input colormaps
     from . import colors as pcolors
@@ -509,7 +509,7 @@ def register_cycles(*args, user=None, local=None, default=False):
     register_cmaps
     register_colors
     register_fonts
-    proplot.demos.show_cycles
+    ultraplot.demos.show_cycles
     """
     # Register input color cycles
     from . import colors as pcolors
@@ -564,7 +564,7 @@ def register_colors(
     register_cmaps
     register_cycles
     register_fonts
-    proplot.demos.show_colors
+    ultraplot.demos.show_colors
     """
     from . import colors as pcolors
 
@@ -606,7 +606,7 @@ def register_colors(
         if i == 0:
             cat, _ = os.path.splitext(os.path.basename(path))
             if cat not in srcs:
-                raise RuntimeError(f"Unknown proplot color database {path!r}.")
+                raise RuntimeError(f"Unknown ultraplot color database {path!r}.")
             src = srcs[cat]
             if cat == "xkcd":
                 for key in COLORS_KEEP:
@@ -632,9 +632,9 @@ def register_fonts(*args, user=True, local=True, default=False):
     register_cmaps
     register_cycles
     register_colors
-    proplot.demos.show_fonts
+    ultraplot.demos.show_fonts
     """
-    # Find proplot fonts
+    # Find ultraplot fonts
     # WARNING: Must search data files in reverse because font manager will
     # not overwrite existing fonts with user-input fonts.
     # WARNING: If you include a font file with an unrecognized style,
@@ -644,36 +644,36 @@ def register_fonts(*args, user=True, local=True, default=False):
     # https://matplotlib.org/api/font_manager_api.html
     # For macOS the only fonts with 'Thin' in one of the .ttf file names
     # are Helvetica Neue and .SF NS Display Condensed. Never try to use these!
-    paths_proplot = _get_data_folders(
+    paths_ultraplot = _get_data_folders(
         "fonts", user=user, local=local, default=default, reverse=True
     )
-    fnames_proplot = set(mfonts.findSystemFonts(paths_proplot))
+    fnames_ultraplot = set(mfonts.findSystemFonts(paths_ultraplot))
     for path in args:
         path = os.path.expanduser(path)
         if os.path.isfile(path):
-            fnames_proplot.add(path)
+            fnames_ultraplot.add(path)
         else:
             raise FileNotFoundError(f"Invalid font file path {path!r}.")
 
     # Detect user-input ttc fonts and issue warning
-    fnames_proplot_ttc = {
-        file for file in fnames_proplot if os.path.splitext(file)[1] == ".ttc"
+    fnames_ultraplot_ttc = {
+        file for file in fnames_ultraplot if os.path.splitext(file)[1] == ".ttc"
     }
-    if fnames_proplot_ttc:
-        warnings._warn_proplot(
+    if fnames_ultraplot_ttc:
+        warnings._warn_ultraplot(
             "Ignoring the following .ttc fonts because they cannot be "
             "saved into PDF or EPS files (see matplotlib issue #3135): "
-            + ", ".join(map(repr, sorted(fnames_proplot_ttc)))
+            + ", ".join(map(repr, sorted(fnames_ultraplot_ttc)))
             + ". Please consider expanding them into separate .ttf files."
         )
 
     # Rebuild font cache only if necessary! Can be >50% of total import time!
     fnames_all = {font.fname for font in mfonts.fontManager.ttflist}
-    fnames_proplot -= fnames_proplot_ttc
-    if not fnames_all >= fnames_proplot:
-        warnings._warn_proplot(
+    fnames_ultraplot -= fnames_ultraplot_ttc
+    if not fnames_all >= fnames_ultraplot:
+        warnings._warn_ultraplot(
             "Rebuilding font cache. This usually happens "
-            "after installing or updating proplot."
+            "after installing or updating ultraplot."
         )
         if hasattr(mfonts.fontManager, "addfont"):
             # Newer API lets us add font files manually and deprecates TTFPATH. However
@@ -682,7 +682,7 @@ def register_fonts(*args, user=True, local=True, default=False):
             # recently became inaccessible. Must reproduce mpl code instead.
             # NOTE: Older mpl versions used fontList.json as the cache, but these
             # versions also did not have 'addfont', so makes no difference.
-            for fname in fnames_proplot:
+            for fname in fnames_ultraplot:
                 mfonts.fontManager.addfont(fname)
             cache = os.path.join(
                 mpl.get_cachedir(), f"fontlist-v{mfonts.FontManager.__version__}.json"
@@ -691,10 +691,10 @@ def register_fonts(*args, user=True, local=True, default=False):
         else:
             # Older API requires us to modify TTFPATH
             # NOTE: Previously we tried to modify TTFPATH before importing
-            # font manager with hope that it would load proplot fonts on
+            # font manager with hope that it would load ultraplot fonts on
             # initialization. But 99% of the time font manager just imports
             # the FontManager from cache, so we would have to rebuild anyway.
-            paths = ":".join(paths_proplot)
+            paths = ":".join(paths_ultraplot)
             if "TTFPATH" not in os.environ:
                 os.environ["TTFPATH"] = paths
             elif paths not in os.environ["TTFPATH"]:
@@ -716,23 +716,23 @@ class Configurator(MutableMapping, dict):
     """
     A dictionary-like class for managing `matplotlib settings
     <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__
-    stored in `rc_matplotlib` and :ref:`proplot settings <ug_rcproplot>`
-    stored in `rc_proplot`. This class is instantiated as the `rc` object
+    stored in `rc_matplotlib` and :ref:`ultraplot settings <ug_rcultraplot>`
+    stored in `rc_ultraplot`. This class is instantiated as the `rc` object
     on import. See the :ref:`user guide <ug_config>` for details.
     """
 
     def __repr__(self):
         cls = type("rc", (dict,), {})  # temporary class with short name
-        src = cls({key: val for key, val in rc_proplot.items() if "." not in key})
+        src = cls({key: val for key, val in rc_ultraplot.items() if "." not in key})
         return type(rc_matplotlib).__repr__(src).strip()[:-1] + ",\n    ...\n    })"
 
     def __str__(self):
         cls = type("rc", (dict,), {})  # temporary class with short name
-        src = cls({key: val for key, val in rc_proplot.items() if "." not in key})
+        src = cls({key: val for key, val in rc_ultraplot.items() if "." not in key})
         return type(rc_matplotlib).__str__(src) + "\n..."
 
     def __iter__(self):
-        yield from rc_proplot  # sorted proplot settings, ignoring deprecations
+        yield from rc_ultraplot  # sorted ultraplot settings, ignoring deprecations
         yield from rc_matplotlib  # sorted matplotlib settings, ignoring deprecations
 
     def __len__(self):
@@ -756,28 +756,28 @@ class Configurator(MutableMapping, dict):
 
     def __getitem__(self, key):
         """
-        Return an `rc_matplotlib` or `rc_proplot` setting using dictionary notation
+        Return an `rc_matplotlib` or `rc_ultraplot` setting using dictionary notation
         (e.g., ``value = pplt.rc[name]``).
         """
-        key, _ = self._validate_key(key)  # might issue proplot removed/renamed error
+        key, _ = self._validate_key(key)  # might issue ultraplot removed/renamed error
         try:
-            return rc_proplot[key]
+            return rc_ultraplot[key]
         except KeyError:
             pass
         return rc_matplotlib[key]  # might issue matplotlib removed/renamed error
 
     def __setitem__(self, key, value):
         """
-        Modify an `rc_matplotlib` or `rc_proplot` setting using dictionary notation
+        Modify an `rc_matplotlib` or `rc_ultraplot` setting using dictionary notation
         (e.g., ``pplt.rc[name] = value``).
         """
-        kw_proplot, kw_matplotlib = self._get_item_dicts(key, value)
-        rc_proplot.update(kw_proplot)
+        kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
+        rc_ultraplot.update(kw_ultraplot)
         rc_matplotlib.update(kw_matplotlib)
 
     def __getattr__(self, attr):
         """
-        Return an `rc_matplotlib` or `rc_proplot` setting using "dot" notation
+        Return an `rc_matplotlib` or `rc_ultraplot` setting using "dot" notation
         (e.g., ``value = pplt.rc.name``).
         """
         if attr[:1] == "_":
@@ -787,7 +787,7 @@ class Configurator(MutableMapping, dict):
 
     def __setattr__(self, attr, value):
         """
-        Modify an `rc_matplotlib` or `rc_proplot` setting using "dot" notation
+        Modify an `rc_matplotlib` or `rc_ultraplot` setting using "dot" notation
         (e.g., ``pplt.rc.name = value``).
         """
         if attr[:1] == "_":
@@ -808,10 +808,10 @@ class Configurator(MutableMapping, dict):
         rc_new = context.rc_new  # used for context-based _get_item_context
         rc_old = context.rc_old  # used to re-apply settings without copying whole dict
         for key, value in kwargs.items():
-            kw_proplot, kw_matplotlib = self._get_item_dicts(key, value)
+            kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
             for rc_dict, kw_new in zip(
-                (rc_proplot, rc_matplotlib),
-                (kw_proplot, kw_matplotlib),
+                (rc_ultraplot, rc_matplotlib),
+                (kw_ultraplot, kw_matplotlib),
             ):
                 for key, value in kw_new.items():
                     rc_old[key] = rc_dict[key]
@@ -827,8 +827,8 @@ class Configurator(MutableMapping, dict):
             )
         context = self._context[-1]
         for key, value in context.rc_old.items():
-            kw_proplot, kw_matplotlib = self._get_item_dicts(key, value)
-            rc_proplot.update(kw_proplot)
+            kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
+            rc_ultraplot.update(kw_ultraplot)
             rc_matplotlib.update(kw_matplotlib)
         del self._context[-1]
 
@@ -844,13 +844,13 @@ class Configurator(MutableMapping, dict):
         if default:
             rc_matplotlib.update(_get_style_dict("original", filter=False))
             rc_matplotlib.update(rcsetup._rc_matplotlib_default)
-            rc_proplot.update(rcsetup._rc_proplot_default)
-            for key, value in rc_proplot.items():
-                kw_proplot, kw_matplotlib = self._get_item_dicts(
+            rc_ultraplot.update(rcsetup._rc_ultraplot_default)
+            for key, value in rc_ultraplot.items():
+                kw_ultraplot, kw_matplotlib = self._get_item_dicts(
                     key, value, skip_cycle=skip_cycle
                 )
                 rc_matplotlib.update(kw_matplotlib)
-                rc_proplot.update(kw_proplot)
+                rc_ultraplot.update(kw_ultraplot)
 
         # Update from user home
         user_path = None
@@ -870,7 +870,7 @@ class Configurator(MutableMapping, dict):
     @staticmethod
     def _validate_key(key, value=None):
         """
-        Validate setting names and handle `rc_proplot` deprecations.
+        Validate setting names and handle `rc_ultraplot` deprecations.
         """
         # NOTE: Not necessary to check matplotlib key here because... not sure why.
         # Think deprecated matplotlib keys are not involved in any synced settings.
@@ -880,7 +880,7 @@ class Configurator(MutableMapping, dict):
         key = key.lower()
         if "." not in key:
             key = rcsetup._rc_nodots.get(key, key)
-        key, value = rc_proplot._check_key(key, value)  # may issue deprecation warning
+        key, value = rc_ultraplot._check_key(key, value)  # may issue deprecation warning
         return key, value
 
     @staticmethod
@@ -897,11 +897,11 @@ class Configurator(MutableMapping, dict):
         if isinstance(value, np.ndarray):
             value = value.item() if value.size == 1 else value.tolist()
         validate_matplotlib = getattr(rc_matplotlib, "validate", None)
-        validate_proplot = rc_proplot._validate
+        validate_ultraplot = rc_ultraplot._validate
         if validate_matplotlib is not None and key in validate_matplotlib:
             value = validate_matplotlib[key](value)
-        elif key in validate_proplot:
-            value = validate_proplot[key](value)
+        elif key in validate_ultraplot:
+            value = validate_ultraplot[key](value)
         return value
 
     def _get_item_context(self, key, mode=None):
@@ -914,9 +914,9 @@ class Configurator(MutableMapping, dict):
             mode = self._context_mode
         cache = tuple(context.rc_new for context in self._context)
         if mode == 0:
-            rcdicts = (*cache, rc_proplot, rc_matplotlib)
+            rcdicts = (*cache, rc_ultraplot, rc_matplotlib)
         elif mode == 1:
-            rcdicts = (*cache, rc_proplot)  # added settings only!
+            rcdicts = (*cache, rc_ultraplot)  # added settings only!
         elif mode == 2:
             rcdicts = (*cache,)
         else:
@@ -933,7 +933,7 @@ class Configurator(MutableMapping, dict):
 
     def _get_item_dicts(self, key, value, skip_cycle=False):
         """
-        Return dictionaries for updating the `rc_proplot` and `rc_matplotlib`
+        Return dictionaries for updating the `rc_ultraplot` and `rc_matplotlib`
         properties associated with this key. Used when setting items, entering
         context blocks, or loading files.
         """
@@ -943,19 +943,19 @@ class Configurator(MutableMapping, dict):
         keys = (key,) + rcsetup._rc_children.get(key, ())  # settings to change
         contains = lambda *args: any(arg in keys for arg in args)  # noqa: E731
 
-        # Fill dictionaries of matplotlib and proplot settings
+        # Fill dictionaries of matplotlib and ultraplot settings
         # NOTE: Raise key error right away so it can be caught by _load_file().
         # Also ignore deprecation warnings so we only get them *once* on assignment
-        kw_proplot = {}  # custom properties
+        kw_ultraplot = {}  # custom properties
         kw_matplotlib = {}  # builtin properties
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", mpl.MatplotlibDeprecationWarning)
-            warnings.simplefilter("ignore", warnings.ProplotWarning)
+            warnings.simplefilter("ignore", warnings.UltraplotWarning)
             for key in keys:
                 if key in rc_matplotlib:
                     kw_matplotlib[key] = value
-                elif key in rc_proplot:
-                    kw_proplot[key] = value
+                elif key in rc_ultraplot:
+                    kw_ultraplot[key] = value
                 else:
                     raise KeyError(f"Invalid rc setting {key!r}.")
 
@@ -968,10 +968,10 @@ class Configurator(MutableMapping, dict):
             if value is not None:
                 ikw_matplotlib = _get_style_dict(value)
                 kw_matplotlib.update(ikw_matplotlib)
-                kw_proplot.update(_infer_proplot_dict(ikw_matplotlib))
+                kw_ultraplot.update(_infer_ultraplot_dict(ikw_matplotlib))
 
         # Cycler
-        # NOTE: Have to skip this step during initial proplot import
+        # NOTE: Have to skip this step during initial ultraplot import
         elif contains("cycle") and not skip_cycle:
             from .colors import _get_cmap_subtype
 
@@ -984,15 +984,15 @@ class Configurator(MutableMapping, dict):
             if value:
                 name, this = key.split(".")
                 other = "border" if this == "bbox" else "bbox"
-                kw_proplot[name + "." + other] = False
+                kw_ultraplot[name + "." + other] = False
 
         # Fontsize
         # NOTE: Re-application of e.g. size='small' uses the updated 'font.size'
         elif contains("font.size"):
-            kw_proplot.update(
+            kw_ultraplot.update(
                 {
                     key: value
-                    for key, value in rc_proplot.items()
+                    for key, value in rc_ultraplot.items()
                     if key in rcsetup.FONT_KEYS and value in mfonts.font_scalings
                 }
             )
@@ -1008,9 +1008,9 @@ class Configurator(MutableMapping, dict):
         elif contains("tick.len", "tick.lenratio"):
             if contains("tick.len"):
                 ticklen = value
-                ratio = rc_proplot["tick.lenratio"]
+                ratio = rc_ultraplot["tick.lenratio"]
             else:
-                ticklen = rc_proplot["tick.len"]
+                ticklen = rc_ultraplot["tick.len"]
                 ratio = value
             kw_matplotlib["xtick.minor.size"] = ticklen * ratio
             kw_matplotlib["ytick.minor.size"] = ticklen * ratio
@@ -1019,9 +1019,9 @@ class Configurator(MutableMapping, dict):
         elif contains("tick.width", "tick.widthratio"):
             if contains("tick.width"):
                 tickwidth = value
-                ratio = rc_proplot["tick.widthratio"]
+                ratio = rc_ultraplot["tick.widthratio"]
             else:
-                tickwidth = rc_proplot["tick.width"]
+                tickwidth = rc_ultraplot["tick.width"]
                 ratio = value
             kw_matplotlib["xtick.minor.width"] = tickwidth * ratio
             kw_matplotlib["ytick.minor.width"] = tickwidth * ratio
@@ -1030,12 +1030,12 @@ class Configurator(MutableMapping, dict):
         elif contains("grid.width", "grid.widthratio"):
             if contains("grid.width"):
                 gridwidth = value
-                ratio = rc_proplot["grid.widthratio"]
+                ratio = rc_ultraplot["grid.widthratio"]
             else:
-                gridwidth = rc_proplot["grid.width"]
+                gridwidth = rc_ultraplot["grid.width"]
                 ratio = value
-            kw_proplot["gridminor.linewidth"] = gridwidth * ratio
-            kw_proplot["gridminor.width"] = gridwidth * ratio
+            kw_ultraplot["gridminor.linewidth"] = gridwidth * ratio
+            kw_ultraplot["gridminor.width"] = gridwidth * ratio
 
         # Gridline toggling
         elif contains("grid", "gridminor"):
@@ -1045,7 +1045,7 @@ class Configurator(MutableMapping, dict):
             kw_matplotlib["axes.grid"] = b
             kw_matplotlib["axes.grid.which"] = which
 
-        return kw_proplot, kw_matplotlib
+        return kw_ultraplot, kw_matplotlib
 
     @staticmethod
     def _get_axisbelow_zorder(axisbelow):
@@ -1070,8 +1070,8 @@ class Configurator(MutableMapping, dict):
         # Deprecated behavior
         context = native or self._context_mode == 2
         if patch_kw:
-            warnings._warn_proplot(
-                "'patch_kw' is no longer necessary as of proplot v0.8. "
+            warnings._warn_ultraplot(
+                "'patch_kw' is no longer necessary as of ultraplot v0.8. "
                 "Pass the parameters as keyword arguments instead."
             )
             kwargs.update(patch_kw)
@@ -1235,9 +1235,9 @@ class Configurator(MutableMapping, dict):
     @staticmethod
     def local_files():
         """
-        Return locations of files named ``proplotrc`` in this directory and in parent
+        Return locations of files named ``ultraplotrc`` in this directory and in parent
         directories. "Hidden" files with a leading dot are also recognized. These are
-        automatically loaded when proplot is imported.
+        automatically loaded when ultraplot is imported.
 
         See also
         --------
@@ -1247,7 +1247,7 @@ class Configurator(MutableMapping, dict):
         cdir = os.getcwd()
         paths = []
         while cdir:  # i.e. not root
-            for name in ("proplotrc", ".proplotrc"):
+            for name in ("ultraplotrc", ".ultraplotrc"):
                 path = os.path.join(cdir, name)
                 if os.path.isfile(path):
                     paths.append(path)
@@ -1260,10 +1260,10 @@ class Configurator(MutableMapping, dict):
     @staticmethod
     def local_folders(subfolder=None):
         """
-        Return locations of folders named ``proplot_cmaps``, ``proplot_cycles``,
-        ``proplot_colors``, and ``proplot_fonts`` in this directory and in parent
+        Return locations of folders named ``ultraplot_cmaps``, ``ultraplot_cycles``,
+        ``ultraplot_colors``, and ``ultraplot_fonts`` in this directory and in parent
         directories. "Hidden" folders with a leading dot are also recognized. Files
-        in these directories are automatically loaded when proplot is imported.
+        in these directories are automatically loaded when ultraplot is imported.
 
         See also
         --------
@@ -1277,7 +1277,7 @@ class Configurator(MutableMapping, dict):
         if isinstance(subfolder, str):
             subfolder = (subfolder,)
         while cdir:  # i.e. not root
-            for prefix in ("proplot", ".proplot"):
+            for prefix in ("ultraplot", ".ultraplot"):
                 for suffix in subfolder:
                     path = os.path.join(cdir, "_".join((prefix, suffix)))
                     if os.path.isdir(path):
@@ -1291,26 +1291,26 @@ class Configurator(MutableMapping, dict):
     @staticmethod
     def _config_folder():
         """
-        Get the XDG proplot folder.
+        Get the XDG ultraplot folder.
         """
         home = os.path.expanduser("~")
         base = os.environ.get("XDG_CONFIG_HOME")
         if not base:
             base = os.path.join(home, ".config")
         if sys.platform.startswith(("linux", "freebsd")) and os.path.isdir(base):
-            configdir = os.path.join(base, "proplot")
+            configdir = os.path.join(base, "ultraplot")
         else:
-            configdir = os.path.join(home, ".proplot")
+            configdir = os.path.join(home, ".ultraplot")
         return configdir
 
     @staticmethod
     def user_file():
         """
-        Return location of the default proplotrc file. On Linux, this is either
-        ``$XDG_CONFIG_HOME/proplot/proplotrc`` or ``~/.config/proplot/proplotrc``
+        Return location of the default ultraplotrc file. On Linux, this is either
+        ``$XDG_CONFIG_HOME/ultraplot/ultraplotrc`` or ``~/.config/ultraplot/ultraplotrc``
         if the `XDG directory <https://wiki.archlinux.org/title/XDG_Base_Directory>`__
-        is unset. On other operating systems, this is ``~/.proplot/proplotrc``. The
-        location ``~/.proplotrc`` or ``~/.proplot/proplotrc`` is always returned if the
+        is unset. On other operating systems, this is ``~/.ultraplot/ultraplotrc``. The
+        location ``~/.ultraplotrc`` or ``~/.ultraplot/ultraplotrc`` is always returned if the
         file exists, regardless of the operating system. If multiple valid locations
         are found, a warning is raised.
 
@@ -1319,13 +1319,13 @@ class Configurator(MutableMapping, dict):
         Configurator.user_folder
         Configurator.local_files
         """
-        # Support both loose files and files inside .proplot
-        file = os.path.join(Configurator.user_folder(), "proplotrc")
-        universal = os.path.join(os.path.expanduser("~"), ".proplotrc")
+        # Support both loose files and files inside .ultraplot
+        file = os.path.join(Configurator.user_folder(), "ultraplotrc")
+        universal = os.path.join(os.path.expanduser("~"), ".ultraplotrc")
         if os.path.isfile(universal):
             if file != universal and os.path.isfile(file):
-                warnings._warn_proplot(
-                    "Found conflicting default user proplotrc files at "
+                warnings._warn_ultraplot(
+                    "Found conflicting default user ultraplotrc files at "
                     f"{universal!r} and {file!r}. Ignoring the second one."
                 )
             file = universal
@@ -1334,11 +1334,11 @@ class Configurator(MutableMapping, dict):
     @staticmethod
     def user_folder(subfolder=None):
         """
-        Return location of the default proplot folder. On Linux, this
-        is either ``$XDG_CONFIG_HOME/proplot`` or ``~/.config/proplot``
+        Return location of the default ultraplot folder. On Linux, this
+        is either ``$XDG_CONFIG_HOME/ultraplot`` or ``~/.config/ultraplot``
         if the `XDG directory <https://wiki.archlinux.org/title/XDG_Base_Directory>`__
-        is unset. On other operating systems, this is ``~/.proplot``. The location
-        ``~/.proplot`` is always returned if the folder exists, regardless of the
+        is unset. On other operating systems, this is ``~/.ultraplot``. The location
+        ``~/.ultraplot`` is always returned if the folder exists, regardless of the
         operating system. If multiple valid locations are found, a warning is raised.
 
         See also
@@ -1349,17 +1349,17 @@ class Configurator(MutableMapping, dict):
         # Try the XDG standard location
         # NOTE: This is borrowed from matplotlib.get_configdir
         home = os.path.expanduser("~")
-        universal = folder = os.path.join(home, ".proplot")
+        universal = folder = os.path.join(home, ".ultraplot")
         if sys.platform.startswith(("linux", "freebsd")):
             xdg = os.environ.get("XDG_CONFIG_HOME")
             xdg = xdg or os.path.join(home, ".config")
-            folder = os.path.join(xdg, "proplot")
-        # Fallback to the loose ~/.proplot if it is present
+            folder = os.path.join(xdg, "ultraplot")
+        # Fallback to the loose ~/.ultraplot if it is present
         # NOTE: This is critical or we might ignore previously stored settings!
         if os.path.isdir(universal):
             if folder != universal and os.path.isdir(folder):
-                warnings._warn_proplot(
-                    "Found conflicting default user proplot folders at "
+                warnings._warn_ultraplot(
+                    "Found conflicting default user ultraplot folders at "
                     f"{universal!r} and {folder!r}. Ignoring the second one."
                 )
             folder = universal
@@ -1392,7 +1392,7 @@ class Configurator(MutableMapping, dict):
             The options are as follows:
 
             * ``mode=0``: Matplotlib's `rc_matplotlib` settings
-              and proplot's `rc_proplot` settings are all returned,
+              and ultraplot's `rc_ultraplot` settings are all returned,
               whether or not they are local to the "with as" block.
             * ``mode=1``: Matplotlib's `rc_matplotlib` settings are only
               returned if they are local to the "with as" block. For example,
@@ -1400,17 +1400,17 @@ class Configurator(MutableMapping, dict):
               then ``pplt.rc.find('axes.titlesize', context=True)`` will return
               this value, but ``pplt.rc.find('axes.titleweight', context=True)`` will
               return ``None``. This is used internally when instantiating axes.
-            * ``mode=2``: Matplotlib's `rc_matplotlib` settings and proplot's
-              `rc_proplot` settings are only returned if they are local to the
+            * ``mode=2``: Matplotlib's `rc_matplotlib` settings and ultraplot's
+              `rc_ultraplot` settings are only returned if they are local to the
               "with as" block. This is used internally when formatting axes.
 
         Note
         ----
         Context "modes" are primarily used internally but may also be useful for power
-        users. Mode ``1`` is used when `~proplot.axes.Axes.format` is called during
-        axes instantiation, and mode ``2`` is used when `~proplot.axes.Axes.format`
+        users. Mode ``1`` is used when `~ultraplot.axes.Axes.format` is called during
+        axes instantiation, and mode ``2`` is used when `~ultraplot.axes.Axes.format`
         is manually called by users. The latter prevents successive calls to
-        `~proplot.axes.Axes.format` from constantly looking up and re-applying
+        `~ultraplot.axes.Axes.format` from constantly looking up and re-applying
         unchanged settings and significantly increasing the runtime.
 
         Example
@@ -1418,16 +1418,16 @@ class Configurator(MutableMapping, dict):
         The below applies settings to axes in a specific figure using
         `~Configurator.context`.
 
-        >>> import proplot as pplt
+        >>> import ultraplot as pplt
         >>> with pplt.rc.context(ticklen=5, metalinewidth=2):
         >>>     fig, ax = pplt.subplots()
         >>>     ax.plot(data)
 
         The below applies settings to a specific axes using
-        `~proplot.axes.Axes.format`, which uses `~Configurator.context`
+        `~ultraplot.axes.Axes.format`, which uses `~Configurator.context`
         internally.
 
-        >>> import proplot as pplt
+        >>> import ultraplot as pplt
         >>> fig, ax = pplt.subplots()
         >>> ax.format(ticklen=5, metalinewidth=2)
         """
@@ -1588,7 +1588,7 @@ class Configurator(MutableMapping, dict):
 
     def _load_file(self, path):
         """
-        Return dictionaries of proplot and matplotlib settings loaded from the file.
+        Return dictionaries of ultraplot and matplotlib settings loaded from the file.
         """
         # WARNING: Critical to not yet apply _get_item_dicts() syncing or else we
         # can overwrite input settings (e.g. label.size followed by font.size).
@@ -1606,35 +1606,35 @@ class Configurator(MutableMapping, dict):
                 # Parse the pair
                 pair = stripped.split(":", 1)
                 if len(pair) != 2:
-                    warnings._warn_proplot(f'Illegal {message}:\n{line}"')
+                    warnings._warn_ultraplot(f'Illegal {message}:\n{line}"')
                     continue
                 # Detect duplicates
                 key, value = map(str.strip, pair)
                 if key in added:
-                    warnings._warn_proplot(f"Duplicate rc key {key!r} on {message}.")
+                    warnings._warn_ultraplot(f"Duplicate rc key {key!r} on {message}.")
                 added.add(key)
                 # Get child dictionaries. Careful to have informative messages
                 with warnings.catch_warnings():
-                    warnings.simplefilter("error", warnings.ProplotWarning)
+                    warnings.simplefilter("error", warnings.UltraplotWarning)
                     try:
                         key, value = self._validate_key(key, value)
                         value = self._validate_value(key, value)
                     except KeyError:
-                        warnings.simplefilter("default", warnings.ProplotWarning)
-                        warnings._warn_proplot(f"Invalid rc key {key!r} on {message}.")
+                        warnings.simplefilter("default", warnings.UltraplotWarning)
+                        warnings._warn_ultraplot(f"Invalid rc key {key!r} on {message}.")
                         continue
                     except ValueError as err:
-                        warnings.simplefilter("default", warnings.ProplotWarning)
-                        warnings._warn_proplot(
+                        warnings.simplefilter("default", warnings.UltraplotWarning)
+                        warnings._warn_ultraplot(
                             f"Invalid rc value {value!r} for key {key!r} on {message}: {err}"
                         )  # noqa: E501
                         continue
-                    except warnings.ProplotWarning as err:
-                        warnings.simplefilter("default", warnings.ProplotWarning)
-                        warnings._warn_proplot(
+                    except warnings.UltraplotWarning as err:
+                        warnings.simplefilter("default", warnings.UltraplotWarning)
+                        warnings._warn_ultraplot(
                             f"Outdated rc key {key!r} on {message}: {err}"
                         )  # noqa: E501
-                        warnings.simplefilter("ignore", warnings.ProplotWarning)
+                        warnings.simplefilter("ignore", warnings.UltraplotWarning)
                         key, value = self._validate_key(key, value)
                         value = self._validate_value(key, value)
                 # Update the settings
@@ -1672,31 +1672,31 @@ class Configurator(MutableMapping, dict):
     def _save_yaml(path, user_dict=None, *, comment=False, description=False):
         """
         Create a YAML file. Used for online docs and default and user-generated
-        proplotrc files. Extra settings can be passed with the input dictionary.
+        ultraplotrc files. Extra settings can be passed with the input dictionary.
         """
         user_table = ()
         if user_dict:  # add always-uncommented user settings
             user_table = rcsetup._yaml_table(user_dict, comment=False)
             user_table = ("# Changed settings", user_table, "")
-        proplot_dict = (
-            rcsetup._rc_proplot_table if description else rcsetup._rc_proplot_default
+        ultraplot_dict = (
+            rcsetup._rc_ultraplot_table if description else rcsetup._rc_ultraplot_default
         )  # noqa: E501
-        proplot_table = rcsetup._yaml_table(
-            proplot_dict, comment=comment, description=description
+        ultraplot_table = rcsetup._yaml_table(
+            ultraplot_dict, comment=comment, description=description
         )  # noqa: E501
-        proplot_table = ("# Proplot settings", proplot_table, "")
+        ultraplot_table = ("# ultraplot settings", ultraplot_table, "")
         matplotlib_dict = rcsetup._rc_matplotlib_default
         matplotlib_table = rcsetup._yaml_table(matplotlib_dict, comment=comment)
         matplotlib_table = ("# Matplotlib settings", matplotlib_table)
         parts = (
             "#--------------------------------------------------------------------",
-            "# Use this file to change the default proplot and matplotlib settings.",
+            "# Use this file to change the default ultraplot and matplotlib settings.",
             "# The syntax is identical to matplotlibrc syntax. For details see:",
-            "# https://proplot.readthedocs.io/en/latest/configuration.html",
+            "# https://ultraplot.readthedocs.io/en/latest/configuration.html",
             "# https://matplotlib.org/stable/tutorials/introductory/customizing.html",
             "#--------------------------------------------------------------------",
             *user_table,  # empty if nothing passed
-            *proplot_table,
+            *ultraplot_table,
             *matplotlib_table,
         )
         with open(path, "w") as fh:
@@ -1704,18 +1704,18 @@ class Configurator(MutableMapping, dict):
 
     def save(self, path=None, user=True, comment=None, backup=True, description=False):
         """
-        Save the current settings to a ``proplotrc`` file. This writes
+        Save the current settings to a ``ultraplotrc`` file. This writes
         the default values commented out plus the values that *differ*
         from the defaults at the top of the file.
 
         Parameters
         ----------
-        path : path-like, default: 'proplotrc'
-            The file name and/or directory. The default file name is ``proplotrc``
+        path : path-like, default: 'ultraplotrc'
+            The file name and/or directory. The default file name is ``ultraplotrc``
             and the default directory is the current directory.
         user : bool, default: True
             If ``True`` then settings that have been `~Configurator.changed` from
-            the proplot defaults are shown uncommented at the top of the file.
+            the ultraplot defaults are shown uncommented at the top of the file.
         backup : bool, default: True
             Whether to "backup" an existing file by renaming with the suffix ``.bak``
             or overwrite an existing file.
@@ -1733,11 +1733,11 @@ class Configurator(MutableMapping, dict):
         """
         path = os.path.expanduser(path or ".")
         if os.path.isdir(path):  # includes ''
-            path = os.path.join(path, "proplotrc")
+            path = os.path.join(path, "ultraplotrc")
         if os.path.isfile(path) and backup:
             backup = path + ".bak"
             os.rename(path, backup)
-            warnings._warn_proplot(f"Existing file {path!r} was moved to {backup!r}.")
+            warnings._warn_ultraplot(f"Existing file {path!r} was moved to {backup!r}.")
         comment = _not_none(comment, user)
         user_dict = self.changed if user else None
         self._save_yaml(path, user_dict, comment=comment, description=description)
@@ -1752,7 +1752,7 @@ class Configurator(MutableMapping, dict):
     @property
     def changed(self):
         """
-        A dictionary of settings that have changed from the proplot defaults.
+        A dictionary of settings that have changed from the ultraplot defaults.
 
         See also
         --------
@@ -1791,11 +1791,11 @@ _init_user_file()
 #: validated and restricted to recognized setting names.
 rc_matplotlib = mpl.rcParams  # PEP8 4 lyfe
 
-#: A dictionary-like container of proplot settings. Assignments are
+#: A dictionary-like container of ultraplot settings. Assignments are
 #: validated and restricted to recognized setting names.
-rc_proplot = rcsetup._rc_proplot_default.copy()  # a validated rcParams-style dict
+rc_ultraplot = rcsetup._rc_ultraplot_default.copy()  # a validated rcParams-style dict
 
-#: Instance of `Configurator`. This controls both `rc_matplotlib` and `rc_proplot`
+#: Instance of `Configurator`. This controls both `rc_matplotlib` and `rc_ultraplot`
 #: settings. See the :ref:`configuration guide <ug_config>` for details.
 rc = Configurator(skip_cycle=True)
 

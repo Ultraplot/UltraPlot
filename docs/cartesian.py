@@ -32,11 +32,11 @@
 #
 # Matplotlib `tick locators
 # <https://matplotlib.org/stable/gallery/ticks_and_spines/tick-locators.html>`__
-# select sensible tick locations based on the axis data limits. In proplot, you can
-# change the tick locator using the `~proplot.axes.CartesianAxes.format` keyword
+# select sensible tick locations based on the axis data limits. In ultraplot, you can
+# change the tick locator using the `~ultraplot.axes.CartesianAxes.format` keyword
 # arguments `xlocator`, `ylocator`, `xminorlocator`, and `yminorlocator` (or their
 # aliases, `xticks`, `yticks`, `xminorticks`, and `yminorticks`). This is powered by
-# the `~proplot.constructor.Locator` :ref:`constructor function <why_constructor>`.
+# the `~ultraplot.constructor.Locator` :ref:`constructor function <why_constructor>`.
 #
 # You can use these keyword arguments to apply built-in matplotlib
 # `~matplotlib.ticker.Locator`\ s by their "registered" names
@@ -47,12 +47,12 @@
 # If you want to work with the locator classes directly, they are available in the
 # top-level namespace (e.g., ``xlocator=pplt.MultipleLocator(...)`` is allowed).
 #
-# To generate lists of tick locations, we recommend using proplot's
-# `~proplot.utils.arange` function -- it’s basically an endpoint-inclusive
+# To generate lists of tick locations, we recommend using ultraplot's
+# `~ultraplot.utils.arange` function -- it’s basically an endpoint-inclusive
 # version of `numpy.arange`, which is usually what you'll want in this context.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -107,10 +107,10 @@ pplt.rc.reset()
 #
 # Matplotlib `tick formatters
 # <https://matplotlib.org/stable/gallery/ticks_and_spines/tick-formatters.html>`__
-# convert floating point numbers to nicely-formatted tick labels. In proplot, you can
-# change the tick formatter using the `~proplot.axes.CartesianAxes.format` keyword
+# convert floating point numbers to nicely-formatted tick labels. In ultraplot, you can
+# change the tick formatter using the `~ultraplot.axes.CartesianAxes.format` keyword
 # arguments `xformatter` and `yformatter` (or their aliases, `xticklabels` and
-# `yticklabels`). This is powered by the `~proplot.constructor.Formatter`
+# `yticklabels`). This is powered by the `~ultraplot.constructor.Formatter`
 # :ref:`constructor function <why_constructor>`.
 #
 # You can use these keyword arguments to apply built-in matplotlib
@@ -118,7 +118,7 @@ pplt.rc.reset()
 # (e.g., ``xformatter='log'``), to apply a ``%``-style format directive with
 # `~matplotlib.ticker.FormatStrFormatter` (e.g., ``xformatter='%.0f'``), or
 # to apply custom tick labels with `~matplotlib.ticker.FixedFormatter` (just
-# like `~matplotlib.axes.Axes.set_xticklabels`). You can also apply one of proplot's
+# like `~matplotlib.axes.Axes.set_xticklabels`). You can also apply one of ultraplot's
 # new tick formatters -- for example, ``xformatter='deglat'`` to label ticks
 # as geographic latitude coordinates, ``xformatter='pi'`` to label ticks as
 # fractions of :math:`\pi`, or ``xformatter='sci'`` to label ticks with
@@ -126,15 +126,15 @@ pplt.rc.reset()
 # directly, they are available in the top-level namespace
 # (e.g., ``xformatter=pplt.SciFormatter(...)`` is allowed).
 #
-# Proplot also changes the default tick formatter to
-# `~proplot.ticker.AutoFormatter`. This class trims trailing zeros by
+# ultraplot also changes the default tick formatter to
+# `~ultraplot.ticker.AutoFormatter`. This class trims trailing zeros by
 # default, can optionally omit or wrap tick values within particular
 # number ranges, and can add prefixes and suffixes to each label. See
-# `~proplot.ticker.AutoFormatter` for details. To disable the trailing
+# `~ultraplot.ticker.AutoFormatter` for details. To disable the trailing
 # zero-trimming feature, set :rcraw:`formatter.zerotrim` to ``False``.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 
 pplt.rc.fontsize = 11
 pplt.rc.metawidth = 1.5
@@ -152,7 +152,7 @@ axs.format(
 # Formatter comparison
 locator = [0, 0.25, 0.5, 0.75, 1]
 axs[0].format(xformatter="scalar", yformatter="scalar", title="Matplotlib formatter")
-axs[1].format(title="Proplot formatter")
+axs[1].format(title="ultraplot formatter")
 axs[:2].format(xlocator=locator, ylocator=locator)
 
 # Limiting the tick range
@@ -182,7 +182,7 @@ pplt.rc.reset()
 
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 pplt.rc.update(
@@ -248,7 +248,7 @@ pplt.rc.reset()
 # --------------
 #
 # The above examples all assumed typical "numeric" axes. However
-# `~proplot.axes.CartesianAxes.format` can also modify the tick locations and tick
+# `~ultraplot.axes.CartesianAxes.format` can also modify the tick locations and tick
 # labels for "datetime" axes. To draw ticks on each occurence of some particular time
 # unit, use a unit string (e.g., ``xlocator='month'``). To draw ticks every ``N`` time
 # units, use a (unit, N) tuple (e.g., ``xlocator=('day', 5)``). For `% style formatting
@@ -256,12 +256,12 @@ pplt.rc.reset()
 # of datetime tick labels with `~datetime.datetime.strftime`, you can use a string
 # containing ``'%'`` (e.g. ``xformatter='%Y-%m-%d'``). By default, *x* axis datetime
 # axis labels are rotated 90 degrees, like in `pandas`_. This can be disabled by
-# passing ``xrotation=0`` to `~proplot.axes.CartesianAxes.format` or by setting
-# :rcraw:`formatter.timerotation` to ``0``. See `~proplot.constructor.Locator`
-# and `~proplot.constructor.Formatter` for details.
+# passing ``xrotation=0`` to `~ultraplot.axes.CartesianAxes.format` or by setting
+# :rcraw:`formatter.timerotation` to ``0``. See `~ultraplot.constructor.Locator`
+# and `~ultraplot.constructor.Formatter` for details.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 pplt.rc.update(
@@ -333,7 +333,7 @@ pplt.rc.reset()
 # The locations of `axis spines
 # <https://matplotlib.org/stable/gallery/ticks_and_spines/spines.html>`__,
 # tick marks, tick labels, and axis labels can be controlled with
-# `proplot.axes.CartesianAxes.format` keyword arguments like `xspineloc`
+# `ultraplot.axes.CartesianAxes.format` keyword arguments like `xspineloc`
 # (shorthand `xloc`), `xtickloc`, `xticklabelloc`, and `xlabelloc`. Valid
 # locations include ``'left'``, ``'right'``, ``'top'``, ``'bottom'``, ``'neither'``,
 # ``'none'``, or ``'both'``. Spine locations can also be set to a valid
@@ -347,7 +347,7 @@ pplt.rc.reset()
 # but with additional flexibility.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 
 pplt.rc.update(
     metawidth=1.2,
@@ -382,42 +382,42 @@ pplt.rc.reset()
 #
 # "Axis scales" like ``'linear'`` and ``'log'`` control the *x* and *y* axis
 # coordinate system. To change the axis scale, pass e.g. ``xscale='log'`` or
-# ``yscale='log'`` to `~proplot.axes.Axes.format`. This is powered by the
-# `~proplot.constructor.Scale` :ref:`constructor function <why_constructor>`.
-# Proplot makes several changes to the axis scale API:
+# ``yscale='log'`` to `~ultraplot.axes.Axes.format`. This is powered by the
+# `~ultraplot.constructor.Scale` :ref:`constructor function <why_constructor>`.
+# ultraplot makes several changes to the axis scale API:
 #
-# * The `~proplot.ticker.AutoFormatter` formatter is now used for all axis scales
+# * The `~ultraplot.ticker.AutoFormatter` formatter is now used for all axis scales
 #   by default, including ``'log'`` and ``'symlog'``. Matplotlib's behavior can
 #   be restored by passing e.g. ``xformatter='log'`` or ``yformatter='log'`` to
-#   `~proplot.axes.CartesianAxes.format`.
-# * To make its behavior consistent with `~proplot.constructor.Locator` and
-#   `~proplot.constructor.Formatter`, the `~proplot.constructor.Scale`
+#   `~ultraplot.axes.CartesianAxes.format`.
+# * To make its behavior consistent with `~ultraplot.constructor.Locator` and
+#   `~ultraplot.constructor.Formatter`, the `~ultraplot.constructor.Scale`
 #   constructor function returns instances of `~matplotlib.scale.ScaleBase`,
 #   and `~matplotlib.axes.Axes.set_xscale` and
 #   `~matplotlib.axes.Axes.set_yscale` now accept these class instances in
 #   addition to "registered" names like ``'log'``.
 # * While matplotlib axis scales must be instantiated with an
 #   `~matplotlib.axis.Axis` instance (for backwards compatibility reasons),
-#   proplot axis scales can be instantiated without the axis instance
+#   ultraplot axis scales can be instantiated without the axis instance
 #   (e.g., ``pplt.LogScale()`` instead of ``pplt.LogScale(ax.xaxis)``).
 # * The default `subs` for the ``'symlog'`` axis scale is now ``np.arange(1, 10)``,
 #   and the default `linthresh` is now ``1``. Also the ``'log'`` and ``'symlog'``
 #   axis scales now accept the keywords `base`, `linthresh`, `linscale`, and
 #   `subs` rather than keywords with trailing ``x`` or ``y``.
 #
-# Proplot also includes a few new axis scales. The ``'cutoff'`` scale
-# `~proplot.scale.CutoffScale` is useful when the statistical distribution
-# of your data is very unusual. The ``'sine'`` scale `~proplot.scale.SineLatitudeScale`
+# ultraplot also includes a few new axis scales. The ``'cutoff'`` scale
+# `~ultraplot.scale.CutoffScale` is useful when the statistical distribution
+# of your data is very unusual. The ``'sine'`` scale `~ultraplot.scale.SineLatitudeScale`
 # scales the axis with a sine function (resulting in an area-weighted spherical latitude
-# coordinate) and the ``'mercator'`` scale `~proplot.scale.MercatorLatitudeScale`
+# coordinate) and the ``'mercator'`` scale `~ultraplot.scale.MercatorLatitudeScale`
 # scales the axis with the Mercator projection latitude coordinate. The
-# ``'inverse'`` scale `~proplot.scale.InverseScale` can be useful when
+# ``'inverse'`` scale `~ultraplot.scale.InverseScale` can be useful when
 # working with spectral data, especially with :ref:`"dual" unit axes <ug_dual>`.
 # If you want to work with the axis scale classes directly, they are available
 # in the top-level namespace (e.g., ``xscale=pplt.CutoffScale(...)`` is allowed).
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 N = 200
@@ -448,7 +448,7 @@ pplt.rc.reset()
 
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Create figure
@@ -492,7 +492,7 @@ for ax, iargs, title, locator in zip(axs, args, titles, locators):
     )
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 # Create figure
@@ -547,14 +547,14 @@ ax.format(ymin=0.05, yscale=("power", 0.5), title=title)
 #
 # The `matplotlib.axes.Axes` class includes `~matplotlib.axes.Axes.twinx`
 # and `~matplotlib.axes.Axes.twiny` commands for drawing "twin" *x* and
-# *y* axes in the same subplot. Proplot expands on these commands and adds
-# the arguably more intuitive `~proplot.axes.CartesianAxes.altx` and
-# `~proplot.axes.CartesianAxes.alty` options. Here `~proplot.axes.CartesianAxes.altx`
-# is equivalent to `~proplot.axes.CartesianAxes.twiny` (makes an alternate *x*
-# axes and an identical twin *y* axes) and `~proplot.axes.CartesianAxes.alty`
-# is equivalent to `~proplot.axes.CartesianAxes.twinx` (makes an alternate *y*
-# axes and an identical twin *x* axes). The proplot versions can be quickly
-# formatted by passing `proplot.axes.CartesianAxes.format` keyword arguments
+# *y* axes in the same subplot. ultraplot expands on these commands and adds
+# the arguably more intuitive `~ultraplot.axes.CartesianAxes.altx` and
+# `~ultraplot.axes.CartesianAxes.alty` options. Here `~ultraplot.axes.CartesianAxes.altx`
+# is equivalent to `~ultraplot.axes.CartesianAxes.twiny` (makes an alternate *x*
+# axes and an identical twin *y* axes) and `~ultraplot.axes.CartesianAxes.alty`
+# is equivalent to `~ultraplot.axes.CartesianAxes.twinx` (makes an alternate *y*
+# axes and an identical twin *x* axes). The ultraplot versions can be quickly
+# formatted by passing `ultraplot.axes.CartesianAxes.format` keyword arguments
 # to the commands (e.g., ``ax.alty(ycolor='red')`` or, since the ``y`` prefix in
 # this context is redundant, just ``ax.alty(color='red')``). They also enforce
 # sensible default locations for the spines, ticks, and labels, and disable
@@ -562,16 +562,16 @@ ax.format(ymin=0.05, yscale=("power", 0.5), title=title)
 #
 # .. note::
 #
-#    Unlike matplotlib, proplot adds alternate axes as `children
+#    Unlike matplotlib, ultraplot adds alternate axes as `children
 #    <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.add_child_axes.html>`__
 #    of the original axes. This helps simplify the :ref:`tight layout algorithm
 #    <ug_tight>` but means that the drawing order is controlled by the difference
 #    between the zorders of the alternate axes and the content *inside* the original
 #    axes rather than the zorder of the original axes itself (see `this issue page
-#    <https://github.com/proplot-dev/proplot/issues/303>`__ for details).
+#    <https://github.com/ultraplot-dev/ultraplot/issues/303>`__ for details).
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -604,13 +604,13 @@ fig.format(xlabel="xlabel", ylabel="ylabel", suptitle="Alternate axes demo")
 # Dual unit axes
 # --------------
 #
-# The `~proplot.axes.CartesianAxes.dualx` and
-# `~proplot.axes.CartesianAxes.dualy` methods can be used to draw duplicate *x* and
+# The `~ultraplot.axes.CartesianAxes.dualx` and
+# `~ultraplot.axes.CartesianAxes.dualy` methods can be used to draw duplicate *x* and
 # *y* axes meant to represent *alternate units* in the same coordinate range as the
-# "parent" axis. This feature is powered by the `~proplot.scale.FuncScale` class.
-# `~proplot.axes.CartesianAxes.dualx` and `~proplot.axes.CartesianAxes.dualy` accept
-# the same axis formatting keyword arguments as `~proplot.axes.CartesianAxes.altx`
-# and `~proplot.axes.CartesianAxes.alty`. The alternate units are specified with
+# "parent" axis. This feature is powered by the `~ultraplot.scale.FuncScale` class.
+# `~ultraplot.axes.CartesianAxes.dualx` and `~ultraplot.axes.CartesianAxes.dualy` accept
+# the same axis formatting keyword arguments as `~ultraplot.axes.CartesianAxes.altx`
+# and `~ultraplot.axes.CartesianAxes.alty`. The alternate units are specified with
 # either of the following three positional arguments:
 #
 # #. A single linear forward function.
@@ -622,11 +622,11 @@ fig.format(xlabel="xlabel", ylabel="ylabel", suptitle="Alternate axes demo")
 # for the default dual axis locators and formatters. In the below examples,
 # we generate dual axes with each of these three methods. Note that the
 # "parent" axis scale is arbitrary -- in the first example, we create
-# a `~proplot.axes.CartesianAxes.dualx` axis for a `symlog-scaled
+# a `~ultraplot.axes.CartesianAxes.dualx` axis for a `symlog-scaled
 # <https://matplotlib.org/stable/gallery/scales/symlog_demo.html>`__ axis.
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 
 pplt.rc.update({"grid.alpha": 0.4, "meta.width": 1, "grid.linewidth": 1})
 c1 = pplt.scale_luminance("cerulean", 0.5)
@@ -671,7 +671,7 @@ ax.dualx(
 pplt.rc.reset()
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 
 pplt.rc.update({"grid.alpha": 0.4, "meta.width": 1, "grid.linewidth": 1})
 c1 = pplt.scale_luminance("cerulean", 0.5)
@@ -712,7 +712,7 @@ ax.dualy(
 pplt.rc.reset()
 
 # %%
-import proplot as pplt
+import ultraplot as pplt
 import numpy as np
 
 pplt.rc.margin = 0

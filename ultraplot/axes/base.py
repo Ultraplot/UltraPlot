@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-The first-level axes subclass used for all proplot figures.
+The first-level axes subclass used for all ultraplot figures.
 Implements basic shared functionality.
 """
 import copy
@@ -86,10 +86,10 @@ _proj_docstring = """
 proj, projection : \
 str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
     The map projection specification(s). If ``'cart'`` or ``'cartesian'``
-    (the default), a `~proplot.axes.CartesianAxes` is created. If ``'polar'``,
-    a `~proplot.axes.PolarAxes` is created. Otherwise, the argument is
-    interpreted by `~proplot.constructor.Proj`, and the result is used
-    to make a `~proplot.axes.GeoAxes` (in this case the argument can be
+    (the default), a `~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
+    a `~ultraplot.axes.PolarAxes` is created. Otherwise, the argument is
+    interpreted by `~ultraplot.constructor.Proj`, and the result is used
+    to make a `~ultraplot.axes.GeoAxes` (in this case the argument can be
     a `cartopy.crs.Projection` instance, a `~mpl_toolkits.basemap.Basemap`
     instance, or a projection name listed in :ref:`this table <proj_table>`).
 """
@@ -178,18 +178,18 @@ zorder : float, default: 4
 zoom : bool, default: True or False
     Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.
     The line positions will automatically adjust when the parent or inset axes limits
-    change. Default is ``True`` only if both axes are `~proplot.axes.CartesianAxes`.
+    change. Default is ``True`` only if both axes are `~ultraplot.axes.CartesianAxes`.
 zoom_kw : dict, optional
     Passed to `~Axes.indicate_inset_zoom`.
 
 Other parameters
 ----------------
 **kwargs
-    Passed to `proplot.axes.Axes`.
+    Passed to `ultraplot.axes.Axes`.
 
 Returns
 -------
-proplot.axes.Axes
+ultraplot.axes.Axes
     The inset axes.
 
 See also
@@ -274,12 +274,12 @@ share : bool, default: True
 Other parameters
 ----------------
 **kwargs
-    Passed to `proplot.axes.CartesianAxes`. Supports all valid
-    `~proplot.axes.CartesianAxes.format` keywords.
+    Passed to `ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords.
 
 Returns
 -------
-proplot.axes.CartesianAxes
+ultraplot.axes.CartesianAxes
     The panel axes.
 """
 docstring._snippet_manager["axes.panel_loc"] = _panel_loc_docstring
@@ -385,18 +385,18 @@ _rc_init_docstring = """
 """
 _rc_format_docstring = """
 rc_mode : int, optional
-    The context mode passed to `~proplot.config.Configurator.context`.
+    The context mode passed to `~ultraplot.config.Configurator.context`.
 rc_kw : dict-like, optional
     An alternative to passing extra keyword arguments. See below.
 **kwargs
-    {}Keyword arguments that match the name of an `~proplot.config.rc` setting are
-    passed to `proplot.config.Configurator.context` and used to update the axes.
+    {}Keyword arguments that match the name of an `~ultraplot.config.rc` setting are
+    passed to `ultraplot.config.Configurator.context` and used to update the axes.
     If the setting name has "dots" you can simply omit the dots. For example,
     ``abc='A.'`` modifies the :rcraw:`abc` setting, ``titleloc='left'`` modifies the
     :rcraw:`title.loc` setting, ``gridminor=True`` modifies the :rcraw:`gridminor`
     setting, and ``gridbelow=True`` modifies the :rcraw:`grid.below` setting. Many
     of the keyword arguments documented above are internally applied by retrieving
-    settings passed to `~proplot.config.Configurator.context`.
+    settings passed to `~ultraplot.config.Configurator.context`.
 """
 docstring._snippet_manager["rc.init"] = _rc_format_docstring.format(
     "Remaining keyword arguments are passed to `matplotlib.axes.Axes`.\n    "
@@ -413,20 +413,20 @@ or sequence of `~matplotlib.artist.Artist`
     There are four options here:
 
     1. A `~matplotlib.cm.ScalarMappable` (e.g., an object returned by
-       `~proplot.axes.PlotAxes.contourf` or `~proplot.axes.PlotAxes.pcolormesh`).
+       `~ultraplot.axes.PlotAxes.contourf` or `~ultraplot.axes.PlotAxes.pcolormesh`).
     2. A `~matplotlib.colors.Colormap` or registered colormap name used to build a
        `~matplotlib.cm.ScalarMappable` on-the-fly. The colorbar range and ticks depend
        on the arguments `values`, `vmin`, `vmax`, and `norm`. The default for a
-       `~proplot.colors.ContinuousColormap` is ``vmin=0`` and ``vmax=1`` (note that
+       `~ultraplot.colors.ContinuousColormap` is ``vmin=0`` and ``vmax=1`` (note that
        passing `values` will "discretize" the colormap). The default for a
-       `~proplot.colors.DiscreteColormap` is ``values=np.arange(0, cmap.N)``.
+       `~ultraplot.colors.DiscreteColormap` is ``values=np.arange(0, cmap.N)``.
     3. A sequence of hex strings, color names, or RGB[A] tuples. A
-       `~proplot.colors.DiscreteColormap` will be generated from these colors and
+       `~ultraplot.colors.DiscreteColormap` will be generated from these colors and
        used to build a `~matplotlib.cm.ScalarMappable` on-the-fly. The colorbar
        range and ticks depend on the arguments `values`, `norm`, and
        `norm_kw`. The default is ``values=np.arange(0, len(mappable))``.
     4. A sequence of `matplotlib.artist.Artist` instances (e.g., a list of
-       `~matplotlib.lines.Line2D` instances returned by `~proplot.axes.PlotAxes.plot`).
+       `~matplotlib.lines.Line2D` instances returned by `~ultraplot.axes.PlotAxes.plot`).
        A colormap will be generated from the colors of these objects (where the
        color is determined by ``get_color``, if available, or ``get_facecolor``).
        The colorbar range and ticks depend on the arguments `values`, `norm`, and
@@ -435,8 +435,8 @@ or sequence of `~matplotlib.artist.Artist`
 
 values : sequence of float or str, optional
     Ignored if `mappable` is a `~matplotlib.cm.ScalarMappable`. This maps the colormap
-    colors to numeric values using `~proplot.colors.DiscreteNorm`. If the colormap is
-    a `~proplot.colors.ContinuousColormap` then its colors will be "discretized".
+    colors to numeric values using `~ultraplot.colors.DiscreteNorm`. If the colormap is
+    a `~ultraplot.colors.ContinuousColormap` then its colors will be "discretized".
     These These can also be strings, in which case the list indices are used for
     tick locations and the strings are applied as tick labels.
 """
@@ -446,21 +446,21 @@ orientation : {None, 'horizontal', 'vertical'}, optional
     or figure where the colorbar is drawn. Inset colorbars are always horizontal.
 norm : norm-spec, optional
     Ignored if `mappable` is a `~matplotlib.cm.ScalarMappable`. This is the continuous
-    normalizer used to scale the `~proplot.colors.ContinuousColormap` (or passed
-    to `~proplot.colors.DiscreteNorm` if `values` was passed). Passed to the
-    `~proplot.constructor.Norm` constructor function.
+    normalizer used to scale the `~ultraplot.colors.ContinuousColormap` (or passed
+    to `~ultraplot.colors.DiscreteNorm` if `values` was passed). Passed to the
+    `~ultraplot.constructor.Norm` constructor function.
 norm_kw : dict-like, optional
     Ignored if `mappable` is a `~matplotlib.cm.ScalarMappable`. These are the
-    normalizer keyword arguments. Passed to `~proplot.constructor.Norm`.
+    normalizer keyword arguments. Passed to `~ultraplot.constructor.Norm`.
 vmin, vmax : float, optional
     Ignored if `mappable` is a `~matplotlib.cm.ScalarMappable`. These are the minimum
-    and maximum colorbar values. Passed to `~proplot.constructor.Norm`.
+    and maximum colorbar values. Passed to `~ultraplot.constructor.Norm`.
 label, title : str, optional
     The colorbar label. The `title` keyword is also accepted for
     consistency with `~matplotlib.axes.Axes.legend`.
 reverse : bool, optional
     Whether to reverse the direction of the colorbar. This is done automatically
-    when descending levels are used with `~proplot.colors.DiscreteNorm`.
+    when descending levels are used with `~ultraplot.colors.DiscreteNorm`.
 rotation : float, default: 0
     The tick label rotation.
 grid, edges, drawedges : bool, default: :rc:`colorbar.grid`
@@ -481,19 +481,19 @@ extendrect : bool, default: False
     the extensions are drawn as triangles.
 locator, ticks : locator-spec, optional
     Used to determine the colorbar tick positions. Passed to the
-    `~proplot.constructor.Locator` constructor function. By default
+    `~ultraplot.constructor.Locator` constructor function. By default
     `~matplotlib.ticker.AutoLocator` is used for continuous color levels
-    and `~proplot.ticker.DiscreteLocator` is used for discrete color levels.
+    and `~ultraplot.ticker.DiscreteLocator` is used for discrete color levels.
 locator_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Locator` class.
 minorlocator, minorticks
     As with `locator`, `ticks` but for the minor ticks. By default
     `~matplotlib.ticker.AutoMinorLocator` is used for continuous color levels
-    and `~proplot.ticker.DiscreteLocator` is used for discrete color levels.
+    and `~ultraplot.ticker.DiscreteLocator` is used for discrete color levels.
 minorlocator_kw
     As with `locator_kw`, but for the minor ticks.
 format, formatter, ticklabels : formatter-spec, optional
-    The tick label format. Passed to the `~proplot.constructor.Formatter`
+    The tick label format. Passed to the `~ultraplot.constructor.Formatter`
     constructor function.
 formatter_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Formatter` class.
@@ -535,7 +535,7 @@ lw, linewidth, c, color : optional
 %(axes.edgefix)s
 rasterize : bool, default: :rc:`colorbar.rasterize`
     Whether to rasterize the colorbar solids. The matplotlib default was ``True``
-    but proplot changes this to ``False`` since rasterization can cause misalignment
+    but ultraplot changes this to ``False`` since rasterization can cause misalignment
     between the color patches and the colorbar outline.
 **kwargs
     Passed to `~matplotlib.figure.Figure.colorbar`.
@@ -564,7 +564,7 @@ handles : list of artist, optional
     are retrieved automatically. If the object is a `~matplotlib.contour.ContourSet`,
     `~matplotlib.contour.ContourSet.legend_elements` is used to select the central
     artist in the list (generally useful for single-color contour plots). Note that
-    proplot's `~proplot.axes.PlotAxes.contour` and `~proplot.axes.PlotAxes.contourf`
+    ultraplot's `~ultraplot.axes.PlotAxes.contour` and `~ultraplot.axes.PlotAxes.contourf`
     accept a legend `label` keyword argument.
 labels : list of str, optional
     A matching list of string labels or ``None`` placeholders, or a matching list of
@@ -588,7 +588,7 @@ ncol, ncols : int, optional
 order : {'C', 'F'}, optional
     Whether legend handles are drawn in row-major (``'C'``) or column-major
     (``'F'``) order. Analagous to `numpy.array` ordering. The matplotlib
-    default was ``'F'`` but proplot changes this to ``'C'``.
+    default was ``'F'`` but ultraplot changes this to ``'C'``.
 center : bool, optional
     Whether to center each legend row individually. If ``True``, we draw
     successive single-row legends "stacked" on top of each other. If ``None``,
@@ -602,10 +602,10 @@ title, label : str, optional
     with `~matplotlib.figure.Figure.colorbar`.
 fontsize, fontweight, fontcolor : optional
     The font size, weight, and color for the legend text. Font size is interpreted
-    by `~proplot.utils.units`. The default font size is :rcraw:`legend.fontsize`.
+    by `~ultraplot.utils.units`. The default font size is :rcraw:`legend.fontsize`.
 titlefontsize, titlefontweight, titlefontcolor : optional
     The font size, weight, and color for the legend title. Font size is interpreted
-    by `~proplot.utils.units`. The default size is `fontsize`.
+    by `~ultraplot.utils.units`. The default size is `fontsize`.
 borderpad, borderaxespad, handlelength, handleheight, handletextpad, \
 labelspacing, columnspacing : unit-spec, optional
     Various matplotlib `~matplotlib.axes.Axes.legend` spacing arguments.
@@ -667,7 +667,7 @@ class _TransformedBoundsLocator:
 
 class Axes(maxes.Axes):
     """
-    The lowest-level `~matplotlib.axes.Axes` subclass used by proplot.
+    The lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
     Implements basic universal features.
     """
 
@@ -736,12 +736,12 @@ class Axes(maxes.Axes):
         --------
         Axes.format
         matplotlib.axes.Axes
-        proplot.axes.PlotAxes
-        proplot.axes.CartesianAxes
-        proplot.axes.PolarAxes
-        proplot.axes.GeoAxes
-        proplot.figure.Figure.subplot
-        proplot.figure.Figure.add_subplot
+        ultraplot.axes.PlotAxes
+        ultraplot.axes.CartesianAxes
+        ultraplot.axes.PolarAxes
+        ultraplot.axes.GeoAxes
+        ultraplot.figure.Figure.subplot
+        ultraplot.figure.Figure.add_subplot
         """
         # Remove subplot-related args
         # NOTE: These are documented on add_subplot()
@@ -828,7 +828,7 @@ class Axes(maxes.Axes):
             self._apply_auto_share()
 
         # Default formatting
-        # NOTE: This ignores user-input rc_mode. Mode '1' applies proplot
+        # NOTE: This ignores user-input rc_mode. Mode '1' applies ultraplot
         # features which is necessary on first run. Default otherwise is mode '2'
         self.format(rc_kw=rc_kw, rc_mode=1, skip_figure=True, **kw_format)
 
@@ -1080,7 +1080,7 @@ class Axes(maxes.Axes):
             nbins = kwargs.pop("maxn_minor" if b else "maxn", None)
             if nbins is not None:
                 kw["nbins"] = nbins
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"The colorbar() keyword {key!r} was deprecated in v0.10. To "
                     "achieve the same effect, you can pass 'nbins' to the new default "
                     f"locator DiscreteLocator using {name}_kw={{'nbins': {nbins}}}."
@@ -1118,7 +1118,7 @@ class Axes(maxes.Axes):
         else:
             pop = _pop_params(kwargs, cax._parse_colorbar_arg, ignore_internal=True)
             if pop:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"Input is already a ScalarMappable. "
                     f"Ignoring unused keyword arg(s): {pop}"
                 )
@@ -1127,7 +1127,7 @@ class Axes(maxes.Axes):
         # TODO: Make this auto-adjust to the subplot size
         vert = kwargs["orientation"] == "vertical"
         if extendsize is not None and extendfrac is not None:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"You cannot specify both an absolute extendsize={extendsize!r} "
                 f"and a relative extendfrac={extendfrac!r}. Ignoring 'extendfrac'."
             )
@@ -1164,8 +1164,8 @@ class Axes(maxes.Axes):
 
         # Special handling for colorbar keyword arguments
         # WARNING: Critical to not pass empty major locators in matplotlib < 3.5
-        # See this issue: https://github.com/proplot-dev/proplot/issues/301
-        # WARNING: Proplot 'supports' passing one extend to a mappable function
+        # See this issue: https://github.com/ultraplot-dev/ultraplot/issues/301
+        # WARNING: ultraplot 'supports' passing one extend to a mappable function
         # then overwriting by passing another 'extend' to colobar. But contour
         # colorbars break when you try to change its 'extend'. Matplotlib gets
         # around this by just silently ignoring 'extend' passed to colorbar() but
@@ -1183,7 +1183,7 @@ class Axes(maxes.Axes):
             extend = _not_none(extend, "neither")
             kwargs["extend"] = extend
         elif extend is not None and extend != mappable.extend:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Ignoring extend={extend!r}. ContourSet extend cannot be changed."
             )
         if (
@@ -1883,7 +1883,7 @@ class Axes(maxes.Axes):
                 raise ValueError(f"Invalid align={align!r} for colorbar loc={side!r}.")
 
         # Add the axes as a child of the original axes
-        cls = mproj.get_projection_class("proplot_cartesian")
+        cls = mproj.get_projection_class("ultraplot_cartesian")
         locator = self._make_inset_locator(bounds, self.transAxes)
         ax = cls(self.figure, locator(self, None).bounds, zorder=5)
         ax.set_axes_locator(locator)
@@ -1964,7 +1964,7 @@ class Axes(maxes.Axes):
         bounds_frame.extend((2 * xpad + length, 2 * ypad + width + labspace))
 
         # Make axes and frame with zorder matching default legend zorder
-        cls = mproj.get_projection_class("proplot_cartesian")
+        cls = mproj.get_projection_class("ultraplot_cartesian")
         locator = self._make_inset_locator(bounds_inset, self.transAxes)
         ax = cls(self.figure, locator(self, None).bounds, zorder=5)
         ax.patch.set_facecolor("none")
@@ -1976,13 +1976,13 @@ class Axes(maxes.Axes):
 
         # Handle default keyword args
         if orientation is not None and orientation != "horizontal":
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Orientation for inset colorbars must be horizontal. "
                 f"Ignoring orientation={orientation!r}."
             )
         ticklocation = _not_none(tickloc=tickloc, ticklocation=ticklocation)
         if ticklocation is not None and ticklocation != "bottom":
-            warnings._warn_proplot("Inset colorbars can only have ticks on the bottom.")
+            warnings._warn_ultraplot("Inset colorbars can only have ticks on the bottom.")
         kwargs.update({"orientation": "horizontal", "ticklocation": "bottom"})
         return ax, kwargs
 
@@ -2036,7 +2036,7 @@ class Axes(maxes.Axes):
         keys = ("bbox_transform", "bbox_to_anchor")
         kw_ignore = {key: kwargs.pop(key) for key in keys if key in kwargs}
         if kw_ignore:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Ignoring invalid centered-row legend keyword args: {kw_ignore!r}"
             )
 
@@ -2136,7 +2136,7 @@ class Axes(maxes.Axes):
                 elif hasattr(obj, "get_label"):
                     handles.append(obj)
                 else:
-                    warnings._warn_proplot(f"Ignoring invalid legend handle {obj!r}.")
+                    warnings._warn_ultraplot(f"Ignoring invalid legend handle {obj!r}.")
             return tuple(handles)
 
         # Sanitize labels. Ignore e.g. extra hist() or hist2d() return values,
@@ -2198,18 +2198,18 @@ class Axes(maxes.Axes):
             handles, labels = labels, handles
         multi = any(is_list(h) and len(h) > 1 for h in (handles or ()))
         if multi and order == "F":
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Column-major ordering of legend handles is not supported "
                 "for horizontally-centered legends."
             )
         if multi and ncol is not None:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Detected list of *lists* of legend handles. Ignoring "
                 'the user input property "ncol".'
             )
         if labels and not handles:
-            warnings._warn_proplot(
-                "Passing labels without handles is unsupported in proplot. "
+            warnings._warn_ultraplot(
+                "Passing labels without handles is unsupported in ultraplot. "
                 "Please explicitly pass the handles to legend() or pass labels "
                 "to plotting commands with e.g. plot(data_1d, label='label') or "
                 "plot(data_2d, labels=['label1', 'label2', ...]). After passing "
@@ -2712,7 +2712,7 @@ class Axes(maxes.Axes):
     ):
         """
         Modify the a-b-c label, axes title(s), and background patch,
-        and call `proplot.figure.Figure.format` on the axes figure.
+        and call `ultraplot.figure.Figure.format` on the axes figure.
 
         Parameters
         ----------
@@ -2733,12 +2733,12 @@ class Axes(maxes.Axes):
 
         See also
         --------
-        proplot.axes.CartesianAxes.format
-        proplot.axes.PolarAxes.format
-        proplot.axes.GeoAxes.format
-        proplot.figure.Figure.format
-        proplot.gridspec.SubplotGrid.format
-        proplot.config.Configurator.context
+        ultraplot.axes.CartesianAxes.format
+        ultraplot.axes.PolarAxes.format
+        ultraplot.axes.GeoAxes.format
+        ultraplot.figure.Figure.format
+        ultraplot.gridspec.SubplotGrid.format
+        ultraplot.config.Configurator.context
         """
         skip_figure = kwargs.pop("skip_figure", False)  # internal keyword arg
         params = _pop_params(kwargs, self.figure._format_signature)
@@ -2862,7 +2862,7 @@ class Axes(maxes.Axes):
 
     def set_prop_cycle(self, *args, **kwargs):
         # Silent override. This is a strict superset of matplotlib functionality.
-        # Includes both proplot syntax with positional arguments interpreted as
+        # Includes both ultraplot syntax with positional arguments interpreted as
         # color arguments and oldschool matplotlib cycler(key, value) syntax.
         if len(args) == 2 and isinstance(args[0], str) and np.iterable(args[1]):
             if _pop_props({args[0]: object()}, "line"):  # if a valid line property
@@ -2971,12 +2971,12 @@ class Axes(maxes.Axes):
             The colorbar length. For outer colorbars, units are relative to the axes
             width or height (default is :rcraw:`colorbar.length`). For inset
             colorbars, floats interpreted as em-widths and strings interpreted
-            by `~proplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
+            by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
         width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth
             The colorbar width. For outer colorbars, floats are interpreted as inches
             (default is :rcraw:`colorbar.width`). For inset colorbars, floats are
             interpreted as em-widths (default is :rcraw:`colorbar.insetwidth`).
-            Strings are interpreted by `~proplot.utils.units`.
+            Strings are interpreted by `~ultraplot.utils.units`.
         %(axes.colorbar_space)s
             Has no visible effect if `length` is ``1``.
 
@@ -2986,7 +2986,7 @@ class Axes(maxes.Axes):
 
         See also
         --------
-        proplot.figure.Figure.colorbar
+        ultraplot.figure.Figure.colorbar
         matplotlib.figure.Figure.colorbar
         """
         # Translate location and possibly infer from orientation. Also optionally
@@ -3060,7 +3060,7 @@ class Axes(maxes.Axes):
 
         See also
         --------
-        proplot.figure.Figure.legend
+        ultraplot.figure.Figure.legend
         matplotlib.axes.Axes.legend
         """
         # Translate location and possibly infer from orientation. Also optionally
@@ -3102,7 +3102,7 @@ class Axes(maxes.Axes):
         Parameters
         ----------
         x, y, [z] : float
-            The coordinates for the text. `~proplot.axes.ThreeAxes` accept an
+            The coordinates for the text. `~ultraplot.axes.ThreeAxes` accept an
             optional third coordinate. If only two are provided this automatically
             redirects to the `~mpl_toolkits.mplot3d.Axes3D.text2D` method.
         s, text : str
@@ -3162,7 +3162,7 @@ class Axes(maxes.Axes):
         else:
             transform = self._get_transform(transform)
         with warnings.catch_warnings():  # ignore duplicates (internal issues?)
-            warnings.simplefilter("ignore", warnings.ProplotWarning)
+            warnings.simplefilter("ignore", warnings.UltraplotWarning)
             kwargs.update(_pop_props(kwargs, "text"))
 
         # Update the text object using a monkey patch
@@ -3221,8 +3221,8 @@ class Axes(maxes.Axes):
     def number(self):
         """
         The axes number. This controls the order of a-b-c labels and the
-        order of appearance in the `~proplot.gridspec.SubplotGrid` returned
-        by `~proplot.figure.Figure.subplots`.
+        order of appearance in the `~ultraplot.gridspec.SubplotGrid` returned
+        by `~ultraplot.figure.Figure.subplots`.
         """
         return self._number
 

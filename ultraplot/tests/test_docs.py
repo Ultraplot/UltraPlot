@@ -8,8 +8,8 @@ Automatically build pytests from jupytext py:percent documentation files.
 # import jupytext
 # import pytest
 
-# from proplot.config import rc
-# from proplot.tests import SAVEFIG_KWARGS, TOLERANCE, VERSION_STRING
+# from ultraplot.config import rc
+# from ultraplot.tests import SAVEFIG_KWARGS, TOLERANCE, VERSION_STRING
 
 
 # def _init_tests():

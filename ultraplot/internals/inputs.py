@@ -376,7 +376,7 @@ def _dist_reduce(data, *, mean=None, means=None, median=None, medians=None, **kw
     means = _not_none(mean=mean, means=means)
     medians = _not_none(median=median, medians=medians)
     if means and medians:
-        warnings._warn_proplot(
+        warnings._warn_ultraplot(
             "Cannot have both means=True and medians=True. Using former."
         )
         medians = None
@@ -448,18 +448,18 @@ def _dist_range(
             "columns of data you must pass means=True or medians=True."
         )
     if stds is not None and pctiles is not None:
-        warnings._warn_proplot(
+        warnings._warn_ultraplot(
             "Got both a standard deviation range and a percentile range for "
             "auto error indicators. Using the standard deviation range."
         )
         pctiles = None
     if distribution is not None and errdata is not None:
         stds = pctiles = None
-        warnings._warn_proplot(
+        warnings._warn_ultraplot(
             "You explicitly provided the error bounds but also requested "
             "automatically calculating means or medians on data columns. "
             'It may make more sense to use the "stds" or "pctiles" keyword args '
-            "and have *proplot* calculate the error bounds."
+            "and have *ultraplot* calculate the error bounds."
         )
 
     # Compute error data in format that can be passed to maxes.Axes.errorbar()
@@ -498,7 +498,7 @@ def _dist_range(
         label_default = f"{pctiles[1] - pctiles[0]}% range"
         err = np.nanpercentile(distribution, pctiles, axis=0)
     else:
-        warnings._warn_proplot(
+        warnings._warn_ultraplot(
             "Error indications are missing from the dataset reduced by a "
             "mean or median operation. Consider passing e.g. bars=True."
         )
@@ -717,7 +717,7 @@ def _meta_units(data):
         try:
             units = format(data.units, fmt)
         except (TypeError, ValueError):
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Failed to format pint quantity with format string {fmt!r}."
             )
         else:

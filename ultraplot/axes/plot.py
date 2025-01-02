@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-The second-level axes subclass used for all proplot figures.
+The second-level axes subclass used for all ultraplot figures.
 Implements plotting method overrides.
 """
 import contextlib
@@ -96,7 +96,7 @@ _args_2d_docstring = """
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~proplot.utils.edges` or `~proplot.utils.edges2d` if *centers* were provided.
+      `~ultraplot.utils.edges` or `~ultraplot.utils.edges2d` if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
     * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
       to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
@@ -145,7 +145,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `proplot.axes.GeoAxes` only. Whether to enforce global
+    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -168,17 +168,17 @@ colorbar : bool, int, or str, optional
     the default :rc:`colorbar.loc` is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~proplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~proplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
     resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in `~proplot.axes.Axes.legend`.
+    are shown in `~ultraplot.axes.Axes.legend`.
 legend_kw : dict-like, optional
-    Extra keyword args for the call to `~proplot.axes.Axes.legend`.
+    Extra keyword args for the call to `~ultraplot.axes.Axes.legend`.
 """
 docstring._snippet_manager["plot.guide"] = _guide_docstring
 
@@ -285,54 +285,54 @@ docstring._snippet_manager["plot.error_shading"] = _error_shading_docstring
 # Color docstrings
 _cycle_docstring = """
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~proplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~proplot.constructor.Cycle`.
+    Passed to `~ultraplot.constructor.Cycle`.
 """
 _cmap_norm_docstring = """
 cmap : colormap-spec, default: \
 :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the `~proplot.constructor.Colormap` constructor
+    The colormap specifer, passed to the `~ultraplot.constructor.Colormap` constructor
     function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
     range contains negative and positive values then :rcraw:`cmap.diverging` is used.
     Otherwise :rcraw:`cmap.sequential` is used.
 cmap_kw : dict-like, optional
-    Passed to `~proplot.constructor.Colormap`.
+    Passed to `~ultraplot.constructor.Colormap`.
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a `~proplot.colors.DiscreteColormap`.
+    The color(s) used to create a `~ultraplot.colors.DiscreteColormap`.
     If not passed, `cmap` is used.
 norm : norm-spec, default: \
-`~matplotlib.colors.Normalize` or `~proplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~proplot.constructor.Norm`
+`~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
+    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~proplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~proplot.colors.DiscreteNorm`).
+    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
+    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
     If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~proplot.colors.DivergingNorm` is used.
+    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
     Otherwise `~matplotlib.colors.Normalize` is used.
 norm_kw : dict-like, optional
-    Passed to `~proplot.constructor.Norm`.
+    Passed to `~ultraplot.constructor.Norm`.
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
 discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~proplot.colors.DiscreteNorm` is not applied to the
+    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
     roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~proplot.axes.Axes.contourf`
-    and pseudocolor commands like `~proplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
+    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
     to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
     :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~proplot.colors.DivergingNorm`
+    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
     as the default continuous normalizer.
 """
 docstring._snippet_manager["plot.cycle"] = _cycle_docstring
@@ -363,7 +363,7 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~proplot.utils.edges`.
+    If the latter, levels are inferred using `~ultraplot.utils.edges`.
     This will override any `levels` input.
 """
 _auto_levels_docstring = """
@@ -381,7 +381,7 @@ inbounds : bool, default: :rc:`cmap.inbounds`
     See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
 locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~proplot.constructor.Locator` constructor.
+    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
     Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
 locator_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Locator` class.
@@ -432,12 +432,12 @@ labels_kw : dict-like, optional
     Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
 formatter, fmt : formatter-spec, optional
     The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~proplot.constructor.Formatter` constructor.
+    Passed to the `~ultraplot.constructor.Formatter` constructor.
 formatter_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Formatter` class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~proplot.ticker.Simpleformatter`.
+    with the default formatter `~ultraplot.ticker.Simpleformatter`.
 """
 docstring._snippet_manager["plot.label"] = _label_docstring
 docstring._snippet_manager["plot.labels_1d"] = _labels_1d_docstring
@@ -645,7 +645,7 @@ Parameters
 s, size, ms, markersize : float or array-like or unit-spec, optional
     The marker size area(s). If this is an array matching the shape of `x` and `y`,
     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
-    is processed by `~proplot.utils.units` and represents the width rather than area.
+    is processed by `~ultraplot.utils.units` and represents the width rather than area.
 c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors \
 : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
@@ -1154,7 +1154,7 @@ Other parameters
 
 See also
 --------
-proplot.axes.PlotAxes
+ultraplot.axes.PlotAxes
 matplotlib.axes.Axes.{command}
 """
 docstring._snippet_manager["plot.imshow"] = _show_docstring.format(
@@ -1271,7 +1271,7 @@ def _inside_seaborn_call():
 
 class PlotAxes(base.Axes):
     """
-    The second lowest-level `~matplotlib.axes.Axes` subclass used by proplot.
+    The second lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
     Implements all plotting overrides.
     """
 
@@ -1280,15 +1280,15 @@ class PlotAxes(base.Axes):
         Parameters
         ----------
         *args, **kwargs
-            Passed to `proplot.axes.Axes`.
+            Passed to `ultraplot.axes.Axes`.
 
         See also
         --------
         matplotlib.axes.Axes
-        proplot.axes.Axes
-        proplot.axes.CartesianAxes
-        proplot.axes.PolarAxes
-        proplot.axes.GeoAxes
+        ultraplot.axes.Axes
+        ultraplot.axes.CartesianAxes
+        ultraplot.axes.PolarAxes
+        ultraplot.axes.GeoAxes
         """
         super().__init__(*args, **kwargs)
 
@@ -1297,7 +1297,7 @@ class PlotAxes(base.Axes):
         Call the plotting method and redirect internal calls to native methods.
         """
         # NOTE: Previously allowed internal matplotlib plotting function calls to run
-        # through proplot overrides then avoided awkward conflicts in piecemeal fashion.
+        # through ultraplot overrides then avoided awkward conflicts in piecemeal fashion.
         # Now prevent internal calls from running through overrides using preprocessor
         kwargs.pop("distribution", None)  # remove stat distributions
         with context._state_context(self, _internal_call=True):
@@ -1327,7 +1327,7 @@ class PlotAxes(base.Axes):
         for key in ("color", "colors", "facecolor", "facecolors", "where"):
             value = kwargs.pop(key, None)
             if value is not None:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"{name}() argument {key}={value!r} is incompatible with negpos=True. Ignoring."  # noqa: E501
                 )
         # Negative component
@@ -1364,7 +1364,7 @@ class PlotAxes(base.Axes):
         precision=None,
     ):
         """
-        Add number labels. Default formatter is `~proplot.ticker.SimpleFormatter`
+        Add number labels. Default formatter is `~ultraplot.ticker.SimpleFormatter`
         with a default maximum precision of ``3`` decimal places.
         """
         # TODO: Add quiverkey to this!
@@ -1822,7 +1822,7 @@ class PlotAxes(base.Axes):
             for element in obj:
                 PlotAxes._fix_patch_edges(element, edgefix=edgefix)
         else:
-            warnings._warn_proplot(f"Unexpected obj {obj} passed to _fix_patch_edges.")
+            warnings._warn_ultraplot(f"Unexpected obj {obj} passed to _fix_patch_edges.")
 
     @contextlib.contextmanager
     def _keep_grid_bools(self):
@@ -1893,7 +1893,7 @@ class PlotAxes(base.Axes):
                 z = z[ymask, :] if z.ndim == 2 and ymask.ndim == 1 else z[ymask]
             return z
         except Exception as err:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Failed to restrict automatic colormap normalization "
                 f"to in-bounds data only. Error message: {err}"
             )
@@ -1907,7 +1907,7 @@ class PlotAxes(base.Axes):
         """
         # WARNING: This feature is still experimental. But seems obvious. Matplotlib
         # updates data limits in ad hoc fashion differently for each plotting command
-        # but since proplot standardizes inputs we can easily use them for dataLim.
+        # but since ultraplot standardizes inputs we can easily use them for dataLim.
         if extents is None:
             return
         if self._name != "cartesian":
@@ -1943,7 +1943,7 @@ class PlotAxes(base.Axes):
                     trans.x1 = extents[2] = max(convert(xmax), extents[2])
                 getattr(self, "_request_autoscale_view", self.autoscale_view)()
         except Exception as err:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Failed to restrict automatic y (x) axis limit algorithm to "
                 f"data within locked x (y) limits only. Error message: {err}"
             )
@@ -2240,7 +2240,7 @@ class PlotAxes(base.Axes):
                 parsers = (self._parse_cycle,)
         pop = _pop_params(kwargs, *parsers, ignore_internal=True)
         if pop:
-            warnings._warn_proplot(f"Ignoring unused keyword arg(s): {pop}")
+            warnings._warn_ultraplot(f"Ignoring unused keyword arg(s): {pop}")
         return (c, kwargs)
 
     @warnings._rename_kwargs("0.6.0", centers="values")
@@ -2309,7 +2309,7 @@ class PlotAxes(base.Axes):
         }  # noqa: E501
         trues = {key: b for key, b in modes.items() if b}
         if len(trues) > 1:  # noqa: E501
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Conflicting colormap arguments: {trues!r}. Using the first one."
             )
             for key in tuple(trues)[1:]:
@@ -2328,7 +2328,7 @@ class PlotAxes(base.Axes):
         autodiverging = rc["cmap.autodiverging"]
         if colors is not None:
             if cmap is not None:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"you specified both cmap={cmap!s} and the qualitative-colormap "
                     f"colors={colors!r}. Ignoring 'colors'. If you meant to specify "
                     f"the edge color please use e.g. edgecolor={colors!r} instead."
@@ -2351,19 +2351,19 @@ class PlotAxes(base.Axes):
         # until after level generation so 'diverging' can be automatically applied.
         if "cyclic" in trues or getattr(cmap, "_cyclic", None):
             if extend is not None and extend != "neither":
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"Cyclic colormaps require extend='neither'. Ignoring extend={extend!r}"  # noqa: E501
                 )
             extend = "neither"
         if "qualitative" in trues or isinstance(cmap, pcolors.DiscreteColormap):
             if discrete is not None and not discrete:  # noqa: E501
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     "Qualitative colormaps require discrete=True. Ignoring discrete=False."  # noqa: E501
                 )
             discrete = True
         if plot_contours:
             if discrete is not None and not discrete:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     "Contoured plots require discrete=True. Ignoring discrete=False."
                 )
             discrete = True
@@ -2434,7 +2434,7 @@ class PlotAxes(base.Axes):
         if "N" in params:  # use this for lookup table N instead of levels N
             cmap = cmap.copy(N=params.pop("N"))
         if params:
-            warnings._warn_proplot(f"Ignoring unused keyword args(s): {params}")
+            warnings._warn_ultraplot(f"Ignoring unused keyword args(s): {params}")
 
         # Update outgoing args
         # NOTE: ContourSet natively stores 'extend' on the result but for other
@@ -2619,7 +2619,7 @@ class PlotAxes(base.Axes):
             if automax:
                 vmax = 0
             else:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"Incompatible arguments vmax={vmax!r} and negative=True. "
                     "Ignoring the latter."
                 )
@@ -2627,7 +2627,7 @@ class PlotAxes(base.Axes):
             if automin:
                 vmin = 0
             else:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"Incompatible arguments vmin={vmin!r} and positive=True. "
                     "Ignoring the latter."
                 )
@@ -2639,7 +2639,7 @@ class PlotAxes(base.Axes):
             elif automin and automax:
                 vmin, vmax = -np.max(np.abs((vmin, vmax))), np.max(np.abs((vmin, vmax)))
             else:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f"Incompatible arguments vmin={vmin!r}, vmax={vmax!r}, and "
                     "symmetric=True. Ignoring the latter."
                 )
@@ -2844,7 +2844,7 @@ class PlotAxes(base.Axes):
                 raise ValueError(f"Invalid {key}={array}. Must be list or integer.")
             if isinstance(norm, (mcolors.BoundaryNorm, pcolors.SegmentedNorm)):
                 if isinstance(array, Integral):
-                    warnings._warn_proplot(
+                    warnings._warn_ultraplot(
                         f"Ignoring {key}={array}. Using norm={norm!r} {key} instead."
                     )
                 array = norm.boundaries if key == "levels" else None
@@ -2854,12 +2854,12 @@ class PlotAxes(base.Axes):
         vmin = vmax = None
         levels = _not_none(N=N, levels=levels, norm_kw_levs=norm_kw.pop("levels", None))
         if positive and negative:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Incompatible args positive=True and negative=True. Using former."
             )
             negative = False
         if levels is not None and values is not None:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Incompatible args levels={levels!r} and values={values!r}. Using former."  # noqa: E501
             )
             values = None
@@ -2905,7 +2905,7 @@ class PlotAxes(base.Axes):
         if np.iterable(levels):
             pop = _pop_params(kwargs, self._parse_level_num, ignore_internal=True)
             if pop:
-                warnings._warn_proplot(f"Ignoring unused keyword arg(s): {pop}")
+                warnings._warn_ultraplot(f"Ignoring unused keyword arg(s): {pop}")
         elif not skip_autolev:
             levels, kwargs = self._parse_level_num(
                 *args,
@@ -2953,7 +2953,7 @@ class PlotAxes(base.Axes):
         **kwargs,
     ):
         """
-        Create a `~proplot.colors.DiscreteNorm` or `~proplot.colors.BoundaryNorm`
+        Create a `~ultraplot.colors.DiscreteNorm` or `~ultraplot.colors.BoundaryNorm`
         from the input colormap and normalizer.
 
         Parameters
@@ -2975,7 +2975,7 @@ class PlotAxes(base.Axes):
 
         Returns
         -------
-        norm : `~proplot.colors.DiscreteNorm`
+        norm : `~ultraplot.colors.DiscreteNorm`
             The discrete normalizer.
         cmap : `~matplotlib.colors.Colormap`
             The possibly-modified colormap.
@@ -3764,20 +3764,20 @@ class PlotAxes(base.Axes):
         Parse common boxplot and violinplot arguments.
         """
         if isinstance(fillcolor, list):
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Passing lists to fillcolor was deprecated in v0.9. Please use "
                 f"the property cycler with e.g. cycle={fillcolor!r} instead."
             )
             kw["cycle"] = _not_none(cycle=kw.get("cycle", None), fillcolor=fillcolor)
             fillcolor = None
         if isinstance(fillalpha, list):
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Passing lists to fillalpha was removed in v0.9. Please specify "
                 "different opacities using the property cycle colors instead."
             )
             fillalpha = fillalpha[0]  # too complicated to try to apply this
         if isinstance(edgecolor, list):
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "Passing lists of edgecolors was removed in v0.9. Please call the "
                 "plotting command multiple times with different edge colors instead."
             )
@@ -4288,7 +4288,7 @@ class PlotAxes(base.Axes):
             self._add_auto_labels(m, **labels_kw)
         elif edgefix_kw or labels_kw:
             kw = {**edgefix_kw, **labels_kw}
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Ignoring unused keyword argument(s): {kw}. These only work with "
                 "QuadMesh, not AxesImage. Consider using pcolor() or pcolormesh()."
             )
@@ -4303,7 +4303,7 @@ class PlotAxes(base.Axes):
         obj = self.pcolormesh(*args, default_discrete=False, **kwargs)
         aspect = _not_none(aspect, rc["image.aspect"])
         if self._name != "cartesian":
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 "The heatmap() command is meant for CartesianAxes "
                 "only. Please use pcolor() or pcolormesh() instead."
             )

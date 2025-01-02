@@ -120,7 +120,7 @@ if _version_cartopy >= "0.18":
 # NOTE: Critical to use SimpleFormatter for cardinal formatters rather than
 # AutoFormatter because latter fails with Basemap formatting.
 # NOTE: Define cartopy longitude/latitude formatters with dms=True because that
-# is their distinguishing feature relative to proplot formatter.
+# is their distinguishing feature relative to ultraplot formatter.
 # NOTE: Will raise error when you try to use degree-minute-second
 # formatters with cartopy < 0.18.
 FORMATTERS = {  # note default LogFormatter uses ugly e+00 notation
@@ -304,7 +304,7 @@ else:
             PROJS[_key] = getattr(ccrs, _cls)
             del PROJS_MISSING[_key]
     if PROJS_MISSING:
-        warnings._warn_proplot(
+        warnings._warn_ultraplot(
             "The following cartopy projection(s) are unavailable: "
             + ", ".join(map(repr, PROJS_MISSING))
             + " . Please consider updating cartopy."
@@ -357,7 +357,7 @@ def _modify_colormap(cmap, *, cut, left, right, reverse, shift, alpha, samples):
     if cut is not None or left is not None or right is not None:
         if isinstance(cmap, pcolors.DiscreteColormap):
             if cut is not None:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     "Invalid argument 'cut' for ListedColormap. Ignoring."
                 )
             cmap = cmap.truncate(left=left, right=right)
@@ -393,38 +393,38 @@ def Colormap(
 ):
     """
     Generate, retrieve, modify, and/or merge instances of
-    `~proplot.colors.PerceptualColormap`,
-    `~proplot.colors.ContinuousColormap`, and
-    `~proplot.colors.DiscreteColormap`.
+    `~ultraplot.colors.PerceptualColormap`,
+    `~ultraplot.colors.ContinuousColormap`, and
+    `~ultraplot.colors.DiscreteColormap`.
 
     Parameters
     ----------
     *args : colormap-spec
         Positional arguments that individually generate colormaps. If more
         than one argument is passed, the resulting colormaps are *merged* with
-        `~proplot.colors.ContinuousColormap.append`
-        or `~proplot.colors.DiscreteColormap.append`.
+        `~ultraplot.colors.ContinuousColormap.append`
+        or `~ultraplot.colors.DiscreteColormap.append`.
         The arguments are interpreted as follows:
 
         * If a registered colormap name, that colormap instance is looked up.
           If colormap instance is a native matplotlib colormap class, it is
-          converted to a proplot colormap class.
+          converted to a ultraplot colormap class.
         * If a filename string with valid extension, the colormap data
-          is loaded with `proplot.colors.ContinuousColormap.from_file` or
-          `proplot.colors.DiscreteColormap.from_file` depending on the value of
+          is loaded with `ultraplot.colors.ContinuousColormap.from_file` or
+          `ultraplot.colors.DiscreteColormap.from_file` depending on the value of
           `filemode` (see below). Default behavior is to load a
-          `~proplot.colors.ContinuousColormap`.
-        * If RGB tuple or color string, a `~proplot.colors.PerceptualColormap`
-          is generated with `~proplot.colors.PerceptualColormap.from_color`.
+          `~ultraplot.colors.ContinuousColormap`.
+        * If RGB tuple or color string, a `~ultraplot.colors.PerceptualColormap`
+          is generated with `~ultraplot.colors.PerceptualColormap.from_color`.
           If the string ends in ``'_r'``, the monochromatic map will be
           *reversed*, i.e. will go from dark to light instead of light to dark.
         * If sequence of RGB tuples or color strings, a
-          `~proplot.colors.DiscreteColormap`, `~proplot.colors.PerceptualColormap`,
-          or `~proplot.colors.ContinuousColormap` is generated depending on
+          `~ultraplot.colors.DiscreteColormap`, `~ultraplot.colors.PerceptualColormap`,
+          or `~ultraplot.colors.ContinuousColormap` is generated depending on
           the value of `listmode` (see below). Default behavior is to generate a
-          `~proplot.colors.PerceptualColormap`.
-        * If dictionary, a `~proplot.colors.PerceptualColormap` is
-          generated with `~proplot.colors.PerceptualColormap.from_hsl`.
+          `~ultraplot.colors.PerceptualColormap`.
+        * If dictionary, a `~ultraplot.colors.PerceptualColormap` is
+          generated with `~ultraplot.colors.PerceptualColormap.from_hsl`.
           The dictionary should contain the keys ``'hue'``, ``'saturation'``,
           ``'luminance'``, and optionally ``'alpha'``, or their aliases (see below).
 
@@ -437,11 +437,11 @@ def Colormap(
         The options are as follows:
 
         * If ``'perceptual'`` or ``'continuous'``, a colormap is generated using
-          `~proplot.colors.ContinuousColormap.from_file`. The resulting
-          colormap may be a `~proplot.colors.ContinuousColormap` or
-          `~proplot.colors.PerceptualColormap` depending on the data file.
-        * If ``'discrete'``, a `~proplot.colors.DiscreteColormap` is generated
-          using `~proplot.colors.ContinuousColormap.from_file`.
+          `~ultraplot.colors.ContinuousColormap.from_file`. The resulting
+          colormap may be a `~ultraplot.colors.ContinuousColormap` or
+          `~ultraplot.colors.PerceptualColormap` depending on the data file.
+        * If ``'discrete'``, a `~ultraplot.colors.DiscreteColormap` is generated
+          using `~ultraplot.colors.ContinuousColormap.from_file`.
 
         Default is ``'continuous'`` when calling `Colormap` directly and
         ``'discrete'`` when `Colormap` is called by `Cycle`.
@@ -449,73 +449,73 @@ def Colormap(
         Controls how colormaps are generated when you input sequence(s)
         of colors. The options are as follows:
 
-        * If ``'perceptual'``, a `~proplot.colors.PerceptualColormap`
-          is generated with `~proplot.colors.PerceptualColormap.from_list`.
-        * If ``'continuous'``, a `~proplot.colors.ContinuousColormap` is
-          generated with `~proplot.colors.ContinuousColormap.from_list`.
-        * If ``'discrete'``, a `~proplot.colors.DiscreteColormap` is generated
+        * If ``'perceptual'``, a `~ultraplot.colors.PerceptualColormap`
+          is generated with `~ultraplot.colors.PerceptualColormap.from_list`.
+        * If ``'continuous'``, a `~ultraplot.colors.ContinuousColormap` is
+          generated with `~ultraplot.colors.ContinuousColormap.from_list`.
+        * If ``'discrete'``, a `~ultraplot.colors.DiscreteColormap` is generated
           by simply passing the colors to the class.
 
         Default is ``'perceptual'`` when calling `Colormap` directly and
         ``'discrete'`` when `Colormap` is called by `Cycle`.
     samples : int or sequence of int, optional
-        For `~proplot.colors.ContinuousColormap`\\ s, this is used to
-        generate `~proplot.colors.DiscreteColormap`\\ s with
-        `~proplot.colors.ContinuousColormap.to_discrete`. For
-        `~proplot.colors.DiscreteColormap`\\ s, this is used to updates the
+        For `~ultraplot.colors.ContinuousColormap`\\ s, this is used to
+        generate `~ultraplot.colors.DiscreteColormap`\\ s with
+        `~ultraplot.colors.ContinuousColormap.to_discrete`. For
+        `~ultraplot.colors.DiscreteColormap`\\ s, this is used to updates the
         number of colors in the cycle. If `samples` is integer, it applies
         to the final *merged* colormap. If it is a sequence of integers,
         it applies to each input colormap individually.
     discrete : bool, optional
         If ``True``, when the final colormap is a
-        `~proplot.colors.DiscreteColormap`, we leave it alone, but when it is a
-        `~proplot.colors.ContinuousColormap`, we always call
-        `~proplot.colors.ContinuousColormap.to_discrete` with a
+        `~ultraplot.colors.DiscreteColormap`, we leave it alone, but when it is a
+        `~ultraplot.colors.ContinuousColormap`, we always call
+        `~ultraplot.colors.ContinuousColormap.to_discrete` with a
         default `samples` value of ``10``. This argument is not
         necessary if you provide the `samples` argument.
     left, right : float or sequence of float, optional
         Truncate the left or right edges of the colormap.
-        Passed to `~proplot.colors.ContinuousColormap.truncate`.
+        Passed to `~ultraplot.colors.ContinuousColormap.truncate`.
         If float, these apply to the final *merged* colormap. If sequence
         of float, these apply to each input colormap individually.
     cut : float or sequence of float, optional
         Cut out the center of the colormap. Passed to
-        `~proplot.colors.ContinuousColormap.cut`. If float,
+        `~ultraplot.colors.ContinuousColormap.cut`. If float,
         this applies to the final *merged* colormap. If sequence of
         float, these apply to each input colormap individually.
     reverse : bool or sequence of bool, optional
         Reverse the colormap. Passed to
-        `~proplot.colors.ContinuousColormap.reversed`. If
+        `~ultraplot.colors.ContinuousColormap.reversed`. If
         float, this applies to the final *merged* colormap. If
         sequence of float, these apply to each input colormap individually.
     shift : float or sequence of float, optional
         Cyclically shift the colormap.
-        Passed to `~proplot.colors.ContinuousColormap.shifted`.
+        Passed to `~ultraplot.colors.ContinuousColormap.shifted`.
         If float, this applies to the final *merged* colormap. If sequence
         of float, these apply to each input colormap individually.
     a
         Shorthand for `alpha`.
     alpha : float or color-spec or sequence, optional
         The opacity of the colormap or the opacity gradation. Passed to
-        `proplot.colors.ContinuousColormap.set_alpha`
-        or `proplot.colors.DiscreteColormap.set_alpha`. If float, this applies
+        `ultraplot.colors.ContinuousColormap.set_alpha`
+        or `ultraplot.colors.DiscreteColormap.set_alpha`. If float, this applies
         to the final *merged* colormap. If sequence of float, these apply to
         each colormap individually.
     h, s, l, c
         Shorthands for `hue`, `luminance`, `saturation`, and `chroma`.
     hue, saturation, luminance : float or color-spec or sequence, optional
         The channel value(s) used to generate colormaps with
-        `~proplot.colors.PerceptualColormap.from_hsl` and
-        `~proplot.colors.PerceptualColormap.from_color`.
+        `~ultraplot.colors.PerceptualColormap.from_hsl` and
+        `~ultraplot.colors.PerceptualColormap.from_color`.
 
         * If you provided no positional arguments, these are used to create
           an arbitrary perceptually uniform colormap with
-          `~proplot.colors.PerceptualColormap.from_hsl`. This
+          `~ultraplot.colors.PerceptualColormap.from_hsl`. This
           is an alternative to passing a dictionary as a positional argument
           with `hue`, `saturation`, and `luminance` as dictionary keys (see `args`).
         * If you did provide positional arguments, and any of them are
           color specifications, these control the look of monochromatic colormaps
-          generated with `~proplot.colors.PerceptualColormap.from_color`.
+          generated with `~ultraplot.colors.PerceptualColormap.from_color`.
           To use different values for each colormap, pass a sequence of floats
           instead of a single float. Note the default `luminance` is ``90`` if
           `discrete` is ``True`` and ``100`` otherwise.
@@ -528,34 +528,34 @@ def Colormap(
         you make monochromatic colormaps using colors selected from arbitrary cycles.
     save : bool, optional
         Whether to call the colormap/color cycle save method, i.e.
-        `proplot.colors.ContinuousColormap.save` or
-        `proplot.colors.DiscreteColormap.save`.
+        `ultraplot.colors.ContinuousColormap.save` or
+        `ultraplot.colors.DiscreteColormap.save`.
     save_kw : dict-like, optional
         Ignored if `save` is ``False``. Passed to the colormap/color cycle
-        save method, i.e. `proplot.colors.ContinuousColormap.save` or
-        `proplot.colors.DiscreteColormap.save`.
+        save method, i.e. `ultraplot.colors.ContinuousColormap.save` or
+        `ultraplot.colors.DiscreteColormap.save`.
 
     Other parameters
     ----------------
     **kwargs
-        Passed to `proplot.colors.ContinuousColormap.copy`,
-        `proplot.colors.PerceptualColormap.copy`, or
-        `proplot.colors.DiscreteColormap.copy`.
+        Passed to `ultraplot.colors.ContinuousColormap.copy`,
+        `ultraplot.colors.PerceptualColormap.copy`, or
+        `ultraplot.colors.DiscreteColormap.copy`.
 
     Returns
     -------
     matplotlib.colors.Colormap
-        A `~proplot.colors.ContinuousColormap` or
-        `~proplot.colors.DiscreteColormap` instance.
+        A `~ultraplot.colors.ContinuousColormap` or
+        `~ultraplot.colors.DiscreteColormap` instance.
 
     See also
     --------
     matplotlib.colors.Colormap
     matplotlib.colors.LinearSegmentedColormap
     matplotlib.colors.ListedColormap
-    proplot.constructor.Norm
-    proplot.constructor.Cycle
-    proplot.utils.get_colors
+    ultraplot.constructor.Norm
+    ultraplot.constructor.Cycle
+    ultraplot.utils.get_colors
     """
 
     # Helper function
@@ -609,7 +609,7 @@ def Colormap(
     deprecated = {"listed": "discrete", "linear": "continuous"}
     if listmode in deprecated:
         oldmode, listmode = listmode, deprecated[listmode]
-        warnings._warn_proplot(
+        warnings._warn_ultraplot(
             f"Please use listmode={listmode!r} instead of listmode={oldmode!r}."
             "Option was renamed in v0.8 and will be removed in a future relase."
         )
@@ -776,12 +776,12 @@ def Cycle(*args, N=None, samples=None, name=None, **kwargs):
 
         * If a `~cycler.Cycler`, nothing more is done.
         * If a sequence of RGB tuples or color strings, these colors are used.
-        * If a `~proplot.colors.DiscreteColormap`, colors from the ``colors``
+        * If a `~ultraplot.colors.DiscreteColormap`, colors from the ``colors``
           attribute are used.
-        * If a string cycle name, that `~proplot.colors.DiscreteColormap`
+        * If a string cycle name, that `~ultraplot.colors.DiscreteColormap`
           is looked up and its ``colors`` are used.
         * In all other cases, the argument is passed to `Colormap`, and
-          colors from the resulting `~proplot.colors.ContinuousColormap`
+          colors from the resulting `~ultraplot.colors.ContinuousColormap`
           are used. See the `samples` argument.
 
         If the last positional argument is numeric, it is used for the
@@ -789,10 +789,10 @@ def Cycle(*args, N=None, samples=None, name=None, **kwargs):
     N
         Shorthand for `samples`.
     samples : float or sequence of float, optional
-        For `~proplot.colors.DiscreteColormap`\\ s, this is the number of
+        For `~ultraplot.colors.DiscreteColormap`\\ s, this is the number of
         colors to select. For example, ``Cycle('538', 4)`` returns the first 4
         colors of the ``'538'`` color cycle.
-        For `~proplot.colors.ContinuousColormap`\\ s, this is either a
+        For `~ultraplot.colors.ContinuousColormap`\\ s, this is either a
         sequence of sample coordinates used to draw colors from the colormap, or
         an integer number of colors to draw. If the latter, the sample coordinates
         are ``np.linspace(0, 1, samples)``. For example, ``Cycle('Reds', 5)``
@@ -827,7 +827,7 @@ markeredgecolors, markerfacecolors
         Aliases for the above keywords.
     **kwargs
         If the input is not already a `~cycler.Cycler` instance, these are passed
-        to `Colormap` and used to build the `~proplot.colors.DiscreteColormap`
+        to `Colormap` and used to build the `~ultraplot.colors.DiscreteColormap`
         from which the cycler will draw its colors.
 
     Returns
@@ -841,9 +841,9 @@ markeredgecolors, markerfacecolors
     cycler.cycler
     cycler.Cycler
     matplotlib.axes.Axes.set_prop_cycle
-    proplot.constructor.Colormap
-    proplot.constructor.Norm
-    proplot.utils.get_colors
+    ultraplot.constructor.Colormap
+    ultraplot.constructor.Norm
+    ultraplot.utils.get_colors
     """
     # Parse keyword arguments that rotate through other properties
     # besides color cycles.
@@ -862,13 +862,13 @@ markeredgecolors, markerfacecolors
     if not args:
         props.setdefault("color", ["black"])
         if kwargs:
-            warnings._warn_proplot(f"Ignoring Cycle() keyword arg(s) {kwargs}.")
+            warnings._warn_ultraplot(f"Ignoring Cycle() keyword arg(s) {kwargs}.")
         dicts = ()
 
     # Merge cycler objects and/or update cycler objects with input kwargs
     elif all(isinstance(arg, cycler.Cycler) for arg in args):
         if kwargs:
-            warnings._warn_proplot(f"Ignoring Cycle() keyword arg(s) {kwargs}.")
+            warnings._warn_ultraplot(f"Ignoring Cycle() keyword arg(s) {kwargs}.")
         if len(args) == 1 and not props:
             return args[0]
         dicts = tuple(arg.by_key() for arg in args)
@@ -930,8 +930,8 @@ def Norm(norm, *args, **kwargs):
         Key(s)                           Class
         ===============================  =====================================
         ``'null'``, ``'none'``           `~matplotlib.colors.NoNorm`
-        ``'diverging'``, ``'div'``       `~proplot.colors.DivergingNorm`
-        ``'segmented'``, ``'segments'``  `~proplot.colors.SegmentedNorm`
+        ``'diverging'``, ``'div'``       `~ultraplot.colors.DivergingNorm`
+        ``'segmented'``, ``'segments'``  `~ultraplot.colors.SegmentedNorm`
         ``'linear'``                     `~matplotlib.colors.Normalize`
         ``'log'``                        `~matplotlib.colors.LogNorm`
         ``'power'``                      `~matplotlib.colors.PowerNorm`
@@ -951,8 +951,8 @@ def Norm(norm, *args, **kwargs):
     See also
     --------
     matplotlib.colors.Normalize
-    proplot.colors.DiscreteNorm
-    proplot.constructor.Colormap
+    ultraplot.colors.DiscreteNorm
+    ultraplot.constructor.Colormap
     """
     if np.iterable(norm) and not isinstance(norm, str):
         norm, *args = *norm, *args
@@ -988,7 +988,7 @@ def Locator(locator, *args, discrete=False, **kwargs):
           Returns a `~matplotlib.ticker.MultipleLocator`.
         * If a sequence of numbers, these points are ticked. Returns
           a `~matplotlib.ticker.FixedLocator` by default or a
-          `~proplot.ticker.DiscreteLocator` if `discrete` is ``True``.
+          `~ultraplot.ticker.DiscreteLocator` if `discrete` is ``True``.
 
         Otherwise, `locator` should be a string corresponding to one
         of the "registered" locators (see below table). If `locator` is a
@@ -1007,9 +1007,9 @@ def Locator(locator, *args, discrete=False, **kwargs):
         ``'minor'``              `~matplotlib.ticker.AutoMinorLocator`         Minor ticks at sensible locations
         ``'date'``               `~matplotlib.dates.AutoDateLocator`           Default tick locations for datetime axes
         ``'fixed'``              `~matplotlib.ticker.FixedLocator`             Ticks at these exact locations
-        ``'discrete'``           `~proplot.ticker.DiscreteLocator`             Major ticks restricted to these locations but subsampled depending on the axis length
-        ``'discreteminor'``      `~proplot.ticker.DiscreteLocator`             Minor ticks restricted to these locations but subsampled depending on the axis length
-        ``'index'``              `~proplot.ticker.IndexLocator`                Ticks on the non-negative integers
+        ``'discrete'``           `~ultraplot.ticker.DiscreteLocator`             Major ticks restricted to these locations but subsampled depending on the axis length
+        ``'discreteminor'``      `~ultraplot.ticker.DiscreteLocator`             Minor ticks restricted to these locations but subsampled depending on the axis length
+        ``'index'``              `~ultraplot.ticker.IndexLocator`                Ticks on the non-negative integers
         ``'linear'``             `~matplotlib.ticker.LinearLocator`            Exactly ``N`` ticks encompassing axis limits, spaced as ``numpy.linspace(lo, hi, N)``
         ``'log'``                `~matplotlib.ticker.LogLocator`               For log-scale axes
         ``'logminor'``           `~matplotlib.ticker.LogLocator`               For log-scale axes on the 1st through 9th multiples of each power of the base
@@ -1028,11 +1028,11 @@ def Locator(locator, *args, discrete=False, **kwargs):
         ``'minute'``             `~matplotlib.dates.MinuteLocator`             Ticks every ``N`` minutes
         ``'second'``             `~matplotlib.dates.SecondLocator`             Ticks every ``N`` seconds
         ``'microsecond'``        `~matplotlib.dates.MicrosecondLocator`        Ticks every ``N`` microseconds
-        ``'lon'``, ``'deglon'``  `~proplot.ticker.LongitudeLocator`            Longitude gridlines at sensible decimal locations
-        ``'lat'``, ``'deglat'``  `~proplot.ticker.LatitudeLocator`             Latitude gridlines at sensible decimal locations
-        ``'dms'``                `~proplot.ticker.DegreeLocator`               Gridlines on nice minute and second intervals
-        ``'dmslon'``             `~proplot.ticker.LongitudeLocator`            Longitude gridlines on nice minute and second intervals
-        ``'dmslat'``             `~proplot.ticker.LatitudeLocator`             Latitude gridlines on nice minute and second intervals
+        ``'lon'``, ``'deglon'``  `~ultraplot.ticker.LongitudeLocator`            Longitude gridlines at sensible decimal locations
+        ``'lat'``, ``'deglat'``  `~ultraplot.ticker.LatitudeLocator`             Latitude gridlines at sensible decimal locations
+        ``'dms'``                `~ultraplot.ticker.DegreeLocator`               Gridlines on nice minute and second intervals
+        ``'dmslon'``             `~ultraplot.ticker.LongitudeLocator`            Longitude gridlines on nice minute and second intervals
+        ``'dmslat'``             `~ultraplot.ticker.LatitudeLocator`             Latitude gridlines on nice minute and second intervals
         =======================  ============================================  =====================================================================================
 
     Other parameters
@@ -1048,11 +1048,11 @@ def Locator(locator, *args, discrete=False, **kwargs):
     See also
     --------
     matplotlib.ticker.Locator
-    proplot.axes.CartesianAxes.format
-    proplot.axes.PolarAxes.format
-    proplot.axes.GeoAxes.format
-    proplot.axes.Axes.colorbar
-    proplot.constructor.Formatter
+    ultraplot.axes.CartesianAxes.format
+    ultraplot.axes.PolarAxes.format
+    ultraplot.axes.GeoAxes.format
+    ultraplot.axes.Axes.colorbar
+    ultraplot.constructor.Formatter
     """  # noqa: E501
     if (
         np.iterable(locator)
@@ -1110,12 +1110,12 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         * If a `~matplotlib.ticker.Formatter` instance already,
           a `copy.copy` of the instance is returned.
         * If ``False``, a `~matplotlib.ticker.NullFormatter` is used, and if
-          ``True``, the default `~proplot.ticker.AutoFormatter` is used.
+          ``True``, the default `~ultraplot.ticker.AutoFormatter` is used.
         * If a function, the labels will be generated using this function.
           Returns a `~matplotlib.ticker.FuncFormatter`.
         * If sequence of strings, the ticks are labeled with these strings.
           Returns a `~matplotlib.ticker.FixedFormatter` by default or
-          an `~proplot.ticker.IndexFormatter` if `index` is ``True``.
+          an `~ultraplot.ticker.IndexFormatter` if `index` is ``True``.
         * If a string containing ``{x}`` or ``{x:...}``, ticks will be
           formatted by calling ``string.format(x=number)``. Returns
           a `~matplotlib.ticker.StrMethodFormatter`.
@@ -1144,11 +1144,11 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         Key                     Class                                           Description
         ======================  ==============================================  =================================================================
         ``'null'``, ``'none'``  `~matplotlib.ticker.NullFormatter`              No tick labels
-        ``'auto'``              `~proplot.ticker.AutoFormatter`                 New default tick labels for axes
-        ``'sci'``               `~proplot.ticker.SciFormatter`                  Format ticks with scientific notation
-        ``'simple'``            `~proplot.ticker.SimpleFormatter`               New default tick labels for e.g. contour labels
-        ``'sigfig'``            `~proplot.ticker.SigFigFormatter`               Format labels using the first ``N`` significant digits
-        ``'frac'``              `~proplot.ticker.FracFormatter`                 Rational fractions
+        ``'auto'``              `~ultraplot.ticker.AutoFormatter`                 New default tick labels for axes
+        ``'sci'``               `~ultraplot.ticker.SciFormatter`                  Format ticks with scientific notation
+        ``'simple'``            `~ultraplot.ticker.SimpleFormatter`               New default tick labels for e.g. contour labels
+        ``'sigfig'``            `~ultraplot.ticker.SigFigFormatter`               Format labels using the first ``N`` significant digits
+        ``'frac'``              `~ultraplot.ticker.FracFormatter`                 Rational fractions
         ``'date'``              `~matplotlib.dates.AutoDateFormatter`           Default tick labels for datetime axes
         ``'concise'``           `~matplotlib.dates.ConciseDateFormatter`        More concise date labels introduced in matplotlib 3.1
         ``'datestr'``           `~matplotlib.dates.DateFormatter`               Date formatting with C-style ``string % format`` notation
@@ -1156,24 +1156,24 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         ``'fixed'``             `~matplotlib.ticker.FixedFormatter`             List of strings
         ``'formatstr'``         `~matplotlib.ticker.FormatStrFormatter`         From C-style ``string % format`` notation
         ``'func'``              `~matplotlib.ticker.FuncFormatter`              Use an arbitrary function
-        ``'index'``             `~proplot.ticker.IndexFormatter`                List of strings corresponding to non-negative integer positions
+        ``'index'``             `~ultraplot.ticker.IndexFormatter`                List of strings corresponding to non-negative integer positions
         ``'log'``               `~matplotlib.ticker.LogFormatterSciNotation`    For log-scale axes with scientific notation
         ``'logit'``             `~matplotlib.ticker.LogitFormatter`             For logistic-scale axes
         ``'percent'``           `~matplotlib.ticker.PercentFormatter`           Trailing percent sign
         ``'scalar'``            `~matplotlib.ticker.ScalarFormatter`            The default matplotlib formatter
         ``'strmethod'``         `~matplotlib.ticker.StrMethodFormatter`         From the ``string.format`` method
         ``'theta'``             `~matplotlib.projections.polar.ThetaFormatter`  Formats radians as degrees, with a degree symbol
-        ``'e'``                 `~proplot.ticker.FracFormatter` preset          Fractions of *e*
-        ``'pi'``                `~proplot.ticker.FracFormatter` preset          Fractions of :math:`\\pi`
-        ``'tau'``               `~proplot.ticker.FracFormatter` preset          Fractions of the `one true circle constant <tau_>`_ :math:`\\tau`
-        ``'lat'``               `~proplot.ticker.AutoFormatter` preset          Cardinal "SN" indicator
-        ``'lon'``               `~proplot.ticker.AutoFormatter` preset          Cardinal "WE" indicator
-        ``'deg'``               `~proplot.ticker.AutoFormatter` preset          Trailing degree symbol
-        ``'deglat'``            `~proplot.ticker.AutoFormatter` preset          Trailing degree symbol and cardinal "SN" indicator
-        ``'deglon'``            `~proplot.ticker.AutoFormatter` preset          Trailing degree symbol and cardinal "WE" indicator
-        ``'dms'``               `~proplot.ticker.DegreeFormatter`               Labels with degree/minute/second support
-        ``'dmslon'``            `~proplot.ticker.LongitudeFormatter`            Longitude labels with degree/minute/second support
-        ``'dmslat'``            `~proplot.ticker.LatitudeFormatter`             Latitude labels with degree/minute/second support
+        ``'e'``                 `~ultraplot.ticker.FracFormatter` preset          Fractions of *e*
+        ``'pi'``                `~ultraplot.ticker.FracFormatter` preset          Fractions of :math:`\\pi`
+        ``'tau'``               `~ultraplot.ticker.FracFormatter` preset          Fractions of the `one true circle constant <tau_>`_ :math:`\\tau`
+        ``'lat'``               `~ultraplot.ticker.AutoFormatter` preset          Cardinal "SN" indicator
+        ``'lon'``               `~ultraplot.ticker.AutoFormatter` preset          Cardinal "WE" indicator
+        ``'deg'``               `~ultraplot.ticker.AutoFormatter` preset          Trailing degree symbol
+        ``'deglat'``            `~ultraplot.ticker.AutoFormatter` preset          Trailing degree symbol and cardinal "SN" indicator
+        ``'deglon'``            `~ultraplot.ticker.AutoFormatter` preset          Trailing degree symbol and cardinal "WE" indicator
+        ``'dms'``               `~ultraplot.ticker.DegreeFormatter`               Labels with degree/minute/second support
+        ``'dmslon'``            `~ultraplot.ticker.LongitudeFormatter`            Longitude labels with degree/minute/second support
+        ``'dmslat'``            `~ultraplot.ticker.LatitudeFormatter`             Latitude labels with degree/minute/second support
         ======================  ==============================================  =================================================================
 
     date : bool, optional
@@ -1196,11 +1196,11 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
     See also
     --------
     matplotlib.ticker.Formatter
-    proplot.axes.CartesianAxes.format
-    proplot.axes.PolarAxes.format
-    proplot.axes.GeoAxes.format
-    proplot.axes.Axes.colorbar
-    proplot.constructor.Locator
+    ultraplot.axes.CartesianAxes.format
+    ultraplot.axes.PolarAxes.format
+    ultraplot.axes.GeoAxes.format
+    ultraplot.axes.Axes.colorbar
+    ultraplot.constructor.Locator
     """  # noqa: E501
     if (
         np.iterable(formatter)
@@ -1258,26 +1258,26 @@ def Scale(scale, *args, **kwargs):
         =================  ======================================  ===============================================
         Key                Class                                   Description
         =================  ======================================  ===============================================
-        ``'linear'``       `~proplot.scale.LinearScale`            Linear
-        ``'log'``          `~proplot.scale.LogScale`               Logarithmic
-        ``'symlog'``       `~proplot.scale.SymmetricalLogScale`    Logarithmic beyond finite space around zero
-        ``'logit'``        `~proplot.scale.LogitScale`             Logistic
-        ``'inverse'``      `~proplot.scale.InverseScale`           Inverse
-        ``'function'``     `~proplot.scale.FuncScale`              Arbitrary forward and backwards transformations
-        ``'sine'``         `~proplot.scale.SineLatitudeScale`      Sine function (in degrees)
-        ``'mercator'``     `~proplot.scale.MercatorLatitudeScale`  Mercator latitude function (in degrees)
-        ``'exp'``          `~proplot.scale.ExpScale`               Arbitrary exponential function
-        ``'power'``        `~proplot.scale.PowerScale`             Arbitrary power function
-        ``'cutoff'``       `~proplot.scale.CutoffScale`            Arbitrary piecewise linear transformations
-        ``'quadratic'``    `~proplot.scale.PowerScale` (preset)    Quadratic function
-        ``'cubic'``        `~proplot.scale.PowerScale` (preset)    Cubic function
-        ``'quartic'``      `~proplot.scale.PowerScale` (preset)    Quartic function
-        ``'db'``           `~proplot.scale.ExpScale` (preset)      Ratio expressed as `decibels <db_>`_
-        ``'np'``           `~proplot.scale.ExpScale` (preset)      Ratio expressed as `nepers <np_>`_
-        ``'idb'``          `~proplot.scale.ExpScale` (preset)      `Decibels <db_>`_ expressed as ratio
-        ``'inp'``          `~proplot.scale.ExpScale` (preset)      `Nepers <np_>`_ expressed as ratio
-        ``'pressure'``     `~proplot.scale.ExpScale` (preset)      Height (in km) expressed linear in pressure
-        ``'height'``       `~proplot.scale.ExpScale` (preset)      Pressure (in hPa) expressed linear in height
+        ``'linear'``       `~ultraplot.scale.LinearScale`            Linear
+        ``'log'``          `~ultraplot.scale.LogScale`               Logarithmic
+        ``'symlog'``       `~ultraplot.scale.SymmetricalLogScale`    Logarithmic beyond finite space around zero
+        ``'logit'``        `~ultraplot.scale.LogitScale`             Logistic
+        ``'inverse'``      `~ultraplot.scale.InverseScale`           Inverse
+        ``'function'``     `~ultraplot.scale.FuncScale`              Arbitrary forward and backwards transformations
+        ``'sine'``         `~ultraplot.scale.SineLatitudeScale`      Sine function (in degrees)
+        ``'mercator'``     `~ultraplot.scale.MercatorLatitudeScale`  Mercator latitude function (in degrees)
+        ``'exp'``          `~ultraplot.scale.ExpScale`               Arbitrary exponential function
+        ``'power'``        `~ultraplot.scale.PowerScale`             Arbitrary power function
+        ``'cutoff'``       `~ultraplot.scale.CutoffScale`            Arbitrary piecewise linear transformations
+        ``'quadratic'``    `~ultraplot.scale.PowerScale` (preset)    Quadratic function
+        ``'cubic'``        `~ultraplot.scale.PowerScale` (preset)    Cubic function
+        ``'quartic'``      `~ultraplot.scale.PowerScale` (preset)    Quartic function
+        ``'db'``           `~ultraplot.scale.ExpScale` (preset)      Ratio expressed as `decibels <db_>`_
+        ``'np'``           `~ultraplot.scale.ExpScale` (preset)      Ratio expressed as `nepers <np_>`_
+        ``'idb'``          `~ultraplot.scale.ExpScale` (preset)      `Decibels <db_>`_ expressed as ratio
+        ``'inp'``          `~ultraplot.scale.ExpScale` (preset)      `Nepers <np_>`_ expressed as ratio
+        ``'pressure'``     `~ultraplot.scale.ExpScale` (preset)      Height (in km) expressed linear in pressure
+        ``'height'``       `~ultraplot.scale.ExpScale` (preset)      Pressure (in hPa) expressed linear in height
         =================  ======================================  ===============================================
 
         .. _db: https://en.wikipedia.org/wiki/Decibel
@@ -1296,10 +1296,10 @@ def Scale(scale, *args, **kwargs):
     See also
     --------
     matplotlib.scale.ScaleBase
-    proplot.scale.LinearScale
-    proplot.axes.CartesianAxes.format
-    proplot.axes.CartesianAxes.dualx
-    proplot.axes.CartesianAxes.dualy
+    ultraplot.scale.LinearScale
+    ultraplot.axes.CartesianAxes.format
+    ultraplot.axes.CartesianAxes.dualx
+    ultraplot.axes.CartesianAxes.dualy
     """  # noqa: E501
     # NOTE: Why not try to interpret FuncScale arguments, like when lists
     # of numbers are passed to Locator? Because FuncScale *itself* accepts
@@ -1314,7 +1314,7 @@ def Scale(scale, *args, **kwargs):
     scale = scale.lower()
     if scale in SCALES_PRESETS:
         if args or kwargs:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Scale {scale!r} is a scale *preset*. Ignoring positional "
                 "argument(s): {args} and keyword argument(s): {kwargs}. "
             )
@@ -1356,7 +1356,7 @@ def Proj(
         their full names (with links to the relevant `PROJ documentation
         <https://proj.org/operations/projections>`__),
         and whether they are available in the cartopy and basemap packages.
-        (added) indicates a projection class that proplot has "added" to
+        (added) indicates a projection class that ultraplot has "added" to
         cartopy using the cartopy API.
 
         .. _proj_table:
@@ -1447,8 +1447,8 @@ def Proj(
     --------
     mpl_toolkits.basemap.Basemap
     cartopy.crs.Projection
-    proplot.ui.subplots
-    proplot.axes.GeoAxes
+    ultraplot.ui.subplots
+    ultraplot.axes.GeoAxes
 
     References
     ----------
@@ -1535,7 +1535,7 @@ def Proj(
         if backend is not None:
             kwargs["backend"] = backend
         if kwargs:
-            warnings._warn_proplot(f"Ignoring Proj() keyword arg(s): {kwargs!r}.")
+            warnings._warn_ultraplot(f"Ignoring Proj() keyword arg(s): {kwargs!r}.")
         proj = name
         backend = "cartopy" if is_crs else "basemap"
 

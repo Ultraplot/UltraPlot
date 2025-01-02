@@ -144,7 +144,7 @@ def _update_ticks(self, manual_only=False):
             axis.set_ticks(ticks, minor=True)
             axis.set_ticklabels([], minor=True)
         else:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Cannot use user-input colorbar minor locator {minorlocator!r} (older matplotlib version). Turning on minor ticks instead."
             )  # noqa: E501
             self.minorlocator = None

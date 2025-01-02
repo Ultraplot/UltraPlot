@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# import proplot as pplt
+# import ultraplot as pplt
 import numpy as np, pandas as pd, ultraplot as pplt
 import pytest
 

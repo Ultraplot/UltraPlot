@@ -1,5 +1,4 @@
 pytest
 pytest-mpl
 numpy
-pandas
-matplotlib>=3.0.0
+matplotlib>=3.9.3

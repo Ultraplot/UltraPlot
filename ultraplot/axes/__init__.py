@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-The various axes classes used throughout proplot.
+The various axes classes used throughout ultraplot.
 """
 import matplotlib.projections as mproj
 
@@ -30,7 +30,7 @@ __all__ = [
 _cls_dict = {}  # track valid names
 for _cls in (CartesianAxes, PolarAxes, _CartopyAxes, _BasemapAxes, ThreeAxes):
     for _name in (_cls._name, *_cls._name_aliases):
-        with context._state_context(_cls, name="proplot_" + _name):
+        with context._state_context(_cls, name="ultraplot_" + _name):
             mproj.register_projection(_cls)
             _cls_dict[_name] = _cls
 _cls_table = "\n".join(

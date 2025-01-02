@@ -1,29 +1,29 @@
 Installation
 ============
 
-Proplot is published on `PyPi <https://pypi.org/project/proplot/>`__
+Ultraplot is published on `PyPi <https://pypi.org/project/ultraplot/>`__
 and `conda-forge <https://conda-forge.org>`__. It can be installed
 with ``pip`` or ``conda`` as follows:
 
 .. code-block:: bash
 
-   pip install proplot
-   conda install -c conda-forge proplot
+   pip install ultraplot
+   conda install -c conda-forge ultraplot
 
-Likewise, an existing installation of proplot can be upgraded to the latest version with:
+Likewise, an existing installation of ultraplot can be upgraded to the latest version with:
 
 .. code-block:: bash
 
-   pip install --upgrade proplot
-   conda upgrade proplot
+   pip install --upgrade ultraplot
+   conda upgrade ultraplot
 
 
-To install a development version of proplot, you can use
-``pip install git+https://github.com/proplot-dev/proplot.git``
+To install a development version of ultraplot, you can use
+``pip install git+https://github.com/ultraplot/ultraplot.git``
 or clone the repository and run ``pip install -e .`` inside
-the ``proplot`` folder.
+the ``ultraplot`` folder.
 
-Proplot's only hard dependency is `matplotlib <https://matplotlib.org/>`__.
+ultraplot's only hard dependency is `matplotlib <https://matplotlib.org/>`__.
 The *soft* dependencies are `cartopy <https://scitools.org.uk/cartopy/docs/latest/>`__,
 `basemap <https://matplotlib.org/basemap/index.html>`__,
 `xarray <http://xarray.pydata.org>`__, and `pandas <https://pandas.pydata.org>`__.

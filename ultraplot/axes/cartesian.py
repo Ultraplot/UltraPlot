@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-The standard Cartesian axes used for most proplot figures.
+The standard Cartesian axes used for most ultraplot figures.
 """
 import copy
 import inspect
@@ -59,11 +59,11 @@ xreverse, yreverse : bool, optional
     Whether to "reverse" the x and y axis direction. Makes the x and
     y axes ascend left-to-right and top-to-bottom, respectively.
 xscale, yscale : scale-spec, optional
-    The x and y axis scales. Passed to the `~proplot.scale.Scale` constructor.
+    The x and y axis scales. Passed to the `~ultraplot.scale.Scale` constructor.
     For example, ``xscale='log'`` applies logarithmic scaling, and
-    ``xscale=('cutoff', 100, 2)`` applies a `~proplot.scale.CutoffScale`.
+    ``xscale=('cutoff', 100, 2)`` applies a `~ultraplot.scale.CutoffScale`.
 xscale_kw, yscale_kw : dict-like, optional
-    The x and y axis scale settings. Passed to `~proplot.scale.Scale`.
+    The x and y axis scale settings. Passed to `~ultraplot.scale.Scale`.
 xmargin, ymargin, margin : float, default: :rc:`margin`
     The default margin between plotted content and the x and y axis spines in
     axes-relative coordinates. This is useful if you don't witch to explicitly set
@@ -77,11 +77,11 @@ xtickrange, ytickrange : 2-tuple of float, optional
     The x and y axis data ranges within which major tick marks are labelled.
     For example, ``xlim=(-5, 5)`` combined with ``xtickrange=(-1, 1)`` and a
     tick interval of 1 will only label the ticks marks at -1, 0, and 1. See
-    `~proplot.ticker.AutoFormatter` for details.
+    `~ultraplot.ticker.AutoFormatter` for details.
 xwraprange, ywraprange : 2-tuple of float, optional
     The x and y axis data ranges with which major tick mark values are wrapped. For
     example, ``xwraprange=(0, 3)`` causes the values 0 through 9 to be formatted as
-    0, 1, 2, 0, 1, 2, 0, 1, 2, 0. See `~proplot.ticker.AutoFormatter` for details. This
+    0, 1, 2, 0, 1, 2, 0, 1, 2, 0. See `~ultraplot.ticker.AutoFormatter` for details. This
     can be combined with `xtickrange` and `ytickrange` to make "stacked" line plots.
 xloc, yloc : optional
     Shorthands for `xspineloc`, `yspineloc`.
@@ -127,7 +127,7 @@ xticks, yticks : optional
     Aliases for `xlocator`, `ylocator`.
 xlocator, ylocator : locator-spec, optional
     Used to determine the x and y axis tick mark positions. Passed
-    to the `~proplot.constructor.Locator` constructor.  Can be float,
+    to the `~ultraplot.constructor.Locator` constructor.  Can be float,
     list of float, string, or `matplotlib.ticker.Locator` instance.
     Use ``[]``, ``'null'``, or ``'none'`` for no ticks.
 xlocator_kw, ylocator_kw : dict-like, optional
@@ -142,7 +142,7 @@ xticklabels, yticklabels : optional
     Aliases for `xformatter`, `yformatter`.
 xformatter, yformatter : formatter-spec, optional
     Used to determine the x and y axis tick label string format.
-    Passed to the `~proplot.constructor.Formatter` constructor.
+    Passed to the `~ultraplot.constructor.Formatter` constructor.
     Can be string, list of strings, or `matplotlib.ticker.Formatter` instance.
     Use ``[]``, ``'null'``, or ``'none'`` for no labels.
 xformatter_kw, yformatter_kw : dict-like, optional
@@ -233,8 +233,8 @@ _shared_docstring = """
 Parameters
 ----------
 %(extra)s**kwargs
-    Passed to `~proplot.axes.CartesianAxes`. Supports all valid
-    `~proplot.axes.CartesianAxes.format` keywords. You can optionally
+    Passed to `~ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords. You can optionally
     omit the {x} from keywords beginning with ``{x}`` -- for example
     ``ax.alt{x}(lim=(0, 10))`` is equivalent to ``ax.alt{x}({x}lim=(0, 10))``.
     You can also change the default side for the axis spine, axis tick marks,
@@ -243,7 +243,7 @@ Parameters
 
 Returns
 -------
-proplot.axes.CartesianAxes
+ultraplot.axes.CartesianAxes
     The resulting axes.
 
 Note
@@ -266,7 +266,7 @@ _alt_descrip = """
 Add an axes locked to the same location with a
 distinct {x} axis.
 This is an alias and arguably more intuitive name for
-`~proplot.axes.CartesianAxes.twin{y}`, which generates
+`~ultraplot.axes.CartesianAxes.twin{y}`, which generates
 two {x} axes with a shared ("twin") {y} axes.
 """
 _alt_docstring = _shared_docstring % {"descrip": _alt_descrip, "extra": ""}
@@ -295,11 +295,11 @@ additional convenience features.
 _dual_extra = """
 funcscale : callable, 2-tuple of callables, or scale-spec
     The scale used to transform units from the parent axis to the secondary
-    axis. This can be a `~proplot.scale.FuncScale` itself or a function,
+    axis. This can be a `~ultraplot.scale.FuncScale` itself or a function,
     (function, function) tuple, or an axis scale specification interpreted
-    by the `~proplot.constructor.Scale` constructor function, any of which
-    will be used to build a `~proplot.scale.FuncScale` and applied
-    to the dual axis (see `~proplot.scale.FuncScale` for details).
+    by the `~ultraplot.constructor.Scale` constructor function, any of which
+    will be used to build a `~ultraplot.scale.FuncScale` and applied
+    to the dual axis (see `~ultraplot.scale.FuncScale` for details).
 """
 _dual_docstring = _shared_docstring % {
     "descrip": _dual_descrip,
@@ -318,8 +318,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
     ---------
     This is the default axes subclass. It can be specified explicitly by passing
     ``proj='cart'``, ``proj='cartesian'``, ``proj='rect'``, or ``proj='rectilinear'``
-    to axes-creation commands like `~proplot.figure.Figure.add_axes`,
-    `~proplot.figure.Figure.add_subplot`, and `~proplot.figure.Figure.subplots`.
+    to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
+    `~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`.
     """
 
     _name = "cartesian"
@@ -342,10 +342,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         See also
         --------
         CartesianAxes.format
-        proplot.axes.Axes
-        proplot.axes.PlotAxes
-        proplot.figure.Figure.subplot
-        proplot.figure.Figure.add_subplot
+        ultraplot.axes.Axes
+        ultraplot.axes.PlotAxes
+        ultraplot.figure.Figure.subplot
+        ultraplot.figure.Figure.add_subplot
         """
         # Initialize axes
         self._xaxis_current_rotation = "horizontal"  # current rotation
@@ -693,9 +693,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             formatter = _not_none(formatter, "auto")
             if tickrange is not None or wraprange is not None:
                 if formatter != "auto":
-                    warnings._warn_proplot(
+                    warnings._warn_ultraplot(
                         "The tickrange and autorange features require "
-                        "proplot.AutoFormatter formatter. Overriding the input."
+                        "ultraplot.AutoFormatter formatter. Overriding the input."
                     )
                 if tickrange is not None:
                     formatter_kw.setdefault("tickrange", tickrange)
@@ -1043,9 +1043,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         See also
         --------
-        proplot.axes.Axes.format
-        proplot.figure.Figure.format
-        proplot.config.Configurator.context
+        ultraplot.axes.Axes.format
+        ultraplot.figure.Figure.format
+        ultraplot.config.Configurator.context
 
         Note
         ----
@@ -1316,7 +1316,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
                 # Axis locator
                 if minorlocator is True or minorlocator is False:  # must test identity
-                    warnings._warn_proplot(
+                    warnings._warn_ultraplot(
                         f"You passed {s}minorticks={minorlocator}, but this argument "
                         "is used to specify the tick locations. If you just want to "
                         f"toggle minor ticks, please use {s}tickminor={minorlocator}."

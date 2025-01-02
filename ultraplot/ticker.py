@@ -337,7 +337,7 @@ class LatitudeLocator(DegreeLocator):
 
 class AutoFormatter(mticker.ScalarFormatter):
     """
-    The default formatter used for proplot tick labels.
+    The default formatter used for ultraplot tick labels.
     Replaces `~matplotlib.ticker.ScalarFormatter`.
     """
 
@@ -365,15 +365,15 @@ class AutoFormatter(mticker.ScalarFormatter):
 
         See also
         --------
-        proplot.constructor.Formatter
-        proplot.ticker.SimpleFormatter
+        ultraplot.constructor.Formatter
+        ultraplot.ticker.SimpleFormatter
 
         Note
         ----
         `matplotlib.ticker.ScalarFormatter` determines the number of
         significant digits based on the axis limits, and therefore may
         truncate digits while formatting ticks on highly non-linear axis
-        scales like `~proplot.scale.LogScale`. `AutoFormatter` corrects
+        scales like `~ultraplot.scale.LogScale`. `AutoFormatter` corrects
         this behavior, making it suitable for arbitrary axis scales. We
         therefore use `AutoFormatter` with every axis scale by default.
         """
@@ -587,8 +587,8 @@ class SimpleFormatter(mticker.Formatter):
 
         See also
         --------
-        proplot.constructor.Formatter
-        proplot.ticker.AutoFormatter
+        ultraplot.constructor.Formatter
+        ultraplot.ticker.AutoFormatter
         """
         precision, zerotrim = _default_precision_zerotrim(precision, zerotrim)
         self._precision = precision
@@ -665,8 +665,8 @@ class SciFormatter(mticker.Formatter):
 
         See also
         --------
-        proplot.constructor.Formatter
-        proplot.ticker.AutoFormatter
+        ultraplot.constructor.Formatter
+        ultraplot.ticker.AutoFormatter
         """
         precision, zerotrim = _default_precision_zerotrim(precision, zerotrim)
         self._precision = precision
@@ -723,8 +723,8 @@ class SigFigFormatter(mticker.Formatter):
 
         See also
         --------
-        proplot.constructor.Formatter
-        proplot.ticker.AutoFormatter
+        ultraplot.constructor.Formatter
+        ultraplot.ticker.AutoFormatter
         """
         self._sigfig = _not_none(sigfig, 3)
         self._zerotrim = _not_none(zerotrim, rc["formatter.zerotrim"])
@@ -775,8 +775,8 @@ class FracFormatter(mticker.Formatter):
 
         See also
         --------
-        proplot.constructor.Formatter
-        proplot.ticker.AutoFormatter
+        ultraplot.constructor.Formatter
+        ultraplot.ticker.AutoFormatter
         """
         self._symbol = symbol
         self._number = number

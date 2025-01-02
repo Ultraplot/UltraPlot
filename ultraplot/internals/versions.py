@@ -23,7 +23,7 @@ class _version(list):
             major, minor, *_ = version.split(".")
             major, minor = int(major or 0), int(minor or 0)
         except Exception:
-            warnings._warn_proplot(f"Unexpected version {version!r}. Using 0.0.0.")
+            warnings._warn_ultraplot(f"Unexpected version {version!r}. Using 0.0.0.")
             major = minor = 0
         self._version = f"{major}.{minor}"
         super().__init__((major, minor))  # then use builtin python list sorting

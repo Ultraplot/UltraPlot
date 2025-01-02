@@ -1,7 +1,7 @@
 # Hard requirements for running tests
 # See docs/environment.yml for dependency notes
 # WARNING: Keep this up-to-date with ci/environment.yml
-name: proplot-dev
+name: ultraplot-dev
 channels:
   - conda-forge
 dependencies:
@@ -35,4 +35,4 @@ dependencies:
   - nbsphinx>=0.8.1
   - jupytext
   - pip:
-    - git+https://github.com/proplot-dev/sphinx-automodapi@proplot-mods
+      - git+https://github.com/ultraplot-dev/sphinx-automodapi@ultraplot-mods

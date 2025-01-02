@@ -14,8 +14,8 @@ from ..utils import _fontsize_to_pt, _not_none, units
 
 class _SharedAxes(object):
     """
-    Mix-in class with methods shared between `~proplot.axes.CartesianAxes`
-    and `~proplot.axes.PolarAxes`.
+    Mix-in class with methods shared between `~ultraplot.axes.CartesianAxes`
+    and `~ultraplot.axes.PolarAxes`.
     """
 
     @staticmethod

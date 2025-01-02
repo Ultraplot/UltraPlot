@@ -4,48 +4,48 @@
 
 .. _ug_config:
 
-Configuring proplot
+Configuring ultraplot
 ===================
 
 Overview
 --------
 
-A dictionary-like object named `~proplot.config.rc`, belonging to the
-`~proplot.config.Configurator` class, is created when you import proplot.
+A dictionary-like object named `~ultraplot.config.rc`, belonging to the
+`~ultraplot.config.Configurator` class, is created when you import ultraplot.
 This is your one-stop shop for working with
 `matplotlib settings <ug_rcmpl_>`_
-stored in `~proplot.config.rc_matplotlib`
+stored in `~ultraplot.config.rc_matplotlib`
 (our name for the `~matplotlib.rcParams` dictionary)
-and :ref:`proplot settings <ug_rcproplot>`
-stored in `~proplot.config.rc_proplot`.
+and :ref:`ultraplot settings <ug_rcultraplot>`
+stored in `~ultraplot.config.rc_ultraplot`.
 
-To change global settings on-the-fly, simply update `~proplot.config.rc`
+To change global settings on-the-fly, simply update `~ultraplot.config.rc`
 using either dot notation or as you would any other dictionary:
 
 .. code-block:: python
 
-  import proplot as pplt
+  import ultraplot as pplt
   pplt.rc.name = value
   pplt.rc['name'] = value
   pplt.rc.update(name1=value1, name2=value2)
   pplt.rc.update({'name1': value1, 'name2': value2})
 
 To apply settings to a particular axes or figure, pass the setting
-to `proplot.axes.Axes.format` or `proplot.figure.Figure.format`:
+to `ultraplot.axes.Axes.format` or `ultraplot.figure.Figure.format`:
 
 .. code-block:: python
 
-  import proplot as pplt
+  import ultraplot as pplt
   fig, ax = pplt.subplots()
   ax.format(name1=value1, name2=value2)
   ax.format(rc_kw={'name1': value1, 'name2': value2})
 
 To temporarily modify settings for particular figure(s), pass the setting
-to the `~proplot.config.Configurator.context` command:
+to the `~ultraplot.config.Configurator.context` command:
 
 .. code-block:: python
 
-   import proplot as pplt
+   import ultraplot as pplt
    with pplt.rc.context(name1=value1, name2=value2):
        fig, ax = pplt.subplots()
    with pplt.rc.context({'name1': value1, 'name2': value2}):
@@ -58,7 +58,7 @@ you can simply omit the dots. For example, to change the
 
 .. code-block:: python
 
-  import proplot as pplt
+  import ultraplot as pplt
   # Apply globally
   pplt.rc.titleloc = value
   pplt.rc.update(titleloc=value)
@@ -72,21 +72,21 @@ Matplotlib settings
 -------------------
 
 Matplotlib settings are natively stored in the `~matplotlib.rcParams`
-dictionary. Proplot makes this dictionary available in the top-level namespace as
-`~proplot.config.rc_matplotlib`. All matplotlib settings can also be changed with
-`~proplot.config.rc`. Details on the matplotlib settings can be found on
+dictionary. ultraplot makes this dictionary available in the top-level namespace as
+`~ultraplot.config.rc_matplotlib`. All matplotlib settings can also be changed with
+`~ultraplot.config.rc`. Details on the matplotlib settings can be found on
 `this page <ug_rcmpl_>`_.
 
-.. _ug_rcproplot:
+.. _ug_rcultraplot:
 
-Proplot settings
+ultraplot settings
 ----------------
 
-Proplot settings are natively stored in the `~proplot.config.rc_proplot` dictionary.
-They should almost always be changed with `~proplot.config.rc` rather than
-`~proplot.config.rc_proplot` to ensure that :ref:`meta-settings <ug_rcmeta>` are
+ultraplot settings are natively stored in the `~ultraplot.config.rc_ultraplot` dictionary.
+They should almost always be changed with `~ultraplot.config.rc` rather than
+`~ultraplot.config.rc_ultraplot` to ensure that :ref:`meta-settings <ug_rcmeta>` are
 synced. These settings are not found in `~matplotlib.rcParams` -- they either
-control proplot-managed features (e.g., a-b-c labels and geographic gridlines)
+control ultraplot-managed features (e.g., a-b-c labels and geographic gridlines)
 or they represent existing matplotlib settings with more clear or succinct names.
 Here's a broad overview of the new settings:
 
@@ -99,27 +99,27 @@ Here's a broad overview of the new settings:
 * The ``suptitle``, ``leftlabel``, ``toplabel``, ``rightlabel``, and ``bottomlabel``
   categories control the figure titles and subplot row and column labels.
 * The ``formatter`` category supersedes matplotlib's ``axes.formatter``
-  and includes settings that control the `~proplot.ticker.AutoFormatter` behavior.
+  and includes settings that control the `~ultraplot.ticker.AutoFormatter` behavior.
 * The ``cmap`` category supersedes matplotlib's ``image`` and includes
-  settings relevant to colormaps and the `~proplot.colors.DiscreteNorm` normalizer.
+  settings relevant to colormaps and the `~ultraplot.colors.DiscreteNorm` normalizer.
 * The ``tick`` category supersedes matplotlib's ``xtick`` and ``ytick``
   to simultaneously control *x* and *y* axis tick and tick label settings.
 * The matplotlib ``grid`` category includes new settings that control the meridian
-  and parallel gridlines and gridline labels managed by `~proplot.axes.GeoAxes`.
+  and parallel gridlines and gridline labels managed by `~ultraplot.axes.GeoAxes`.
 * The ``gridminor`` category optionally controls minor gridlines separately
   from major gridlines.
 * The ``land``, ``ocean``, ``rivers``, ``lakes``, ``borders``, and ``innerborders``
-  categories control geographic content managed by `~proplot.axes.GeoAxes`.
+  categories control geographic content managed by `~ultraplot.axes.GeoAxes`.
 
 .. _ug_rcmeta:
 
 Meta-settings
 -------------
 
-Some proplot settings may be more accurately described as "meta-settings",
-as they change several matplotlib and proplot settings at once (note that settings
-are only synced when they are changed on the `~proplot.config.rc` object rather than
-the `~proplot.config.rc_proplot` and `~proplot.config.rc_matplotlib` dictionaries).
+Some ultraplot settings may be more accurately described as "meta-settings",
+as they change several matplotlib and ultraplot settings at once (note that settings
+are only synced when they are changed on the `~ultraplot.config.rc` object rather than
+the `~ultraplot.config.rc_ultraplot` and `~ultraplot.config.rc_matplotlib` dictionaries).
 Here's a broad overview of the "meta-settings":
 
 * Setting :rcraw:`font.small` (or, equivalently, :rcraw:`fontsmall`) changes
@@ -154,35 +154,35 @@ Here's a broad overview of the "meta-settings":
 Table of settings
 -----------------
 
-A comprehensive table of the new proplot settings is shown below.
+A comprehensive table of the new ultraplot settings is shown below.
 
 .. include:: _static/rctable.rst
 
-.. _ug_proplotrc:
+.. _ug_ultraplotrc:
 
-The proplotrc file
+The ultraplotrc file
 ------------------
 
-When you import proplot for the first time, a ``proplotrc`` file is generated with
+When you import ultraplot for the first time, a ``ultraplotrc`` file is generated with
 all lines commented out. This file is just like `matplotlibrc <ug_mplrc_>`_,
-except it controls both matplotlib *and* proplot settings. The syntax is essentially
+except it controls both matplotlib *and* ultraplot settings. The syntax is essentially
 the same as matplotlibrc, and the file path is very similar to matplotlibrc. On most
-platforms it is found in ``~/.proplot/proplotrc``, but a loose hidden file in the
-home directory named ``~/.proplotrc`` is also allowed (use
-`~proplot.config.Configurator.user_file` to print the path). To update this file
+platforms it is found in ``~/.ultraplot/ultraplotrc``, but a loose hidden file in the
+home directory named ``~/.ultraplotrc`` is also allowed (use
+`~ultraplot.config.Configurator.user_file` to print the path). To update this file
 after a version change, simply remove it and restart your python session.
 
-To change the global `~proplot.config.rc` settings, edit and uncomment the lines
-in the ``proplotrc`` file. To change the settings for a specific project, place a file
-named either ``.proplotrc`` or ``proplotrc`` in the same directory as your python
-session, or in an arbitrary parent directory. To generate a ``proplotrc`` file
+To change the global `~ultraplot.config.rc` settings, edit and uncomment the lines
+in the ``ultraplotrc`` file. To change the settings for a specific project, place a file
+named either ``.ultraplotrc`` or ``ultraplotrc`` in the same directory as your python
+session, or in an arbitrary parent directory. To generate a ``ultraplotrc`` file
 containing the settings you have changed during a python session, use
-`~proplot.config.Configurator.save` (use `~proplot.config.Configurator.changed`
-to preview a dictionary of the changed settings). To explicitly load a ``proplotrc``
-file, use `~proplot.config.Configurator.load`.
+`~ultraplot.config.Configurator.save` (use `~ultraplot.config.Configurator.changed`
+to preview a dictionary of the changed settings). To explicitly load a ``ultraplotrc``
+file, use `~ultraplot.config.Configurator.load`.
 
-As an example, a ``proplotrc`` file containing the default settings
+As an example, a ``ultraplotrc`` file containing the default settings
 is shown below.
 
-.. include:: _static/proplotrc
+.. include:: _static/ultraplotrc
    :literal:

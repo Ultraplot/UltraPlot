@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Utilities for modifying proplot docstrings.
+Utilities for modifying ultraplot docstrings.
 """
 # WARNING: To check every docstring in the package for
 # unfilled snippets simply use the following code:
-# >>> import proplot as pplt
+# >>> import ultraplot as pplt
 # ... seen = set()
 # ... def _iter_doc(objs):
 # ...     if objs in seen:
@@ -61,7 +61,7 @@ def _obfuscate_signature(func, dummy):
 
 def _concatenate_inherited(func, prepend_summary=False):
     """
-    Concatenate docstrings from a matplotlib axes method with a proplot
+    Concatenate docstrings from a matplotlib axes method with a ultraplot
     axes method and obfuscate the call signature.
     """
     # Get matplotlib axes func
@@ -88,7 +88,7 @@ def _concatenate_inherited(func, prepend_summary=False):
     if not rc_matplotlib["docstring.hardcopy"]:
         doc = f"""
 =====================
-Proplot documentation
+ultraplot documentation
 =====================
 
 {doc}

@@ -66,7 +66,7 @@ color : color-spec
     The color. Can be a 3-tuple or 4-tuple of channel values, a hex
     string, a registered color name, a cycle color like ``'C0'``, or
     a 2-tuple colormap coordinate specification like ``('magma', 0.5)``
-    (see `~proplot.colors.ColorDatabase` for details).
+    (see `~ultraplot.colors.ColorDatabase` for details).
 
     If `space` is ``'rgb'``, this is a tuple of RGB values, and any
     channels are larger than ``2``, the channels are assumed to be
@@ -138,12 +138,12 @@ def arange(min_, *args):
     See also
     --------
     numpy.arange
-    proplot.constructor.Locator
-    proplot.axes.CartesianAxes.format
-    proplot.axes.PolarAxes.format
-    proplot.axes.GeoAxes.format
-    proplot.axes.Axes.colorbar
-    proplot.axes.PlotAxes
+    ultraplot.constructor.Locator
+    ultraplot.axes.CartesianAxes.format
+    ultraplot.axes.PolarAxes.format
+    ultraplot.axes.GeoAxes.format
+    ultraplot.axes.Axes.colorbar
+    ultraplot.axes.PlotAxes
     """
     # Optional arguments just like np.arange
     if len(args) == 0:
@@ -194,9 +194,9 @@ def edges(z, axis=-1):
     See also
     --------
     edges2d
-    proplot.axes.PlotAxes.pcolor
-    proplot.axes.PlotAxes.pcolormesh
-    proplot.axes.PlotAxes.pcolorfast
+    ultraplot.axes.PlotAxes.pcolor
+    ultraplot.axes.PlotAxes.pcolormesh
+    ultraplot.axes.PlotAxes.pcolorfast
     """
     z = np.asarray(z)
     z = np.swapaxes(z, axis, -1)
@@ -233,9 +233,9 @@ def edges2d(z):
     See also
     --------
     edges
-    proplot.axes.PlotAxes.pcolor
-    proplot.axes.PlotAxes.pcolormesh
-    proplot.axes.PlotAxes.pcolorfast
+    ultraplot.axes.PlotAxes.pcolor
+    ultraplot.axes.PlotAxes.pcolormesh
+    ultraplot.axes.PlotAxes.pcolorfast
     """
     z = np.asarray(z)
     if z.ndim != 2:
@@ -264,7 +264,7 @@ def get_colors(*args, **kwargs):
     Parameters
     ----------
     *args, **kwargs
-        Passed to `~proplot.constructor.Cycle`.
+        Passed to `~ultraplot.constructor.Cycle`.
 
     Returns
     -------
@@ -273,8 +273,8 @@ def get_colors(*args, **kwargs):
 
     See also
     --------
-    proplot.constructor.Cycle
-    proplot.constructor.Colormap
+    ultraplot.constructor.Cycle
+    ultraplot.constructor.Colormap
     """
     from .constructor import Cycle  # delayed to avoid cyclic imports
 
@@ -770,7 +770,7 @@ def units(
 ):
     """
     Convert values between arbitrary physical units. This is used internally all
-    over proplot, permitting flexible units for various keyword arguments.
+    over ultraplot, permitting flexible units for various keyword arguments.
 
     Parameters
     ----------
@@ -851,7 +851,7 @@ def units(
         unit_dict["pp"] = 1 / rc_matplotlib["savefig.dpi"]  # once 'printed' i.e. saved
 
     # Scales relative to axes and figure objects
-    if axes is not None and hasattr(axes, "_get_size_inches"):  # proplot axes
+    if axes is not None and hasattr(axes, "_get_size_inches"):  # ultraplot axes
         unit_dict["ax"] = axes._get_size_inches()[1 - int(width)]
     if figure is None:
         figure = getattr(axes, "figure", None)

@@ -108,7 +108,7 @@ CMAP_TABLE = {
         "IceFire",
         "Vlag",
     ),
-    "Proplot sequential": (
+    "ultraplot sequential": (
         "Fire",
         "Stellar",
         "Glacial",
@@ -118,7 +118,7 @@ CMAP_TABLE = {
         "Sunrise",
         "Sunset",
     ),
-    "Proplot diverging": (
+    "ultraplot diverging": (
         "Div",
         "NegPos",
         "DryWet",
@@ -383,13 +383,13 @@ def show_channels(
     width : int, optional
         The width of each colormap line in points.
     refwidth : int or str, optional
-        The width of each subplot. Passed to `~proplot.ui.subplots`.
+        The width of each subplot. Passed to `~ultraplot.ui.subplots`.
 
     Returns
     -------
-    proplot.figure.Figure
+    ultraplot.figure.Figure
         The figure.
-    proplot.gridspec.SubplotGrid
+    ultraplot.gridspec.SubplotGrid
         The subplot grid.
 
     See also
@@ -515,13 +515,13 @@ def show_colorspaces(*, luminance=None, saturation=None, hue=None, refwidth=2):
         are drawn for this hue. Must be between ``0`` and ``360``.
     refwidth : str or float, optional
         Average width of each subplot. Units are interpreted by
-        `~proplot.utils.units`.
+        `~ultraplot.utils.units`.
 
     Returns
     -------
-    proplot.figure.Figure
+    ultraplot.figure.Figure
         The figure.
-    proplot.gridspec.SubplotGrid
+    ultraplot.gridspec.SubplotGrid
         The subplot grid.
 
     See also
@@ -724,7 +724,7 @@ def show_cmaps(*args, **kwargs):
     N : int, default: :rc:`image.lut`
         The number of levels in each colorbar.
     unknown : str, default: 'User'
-        Category name for colormaps that are unknown to proplot.
+        Category name for colormaps that are unknown to ultraplot.
         Set this to ``False`` to hide unknown colormaps.
     include : str or sequence of str, default: None
         Category names to be shown in the table. Use this to limit
@@ -738,9 +738,9 @@ def show_cmaps(*args, **kwargs):
 
     Returns
     -------
-    proplot.figure.Figure
+    ultraplot.figure.Figure
         The figure.
-    proplot.gridspec.SubplotGrid
+    ultraplot.gridspec.SubplotGrid
         The subplot grid.
 
     See also
@@ -790,7 +790,7 @@ def show_cycles(*args, **kwargs):
     *args : colormap-spec, optional
         Cycle names or objects.
     unknown : str, default: 'User'
-        Category name for cycles that are unknown to proplot.
+        Category name for cycles that are unknown to ultraplot.
         Set this to ``False`` to hide unknown colormaps.
     include : str or sequence of str, default: None
         Category names to be shown in the table. Use this to limit
@@ -803,9 +803,9 @@ def show_cycles(*args, **kwargs):
 
     Returns
     -------
-    proplot.figure.Figure
+    ultraplot.figure.Figure
         The figure.
-    proplot.gridspec.SubplotGrid
+    ultraplot.gridspec.SubplotGrid
         The subplot grid.
 
     See also
@@ -886,7 +886,7 @@ def show_colors(*, nhues=17, minsat=10, unknown="User", include=None, ignore=Non
         The threshold saturation, between ``0`` and ``100``, for designating
         "gray colors" in the color table.
     unknown : str, default: 'User'
-        Category name for color names that are unknown to proplot.
+        Category name for color names that are unknown to ultraplot.
         Set this to ``False`` to hide unknown color names.
     include : str or sequence of str, default: None
         Category names to be shown in the table. Use this to limit
@@ -898,9 +898,9 @@ def show_colors(*, nhues=17, minsat=10, unknown="User", include=None, ignore=Non
 
     Returns
     -------
-    proplot.figure.Figure
+    ultraplot.figure.Figure
         The figure.
-    proplot.gridspec.SubplotGrid
+    ultraplot.gridspec.SubplotGrid
         The subplot grid.
     """
     # Tables of known colors to be plotted
@@ -1045,8 +1045,8 @@ def show_fonts(
     *args : str or `~matplotlib.font_manager.FontProperties`
         The font specs, font names, or `~matplotlib.font_manager.FontProperties`\\ s
         to show. If no positional arguments are passed and the `family` argument is
-        not passed, then the fonts found in `~proplot.config.Configurator.user_folder`
-        and `~proplot.config.Configurator.local_folders` and the *available*
+        not passed, then the fonts found in `~ultraplot.config.Configurator.user_folder`
+        and `~ultraplot.config.Configurator.local_folders` and the *available*
         :rcraw:`font.sans-serif` fonts are shown.
     family \
 : {'tex-gyre', 'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy'}, optional
@@ -1057,8 +1057,8 @@ def show_fonts(
         :rcraw:`font.fantasy`. The special family ``'tex-gyre'`` includes the
         `TeX Gyre <http://www.gust.org.pl/projects/e-foundry/tex-gyre>`__ fonts.
     user : bool, optional
-        Whether to include fonts in `~proplot.config.Configurator.user_folder` and
-        `~proplot.config.Configurator.local_folders` at the top of the table. Default
+        Whether to include fonts in `~ultraplot.config.Configurator.user_folder` and
+        `~ultraplot.config.Configurator.local_folders` at the top of the table. Default
         is ``True`` if called without any arguments and ``False`` otherwise.
     text : str, optional
         The sample text shown for each font. If not passed then default math or
@@ -1086,9 +1086,9 @@ def show_fonts(
 
     Returns
     -------
-    proplot.figure.Figure
+    ultraplot.figure.Figure
         The figure.
-    proplot.gridspec.SubplotGrid
+    ultraplot.gridspec.SubplotGrid
         The subplot grid.
 
     See also
@@ -1114,7 +1114,7 @@ def show_fonts(
         if opts and opts[0] in all_names:
             props.append(arg)
         else:
-            warnings._warn_proplot(f"Input font name {opts[:1]!r} not found. Skipping.")
+            warnings._warn_ultraplot(f"Input font name {opts[:1]!r} not found. Skipping.")
 
     # Add user and family FontProperties.
     user = _not_none(user, not args and family is None)

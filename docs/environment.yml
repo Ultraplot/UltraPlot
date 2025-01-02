@@ -12,7 +12,7 @@
 #   manually specify that: https://github.com/pallets/markupsafe/issues/284
 # * docutils >= 0.17 breaks bullet points. See the following thread
 #   for more info: https://github.com/readthedocs/sphinx_rtd_theme/issues/1115
-name: proplot-dev
+name: ultraplot-dev
 channels:
   - conda-forge
   - defaults
@@ -36,14 +36,14 @@ dependencies:
   - setuptools==72.1.0
   - xarray
   - pip:
-    - ..
-    - basemap
-    - sphinx-autoapi
-    - basemap-data-hires
-    # - git+https://github.com/proplot-dev/sphinx-automodapi@proplot-mods
-    - sphinx-automodapi
-    - nbsphinx
-    - sphinx>=7,<8
-    - sphinx-copybutton
-    - sphinx-rtd-theme==2.1.0rc2
-    - git+https://github.com/cvanelteren/sphinx-rtd-light-dark.git@mplv3.9.1
+      - ..
+      - basemap
+      - sphinx-autoapi
+      - basemap-data-hires
+      # - git+https://github.com/ultraplot-dev/sphinx-automodapi@ultraplot-mods
+      - sphinx-automodapi
+      - nbsphinx
+      - sphinx>=7,<8
+      - sphinx-copybutton
+      - sphinx-rtd-theme==2.1.0rc2
+      - git+https://github.com/cvanelteren/sphinx-rtd-light-dark.git@mplv3.9.1

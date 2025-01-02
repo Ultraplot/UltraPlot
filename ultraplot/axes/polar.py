@@ -51,13 +51,13 @@ thetagridcolor, rgridcolor, gridcolor : color-spec, optional
     Use the keyword `gridcolor` to set both at once.
 thetalocator, rlocator : locator-spec, optional
     Used to determine the azimuthal and radial gridline positions.
-    Passed to the `~proplot.constructor.Locator` constructor. Can be
+    Passed to the `~ultraplot.constructor.Locator` constructor. Can be
     float, list of float, string, or `matplotlib.ticker.Locator` instance.
 thetalines, rlines
     Aliases for `thetalocator`, `rlocator`.
 thetalocator_kw, rlocator_kw : dict-like, optional
     The azimuthal and radial locator settings. Passed to
-    `~proplot.constructor.Locator`.
+    `~ultraplot.constructor.Locator`.
 thetaminorlocator, rminorlocator : optional
     As for `thetalocator`, `rlocator`, but for the minor gridlines.
 thetaminorticks, rminorticks : optional
@@ -68,17 +68,17 @@ rlabelpos : float, optional
     The azimuth at which radial coordinates are labeled.
 thetaformatter, rformatter : formatter-spec, optional
     Used to determine the azimuthal and radial label format.
-    Passed to the `~proplot.constructor.Formatter` constructor.
+    Passed to the `~ultraplot.constructor.Formatter` constructor.
     Can be string, list of string, or `matplotlib.ticker.Formatter`
     instance. Use ``[]``, ``'null'``, or ``'none'`` for no labels.
 thetalabels, rlabels : optional
     Aliases for `thetaformatter`, `rformatter`.
 thetaformatter_kw, rformatter_kw : dict-like, optional
     The azimuthal and radial label formatter settings. Passed to
-    `~proplot.constructor.Formatter`.
+    `~ultraplot.constructor.Formatter`.
 color : color-spec, default: :rc:`meta.color`
     Color for the axes edge. Propagates to `labelcolor` unless specified
-    otherwise (similar to `proplot.axes.CartesianAxes.format`).
+    otherwise (similar to `ultraplot.axes.CartesianAxes.format`).
 labelcolor, gridlabelcolor : color-spec, default: `color` or :rc:`grid.labelcolor`
     Color for the gridline labels.
 labelpad, gridlabelpad : unit-spec, default: :rc:`grid.labelpad`
@@ -101,8 +101,8 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
     Important
     ---------
     This axes subclass can be used by passing ``proj='polar'``
-    to axes-creation commands like `~proplot.figure.Figure.add_axes`,
-    `~proplot.figure.Figure.add_subplot`, and `~proplot.figure.Figure.subplots`.
+    to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
+    `~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`.
     """
 
     _name = "polar"
@@ -124,11 +124,11 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         See also
         --------
         PolarAxes.format
-        proplot.axes.Axes
-        proplot.axes.PlotAxes
+        ultraplot.axes.Axes
+        ultraplot.axes.PlotAxes
         matplotlib.projections.PolarAxes
-        proplot.figure.Figure.subplot
-        proplot.figure.Figure.add_subplot
+        ultraplot.figure.Figure.subplot
+        ultraplot.figure.Figure.add_subplot
         """
         # Set tick length to zero so azimuthal labels are not too offset
         # Change default radial axis formatter but keep default theta one
@@ -263,8 +263,8 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
 
         See also
         --------
-        proplot.axes.Axes.format
-        proplot.config.Configurator.context
+        ultraplot.axes.Axes.format
+        ultraplot.config.Configurator.context
         """
         # NOTE: Here we capture 'label.pad' rc argument normally used for
         # x and y axis labels as shorthand for 'tick.labelpad'.

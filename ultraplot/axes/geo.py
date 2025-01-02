@@ -42,7 +42,7 @@ round : bool, default: :rc:`geo.round`
     *For polar cartopy axes only*.
     Whether to bound polar projections with circles rather than squares. Note that outer
     gridline labels cannot be added to circle-bounded polar projections. When basemap
-    is the backend this argument must be passed to `~proplot.constructor.Proj` instead.
+    is the backend this argument must be passed to `~ultraplot.constructor.Proj` instead.
 extent : {'globe', 'auto'}, default: :rc:`geo.extent`
     *For cartopy axes only*.
     Whether to auto adjust the map bounds based on plotted content. If ``'globe'`` then
@@ -53,12 +53,12 @@ lonlim, latlim : 2-tuple of float, optional
     *For cartopy axes only.*
     The approximate longitude and latitude boundaries of the map, applied
     with `~cartopy.mpl.geoaxes.GeoAxes.set_extent`. When basemap is the backend
-    this argument must be passed to `~proplot.constructor.Proj` instead.
+    this argument must be passed to `~ultraplot.constructor.Proj` instead.
 boundinglat : float, optional
     *For cartopy axes only.*
     The edge latitude for the circle bounding North Pole and South Pole-centered
     projections. When basemap is the backend this argument must be passed to
-    `~proplot.constructor.Proj` instead.
+    `~ultraplot.constructor.Proj` instead.
 longrid, latgrid, grid : bool, default: :rc:`grid`
     Whether to draw longitude and latitude gridlines.
     Use the keyword `grid` to toggle both at once.
@@ -75,12 +75,12 @@ lonlines, latlines : optional
     Aliases for `lonlocator`, `latlocator`.
 lonlocator, latlocator : locator-spec, optional
     Used to determine the longitude and latitude gridline locations.
-    Passed to the `~proplot.constructor.Locator` constructor. Can be
+    Passed to the `~ultraplot.constructor.Locator` constructor. Can be
     string, float, list of float, or `matplotlib.ticker.Locator` instance.
 
     For basemap or cartopy < 0.18, the defaults are ``'deglon'`` and
-    ``'deglat'``, which correspond to the `~proplot.ticker.LongitudeLocator`
-    and `~proplot.ticker.LatitudeLocator` locators (adapted from cartopy).
+    ``'deglat'``, which correspond to the `~ultraplot.ticker.LongitudeLocator`
+    and `~ultraplot.ticker.LatitudeLocator` locators (adapted from cartopy).
     For cartopy >= 0.18, the defaults are ``'dmslon'`` and ``'dmslat'``,
     which uses the same locators with ``dms=True``. This selects gridlines
     at nice degree-minute-second intervals when the map extent is very small.
@@ -136,11 +136,11 @@ dms : bool, default: :rc:`grid.dmslabels`
     and ``ax.format(lonformatter='deglon', latformatter='deglat')``.
 lonformatter, latformatter : formatter-spec, optional
     Formatter used to style longitude and latitude gridline labels.
-    Passed to the `~proplot.constructor.Formatter` constructor. Can be
+    Passed to the `~ultraplot.constructor.Formatter` constructor. Can be
     string, list of string, or `matplotlib.ticker.Formatter` instance.
 
     For basemap or cartopy < 0.18, the defaults are ``'deglon'`` and
-    ``'deglat'``, which correspond to `~proplot.ticker.SimpleFormatter`
+    ``'deglat'``, which correspond to `~ultraplot.ticker.SimpleFormatter`
     presets with degree symbols and cardinal direction suffixes.
     For cartopy >= 0.18, the defaults are ``'dmslon'`` and ``'dmslat'``,
     which uses cartopy's `~cartopy.mpl.ticker.LongitudeFormatter` and
@@ -153,7 +153,7 @@ land, ocean, coast, rivers, lakes, borders, innerborders : bool, optional
     Toggles various geographic features. These are actually the
     :rcraw:`land`, :rcraw:`ocean`, :rcraw:`coast`, :rcraw:`rivers`,
     :rcraw:`lakes`, :rcraw:`borders`, and :rcraw:`innerborders`
-    settings passed to `~proplot.config.Configurator.context`.
+    settings passed to `~ultraplot.config.Configurator.context`.
     The style can be modified using additional `rc` settings.
 
     For example, to change :rcraw:`land.color`, use
@@ -162,10 +162,10 @@ land, ocean, coast, rivers, lakes, borders, innerborders : bool, optional
 reso : {'lo', 'med', 'hi', 'x-hi', 'xx-hi'}, optional
     *For cartopy axes only.*
     The resolution of geographic features. When basemap is the backend this
-    must be passed to `~proplot.constructor.Proj` instead.
+    must be passed to `~ultraplot.constructor.Proj` instead.
 color : color-spec, default: :rc:`meta.color`
     The color for the axes edge. Propagates to `labelcolor` unless specified
-    otherwise (similar to `proplot.axes.CartesianAxes.format`).
+    otherwise (similar to `ultraplot.axes.CartesianAxes.format`).
 gridcolor : color-spec, default: :rc:`grid.color`
     The color for the gridline labels.
 labelcolor : color-spec, default: `color` or :rc:`grid.labelcolor`
@@ -345,7 +345,7 @@ class _LonAxis(_GeoAxis):
         return ticks
 
     def get_view_interval(self):
-        # NOTE: Proplot tries to set its *own* view intervals to avoid dateline
+        # NOTE: ultraplot tries to set its *own* view intervals to avoid dateline
         # weirdness, but if rc['geo.extent'] is 'auto' the interval will be unset.
         # In this case we use _get_extent() as a backup.
         interval = self._interval
@@ -365,7 +365,7 @@ class _LatAxis(_GeoAxis):
     def __init__(self, axes, latmax=90):
         # NOTE: Need to pass projection because lataxis/lonaxis are
         # initialized before geoaxes is initialized, because format() needs
-        # the axes and format() is called by proplot.axes.Axes.__init__()
+        # the axes and format() is called by ultraplot.axes.Axes.__init__()
         self._latmax = latmax
         super().__init__(axes)
         if self._use_dms:
@@ -428,8 +428,8 @@ class GeoAxes(plot.PlotAxes):
     Important
     ---------
     This axes subclass can be used by passing ``proj='proj_name'``
-    to axes-creation commands like `~proplot.figure.Figure.add_axes`,
-    `~proplot.figure.Figure.add_subplot`, and `~proplot.figure.Figure.subplots`,
+    to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
+    `~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`,
     where ``proj_name`` is a registered :ref:`PROJ projection name <proj_table>`.
     You can also pass a `~cartopy.crs.Projection` or `~mpl_toolkits.basemap.Basemap`
     instance instead of a projection name. Alternatively, you can pass any of the
@@ -449,7 +449,7 @@ class GeoAxes(plot.PlotAxes):
         map_projection : `~cartopy.crs.Projection` or `~mpl_toolkits.basemap.Basemap`
             The cartopy or basemap projection instance. This is
             passed automatically when calling axes-creation
-            commands like `~proplot.figure.Figure.add_subplot`.
+            commands like `~ultraplot.figure.Figure.add_subplot`.
         %(geo.format)s
 
         Other parameters
@@ -460,11 +460,11 @@ class GeoAxes(plot.PlotAxes):
         See also
         --------
         GeoAxes.format
-        proplot.constructor.Proj
-        proplot.axes.Axes
-        proplot.axes.PlotAxes
-        proplot.figure.Figure.subplot
-        proplot.figure.Figure.add_subplot
+        ultraplot.constructor.Proj
+        ultraplot.axes.Axes
+        ultraplot.axes.PlotAxes
+        ultraplot.figure.Figure.subplot
+        ultraplot.figure.Figure.add_subplot
         """
         super().__init__(*args, **kwargs)
 
@@ -614,8 +614,8 @@ class GeoAxes(plot.PlotAxes):
 
         See also
         --------
-        proplot.axes.Axes.format
-        proplot.config.Configurator.context
+        ultraplot.axes.Axes.format
+        ultraplot.config.Configurator.context
         """
         # Initialize map boundary
         # WARNING: Normal workflow is Axes.format() does 'universal' tasks including
@@ -901,7 +901,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
 
     def _init_gridlines(self):
         """
-        Create monkey patched "major" and "minor" gridliners managed by proplot.
+        Create monkey patched "major" and "minor" gridliners managed by ultraplot.
         """
 
         # Cartopy < 0.18 monkey patch. Helps filter valid coordates to lon_0 +/- 180
@@ -994,7 +994,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             if hasattr(self, "_boundary"):
                 self._boundary()
             else:
-                warnings._warn_proplot("Failed to reset round map boundary.")
+                warnings._warn_ultraplot("Failed to reset round map boundary.")
 
     def _update_extent_mode(self, extent=None, boundinglat=None):
         """
@@ -1048,7 +1048,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         latlim = _not_none(latlim, (None, None))
         if north or south:
             if any(_ is not None for _ in (*lonlim, *latlim)):
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f'{proj!r} extent is controlled by "boundinglat", '
                     f"ignoring lonlim={lonlim!r} and latlim={latlim!r}."
                 )
@@ -1062,7 +1062,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         # Rectangular extent
         else:
             if boundinglat is not None:
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     f'{proj!r} extent is controlled by "lonlim" and "latlim", '
                     f"ignoring boundinglat={boundinglat!r}."
                 )
@@ -1169,7 +1169,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             gl.ylines = latgrid
         lonlines = self._get_lonticklocs(which=which)
         latlines = self._get_latticklocs(which=which)
-        if _version_cartopy >= "0.18":  # see lukelbd/proplot#208
+        if _version_cartopy >= "0.18":  # see lukelbd/ultraplot#208
             lonlines = (np.asarray(lonlines) + 180) % 360 - 180  # only for cartopy
         gl.xlocator = mticker.FixedLocator(lonlines)
         gl.ylocator = mticker.FixedLocator(latlines)
@@ -1229,13 +1229,13 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             self.projection, (ccrs.Mercator, ccrs.PlateCarree)
         ):
             if any(latarray):
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     "Cannot add gridline labels to cartopy "
                     f"{type(self.projection).__name__} projection."
                 )
                 latarray = [False] * 5
             if any(lonarray):
-                warnings._warn_proplot(
+                warnings._warn_ultraplot(
                     "Cannot add gridline labels to cartopy "
                     f"{type(self.projection).__name__} projection."
                 )
@@ -1472,7 +1472,7 @@ class _BasemapAxes(GeoAxes):
         if round is None:
             return
         else:
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Got round={round!r}, but you cannot change the bounds of a polar "
                 "basemap projection after creating it. Please pass 'round' to pplt.Proj "  # noqa: E501
                 "instead (e.g. using the pplt.subplots() dictionary keyword 'proj_kw')."
@@ -1490,7 +1490,7 @@ class _BasemapAxes(GeoAxes):
                 f"Invalid extent mode {extent!r}. Must be 'auto' or 'globe'."
             )
         if extent == "auto":
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Got extent={extent!r}, but you cannot use auto extent mode "
                 "in basemap projections. Please consider switching to cartopy."
             )
@@ -1502,7 +1502,7 @@ class _BasemapAxes(GeoAxes):
         lonlim = _not_none(lonlim, (None, None))
         latlim = _not_none(latlim, (None, None))
         if boundinglat is not None or any(_ is not None for _ in (*lonlim, *latlim)):
-            warnings._warn_proplot(
+            warnings._warn_ultraplot(
                 f"Got lonlim={lonlim!r}, latlim={latlim!r}, boundinglat={boundinglat!r}"
                 ', but you cannot "zoom into" a basemap projection after creating it. '
                 "Please pass any of the following keyword arguments to pplt.Proj "

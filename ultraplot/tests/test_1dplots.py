@@ -283,7 +283,7 @@ def test_scatter_args():
     ax = axs[1]
     ax.scatter(data, c=data, cmap="reds")  # column iteration
     ax = axs[2]
-    with pytest.warns(pplt.internals.ProplotWarning) as record:
+    with pytest.warns(pplt.internals.UltraplotWarning) as record:
         ax.scatter(data[:, 0], c=data, cmap="reds")  # actual colors
     assert len(record) == 1
     ax = axs[3]

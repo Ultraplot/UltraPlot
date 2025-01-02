@@ -236,7 +236,7 @@ def test_ignore_message():
     """
     Test various ignored argument warnings.
     """
-    warning = pplt.internals.ProplotWarning
+    warning = pplt.internals.UltraplotWarning
     fig, axs = pplt.subplots(ncols=2, nrows=2)
     with pytest.warns(warning):
         axs[0].contour(state.rand(5, 5) * 10, levels=pplt.arange(10), symmetric=True)
