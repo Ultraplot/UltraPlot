@@ -98,7 +98,6 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           auto-activate-base: false
-          activate-environment: build-env
           environment-file: environment-dev.yml
 
       - name: Install conda-build

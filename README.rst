@@ -4,11 +4,8 @@
 |build-status| |docs| |pypi| |code-style| |pr-welcome| |license|
 
 A succinct `matplotlib <https://matplotlib.org/>`__ wrapper for making beautiful,
-publication-quality graphics. It builds upon ultraplot and transports it into the modern age (supporting mpl 3.9.0+).
+publication-quality graphics. It builds upon ProPlot and transports it into the modern age (supporting mpl 3.9.0+).
 
-Under construction
-==================
-Please bear with us as we work to bring the full functionality of ultraplot to UltraPlot. We are working to bring the full functionality of ultraplot to UltraPlot, and we are working to make the transition as smooth as possible.
 
 Documentation
 =============
@@ -18,7 +15,7 @@ The documentation is `published on readthedocs <https://ultraplot.readthedocs.io
 Installation
 ============
 
-Ultraplot is published on `PyPi <https://pypi.org/project/ultraplot/>`__ and
+UltraPlot is published on `PyPi <https://pypi.org/project/ultraplot/>`__ and
 `conda-forge <https://conda-forge.org>`__. It can be installed with ``pip`` or
 ``conda`` as follows:
 
@@ -27,7 +24,7 @@ Ultraplot is published on `PyPi <https://pypi.org/project/ultraplot/>`__ and
    pip install ultraplot
    conda install -c conda-forge ultraplot
 
-Likewise, an existing installation of ultraplot can be upgraded
+Likewise, an existing installation of UltraPlot can be upgraded
 to the latest version with:
 
 .. code-block:: bash
@@ -35,8 +32,8 @@ to the latest version with:
    pip install --upgrade ultraplot
    conda upgrade ultraplot
 
-To install a development version of ultraplot, you can use
-``pip install git+https://github.com/ultraplot-dev/ultraplot.git``
+To install a development version of UltraPlot, you can use
+``pip install git+https://github.com/ultraplot/ultraplot.git``
 or clone the repository and run ``pip install -e .``
 inside the ``ultraplot`` folder.
 
