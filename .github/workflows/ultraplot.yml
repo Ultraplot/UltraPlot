@@ -109,9 +109,44 @@ jobs:
           micromamba activate ultraplot-dev
           micromamba install conda-build anaconda-client
 
-      - name: Build and publish to Anaconda Cloud
-        uses: anaconda/upload-conda-package@vi1
+      - name: Clone staged-recipes
+        run: git clone https://github.com/cvanelteren/staged-recipes.git
+
+      - name: Check if recipe exists
+        run: |
+          if [ -d "staged-recipes/recipes/ultraplot" ]; then
+            echo "Recipe already exists. Checking version..."
+            RECIPE_VERSION=$(grep "version:"staged-recipes/recipes/ultraplot/meta.yaml | awk {print $2}')
+            PACKAGE_VERSION=$(python setup.py --version)
+            if [ "$RECIPE_VERSION" == "$PACKAGE_VERSION" ];then
+              echo "Recipe is up-to-date. Skipping."
+              exit 0
+            fi
+          fi
+
+      - name: Generate meta.yaml
+        run: |
+          mkdir -p staged-recipes/recipes/ultraplot
+          # Generate meta.yaml as shown earlier
+
+      - name: Commit changes if any
+        run: |
+          cd staged-recipes
+          git add recipes/ultraplot
+          if git diff --cached --exit-code; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Update ultraplot recipe to version $(python setup.py --version)"
+          git push origin main
+
+      - name: Create Pull Request
+        if: success()
+        uses: peter-evans/create-pull-request@v5
         with:
-          user: cvanelteren
-          token: ${{ secrets.ANACONDA_TOKEN }}
-          label: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update ultraplot recipe"
+          branch: update-ultraplot-recipe
+          title: "Update ultraplot recipe"
+          body: |
+            This PR updates the ultraplot recipe to version $(python setup.py --version).
