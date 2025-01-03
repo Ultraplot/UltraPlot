@@ -72,9 +72,13 @@ jobs:
     permissions:
       # Required for trusted publishing to PyPI
       id-token: write
+      contents: read
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4

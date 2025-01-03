@@ -89,7 +89,7 @@ except ImportError:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     "matplotlib.sphinxext.plot_directive",  # see: https://matplotlib.org/sampledoc/extensions.html  # noqa: E501
-    # "sphinx.ext.autodoc",  # include documentation from docstrings
+    "sphinx.ext.autodoc",  # include documentation from docstrings
     "autoapi.extension",
     "sphinx.ext.doctest",  # >>> examples
     "sphinx.ext.extlinks",  # for :pr:, :issue:, :commit:
