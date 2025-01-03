@@ -124,29 +124,36 @@ jobs:
             fi
           fi
 
+      - name: Extract version from pyproject.toml
+        id: get-version
+        run: |
+          pip install tomli
+          python -c "
+          import tomli
+          with open('pyproject.toml', 'rb') as f:
+            data = tomli.load(f)
+          print(data['project']['version'])
+                " > version.txt
+
       - name: Generate meta.yaml
         run: |
           mkdir -p staged-recipes/recipes/ultraplot
-          # Generate meta.yaml as shown earlier
+          cat <<EOF > staged-recipes/recipes/ultraplot/meta.yaml
+          # Same meta.yaml generation script as above
+          EOF
 
-      - name: Commit changes if any
+      - name: Push changes to fork
         run: |
-          cd staged-recipes
-          git add recipes/ultraplot
-          if git diff --cached --exit-code; then
-            echo "No changes to commit."
-            exit 0
-          fi
-          git commit -m "Update ultraplot recipe to version $(python setup.py --version)"
-          git push origin main
+          git add staged-recipes/recipes/ultraplot
+          git commit -m "Update ultraplot recipe to version $(cat version.txt)"
+          git push origin update-ultraplot-recipe
 
       - name: Create Pull Request
-        if: success()
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update ultraplot recipe"
+          commit-message: "Update ultraplot recipe to version $(cat version.txt)"
           branch: update-ultraplot-recipe
           title: "Update ultraplot recipe"
           body: |
-            This PR updates the ultraplot recipe to version $(python setup.py --version).
+            This PR updates the ultraplot recipe to version $(cat version.txt).
