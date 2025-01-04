@@ -5,11 +5,11 @@ How to contribute?
 ==================
 
 Contributions of any size are greatly appreciated! You can
-make a significant impact on ultraplot by just using it and
+make a significant impact on UltraPlot by just using it and
 reporting `issues <https://github.com/ultraplot/ultraplot/issues>`__.
 
 The following sections cover some general guidelines
-regarding ultraplot development for new contributors. Feel
+regarding UltraPlot development for new contributors. Feel
 free to suggest improvements or changes to this workflow.
 
 .. _contrib_features:
@@ -46,7 +46,7 @@ Write tests
 
 Most modern python packages have ``test_*.py`` scripts that are run by `pytest`
 via continuous integration services like `Travis <https://travis-ci.com>`__
-whenever commits are pushed to the repository. Currently, ultraplot's continuous
+whenever commits are pushed to the repository. Currently, UltraPlot's continuous
 integration includes only the examples that appear on the website User Guide (see
 `.travis.yml`), and `Casper van Elteren <https://github.com/cvanelteren>` runs additional tests
 manually. This approach leaves out many use cases and leaves the project more
@@ -203,7 +203,7 @@ Here is a quick guide for submitting pull requests:
       base: master
 
 Note that you can create the pull request before you're finished with your
-feature addition or bug fix. The PR will update as you add more commits. ultraplot
+feature addition or bug fix. The PR will update as you add more commits. UltraPlot
 developers and contributors can then review your code and offer suggestions.
 
 .. _contrib_release:
