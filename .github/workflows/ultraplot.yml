@@ -68,7 +68,7 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
-  publish:
+  publish-conda-pypi:
     needs: [build, publish-test]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/v')
