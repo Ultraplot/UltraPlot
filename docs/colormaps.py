@@ -86,9 +86,9 @@
 #    or color cycle. See `~ultraplot.colors.ColormapDatabase` for more info.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig, axs = pplt.show_cmaps(rasterized=True)
+fig, axs = uplt.show_cmaps(rasterized=True)
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -134,18 +134,18 @@ fig, axs = pplt.show_cmaps(rasterized=True)
 
 # %%
 # Colorspace demo
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig, axs = pplt.show_colorspaces(refwidth=1.6, luminance=50)
-fig, axs = pplt.show_colorspaces(refwidth=1.6, saturation=60)
-fig, axs = pplt.show_colorspaces(refwidth=1.6, hue=0)
+fig, axs = uplt.show_colorspaces(refwidth=1.6, luminance=50)
+fig, axs = uplt.show_colorspaces(refwidth=1.6, saturation=60)
+fig, axs = uplt.show_colorspaces(refwidth=1.6, hue=0)
 
 # %%
 # Compare colormaps
-import ultraplot as pplt
+import ultraplot as uplt
 
 for cmaps in (("magma", "rocket"), ("fire", "dusk")):
-    fig, axs = pplt.show_channels(
+    fig, axs = uplt.show_channels(
         *cmaps, refwidth=1.5, minhue=-180, maxsat=400, rgb=False
     )
 
@@ -198,7 +198,7 @@ for cmaps in (("magma", "rocket"), ("fire", "dusk")):
 
 # %%
 # Sample data
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -207,15 +207,15 @@ data = state.rand(30, 30).cumsum(axis=1)
 # %%
 # Colormap from a color
 # The trailing '_r' makes the colormap go dark-to-light instead of light-to-dark
-fig = pplt.figure(refwidth=2, span=False)
+fig = uplt.figure(refwidth=2, span=False)
 ax = fig.subplot(121, title="From single named color")
-cmap1 = pplt.Colormap("prussian blue_r", l=100, name="Pacific", space="hpl")
+cmap1 = uplt.Colormap("prussian blue_r", l=100, name="Pacific", space="hpl")
 m = ax.contourf(data, cmap=cmap1)
 ax.colorbar(m, loc="b", ticks="none", label=cmap1.name)
 
 # Colormap from lists
 ax = fig.subplot(122, title="From list of colors")
-cmap2 = pplt.Colormap(("maroon", "light tan"), name="Heatwave")
+cmap2 = uplt.Colormap(("maroon", "light tan"), name="Heatwave")
 m = ax.contourf(data, cmap=cmap2)
 ax.colorbar(m, loc="b", ticks="none", label=cmap2.name)
 fig.format(
@@ -223,21 +223,21 @@ fig.format(
 )
 
 # Display the channels
-fig, axs = pplt.show_channels(cmap1, cmap2, refwidth=1.5, rgb=False)
+fig, axs = uplt.show_channels(cmap1, cmap2, refwidth=1.5, rgb=False)
 
 # %%
 # Sequential colormap from channel values
-cmap3 = pplt.Colormap(
+cmap3 = uplt.Colormap(
     h=("red", "red-720"), s=(80, 20), l=(20, 100), space="hpl", name="CubeHelix"
 )
-fig = pplt.figure(refwidth=2, span=False)
+fig = uplt.figure(refwidth=2, span=False)
 ax = fig.subplot(121, title="Sequential from channel values")
 m = ax.contourf(data, cmap=cmap3)
 ax.colorbar(m, loc="b", ticks="none", label=cmap3.name)
 
 # Cyclic colormap from channel values
 ax = fig.subplot(122, title="Cyclic from channel values")
-cmap4 = pplt.Colormap(h=(0, 360), c=50, l=70, space="hcl", cyclic=True, name="Spectrum")
+cmap4 = uplt.Colormap(h=(0, 360), c=50, l=70, space="hcl", cyclic=True, name="Spectrum")
 m = ax.contourf(data, cmap=cmap4)
 ax.colorbar(m, loc="b", ticks="none", label=cmap4.name)
 fig.format(
@@ -245,7 +245,7 @@ fig.format(
 )
 
 # Display the channels
-fig, axs = pplt.show_channels(cmap3, cmap4, refwidth=1.5, rgb=False)
+fig, axs = uplt.show_channels(cmap3, cmap4, refwidth=1.5, rgb=False)
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -271,23 +271,23 @@ fig, axs = pplt.show_channels(cmap3, cmap4, refwidth=1.5, rgb=False)
 # `~ultraplot.constructor.Colormap`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
 data = state.rand(30, 30).cumsum(axis=1)
 
 # Generate figure
-fig, axs = pplt.subplots([[0, 1, 1, 0], [2, 2, 3, 3]], refwidth=2.4, span=False)
+fig, axs = uplt.subplots([[0, 1, 1, 0], [2, 2, 3, 3]], refwidth=2.4, span=False)
 axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Merging colormaps")
 
 # Diverging colormap example
 title1 = "Diverging from sequential maps"
-cmap1 = pplt.Colormap("Blues4_r", "Reds3", name="Diverging", save=True)
+cmap1 = uplt.Colormap("Blues4_r", "Reds3", name="Diverging", save=True)
 
 # SciVisColor examples
 title2 = "SciVisColor example"
-cmap2 = pplt.Colormap(
+cmap2 = uplt.Colormap(
     "Greens1_r",
     "Oranges1",
     "Blues1_r",
@@ -297,7 +297,7 @@ cmap2 = pplt.Colormap(
     save=True,
 )
 title3 = "SciVisColor with equal ratios"
-cmap3 = pplt.Colormap(
+cmap3 = uplt.Colormap(
     "Greens1_r", "Oranges1", "Blues1_r", "Blues6", name="SciVisColorEven", save=True
 )
 
@@ -350,14 +350,14 @@ for ax, cmap, title in zip(axs, (cmap1, cmap2, cmap3), (title1, title2, title3))
 #   <http://hclwizard.org:64230/hclwizard/>`__ "power" sliders.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
 data = state.rand(40, 40).cumsum(axis=0)
 
 # Generate figure
-fig, axs = pplt.subplots([[0, 1, 1, 0], [2, 2, 3, 3]], refwidth=1.9, span=False)
+fig, axs = uplt.subplots([[0, 1, 1, 0], [2, 2, 3, 3]], refwidth=1.9, span=False)
 axs.format(xlabel="y axis", ylabel="x axis", suptitle="Truncating sequential colormaps")
 
 # Cutting left and right
@@ -375,14 +375,14 @@ for ax, coord in zip(axs, (None, 0.3, 0.7)):
     )
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
 data = (state.rand(40, 40) - 0.5).cumsum(axis=0).cumsum(axis=1)
 
 # Create figure
-fig, axs = pplt.subplots(ncols=2, nrows=2, refwidth=1.7, span=False)
+fig, axs = uplt.subplots(ncols=2, nrows=2, refwidth=1.7, span=False)
 axs.format(
     xlabel="x axis",
     ylabel="y axis",
@@ -399,11 +399,11 @@ titles = (
 )
 for i, (ax, title, cut) in enumerate(zip(axs, titles, (None, None, 0.2, -0.1))):
     if i % 2 == 0:
-        kw = {"levels": pplt.arange(-10, 10, 2)}  # negative-positive cutoff
+        kw = {"levels": uplt.arange(-10, 10, 2)}  # negative-positive cutoff
     else:
-        kw = {"values": pplt.arange(-10, 10, 2)}  # dedicated center
+        kw = {"values": uplt.arange(-10, 10, 2)}  # dedicated center
     if cut is not None:
-        fmt = pplt.SimpleFormatter()  # a proper minus sign
+        fmt = uplt.SimpleFormatter()  # a proper minus sign
         title = f"{title}\ncut = {fmt(cut)}"
     ax.format(title=title)
     m = ax.contourf(
@@ -417,14 +417,14 @@ for i, (ax, title, cut) in enumerate(zip(axs, titles, (None, None, 0.2, -0.1))):
     )
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
 data = (state.rand(50, 50) - 0.48).cumsum(axis=0).cumsum(axis=1) % 30
 
 # Rotating cyclic colormaps
-fig, axs = pplt.subplots(ncols=3, refwidth=1.7, span=False)
+fig, axs = uplt.subplots(ncols=3, refwidth=1.7, span=False)
 for ax, shift in zip(axs, (0, 90, 180)):
     m = ax.pcolormesh(data, cmap="romaO", cmap_kw={"shift": shift}, levels=12)
     ax.format(
@@ -436,17 +436,17 @@ for ax, shift in zip(axs, (0, 90, 180)):
     ax.colorbar(m, loc="b", locator="null")
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
 data = state.rand(20, 20).cumsum(axis=1)
 
 # Changing the colormap opacity
-fig, axs = pplt.subplots(ncols=3, refwidth=1.7, span=False)
+fig, axs = uplt.subplots(ncols=3, refwidth=1.7, span=False)
 for ax, alpha in zip(axs, (1.0, 0.5, 0.0)):
     alpha = (alpha, 1.0)
-    cmap = pplt.Colormap("batlow_r", alpha=alpha)
+    cmap = uplt.Colormap("batlow_r", alpha=alpha)
     m = ax.imshow(data, cmap=cmap, levels=10, extend="both")
     ax.colorbar(m, loc="b", locator="none")
     ax.format(
@@ -457,16 +457,16 @@ for ax, alpha in zip(axs, (1.0, 0.5, 0.0)):
     )
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
 data = state.rand(20, 20).cumsum(axis=1)
 
 # Changing the colormap gamma
-fig, axs = pplt.subplots(ncols=3, refwidth=1.7, span=False)
+fig, axs = uplt.subplots(ncols=3, refwidth=1.7, span=False)
 for ax, gamma in zip(axs, (0.7, 1.0, 1.4)):
-    cmap = pplt.Colormap("boreal", gamma=gamma)
+    cmap = uplt.Colormap("boreal", gamma=gamma)
     m = ax.pcolormesh(data, cmap=cmap, levels=10, extend="both")
     ax.colorbar(m, loc="b", locator="none")
     ax.format(

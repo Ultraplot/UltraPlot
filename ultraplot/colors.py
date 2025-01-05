@@ -3,7 +3,7 @@
 Various colormap classes and colormap normalization classes.
 """
 # NOTE: To avoid name conflicts between registered colormaps and colors, print
-# set(pplt.colors._cmap_database) & set(pplt.colors._color_database) whenever
+# set(uplt.colors._cmap_database) & set(uplt.colors._color_database) whenever
 # you add new colormaps. v0.8 result is {'gray', 'marine', 'ocean', 'pink'} due
 # to the MATLAB and GNUPlot colormaps. Want to minimize conflicts.
 # NOTE: We feel that LinearSegmentedColormap should always be used for smooth color
@@ -2002,13 +2002,13 @@ class PerceptualColormap(ContinuousColormap):
         `segmentdata` dictionary that uses color names for the hue data,
         instead of channel values between ``0`` and ``360``.
 
-        >>> import ultraplot as pplt
+        >>> import ultraplot as uplt
         >>> data = {
         >>>     'h': [[0, 'red', 'red'], [1, 'blue', 'blue']],
         >>>     's': [[0, 100, 100], [1, 100, 100]],
         >>>     'l': [[0, 100, 100], [1, 20, 20]],
         >>> }
-        >>> cmap = pplt.PerceptualColormap(data)
+        >>> cmap = uplt.PerceptualColormap(data)
 
         See also
         --------
@@ -2686,11 +2686,11 @@ class SegmentedNorm(mcolors.Normalize):
         `~matplotlib.axes.Axes.contourf`, resulting in the automatic
         application of `SegmentedNorm`.
 
-        >>> import ultraplot as pplt
+        >>> import ultraplot as uplt
         >>> import numpy as np
         >>> levels = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]
         >>> data = 10 ** (3 * np.random.rand(10, 10))
-        >>> fig, ax = pplt.subplots()
+        >>> fig, ax = uplt.subplots()
         >>> ax.contourf(data, levels=levels)
         """
         # WARNING: Tried using descending levels by adding 1 - yq to __call__() and

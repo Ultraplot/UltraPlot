@@ -24,19 +24,19 @@ using either dot notation or as you would any other dictionary:
 
 .. code-block:: python
 
-  import ultraplot as pplt
-  pplt.rc.name = value
-  pplt.rc['name'] = value
-  pplt.rc.update(name1=value1, name2=value2)
-  pplt.rc.update({'name1': value1, 'name2': value2})
+  import ultraplot as uplt
+  uplt.rc.name = value
+  uplt.rc['name'] = value
+  uplt.rc.update(name1=value1, name2=value2)
+  uplt.rc.update({'name1': value1, 'name2': value2})
 
 To apply settings to a particular axes or figure, pass the setting
 to `ultraplot.axes.Axes.format` or `ultraplot.figure.Figure.format`:
 
 .. code-block:: python
 
-  import ultraplot as pplt
-  fig, ax = pplt.subplots()
+  import ultraplot as uplt
+  fig, ax = uplt.subplots()
   ax.format(name1=value1, name2=value2)
   ax.format(rc_kw={'name1': value1, 'name2': value2})
 
@@ -45,11 +45,11 @@ to the `~ultraplot.config.Configurator.context` command:
 
 .. code-block:: python
 
-   import ultraplot as pplt
-   with pplt.rc.context(name1=value1, name2=value2):
-       fig, ax = pplt.subplots()
-   with pplt.rc.context({'name1': value1, 'name2': value2}):
-       fig, ax = pplt.subplots()
+   import ultraplot as uplt
+   with uplt.rc.context(name1=value1, name2=value2):
+       fig, ax = uplt.subplots()
+   with uplt.rc.context({'name1': value1, 'name2': value2}):
+       fig, ax = uplt.subplots()
 
 
 In all of these examples, if the setting name contains dots,
@@ -58,12 +58,12 @@ you can simply omit the dots. For example, to change the
 
 .. code-block:: python
 
-  import ultraplot as pplt
+  import ultraplot as uplt
   # Apply globally
-  pplt.rc.titleloc = value
-  pplt.rc.update(titleloc=value)
+  uplt.rc.titleloc = value
+  uplt.rc.update(titleloc=value)
   # Apply locally
-  fig, ax = pplt.subplots()
+  fig, ax = uplt.subplots()
   ax.format(titleloc=value)
 
 .. _ug_rcmatplotlib:

@@ -50,9 +50,9 @@
 # simply use `~ultraplot.utils.get_colors`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig, axs = pplt.show_cycles(rasterized=True)
+fig, axs = uplt.show_cycles(rasterized=True)
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -72,7 +72,7 @@ fig, axs = pplt.show_cycles(rasterized=True)
 # to :rcraw:`axes.prop_cycle` (see the :ref:`configuration guide <ug_config>`).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -82,8 +82,8 @@ kwargs = {"legend": "b", "labels": list("abcdef")}
 
 # Figure
 lw = 5
-pplt.rc.cycle = "538"
-fig = pplt.figure(refwidth=1.9, suptitle="Changing the color cycle")
+uplt.rc.cycle = "538"
+fig = uplt.figure(refwidth=1.9, suptitle="Changing the color cycle")
 
 # Modify the default color cycle
 ax = fig.subplot(131, title="Global color cycle")
@@ -122,7 +122,7 @@ for i in range(data.shape[1]):
 # by the `~ultraplot.constructor.Colormap` constructor function. If the result
 # is a `~ultraplot.colors.DiscreteColormap`, those colors are used for the resulting
 # `~cycler.Cycler`. If the result is a `~ultraplot.colors.ContinuousColormap`, the
-# colormap is sampled at `N` discrete values -- for example, ``pplt.Cycle('Blues', 5)``
+# colormap is sampled at `N` discrete values -- for example, ``uplt.Cycle('Blues', 5)``
 # selects 5 evenly-spaced values. When building color cycles on-the-fly, for example
 # with ``ax.plot(data, cycle='Blues')``, ultraplot automatically selects as many colors
 # as there are columns in the 2D array (i.e., if we are drawing 10 lines using an array
@@ -136,10 +136,10 @@ for i in range(data.shape[1]):
 # generating colorbars from :ref:`lists of artists <ug_colorbars>`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-fig = pplt.figure(refwidth=2, share=False)
+fig = uplt.figure(refwidth=2, share=False)
 state = np.random.RandomState(51423)
 data = (20 * state.rand(10, 21) - 10).cumsum(axis=0)
 
@@ -152,7 +152,7 @@ ax.format(title="Cycle from a single color")
 
 # Cycle from registered colormaps
 ax = fig.subplot(122)
-cycle = pplt.Cycle("blues", "reds", "oranges", 15, left=0.1)
+cycle = uplt.Cycle("blues", "reds", "oranges", 15, left=0.1)
 lines = ax.plot(data[:, :15], cycle=cycle, lw=5)
 fig.colorbar(lines, loc="b", col=2, values=np.arange(0, len(lines)), locator=2)
 fig.legend(lines, loc="b", col=2, labels=np.arange(0, len(lines)), ncols=4)
@@ -171,15 +171,15 @@ ax.format(title="Cycle from merged colormaps", suptitle="Color cycles from color
 # property cycler is constructed and applied to the axes locally using the
 # line properties `lw` and `dashes` (the aliases `linewidth` or `linewidths`
 # would also work). The resulting property cycle can be applied globally
-# using ``pplt.rc['axes.prop_cycle'] = cycle``.
+# using ``uplt.rc['axes.prop_cycle'] = cycle``.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 import pandas as pd
 
 # Cycle that loops through 'dashes' Line2D property
-cycle = pplt.Cycle(lw=3, dashes=[(1, 0.5), (1, 1.5), (3, 0.5), (3, 1.5)])
+cycle = uplt.Cycle(lw=3, dashes=[(1, 0.5), (1, 1.5), (3, 0.5), (3, 1.5)])
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -187,7 +187,7 @@ data = (state.rand(20, 4) - 0.5).cumsum(axis=0)
 data = pd.DataFrame(data, columns=pd.Index(["a", "b", "c", "d"], name="label"))
 
 # Plot data
-fig, ax = pplt.subplots(refwidth=2.5, suptitle="Plot without color cycle")
+fig, ax = uplt.subplots(refwidth=2.5, suptitle="Plot without color cycle")
 obj = ax.plot(
     data, cycle=cycle, legend="ll", legend_kw={"ncols": 2, "handlelength": 2.5}
 )

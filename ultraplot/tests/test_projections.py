@@ -5,7 +5,7 @@ Test projection features.
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
-import ultraplot as pplt
+import ultraplot as uplt
 import pytest
 
 state = np.random.RandomState(51423)
@@ -16,21 +16,21 @@ def test_aspect_ratios():
     """
     Test aspect ratio adjustments.
     """
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     axs[0].format(aspect=1.5)
-    fig, axs = pplt.subplots(ncols=2, proj=("cart", "cyl"), aspect=2)
+    fig, axs = uplt.subplots(ncols=2, proj=("cart", "cyl"), aspect=2)
     axs[0].set_aspect(1)
     return fig
 
 
-if pplt.internals._version_mpl <= "3.2":
+if uplt.internals._version_mpl <= "3.2":
 
     @pytest.mark.mpl_image_compare
     def test_basemap_labels():
         """
         Add basemap labels.
         """
-        fig, axs = pplt.subplots(ncols=2, proj="robin", refwidth=3, basemap=True)
+        fig, axs = uplt.subplots(ncols=2, proj="robin", refwidth=3, basemap=True)
         axs.format(coast=True, labels="rt")
         return fig
 
@@ -40,7 +40,7 @@ def test_cartopy_labels():
     """
     Add cartopy labels.
     """
-    fig, axs = pplt.subplots(ncols=2, proj="robin", refwidth=3)
+    fig, axs = uplt.subplots(ncols=2, proj="robin", refwidth=3)
     axs.format(coast=True, labels=True)
     axs[0].format(inlinelabels=True)
     axs[1].format(rotatelabels=True)
@@ -70,8 +70,8 @@ def test_cartopy_contours():
         vmax=5,
     )
     fig.colorbar(m, ax=ax)
-    fig = pplt.figure()
-    ax = fig.add_subplot(projection=pplt.Mollweide(), extent="auto")
+    fig = uplt.figure()
+    ax = fig.add_subplot(projection=uplt.Mollweide(), extent="auto")
     ax.coastlines()
     N = 10
     m = ax.contourf(
@@ -79,7 +79,7 @@ def test_cartopy_contours():
         np.linspace(0, 90, N)[1::2],
         state.rand(N // 2, N) * 10 + 5,
         cmap="BuRd",
-        transform=pplt.PlateCarree(),
+        transform=uplt.PlateCarree(),
         edgefix=False,
     )
     fig.colorbar(m, ax=ax)
@@ -91,8 +91,8 @@ def test_cartopy_manual():
     """
     Test alternative workflow without classes.
     """
-    fig = pplt.figure()
-    proj = pplt.Proj("npstere")
+    fig = uplt.figure()
+    proj = uplt.Proj("npstere")
     # fig.add_axes([0.1, 0.1, 0.9, 0.9], proj='geo', map_projection=proj)
     fig.add_subplot(111, proj="geo", land=True, map_projection=proj)
     return fig
@@ -103,8 +103,8 @@ def test_three_axes():
     """
     Test basic 3D axes here.
     """
-    pplt.rc["tick.minor"] = False
-    fig, ax = pplt.subplots(proj="3d", outerpad=3)
+    uplt.rc["tick.minor"] = False
+    fig, ax = uplt.subplots(proj="3d", outerpad=3)
     return fig
 
 
@@ -113,7 +113,7 @@ def test_projection_dicts():
     """
     Test projection dictionaries.
     """
-    fig = pplt.figure(refnum=1)
+    fig = uplt.figure(refnum=1)
     a = [[1, 0], [1, 4], [2, 4], [2, 4], [3, 4], [3, 0]]
     fig.subplots(a, proj={1: "cyl", 2: "cart", 3: "cart", 4: "cart"})
     return fig
@@ -124,7 +124,7 @@ def test_polar_projections():
     """
     Rigorously test polar features here.
     """
-    fig, ax = pplt.subplots(proj="polar")
+    fig, ax = uplt.subplots(proj="polar")
     ax.format(
         rlabelpos=45,
         thetadir=-1,

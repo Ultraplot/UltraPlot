@@ -52,7 +52,7 @@ We recommend importing ultraplot as follows:
 
 .. code-block:: python
 
-   import ultraplot as pplt
+   import ultraplot as uplt
 
 This differentiates ultraplot from the usual ``plt`` abbreviation reserved for
 the `~matplotlib.pyplot` module.
@@ -68,14 +68,14 @@ all of its subplots at once:
 
 .. code-block:: python
 
-   fig, axs = pplt.subplots(...)
+   fig, axs = uplt.subplots(...)
 
 or create an empty figure
 then fill it with subplots:
 
 .. code-block:: python
 
-   fig = pplt.figure(...)
+   fig = uplt.figure(...)
    axs = fig.add_subplots(...)  # add several subplots
    ax = fig.add_subplot(...)  # add a single subplot
    # axs = fig.subplots(...)  # shorthand

@@ -1470,8 +1470,8 @@ class SubplotGrid(MutableSequence, list):
 
         Example
         -------
-        >>> import ultraplot as pplt
-        >>> fig, axs = pplt.subplots(nrows=3, ncols=3)
+        >>> import ultraplot as uplt
+        >>> fig, axs = uplt.subplots(nrows=3, ncols=3)
         >>> axs[5]  # the subplot in the second row, third column
         >>> axs[1, 2]  # the subplot in the second row, third column
         >>> axs[:, 0]  # a SubplotGrid containing the subplots in the first column

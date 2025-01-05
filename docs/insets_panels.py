@@ -62,12 +62,12 @@
 #    most complex arrangements of subplots and panels.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Demonstrate that complex arrangements preserve
 # spacing, aspect ratios, and axis sharing
-gs = pplt.GridSpec(nrows=2, ncols=2)
-fig = pplt.figure(refwidth=1.5, share=False)
+gs = uplt.GridSpec(nrows=2, ncols=2)
+fig = uplt.figure(refwidth=1.5, share=False)
 for ss, side in zip(gs, "tlbr"):
     ax = fig.add_subplot(ss)
     px = ax.panel_axes(side, width="3em")
@@ -88,7 +88,7 @@ fig.format(
 )
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -98,7 +98,7 @@ data = 10 * (data - data.min()) / (data.max() - data.min())
 # Stacked panels with outer colorbars
 for cbarloc, ploc in ("rb", "br"):
     # Create figure
-    fig, axs = pplt.subplots(
+    fig, axs = uplt.subplots(
         nrows=1, ncols=2, refwidth=1.8, panelpad=0.8, share=False, includepanels=True
     )
     axs.format(
@@ -166,7 +166,7 @@ for cbarloc, ploc in ("rb", "br"):
 # axes. To modify the zoom line properties, you can pass a dictionary to `zoom_kw`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -177,7 +177,7 @@ data = state.rand(10, 10).cumsum(axis=0)
 data = np.flip(data, (0, 1))
 
 # Plot data in the main axes
-fig, ax = pplt.subplots(refwidth=3)
+fig, ax = uplt.subplots(refwidth=3)
 m = ax.pcolormesh(data, cmap="Grays", levels=N)
 ax.colorbar(m, loc="b", label="label")
 ax.format(xlabel="xlabel", ylabel="ylabel", suptitle='"Zooming in" with an inset axes')
