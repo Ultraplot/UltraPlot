@@ -77,9 +77,9 @@
 #    passing ``border=True`` or ``bbox=True`` to `ultraplot.axes.Axes.text`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig = pplt.figure(space=0, refwidth="10em")
+fig = uplt.figure(space=0, refwidth="10em")
 axs = fig.subplots(nrows=3, ncols=3)
 axs.format(
     abc="A.",
@@ -96,9 +96,9 @@ axs[-3:].format(abcbbox=True)  # also disables abcborder
 # axs[:-3].format(abcborder=True)  # this is already the default
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig = pplt.figure(space=0, refwidth=0.7)
+fig = uplt.figure(space=0, refwidth=0.7)
 axs = fig.subplots(nrows=8, ncols=8)
 axs.format(
     abc=True,
@@ -180,32 +180,32 @@ axs.format(
 #      depending on the number of subplots in the figure.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Grid of images (note the square pixels)
 state = np.random.RandomState(51423)
 colors = np.tile(state.rand(8, 12, 1), (1, 1, 3))
-fig, axs = pplt.subplots(ncols=3, nrows=2, refwidth=1.7)
+fig, axs = uplt.subplots(ncols=3, nrows=2, refwidth=1.7)
 fig.format(suptitle="Auto figure dimensions for grid of images")
 for ax in axs:
     ax.imshow(colors)
 
 # Grid of cartopy projections
-fig, axs = pplt.subplots(ncols=2, nrows=3, proj="robin")
+fig, axs = uplt.subplots(ncols=2, nrows=3, proj="robin")
 axs.format(land=True, landcolor="k")
 fig.format(suptitle="Auto figure dimensions for grid of cartopy projections")
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-pplt.rc.update(grid=False, titleloc="uc", titleweight="bold", titlecolor="red9")
+uplt.rc.update(grid=False, titleloc="uc", titleweight="bold", titlecolor="red9")
 
 # Change the reference subplot width
 suptitle = "Effect of subplot width on figure size"
 for refwidth in ("3cm", "5cm"):
-    fig, axs = pplt.subplots(
+    fig, axs = uplt.subplots(
         ncols=2,
         refwidth=refwidth,
     )
@@ -214,19 +214,19 @@ for refwidth in ("3cm", "5cm"):
 # Change the reference subplot aspect ratio
 suptitle = "Effect of subplot aspect ratio on figure size"
 for refaspect in (1, 2):
-    fig, axs = pplt.subplots(ncols=2, refwidth=1.6, refaspect=refaspect)
+    fig, axs = uplt.subplots(ncols=2, refwidth=1.6, refaspect=refaspect)
     axs[0].format(title=f"refaspect = {refaspect}", suptitle=suptitle)
 
 # Change the reference subplot
 suptitle = "Effect of reference subplot on figure size"
 for ref in (1, 2):  # with different width ratios
-    fig, axs = pplt.subplots(ncols=3, wratios=(3, 2, 2), ref=ref, refwidth=1.1)
+    fig, axs = uplt.subplots(ncols=3, wratios=(3, 2, 2), ref=ref, refwidth=1.1)
     axs[ref - 1].format(title="reference", suptitle=suptitle)
 for ref in (1, 2):  # with complex subplot grid
-    fig, axs = pplt.subplots([[1, 2], [1, 3]], refnum=ref, refwidth=1.8)
+    fig, axs = uplt.subplots([[1, 2], [1, 3]], refnum=ref, refwidth=1.8)
     axs[ref - 1].format(title="reference", suptitle=suptitle)
 
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_tight:
@@ -281,11 +281,11 @@ pplt.rc.reset()
 #    (note the spacing between the first and second row in the below example).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Stress test of the tight layout algorithm
 # This time override the algorithm between selected subplot rows/columns
-fig, axs = pplt.subplots(
+fig, axs = uplt.subplots(
     ncols=4,
     nrows=3,
     refwidth=1.1,
@@ -316,7 +316,7 @@ axs[:, 0].format(ylabel="ylabel")
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Stress test of the tight layout algorithm
 # Add large labels along the edge of one subplot
@@ -325,7 +325,7 @@ groups = [("grouped", True), ("ungrouped", False), ("grouped", True)]
 for (name1, equal), (name2, group) in zip(equals, groups):
     suffix = " (default)" if group and not equal else ""
     suptitle = f'Tight layout with "{name1}" and "{name2}" row-column spacing{suffix}'
-    fig, axs = pplt.subplots(
+    fig, axs = uplt.subplots(
         nrows=3,
         ncols=3,
         refwidth=1.1,
@@ -389,13 +389,13 @@ for (name1, equal), (name2, group) in zip(equals, groups):
 # settings on the appearance of several subplot grids.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 N = 50
 M = 40
 state = np.random.RandomState(51423)
-cycle = pplt.Cycle("grays_r", M, left=0.1, right=0.8)
+cycle = uplt.Cycle("grays_r", M, left=0.1, right=0.8)
 datas = []
 for scale in (1, 3, 7, 0.2):
     data = scale * (state.rand(N, M) - 0.5).cumsum(axis=0)[N // 2 :, :]
@@ -406,7 +406,7 @@ for scale in (1, 3, 7, 0.2):
 spans = (False, False, True, True)
 shares = (False, "labels", "limits", True)
 for i, (span, share) in enumerate(zip(spans, shares)):
-    fig = pplt.figure(refaspect=1, refwidth=1.06, spanx=span, sharey=share)
+    fig = uplt.figure(refaspect=1, refwidth=1.06, spanx=span, sharey=share)
     axs = fig.subplots(ncols=4)
     for ax, data in zip(axs, datas):
         on = ("off", "on")[int(span)]
@@ -419,7 +419,7 @@ for i, (span, share) in enumerate(zip(spans, shares)):
         )
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -430,7 +430,7 @@ spans = (False, True)
 shares = (False, "all")
 titles = ("Minimum sharing", "Maximum sharing")
 for span, share, title in zip(spans, shares, titles):
-    fig = pplt.figure(refwidth=1, span=span, share=share)
+    fig = uplt.figure(refwidth=1, span=span, share=share)
     axs = fig.subplots(nrows=4, ncols=4)
     for ax in axs:
         data = (state.rand(100, 20) - 0.4).cumsum(axis=0)
@@ -480,11 +480,11 @@ for span, share, title in zip(spans, shares, titles):
 # and `points <https://en.wikipedia.org/wiki/Point_(typography)>`__.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-with pplt.rc.context(fontsize="12px"):  # depends on rc['figure.dpi']
-    fig, axs = pplt.subplots(
+with uplt.rc.context(fontsize="12px"):  # depends on rc['figure.dpi']
+    fig, axs = uplt.subplots(
         ncols=3,
         figwidth="15cm",
         figheight="3in",

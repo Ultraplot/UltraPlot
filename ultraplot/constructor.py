@@ -994,8 +994,8 @@ def Locator(locator, *args, discrete=False, **kwargs):
         of the "registered" locators (see below table). If `locator` is a
         list or tuple and the first element is a "registered" locator name,
         subsequent elements are passed to the locator class as positional
-        arguments. For example, ``pplt.Locator(('multiple', 5))`` is
-        equivalent to ``pplt.Locator('multiple', 5)``.
+        arguments. For example, ``uplt.Locator(('multiple', 5))`` is
+        equivalent to ``uplt.Locator('multiple', 5)``.
 
         .. _locator_table:
 
@@ -1132,7 +1132,7 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         "registered" formatters or formatter presets (see below table). If
         `formatter` is a list or tuple and the first element is a "registered"
         formatter name, subsequent elements are passed to the formatter class
-        as positional arguments. For example, ``pplt.Formatter(('sigfig', 3))`` is
+        as positional arguments. For example, ``uplt.Formatter(('sigfig', 3))`` is
         equivalent to ``Formatter('sigfig', 3)``.
 
 

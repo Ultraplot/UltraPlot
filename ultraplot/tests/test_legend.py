@@ -2,7 +2,7 @@
 """
 Test legends.
 """
-import numpy as np, pandas as pd, ultraplot as pplt, pytest
+import numpy as np, pandas as pd, ultraplot as uplt, pytest
 
 state = np.random.RandomState(51423)
 
@@ -12,7 +12,7 @@ def test_auto_legend():
     """
     Test retrieval of legends from panels, insets, etc.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.line(state.rand(5, 3), labels=list("abc"))
     px = ax.panel_axes("right", share=False)
     px.linex(state.rand(5, 3), labels=list("xyz"))
@@ -29,7 +29,7 @@ def test_singleton_legend():
     Test behavior when singleton lists are passed.
     Ensure this does not trigger centered-row legends.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     h1 = ax.plot([0, 1, 2], label="a")
     h2 = ax.plot([0, 1, 1], label="b")
     ax.legend(loc="best")
@@ -43,7 +43,7 @@ def test_centered_legends():
     Test success of algorithm.
     """
     # Basic centered legends
-    fig, axs = pplt.subplots(ncols=2, nrows=2, axwidth=2)
+    fig, axs = uplt.subplots(ncols=2, nrows=2, axwidth=2)
     hs = axs[0].plot(state.rand(10, 6))
     locs = ["l", "t", "r", "uc", "ul", "ll"]
     locs = ["l", "t", "uc", "ll"]
@@ -52,7 +52,7 @@ def test_centered_legends():
         ax.legend(hs, loc=loc, ncol=3, labels=labels, center=True)
 
     # Pass centered legends with keywords or list-of-list input.
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     hs = ax.plot(state.rand(10, 5), labels=list("abcde"))
     ax.legend(hs, center=True, loc="b")
     ax.legend(hs + hs[:1], loc="r", ncol=1)
@@ -68,12 +68,12 @@ def test_manual_labels():
     order objects were drawn in then assigning labels to them. Similar to using
     OO interface and rejecting pyplot "current axes" and "current figure".
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     (h1,) = ax.plot([0, 1, 2], label="label1")
     (h2,) = ax.plot([0, 1, 1], label="label2")
     for loc in ("best", "bottom"):
         ax.legend([h1, h2], loc=loc, labels=[None, "override"])
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.plot([0, 1, 2])
     ax.plot([0, 1, 1])
     for loc in ("best", "bottom"):
@@ -90,7 +90,7 @@ def test_contour_legend_with_label():
     figs = []
     label = "label"
 
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     ax = axs[0]
     ax.contour(state.rand(5, 5), color="k", label=label, legend="b")
     ax = axs[1]
@@ -106,7 +106,7 @@ def test_contour_legend_without_label():
     figs = []
     label = None
 
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     ax = axs[0]
     ax.contour(state.rand(5, 5), color="k", label=label, legend="b")
     ax = axs[1]
@@ -119,8 +119,8 @@ def test_histogram_legend():
     """
     Support complex histogram legends.
     """
-    pplt.rc.inlinefmt = "svg"
-    fig, ax = pplt.subplots()
+    uplt.rc.inlinefmt = "svg"
+    fig, ax = uplt.subplots()
     res = ax.hist(
         state.rand(500, 2), 4, labels=("label", "other"), edgefix=True, legend="b"
     )
@@ -129,7 +129,7 @@ def test_histogram_legend():
         {"length": [1.5, 0.5, 1.2, 0.9, 3], "width": [0.7, 0.2, 0.15, 0.2, 1.1]},
         index=["pig", "rabbit", "duck", "chicken", "horse"],
     )
-    fig, axs = pplt.subplots(ncols=3)
+    fig, axs = uplt.subplots(ncols=3)
     ax = axs[0]
     res = ax.hist(df, bins=3, legend=True, lw=3)
     ax.legend(loc="b")
@@ -144,12 +144,12 @@ def test_multiple_calls():
     """
     Test successive plotting additions to guides.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.pcolor(state.rand(10, 10), colorbar="b")
     ax.pcolor(state.rand(10, 5), cmap="grays", colorbar="b")
     ax.pcolor(state.rand(10, 5), cmap="grays", colorbar="b")
 
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     data = state.rand(10, 5)
     for i in range(data.shape[1]):
         ax.plot(data[:, i], colorbar="b", label=f"x{i}", colorbar_kw={"label": "hello"})
@@ -163,7 +163,7 @@ def test_tuple_handles():
     """
     from matplotlib import legend_handler
 
-    fig, ax = pplt.subplots(refwidth=3, abc="A.", abcloc="ul", span=False)
+    fig, ax = uplt.subplots(refwidth=3, abc="A.", abcloc="ul", span=False)
     patches = ax.fill_between(state.rand(10, 3), stack=True)
     lines = ax.line(1 + 0.5 * (state.rand(10, 3) - 0.5).cumsum(axis=0))
     # ax.legend([(handles[0], lines[1])], ['joint label'], loc='bottom', queue=True)

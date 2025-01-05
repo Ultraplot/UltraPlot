@@ -198,12 +198,12 @@ order : {'C', 'F'}, default: 'C'
     two options:
 
     * Pass a *list* of projection specifications, one for each subplot.
-      For example, ``pplt.subplots(ncols=2, proj=('cart', 'robin'))``.
+      For example, ``uplt.subplots(ncols=2, proj=('cart', 'robin'))``.
     * Pass a *dictionary* of projection specifications, where the
       keys are integers or tuples of integers that indicate the projection
       to use for the corresponding subplot number(s). If a key is not
       provided, the default projection ``'cartesian'`` is used. For example,
-      ``pplt.subplots(ncols=4, proj={2: 'cyl', (3, 4): 'stere'})`` creates
+      ``uplt.subplots(ncols=4, proj={2: 'cyl', (3, 4): 'stere'})`` creates
       a figure with a default Cartesian axes for the first subplot, a Mercator
       projection for the second subplot, and a Stereographic projection
       for the third and fourth subplots.
@@ -211,7 +211,7 @@ order : {'C', 'F'}, default: 'C'
 %(axes.proj_kw)s
     If dictionary of properties, applies globally. If list or dictionary of
     dictionaries, applies to specific subplots, as with `proj`. For example,
-    ``pplt.subplots(ncols=2, proj='cyl', proj_kw=({'lon_0': 0}, {'lon_0': 180})``
+    ``uplt.subplots(ncols=2, proj='cyl', proj_kw=({'lon_0': 0}, {'lon_0': 180})``
     centers the projection in the left subplot on the prime meridian and in the
     right subplot on the international dateline.
 %(axes.backend)s
@@ -488,14 +488,14 @@ class Figure(mfigure.Figure):
     )
     _space_message = (
         "To set the left, right, bottom, top, wspace, or hspace gridspec values, "
-        "pass them as keyword arguments to pplt.figure() or pplt.subplots(). Please "
+        "pass them as keyword arguments to uplt.figure() or uplt.subplots(). Please "
         "note they are now specified in physical units, with strings interpreted by "
-        "pplt.units() and floats interpreted as font size-widths."
+        "uplt.units() and floats interpreted as font size-widths."
     )
     _tight_message = (
         "ultraplot uses its own tight layout algorithm that is activated by default. "
-        "To disable it, set pplt.rc['subplots.tight'] to False or pass tight=False "
-        "to pplt.subplots(). For details, see fig.auto_layout()."
+        "To disable it, set uplt.rc['subplots.tight'] to False or pass tight=False "
+        "to uplt.subplots(). For details, see fig.auto_layout()."
     )
     _warn_interactive = True  # disabled after first warning
 
@@ -517,7 +517,7 @@ class Figure(mfigure.Figure):
     @docstring._obfuscate_kwargs
     @docstring._snippet_manager
     @warnings._rename_kwargs(
-        "0.7.0", axpad="innerpad", autoformat="pplt.rc.autoformat = {}"
+        "0.7.0", axpad="innerpad", autoformat="uplt.rc.autoformat = {}"
     )
     def __init__(
         self,
@@ -658,7 +658,7 @@ class Figure(mfigure.Figure):
         # Add space settings
         # NOTE: This is analogous to 'subplotpars' but we don't worry about
         # user mutability. Think it's perfectly fine to ask users to simply
-        # pass these to pplt.figure() or pplt.subplots(). Also overriding
+        # pass these to uplt.figure() or uplt.subplots(). Also overriding
         # 'subplots_adjust' would be confusing since we switch to absolute
         # units and that function is heavily used outside of ultraplot.
         params = {
@@ -1561,7 +1561,7 @@ class Figure(mfigure.Figure):
         _align_content()
 
     @warnings._rename_kwargs(
-        "0.10.0", mathtext_fallback="pplt.rc.mathtext_fallback = {}"
+        "0.10.0", mathtext_fallback="uplt.rc.mathtext_fallback = {}"
     )
     @docstring._snippet_manager
     def format(

@@ -798,11 +798,11 @@ class CutoffScale(_Scale, mscale.ScaleBase):
 
         Example
         -------
-        >>> import ultraplot as pplt
+        >>> import ultraplot as uplt
         >>> import numpy as np
-        >>> scale = pplt.CutoffScale(10, 0.5)  # move slower above 10
-        >>> scale = pplt.CutoffScale(10, 2, 20)  # move faster between 10 and 20
-        >>> scale = pplt.CutoffScale(10, np.inf, 20)  # jump from 10 to 20
+        >>> scale = uplt.CutoffScale(10, 0.5)  # move slower above 10
+        >>> scale = uplt.CutoffScale(10, 2, 20)  # move faster between 10 and 20
+        >>> scale = uplt.CutoffScale(10, np.inf, 20)  # jump from 10 to 20
         """
         # NOTE: See https://stackoverflow.com/a/5669301/4970632
         super().__init__()

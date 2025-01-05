@@ -55,14 +55,14 @@
 # For details, see `ultraplot.axes.PolarAxes.format`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 N = 200
 state = np.random.RandomState(51423)
 x = np.linspace(0, 2 * np.pi, N)[:, None] + np.arange(5) * 2 * np.pi / 5
 y = 100 * (state.rand(N, 5) - 0.3).cumsum(axis=0) / N
-fig, axs = pplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], proj="polar")
+fig, axs = uplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], proj="polar")
 axs.format(
     suptitle="Polar axes demo",
     linewidth=1,
@@ -79,7 +79,7 @@ axs[0].format(
     title="Normal plot",
     thetaformatter="tau",
     rlabelpos=225,
-    rlines=pplt.arange(5, 30, 5),
+    rlines=uplt.arange(5, 30, 5),
     edgecolor="red8",
     tickpad="1em",
 )
@@ -92,7 +92,7 @@ axs[1].format(
     thetalim=(0, 270),
     theta0="N",
     rlim=(0, 22),
-    rlines=pplt.arange(5, 30, 5),
+    rlines=uplt.arange(5, 30, 5),
 )
 
 # Annular plot
@@ -132,12 +132,12 @@ axs[2].format(
 
 # %%
 # Use an on-the-fly projection
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig = pplt.figure(refwidth=3)
+fig = uplt.figure(refwidth=3)
 axs = fig.subplots(nrows=2, proj="robin", proj_kw={"lon0": 150})
-# proj = pplt.Proj('robin', lon0=180)
-# axs = pplt.subplots(nrows=2, proj=proj)  # equivalent to above
+# proj = uplt.Proj('robin', lon0=180)
+# axs = uplt.subplots(nrows=2, proj=proj)  # equivalent to above
 axs.format(
     suptitle="Figure with single projection",
     land=True,
@@ -166,7 +166,7 @@ axs.format(
 #   cartopy. If you need to use the underlying `~cartopy.crs.Projection` instance, it
 #   is available via the `~ultraplot.axes.GeoAxes.projection` attribute. If you want
 #   to work with the projection classes directly, they are available in the
-#   top-level namespace (e.g., ``proj=pplt.PlateCarre()`` is allowed).
+#   top-level namespace (e.g., ``proj=uplt.PlateCarre()`` is allowed).
 #
 # * Basemap is an alternative backend. To use basemap, set :rcraw:`geo.backend` to
 #   ``'basemap'`` or pass ``backend='basemap'`` to the axes-creation command. When
@@ -225,12 +225,12 @@ axs.format(
 #    in a future release and fully remove basemap support by version 1.0.0.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig = pplt.figure()
+fig = uplt.figure()
 
 # Add projections
-gs = pplt.GridSpec(ncols=2, nrows=3, hratios=(1, 1, 1.4))
+gs = uplt.GridSpec(ncols=2, nrows=3, hratios=(1, 1, 1.4))
 for i, proj in enumerate(("cyl", "hammer", "npstere")):
     ax1 = fig.subplot(gs[i, 0], proj=proj)  # default cartopy backend
     ax2 = fig.subplot(gs[i, 1], proj=proj, backend="basemap")  # basemap backend
@@ -248,7 +248,7 @@ axs.format(
 axs[:2].format(lonlabels="b", latlabels="r")  # or lonlabels=True, lonlabels='bottom',
 axs[2:4].format(lonlabels=False, latlabels="both")
 axs[4:].format(lonlabels="all", lonlines=30)
-pplt.rc.reset()
+uplt.rc.reset()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -276,25 +276,25 @@ pplt.rc.reset()
 # the `zorder <https://matplotlib.org/3.1.1/gallery/misc/zorder_demo.html>`__
 # property for that feature. For example, to draw land patches on top of all plotted
 # content as a "land mask" you can use ``ax.format(land=True, landzorder=4)`` or set
-# ``pplt.rc['land.zorder'] = 4`` (see the :ref:`next section <ug_geoformat>`
+# ``uplt.rc['land.zorder'] = 4`` (see the :ref:`next section <ug_geoformat>`
 # for details).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Fake data with unusual longitude seam location and without coverage over poles
 offset = -40
-lon = pplt.arange(offset, 360 + offset - 1, 60)
-lat = pplt.arange(-60, 60 + 1, 30)
+lon = uplt.arange(offset, 360 + offset - 1, 60)
+lat = uplt.arange(-60, 60 + 1, 30)
 state = np.random.RandomState(51423)
 data = state.rand(len(lat), len(lon))
 
 # Plot data both without and with globe=True
 for globe in (False, True):
     string = "with" if globe else "without"
-    gs = pplt.GridSpec(nrows=2, ncols=2)
-    fig = pplt.figure(refwidth=2.5)
+    gs = uplt.GridSpec(nrows=2, ncols=2)
+    fig = uplt.figure(refwidth=2.5)
     for i, ss in enumerate(gs):
         cmap = ("sunset", "sunrise")[i % 2]
         backend = ("cartopy", "basemap")[i % 2]
@@ -349,10 +349,10 @@ for globe in (False, True):
 # For details, see the `ultraplot.axes.GeoAxes.format` documentation.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-gs = pplt.GridSpec(ncols=3, nrows=2, wratios=(1, 1, 1.2), hratios=(1, 1.2))
-fig = pplt.figure(refwidth=4)
+gs = uplt.GridSpec(ncols=3, nrows=2, wratios=(1, 1, 1.2), hratios=(1, 1.2))
+fig = uplt.figure(refwidth=4)
 
 # Styling projections in different ways
 ax = fig.subplot(gs[0, :2], proj="eqearth")
@@ -442,12 +442,12 @@ fig.format(
 # projections with `format` after they have already been created.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Plate Carrée map projection
-pplt.rc.reso = "med"  # use higher res for zoomed in geographic features
-basemap = pplt.Proj("cyl", lonlim=(-20, 180), latlim=(-10, 50), backend="basemap")
-fig, axs = pplt.subplots(nrows=2, refwidth=5, proj=("cyl", basemap))
+uplt.rc.reso = "med"  # use higher res for zoomed in geographic features
+basemap = uplt.Proj("cyl", lonlim=(-20, 180), latlim=(-10, 50), backend="basemap")
+fig, axs = uplt.subplots(nrows=2, refwidth=5, proj=("cyl", basemap))
 axs.format(
     land=True,
     labels=True,
@@ -461,35 +461,35 @@ axs[0].format(title="Cartopy example")
 axs[1].format(title="Basemap example")
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Pole-centered map projections
-basemap = pplt.Proj("npaeqd", boundinglat=60, backend="basemap")
-fig, axs = pplt.subplots(ncols=2, refwidth=2.7, proj=("splaea", basemap))
+basemap = uplt.Proj("npaeqd", boundinglat=60, backend="basemap")
+fig, axs = uplt.subplots(ncols=2, refwidth=2.7, proj=("splaea", basemap))
 fig.format(suptitle="Zooming into polar projections")
 axs.format(land=True, latmax=80)  # no gridlines poleward of 80 degrees
 axs[0].format(boundinglat=-60, title="Cartopy example")
 axs[1].format(title="Basemap example")
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Zooming in on continents
-fig = pplt.figure(refwidth=3)
+fig = uplt.figure(refwidth=3)
 ax = fig.subplot(121, proj="lcc", proj_kw={"lon0": 0})
 ax.format(lonlim=(-20, 50), latlim=(30, 70), title="Cartopy example")
-proj = pplt.Proj("lcc", lon0=-100, lat0=45, width=8e6, height=8e6, backend="basemap")
+proj = uplt.Proj("lcc", lon0=-100, lat0=45, width=8e6, height=8e6, backend="basemap")
 ax = fig.subplot(122, proj=proj)
 ax.format(lonlines=20, title="Basemap example")
 fig.format(suptitle="Zooming into specific regions", land=True)
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Zooming in with cartopy degree-minute-second labels
-pplt.rc.reso = "hi"
-fig = pplt.figure(refwidth=2.5)
+uplt.rc.reso = "hi"
+fig = uplt.figure(refwidth=2.5)
 ax = fig.subplot(121, proj="cyl")
 ax.format(lonlim=(-7.5, 2), latlim=(49.5, 59))
 ax = fig.subplot(122, proj="cyl")
@@ -501,7 +501,7 @@ fig.format(
     borderscolor="white",
     suptitle="Cartopy degree-minute-second labels",
 )
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _proj_included:
@@ -523,7 +523,7 @@ pplt.rc.reset()
 # and `~cartopy.crs.SouthPolarStereo` projections.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Table of cartopy projections
 projs = [
@@ -558,13 +558,13 @@ projs = [
     "eck5",
     "eck6",
 ]
-fig, axs = pplt.subplots(ncols=3, nrows=10, figwidth=7, proj=projs)
+fig, axs = uplt.subplots(ncols=3, nrows=10, figwidth=7, proj=projs)
 axs.format(land=True, reso="lo", labels=False, suptitle="Table of cartopy projections")
 for proj, ax in zip(projs, axs):
     ax.format(title=proj, titleweight="bold", labels=False)
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 # Table of basemap projections
 projs = [
@@ -593,7 +593,7 @@ projs = [
     "npaeqd",
     "nplaea",
 ]
-fig, axs = pplt.subplots(ncols=3, nrows=8, figwidth=7, proj=projs, backend="basemap")
+fig, axs = uplt.subplots(ncols=3, nrows=8, figwidth=7, proj=projs, backend="basemap")
 axs.format(land=True, labels=False, suptitle="Table of basemap projections")
 for proj, ax in zip(projs, axs):
     ax.format(title=proj, titleweight="bold", labels=False)

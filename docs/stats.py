@@ -79,7 +79,7 @@ fadedata = np.percentile(data, (5, 95), axis=0)  # light shading
 shadedata = np.percentile(data, (25, 75), axis=0)  # dark shading
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Loop through "vertical" and "horizontal" versions
@@ -87,7 +87,7 @@ varray = [[1], [2], [3]]
 harray = [[1, 1], [2, 3], [2, 3]]
 for orientation, array in zip(("vertical", "horizontal"), (varray, harray)):
     # Figure
-    fig = pplt.figure(refwidth=4, refaspect=1.5, share=False)
+    fig = uplt.figure(refwidth=4, refaspect=1.5, share=False)
     axs = fig.subplots(array, hratios=(2, 1, 1))
     axs.format(abc="A.", suptitle=f"Indicating {orientation} error bounds")
 
@@ -164,7 +164,7 @@ for orientation, array in zip(("vertical", "horizontal"), (varray, harray)):
 # with the same keywords used for :ref:`on-the-fly error bars <ug_errorbars>`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 import pandas as pd
 
@@ -177,7 +177,7 @@ data2 = state.rand(100, 7)
 data2 = pd.DataFrame(data2, columns=pd.Index(list("abcdefg"), name="label"))
 
 # Figure
-fig, axs = pplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], span=False)
+fig, axs = uplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], span=False)
 axs.format(abc="A.", titleloc="l", grid=False, suptitle="Boxes and violins demo")
 
 # Box plots
@@ -221,7 +221,7 @@ ax.format(title="Multiple colors", ymargin=0.15)
 # will use the same algorithm for kernel density estimation as the `kde` commands.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -230,11 +230,11 @@ state = np.random.RandomState(51423)
 x = state.normal(size=(M, N)) + state.rand(M)[:, None] * np.arange(N) + 2 * np.arange(N)
 
 # Sample overlayed histograms
-fig, ax = pplt.subplots(refwidth=4, refaspect=(3, 2))
+fig, ax = uplt.subplots(refwidth=4, refaspect=(3, 2))
 ax.format(suptitle="Overlaid histograms", xlabel="distribution", ylabel="count")
 res = ax.hist(
     x,
-    pplt.arange(-3, 8, 0.2),
+    uplt.arange(-3, 8, 0.2),
     filled=True,
     alpha=0.7,
     edgecolor="k",
@@ -244,7 +244,7 @@ res = ax.hist(
 )
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -252,10 +252,10 @@ N = 500
 state = np.random.RandomState(51423)
 x = state.normal(size=(N,))
 y = state.normal(size=(N,))
-bins = pplt.arange(-3, 3, 0.25)
+bins = uplt.arange(-3, 3, 0.25)
 
 # Histogram with marginal distributions
-fig, axs = pplt.subplots(ncols=2, refwidth=2.3)
+fig, axs = uplt.subplots(ncols=2, refwidth=2.3)
 axs.format(
     abc="A.",
     abcloc="l",
@@ -277,7 +277,7 @@ for ax, which, color, title in zip(axs, "lr", colors, titles):
         colorbar="b",
         colorbar_kw={"label": "count"},
     )
-    color = pplt.scale_luminance(color, 1.5)  # histogram colors
+    color = uplt.scale_luminance(color, 1.5)  # histogram colors
     px = ax.panel(which, space=0)
     px.histh(y, bins, color=color, fill=True, ec="k")
     px.format(grid=False, xlocator=[], xreverse=(which == "l"))

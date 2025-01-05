@@ -45,18 +45,18 @@
 # specific locations in a list using `~matplotlib.ticker.FixedLocator` (just
 # like `~matplotlib.axes.Axes.set_xticks` and `~matplotlib.axes.Axes.set_yticks`).
 # If you want to work with the locator classes directly, they are available in the
-# top-level namespace (e.g., ``xlocator=pplt.MultipleLocator(...)`` is allowed).
+# top-level namespace (e.g., ``xlocator=uplt.MultipleLocator(...)`` is allowed).
 #
 # To generate lists of tick locations, we recommend using ultraplot's
 # `~ultraplot.utils.arange` function -- it’s basically an endpoint-inclusive
 # version of `numpy.arange`, which is usually what you'll want in this context.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
-pplt.rc.update(
+uplt.rc.update(
     metawidth=1,
     fontsize=10,
     metacolor="dark blue",
@@ -64,9 +64,9 @@ pplt.rc.update(
     titleloc="upper center",
     titlecolor="dark blue",
     titleborder=False,
-    axesfacecolor=pplt.scale_luminance("powderblue", 1.15),
+    axesfacecolor=uplt.scale_luminance("powderblue", 1.15),
 )
-fig = pplt.figure(share=False, refwidth=5, refaspect=(8, 1))
+fig = uplt.figure(share=False, refwidth=5, refaspect=(8, 1))
 fig.format(suptitle="Tick locators demo")
 
 # Step size for tick locations
@@ -97,7 +97,7 @@ ax.format(xlim=(-10, 10), xlocator="null")
 ax = fig.subplot(717, title="Degree-Minute-Second Locator (requires cartopy)")
 ax.format(xlim=(0, 2), xlocator="dms", xformatter="dms")
 
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_formatters:
@@ -124,7 +124,7 @@ pplt.rc.reset()
 # fractions of :math:`\pi`, or ``xformatter='sci'`` to label ticks with
 # scientific notation. If you want to work with the formatter classes
 # directly, they are available in the top-level namespace
-# (e.g., ``xformatter=pplt.SciFormatter(...)`` is allowed).
+# (e.g., ``xformatter=uplt.SciFormatter(...)`` is allowed).
 #
 # ultraplot also changes the default tick formatter to
 # `~ultraplot.ticker.AutoFormatter`. This class trims trailing zeros by
@@ -134,14 +134,14 @@ pplt.rc.reset()
 # zero-trimming feature, set :rcraw:`formatter.zerotrim` to ``False``.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-pplt.rc.fontsize = 11
-pplt.rc.metawidth = 1.5
-pplt.rc.gridwidth = 1
+uplt.rc.fontsize = 11
+uplt.rc.metawidth = 1.5
+uplt.rc.gridwidth = 1
 
 # Create the figure
-fig, axs = pplt.subplots(ncols=2, nrows=2, refwidth=1.5, share=False)
+fig, axs = uplt.subplots(ncols=2, nrows=2, refwidth=1.5, share=False)
 axs.format(
     ytickloc="both",
     yticklabelloc="both",
@@ -178,14 +178,14 @@ axs[3].format(
     xlocator=1,
     ylocator=1,
 )
-pplt.rc.reset()
+uplt.rc.reset()
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-pplt.rc.update(
+uplt.rc.update(
     metawidth=1.2,
     fontsize=10,
     axesfacecolor="gray0",
@@ -197,7 +197,7 @@ pplt.rc.update(
     titleloc="upper center",
     titleborder=False,
 )
-fig = pplt.figure(refwidth=5, refaspect=(8, 1), share=False)
+fig = uplt.figure(refwidth=5, refaspect=(8, 1), share=False)
 
 # Scientific notation
 ax = fig.subplot(911, title="SciFormatter")
@@ -237,7 +237,7 @@ ax.format(xlim=(0, 0.001), xlocator=0.0001, xformatter="%.E")
 ax = fig.subplot(919, title="StrMethodFormatter")
 ax.format(xlim=(0, 100), xtickminor=False, xlocator=20, xformatter="{x:.1f}")
 fig.format(ylocator="null", suptitle="Tick formatters demo")
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _pandas: https://pandas.pydata.org
@@ -261,10 +261,10 @@ pplt.rc.reset()
 # and `~ultraplot.constructor.Formatter` for details.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-pplt.rc.update(
+uplt.rc.update(
     metawidth=1.2,
     fontsize=10,
     ticklenratio=0.7,
@@ -273,7 +273,7 @@ pplt.rc.update(
     titleloc="upper center",
     titleborder=False,
 )
-fig, axs = pplt.subplots(nrows=5, refwidth=6, refaspect=(8, 1), share=False)
+fig, axs = uplt.subplots(nrows=5, refwidth=6, refaspect=(8, 1), share=False)
 
 # Default date locator
 # This is enabled if you plot datetime data or set datetime limits
@@ -321,7 +321,7 @@ ax.format(
 )
 axs[:4].format(xrotation=0)  # no rotation for the first four examples
 fig.format(ylocator="null", suptitle="Datetime locators and formatters demo")
-pplt.rc.reset()
+uplt.rc.reset()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -347,16 +347,16 @@ pplt.rc.reset()
 # but with additional flexibility.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-pplt.rc.update(
+uplt.rc.update(
     metawidth=1.2,
     fontsize=10,
     gridcolor="coral",
     axesedgecolor="deep orange",
     figurefacecolor="white",
 )
-fig = pplt.figure(share=False, refwidth=2, suptitle="Axis locations demo")
+fig = uplt.figure(share=False, refwidth=2, suptitle="Axis locations demo")
 
 # Spine location demonstration
 ax = fig.subplot(121, title="Various locations")
@@ -371,7 +371,7 @@ ax.format(ylabel="labels on both sides")
 ax = fig.subplot(122, title="Zero-centered spines", titlepad="1em")
 ax.format(xlim=(-10, 10), ylim=(-3, 3), yticks=1)
 ax.format(xloc="zero", yloc="zero")
-pplt.rc.reset()
+uplt.rc.reset()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -399,7 +399,7 @@ pplt.rc.reset()
 # * While matplotlib axis scales must be instantiated with an
 #   `~matplotlib.axis.Axis` instance (for backwards compatibility reasons),
 #   ultraplot axis scales can be instantiated without the axis instance
-#   (e.g., ``pplt.LogScale()`` instead of ``pplt.LogScale(ax.xaxis)``).
+#   (e.g., ``uplt.LogScale()`` instead of ``uplt.LogScale(ax.xaxis)``).
 # * The default `subs` for the ``'symlog'`` axis scale is now ``np.arange(1, 10)``,
 #   and the default `linthresh` is now ``1``. Also the ``'log'`` and ``'symlog'``
 #   axis scales now accept the keywords `base`, `linthresh`, `linscale`, and
@@ -414,16 +414,16 @@ pplt.rc.reset()
 # ``'inverse'`` scale `~ultraplot.scale.InverseScale` can be useful when
 # working with spectral data, especially with :ref:`"dual" unit axes <ug_dual>`.
 # If you want to work with the axis scale classes directly, they are available
-# in the top-level namespace (e.g., ``xscale=pplt.CutoffScale(...)`` is allowed).
+# in the top-level namespace (e.g., ``xscale=uplt.CutoffScale(...)`` is allowed).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 N = 200
 lw = 3
-pplt.rc.update({"meta.width": 1, "label.weight": "bold", "tick.labelweight": "bold"})
-fig = pplt.figure(refwidth=1.8, share=False)
+uplt.rc.update({"meta.width": 1, "label.weight": "bold", "tick.labelweight": "bold"})
+fig = uplt.figure(refwidth=1.8, share=False)
 
 # Linear and log scales
 ax1 = fig.subplot(221)
@@ -444,11 +444,11 @@ ax.format(yscale="logit", ylabel="logit scale")
 ax.plot(np.linspace(0, 1, N), np.linspace(0.01, 0.99, N), lw=lw)
 
 fig.format(suptitle="Axis scales demo", ytickminor=True)
-pplt.rc.reset()
+uplt.rc.reset()
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Create figure
@@ -458,8 +458,8 @@ ys = (np.sin(x), np.cos(x))
 state = np.random.RandomState(51423)
 data = state.rand(len(dy) - 1, len(x) - 1)
 colors = ("coral", "sky blue")
-cmap = pplt.Colormap("grays", right=0.8)
-fig, axs = pplt.subplots(nrows=4, refaspect=(5, 1), figwidth=5.5, sharex=False)
+cmap = uplt.Colormap("grays", right=0.8)
+fig, axs = uplt.subplots(nrows=4, refaspect=(5, 1), figwidth=5.5, sharex=False)
 
 # Loop through various cutoff scale options
 titles = ("Zoom out of left", "Zoom into left", "Discrete jump", "Fast jump")
@@ -492,7 +492,7 @@ for ax, iargs, title, locator in zip(axs, args, titles, locators):
     )
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Create figure
@@ -500,9 +500,9 @@ n = 30
 state = np.random.RandomState(51423)
 data = state.rand(n - 1, n - 1)
 colors = ("coral", "sky blue")
-cmap = pplt.Colormap("grays", right=0.8)
-gs = pplt.GridSpec(nrows=2, ncols=2)
-fig = pplt.figure(refwidth=2.3, share=False)
+cmap = uplt.Colormap("grays", right=0.8)
+gs = uplt.GridSpec(nrows=2, ncols=2)
+fig = uplt.figure(refwidth=2.3, share=False)
 fig.format(grid=False, suptitle="Other axis scales demo")
 
 # Geographic scales
@@ -571,7 +571,7 @@ ax.format(ymin=0.05, yscale=("power", 0.5), title=title)
 #    <https://github.com/ultraplot-dev/ultraplot/issues/303>`__ for details).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
@@ -583,7 +583,7 @@ N, M = 50, 10
 # Alternate y axis
 data = state.rand(M) + (state.rand(N, M) - 0.48).cumsum(axis=0)
 altdata = 5 * (state.rand(N) - 0.45).cumsum(axis=0)
-fig = pplt.figure(share=False)
+fig = uplt.figure(share=False)
 ax = fig.subplot(121, title="Alternate y twin x")
 ax.line(data, color=c0, ls="--")
 ox = ax.alty(color=c2, label="alternate ylabel", linewidth=1)
@@ -626,12 +626,12 @@ fig.format(xlabel="xlabel", ylabel="ylabel", suptitle="Alternate axes demo")
 # <https://matplotlib.org/stable/gallery/scales/symlog_demo.html>`__ axis.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-pplt.rc.update({"grid.alpha": 0.4, "meta.width": 1, "grid.linewidth": 1})
-c1 = pplt.scale_luminance("cerulean", 0.5)
-c2 = pplt.scale_luminance("red", 0.5)
-fig = pplt.figure(refaspect=2.2, refwidth=3, share=False)
+uplt.rc.update({"grid.alpha": 0.4, "meta.width": 1, "grid.linewidth": 1})
+c1 = uplt.scale_luminance("cerulean", 0.5)
+c2 = uplt.scale_luminance("red", 0.5)
+fig = uplt.figure(refaspect=2.2, refwidth=3, share=False)
 axs = fig.subplots(
     [[1, 1, 2, 2], [0, 3, 3, 0]],
     suptitle="Duplicate axes with simple transformations",
@@ -668,15 +668,15 @@ ax.dualx(
     color=c2,
     gridcolor=c2,
 )
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-pplt.rc.update({"grid.alpha": 0.4, "meta.width": 1, "grid.linewidth": 1})
-c1 = pplt.scale_luminance("cerulean", 0.5)
-c2 = pplt.scale_luminance("red", 0.5)
-fig = pplt.figure(
+uplt.rc.update({"grid.alpha": 0.4, "meta.width": 1, "grid.linewidth": 1})
+c1 = uplt.scale_luminance("cerulean", 0.5)
+c2 = uplt.scale_luminance("red", 0.5)
+fig = uplt.figure(
     share=False,
     refaspect=0.4,
     refwidth=1.8,
@@ -709,16 +709,16 @@ ax.format(
 ax.dualy(
     "pressure", label="pressure (hPa)", locator=100, color=c1, gridcolor=c1, grid=True
 )
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-pplt.rc.margin = 0
-c1 = pplt.scale_luminance("cerulean", 0.5)
-c2 = pplt.scale_luminance("red", 0.5)
-fig, ax = pplt.subplots(refaspect=(3, 1), figwidth=6)
+uplt.rc.margin = 0
+c1 = uplt.scale_luminance("cerulean", 0.5)
+c2 = uplt.scale_luminance("red", 0.5)
+fig, ax = uplt.subplots(refaspect=(3, 1), figwidth=6)
 
 # Sample data
 cutoff = 1 / 5
@@ -739,4 +739,4 @@ ax.format(
 ax = ax.dualx(
     "inverse", locator="log", locator_kw={"subs": (1, 2, 5)}, label="period (days)"
 )
-pplt.rc.reset()
+uplt.rc.reset()

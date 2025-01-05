@@ -78,11 +78,11 @@
 #    complex arrangements of subplots, colorbars, and legends.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
-fig = pplt.figure(share=False, refwidth=2.3)
+fig = uplt.figure(share=False, refwidth=2.3)
 
 # Colorbars
 ax = fig.subplot(121, title="Axes colorbars")
@@ -134,11 +134,11 @@ fig.format(
 #    the same legend rather than creating "stacks".
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
 labels = list("xyzpq")
 state = np.random.RandomState(51423)
-fig = pplt.figure(share=0, refwidth=2.3, suptitle="On-the-fly colorbar and legend demo")
+fig = uplt.figure(share=0, refwidth=2.3, suptitle="On-the-fly colorbar and legend demo")
 
 # Legends
 data = (state.rand(30, 10) - 0.5).cumsum(axis=0)
@@ -183,12 +183,12 @@ ax.contour(
 )
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 N = 10
 state = np.random.RandomState(51423)
-fig, axs = pplt.subplots(
+fig, axs = uplt.subplots(
     nrows=2,
     share=False,
     refwidth="55mm",
@@ -233,11 +233,11 @@ for j, ax in enumerate(axs):
 # and the tight layout padding can be controlled with the `pad` keyword.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
-fig, axs = pplt.subplots(ncols=3, nrows=3, refwidth=1.4)
+fig, axs = uplt.subplots(ncols=3, nrows=3, refwidth=1.4)
 for ax in axs:
     m = ax.pcolormesh(
         state.rand(20, 20), cmap="grays", levels=np.linspace(0, 1, 11), extend="both"
@@ -255,11 +255,11 @@ fig.colorbar(m, label="stacked colorbar", ticks=0.1, loc="b", minorticks=0.05)
 fig.colorbar(m, label="colorbar with length <1", ticks=0.1, loc="r", length=0.7)
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
-fig, axs = pplt.subplots(
+fig, axs = uplt.subplots(
     ncols=2, nrows=2, order="F", refwidth=1.7, wspace=2.5, share=False
 )
 
@@ -268,7 +268,7 @@ data = (state.rand(50, 50) - 0.1).cumsum(axis=0)
 for ax in axs[:2]:
     m = ax.contourf(data, cmap="grays", extend="both")
 hs = []
-colors = pplt.get_colors("grays", 5)
+colors = uplt.get_colors("grays", 5)
 for abc, color in zip("ABCDEF", colors):
     data = state.rand(10)
     for ax in axs[2:]:
@@ -333,16 +333,16 @@ for ax, title in zip(axs, ("2D {} #1", "2D {} #2", "Line {} #1", "Line {} #2")):
 # See `~ultraplot.axes.Axes.colorbar` for details.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-fig = pplt.figure(share=False, refwidth=2)
+fig = uplt.figure(share=False, refwidth=2)
 
 # Colorbars from lines
 ax = fig.subplot(121)
 state = np.random.RandomState(51423)
 data = 1 + (state.rand(12, 10) - 0.45).cumsum(axis=0)
-cycle = pplt.Cycle("algae")
+cycle = uplt.Cycle("algae")
 hs = ax.line(
     data,
     lw=4,
@@ -354,7 +354,7 @@ ax.colorbar(hs, loc="t", values=np.arange(0, 10), label="line colorbar", ticks=2
 
 # Colorbars from a mappable
 ax = fig.subplot(122)
-m = ax.contourf(data.T, extend="both", cmap="algae", levels=pplt.arange(0, 3, 0.5))
+m = ax.contourf(data.T, extend="both", cmap="algae", levels=uplt.arange(0, 3, 0.5))
 fig.colorbar(
     m, loc="r", length=1, label="interior ticks", tickloc="left"  # length is relative
 )
@@ -428,11 +428,11 @@ fig.format(
 # (or use the `handle_kw` keyword). See `ultraplot.axes.Axes.legend` for details.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-pplt.rc.cycle = "538"
-fig, axs = pplt.subplots(ncols=2, span=False, share="labels", refwidth=2.3)
+uplt.rc.cycle = "538"
+fig, axs = uplt.subplots(ncols=2, span=False, share="labels", refwidth=2.3)
 labels = ["a", "bb", "ccc", "dddd", "eeeee"]
 hs1, hs2 = [], []
 
