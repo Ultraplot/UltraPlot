@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build docs
 on:
   push:
     branches: [main]
@@ -19,15 +19,10 @@ jobs:
           cache-environment: true
           cache-downloads: false
 
-      - name: Test Ultraplot
-        shell: bash -el {0}
-        run: |
-          micromamba activate ultraplot-dev
-          pip install .
-
       - name: "Build docs"
         shell: bash -el {0}
         run: |
           micromamba activate ultraplot-dev
+          pip install .
           cd docs
           make html
