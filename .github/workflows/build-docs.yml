@@ -24,4 +24,10 @@ jobs:
         run: |
           micromamba activate ultraplot-dev
           pip install .
-          python -m pytest
+
+      - name: "Build docs"
+        shell: bash -el {0}
+        run: |
+          micromamba activate ultraplot-dev
+          cd docs
+          make html
