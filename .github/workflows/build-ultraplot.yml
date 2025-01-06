@@ -19,9 +19,10 @@ jobs:
           cache-environment: true
           cache-downloads: false
 
-      - name: Test Ultraplot
+      - name: "Build docs"
         shell: bash -el {0}
         run: |
           micromamba activate ultraplot-dev
           pip install .
-          python -m pytest
+          cd docs
+          make html
