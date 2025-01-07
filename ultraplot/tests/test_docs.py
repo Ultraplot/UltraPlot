@@ -52,7 +52,7 @@ Automatically build pytests from jupytext py:percent documentation files.
 #     # cartopy tests but keep us from having to dump them.
 #     if baseline == 'test_projections' and VERSION_STRING == 'mpl32':
 #         cell_source = cell_source.replace("'basemap'", "'cartopy'")
-#         if 'pplt.Proj' in cell_source or 'Table' in cell_source:
+#         if 'uplt.Proj' in cell_source or 'Table' in cell_source:
 #             return  # examples that cannot be naively converted
 
 #     def run_test():

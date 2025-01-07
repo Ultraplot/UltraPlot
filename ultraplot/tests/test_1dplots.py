@@ -6,7 +6,7 @@ import numpy as np
 import numpy.ma as ma
 import pandas as pd
 
-import ultraplot as pplt
+import ultraplot as uplt
 import pytest
 
 state = np.random.RandomState(51423)
@@ -20,7 +20,7 @@ def test_auto_reverse():
     x = np.arange(10)[::-1]
     y = np.arange(10)
     z = state.rand(10, 10)
-    fig, axs = pplt.subplots(ncols=2, nrows=3, share=0)
+    fig, axs = uplt.subplots(ncols=2, nrows=3, share=0)
     # axs[0].format(xreverse=False)  # should fail
     axs[0].plot(x, y)
     axs[1].format(xlim=(0, 9))  # manual override
@@ -40,7 +40,7 @@ def test_cmap_cycles():
     """
     Test sampling of multiple continuous colormaps.
     """
-    cycle = pplt.Cycle(
+    cycle = uplt.Cycle(
         "Boreal",
         "Grays",
         "Fire",
@@ -50,7 +50,7 @@ def test_cmap_cycles():
         right=[0.6] * 5,
         samples=[3, 4, 5, 2, 1],
     )
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     data = state.rand(10, len(cycle)).cumsum(axis=1)
     data = pd.DataFrame(data, columns=list("abcdefghijklmno"))
     ax.plot(data, cycle=cycle, linewidth=2, legend="b")
@@ -62,7 +62,7 @@ def test_column_iteration():
     """
     Test scatter column iteration.
     """
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     axs[0].plot(state.rand(5, 5), state.rand(5, 5), lw=5)
     axs[1].scatter(
         state.rand(5, 5), state.rand(5, 5), state.rand(5, 5), state.rand(5, 5)
@@ -84,7 +84,7 @@ def test_bar_width():
     """
     Test relative and absolute widths.
     """
-    fig, axs = pplt.subplots(ncols=3)
+    fig, axs = uplt.subplots(ncols=3)
     x = np.arange(10)
     y = state.rand(10, 2)
     for i, ax in enumerate(axs):
@@ -98,7 +98,7 @@ def test_bar_vectors():
     Test vector arguments to bar plots.
     """
     facecolors = np.repeat(0.1, 3) * np.arange(1, 11)[:, None]
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.bar(
         np.arange(10),
         np.arange(1, 11),
@@ -115,7 +115,7 @@ def test_boxplot_colors():
     """
     Test box colors and cycle colors.
     """
-    fig = pplt.figure(share=False)
+    fig = uplt.figure(share=False)
     ax = fig.subplot(221)
     box_data = state.uniform(-3, 3, size=(1000, 5))
     violin_data = state.normal(0, 1, size=(1000, 5))
@@ -149,7 +149,7 @@ def test_boxplot_vectors():
         datas.append(data)
     datas = np.array(datas, dtype=object)
     assert len(datas) == len(coords)
-    fig, ax = pplt.subplot(refwidth=3)
+    fig, ax = uplt.subplot(refwidth=3)
     ax.boxplot(
         coords,
         datas,
@@ -170,7 +170,7 @@ def test_histogram_types():
     """
     Test the different histogram types using basic keywords.
     """
-    fig, axs = pplt.subplots(ncols=2, nrows=2, share=False)
+    fig, axs = uplt.subplots(ncols=2, nrows=2, share=False)
     data = state.normal(size=(100, 5))
     data += np.arange(5)
     kws = ({"stack": 0}, {"stack": 1}, {"fill": 0}, {"fill": 1, "alpha": 0.5})
@@ -184,7 +184,7 @@ def test_invalid_plot():
     """
     Test lines with missing or invalid values.
     """
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     data = state.normal(size=(100, 5))
     for j in range(5):
         data[:, j] = np.sort(data[:, j])
@@ -201,7 +201,7 @@ def test_invalid_dist():
     """
     Test distributions with missing or invalid data.
     """
-    fig, axs = pplt.subplots(ncols=2, nrows=2)
+    fig, axs = uplt.subplots(ncols=2, nrows=2)
     data = state.normal(size=(100, 5))
     for i in range(5):  # test uneven numbers of invalid values
         data[: 10 * (i + 1), :] = np.nan
@@ -218,11 +218,11 @@ def test_pie_charts():
     """
     Test basic pie plots. No examples in user guide right now.
     """
-    pplt.rc.inlinefmt = "svg"
+    uplt.rc.inlinefmt = "svg"
     labels = ["foo", "bar", "baz", "biff", "buzz"]
     array = np.arange(1, 6)
     data = pd.Series(array, index=labels)
-    fig = pplt.figure()
+    fig = uplt.figure()
     ax = fig.subplot(121)
     ax.pie(array, edgefix=True, labels=labels, ec="k", cycle="reds")
     ax = fig.subplot(122)
@@ -236,8 +236,8 @@ def test_parametric_labels():
     Test passing strings as parametric 'color values'. This is likely
     a common use case.
     """
-    pplt.rc.inlinefmt = "svg"
-    fig, ax = pplt.subplots()
+    uplt.rc.inlinefmt = "svg"
+    fig, ax = uplt.subplots()
     ax.parametric(
         state.rand(5), c=list("abcde"), lw=20, colorbar="b", cmap_kw={"left": 0.2}
     )
@@ -250,7 +250,7 @@ def test_parametric_colors():
     Test color input arguments. Should be able to make monochromatic
     plots for case where we want `line` without sticky x/y edges.
     """
-    fig, axs = pplt.subplots(ncols=2, nrows=2)
+    fig, axs = uplt.subplots(ncols=2, nrows=2)
     colors = (
         [(0, 1, 1), (0, 1, 0), (1, 0, 0), (0, 0, 1), (1, 1, 0)],
         ["b", "r", "g", "m", "c", "y"],
@@ -277,13 +277,13 @@ def test_scatter_args():
     """
     x, y = state.randn(50), state.randn(50)
     data = state.rand(50, 3)
-    fig, axs = pplt.subplots(ncols=4, share=0)
+    fig, axs = uplt.subplots(ncols=4, share=0)
     ax = axs[0]
     ax.scatter(x, y, s=80, fc="none", edgecolors="r")
     ax = axs[1]
     ax.scatter(data, c=data, cmap="reds")  # column iteration
     ax = axs[2]
-    with pytest.warns(pplt.internals.UltraplotWarning) as record:
+    with pytest.warns(uplt.internals.UltraplotWarning) as record:
         ax.scatter(data[:, 0], c=data, cmap="reds")  # actual colors
     assert len(record) == 1
     ax = axs[3]
@@ -297,7 +297,7 @@ def test_scatter_inbounds():
     """
     Test in-bounds scatter plots.
     """
-    fig, axs = pplt.subplots(ncols=2, share=False)
+    fig, axs = uplt.subplots(ncols=2, share=False)
     N = 100
     fig.format(xlim=(0, 20))
     for i, ax in enumerate(axs):
@@ -311,7 +311,7 @@ def test_scatter_alpha():
     """
     Test behavior with multiple alpha values.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     data = state.rand(10)
     alpha = np.linspace(0.1, 1, data.size)
     ax.scatter(data, alpha=alpha)
@@ -326,8 +326,8 @@ def test_scatter_cycle():
     """
     Test scatter property cycling.
     """
-    fig, ax = pplt.subplots()
-    cycle = pplt.Cycle(
+    fig, ax = uplt.subplots()
+    cycle = uplt.Cycle(
         "538", marker=["X", "o", "s", "d"], sizes=[20, 100], edgecolors=["r", "k"]
     )
     ax.scatter(
@@ -346,8 +346,8 @@ def test_scatter_sizes():
     """
     # Compare setting size to input size
     size = 20
-    with pplt.rc.context({"lines.markersize": size}):
-        fig = pplt.figure()
+    with uplt.rc.context({"lines.markersize": size}):
+        fig = uplt.figure()
         ax = fig.subplot(121, margin=0.15)
         for i in range(3):
             kw = {"absolute_size": i == 2}

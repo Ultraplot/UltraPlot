@@ -4,7 +4,7 @@ Test colorbars.
 """
 import numpy as np
 import pytest
-import ultraplot as pplt
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 
@@ -14,7 +14,7 @@ def test_outer_align():
     """
     Test various align options.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.plot(np.empty((0, 4)), labels=list("abcd"))
     ax.legend(loc="bottom", align="right", ncol=2)
     ax.legend(loc="left", align="bottom", ncol=1)
@@ -41,7 +41,7 @@ def test_colorbar_ticks():
     """
     Test ticks modification.
     """
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     ax = axs[0]
     ax.colorbar("magma", loc="bottom", ticklen=10, linewidth=3, tickminor=True)
     ax = axs[1]
@@ -56,9 +56,9 @@ def test_discrete_ticks():
     """
     Test `DiscreteLocator`.
     """
-    levels = pplt.arange(0, 2, 0.1)
+    levels = uplt.arange(0, 2, 0.1)
     data = state.rand(5, 5) * 2
-    fig, axs = pplt.subplots(share=False, ncols=2, nrows=2, refwidth=2)
+    fig, axs = uplt.subplots(share=False, ncols=2, nrows=2, refwidth=2)
     for i, ax in enumerate(axs):
         cmd = ax.contourf if i // 2 == 0 else ax.pcolormesh
         m = cmd(data, levels=levels, extend="both")
@@ -73,7 +73,7 @@ def test_discrete_vs_fixed():
     Test `DiscreteLocator` for numeric on-the-fly
     mappable ticks and `FixedLocator` otherwise.
     """
-    fig, axs = pplt.subplots(ncols=2, nrows=3, refwidth=1.3, share=False)
+    fig, axs = uplt.subplots(ncols=2, nrows=3, refwidth=1.3, share=False)
     axs[0].plot(state.rand(10, 5), labels=list("xyzpq"), colorbar="b")  # fixed
     axs[1].plot(state.rand(10, 5), labels=np.arange(5), colorbar="b")  # discrete
     axs[2].contourf(
@@ -86,7 +86,7 @@ def test_discrete_vs_fixed():
         state.rand(10, 10) * 20, colorbar="b", levels=[0, 2, 4, 6, 8, 10, 15, 20]
     )  # fixed
     axs[5].pcolormesh(
-        state.rand(10, 10) * 20, colorbar="b", levels=pplt.arange(0, 20, 2)
+        state.rand(10, 10) * 20, colorbar="b", levels=uplt.arange(0, 20, 2)
     )  # discrete
     return fig
 
@@ -114,9 +114,9 @@ def test_uneven_levels():
         "violet1",
         "violet3",
     ]
-    levels_even = pplt.arange(1, 12, 1)
+    levels_even = uplt.arange(1, 12, 1)
     levels_uneven = [1.0, 1.25, 1.5, 2.0, 2.5, 3.0, 3.75, 4.5, 6.0, 7.5, 9.0, 12.0]
-    fig, axs = pplt.subplots(ncols=2, refwidth=3.0)
+    fig, axs = uplt.subplots(ncols=2, refwidth=3.0)
     axs[0].pcolor(
         data, levels=levels_uneven, colors=colors, colorbar="r", extend="both"
     )
@@ -129,7 +129,7 @@ def test_on_the_fly_mappable():
     """
     Test on-the-fly mappable generation.
     """
-    fig, axs = pplt.subplots(ncols=2, nrows=3, space=3)
+    fig, axs = uplt.subplots(ncols=2, nrows=3, space=3)
     axs.format(aspect=0.5)
     axs[0].colorbar("magma", vmin=None, vmax=100, values=[0, 1, 2, 3, 4], loc="bottom")
     axs[1].colorbar("magma", vmin=None, vmax=100, loc="bottom")
@@ -139,11 +139,11 @@ def test_on_the_fly_mappable():
     axs[5].colorbar(["r", "b", "g", "k", "w"], loc="bottom")
 
     # Passing labels to plot function.
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.scatter(state.rand(10, 4), labels=["foo", "bar", "baz", "xyz"], colorbar="b")
 
     # Passing string value lists. This helps complete the analogy with legend 'labels'.
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     hs = ax.line(state.rand(20, 5))
     ax.colorbar(hs, loc="b", values=["abc", "def", "ghi", "pqr", "xyz"])
     return fig
@@ -155,15 +155,15 @@ def test_inset_colorbars():
     Test basic functionality.
     """
     # Simple example
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.colorbar("magma", loc="ul")
 
     # Colorbars from lines
-    fig = pplt.figure(share=False, refwidth=2)
+    fig = uplt.figure(share=False, refwidth=2)
     ax = fig.subplot(121)
     state = np.random.RandomState(51423)
     data = 1 + (state.rand(12, 10) - 0.45).cumsum(axis=0)
-    cycle = pplt.Cycle("algae")
+    cycle = uplt.Cycle("algae")
     hs = ax.line(
         data,
         lw=4,
@@ -175,7 +175,7 @@ def test_inset_colorbars():
 
     # Colorbars from a mappable
     ax = fig.subplot(122)
-    m = ax.contourf(data.T, extend="both", cmap="algae", levels=pplt.arange(0, 3, 0.5))
+    m = ax.contourf(data.T, extend="both", cmap="algae", levels=uplt.arange(0, 3, 0.5))
     fig.colorbar(
         m,
         loc="r",
@@ -206,11 +206,11 @@ def test_segmented_norm_center():
     """
     Test various align options.
     """
-    fig, ax = pplt.subplots()
-    cmap = pplt.Colormap("NegPos", cut=0.1)
+    fig, ax = uplt.subplots()
+    cmap = uplt.Colormap("NegPos", cut=0.1)
     data = state.rand(10, 10) * 10 - 2
     levels = [-4, -3, -2, -1, 0, 1, 2, 4, 8, 16, 32, 64, 128]
-    norm = pplt.SegmentedNorm(levels, vcenter=0, fair=1)
+    norm = uplt.SegmentedNorm(levels, vcenter=0, fair=1)
     ax.pcolormesh(data, levels=levels, norm=norm, cmap=cmap, colorbar="b")
     return fig
 
@@ -220,7 +220,7 @@ def test_segmented_norm_ticks():
     """
     Ensure segmented norm ticks show up in center when `values` are passed.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     data = state.rand(10, 10) * 10
     values = (1, 5, 5.5, 6, 10)
     ax.contourf(
@@ -237,7 +237,7 @@ def test_reversed_levels():
     """
     Test negative levels with a discrete norm and segmented norm.
     """
-    fig, axs = pplt.subplots(ncols=4, nrows=2, refwidth=1.8)
+    fig, axs = uplt.subplots(ncols=4, nrows=2, refwidth=1.8)
     data = state.rand(20, 20).cumsum(axis=0)
     i = 0
     for stride in (1, -1):

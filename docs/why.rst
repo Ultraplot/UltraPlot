@@ -96,8 +96,8 @@ highly customized figures. As an example, it is trivial to see that...
 
 .. code-block:: python
 
-   import ultraplot as pplt
-   fig, axs = pplt.subplots(ncols=2)
+   import ultraplot as uplt
+   fig, axs = uplt.subplots(ncols=2)
    axs.format(color='gray', linewidth=1)
    axs.format(xlim=(0, 100), xticks=10, xtickminor=True, xlabel='foo', ylabel='bar')
 
@@ -172,7 +172,7 @@ and `~ultraplot.constructor.Colormap` accept colormap names, individual colors, 
 lists of colors. Passing the relevant class instance to a constructor function
 simply returns it, and all the registered classes are available in the top-level
 namespace -- so class instances can be directly created with e.g.
-``pplt.MultipleLocator(...)`` or ``pplt.LogNorm(...)`` rather than
+``uplt.MultipleLocator(...)`` or ``uplt.LogNorm(...)`` rather than
 relying on constructor functions.
 
 The below table lists the constructor functions and the keyword arguments that use them.
@@ -330,7 +330,7 @@ concise figures.
   one subplot in arbitrary contiguous rows and columns. See the
   :ref:`next section <why_colorbars_legends>` for details.
 * A-b-c labels can be added to subplots simply using the :rcraw:`abc`
-  setting -- for example, ``pplt.rc['abc'] = 'A.'`` or ``axs.format(abc='A.')``.
+  setting -- for example, ``uplt.rc['abc'] = 'A.'`` or ``axs.format(abc='A.')``.
   This is possible because `~ultraplot.figure.Figure.add_subplot` assigns a unique
   `~ultraplot.axes.Axes.number` to every new subplot.
 * The `ultraplot.gridspec.SubplotGrid.format` command can easily format multiple subplots
@@ -559,7 +559,7 @@ ultraplot can succinctly create detailed geographic plots using either cartopy o
 basemap as "backends". By default, cartopy is used, but basemap can be used by passing
 ``backend='basemap'`` to axes-creation commands or by setting :rcraw:`geo.backend` to
 ``'basemap'``. To create a geographic plot, simply pass the `PROJ <https://proj.org>`__
-name to an axes-creation command, e.g. ``fig, ax = pplt.subplots(proj='pcarree')``
+name to an axes-creation command, e.g. ``fig, ax = uplt.subplots(proj='pcarree')``
 or ``fig.add_subplot(proj='pcarree')``. Alternatively, use the
 `~ultraplot.constructor.Proj` constructor function to quickly generate
 a `cartopy.crs.Projection` or `~mpl_toolkits.basemap.Basemap` instance.
@@ -852,8 +852,8 @@ matplotlib settings (found in `~ultraplot.config.rc_matplotlib`) and added ultra
 settings (found in `~ultraplot.config.rc_ultraplot`). Assigned settings are always
 validated, and "meta" settings like ``meta.edgecolor``, ``meta.linewidth``, and
 ``font.smallsize`` can be used to update many settings all at once. Settings can
-be changed with ``pplt.rc.key = value``, ``pplt.rc[key] = value``,
-``pplt.rc.update(key=value)``, using `ultraplot.axes.Axes.format`, or using
+be changed with ``uplt.rc.key = value``, ``uplt.rc[key] = value``,
+``uplt.rc.update(key=value)``, using `ultraplot.axes.Axes.format`, or using
 `ultraplot.config.Configurator.context`. Settings that have changed during the
 python session can be saved to a file with `ultraplot.config.Configurator.save`
 (see `~ultraplot.config.Configurator.changed`), and settings can be loaded from

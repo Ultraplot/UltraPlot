@@ -77,20 +77,20 @@
 #    setting and the :ref:`user guide <ug_1dstd>`).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
 state = np.random.RandomState(51423)
 x = y = np.array([-10, -5, 0, 5, 10])
-xedges = pplt.edges(x)
-yedges = pplt.edges(y)
+xedges = uplt.edges(x)
+yedges = uplt.edges(y)
 data = state.rand(y.size, x.size)  # "center" coordinates
 lim = (np.min(xedges), np.max(xedges))
 
-with pplt.rc.context({"cmap": "Grays", "cmap.levels": 21}):
+with uplt.rc.context({"cmap": "Grays", "cmap.levels": 21}):
     # Figure
-    fig = pplt.figure(refwidth=2.3, share=False)
+    fig = uplt.figure(refwidth=2.3, share=False)
     axs = fig.subplots(ncols=2, nrows=2)
     axs.format(
         xlabel="xlabel",
@@ -110,7 +110,7 @@ with pplt.rc.context({"cmap": "Grays", "cmap.levels": 21}):
     axs[3].contourf(xedges, yedges, data)
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -122,7 +122,7 @@ data = 10 + (state.normal(0, 3, size=(N, N))).cumsum(axis=0).cumsum(axis=1)
 xlim = ylim = (0, 25)
 
 # Plot the data
-fig, axs = pplt.subplots(
+fig, axs = uplt.subplots(
     [[0, 1, 1, 0], [2, 2, 3, 3]],
     wratios=(1.3, 1, 1, 1.3),
     span=False,
@@ -133,7 +133,7 @@ axs[0].fill_between(
     *ylim,
     zorder=3,
     edgecolor="red",
-    facecolor=pplt.set_alpha("red", 0.2),
+    facecolor=uplt.set_alpha("red", 0.2),
 )
 for i, ax in enumerate(axs):
     inbounds = i == 1
@@ -223,12 +223,12 @@ df.index.name = "date"
 df.columns.name = "variable (units)"
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig = pplt.figure(refwidth=2.5, share=False, suptitle="Automatic subplot formatting")
+fig = uplt.figure(refwidth=2.5, share=False, suptitle="Automatic subplot formatting")
 
 # Plot DataArray
-cmap = pplt.Colormap("PuBu", left=0.05)
+cmap = uplt.Colormap("PuBu", left=0.05)
 ax = fig.subplot(121, yreverse=True)
 ax.contourf(da, cmap=cmap, colorbar="t", lw=0.7, ec="k")
 
@@ -265,7 +265,7 @@ ax.format(xtickminor=False, yformatter="%b", ytickminor=False)
 # when the data limits or colormap levels cross zero (see :ref:`below <ug_autonorm>`).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -274,27 +274,27 @@ state = np.random.RandomState(51423)
 data = np.cumsum(state.rand(N, N), axis=0)
 
 # Custom defaults of each type
-pplt.rc["cmap.sequential"] = "PuBuGn"
-pplt.rc["cmap.diverging"] = "PiYG"
-pplt.rc["cmap.cyclic"] = "bamO"
-pplt.rc["cmap.qualitative"] = "flatui"
+uplt.rc["cmap.sequential"] = "PuBuGn"
+uplt.rc["cmap.diverging"] = "PiYG"
+uplt.rc["cmap.cyclic"] = "bamO"
+uplt.rc["cmap.qualitative"] = "flatui"
 
 # Make plots. Note the default behavior is sequential=True or diverging=True
 # depending on whether data contains negative values (see below).
-fig = pplt.figure(refwidth=2.2, span=False, suptitle="Colormap types")
+fig = uplt.figure(refwidth=2.2, span=False, suptitle="Colormap types")
 axs = fig.subplots(ncols=2, nrows=2)
 axs.format(xformatter="none", yformatter="none")
 axs[0].pcolor(data, sequential=True, colorbar="l", extend="max")
 axs[1].pcolor(data - 5, diverging=True, colorbar="r", extend="both")
 axs[2].pcolor(data % 8, cyclic=True, colorbar="l")
-axs[3].pcolor(data, levels=pplt.arange(0, 12, 2), qualitative=True, colorbar="r")
+axs[3].pcolor(data, levels=uplt.arange(0, 12, 2), qualitative=True, colorbar="r")
 types = ("sequential", "diverging", "cyclic", "qualitative")
 for ax, typ in zip(axs, types):
     ax.format(title=typ.title() + " colormap")
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -303,7 +303,7 @@ state = np.random.RandomState(51423)
 data = np.cumsum(state.rand(N, N), axis=1) - 6
 
 # Continuous "diverging" colormap
-fig = pplt.figure(refwidth=2.3, spanx=False)
+fig = uplt.figure(refwidth=2.3, spanx=False)
 ax = fig.subplot(121, title="Diverging colormap with 'cmap'", xlabel="xlabel")
 ax.contourf(
     data,
@@ -317,12 +317,12 @@ ax.contourf(
 ax = fig.subplot(122, title="Qualitative colormap with 'colors'")
 ax.contourf(
     data,
-    levels=pplt.arange(-6, 9, 3),
+    levels=uplt.arange(-6, 9, 3),
     colors=["red5", "blue5", "yellow5", "gray5", "violet5"],
     colorbar="b",
 )
 
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -331,8 +331,8 @@ state = np.random.RandomState(51423)
 data = 11 ** (0.25 * np.cumsum(state.rand(N, N), axis=0))
 
 # Create figure
-gs = pplt.GridSpec(ncols=2)
-fig = pplt.figure(refwidth=2.3, span=False, suptitle="Normalizer types")
+gs = uplt.GridSpec(ncols=2)
+fig = uplt.figure(refwidth=2.3, span=False, suptitle="Normalizer types")
 
 # Different normalizers
 ax = fig.subplot(gs[0], title="Default linear normalizer")
@@ -372,7 +372,7 @@ ax.pcolormesh(data, cmap="magma", norm="log", colorbar="b")
 # affect the interpretation of different datasets.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -380,7 +380,7 @@ state = np.random.RandomState(51423)
 data = 11 ** (2 * state.rand(20, 20).cumsum(axis=0) / 7)
 
 # Linear segmented norm
-fig, axs = pplt.subplots(ncols=2, refwidth=2.4)
+fig, axs = uplt.subplots(ncols=2, refwidth=2.4)
 fig.format(suptitle="Segmented normalizer demo")
 ticks = [5, 10, 20, 50, 100, 200, 500, 1000]
 for ax, norm in zip(axs, ("linear", "segmented")):
@@ -395,7 +395,7 @@ for ax, norm in zip(axs, ("linear", "segmented")):
     )
     ax.format(title=norm.title() + " normalizer")
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -404,9 +404,9 @@ data1 = (state.rand(20, 20) - 0.485).cumsum(axis=1).cumsum(axis=0)
 data2 = (state.rand(20, 20) - 0.515).cumsum(axis=0).cumsum(axis=1)
 
 # Figure
-fig, axs = pplt.subplots(nrows=2, ncols=2, refwidth=2.2, order="F")
+fig, axs = uplt.subplots(nrows=2, ncols=2, refwidth=2.2, order="F")
 axs.format(suptitle="Diverging normalizer demo")
-cmap = pplt.Colormap("DryWet", cut=0.1)
+cmap = uplt.Colormap("DryWet", cut=0.1)
 
 # Diverging norms
 i = 0
@@ -416,7 +416,7 @@ for data, mode, fair in zip(
     ("fair", "unfair"),
 ):
     for fair in ("fair", "unfair"):
-        norm = pplt.Norm("diverging", fair=(fair == "fair"))
+        norm = uplt.Norm("diverging", fair=(fair == "fair"))
         ax = axs[i]
         m = ax.contourf(data, cmap=cmap, norm=norm)
         ax.colorbar(m, loc="b")
@@ -463,7 +463,7 @@ for data, mode, fair in zip(
 # the zero level (useful for single-color `~ultraplot.axes.PlotAxes.contour` plots).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -471,7 +471,7 @@ state = np.random.RandomState(51423)
 data = 10 + state.normal(0, 1, size=(33, 33)).cumsum(axis=0).cumsum(axis=1)
 
 # Figure
-fig, axs = pplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], ref=3, refwidth=2.3)
+fig, axs = uplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], ref=3, refwidth=2.3)
 axs.format(yformatter="none", suptitle="Discrete vs. smooth colormap levels")
 
 # Pcolor
@@ -485,21 +485,21 @@ m = axs[2].imshow(data, cmap="oslo", colorbar="b")
 axs[2].format(title="Imshow plot\ndiscrete=False (default)", yformatter="auto")
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
 state = np.random.RandomState(51423)
 data = (20 * (state.rand(20, 20) - 0.4).cumsum(axis=0).cumsum(axis=1)) % 360
-levels = pplt.arange(0, 360, 45)
+levels = uplt.arange(0, 360, 45)
 
 # Figure
-gs = pplt.GridSpec(nrows=2, ncols=4, hratios=(1.5, 1))
-fig = pplt.figure(refwidth=2.4, right=2)
+gs = uplt.GridSpec(nrows=2, ncols=4, hratios=(1.5, 1))
+fig = uplt.figure(refwidth=2.4, right=2)
 fig.format(suptitle="DiscreteNorm end-color standardization")
 
 # Cyclic colorbar with distinct end colors
-cmap = pplt.Colormap("twilight", shift=-90)
+cmap = uplt.Colormap("twilight", shift=-90)
 ax = fig.subplot(gs[0, 1:3], title='distinct "cyclic" end colors')
 ax.pcolormesh(
     data,
@@ -560,31 +560,31 @@ for i, extend in enumerate(("min", "max", "neither", "both")):
 # setting :rcraw:`cmap.autodiverging` to ``False``.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 N = 20
 state = np.random.RandomState(51423)
 data = N * 2 + (state.rand(N, N) - 0.45).cumsum(axis=0).cumsum(axis=1) * 10
-fig, axs = pplt.subplots(
+fig, axs = uplt.subplots(
     nrows=2, ncols=2, refwidth=2, suptitle="Auto normalization demo"
 )
 
 # Auto diverging
-pplt.rc["cmap.sequential"] = "lapaz_r"
-pplt.rc["cmap.diverging"] = "vik"
+uplt.rc["cmap.sequential"] = "lapaz_r"
+uplt.rc["cmap.diverging"] = "vik"
 for i, ax in enumerate(axs[:2]):
     ax.pcolor(data - i * N * 6, colorbar="b")
     ax.format(title="Diverging " + ("on" if i else "off"))
 
 # Auto range
-pplt.rc["cmap.sequential"] = "lajolla"
+uplt.rc["cmap.sequential"] = "lajolla"
 data = data[::-1, :]
 data[-1, 0] = 2e3
 for i, ax in enumerate(axs[2:]):
     ax.pcolor(data, robust=bool(i), colorbar="b")
     ax.format(title="Robust " + ("on" if i else "off"))
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_labels:
@@ -605,7 +605,7 @@ pplt.rc.reset()
 # command documentation for details.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import pandas as pd
 import numpy as np
 
@@ -615,7 +615,7 @@ data = state.rand(6, 6)
 data = pd.DataFrame(data, index=pd.Index(["a", "b", "c", "d", "e", "f"]))
 
 # Figure
-fig, axs = pplt.subplots(
+fig, axs = uplt.subplots(
     [[1, 1, 2, 2], [0, 3, 3, 0]],
     refwidth=2.3,
     share="labels",
@@ -663,7 +663,7 @@ ax.format(title="Line contours with labels")
 # `~ultraplot.axes.CartesianAxes`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 import pandas as pd
 
@@ -676,7 +676,7 @@ data[np.tril_indices(data.shape[0], -1)] = np.nan  # fill half with empty boxes
 data = pd.DataFrame(data, columns=list("abcdefghij"), index=list("abcdefghij"))
 
 # Covariance matrix plot
-fig, ax = pplt.subplots(refwidth=4.5)
+fig, ax = uplt.subplots(refwidth=4.5)
 m = ax.heatmap(
     data,
     cmap="ColdHot",

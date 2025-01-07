@@ -1474,8 +1474,8 @@ class _BasemapAxes(GeoAxes):
         else:
             warnings._warn_ultraplot(
                 f"Got round={round!r}, but you cannot change the bounds of a polar "
-                "basemap projection after creating it. Please pass 'round' to pplt.Proj "  # noqa: E501
-                "instead (e.g. using the pplt.subplots() dictionary keyword 'proj_kw')."
+                "basemap projection after creating it. Please pass 'round' to uplt.Proj "  # noqa: E501
+                "instead (e.g. using the uplt.subplots() dictionary keyword 'proj_kw')."
             )
 
     def _update_extent_mode(self, extent=None, boundinglat=None):  # noqa: U100
@@ -1505,8 +1505,8 @@ class _BasemapAxes(GeoAxes):
             warnings._warn_ultraplot(
                 f"Got lonlim={lonlim!r}, latlim={latlim!r}, boundinglat={boundinglat!r}"
                 ', but you cannot "zoom into" a basemap projection after creating it. '
-                "Please pass any of the following keyword arguments to pplt.Proj "
-                "instead (e.g. using the pplt.subplots() dictionary keyword 'proj_kw'):"
+                "Please pass any of the following keyword arguments to uplt.Proj "
+                "instead (e.g. using the uplt.subplots() dictionary keyword 'proj_kw'):"
                 "'boundinglat', 'lonlim', 'latlim', 'llcrnrlon', 'llcrnrlat', "
                 "'urcrnrlon', 'urcrnrlat', 'llcrnrx', 'llcrnry', 'urcrnrx', 'urcrnry', "
                 "'width', or 'height'."

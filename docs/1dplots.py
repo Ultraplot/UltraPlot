@@ -63,16 +63,16 @@
 #    the :rcraw:`cmap.inbounds` setting and the :ref:`user guide <ug_2dstd>`).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 N = 5
 state = np.random.RandomState(51423)
-with pplt.rc.context({"axes.prop_cycle": pplt.Cycle("Grays", N=N, left=0.3)}):
+with uplt.rc.context({"axes.prop_cycle": uplt.Cycle("Grays", N=N, left=0.3)}):
     # Sample data
     x = np.linspace(-5, 5, N)
     y = state.rand(N, 5)
-    fig = pplt.figure(share=False, suptitle="Standardized input demonstration")
+    fig = uplt.figure(share=False, suptitle="Standardized input demonstration")
 
     # Plot by passing both x and y coordinates
     ax = fig.subplot(121, title="Manual x coordinates")
@@ -92,11 +92,11 @@ with pplt.rc.context({"axes.prop_cycle": pplt.Cycle("Grays", N=N, left=0.3)}):
     fig.format(xlabel="xlabel", ylabel="ylabel")
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
-cycle = pplt.Cycle("davos", right=0.8)
+cycle = uplt.Cycle("davos", right=0.8)
 state = np.random.RandomState(51423)
 N, M = 400, 20
 xmax = 20
@@ -104,14 +104,14 @@ x = np.linspace(0, 100, N)
 y = 100 * (state.rand(N, M) - 0.42).cumsum(axis=0)
 
 # Plot the data
-fig = pplt.figure(refwidth=2.2, share=False)
+fig = uplt.figure(refwidth=2.2, share=False)
 axs = fig.subplots([[0, 1, 1, 0], [2, 2, 3, 3]], wratios=(2, 1, 1, 2))
 axs[0].axvspan(
     0,
     xmax,
     zorder=3,
     edgecolor="red",
-    facecolor=pplt.set_alpha("red", 0.2),
+    facecolor=uplt.set_alpha("red", 0.2),
 )
 for i, ax in enumerate(axs):
     inbounds = i == 1
@@ -191,17 +191,17 @@ df.index.name = "date"
 df.columns.name = "category"
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig = pplt.figure(share=False, suptitle="Automatic subplot formatting")
+fig = uplt.figure(share=False, suptitle="Automatic subplot formatting")
 
 # Plot DataArray
-cycle = pplt.Cycle("dark blue", space="hpl", N=da.shape[1])
+cycle = uplt.Cycle("dark blue", space="hpl", N=da.shape[1])
 ax = fig.subplot(121)
 ax.scatter(da, cycle=cycle, lw=3, colorbar="t", colorbar_kw={"locator": 20})
 
 # Plot Dataframe
-cycle = pplt.Cycle("dark green", space="hpl", N=df.shape[1])
+cycle = uplt.Cycle("dark green", space="hpl", N=df.shape[1])
 ax = fig.subplot(122)
 ax.plot(df, cycle=cycle, lw=3, legend="t", legend_kw={"frame": False})
 
@@ -230,7 +230,7 @@ ax.plot(df, cycle=cycle, lw=3, legend="t", legend_kw={"frame": False})
 # <https://matplotlib.org/stable/tutorials/intermediate/color_cycle.html#sphx-glr-tutorials-intermediate-color-cycle-py>`__.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -241,9 +241,9 @@ data2 = (state.rand(M, N) - 0.48).cumsum(axis=1).cumsum(axis=0) * 1.5
 data1 += state.rand(M, N)
 data2 += state.rand(M, N)
 
-with pplt.rc.context({"lines.linewidth": 3}):
+with uplt.rc.context({"lines.linewidth": 3}):
     # Use property cycle for columns of 2D input data
-    fig = pplt.figure(share=False)
+    fig = uplt.figure(share=False)
     ax = fig.subplot(121, title="Single plot call")
     ax.plot(
         2 * data1 + data2,
@@ -283,12 +283,12 @@ with pplt.rc.context({"lines.linewidth": 3}):
 # "positive" lines using ``negpos=True`` (see :ref:`below <ug_negpos>` for details).
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
-gs = pplt.GridSpec(nrows=3, ncols=2)
-fig = pplt.figure(refwidth=2.2, span=False, share="labels")
+gs = uplt.GridSpec(nrows=3, ncols=2)
+fig = uplt.figure(refwidth=2.2, span=False, share="labels")
 
 # Vertical vs. horizontal
 data = (state.rand(10, 5) - 0.5).cumsum(axis=0)
@@ -359,7 +359,7 @@ fig.format(suptitle="Line plots demo", xlabel="xlabel", ylabel="ylabel")
 #    calls `~ultraplot.axes.Axes.scatter` internally.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 import pandas as pd
 
@@ -370,8 +370,8 @@ data = (state.rand(20, 4) - 0.5).cumsum(axis=0)
 data = pd.DataFrame(data, columns=pd.Index(["a", "b", "c", "d"], name="label"))
 
 # Figure
-gs = pplt.GridSpec(ncols=2, nrows=2)
-fig = pplt.figure(refwidth=2.2, share="labels", span=False)
+gs = uplt.GridSpec(ncols=2, nrows=2)
+fig = uplt.figure(refwidth=2.2, share="labels", span=False)
 
 # Vertical vs. horizontal
 ax = fig.subplot(gs[0], title="Dependent x-axis")
@@ -423,12 +423,12 @@ fig.format(suptitle="Scatter plot demo", xlabel="xlabel", ylabel="ylabel")
 # plot with a colorbar indicating the parametric coordinate.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 import pandas as pd
 
-gs = pplt.GridSpec(ncols=2, wratios=(2, 1))
-fig = pplt.figure(figwidth="16cm", refaspect=(2, 1), share=False)
+gs = uplt.GridSpec(ncols=2, wratios=(2, 1))
+fig = uplt.figure(figwidth="16cm", refaspect=(2, 1), share=False)
 fig.format(suptitle="Parametric plots demo")
 cmap = "IceFire"
 
@@ -518,7 +518,7 @@ ax.colorbar(m, loc="b", locator=2, label="parametric coordinate")
 #    `~ultraplot.axes.Axes.bar` or `~ultraplot.axes.Axes.barh` internally.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 import pandas as pd
 
@@ -532,10 +532,10 @@ data = pd.DataFrame(
 )
 
 # Figure
-pplt.rc.abc = "a."
-pplt.rc.titleloc = "l"
-gs = pplt.GridSpec(nrows=2, hratios=(3, 2))
-fig = pplt.figure(refaspect=2, refwidth=4.8, share=False)
+uplt.rc.abc = "a."
+uplt.rc.titleloc = "l"
+gs = uplt.GridSpec(nrows=2, hratios=(3, 2))
+fig = uplt.figure(refaspect=2, refwidth=4.8, share=False)
 
 # Side-by-side bars
 ax = fig.subplot(gs[0], title="Side-by-side")
@@ -554,10 +554,10 @@ obj = ax.barh(
     stack=True,
 )
 fig.format(grid=False, suptitle="Bar plot demo")
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -566,9 +566,9 @@ data = state.rand(5, 3).cumsum(axis=0)
 cycle = ("gray3", "gray5", "gray7")
 
 # Figure
-pplt.rc.abc = "a."
-pplt.rc.titleloc = "l"
-fig = pplt.figure(refwidth=2.3, share=False)
+uplt.rc.abc = "a."
+uplt.rc.titleloc = "l"
+fig = uplt.figure(refwidth=2.3, share=False)
 
 # Overlaid area patches
 ax = fig.subplot(121, title="Fill between columns")
@@ -594,7 +594,7 @@ ax.area(
     legend_kw={"center": True, "ncols": 2, "labels": ["z", "y", "qqqq"]},
 )
 fig.format(grid=False, xlabel="xlabel", ylabel="ylabel", suptitle="Area plot demo")
-pplt.rc.reset()
+uplt.rc.reset()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_negpos:
@@ -613,7 +613,7 @@ pplt.rc.reset()
 # ``negcolor=color`` and ``poscolor=color`` to the `~ultraplot.axes.PlotAxes` commands.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -621,9 +621,9 @@ state = np.random.RandomState(51423)
 data = 4 * (state.rand(40) - 0.5)
 
 # Figure
-pplt.rc.abc = "a."
-pplt.rc.titleloc = "l"
-fig, axs = pplt.subplots(nrows=3, refaspect=2, figwidth=5)
+uplt.rc.abc = "a."
+uplt.rc.titleloc = "l"
+fig, axs = uplt.subplots(nrows=3, refaspect=2, figwidth=5)
 axs.format(
     xmargin=0,
     xlabel="xlabel",
@@ -650,4 +650,4 @@ ax.area(data, negpos=True, lw=0.5, edgecolor="k")
 ax.format(title="Area plot")
 
 # Reset title styles changed above
-pplt.rc.reset()
+uplt.rc.reset()

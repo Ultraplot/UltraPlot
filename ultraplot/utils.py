@@ -118,10 +118,10 @@ def _keep_units(func):
 def arange(min_, *args):
     """
     Identical to `numpy.arange` but with inclusive endpoints. For example,
-    ``pplt.arange(2, 4)`` returns the numpy array ``[2, 3, 4]`` instead of
+    ``uplt.arange(2, 4)`` returns the numpy array ``[2, 3, 4]`` instead of
     ``[2, 3]``. This is useful for generating lists of tick locations or
-    colormap levels, e.g. ``ax.format(xlocator=pplt.arange(0, 10))``
-    or ``ax.pcolor(levels=pplt.arange(0, 10))``.
+    colormap levels, e.g. ``ax.format(xlocator=uplt.arange(0, 10))``
+    or ``ax.pcolor(levels=uplt.arange(0, 10))``.
 
     Parameters
     ----------

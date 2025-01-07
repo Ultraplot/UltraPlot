@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# import ultraplot as pplt
-import numpy as np, pandas as pd, ultraplot as pplt
+# import ultraplot as uplt
+import numpy as np, pandas as pd, ultraplot as uplt
 import pytest
 
 
@@ -15,7 +15,7 @@ def test_statistical_boxplot():
     data2 = pd.DataFrame(data2, columns=pd.Index(list("abcdefg"), name="label"))
 
     # Figure
-    fig, axs = pplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], span=False)
+    fig, axs = uplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], span=False)
     axs.format(abc="A.", titleloc="l", grid=False, suptitle="Boxes and violins demo")
 
     # Box plots
@@ -42,10 +42,10 @@ def test_panel_dist():
     state = np.random.RandomState(51423)
     x = state.normal(size=(N,))
     y = state.normal(size=(N,))
-    bins = pplt.arange(-3, 3, 0.25)
+    bins = uplt.arange(-3, 3, 0.25)
 
     # Histogram with marginal distributions
-    fig, axs = pplt.subplots(ncols=2, refwidth=2.3)
+    fig, axs = uplt.subplots(ncols=2, refwidth=2.3)
     axs.format(
         abc="A.",
         abcloc="l",
@@ -67,7 +67,7 @@ def test_panel_dist():
             colorbar="b",
             colorbar_kw={"label": "count"},
         )
-        color = pplt.scale_luminance(color, 1.5)  # histogram colors
+        color = uplt.scale_luminance(color, 1.5)  # histogram colors
         px = ax.panel(which, space=0)
         px.histh(y, bins, color=color, fill=True, ec="k")
         px.format(grid=False, xlocator=[], xreverse=(which == "l"))

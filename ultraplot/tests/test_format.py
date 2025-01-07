@@ -2,7 +2,7 @@
 """
 Test format and rc behavior.
 """
-import locale, numpy as np, ultraplot as pplt, pytest
+import locale, numpy as np, ultraplot as uplt, pytest
 import warnings
 
 state = np.random.RandomState(51423)
@@ -12,10 +12,10 @@ state = np.random.RandomState(51423)
 #     """
 #     Test below line is possible and naming schemes.
 #     """
-#     pplt.rc["image.cmap"] = pplt.Colormap("phase", shift=180, left=0.2)
-#     assert pplt.rc["cmap"] == pplt.rc["cmap.sequential"] == "_Phase_copy_s"
-#     pplt.rc["image.cmap"] = pplt.Colormap("magma", reverse=True, right=0.8)
-#     assert pplt.rc["image.cmap"] == pplt.rc["cmap.sequential"] == "_magma_copy_r"
+#     uplt.rc["image.cmap"] = uplt.Colormap("phase", shift=180, left=0.2)
+#     assert uplt.rc["cmap"] == uplt.rc["cmap.sequential"] == "_Phase_copy_s"
+#     uplt.rc["image.cmap"] = uplt.Colormap("magma", reverse=True, right=0.8)
+#     assert uplt.rc["image.cmap"] == uplt.rc["cmap.sequential"] == "_magma_copy_r"
 
 
 def test_ignored_keywords():
@@ -23,7 +23,7 @@ def test_ignored_keywords():
     Test ignored keywords and functions.
     """
     with warnings.catch_warnings(record=True) as record:
-        fig, ax = pplt.subplots(
+        fig, ax = uplt.subplots(
             gridspec_kw={"left": 3},
             subplot_kw={"proj": "cart"},
             subplotpars={"left": 0.2},
@@ -39,7 +39,7 @@ def test_init_format():
     """
     Test application of format args on initialization.
     """
-    fig, axs = pplt.subplots(
+    fig, axs = uplt.subplots(
         ncols=2,
         xlim=(0, 10),
         xlabel="xlabel",
@@ -57,7 +57,7 @@ def test_patch_format():
     """
     Test application of patch args on initialization.
     """
-    fig = pplt.figure(suptitle="Super title")
+    fig = uplt.figure(suptitle="Super title")
     fig.subplot(
         121, proj="cyl", labels=True, land=True, latlines=20, abcloc="l", abc="[A]"
     )
@@ -80,7 +80,7 @@ def test_multi_formatting():
     """
     Support formatting in multiple projections.
     """
-    fig, axs = pplt.subplots(ncols=2, proj=("cart", "cyl"))
+    fig, axs = uplt.subplots(ncols=2, proj=("cart", "cyl"))
     axs[0].pcolormesh(state.rand(5, 5))
     fig.format(
         land=1,
@@ -106,7 +106,7 @@ def test_inner_title_zorder():
     """
     Test prominence of contour labels and whatnot.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.format(
         title="TITLE", titleloc="upper center", titleweight="bold", titlesize="xx-large"
     )
@@ -140,7 +140,7 @@ def test_font_adjustments():
     """
     Test font name application. Somewhat hard to do.
     """
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     axs.format(
         abc="A.",
         fontsize=15,
@@ -159,7 +159,7 @@ def test_axes_colors():
     """
     Test behavior of passing color to format.
     """
-    fig, axs = pplt.subplots(
+    fig, axs = uplt.subplots(
         ncols=3,
         nrows=2,
         share=False,
@@ -195,21 +195,21 @@ def test_locale_formatting(loc):
         # Your test code that is sensitive to the locale settings
         assert locale.getlocale() == (loc.split(".")[0], loc.split(".")[1])
 
-        pplt.rc["formatter.use_locale"] = False
-        pplt.rc["formatter.zerotrim"] = True
-        with pplt.rc.context({"formatter.use_locale": True}):
-            fig, ax = pplt.subplots()
-            ticks = pplt.arange(-1, 1, 0.1)
+        uplt.rc["formatter.use_locale"] = False
+        uplt.rc["formatter.zerotrim"] = True
+        with uplt.rc.context({"formatter.use_locale": True}):
+            fig, ax = uplt.subplots()
+            ticks = uplt.arange(-1, 1, 0.1)
             ax.format(ylim=(min(ticks), max(ticks)), yticks=ticks)
         return fig
     finally:
         # Always reset to the original locale
         locale.setlocale(locale.LC_ALL, original_locale)
-    pplt.rc["formatter.use_locale"] = False
-    pplt.rc["formatter.zerotrim"] = True
-    with pplt.rc.context({"formatter.use_locale": True}):
-        fig, ax = pplt.subplots()
-        ticks = pplt.arange(-1, 1, 0.1)
+    uplt.rc["formatter.use_locale"] = False
+    uplt.rc["formatter.zerotrim"] = True
+    with uplt.rc.context({"formatter.use_locale": True}):
+        fig, ax = uplt.subplots()
+        ticks = uplt.arange(-1, 1, 0.1)
         ax.format(ylim=(min(ticks), max(ticks)), yticks=ticks)
     return fig
 
@@ -220,7 +220,7 @@ def test_bounds_ticks():
     Test spine bounds and location. Previously applied `fixticks`
     automatically but no longer the case.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     # ax.format(xlim=(-10, 10))
     ax.format(xloc="top")
     ax.format(xlim=(-10, 15), xbounds=(0, 10))
@@ -232,7 +232,7 @@ def test_cutoff_ticks():
     """
     Test spine cutoff ticks.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     # ax.format(xlim=(-10, 10))
     ax.format(xlim=(-10, 10), xscale=("cutoff", 0, 2), xloc="top", fixticks=True)
     ax.axvspan(0, 100, facecolor="k", alpha=0.1)
@@ -244,8 +244,8 @@ def test_spine_side():
     """
     Test automatic spine selection when passing `xspineloc` or `yspineloc`.
     """
-    fig, ax = pplt.subplots()
-    ax.plot(pplt.arange(-5, 5), (10 * state.rand(11, 5) - 5).cumsum(axis=0))
+    fig, ax = uplt.subplots()
+    ax.plot(uplt.arange(-5, 5), (10 * state.rand(11, 5) - 5).cumsum(axis=0))
     ax.format(xloc="bottom", yloc="zero")
     ax.alty(loc="right")
     return fig
@@ -256,7 +256,7 @@ def test_spine_offset():
     """
     Test offset axes.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.format(xloc="none")  # test none instead of neither
     ax.alty(loc=("axes", -0.2), color="red")
     # ax.alty(loc=('axes', 1.2), color='blue')
@@ -270,7 +270,7 @@ def test_tick_direction():
     """
     Test tick direction arguments.
     """
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     axs[0].format(tickdir="in")
     axs[1].format(xtickdirection="inout", ytickdir="out")  # rc setting should be used?
     return fig
@@ -281,7 +281,7 @@ def test_tick_length():
     """
     Test tick length args. Ensure ratios can be applied successively.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.format(yticklen=100)
     ax.format(xticklen=50, yticklenratio=0.1)
     return fig
@@ -294,7 +294,7 @@ def test_tick_width():
     width to `zero` adjusts length for label padding, and ticks can appear
     without spines if requested.
     """
-    fig, axs = pplt.subplots(ncols=2, nrows=2, share=False)
+    fig, axs = uplt.subplots(ncols=2, nrows=2, share=False)
     ax = axs[0]
     ax.format(linewidth=2, ticklen=20, xtickwidthratio=1)
     ax.format(ytickwidthratio=0.3)
@@ -316,7 +316,7 @@ def test_tick_labels():
 
     data = state.rand(5, 3)
     data = pd.DataFrame(data, index=["foo", "bar", "baz", "bat", "bot"])
-    fig, axs = pplt.subplots(abc="A.", abcloc="ul", ncols=2, refwidth=3, span=False)
+    fig, axs = uplt.subplots(abc="A.", abcloc="ul", ncols=2, refwidth=3, span=False)
     for i, ax in enumerate(axs):
         data.index.name = "label"
         if i == 1:
@@ -334,7 +334,7 @@ def test_label_settings():
     """
     Test label colors and ensure color change does not erase labels.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     ax.format(xlabel="xlabel", ylabel="ylabel")
     ax.format(labelcolor="red")
     return fig

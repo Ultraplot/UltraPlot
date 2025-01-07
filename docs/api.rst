@@ -5,7 +5,7 @@ API reference
 =============
 
 The comprehensive API reference. All of the below objects are imported
-into the top-level namespace. Use ``help(pplt.object)`` to read
+into the top-level namespace. Use ``help(uplt.object)`` to read
 the docs during a python session.
 
 Please note that ultraplot removes the associated documentation when functionality

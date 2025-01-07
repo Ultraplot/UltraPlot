@@ -757,7 +757,7 @@ class Configurator(MutableMapping, dict):
     def __getitem__(self, key):
         """
         Return an `rc_matplotlib` or `rc_ultraplot` setting using dictionary notation
-        (e.g., ``value = pplt.rc[name]``).
+        (e.g., ``value = uplt.rc[name]``).
         """
         key, _ = self._validate_key(key)  # might issue ultraplot removed/renamed error
         try:
@@ -769,7 +769,7 @@ class Configurator(MutableMapping, dict):
     def __setitem__(self, key, value):
         """
         Modify an `rc_matplotlib` or `rc_ultraplot` setting using dictionary notation
-        (e.g., ``pplt.rc[name] = value``).
+        (e.g., ``uplt.rc[name] = value``).
         """
         kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
         rc_ultraplot.update(kw_ultraplot)
@@ -778,7 +778,7 @@ class Configurator(MutableMapping, dict):
     def __getattr__(self, attr):
         """
         Return an `rc_matplotlib` or `rc_ultraplot` setting using "dot" notation
-        (e.g., ``value = pplt.rc.name``).
+        (e.g., ``value = uplt.rc.name``).
         """
         if attr[:1] == "_":
             return super().__getattribute__(attr)  # raise built-in error
@@ -788,7 +788,7 @@ class Configurator(MutableMapping, dict):
     def __setattr__(self, attr, value):
         """
         Modify an `rc_matplotlib` or `rc_ultraplot` setting using "dot" notation
-        (e.g., ``pplt.rc.name = value``).
+        (e.g., ``uplt.rc.name = value``).
         """
         if attr[:1] == "_":
             super().__setattr__(attr, value)
@@ -1397,8 +1397,8 @@ class Configurator(MutableMapping, dict):
             * ``mode=1``: Matplotlib's `rc_matplotlib` settings are only
               returned if they are local to the "with as" block. For example,
               if :rcraw:`axes.titlesize` was passed to `~Configurator.context`,
-              then ``pplt.rc.find('axes.titlesize', context=True)`` will return
-              this value, but ``pplt.rc.find('axes.titleweight', context=True)`` will
+              then ``uplt.rc.find('axes.titlesize', context=True)`` will return
+              this value, but ``uplt.rc.find('axes.titleweight', context=True)`` will
               return ``None``. This is used internally when instantiating axes.
             * ``mode=2``: Matplotlib's `rc_matplotlib` settings and ultraplot's
               `rc_ultraplot` settings are only returned if they are local to the
@@ -1418,17 +1418,17 @@ class Configurator(MutableMapping, dict):
         The below applies settings to axes in a specific figure using
         `~Configurator.context`.
 
-        >>> import ultraplot as pplt
-        >>> with pplt.rc.context(ticklen=5, metalinewidth=2):
-        >>>     fig, ax = pplt.subplots()
+        >>> import ultraplot as uplt
+        >>> with uplt.rc.context(ticklen=5, metalinewidth=2):
+        >>>     fig, ax = uplt.subplots()
         >>>     ax.plot(data)
 
         The below applies settings to a specific axes using
         `~ultraplot.axes.Axes.format`, which uses `~Configurator.context`
         internally.
 
-        >>> import ultraplot as pplt
-        >>> fig, ax = pplt.subplots()
+        >>> import ultraplot as uplt
+        >>> fig, ax = uplt.subplots()
         >>> ax.format(ticklen=5, metalinewidth=2)
         """
         # Add input dictionaries

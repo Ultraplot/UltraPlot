@@ -4,7 +4,7 @@ Utilities for modifying ultraplot docstrings.
 """
 # WARNING: To check every docstring in the package for
 # unfilled snippets simply use the following code:
-# >>> import ultraplot as pplt
+# >>> import ultraplot as uplt
 # ... seen = set()
 # ... def _iter_doc(objs):
 # ...     if objs in seen:
@@ -19,7 +19,7 @@ Utilities for modifying ultraplot docstrings.
 # ...             if obj.__doc__ and '%(' in obj.__doc__:
 # ...                 yield obj.__name__
 # ...             yield from _iter_doc(obj)
-# ... print(*_iter_doc(pplt))
+# ... print(*_iter_doc(uplt))
 import inspect
 import re
 

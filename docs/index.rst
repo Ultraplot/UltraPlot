@@ -5,12 +5,12 @@
    it should at least contain the root `toctree` directive.
 
 =======
-ultraplot
+UltraPlot
 =======
 
 A succinct `matplotlib <https://matplotlib.org/>`__ wrapper
 for making beautiful, publication-quality graphics. This project
-is `published on GitHub <https://github.com/ultraplot-dev/ultraplot>`__ and can
+is `published on GitHub <https://github.com/ultraplot/ultraplot>`__ and can
 be cited using its `Zenodo DOI <https://doi.org/10.5281/zenodo.3873878>`__.
 
 .. toctree::

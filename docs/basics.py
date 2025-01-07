@@ -77,12 +77,12 @@
 # %%
 # Simple subplot
 import numpy as np
-import ultraplot as pplt
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
-fig, ax = pplt.subplot(suptitle="Single subplot", xlabel="x axis", ylabel="y axis")
-# fig = pplt.figure(suptitle='Single subplot')  # equivalent to above
+fig, ax = uplt.subplot(suptitle="Single subplot", xlabel="x axis", ylabel="y axis")
+# fig = uplt.figure(suptitle='Single subplot')  # equivalent to above
 # ax = fig.subplot(xlabel='x axis', ylabel='y axis')
 ax.plot(data, lw=2)
 
@@ -139,17 +139,17 @@ ax.plot(data, lw=2)
 #    subplots in the same row or column share the same axis limits, scales, ticks,
 #    and labels. This is often convenient, but may be annoying for some users. To
 #    keep this feature turned off, simply :ref:`change the default settings <ug_rc>`
-#    with e.g. ``pplt.rc.update('subplots', share=False, span=False)``. See the
+#    with e.g. ``uplt.rc.update('subplots', share=False, span=False)``. See the
 #    :ref:`axis sharing section <ug_share>` for details.
 
 # %%
 # Simple subplot grid
 import numpy as np
-import ultraplot as pplt
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
-fig = pplt.figure()
+fig = uplt.figure()
 ax = fig.subplot(121)
 ax.plot(data, lw=2)
 ax = fig.subplot(122)
@@ -163,7 +163,7 @@ fig.format(
 # %%
 # Complex grid
 import numpy as np
-import ultraplot as pplt
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
@@ -171,7 +171,7 @@ array = [  # the "picture" (0 == nothing, 1 == subplot A, 2 == subplot B, etc.)
     [1, 1, 2, 2],
     [0, 3, 3, 0],
 ]
-fig = pplt.figure(refwidth=1.8)
+fig = uplt.figure(refwidth=1.8)
 axs = fig.subplots(array)
 axs.format(
     abc=True,
@@ -188,7 +188,7 @@ axs[2].plot(data, lw=2)
 # %%
 # Really complex grid
 import numpy as np
-import ultraplot as pplt
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
@@ -198,7 +198,7 @@ array = [  # the "picture" (1 == subplot A, 2 == subplot B, etc.)
     [3, 4, 4],
     [3, 5, 5],
 ]
-fig, axs = pplt.subplots(array, figwidth=5, span=False)
+fig, axs = uplt.subplots(array, figwidth=5, span=False)
 axs.format(
     suptitle="Really complex subplot grid", xlabel="xlabel", ylabel="ylabel", abc=True
 )
@@ -209,12 +209,12 @@ axs[0].plot(data, lw=2)
 # %%
 # Using a GridSpec
 import numpy as np
-import ultraplot as pplt
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 data = 2 * (state.rand(100, 5) - 0.5).cumsum(axis=0)
-gs = pplt.GridSpec(nrows=2, ncols=2, pad=1)
-fig = pplt.figure(span=False, refwidth=2)
+gs = uplt.GridSpec(nrows=2, ncols=2, pad=1)
+fig = uplt.figure(span=False, refwidth=2)
 ax = fig.subplot(gs[:, 0])
 ax.plot(data, lw=2)
 ax = fig.subplot(gs[0, 1])
@@ -237,7 +237,7 @@ fig.format(
 # three possible return types used by `matplotlib.pyplot.subplots`:
 #
 # * `~ultraplot.gridspec.SubplotGrid` behaves like a scalar when it is singleton.
-#   In other words, if you make a single subplot with ``fig, axs = pplt.subplots()``,
+#   In other words, if you make a single subplot with ``fig, axs = uplt.subplots()``,
 #   then ``axs[0].method(...)`` is equivalent to ``axs.method(...)``.
 # * `~ultraplot.gridspec.SubplotGrid` permits list-like 1D indexing, e.g. ``axs[1]``
 #   to return the second subplot. The subplots in the grid are sorted by
@@ -268,13 +268,13 @@ fig.format(
 #    all-at-once, the subplots in the grid are sorted by `~ultraplot.axes.Axes.number`.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 state = np.random.RandomState(51423)
 
 # Selected subplots in a simple grid
-fig, axs = pplt.subplots(ncols=4, nrows=4, refwidth=1.2, span=True)
+fig, axs = uplt.subplots(ncols=4, nrows=4, refwidth=1.2, span=True)
 axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Simple SubplotGrid")
 axs.format(grid=False, xlim=(0, 50), ylim=(-4, 4))
 axs[:, 0].format(facecolor="blush", edgecolor="gray7", linewidth=1)  # eauivalent
@@ -286,7 +286,7 @@ for ax in axs[1:, 1:]:
     ax.plot((state.rand(50, 5) - 0.5).cumsum(axis=0), cycle="Grays", lw=2)
 
 # Selected subplots in a complex grid
-fig = pplt.figure(refwidth=1, refnum=5, span=False)
+fig = uplt.figure(refwidth=1, refnum=5, span=False)
 axs = fig.subplots([[1, 1, 2], [3, 4, 2], [3, 4, 5]], hratios=[2.2, 1, 1])
 axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Complex SubplotGrid")
 axs[0].format(ec="black", fc="gray1", lw=1.4)
@@ -329,7 +329,7 @@ axs[0].plot((state.rand(50, 10) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Sample data
@@ -338,8 +338,8 @@ state = np.random.RandomState(51423)
 data = N + (state.rand(N, N) - 0.55).cumsum(axis=0).cumsum(axis=1)
 
 # Example plots
-cycle = pplt.Cycle("greys", left=0.2, N=5)
-fig, axs = pplt.subplots(ncols=2, nrows=2, figwidth=5, share=False)
+cycle = uplt.Cycle("greys", left=0.2, N=5)
+fig, axs = uplt.subplots(ncols=2, nrows=2, figwidth=5, share=False)
 axs[0].plot(data[:, :5], linewidth=2, linestyle="--", cycle=cycle)
 axs[1].scatter(data[:, :5], marker="x", cycle=cycle)
 axs[2].pcolormesh(data, cmap="greys")
@@ -427,10 +427,10 @@ fig.colorbar(m, loc="b", label="label")
 # used to succinctly and efficiently customize plots.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-fig, axs = pplt.subplots(ncols=2, nrows=2, refwidth=2, share=False)
+fig, axs = uplt.subplots(ncols=2, nrows=2, refwidth=2, share=False)
 state = np.random.RandomState(51423)
 N = 60
 x = np.linspace(1, 10, N)
@@ -455,7 +455,7 @@ axs.format(
     xlim=(1, 10),
     xticks=1,
     ylim=(-3, 3),
-    yticks=pplt.arange(-3, 3),
+    yticks=uplt.arange(-3, 3),
     yticklabels=("a", "bb", "c", "dd", "e", "ff", "g"),
     ytickloc="both",
     yticklabelloc="both",
@@ -492,26 +492,26 @@ axs.format(
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Update global settings in several different ways
-pplt.rc.metacolor = "gray6"
-pplt.rc.update({"fontname": "Source Sans Pro", "fontsize": 11})
-pplt.rc["figure.facecolor"] = "gray3"
-pplt.rc.axesfacecolor = "gray4"
-# pplt.rc.save()  # save the current settings to ~/.ultraplotrc
+uplt.rc.metacolor = "gray6"
+uplt.rc.update({"fontname": "Source Sans Pro", "fontsize": 11})
+uplt.rc["figure.facecolor"] = "gray3"
+uplt.rc.axesfacecolor = "gray4"
+# uplt.rc.save()  # save the current settings to ~/.ultraplotrc
 
 # Apply settings to figure with context()
-with pplt.rc.context({"suptitle.size": 13}, toplabelcolor="gray6", metawidth=1.5):
-    fig = pplt.figure(figwidth=6, sharey="limits", span=False)
+with uplt.rc.context({"suptitle.size": 13}, toplabelcolor="gray6", metawidth=1.5):
+    fig = uplt.figure(figwidth=6, sharey="limits", span=False)
     axs = fig.subplots(ncols=2)
 
 # Plot lines with a custom cycler
 N, M = 100, 7
 state = np.random.RandomState(51423)
 values = np.arange(1, M + 1)
-cycle = pplt.get_colors("grays", M - 1) + ["red"]
+cycle = uplt.get_colors("grays", M - 1) + ["red"]
 for i, ax in enumerate(axs):
     data = np.cumsum(state.rand(N, M) - 0.5, axis=0)
     lines = ax.plot(data, linewidth=3, cycle=cycle)
@@ -532,21 +532,21 @@ axs.format(
 )
 
 # Reset persistent modifications from head of cell
-pplt.rc.reset()
+uplt.rc.reset()
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
-# pplt.rc.style = 'style'  # set the style everywhere
+# uplt.rc.style = 'style'  # set the style everywhere
 
 # Sample data
 state = np.random.RandomState(51423)
 data = state.rand(10, 5)
 
 # Set up figure
-fig, axs = pplt.subplots(ncols=2, nrows=2, span=False, share=False)
+fig, axs = uplt.subplots(ncols=2, nrows=2, span=False, share=False)
 axs.format(suptitle="Stylesheets demo")
 styles = ("ggplot", "seaborn", "538", "bmh")
 

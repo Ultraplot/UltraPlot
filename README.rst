@@ -48,7 +48,7 @@ inside the ``ultraplot`` folder.
    :alt: docs
    :target: https://ultraplot.readthedocs.io/en/latest/?badge=latest
 
-.. |pypi| image:: https://img.shields.io/pypi/v/ultrplot?color=83%20197%2052
+.. |pypi| image:: https://img.shields.io/pypi/v/ultraplot?color=83%20197%2052
    :alt: pypi
    :target: https://pypi.org/project/ultraplot/
 

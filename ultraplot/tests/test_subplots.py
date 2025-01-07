@@ -2,7 +2,7 @@
 """
 Test subplot layout.
 """
-import numpy as np, ultraplot as pplt, pytest
+import numpy as np, ultraplot as uplt, pytest
 
 
 @pytest.mark.mpl_image_compare
@@ -10,7 +10,7 @@ def test_align_labels():
     """
     Test spanning and aligned labels.
     """
-    fig, axs = pplt.subplots(
+    fig, axs = uplt.subplots(
         [[2, 1, 4], [2, 3, 5]], refnum=2, refwidth=1.5, align=1, span=0
     )
     fig.format(xlabel="xlabel", ylabel="ylabel", abc="A.", abcloc="ul")
@@ -26,10 +26,10 @@ def test_share_all_basic():
     """
     # Simple example
     N = 10
-    fig, axs = pplt.subplots(nrows=1, ncols=2, refwidth=1.5, share="all")
+    fig, axs = uplt.subplots(nrows=1, ncols=2, refwidth=1.5, share="all")
     axs[0].plot(np.arange(N) * 1e2, np.arange(N) * 1e4)
     # Complex example
-    fig, axs = pplt.subplots(nrows=2, ncols=2, refwidth=1.5, share="all")
+    fig, axs = uplt.subplots(nrows=2, ncols=2, refwidth=1.5, share="all")
     axs[0].panel("b")
     pax = axs[0].panel("r")
     pax.format(ylabel="label")
@@ -42,7 +42,7 @@ def test_span_labels():
     """
     Rigorous tests of spanning and aligned labels feature.
     """
-    fig, axs = pplt.subplots([[1, 2, 4], [1, 3, 5]], refwidth=1.5, share=0, span=1)
+    fig, axs = uplt.subplots([[1, 2, 4], [1, 3, 5]], refwidth=1.5, share=0, span=1)
     fig.format(xlabel="xlabel", ylabel="ylabel", abc="A.", abcloc="ul")
     axs[1].format()  # xlabel='xlabel')
     axs[2].format()
@@ -54,7 +54,7 @@ def test_title_deflection():
     """
     Test the deflection of titles above and below panels.
     """
-    fig, ax = pplt.subplots()
+    fig, ax = uplt.subplots()
     # ax.format(abc='A.', title='Title', titleloc='left', titlepad=30)
     tax = ax.panel_axes("top")
     ax.format(titleabove=False)  # redirects to bottom
@@ -71,7 +71,7 @@ def test_complex_ticks():
     Normally title offset with these different tick arrangements is tricky
     but `_update_title_position` accounts for edge cases.
     """
-    fig, axs = pplt.subplots(ncols=2)
+    fig, axs = uplt.subplots(ncols=2)
     axs[0].format(
         xtickloc="both",
         xticklabelloc="top",
@@ -96,13 +96,13 @@ def test_both_ticklabels():
     """
     Test both tick labels.
     """
-    fig, ax = pplt.subplots()  # when both, have weird bug
+    fig, ax = uplt.subplots()  # when both, have weird bug
     ax.format(xticklabelloc="both", title="title", suptitle="Test")
-    fig, ax = pplt.subplots()  # when *just top*, bug disappears
+    fig, ax = uplt.subplots()  # when *just top*, bug disappears
     ax.format(xtickloc="top", xticklabelloc="top", title="title", suptitle="Test")
-    fig, ax = pplt.subplots()  # not sure here
+    fig, ax = uplt.subplots()  # not sure here
     ax.format(xtickloc="both", xticklabelloc="neither", suptitle="Test")
-    fig, ax = pplt.subplots()  # doesn't seem to change the title offset though
+    fig, ax = uplt.subplots()  # doesn't seem to change the title offset though
     ax.format(xtickloc="top", xticklabelloc="neither", suptitle="Test")
     return fig
 
@@ -111,12 +111,12 @@ def test_gridspec_copies():
     """
     Test whether gridspec copies work.
     """
-    fig1, ax = pplt.subplots(ncols=2)
+    fig1, ax = uplt.subplots(ncols=2)
     gs = fig1.gridspec.copy(left=5, wspace=0, right=5)
     return fig1
-    fig2 = pplt.figure()
+    fig2 = uplt.figure()
     fig2.add_subplots(gs)
-    fig = pplt.figure()
+    fig = uplt.figure()
     with pytest.raises(ValueError):
         fig.add_subplots(gs)  # should raise error
 
@@ -126,7 +126,7 @@ def test_aligned_outer_guides():
     """
     Test alignment adjustment.
     """
-    fig, ax = pplt.subplot()
+    fig, ax = uplt.subplot()
     h1 = ax.plot(np.arange(5), label="foo")
     h2 = ax.plot(np.arange(5) + 1, label="bar")
     h3 = ax.plot(np.arange(5) + 2, label="baz")
@@ -148,14 +148,14 @@ def test_reference_aspect():
     """
     # A simple test
     refwidth = 1.5
-    fig, axs = pplt.subplots(ncols=2, refwidth=refwidth)
+    fig, axs = uplt.subplots(ncols=2, refwidth=refwidth)
     fig.auto_layout()
 
     assert np.isclose(refwidth, axs[fig._refnum - 1]._get_size_inches()[0])
 
     # A test with funky layout
     refwidth = 1.5
-    fig, axs = pplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], ref=3, refwidth=refwidth)
+    fig, axs = uplt.subplots([[1, 1, 2, 2], [0, 3, 3, 0]], ref=3, refwidth=refwidth)
     axs[1].panel_axes("left")
     axs.format(xlocator=0.2, ylocator=0.2)
     fig.auto_layout()
@@ -163,7 +163,7 @@ def test_reference_aspect():
 
     # A test with panels
     refwidth = 2.0
-    fig, axs = pplt.subplots(
+    fig, axs = uplt.subplots(
         [[1, 1, 2], [3, 4, 5], [3, 4, 6]], hratios=(2, 1, 1), refwidth=refwidth
     )
     axs[2].panel_axes("right", width=0.5)

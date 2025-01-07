@@ -54,9 +54,9 @@
 # with the `space` or `margin` keywords.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig, axs = pplt.show_colors()
+fig, axs = uplt.show_colors()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -74,19 +74,19 @@ fig, axs = pplt.show_colors()
 # colorspace <ug_perceptual>` specified by the `space` keyword (default is ``'hcl'``).
 # The ``shift`` and ``scale`` functions shift or scale the
 # hue, saturation, or luminance by the input value -- for example,
-# ``pplt.scale_luminance('color', 1.2)`` makes ``'color'`` 20% brighter. These
+# ``uplt.scale_luminance('color', 1.2)`` makes ``'color'`` 20% brighter. These
 # are useful for creating color gradations outside of `~ultraplot.colors.Cycle`
 # or if you simply spot a color you like and want to make it a bit
 # brighter, less vibrant, etc.
 
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Figure
 state = np.random.RandomState(51423)
-fig, axs = pplt.subplots(ncols=3, axwidth=2)
+fig, axs = uplt.subplots(ncols=3, axwidth=2)
 axs.format(
     suptitle="Modifying colors",
     toplabels=("Shifted hue", "Scaled luminance", "Scaled saturation"),
@@ -97,23 +97,23 @@ axs.format(
 
 # Shifted hue
 N = 50
-fmt = pplt.SimpleFormatter()
+fmt = uplt.SimpleFormatter()
 marker = "o"
 for shift in (0, -60, 60):
     x, y = state.rand(2, N)
-    color = pplt.shift_hue("grass", shift)
+    color = uplt.shift_hue("grass", shift)
     axs[0].scatter(x, y, marker=marker, c=color, legend="b", label=fmt(shift))
 
 # Scaled luminance
 for scale in (0.2, 1, 2):
     x, y = state.rand(2, N)
-    color = pplt.scale_luminance("bright red", scale)
+    color = uplt.scale_luminance("bright red", scale)
     axs[1].scatter(x, y, marker=marker, c=color, legend="b", label=fmt(scale))
 
 # Scaled saturation
 for scale in (0, 1, 3):
     x, y = state.rand(2, N)
-    color = pplt.scale_saturation("ocean blue", scale)
+    color = uplt.scale_saturation("ocean blue", scale)
     axs[2].scatter(x, y, marker=marker, c=color, legend="b", label=fmt(scale))
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -134,16 +134,16 @@ for scale in (0, 1, 3):
 # `~ultraplot.utils.to_rgba` functions to retrieve the RGB or RGBA channel values.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 import numpy as np
 
 # Initial figure and random state
 state = np.random.RandomState(51423)
-fig = pplt.figure(refwidth=2.2, share=False)
+fig = uplt.figure(refwidth=2.2, share=False)
 
 # Drawing from colormaps
 name = "Deep"
-idxs = pplt.arange(0, 1, 0.2)
+idxs = uplt.arange(0, 1, 0.2)
 state.shuffle(idxs)
 ax = fig.subplot(121, grid=True, title=f"Drawing from colormap {name!r}")
 for idx in idxs:
@@ -156,7 +156,7 @@ for idx in idxs:
         legend="l",
         legend_kw={"ncols": 1},
     )
-ax.colorbar(pplt.Colormap(name), loc="l", locator="none")
+ax.colorbar(uplt.Colormap(name), loc="l", locator="none")
 
 # Drawing from color cycles
 name = "Qual1"
@@ -173,7 +173,7 @@ for idx in idxs:
         legend="r",
         legend_kw={"ncols": 1},
     )
-ax.colorbar(pplt.Colormap(name), loc="r", locator="none")
+ax.colorbar(uplt.Colormap(name), loc="r", locator="none")
 fig.format(
     abc="A.",
     titleloc="l",

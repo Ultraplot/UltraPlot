@@ -70,14 +70,14 @@
 # Gyre and sans-serif fonts packaged with ultraplot are shown below.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig, axs = pplt.show_fonts(family="sans-serif")
+fig, axs = uplt.show_fonts(family="sans-serif")
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig, axs = pplt.show_fonts(family="tex-gyre")
+fig, axs = uplt.show_fonts(family="tex-gyre")
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_fonts_math:
@@ -120,9 +120,9 @@ fig, axs = pplt.show_fonts(family="tex-gyre")
 #    in the text string will also use this font family.
 
 # %%
-import ultraplot as pplt
+import ultraplot as uplt
 
-fig, axs = pplt.show_fonts(family="sans-serif", math=True)
+fig, axs = uplt.show_fonts(family="sans-serif", math=True)
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_fonts_user:

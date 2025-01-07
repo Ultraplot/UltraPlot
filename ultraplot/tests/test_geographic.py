@@ -6,8 +6,8 @@ import pytest
 def test_geographic_single_projection():
     fig = plt.figure(refwidth=3)
     axs = fig.subplots(nrows=2, proj="robin", proj_kw={"lon_0": 180})
-    # proj = pplt.Proj('robin', lon_0=180)
-    # axs = pplt.subplots(nrows=2, proj=proj)  # equivalent to above
+    # proj = uplt.Proj('robin', lon_0=180)
+    # axs = uplt.subplots(nrows=2, proj=proj)  # equivalent to above
     axs.format(
         suptitle="Figure with single projection",
         land=True,
