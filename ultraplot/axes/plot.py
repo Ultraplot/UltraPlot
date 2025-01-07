@@ -4436,7 +4436,7 @@ class PlotAxes(base.Axes):
     @inputs._preprocess_or_redirect("x", "y", "z")
     @docstring._concatenate_inherited
     @docstring._snippet_manager
-    def tricontourf(self, args, **kwargs):
+    def tricontourf(self, *args, **kwargs):
         """
         %(plot.tricontourf)s
         """
