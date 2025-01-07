@@ -4472,11 +4472,21 @@ class PlotAxes(base.Axes):
     @inputs._preprocess_or_redirect("x", "y", "z")
     @docstring._concatenate_inherited
     @docstring._snippet_manager
-    def tripcolor(self, x, y, z, **kwargs):
+    def tripcolor(self, *args, **kwargs):
         """
         %(plot.tripcolor)s
         """
         kw = kwargs.copy()
+        if len(args) == 2:
+            # case where input is a tuple: (triangulation, z)
+            triangulation, z = args
+            x = triangulation.x
+            y = triangulation.y
+        elif len(args) >= 3:
+            x, y, z = args[:3]
+        else:
+            raise ValueError("Input not recognized; provide (triangulation, z) or x, y, z coordinates.")
+
         if x is None or y is None or z is None:
             raise ValueError("Three input arguments are required.")
         kw.update(_pop_props(kw, "collection"))
