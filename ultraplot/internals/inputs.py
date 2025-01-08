@@ -254,6 +254,41 @@ def _from_data(data, *args):
     return args
 
 
+def _parse_tricontourf_inputs(*args, **kwargs):
+    """
+    Parse inputs for the tricontourf function and return triangulation and z values.
+    Supports the following input patterns:
+      1. (triangulation, z)
+      2. (x, y, z)
+      3. (x, y, triangulation, z)
+    """
+    from matplotlib.tri import Triangulation
+
+    if len(args) == 2:
+        # (triangulation, z)
+        triangulation, z = args
+        if not isinstance(triangulation, Triangulation):
+            raise TypeError(
+                "First argument must be a Triangulation object when two arguments are provided."
+            )
+    elif len(args) == 3:
+        # (x, y, z)
+        x, y, z = args
+        triangulation = Triangulation(x, y, mask=kwargs.get("mask"))
+    elif len(args) == 4:
+        x, y, triangulation, z = args
+        if not isinstance(triangulation, Triangulation):
+            raise TypeError(
+                "Third argument must be a Triangulation object when four arguments are provided."
+            )
+    else:
+        raise ValueError(
+            "Invalid inputs. Provide (triangulation, z), (x, y, z), or (x, y, triangulation, z)."
+        )
+
+    return triangulation, z
+
+
 def _preprocess_or_redirect(*keys, keywords=None, allow_extra=True):
     """
     Redirect internal plotting calls to native matplotlib methods. Also convert

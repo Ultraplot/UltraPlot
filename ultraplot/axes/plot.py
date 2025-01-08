@@ -4401,7 +4401,6 @@ class PlotAxes(base.Axes):
         self._update_guide(m.lines, queue_colorbar=False, **guide_kw)  # use lines
         return m
 
-    @inputs._preprocess_or_redirect("x", "y", "z")
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tricontour(self, *args, **kwargs):
@@ -4409,31 +4408,31 @@ class PlotAxes(base.Axes):
         %(plot.tricontour)s
         """
         kw = kwargs.copy()
-        if len(args) == 2:
-            # case where input is a tuple: (triangulation, z)
-            triangulation, z = args
-            x = triangulation.x
-            y = triangulation.y
-        elif len(args) >= 3:
-            x, y, z = args[:3]
-        else:
-            raise ValueError("Input not recognized; provide (triangulation, z) or x, y, z coordinates.")
-        if x is None or y is None or z is None:
-            raise ValueError("Three input arguments are required.")
+
+        # Parse inputs to get triangulation and z
+        triangulation, z = _parse_tricontourf_inputs(*args, **kwargs)
+
+        # Update kwargs and handle cmap
         kw.update(_pop_props(kw, "collection"))
         kw = self._parse_cmap(
-            x, y, z, min_levels=1, plot_lines=True, plot_contours=True, **kw
+            triangulation.x, triangulation.y, z, min_levels=1, plot_lines=True, plot_contours=True, **kw
         )
+
+        # Handle labels and guide parameters
         labels_kw = _pop_params(kw, self._add_auto_labels)
         guide_kw = _pop_params(kw, self._update_guide)
+
+        # Extract and assign label
         label = kw.pop("label", None)
-        m = self._call_native("tricontour", x, y, z, **kw)
+        m = self._call_native("tricontour", triangulation, z, **kw)
         m._legend_label = label
+
+        # Add labels and update guide
         self._add_auto_labels(m, **labels_kw)
         self._update_guide(m, queue_colorbar=False, **guide_kw)
+
         return m
 
-    @inputs._preprocess_or_redirect("x", "y", "z")
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tricontourf(self, *args, **kwargs):
@@ -4441,35 +4440,37 @@ class PlotAxes(base.Axes):
         %(plot.tricontourf)s
         """
         kw = kwargs.copy()
-        if len(args) == 2:
-            # case where input is a tuple: (triangulation, z)
-            triangulation, z = args
-            x = triangulation.x
-            y = triangulation.y
-        elif len(args) >= 3:
-            x, y, z = args[:3]
-        else:
-            raise ValueError("Input not recognized; provide (triangulation, z) or x, y, z coordinates.")
 
-        if x is None or y is None or z is None:
-            raise ValueError("Three input arguments are required.")
+        # Parse inputs to get triangulation and z
+        triangulation, z = inputs._parse_tricontourf_inputs(*args, **kwargs)
+
+        # Update kwargs and handle contour parameters
         kw.update(_pop_props(kw, "collection"))
         contour_kw = _pop_kwargs(kw, "edgecolors", "linewidths", "linestyles")
-        kw = self._parse_cmap(x, y, z, plot_contours=True, **kw)
+        kw = self._parse_cmap(triangulation.x, triangulation.y, z, plot_contours=True, **kw)
+
+        # Handle patch edges, labels, and guide parameters
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         labels_kw = _pop_params(kw, self._add_auto_labels)
         guide_kw = _pop_params(kw, self._update_guide)
+
         label = kw.pop("label", None)
-        m = cm = self._call_native("tricontourf", x, y, z, **kw)
+
+        # Call native tricontourf function with triangulation
+        m = cm = self._call_native("tricontourf", triangulation, z, **kw)
         m._legend_label = label
-        self._fix_patch_edges(m, **edgefix_kw, **contour_kw)  # no-op if not contour_kw
+
+        # Fix edges and add labels
+        self._fix_patch_edges(m, **edgefix_kw, **contour_kw)  # No-op if not contour_kw
         if contour_kw or labels_kw:
-            cm = self._fix_contour_edges("tricontour", x, y, z, **kw, **contour_kw)
+            cm = self._fix_contour_edges("tricontour", triangulation.x, triangulation.y, z, **kw, **contour_kw)
+
+        # Add auto labels and update the guide
         self._add_auto_labels(m, cm, **labels_kw)
         self._update_guide(m, queue_colorbar=False, **guide_kw)
+
         return m
 
-    @inputs._preprocess_or_redirect("x", "y", "z")
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tripcolor(self, *args, **kwargs):
@@ -4477,28 +4478,28 @@ class PlotAxes(base.Axes):
         %(plot.tripcolor)s
         """
         kw = kwargs.copy()
-        if len(args) == 2:
-            # case where input is a tuple: (triangulation, z)
-            triangulation, z = args
-            x = triangulation.x
-            y = triangulation.y
-        elif len(args) >= 3:
-            x, y, z = args[:3]
-        else:
-            raise ValueError("Input not recognized; provide (triangulation, z) or x, y, z coordinates.")
 
-        if x is None or y is None or z is None:
-            raise ValueError("Three input arguments are required.")
+        # Parse inputs to get triangulation and z
+        triangulation, z = _parse_tricontourf_inputs(*args, **kwargs)
+
+        # Update kwargs and handle cmap
         kw.update(_pop_props(kw, "collection"))
-        kw = self._parse_cmap(x, y, z, **kw)
+        kw = self._parse_cmap(triangulation.x, triangulation.y, z, **kw)
+
+        # Handle patch edges, labels, and guide parameters
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         labels_kw = _pop_params(kw, self._add_auto_labels)
         guide_kw = _pop_params(kw, self._update_guide)
+
+        # Plot with the native tripcolor method
         with self._keep_grid_bools():
-            m = self._call_native("tripcolor", x, y, z, **kw)
+            m = self._call_native("tripcolor", triangulation, z, **kw)
+
+        # Fix edges and add labels
         self._fix_patch_edges(m, **edgefix_kw, **kw)
         self._add_auto_labels(m, **labels_kw)
         self._update_guide(m, queue_colorbar=False, **guide_kw)
+
         return m
 
     # WARNING: breaking change from native 'X'
