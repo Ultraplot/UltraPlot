@@ -4408,9 +4408,7 @@ class PlotAxes(base.Axes):
         %(plot.tricontour)s
         """
         kw = kwargs.copy()
-
-        # Parse inputs to get triangulation and z
-        triangulation, z = _parse_tricontourf_inputs(*args, **kwargs)
+        triangulation, z, args, kwargs = inputs._parse_triangulation_inputs(*args, **kwargs)
 
         # Update kwargs and handle cmap
         kw.update(_pop_props(kw, "collection"))
@@ -4440,9 +4438,7 @@ class PlotAxes(base.Axes):
         %(plot.tricontourf)s
         """
         kw = kwargs.copy()
-
-        # Parse inputs to get triangulation and z
-        triangulation, z = inputs._parse_tricontourf_inputs(*args, **kwargs)
+        triangulation, z, args, kw = inputs._parse_triangulation_inputs(*args, **kwargs)
 
         # Update kwargs and handle contour parameters
         kw.update(_pop_props(kw, "collection"))
@@ -4478,9 +4474,7 @@ class PlotAxes(base.Axes):
         %(plot.tripcolor)s
         """
         kw = kwargs.copy()
-
-        # Parse inputs to get triangulation and z
-        triangulation, z = _parse_tricontourf_inputs(*args, **kwargs)
+        triangulation, z, args, kw = inputs._parse_triangulation_inputs(*args, **kwargs)
 
         # Update kwargs and handle cmap
         kw.update(_pop_props(kw, "collection"))
