@@ -420,7 +420,7 @@ def test_triplot_variants(x, y, z, triangles, use_triangulation, use_datadict):
         ax.triplot(x, y, triangles, "ko-")  # Display cell edges
     else:
         if use_datadict:
-            df = pd.DataFrame({"x": x, "y": y, "z": z})
+            df = {"x": x, "y": y, "z": z}
             ax.triplot("x", "y", "ko-", data=df)
         else:
             ax.triplot(x, y, "ko-")  # Without specific triangles
