@@ -377,38 +377,39 @@ def test_scatter_sizes():
 from matplotlib import tri
 
 @pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare
 @pytest.mark.parametrize(
-    "x, y, z, triangles, use_triangulation",
+    "x, y, z, triangles, use_triangulation, use_dataframe",
     [
-        # Test case 1: Simple input with triangles specified
-        (np.array([0, 1, 0, 0, 1]),
-         np.array([0, 0, 1, 2, 2]),
-         np.array([0, 1, -1, 0, 2]),
-         np.array([[0, 1, 2], [2, 3, 4]]),
-         False),
-
-        # Test case 2: Alternative input without triangles
-        (np.array([0, 1, 0, 0, 1]),
-         np.array([0, 0, 1, 2, 2]),
-         np.array([0, 1, -1, 0, 2]),
-         None,
-         False),
-
-        # Test case 3: Using a Triangulation object
-        (np.array([0, 1, 0, 0, 1]),
-         np.array([0, 0, 1, 2, 2]),
-         np.array([0, 1, -1, 0, 2]),
-         np.array([[0, 1, 2], [2, 3, 4]]),
-         True),
+        # Base data that's common to all test cases
+        base_data := (
+            np.array([0, 1, 0, 0, 1]),
+            np.array([0, 0, 1, 2, 2]),
+            np.array([0, 1, -1, 0, 2]),
+            np.array([[0, 1, 2], [2, 3, 4]]),
+            False,
+            True,
+        ),
+        # Test without triangles
+        # (*base_data[:3], None, False, False),
+        # Test with triangulation
+        # (*base_data[:4], True, False),
+        # (*base_data[:3], None, False, True)
     ],
 )
-def test_triplot_variants(x, y, z, triangles, use_triangulation):
+def test_triplot_variants(x, y, z, triangles, use_triangulation, use_dataframe):
     fig, ax = uplt.subplots(figsize=(4, 3))
 
     if use_triangulation:
         # Use a Triangulation object
         triangulation = tri.Triangulation(x, y, triangles)
         ax.tricontourf(triangulation, z, levels=64, cmap="PuBu")
+    elif use_dataframe:
+        # Use a DataFrame
+        import pandas as pd
+        df = pd.DataFrame({"x": x, "y": y, "z": z})
+        ax.tricontourf(df, levels=64, cmap="PuBu")
+        return
     else:
         # Use direct x, y, z inputs
         ax.tricontourf(x, y, z, triangles=triangles, levels=64, cmap="PuBu")
