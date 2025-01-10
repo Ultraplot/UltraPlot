@@ -269,26 +269,15 @@ def _parse_triangulation_inputs(*args, **kwargs):
 
 def _parse_triangulation_with_preprocess(*keys, keywords=None, allow_extra=True):
     """
-    Combines _parse_triangulation with _preprocess_or_redirect for backwards compatibility
+    Combines _parse_triangulation with _preprocess_or_redirect for backwards compatibility.
     """
     def _decorator(func):
-        # First apply the preprocessing decorator
-        preprocessed_func = _preprocess_or_redirect(*keys, keywords=keywords, allow_extra=allow_extra)(func)
-
-        @functools.wraps(func)
+        @_preprocess_or_redirect(*keys, keywords=keywords, allow_extra=allow_extra)
         def wrapper(self, *args, **kwargs):
-            # If it's an internal call, bypass triangulation parsing
-            if getattr(self, "_internal_call", None):
-                return preprocessed_func(self, *args, **kwargs)
-
-            # Parse triangulation inputs
+            # Parse triangulation inputs after preprocessing
             triangulation, z, remaining_args, updated_kwargs = _parse_triangulation_inputs(*args, **kwargs)
-
-            # Combine the parsed inputs with any remaining args/kwargs
-            new_args = (triangulation, z) + tuple(remaining_args)
-
-            # Call the preprocessed function with the parsed inputs
-            return preprocessed_func(self, *new_args, **updated_kwargs)
+            # Call the original function with parsed inputs
+            return func(self, triangulation, z, *remaining_args, **updated_kwargs)
 
         return wrapper
     return _decorator
