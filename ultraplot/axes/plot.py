@@ -4431,6 +4431,8 @@ class PlotAxes(base.Axes):
 
         return m
 
+
+    @inputs._parse_triangulation_with_preprocess('x', 'y', 'z', keywords=['triangles'])
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tricontourf(self, *args, **kwargs):

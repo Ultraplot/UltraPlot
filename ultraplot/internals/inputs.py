@@ -254,6 +254,7 @@ def _from_data(data, *args):
     return args
 
 
+
 def _parse_triangulation_inputs(*args, **kwargs):
     """
     Parse inputs using Matplotlib's `get_from_args_and_kwargs` method.
@@ -266,6 +267,31 @@ def _parse_triangulation_inputs(*args, **kwargs):
     z = args[0]  # Assume the first remaining argument is z
     return triangulation, z, args[1:], kwargs
 
+def _parse_triangulation_with_preprocess(*keys, keywords=None, allow_extra=True):
+    """
+    Combines _parse_triangulation with _preprocess_or_redirect for backwards compatibility
+    """
+    def _decorator(func):
+        # First apply the preprocessing decorator
+        preprocessed_func = _preprocess_or_redirect(*keys, keywords=keywords, allow_extra=allow_extra)(func)
+
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # If it's an internal call, bypass triangulation parsing
+            if getattr(self, "_internal_call", None):
+                return preprocessed_func(self, *args, **kwargs)
+
+            # Parse triangulation inputs
+            triangulation, z, remaining_args, updated_kwargs = _parse_triangulation_inputs(*args, **kwargs)
+
+            # Combine the parsed inputs with any remaining args/kwargs
+            new_args = (triangulation, z) + tuple(remaining_args)
+
+            # Call the preprocessed function with the parsed inputs
+            return preprocessed_func(self, *new_args, **updated_kwargs)
+
+        return wrapper
+    return _decorator
 
 def _preprocess_or_redirect(*keys, keywords=None, allow_extra=True):
     """
