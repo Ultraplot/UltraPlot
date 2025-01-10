@@ -4401,6 +4401,8 @@ class PlotAxes(base.Axes):
         self._update_guide(m.lines, queue_colorbar=False, **guide_kw)  # use lines
         return m
 
+
+    @inputs._parse_triangulation_with_preprocess('x', 'y', 'z', keywords=['triangles'])
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tricontour(self, *args, **kwargs):
@@ -4469,6 +4471,8 @@ class PlotAxes(base.Axes):
 
         return m
 
+
+    @inputs._parse_triangulation_with_preprocess('x', 'y', 'z', keywords=['triangles'])
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tripcolor(self, *args, **kwargs):
