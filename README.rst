@@ -4,7 +4,9 @@
 |build-status| |docs| |pypi| |code-style| |pr-welcome| |license|
 
 A succinct `matplotlib <https://matplotlib.org/>`__ wrapper for making beautiful,
-publication-quality graphics. It builds upon ProPlot and transports it into the modern age (supporting mpl 3.9.0+).
+publication-quality graphics. It builds upon ProPlot_ and transports it into the modern age (supporting mpl 3.9.0+).
+
+.. _ProPlot: https://github.com/proplot-dev/
 
 Why UltraPlot? | Write Less, Create More
 =========================================
@@ -61,8 +63,3 @@ inside the ``ultraplot`` folder.
 .. |license| image:: https://img.shields.io/github/license/ultraplot/ultraplot.svg
    :alt: license
    :target: LICENSE.txt
-
-
-DOI
-=====
-Proplot's DOI: https://zenodo.org/records/5602155
