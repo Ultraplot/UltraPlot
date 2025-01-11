@@ -6,6 +6,12 @@
 A succinct `matplotlib <https://matplotlib.org/>`__ wrapper for making beautiful,
 publication-quality graphics. It builds upon ProPlot and transports it into the modern age (supporting mpl 3.9.0+).
 
+Why UltraPlot? | Write Less, Create More
+=========================================
+.. image:: ci/whyUltraPlot.svg
+    :width: 100%
+    :alt: Comparison of ProPlot and UltraPlot
+    :align: center
 
 Documentation
 =============
