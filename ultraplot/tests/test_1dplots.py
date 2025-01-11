@@ -411,7 +411,7 @@ def test_triplot_variants(x, y, z, triangles, use_triangulation, use_datadict):
         ax.tricontourf(triangulation, z, levels=64, cmap="PuBu")
     elif use_datadict:
         ax.tricontourf("x", "y", "z", data = df)
-        return
+        return fig
     else:
         # Use direct x, y, z inputs
         ax.tricontourf(x, y, z, triangles=triangles, levels=64, cmap="PuBu")
