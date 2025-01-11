@@ -125,10 +125,8 @@ def test_contour_labels():
     ax.clabel(m, colors="black", fontsize="large")  # looks fine without this
 
     import matplotlib.patheffects as pe
-    m.set_path_effects([
-        pe.Stroke(linewidth=1.5, foreground="k"),
-        pe.Normal()
-    ])
+
+    m.set_path_effects([pe.Stroke(linewidth=1.5, foreground="k"), pe.Normal()])
     return fig
 
 

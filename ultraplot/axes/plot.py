@@ -1808,9 +1808,10 @@ class PlotAxes(base.Axes):
                 obj.set_edgecolor("face")
 
                 import matplotlib.patheffects as pe
-                obj.set_path_effects([
-                    pe.Stroke(linewidth=linewidth, linestyle="-", foreground="face")
-                ])
+
+                obj.set_path_effects(
+                    [pe.Stroke(linewidth=linewidth, linestyle="-", foreground="face")]
+                )
         elif isinstance(obj, mcollections.Collection):  # e.g. QuadMesh, PolyCollection
             obj.set_linewidth(linewidth)
             obj.set_edgecolor("face")
