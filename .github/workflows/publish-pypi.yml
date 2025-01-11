@@ -27,7 +27,6 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish-prod:
-    needs: publish-test
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     permissions:
