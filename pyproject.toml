@@ -26,8 +26,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -43,8 +41,8 @@ dynamic = ["version"]
 
 [project.urls]
 "Documentation" = "https://ultraplot.readthedocs.io"
-"Issue Tracker" = "https://github.com/ultraplot-dev/ultraplot/issues"
-"Source Code" = "https://github.com/ultraplot-dev/ultraplot"
+"Issue Tracker" = "https://github.com/ultraplot/ultraplot/issues"
+"Source Code" = "https://github.com/ultraplot/ultraplot"
 
 [project.entry-points."setuptools.finalize_distribution_options"]
 setuptools_scm = "setuptools_scm._integration.setuptools:infer_version"
