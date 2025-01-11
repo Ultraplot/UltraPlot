@@ -1467,8 +1467,7 @@ class PlotAxes(base.Axes):
         on unfilled contour object (otherwise errors crop up).
         """
         # Parse input args
-        zorder = max((h.get_zorder() for h in obj.collections), default=3)
-        zorder = max(3, zorder + 1)
+        zorder = max(3, obj.get_zorder() + 1)
         kwargs.setdefault("zorder", zorder)
         colors = _not_none(c=c, color=color, colors=colors)
         fontsize = _not_none(size=size, fontsize=fontsize, default=rc["font.smallsize"])
@@ -1808,10 +1807,11 @@ class PlotAxes(base.Axes):
                 obj.set_linewidth(linewidth)
                 obj.set_edgecolor("face")
 
-                for contour in obj.collections:
-                    contour.set_linestyle("-")
-                    contour.set_linewidth(linewidth)
-                    contour.set_edgecolor("face")
+                import matplotlib.patheffects as pe
+
+                obj.set_path_effects(
+                    [pe.Stroke(linewidth=linewidth, linestyle="-", foreground="face")]
+                )
         elif isinstance(obj, mcollections.Collection):  # e.g. QuadMesh, PolyCollection
             obj.set_linewidth(linewidth)
             obj.set_edgecolor("face")

@@ -28,6 +28,8 @@ def test_ignored_keywords():
             subplot_kw={"proj": "cart"},
             subplotpars={"left": 0.2},
         )
+    # only capture ultraplot warnings not general mpl warnings, e.g. deprecation warnings
+    record = [r for r in record if "UltraPlotWarning" in str(r)]
     assert len(record) == 3
     with warnings.catch_warnings(record=True) as record:
         fig.subplots_adjust(left=0.2)

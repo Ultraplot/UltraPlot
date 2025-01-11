@@ -123,9 +123,10 @@ def test_contour_labels():
     ax = axs[1]
     m = ax.contourf(data)
     ax.clabel(m, colors="black", fontsize="large")  # looks fine without this
-    for o in m.collections:
-        o.set_linewidth(1.5)
-        o.set_edgecolor("k")
+
+    import matplotlib.patheffects as pe
+
+    m.set_path_effects([pe.Stroke(linewidth=1.5, foreground="k"), pe.Normal()])
     return fig
 
 
