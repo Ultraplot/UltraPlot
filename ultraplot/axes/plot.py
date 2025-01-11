@@ -1821,7 +1821,9 @@ class PlotAxes(base.Axes):
             for element in obj:
                 PlotAxes._fix_patch_edges(element, edgefix=edgefix)
         else:
-            warnings._warn_ultraplot(f"Unexpected obj {obj} passed to _fix_patch_edges.")
+            warnings._warn_ultraplot(
+                f"Unexpected obj {obj} passed to _fix_patch_edges."
+            )
 
     @contextlib.contextmanager
     def _keep_grid_bools(self):
@@ -3470,7 +3472,15 @@ class PlotAxes(base.Axes):
                     and test.shape[1] in (3, 4)
                 ):
                     infer_rgb = False
-            cc, kw = self._parse_color(xs, ys, cc, inbounds=inbounds, apply_cycle=False, infer_rgb=infer_rgb, **kw)
+            cc, kw = self._parse_color(
+                xs,
+                ys,
+                cc,
+                inbounds=inbounds,
+                apply_cycle=False,
+                infer_rgb=infer_rgb,
+                **kw,
+            )
 
         guide_kw = _pop_params(kw, self._update_guide)
         objs = []
@@ -4400,8 +4410,7 @@ class PlotAxes(base.Axes):
         self._update_guide(m.lines, queue_colorbar=False, **guide_kw)  # use lines
         return m
 
-
-    @inputs._parse_triangulation_with_preprocess('x', 'y', 'z', keywords=['triangles'])
+    @inputs._parse_triangulation_with_preprocess("x", "y", "z", keywords=["triangles"])
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tricontour(self, *args, **kwargs):
@@ -4409,12 +4418,20 @@ class PlotAxes(base.Axes):
         %(plot.tricontour)s
         """
         kw = kwargs.copy()
-        triangulation, z, args, kwargs = inputs._parse_triangulation_inputs(*args, **kwargs)
+        triangulation, z, args, kwargs = inputs._parse_triangulation_inputs(
+            *args, **kwargs
+        )
 
         # Update kwargs and handle cmap
         kw.update(_pop_props(kw, "collection"))
         kw = self._parse_cmap(
-            triangulation.x, triangulation.y, z, min_levels=1, plot_lines=True, plot_contours=True, **kw
+            triangulation.x,
+            triangulation.y,
+            z,
+            min_levels=1,
+            plot_lines=True,
+            plot_contours=True,
+            **kw,
         )
 
         # Handle labels and guide parameters
@@ -4432,8 +4449,7 @@ class PlotAxes(base.Axes):
 
         return m
 
-
-    @inputs._parse_triangulation_with_preprocess('x', 'y', 'z', keywords=['triangles'])
+    @inputs._parse_triangulation_with_preprocess("x", "y", "z", keywords=["triangles"])
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tricontourf(self, *args, **kwargs):
@@ -4446,7 +4462,9 @@ class PlotAxes(base.Axes):
         # Update kwargs and handle contour parameters
         kw.update(_pop_props(kw, "collection"))
         contour_kw = _pop_kwargs(kw, "edgecolors", "linewidths", "linestyles")
-        kw = self._parse_cmap(triangulation.x, triangulation.y, z, plot_contours=True, **kw)
+        kw = self._parse_cmap(
+            triangulation.x, triangulation.y, z, plot_contours=True, **kw
+        )
 
         # Handle patch edges, labels, and guide parameters
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
@@ -4462,7 +4480,9 @@ class PlotAxes(base.Axes):
         # Fix edges and add labels
         self._fix_patch_edges(m, **edgefix_kw, **contour_kw)  # No-op if not contour_kw
         if contour_kw or labels_kw:
-            cm = self._fix_contour_edges("tricontour", triangulation.x, triangulation.y, z, **kw, **contour_kw)
+            cm = self._fix_contour_edges(
+                "tricontour", triangulation.x, triangulation.y, z, **kw, **contour_kw
+            )
 
         # Add auto labels and update the guide
         self._add_auto_labels(m, cm, **labels_kw)
@@ -4470,8 +4490,7 @@ class PlotAxes(base.Axes):
 
         return m
 
-
-    @inputs._parse_triangulation_with_preprocess('x', 'y', 'z', keywords=['triangles'])
+    @inputs._parse_triangulation_with_preprocess("x", "y", "z", keywords=["triangles"])
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def tripcolor(self, *args, **kwargs):
