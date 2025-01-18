@@ -2477,52 +2477,43 @@ class PlotAxes(base.Axes):
             Whether to simply return the property cycle or apply it. The cycle is
             only applied (and therefore reset) if it differs from the current one.
         """
+        cycle_kw = cycle_kw or {}
+        cycle_manually = cycle_manually or {}
+        cycle_kw.setdefault("N", ncycle)
 
-        # Create/update cycler only if needed
+        # Match-case for cycle resolution
+        match cycle:
+            case None if not cycle_kw:
+                resolved_cycle = None
+            case True:
+                resolved_cycle = constructor.Cycle(rc["axes.prop_cycle"])
+            case str() if cycle.lower() == "none":
+                resolved_cycle = None
+            case str() | int():
+                resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
+            case _:
+                resolved_cycle = None
 
-        if cycle is not None or cycle_kw or not hasattr(self, "_current_cycler"):
-            cycle_kw = cycle_kw or {}
-            if ncycle != 1:
-                cycle_kw.setdefault("N", ncycle)
-            # Convert string or list to Cycle object
-            if isinstance(cycle, (str, list)):
-                cycle = constructor.Cycle(cycle, **cycle_kw)
-            elif cycle is True:
-                cycle = constructor.Cycle(rc["axes.prop_cycle"], **cycle_kw)
-            elif cycle is False:
-                cycle = None
-            elif cycle is not None and not isinstance(cycle, constructor.Cycle):
-                cycle = constructor.Cycle(cycle, **cycle_kw)
+        # Ignore cycle for single-column plotting
+        resolved_cycle = None if ncycle == 1 else resolved_cycle
 
-            if not hasattr(self, "_current_cycler"):
-                self._current_cycler = cycle
-
-            # Update the current cycler if it changed
-            if cycle != self._current_cycler:
-                self._current_cycle = cycle
-                if not return_cycle and self._current_cycler != self._active_cycle:
-                    self.set_prop_cycle(cycle)
-
-
-        # Use existing cycler if none specified
-        if cycle is None:
-            cycle = self._current_cycler
-
-        # Get next set of properties
-        if cycle is not None:
-            props = cycle.get_next()
-            if cycle_manually:
-                mapped_props = {}
-                for prop, value in props.items():
-                    if mapped_key := cycle_manually.get(prop):
-                        mapped_props[mapped_key] = value
-                for prop in props:
-                    if prop in cycle_manually:
-                        kwargs.pop(prop, None)
-                kwargs.update(mapped_props)
-
+        # Return or apply cycle
         if return_cycle:
-            return cycle, kwargs
+            return resolved_cycle, kwargs
+
+        if resolved_cycle and resolved_cycle != self._active_cycle:
+            self.set_prop_cycle(resolved_cycle)
+
+        # Apply manual cycle properties
+        if cycle_manually:
+            current_prop = self._get_lines._cycler_items[self._get_lines._idx]
+            self._get_lines._idx = (self._get_lines._idx + 1) % len(
+                self._get_lines._cycler_items
+            )
+            for prop, key in cycle_manually.items():
+                if kwargs.get(key) is None and prop in current_prop:
+                    value = current_prop[prop]
+                    kwargs[key] = pcolors.to_hex(value) if key == "c" else value
         return kwargs
 
     def _parse_level_lim(
@@ -3458,8 +3449,6 @@ class PlotAxes(base.Axes):
         ys, kw = inputs._dist_reduce(ys, **kw)
         ss, kw = self._parse_markersize(ss, **kw)  # parse 's'
 
-
-
         # Only parse color if explicitly provided
         infer_rgb = True
         if cc is not None:
@@ -3480,15 +3469,16 @@ class PlotAxes(base.Axes):
                 infer_rgb=infer_rgb,
                 **kw,
             )
-        # Move _parse_cycle before _parse_color
+        # Create the cycler object by manually cycling and sanitzing the inputs
         kw = self._parse_cycle(
-                xs.shape[1] if xs.ndim > 1 else 1, cycle_manually=cycle_manually, **kw
-            )
+            xs.shape[1] if xs.ndim > 1 else 1, cycle_manually=cycle_manually, **kw
+        )
 
         guide_kw = _pop_params(kw, self._update_guide)
         objs = []
         for _, n, x, y, s, c, kw in self._iter_arg_cols(xs, ys, ss, cc, **kw):
-            # Don't set 'c' explicitly unless it was provided
+            # Cycle s and c as they are in cycle_manually
+            # Note: they could be None
             kw["s"], kw["c"] = s, c
             kw = self._parse_cycle(n, cycle_manually=cycle_manually, **kw)
             *eb, kw = self._add_error_bars(x, y, vert=vert, default_barstds=True, **kw)
@@ -4030,6 +4020,7 @@ class PlotAxes(base.Axes):
         bodies = artists.pop("bodies", ())  # should be no other entries
         if bodies:
             bodies = cbook.silent_list(type(bodies[0]).__name__, bodies)
+
         for i, body in enumerate(bodies):
             body.set_alpha(1.0)  # change default to 1.0
             if fillcolor[i] is not None:
