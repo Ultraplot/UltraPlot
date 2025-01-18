@@ -2450,9 +2450,15 @@ class PlotAxes(base.Axes):
         return kwargs
 
     def _parse_cycle(
-            self, ncycle=None, *, cycle=None, cycle_kw=None,
-            cycle_manually=None, return_cycle=False, **kwargs
-        ):
+        self,
+        ncycle=None,
+        *,
+        cycle=None,
+        cycle_kw=None,
+        cycle_manually=None,
+        return_cycle=False,
+        **kwargs,
+    ):
         """
         Parse property cycle-related arguments.
 
@@ -2477,18 +2483,18 @@ class PlotAxes(base.Axes):
         if cycle is not None or cycle_kw:
             cycle_kw = cycle_kw or {}
             if ncycle != 1:  # ignore for column-by-column plotting commands
-                cycle_kw.setdefault('N', ncycle)  # if None then filled in Colormap()
-            if isinstance(cycle, str) and cycle.lower() == 'none':
+                cycle_kw.setdefault("N", ncycle)  # if None then filled in Colormap()
+            if isinstance(cycle, str) and cycle.lower() == "none":
                 cycle = False
             if not cycle:
                 args = ()
             elif cycle is True:  # consistency with 'False' ('reactivate' the cycler)
-                args = (rc['axes.prop_cycle'],)
+                args = (rc["axes.prop_cycle"],)
             else:
                 args = (cycle,)
             cycle = constructor.Cycle(*args, **cycle_kw)
             with warnings.catch_warnings():  # hide 'elementwise-comparison failed'
-                warnings.simplefilter('ignore', FutureWarning)
+                warnings.simplefilter("ignore", FutureWarning)
                 if return_cycle:
                     pass
                 elif cycle != self._active_cycle:
@@ -2500,14 +2506,16 @@ class PlotAxes(base.Axes):
         parser = self._get_lines  # the _process_plot_var_args instance
         props = {}  # which keys to apply from property cycler
         for prop, key in cycle_manually.items():
-            if kwargs.get(key, None) is None and any(prop in item for item in parser._cycler_items):
+            if kwargs.get(key, None) is None and any(
+                prop in item for item in parser._cycler_items
+            ):
                 props[prop] = key
         if props:
             dict_ = parser._cycler_items[parser._idx]
             parser._idx = (parser._idx + 1) % len(parser._cycler_items)
             for prop, key in props.items():
                 value = dict_[prop]
-                if key == 'c':  # special case: scatter() color must be converted to hex
+                if key == "c":  # special case: scatter() color must be converted to hex
                     value = pcolors.to_hex(value)
                 kwargs[key] = value
 
@@ -3478,7 +3486,7 @@ class PlotAxes(base.Axes):
         for _, n, x, y, s, c, kw in self._iter_arg_cols(xs, ys, ss, cc, **kw):
             # Don't set 'c' explicitly unless it was provided
             kw["s"], kw["c"] = s, c
-            kw = self._parse_cycle(n, cycle_manually= cycle_manually, **kw)
+            kw = self._parse_cycle(n, cycle_manually=cycle_manually, **kw)
             *eb, kw = self._add_error_bars(x, y, vert=vert, default_barstds=True, **kw)
             *es, kw = self._add_error_shading(x, y, vert=vert, color_key="c", **kw)
             if not vert:
