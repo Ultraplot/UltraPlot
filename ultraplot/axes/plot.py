@@ -2477,52 +2477,53 @@ class PlotAxes(base.Axes):
             Whether to simply return the property cycle or apply it. The cycle is
             only applied (and therefore reset) if it differs from the current one.
         """
-        # Create the property cycler and update it if necessary
-        # NOTE: Matplotlib Cycler() objects have built-in __eq__ operator
-        # so really easy to check if the cycler has changed!
-        if cycle is not None or cycle_kw:
+
+        # Create/update cycler only if needed
+
+        if cycle is not None or cycle_kw or not hasattr(self, "_current_cycler"):
             cycle_kw = cycle_kw or {}
-            if ncycle != 1:  # ignore for column-by-column plotting commands
-                cycle_kw.setdefault("N", ncycle)  # if None then filled in Colormap()
-            if isinstance(cycle, str) and cycle.lower() == "none":
-                cycle = False
-            if not cycle:
-                args = ()
-            elif cycle is True:  # consistency with 'False' ('reactivate' the cycler)
-                args = (rc["axes.prop_cycle"],)
-            else:
-                args = (cycle,)
-            cycle = constructor.Cycle(*args, **cycle_kw)
-            with warnings.catch_warnings():  # hide 'elementwise-comparison failed'
-                warnings.simplefilter("ignore", FutureWarning)
-                if return_cycle:
-                    pass
-                elif cycle != self._active_cycle:
+            if ncycle != 1:
+                cycle_kw.setdefault("N", ncycle)
+            # Convert string or list to Cycle object
+            if isinstance(cycle, (str, list)):
+                cycle = constructor.Cycle(cycle, **cycle_kw)
+            elif cycle is True:
+                cycle = constructor.Cycle(rc["axes.prop_cycle"], **cycle_kw)
+            elif cycle is False:
+                cycle = None
+            elif cycle is not None and not isinstance(cycle, constructor.Cycle):
+                cycle = constructor.Cycle(cycle, **cycle_kw)
+
+            if not hasattr(self, "_current_cycler"):
+                self._current_cycler = cycle
+
+            # Update the current cycler if it changed
+            if cycle != self._current_cycler:
+                self._current_cycle = cycle
+                if not return_cycle and self._current_cycler != self._active_cycle:
                     self.set_prop_cycle(cycle)
 
-        # Manually extract and apply settings to outgoing keyword arguments
-        # if native matplotlib function does not include desired properties
-        cycle_manually = cycle_manually or {}
-        parser = self._get_lines  # the _process_plot_var_args instance
-        props = {}  # which keys to apply from property cycler
-        for prop, key in cycle_manually.items():
-            if kwargs.get(key, None) is None and any(
-                prop in item for item in parser._cycler_items
-            ):
-                props[prop] = key
-        if props:
-            dict_ = parser._cycler_items[parser._idx]
-            parser._idx = (parser._idx + 1) % len(parser._cycler_items)
-            for prop, key in props.items():
-                value = dict_[prop]
-                if key == "c":  # special case: scatter() color must be converted to hex
-                    value = pcolors.to_hex(value)
-                kwargs[key] = value
+
+        # Use existing cycler if none specified
+        if cycle is None:
+            cycle = self._current_cycler
+
+        # Get next set of properties
+        if cycle is not None:
+            props = cycle.get_next()
+            if cycle_manually:
+                mapped_props = {}
+                for prop, value in props.items():
+                    if mapped_key := cycle_manually.get(prop):
+                        mapped_props[mapped_key] = value
+                for prop in props:
+                    if prop in cycle_manually:
+                        kwargs.pop(prop, None)
+                kwargs.update(mapped_props)
 
         if return_cycle:
-            return cycle, kwargs  # needed for stem() to apply in a context()
-        else:
-            return kwargs
+            return cycle, kwargs
+        return kwargs
 
     def _parse_level_lim(
         self,
@@ -3457,8 +3458,7 @@ class PlotAxes(base.Axes):
         ys, kw = inputs._dist_reduce(ys, **kw)
         ss, kw = self._parse_markersize(ss, **kw)  # parse 's'
 
-        # Move _parse_cycle before _parse_color
-        kw = self._parse_cycle(xs.shape[1] if xs.ndim > 1 else 1, **kw)
+
 
         # Only parse color if explicitly provided
         infer_rgb = True
@@ -3479,6 +3479,10 @@ class PlotAxes(base.Axes):
                 apply_cycle=False,
                 infer_rgb=infer_rgb,
                 **kw,
+            )
+        # Move _parse_cycle before _parse_color
+        kw = self._parse_cycle(
+                xs.shape[1] if xs.ndim > 1 else 1, cycle_manually=cycle_manually, **kw
             )
 
         guide_kw = _pop_params(kw, self._update_guide)
