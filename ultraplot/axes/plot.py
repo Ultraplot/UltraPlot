@@ -1804,10 +1804,11 @@ class PlotAxes(base.Axes):
         if isinstance(obj, mcontour.ContourSet):
             if obj.filled:
                 from matplotlib import patheffects as pe
+
                 obj.set_linestyle("-")
                 obj.set_linewidth(linewidth)
                 obj.set_edgecolor("face")
-                obj.set(path_effects = [pe.Normal(), pe.withStroke(linewidth=linewidth)])
+                obj.set(path_effects=[pe.Normal(), pe.withStroke(linewidth=linewidth)])
         elif isinstance(obj, mcollections.Collection):  # e.g. QuadMesh, PolyCollection
             obj.set_linewidth(linewidth)
             obj.set_edgecolor("face")
