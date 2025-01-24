@@ -2507,13 +2507,12 @@ class PlotAxes(base.Axes):
         # Apply manual cycle properties
         if cycle_manually:
             current_prop = self._get_lines._cycler_items[self._get_lines._idx]
-            self._get_lines._idx = (self._get_lines._idx + 1) % len(
-                self._get_lines._cycler_items
-            )
+            self._get_lines._idx = (self._get_lines._idx + 1) % len(self._active_cycle)
             for prop, key in cycle_manually.items():
                 if kwargs.get(key) is None and prop in current_prop:
                     value = current_prop[prop]
-                    kwargs[key] = pcolors.to_hex(value) if key == "c" else value
+                    kwargs[key] = pcolors.to_rgba(value) if key == "c" else value
+
         return kwargs
 
     def _parse_level_lim(
@@ -3470,10 +3469,6 @@ class PlotAxes(base.Axes):
                 **kw,
             )
         # Create the cycler object by manually cycling and sanitzing the inputs
-        kw = self._parse_cycle(
-            xs.shape[1] if xs.ndim > 1 else 1, cycle_manually=cycle_manually, **kw
-        )
-
         guide_kw = _pop_params(kw, self._update_guide)
         objs = []
         for _, n, x, y, s, c, kw in self._iter_arg_cols(xs, ys, ss, cc, **kw):
