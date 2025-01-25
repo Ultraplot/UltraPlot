@@ -75,3 +75,25 @@ def test_cycler_edge_cases():
     props2 = cycle.get_next()
     assert props1["marker"] == props2["marker"]  # marker should stay same
     assert props1["color"] != props2["color"]  # color should cycle
+
+
+# see https://github.com/matplotlib/matplotlib/pull/29469
+@pytest.mark.skip("Manual cyling not implemented yet in mpl")
+def test_manual_cycle():
+    cycle = uplt.Cycle(
+        ["red", "green", "black"],
+        marker=["X", "o"],
+        sizes=[20, 100],
+        edgecolors=["r", "k"],
+    )
+    fig, ax = uplt.subplots()
+    ax.set_prop_cycle(cycle)
+    ax.scatter([1], [1])
+
+    ax = ax[0]  # force to get single axis rather than GridSpec
+    parser = ax._get_lines
+    current_pos = parser._idx
+    cycled_pos = (current_pos + 1) % len(parser._cycler_items)
+    props = ax._active_cycle.get_next()
+    assert cycled_pos == parser._idx
+    assert props == parser._cycler_items[parser._idx]
