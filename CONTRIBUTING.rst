@@ -210,7 +210,7 @@ developers and contributors can then review your code and offer suggestions.
 
 Release procedure
 =================
-Ultraplot follows EffVer (Effectual Versioning). Changes to the version number ``X.Y.Z`` will reflect the effect on users: the major version ``X`` will be incremented for changes that require user attention (like breaking changes), the minor version ``Y`` will be incremented for safe feature additions, and the patch number ``Z ` will be incremented for changes users can safely ignore.
+Ultraplot follows EffVer (Effectual Versioning). Changes to the version number ``X.Y.Z`` will reflect the effect on users: the major version ``X`` will be incremented for changes that require user attention (like breaking changes), the minor version ``Y`` will be incremented for safe feature additions, and the patch number ``Z`` will be incremented for changes users can safely ignore.
 
 While version 1.0 has been released, we are still in the process of ensuring proplot is fully replaced by ultraplot as we continue development under the ultraplot name. During this transition, the versioning scheme reflects both our commitment to stable APIs and the ongoing work to complete this transition. The minor version number is incremented when changes require user attention (like deprecations or style changes), and the patch number is incremented for additions and fixes that users can safely adopt.
 
