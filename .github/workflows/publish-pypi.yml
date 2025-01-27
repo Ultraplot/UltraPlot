@@ -7,6 +7,8 @@ on:
 
 jobs:
   publish-pypi-test:
+    name: Publish to TestPyPI
+    environment: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     permissions:
@@ -27,6 +29,8 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish-prod:
+    name: Publish to PyPI
+    environment: prod
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     permissions:
