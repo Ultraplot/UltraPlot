@@ -210,16 +210,9 @@ developers and contributors can then review your code and offer suggestions.
 
 Release procedure
 =================
+Ultraplot follows EffVer (Effectual Versioning). Changes to the version number ``X.Y.Z`` will reflect the effect on users: the major version ``X`` will be incremented for changes that require user attention (like breaking changes), the minor version ``Y`` will be incremented for safe feature additions, and the patch number ``Z ` will be incremented for changes users can safely ignore.
 
-Once version 1.0 is released, ultraplot will follow semantic versioning. That is, given
-a version number ``X.Y.Z``, the major version ``X`` will be incremented when something
-is deprecated, the minor version ``Y`` will be incremented when features are added,
-and the patch number ``Z`` will be incremented when bugs are fixed.
-
-Currently, ultraplot's major version number is ``0``, reflecting the fact that the API
-is new and subject to rapid changes. Similar to semantic versioning, the minor version
-number is incremented when something is deprecated or the style is changed, and the
-patch number is incremented only when features are added or bugs are fixed.
+While version 1.0 has been released, we are still in the process of ensuring proplot is fully replaced by ultraplot as we continue development under the ultraplot name. During this transition, the versioning scheme reflects both our commitment to stable APIs and the ongoing work to complete this transition. The minor version number is incremented when changes require user attention (like deprecations or style changes), and the patch number is incremented for additions and fixes that users can safely adopt.
 
 For now, `Casper van Eltern <https://github.com/cvanelteren>`__ is the only one who can
 publish releases on PyPi, but this will change in the future. Releases should
