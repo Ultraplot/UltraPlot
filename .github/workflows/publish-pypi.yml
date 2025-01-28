@@ -7,6 +7,10 @@ on:
 
 jobs:
   publish-pypi-test:
+    name: Publish to TestPyPI
+    environment:
+      name: test
+      url: https://test.pypi.org/project/ultraplot/
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     permissions:
@@ -27,6 +31,10 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish-prod:
+    name: Publish to PyPI
+    environment:
+      name: prod
+      url: https://pypi.org/project/ultraplot/
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     permissions:
