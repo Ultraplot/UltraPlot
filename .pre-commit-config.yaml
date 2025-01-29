@@ -1,39 +1,16 @@
-# See: https://pre-commit.com/hooks.html
-# Must put flake8 in separate group so 'black' is executed first
-# WARNING: Make sure to keep flags in sync with ci/run-linter.sh
+ci:
+    autofix_commit_msg: |
+        [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+        for more information, see https://pre-commit.ci
+    autofix_prs: false
+    autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+    autoupdate_schedule: monthly
+    skip: []
+    submodules: false
+
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 24.8.0
     hooks:
-    - id: double-quote-string-fixer
-    - id: check-docstring-first
-    - id: check-merge-conflict
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
-
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
-    hooks:
-    - id: isort
-      args: ['--line-width=88', '--multi-line=3', '--force-grid-wrap=0', '--trailing-comma']
-      exclude: '(^docs|__init__)'
-
-  - repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
-    hooks:
-    - id: flake8
-      args: ['--max-line-length=88', '--ignore=W503,E402,E731,E741']
-
-  # apply once this handles long tables better
-  # - repo: https://github.com/PyCQA/doc8
-  #   rev: 0.10.1
-  #   hooks:
-  #   - id: doc8
-  #     args: ['--max-line-length', '88', '--allow-long-titles']
-
-  # apply after function keyword args can be ignored
-  # - repo: https://github.com/ambv/black
-  #   rev: 22.1.0
-  #   hooks:
-  #   - id: black
-  #     args: ['--line-length', '88', '--skip-string-normalization']
+      - id: black
