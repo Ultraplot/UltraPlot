@@ -430,3 +430,31 @@ def test_triplot_variants(x, y, z, triangles, use_triangulation, use_datadict):
         else:
             ax.triplot(x, y, "ko-")  # Without specific triangles
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_norm_not_modified():
+    """
+    Ensure that norm is correctly passed to pcolor and related functions.
+    """
+    # Create mock data and assign the colors to y
+    # The norm should clip the data and not be modified
+    x = np.arange(10)
+    y = x**2
+    c = y
+    cmap = uplt.Colormap("viridis")
+    norm = uplt.Norm("linear", 0, 10)
+    fig, (left, right) = uplt.subplots(ncols=2, share=0)
+    left.scatter(x, y, c=c, cmap=cmap, norm=norm)
+    assert norm.vmin == 0
+    assert norm.vmax == 10
+
+    arr = np.random.rand(20, 40) * 1000
+    xe = np.linspace(0, 1, num=40, endpoint=True)
+    ye = np.linspace(0, 1, num=20, endpoint=True)
+
+    norm = uplt.Norm("linear", vmin=0, vmax=1)
+    right.pcolor(xe, ye, arr, cmap="viridis", norm=norm)
+    assert norm.vmin == 0
+    assert norm.vmax == 1
+    return fig

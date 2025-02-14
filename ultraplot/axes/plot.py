@@ -2275,7 +2275,7 @@ class PlotAxes(base.Axes):
             Normalize specs.
         extend : optional
             The colormap extend setting.
-        vmin, vmax : flaot, optional
+        vmin, vmax : float, optional
             The normalization range.
         sequential, diverging, cyclic, qualitative : bool, optional
             Toggle various colormap types.
@@ -2295,6 +2295,12 @@ class PlotAxes(base.Axes):
         # Parse keyword args
         cmap_kw = cmap_kw or {}
         norm_kw = norm_kw or {}
+        # If norm is given we use it to set vmin and vmax
+        if (vmin is not None or vmax is not None) and norm is not None:
+            raise ValueError("If 'norm' is given, 'vmin' and 'vmax' must not be set.")
+        if isinstance(norm, mcolors.Normalize):
+            vmin = norm.vmin
+            vmax = norm.vmax
         vmin = _not_none(vmin=vmin, norm_kw_vmin=norm_kw.pop("vmin", None))
         vmax = _not_none(vmax=vmax, norm_kw_vmax=norm_kw.pop("vmax", None))
         extend = _not_none(extend, "neither")
@@ -2440,7 +2446,6 @@ class PlotAxes(base.Axes):
             kwargs.update({"levels": levels, "extend": extend})
         else:
             guides._add_guide_kw("colorbar", kwargs, extend=extend)
-
         return kwargs
 
     def _parse_cycle(
