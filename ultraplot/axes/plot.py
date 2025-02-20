@@ -9,7 +9,8 @@ import itertools
 import re
 import sys
 from numbers import Integral, Number
-from typing import Any, Iterable
+from typing import Any
+from collections.abc import Iterable
 
 import matplotlib.artist as martist
 import matplotlib.axes as maxes
@@ -2486,18 +2487,16 @@ class PlotAxes(base.Axes):
                 resolved_cycle = None
             case True:
                 resolved_cycle = constructor.Cycle(rc["axes.prop_cycle"])
-            case str() if cycle.lower() == "none":
-                resolved_cycle = None
-            case str() | int():
-                resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
             case constructor.Cycle():
                 resolved_cycle = constructor.Cycle(cycle)
+            case str() if cycle.lower() == "none":
+                resolved_cycle = None
+            case str() | int() | Iterable():
+                resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
             case _:
                 resolved_cycle = None
 
-        # Ignore cycle for single-column plotting
-        resolved_cycle = None if ncycle == 1 else resolved_cycle
-
+        # Ignore cycle for single-column plotting unless cycle is different
         if resolved_cycle and resolved_cycle != self._active_cycle:
             self.set_prop_cycle(resolved_cycle)
 
