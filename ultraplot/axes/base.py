@@ -1159,6 +1159,7 @@ class Axes(maxes.Axes):
                     locator = mticker.FixedLocator(ticks)
                 else:
                     locator = pticker.DiscreteLocator(ticks)
+
             if tickminor and minorlocator is None:
                 minorlocator = pticker.DiscreteLocator(ticks, minor=True)
 
@@ -1213,6 +1214,10 @@ class Axes(maxes.Axes):
         # obj.minorlocator = minorlocator  # backwards compatibility
         obj.update_ticks = guides._update_ticks.__get__(obj)  # backwards compatible
         if minorlocator is not None:
+            # Note we make use of mpl's setters and getters
+            current = obj.minorlocator
+            if current != minorlocator:
+                obj.minorlocator = minorlocator
             obj.update_ticks()
         elif tickminor:
             obj.minorticks_on()
