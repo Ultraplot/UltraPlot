@@ -3250,7 +3250,7 @@ class ColormapDatabase(mcm.ColormapRegistry):
             # surpress warning if the colormap is not generate by ultraplot
             if name not in self._builtin_cmaps:
                 print(f"Overwriting {name!r} that was already registered")
-        self._cmaps[name] = cmap.copy()
+        self._cmaps[name] = cmap.copy(name=name)
 
     def register_lazy(self, name, path, type, is_default=False):
         """

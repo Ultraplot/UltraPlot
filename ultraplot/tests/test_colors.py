@@ -54,10 +54,24 @@ def test_reversed_shifted():
     """
     Test reversed and shifted colormaps.
     """
-    cmap = pcolors._cmap_database.get_cmap("viridis")
-    cmap_r = pcolors._cmap_database.get_cmap("viridis_r")
-    assert cmap_r.name.lower().startswith("_viridis_copy_r")
+    # Create a simple colormap to test the reversal logic
+    # This avoids dependency on the exact definition of 'viridis' in matplotlib
+    colors_list = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]  # Red, Green, Blue
+    test_cmap = pcolors.ContinuousColormap.from_list("test_cmap", colors_list)
+    pcolors._cmap_database.register(test_cmap)
+
+    cmap = pcolors._cmap_database.get_cmap("test_cmap")
+    cmap_r = pcolors._cmap_database.get_cmap("test_cmap_r")
+
+    # Check name
+    assert cmap_r.name == "_test_cmap_copy_r"
+    # Check colors
+    # Start of original should be end of reversed
     assert np.allclose(cmap(0.0), cmap_r(1.0))
+    # End of original should be start of reversed
+    assert np.allclose(cmap(1.0), cmap_r(0.0))
+    # Middle should be the same
+    assert np.allclose(cmap(0.5)[:3], cmap_r(0.5)[:3][::-1])
 
 
 def test_grays_translation():
