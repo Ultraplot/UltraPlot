@@ -3206,7 +3206,10 @@ class ColormapDatabase(mcm.ColormapRegistry):
                         path, warn_on_failure=True
                     )
                 else:
-                    cmap = None  # should not happen
+                    raise ValueError(
+                        f"Invalid colormap type {type!r} for key {key!r} in file {path!r}. "
+                        "Expected 'continuous' or 'discrete'."
+                    )
 
                 if cmap:
                     if is_default and cmap.name.lower() in pcolors.CMAPS_CYCLIC:
