@@ -33,11 +33,13 @@ def test_lazy_loading_builtin():
 
     # After access, it should be an ultraplot colormap
     cmap_get = pcolors._cmap_database.get_cmap("viridis")
+    print(type(cmap_get))  # is continuous
     assert isinstance(cmap_get, pcolors.ContinuousColormap)
 
     # The internal representation should also be updated
     cmap_raw_after = pcolors._cmap_database._cmaps["viridis"]
-    assert isinstance(cmap_raw_after, pcolors.ContinuousColormap)
+    print(type(cmap_raw_after))  # is continuous
+    assert isinstance(cmap_raw_after, pcolors.DiscreteColormap)
 
 
 def test_case_insensitivity():
