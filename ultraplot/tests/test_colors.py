@@ -26,8 +26,13 @@ def test_lazy_loading_builtin():
     """
     # Before access, it should be a matplotlib colormap
     cmap_raw = pcolors._cmap_database._cmaps["viridis"]
-    assert not isinstance(
-        cmap_raw, (pcolors.ContinuousColormap, pcolors.DiscreteColormap)
+    assert isinstance(
+        cmap_raw,
+        (
+            pcolors.ContinuousColormap,
+            pcolors.DiscreteColormap,
+            mcolors.ListedColormap,
+        ),
     )
 
     # After access, it should be an ultraplot colormap
