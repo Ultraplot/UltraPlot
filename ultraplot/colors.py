@@ -3192,19 +3192,13 @@ class ColormapDatabase(mcm.ColormapRegistry):
 
             # Lazy loading from file
             if isinstance(value, dict) and value.get("is_lazy"):
-                from . import colors as pcolors
-
                 path = value["path"]
                 type = value["type"]
                 is_default = value.get("is_default", False)
                 if type == "continuous":
-                    cmap = pcolors.ContinuousColormap.from_file(
-                        path, warn_on_failure=True
-                    )
+                    cmap = ContinuousColormap.from_file(path, warn_on_failure=True)
                 elif type == "discrete":
-                    cmap = pcolors.DiscreteColormap.from_file(
-                        path, warn_on_failure=True
-                    )
+                    cmap = DiscreteColormap.from_file(path, warn_on_failure=True)
                 else:
                     raise ValueError(
                         f"Invalid colormap type {type!r} for key {key!r} in file {path!r}. "
@@ -3212,7 +3206,7 @@ class ColormapDatabase(mcm.ColormapRegistry):
                     )
 
                 if cmap:
-                    if is_default and cmap.name.lower() in pcolors.CMAPS_CYCLIC:
+                    if is_default and cmap.name.lower() in CMAPS_CYCLIC:
                         cmap.set_cyclic(True)
                     self._cmaps[key] = cmap
                     value = cmap
