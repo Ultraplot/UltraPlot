@@ -14,7 +14,6 @@ def setup_teardown():
     """
     # This ensures a clean state for each test.
     # The singleton instance is replaced with a new one.
-    pcolors._cmap_database = pcolors._init_cmap_database()
     config.register_cmaps(default=True)
     config.register_cycles(default=True)
     yield
