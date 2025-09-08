@@ -3090,7 +3090,7 @@ class ColormapDatabase(mcm.ColormapRegistry):
         kwargs : dict-like
             The source dictionary.
         """
-        super().__init__(kwargs)
+        super().__init__({k.lower(): v for k, v in kwargs.items()})
         # The colormap is initialized with all the base colormaps.
         # These are converted to ultraplot's own colormap objects
         # on the fly when they are first accessed.
