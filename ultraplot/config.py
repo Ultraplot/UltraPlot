@@ -527,8 +527,6 @@ def register_cycles(*args, user=None, local=None, default=False):
     # Register input color cycles
     from . import colors as pcolors
 
-    pcolors._cmap_diverging = pcolors._init_cmap_database()
-
     user = _not_none(user, not bool(args))  # skip user folder if input args passed
     local = _not_none(local, not bool(args))
     paths = []

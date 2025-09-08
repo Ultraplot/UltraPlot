@@ -14,6 +14,7 @@ def setup_teardown():
     """
     # This ensures a clean state for each test.
     # The singleton instance is replaced with a new one.
+    pcolors._cmap_database = pcolors._init_cmap_database()
     config.register_cmaps(default=True)
     config.register_cycles(default=True)
     yield
@@ -23,7 +24,6 @@ def test_lazy_loading_builtin():
     """
     Test that built-in colormaps are lazy-loaded.
     """
-    pcolors._cmap_database = pcolors._init_cmap_database()  # ensure pristine state
     # Before access, it should be a matplotlib colormap
     cmap_raw = pcolors._cmap_database._cmaps["viridis"]
     assert not isinstance(
