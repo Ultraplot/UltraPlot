@@ -3091,12 +3091,9 @@ class ColormapDatabase(mcm.ColormapRegistry):
             The source dictionary.
         """
         super().__init__(kwargs)
-        # The colormap is initialized with all the base colormaps
-        # We have to change the classes internally to Perceptual, Continuous or Discrete
-        # such that ultraplot knows what these objects are. We piggy back on the registering mechanism
-        # by overriding matplotlib's behavior
-        for name in tuple(self._cmaps.keys()):
-            self.register(self._cmaps[name], name=name)
+        # The colormap is initialized with all the base colormaps.
+        # These are converted to ultraplot's own colormap objects
+        # on the fly when they are first accessed.
 
     def _translate_deprecated(self, key):
         """
@@ -3188,9 +3185,45 @@ class ColormapDatabase(mcm.ColormapRegistry):
 
         if reverse:
             key = key.removesuffix("_r")
+
         # Retrieve colormap
         if self._has_item(key):
-            value = self._cmaps[key].copy()
+            value = self._cmaps[key]
+
+            # Lazy loading from file
+            if isinstance(value, dict) and value.get("is_lazy"):
+                from . import colors as pcolors
+
+                path = value["path"]
+                type = value["type"]
+                is_default = value.get("is_default", False)
+                if type == "continuous":
+                    cmap = pcolors.ContinuousColormap.from_file(
+                        path, warn_on_failure=True
+                    )
+                elif type == "discrete":
+                    cmap = pcolors.DiscreteColormap.from_file(
+                        path, warn_on_failure=True
+                    )
+                else:
+                    cmap = None  # should not happen
+
+                if cmap:
+                    if is_default and cmap.name.lower() in pcolors.CMAPS_CYCLIC:
+                        cmap.set_cyclic(True)
+                    self._cmaps[key] = cmap
+                    value = cmap
+                else:  # failed to load
+                    # remove from registry to avoid trying again
+                    del self._cmaps[key]
+                    raise KeyError(f"Failed to load colormap {key!r} from {path!r}")
+
+            # Lazy loading for builtin matplotlib cmaps
+            if not isinstance(value, (ContinuousColormap, DiscreteColormap)):
+                value = _translate_cmap(value)
+                self._cmaps[key] = value
+
+            value = value.copy()
         else:
             raise KeyError(
                 f"Invalid colormap or color cycle name {key!r}. Options are: "
@@ -3221,6 +3254,18 @@ class ColormapDatabase(mcm.ColormapRegistry):
             if name not in self._builtin_cmaps:
                 print(f"Overwriting {name!r} that was already registered")
         self._cmaps[name] = cmap.copy()
+
+    def register_lazy(self, name, path, type, is_default=False):
+        """
+        Register a colormap to be loaded lazily from a file.
+        """
+        name = self._translate_key(name, mirror=False)
+        self._cmaps[name] = {
+            "path": path,
+            "type": type,
+            "is_default": is_default,
+            "is_lazy": True,
+        }
 
 
 # Initialize databases
