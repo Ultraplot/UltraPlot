@@ -41,6 +41,11 @@ from .internals import (
 )
 from .utils import set_alpha, to_hex, to_rgb, to_rgba, to_xyz, to_xyza
 
+try:
+    from typing import override
+except:
+    from typing_extensions import override
+
 __all__ = [
     "DiscreteColormap",
     "ContinuousColormap",
@@ -3234,6 +3239,7 @@ class ColormapDatabase(mcm.ColormapRegistry):
             value = value.shifted(180)
         return value
 
+    @override
     def register(self, cmap, *, name=None, force=False):
         """
         Add the colormap after validating and converting.
