@@ -497,12 +497,11 @@ def register_cmaps(*args, user=None, local=None, default=False):
     for i, path in _iter_data_objects(
         "cmaps", *paths, user=user, local=local, default=default
     ):
-        cmap = pcolors.ContinuousColormap.from_file(path, warn_on_failure=True)
-        if not cmap:
-            continue
-        if i == 0 and cmap.name.lower() in pcolors.CMAPS_CYCLIC:
-            cmap.set_cyclic(True)
-        pcolors._cmap_database.register(cmap, name=cmap.name)
+        name, ext = os.path.splitext(os.path.basename(path))
+        if ext and ext[1:] in ("json", "txt", "rgb", "xml", "hex"):
+            pcolors._cmap_database.register_lazy(
+                name, path, "continuous", is_default=(i == 0)
+            )
 
 
 @docstring._snippet_manager
@@ -541,10 +540,9 @@ def register_cycles(*args, user=None, local=None, default=False):
     for _, path in _iter_data_objects(
         "cycles", *paths, user=user, local=local, default=default
     ):
-        cmap = pcolors.DiscreteColormap.from_file(path, warn_on_failure=True)
-        if not cmap:
-            continue
-        pcolors._cmap_database.register(cmap, name=cmap.name)
+        name, ext = os.path.splitext(os.path.basename(path))
+        if ext and ext[1:] in ("hex", "rgb", "txt"):
+            pcolors._cmap_database.register_lazy(name, path, "discrete")
 
 
 @docstring._snippet_manager
