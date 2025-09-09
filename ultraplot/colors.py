@@ -3173,6 +3173,34 @@ class ColormapDatabase(mcm.ColormapRegistry):
     def _has_item(self, key):
         return key in self._cmaps
 
+    def _load_and_register_cmap(self, key, value):
+        """
+        Load a colormap from a file and register it.
+        """
+        path = value["path"]
+        type = value["type"]
+        is_default = value.get("is_default", False)
+        if type == "continuous":
+            cmap = ContinuousColormap.from_file(path, warn_on_failure=True)
+        elif type == "discrete":
+            cmap = DiscreteColormap.from_file(path, warn_on_failure=True)
+        else:
+            raise ValueError(
+                f"Invalid colormap type {type!r} for key {key!r} in file {path!r}. "
+                "Expected 'continuous' or 'discrete'."
+            )
+
+        if cmap:
+            if is_default and cmap.name.lower() in CMAPS_CYCLIC:
+                cmap.set_cyclic(True)
+            self.register(cmap, name=key)
+            return self._cmaps[key]
+        else:  # failed to load
+            # remove from registry to avoid trying again
+            del self._cmaps[key]
+            warnings._warn_ultraplot(f"Failed to load colormap {key!r} from {path!r}")
+            return None
+
     def get_cmap(self, cmap):
         return self.__getitem__(cmap)
 
@@ -3197,28 +3225,9 @@ class ColormapDatabase(mcm.ColormapRegistry):
 
             # Lazy loading from file
             if isinstance(value, dict) and value.get("is_lazy"):
-                path = value["path"]
-                type = value["type"]
-                is_default = value.get("is_default", False)
-                if type == "continuous":
-                    cmap = ContinuousColormap.from_file(path, warn_on_failure=True)
-                elif type == "discrete":
-                    cmap = DiscreteColormap.from_file(path, warn_on_failure=True)
-                else:
-                    raise ValueError(
-                        f"Invalid colormap type {type!r} for key {key!r} in file {path!r}. "
-                        "Expected 'continuous' or 'discrete'."
-                    )
-
-                if cmap:
-                    if is_default and cmap.name.lower() in CMAPS_CYCLIC:
-                        cmap.set_cyclic(True)
-                    self._cmaps[key] = cmap
-                    value = cmap
-                else:  # failed to load
-                    # remove from registry to avoid trying again
-                    del self._cmaps[key]
-                    raise KeyError(f"Failed to load colormap {key!r} from {path!r}")
+                value = self._load_and_register_cmap(key, value)
+                if not value:
+                    raise KeyError(f"Failed to load colormap {key!r} from file.")
 
             # Lazy loading for builtin matplotlib cmaps
             if not isinstance(value, (ContinuousColormap, DiscreteColormap)):
