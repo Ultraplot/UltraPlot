@@ -4,6 +4,7 @@ Various `~matplotlib.ticker.Locator` and `~matplotlib.ticker.Formatter` classes.
 """
 import locale
 import re
+import sys
 from fractions import Fraction
 
 import matplotlib.axis as maxis
@@ -55,7 +56,7 @@ __all__ = [
 
 REGEX_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]?0(.0*)?\\Z")
 REGEX_MINUS = re.compile("\\A[-\\\N{MINUS SIGN}]\\Z")
-REGEX_MINUS_ZERO = re.compile("\\A[-\\\N{MINUS SIGN}]0(.0*)?\\Z")
+REGEX_MINUS_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]0(.0*)?\\Z")
 
 _precision_docstring = """
 precision : int, default: {6, 2}
@@ -868,7 +869,10 @@ class DatetimeFormatter(mticker.Formatter):
         self._units = units
 
     def __call__(self, x, pos=None):
-        dt = cftime.num2date(x, self._units, calendar=self._calendar)
+        if isinstance(x, cftime.datetime):
+            dt = x
+        else:
+            dt = cftime.num2date(x, self._units, calendar=self._calendar)
         return dt.strftime(self._format)
 
 
@@ -885,7 +889,10 @@ class AutoDatetimeFormatter(mticker.Formatter):
 
     def __call__(self, x, pos=0):
         format_string = self.pick_format(self.locator.resolution)
-        dt = cftime.num2date(x, self.time_units, calendar=self.calendar)
+        if isinstance(x, cftime.datetime):
+            dt = x
+        else:
+            dt = cftime.num2date(x, self.time_units, calendar=self.calendar)
         return dt.strftime(format_string)
 
 

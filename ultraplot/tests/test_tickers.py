@@ -98,19 +98,22 @@ def test_datetime_long_range():
 
 
 def test_datetime_explicit_formatter():
-    time = xr.date_range("2000-01-01", periods=365 * 2, calendar="noleap")
+    time = xr.date_range("2000-01-01", periods=365 * 4, calendar="noleap")
     da = xr.DataArray(
-        data=np.sin(np.linspace(0, 2 * np.pi, 365 * 2)),
+        data=np.sin(np.linspace(0, 2 * np.pi, 365 * 4)),
         dims=("time",),
         coords={"time": time},
     )
     fig, ax = uplt.subplots()
+
+    formatter = uplt.ticker.DatetimeFormatter("%b %Y", calendar="noleap")
+    locator = uplt.ticker.AutoDatetimeLocator(calendar="noleap")
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
     ax.plot(da)
-    ax.format(
-        title="Explicit formatter",
-        xformatter=uplt.ticker.DatetimeFormatter("%b %Y", calendar="noleap"),
-    )
+
     fig.canvas.draw()
+
     labels = [label.get_text() for label in ax.get_xticklabels()]
     assert len(labels) > 0
     # check first label
