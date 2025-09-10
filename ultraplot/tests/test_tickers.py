@@ -98,9 +98,9 @@ def test_datetime_long_range():
 
 
 def test_datetime_explicit_formatter():
-    time = xr.date_range("2000-01-01", periods=365 * 4, calendar="noleap")
+    time = xr.date_range("2000-01-01", periods=365 * 2, calendar="noleap")
     da = xr.DataArray(
-        data=np.sin(np.linspace(0, 2 * np.pi, 365 * 4)),
+        data=np.sin(np.linspace(0, 2 * np.pi, 365 * 2)),
         dims=("time",),
         coords={"time": time},
     )

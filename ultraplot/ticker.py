@@ -4,7 +4,6 @@ Various `~matplotlib.ticker.Locator` and `~matplotlib.ticker.Formatter` classes.
 """
 import locale
 import re
-import sys
 from fractions import Fraction
 
 import matplotlib.axis as maxis
@@ -943,23 +942,33 @@ class AutoDatetimeLocator(mticker.Locator):
     def compute_resolution(self, num1, num2, date1, date2):
         """Returns the resolution of the dates."""
         num_days = float(np.abs(num1 - num2))
-        resolutions = ["YEARLY", "MONTHLY", "DAILY", "HOURLY", "MINUTELY", "SECONDLY"]
-        num_units = {
-            "YEARLY": abs(date1.year - date2.year),
-            "MONTHLY": num_days / 30.0,
-            "DAILY": num_days,
-            "HOURLY": num_days * 24.0,
-            "MINUTELY": num_days * 24.0 * 60.0,
-            "SECONDLY": num_days * 24.0 * 60.0 * 60.0,
-        }
 
-        for res in resolutions:
-            if num_units[res] < self.maxticks.get(res, 11):
-                self.resolution = res
-                return res, num_units[res]
+        num_years = num_days / 365.0
+        num_months = num_days / 30.0
+        num_hours = num_days * 24.0
+        num_minutes = num_days * 60.0 * 24.0
 
-        self.resolution = "SECONDLY"
-        return "SECONDLY", num_units["SECONDLY"]
+        if num_years > self.maxticks["YEARLY"]:
+            resolution = "YEARLY"
+            n = abs(date1.year - date2.year)
+        elif num_months > self.maxticks["MONTHLY"]:
+            resolution = "MONTHLY"
+            n = num_months
+        elif num_days > self.maxticks["DAILY"]:
+            resolution = "DAILY"
+            n = num_days
+        elif num_hours > self.maxticks["HOURLY"]:
+            resolution = "HOURLY"
+            n = num_hours
+        elif num_minutes > self.maxticks["MINUTELY"]:
+            resolution = "MINUTELY"
+            n = num_minutes
+        else:
+            resolution = "SECONDLY"
+            n = num_days * 24 * 3600
+
+        self.resolution = resolution
+        return resolution, n
 
     def __call__(self):
         vmin, vmax = self.axis.get_view_interval()
