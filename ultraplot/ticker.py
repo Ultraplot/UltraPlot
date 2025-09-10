@@ -7,8 +7,16 @@ import re
 from fractions import Fraction
 
 import matplotlib.axis as maxis
+import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
+import matplotlib.transforms as mtransforms
+import matplotlib.units as munits
 import numpy as np
+
+try:
+    import cftime
+except ModuleNotFoundError:
+    cftime = None
 
 from .config import rc
 from .internals import ic  # noqa: F401
@@ -37,14 +45,17 @@ __all__ = [
     "SciFormatter",
     "SigFigFormatter",
     "FracFormatter",
+    "DatetimeFormatter",
+    "AutoDatetimeFormatter",
+    "AutoDatetimeLocator",
     "DegreeFormatter",
     "LongitudeFormatter",
     "LatitudeFormatter",
 ]
 
-REGEX_ZERO = re.compile("\\A[-\N{MINUS SIGN}]?0(.0*)?\\Z")
-REGEX_MINUS = re.compile("\\A[-\N{MINUS SIGN}]\\Z")
-REGEX_MINUS_ZERO = re.compile("\\A[-\N{MINUS SIGN}]0(.0*)?\\Z")
+REGEX_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]?0(.0*)?\\Z")
+REGEX_MINUS = re.compile("\\A[-\\N{MINUS SIGN}]\\Z")
+REGEX_MINUS_ZERO = re.compile("\\A[-\\\N{MINUS SIGN}]0(.0*)?\\Z")
 
 _precision_docstring = """
 precision : int, default: {6, 2}
@@ -92,6 +103,18 @@ dms : bool, default: False
     ticks with minutes and seconds instead of decimals.
 """
 docstring._snippet_manager["ticker.dms"] = _dms_docstring
+
+
+_DEFAULT_RESOLUTION = "DAILY"
+_TIME_UNITS = "days since 2000-01-01"
+_RESOLUTION_TO_FORMAT = {
+    "SECONDLY": "%H:%M:%S",
+    "MINUTELY": "%H:%M",
+    "HOURLY": "%Y-%m-%d %H:%M",
+    "DAILY": "%Y-%m-%d",
+    "MONTHLY": "%Y-%m",
+    "YEARLY": "%Y",
+}
 
 
 def _default_precision_zerotrim(precision=None, zerotrim=None):
@@ -820,6 +843,208 @@ class FracFormatter(mticker.Formatter):
                 string = f"{frac.numerator:d}{symbol:s}/{frac.denominator:d}"
         string = AutoFormatter._minus_format(string)
         return string
+
+
+class DatetimeFormatter(mticker.Formatter):
+    """
+    Format dates using `cftime.datetime.strftime` format strings.
+    """
+
+    def __init__(self, fmt, calendar="standard", units="days since 2000-01-01"):
+        """
+        Parameters
+        ----------
+        fmt : str
+            The `strftime` format string.
+        calendar : str, default: 'standard'
+            The calendar for interpreting numeric tick values.
+        units : str, default: 'days since 2000-01-01'
+            The time units for interpreting numeric tick values.
+        """
+        if cftime is None:
+            raise ModuleNotFoundError("cftime is required for DatetimeFormatter.")
+        self._format = fmt
+        self._calendar = calendar
+        self._units = units
+
+    def __call__(self, x, pos=None):
+        dt = cftime.num2date(x, self._units, calendar=self._calendar)
+        return dt.strftime(self._format)
+
+
+class AutoDatetimeFormatter(mticker.Formatter):
+    """Automatic formatter for `cftime.datetime` data."""
+
+    def __init__(self, locator, calendar, time_units=None):
+        self.locator = locator
+        self.calendar = calendar
+        self.time_units = time_units or _TIME_UNITS
+
+    def pick_format(self, resolution):
+        return _RESOLUTION_TO_FORMAT[resolution]
+
+    def __call__(self, x, pos=0):
+        format_string = self.pick_format(self.locator.resolution)
+        dt = cftime.num2date(x, self.time_units, calendar=self.calendar)
+        return dt.strftime(format_string)
+
+
+class AutoDatetimeLocator(mticker.Locator):
+    """Determines tick locations when plotting `cftime.datetime` data."""
+
+    real_world_calendars = (
+        "gregorian",
+        "julian",
+        "proleptic_gregorian",
+        "standard",
+    )
+
+    def __init__(self, maxticks=None, calendar="standard", date_unit=None, minticks=3):
+        self.minticks = minticks
+        self.maxticks = {
+            "YEARLY": 11,
+            "MONTHLY": 12,
+            "DAILY": 11,
+            "HOURLY": 12,
+            "MINUTELY": 11,
+            "SECONDLY": 11,
+        }
+        if maxticks is not None:
+            if isinstance(maxticks, dict):
+                self.maxticks.update(maxticks)
+            else:
+                self.maxticks = dict.fromkeys(self.maxticks.keys(), maxticks)
+
+        self.calendar = calendar
+        self.date_unit = date_unit or _TIME_UNITS
+        if not self.date_unit.lower().startswith("days since"):
+            emsg = "The date unit must be days since for a NetCDF time locator."
+            raise ValueError(emsg)
+        self.resolution = _DEFAULT_RESOLUTION
+        self._cached_resolution = {}
+
+    def set_params(self, maxticks=None, minticks=None):
+        """Set the parameters for the locator."""
+        if maxticks is not None:
+            if isinstance(maxticks, dict):
+                self.maxticks.update(maxticks)
+            else:
+                self.maxticks = dict.fromkeys(self.maxticks.keys(), maxticks)
+        if minticks is not None:
+            self.minticks = minticks
+
+    def compute_resolution(self, num1, num2, date1, date2):
+        """Returns the resolution of the dates."""
+        num_days = float(np.abs(num1 - num2))
+        resolutions = ["YEARLY", "MONTHLY", "DAILY", "HOURLY", "MINUTELY", "SECONDLY"]
+        num_units = {
+            "YEARLY": abs(date1.year - date2.year),
+            "MONTHLY": num_days / 30.0,
+            "DAILY": num_days,
+            "HOURLY": num_days * 24.0,
+            "MINUTELY": num_days * 24.0 * 60.0,
+            "SECONDLY": num_days * 24.0 * 60.0 * 60.0,
+        }
+
+        for res in resolutions:
+            if num_units[res] < self.maxticks.get(res, 11):
+                self.resolution = res
+                return res, num_units[res]
+
+        self.resolution = "SECONDLY"
+        return "SECONDLY", num_units["SECONDLY"]
+
+    def __call__(self):
+        vmin, vmax = self.axis.get_view_interval()
+        return self.tick_values(vmin, vmax)
+
+    def tick_values(self, vmin, vmax):
+        vmin, vmax = mtransforms.nonsingular(vmin, vmax, expander=1e-7, tiny=1e-13)
+        lower = cftime.num2date(vmin, self.date_unit, calendar=self.calendar)
+        upper = cftime.num2date(vmax, self.date_unit, calendar=self.calendar)
+
+        resolution, n = self.compute_resolution(vmin, vmax, lower, upper)
+
+        max_n_ticks = self.maxticks.get(resolution, 11)
+        _max_n_locator = mticker.MaxNLocator(max_n_ticks, integer=True)
+        _max_n_locator_days = mticker.MaxNLocator(
+            max_n_ticks, integer=True, steps=[1, 2, 4, 7, 10]
+        )
+
+        def has_year_zero(year):
+            result = dict()
+            if self.calendar in self.real_world_calendars and not bool(year):
+                result = dict(has_year_zero=True)
+            return result
+
+        if resolution == "YEARLY":
+            years = _max_n_locator.tick_values(lower.year, upper.year)
+            ticks = [
+                cftime.datetime(
+                    int(year),
+                    1,
+                    1,
+                    calendar=self.calendar,
+                    **has_year_zero(year),
+                )
+                for year in years
+            ]
+        elif resolution == "MONTHLY":
+            months_offset = _max_n_locator.tick_values(0, int(n))
+            ticks = []
+            for offset in months_offset:
+                year = lower.year + np.floor((lower.month + offset) / 12)
+                month = ((lower.month + offset) % 12) + 1
+                dt = cftime.datetime(
+                    int(year),
+                    int(month),
+                    1,
+                    calendar=self.calendar,
+                    **has_year_zero(year),
+                )
+                ticks.append(dt)
+        elif resolution == "DAILY":
+            days = _max_n_locator_days.tick_values(vmin, vmax)
+            ticks = [
+                cftime.num2date(dt, self.date_unit, calendar=self.calendar)
+                for dt in days
+            ]
+        elif resolution == "HOURLY":
+            hour_unit = "hours since 2000-01-01"
+            in_hours = cftime.date2num(
+                [lower, upper], hour_unit, calendar=self.calendar
+            )
+            hours = _max_n_locator.tick_values(in_hours[0], in_hours[1])
+            ticks = [
+                cftime.num2date(dt, hour_unit, calendar=self.calendar) for dt in hours
+            ]
+        elif resolution == "MINUTELY":
+            minute_unit = "minutes since 2000-01-01"
+            in_minutes = cftime.date2num(
+                [lower, upper], minute_unit, calendar=self.calendar
+            )
+            minutes = _max_n_locator.tick_values(in_minutes[0], in_minutes[1])
+            ticks = [
+                cftime.num2date(dt, minute_unit, calendar=self.calendar)
+                for dt in minutes
+            ]
+        elif resolution == "SECONDLY":
+            second_unit = "seconds since 2000-01-01"
+            in_seconds = cftime.date2num(
+                [lower, upper], second_unit, calendar=self.calendar
+            )
+            seconds = _max_n_locator.tick_values(in_seconds[0], in_seconds[1])
+            ticks = [
+                cftime.num2date(dt, second_unit, calendar=self.calendar)
+                for dt in seconds
+            ]
+        else:
+            emsg = f"Resolution {resolution} not implemented yet."
+            raise ValueError(emsg)
+
+        if self.calendar in self.real_world_calendars:
+            ticks = [t for t in ticks if t.year != 0]
+        return cftime.date2num(ticks, self.date_unit, calendar=self.calendar)
 
 
 class _CartopyFormatter(object):
