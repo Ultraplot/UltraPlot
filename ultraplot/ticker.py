@@ -54,9 +54,9 @@ __all__ = [
     "LatitudeFormatter",
 ]
 
-REGEX_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]?0(.0*)?\\Z")
-REGEX_MINUS = re.compile("\\A[-\\\N{MINUS SIGN}]\\Z")
-REGEX_MINUS_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]0(.0*)?\\Z")
+REGEX_ZERO = re.compile("\\A[-\N{MINUS SIGN}]?0(.0*)?\\Z")
+REGEX_MINUS = re.compile("\\A[-\N{MINUS SIGN}]\\Z")
+REGEX_MINUS_ZERO = re.compile("\\A[-\N{MINUS SIGN}]0(.0*)?\\Z")
 
 _precision_docstring = """
 precision : int, default: {6, 2}
@@ -540,7 +540,7 @@ class AutoFormatter(mticker.ScalarFormatter):
         Format the minus sign and avoid "negative zero," e.g. ``-0.000``.
         """
         if rc["axes.unicode_minus"] and not rc["text.usetex"]:
-            string = string.replace("-", "\\N{MINUS SIGN}")
+            string = string.replace("-", "\N{MINUS SIGN}")
         if REGEX_MINUS_ZERO.match(string):
             string = string[1:]
         return string
