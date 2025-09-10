@@ -54,8 +54,8 @@ __all__ = [
 ]
 
 REGEX_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]?0(.0*)?\\Z")
-REGEX_MINUS = re.compile("\\A[-\\N{MINUS SIGN}]\\Z")
-REGEX_MINUS_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]0(.0*)?\\Z")
+REGEX_MINUS = re.compile("\\A[-\\\N{MINUS SIGN}]\\Z")
+REGEX_MINUS_ZERO = re.compile("\\A[-\\\N{MINUS SIGN}]0(.0*)?\\Z")
 
 _precision_docstring = """
 precision : int, default: {6, 2}
@@ -539,7 +539,7 @@ class AutoFormatter(mticker.ScalarFormatter):
         Format the minus sign and avoid "negative zero," e.g. ``-0.000``.
         """
         if rc["axes.unicode_minus"] and not rc["text.usetex"]:
-            string = string.replace("-", "\N{MINUS SIGN}")
+            string = string.replace("-", "\\N{MINUS SIGN}")
         if REGEX_MINUS_ZERO.match(string):
             string = string[1:]
         return string
@@ -966,9 +966,9 @@ class AutoDatetimeLocator(mticker.Locator):
         resolution, n = self.compute_resolution(vmin, vmax, lower, upper)
 
         max_n_ticks = self.maxticks.get(resolution, 11)
-        _max_n_locator = mticker.MaxNLocator(max_n_ticks, integer=True)
+        _max_n_locator = mticker.MaxNLocator(max_n_ticks, integer=True, prune="both")
         _max_n_locator_days = mticker.MaxNLocator(
-            max_n_ticks, integer=True, steps=[1, 2, 4, 7, 10]
+            max_n_ticks, integer=True, steps=[1, 2, 4, 7, 10], prune="both"
         )
 
         def has_year_zero(year):

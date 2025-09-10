@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 import xarray as xr
 import ultraplot as uplt
+import matplotlib.ticker as mticker
 
 
 @pytest.mark.mpl_image_compare
@@ -109,9 +110,13 @@ def test_datetime_explicit_formatter():
     ax.format(
         title="Explicit formatter",
         xformatter=uplt.ticker.DatetimeFormatter("%b %Y", calendar="noleap"),
+        xlocator=mticker.MaxNLocator(5),
     )
     fig.canvas.draw()
+    ticks = ax.get_xticks()
+    print(f"Ticks: {ticks}")
     labels = [label.get_text() for label in ax.get_xticklabels()]
+    print(f"Labels: {labels}")
     assert len(labels) > 0
     # check first label
     try:
