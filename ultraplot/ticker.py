@@ -55,7 +55,7 @@ __all__ = [
 
 REGEX_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]?0(.0*)?\\Z")
 REGEX_MINUS = re.compile("\\A[-\\N{MINUS SIGN}]\\Z")
-REGEX_MINUS_ZERO = re.compile("\\A[-\\\N{MINUS SIGN}]0(.0*)?\\Z")
+REGEX_MINUS_ZERO = re.compile("\\A[-\\N{MINUS SIGN}]0(.0*)?\\Z")
 
 _precision_docstring = """
 precision : int, default: {6, 2}
