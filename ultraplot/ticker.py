@@ -727,7 +727,7 @@ class SciFormatter(mticker.Formatter):
         sign = parts[1][0].replace("+", "")
         exponent = parts[1][1:].lstrip("0")
         if exponent:
-            exponent = f"10^{{{sign}{exponent}}}"
+            exponent = f"10^ {{{sign}{exponent}}}"
         if significand and exponent:
             string = rf"{significand}{{\times}}{exponent}"
         else:
@@ -800,7 +800,7 @@ class FracFormatter(mticker.Formatter):
         Parameters
         ----------
         symbol : str, default: ''
-            The constant symbol, e.g. ``r'$\pi$'``.
+            The constant symbol, e.g. ``r'$\\pi$'``.
         number : float, default: 1
             The constant value, e.g. `numpy.pi`.
 
@@ -831,16 +831,16 @@ class FracFormatter(mticker.Formatter):
             if frac.numerator == 1 and symbol:
                 string = f"{symbol:s}"
             elif frac.numerator == -1 and symbol:
-                string = f"-{symbol:s}"
+                string = f"-{{symbol:s}}"
             else:
                 string = f"{frac.numerator:d}{symbol:s}"
         else:
             if frac.numerator == 1 and symbol:  # numerator is +/-1
-                string = f"{symbol:s}/{frac.denominator:d}"
+                string = f"{symbol:s}/{{frac.denominator:d}}"
             elif frac.numerator == -1 and symbol:
-                string = f"-{symbol:s}/{frac.denominator:d}"
+                string = f"-{{symbol:s}}/{{frac.denominator:d}}"
             else:  # and again make sure we use unicode minus!
-                string = f"{frac.numerator:d}{symbol:s}/{frac.denominator:d}"
+                string = f"{frac.numerator:d}{symbol:s}/{{frac.denominator:d}}"
         string = AutoFormatter._minus_format(string)
         return string
 
@@ -1122,3 +1122,139 @@ class LatitudeFormatter(_CartopyFormatter, LatitudeFormatter):
         %(ticker.dms)s
         """
         super().__init__(*args, **kwargs)
+
+
+class CFTimeConverter(mdates.DateConverter):
+    """
+    Converter for cftime.datetime data.
+    """
+
+    standard_unit = "days since 2000-01-01"
+
+    @staticmethod
+    def axisinfo(unit, axis):
+        """Returns the :class:`~matplotlib.units.AxisInfo` for *unit*."""
+        if cftime is None:
+            raise ModuleNotFoundError("cftime is required for CFTimeConverter.")
+
+        if unit is None:
+            calendar, date_unit, date_type = (
+                "standard",
+                CFTimeConverter.standard_unit,
+                getattr(cftime, "DatetimeProlepticGregorian", None),
+            )
+        else:
+            calendar, date_unit, date_type = unit
+
+        majloc = AutoDatetimeLocator(calendar=calendar, date_unit=date_unit)
+        majfmt = AutoDatetimeFormatter(majloc, calendar=calendar, time_units=date_unit)
+
+        try:
+            if date_type is not None:
+                datemin = date_type(2000, 1, 1)
+                datemax = date_type(2010, 1, 1)
+            else:
+                # Fallback if date_type is None
+                datemin = cftime.DatetimeProlepticGregorian(2000, 1, 1)
+                datemax = cftime.DatetimeProlepticGregorian(2010, 1, 1)
+        except (TypeError, AttributeError):
+            datemin = cftime.DatetimeProlepticGregorian(2000, 1, 1)
+            datemax = cftime.DatetimeProlepticGregorian(2010, 1, 1)
+
+        return munits.AxisInfo(
+            majloc=majloc,
+            majfmt=majfmt,
+            label="",
+            default_limits=(datemin, datemax),
+        )
+
+    @classmethod
+    def default_units(cls, x, axis):
+        """Computes some units for the given data point."""
+        if isinstance(x, np.ndarray) and x.dtype != object:
+            return None  # It's already numeric
+
+        if hasattr(x, "__iter__") and not isinstance(x, str):
+            if isinstance(x, np.ndarray):
+                x = x.reshape(-1)
+
+            first_value = next(
+                (v for v in x if v is not None and v is not np.ma.masked), None
+            )
+            if first_value is None:
+                return None
+
+            if not isinstance(first_value, cftime.datetime):
+                return None
+
+            # Check all calendars are the same
+            calendar = first_value.calendar
+            if any(
+                getattr(v, "calendar", None) != calendar
+                for v in x
+                if v is not None and v is not np.ma.masked
+            ):
+                raise ValueError("Calendar units are not all equal.")
+
+            date_type = type(first_value)
+        else:
+            # scalar
+            if not isinstance(x, cftime.datetime):
+                return None
+            calendar = x.calendar
+            date_type = type(x)
+
+        if not calendar:
+            raise ValueError(
+                "A calendar must be defined to plot dates using a cftime axis."
+            )
+
+        return calendar, cls.standard_unit, date_type
+
+    @classmethod
+    def convert(cls, value, unit, axis):
+        """Converts value with :py:func:`cftime.date2num`."""
+        if cftime is None:
+            raise ModuleNotFoundError("cftime is required for CFTimeConverter.")
+
+        if isinstance(value, (int, float, np.number)):
+            return value
+
+        if isinstance(value, np.ndarray) and value.dtype != object:
+            return value
+
+        # Get calendar from unit, or from data
+        if unit:
+            calendar, date_unit, _ = unit
+        else:
+            if hasattr(value, "__iter__") and not isinstance(value, str):
+                first_value = next(
+                    (v for v in value if v is not None and v is not np.ma.masked), None
+                )
+            else:
+                first_value = value
+
+            if first_value is None or not isinstance(first_value, cftime.datetime):
+                return value  # Cannot convert
+
+            calendar = first_value.calendar
+            date_unit = cls.standard_unit
+
+        result = cftime.date2num(value, date_unit, calendar=calendar)
+        return result
+
+
+if cftime is not None:
+    CFTIME_TYPES = [
+        cftime.datetime,
+        cftime.DatetimeNoLeap,
+        cftime.DatetimeAllLeap,
+        cftime.DatetimeProlepticGregorian,
+        cftime.DatetimeGregorian,
+        cftime.Datetime360Day,
+        cftime.DatetimeJulian,
+    ]
+    for date_type in CFTIME_TYPES:
+        # Don't register if it's already been done
+        if date_type not in munits.registry:
+            munits.registry[date_type] = CFTimeConverter()
