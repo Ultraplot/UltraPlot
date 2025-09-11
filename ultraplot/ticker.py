@@ -832,7 +832,7 @@ class FracFormatter(mticker.Formatter):
             if frac.numerator == 1 and symbol:
                 string = f"{symbol:s}"
             elif frac.numerator == -1 and symbol:
-                string = f"-{{symbol:s}}"
+                string = f"-{symbol:s}"
             else:
                 string = f"{frac.numerator:d}{symbol:s}"
         else:
