@@ -801,7 +801,7 @@ class FracFormatter(mticker.Formatter):
         Parameters
         ----------
         symbol : str, default: ''
-            The constant symbol, e.g. ``r'$\\pi$'``.
+            The constant symbol, e.g. ``r'$\pi$'``.
         number : float, default: 1
             The constant value, e.g. `numpy.pi`.
 
