@@ -1,5 +1,5 @@
 import pytest, numpy as np, xarray as xr, ultraplot as uplt, cftime
-from ultraplot.ticker import AutoDatetimeLocator
+from ultraplot.ticker import AutoCFDatetimeLocator
 from unittest.mock import patch
 import importlib
 
@@ -106,8 +106,8 @@ def test_datetime_explicit_formatter():
     )
     fig, ax = uplt.subplots()
 
-    formatter = uplt.ticker.DatetimeFormatter("%b %Y", calendar="noleap")
-    locator = uplt.ticker.AutoDatetimeLocator(calendar="noleap")
+    formatter = uplt.ticker.CFDatetimeFormatter("%b %Y", calendar="noleap")
+    locator = uplt.ticker.AutoCFDatetimeLocator(calendar="noleap")
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(formatter)
     ax.plot(da)
@@ -171,7 +171,7 @@ def test_datetime_explicit_formatter():
     ],
 )
 def test_compute_resolution(date1, date2, num1, num2, expected_resolution, expected_n):
-    locator = AutoDatetimeLocator()
+    locator = AutoCFDatetimeLocator()
     resolution, n = locator.compute_resolution(num1, num2, date1, date2)
     assert resolution == expected_resolution
     assert np.allclose(n, expected_n)
@@ -226,7 +226,7 @@ def test_compute_resolution(date1, date2, num1, num2, expected_resolution, expec
     ],
 )
 def test_tick_values(date1, date2, num1, num2):
-    locator = AutoDatetimeLocator()
+    locator = AutoCFDatetimeLocator()
     locator.compute_resolution(num1, num2, date1, date2)
     ticks = locator.tick_values(num1, num2)
     assert len(ticks) > 0
@@ -390,9 +390,9 @@ def test_auto_formatter_fix_small_number(value, string, expected):
     ],
 )
 def test_auto_datetime_locator_tick_values(start_date, end_date):
-    from ultraplot.ticker import AutoDatetimeLocator
+    from ultraplot.ticker import AutoCFDatetimeLocator
 
-    locator = AutoDatetimeLocator(calendar="gregorian")
+    locator = AutoCFDatetimeLocator(calendar="gregorian")
     import cftime
 
     ticks = locator.tick_values(start_date, end_date)
@@ -421,10 +421,10 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
     ],
 )
 def test_auto_datetime_locator_tick_values(start_date, end_date):
-    from ultraplot.ticker import AutoDatetimeLocator
+    from ultraplot.ticker import AutoCFDatetimeLocator
     import cftime
 
-    locator = AutoDatetimeLocator(calendar="gregorian")
+    locator = AutoCFDatetimeLocator(calendar="gregorian")
     ticks = locator.tick_values(start_date, end_date)
     assert len(ticks) > 0
 

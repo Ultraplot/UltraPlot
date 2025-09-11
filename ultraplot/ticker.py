@@ -46,9 +46,9 @@ __all__ = [
     "SciFormatter",
     "SigFigFormatter",
     "FracFormatter",
-    "DatetimeFormatter",
-    "AutoDatetimeCFFormatter",
-    "AutoDatetimeCFLocator",
+    "CFDatetimeFormatter",
+    "AutoCFDatetimeFormatter",
+    "AutoCFDatetimeLocator",
     "DegreeFormatter",
     "LongitudeFormatter",
     "LatitudeFormatter",
@@ -846,7 +846,7 @@ class FracFormatter(mticker.Formatter):
         return string
 
 
-class DatetimeFormatter(mticker.Formatter):
+class CFDatetimeFormatter(mticker.Formatter):
     """
     Format dates using `cftime.datetime.strftime` format strings.
     """
@@ -863,7 +863,7 @@ class DatetimeFormatter(mticker.Formatter):
             The time units for interpreting numeric tick values.
         """
         if cftime is None:
-            raise ModuleNotFoundError("cftime is required for DatetimeFormatter.")
+            raise ModuleNotFoundError("cftime is required for CFDatetimeFormatter.")
         self._format = fmt
         self._calendar = calendar
         self._units = units
@@ -876,7 +876,7 @@ class DatetimeFormatter(mticker.Formatter):
         return dt.strftime(self._format)
 
 
-class AutoDatetimeCFFormatter(mticker.Formatter):
+class AutoCFDatetimeFormatter(mticker.Formatter):
     """Automatic formatter for `cftime.datetime` data."""
 
     def __init__(self, locator, calendar, time_units=None):
@@ -896,7 +896,7 @@ class AutoDatetimeCFFormatter(mticker.Formatter):
         return dt.strftime(format_string)
 
 
-class AutoDatetimeCFLocator(mticker.Locator):
+class AutoCFDatetimeLocator(mticker.Locator):
     """Determines tick locations when plotting `cftime.datetime` data."""
 
     real_world_calendars = (
@@ -1376,8 +1376,8 @@ class CFTimeConverter(mdates.DateConverter):
         else:
             calendar, date_unit, date_type = unit
 
-        majloc = AutoDateCFtimeLocator(calendar=calendar, date_unit=date_unit)
-        majfmt = AutoDateCFtimeFormatter(
+        majloc = AutoCFDatetimeLocator(calendar=calendar, date_unit=date_unit)
+        majfmt = AutoCFDatetimeFormatter(
             majloc, calendar=calendar, time_units=date_unit
         )
 
