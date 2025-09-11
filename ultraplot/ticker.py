@@ -47,8 +47,8 @@ __all__ = [
     "SigFigFormatter",
     "FracFormatter",
     "DatetimeFormatter",
-    "AutoDatetimeFormatter",
-    "AutoDatetimeLocator",
+    "AutoDatetimeCFFormatter",
+    "AutoDatetimeCFLocator",
     "DegreeFormatter",
     "LongitudeFormatter",
     "LatitudeFormatter",
@@ -876,7 +876,7 @@ class DatetimeFormatter(mticker.Formatter):
         return dt.strftime(self._format)
 
 
-class AutoDatetimeFormatter(mticker.Formatter):
+class AutoDatetimeCFFormatter(mticker.Formatter):
     """Automatic formatter for `cftime.datetime` data."""
 
     def __init__(self, locator, calendar, time_units=None):
@@ -896,7 +896,7 @@ class AutoDatetimeFormatter(mticker.Formatter):
         return dt.strftime(format_string)
 
 
-class AutoDatetimeLocator(mticker.Locator):
+class AutoDatetimeCFLocator(mticker.Locator):
     """Determines tick locations when plotting `cftime.datetime` data."""
 
     real_world_calendars = (
@@ -1376,8 +1376,10 @@ class CFTimeConverter(mdates.DateConverter):
         else:
             calendar, date_unit, date_type = unit
 
-        majloc = AutoDatetimeLocator(calendar=calendar, date_unit=date_unit)
-        majfmt = AutoDatetimeFormatter(majloc, calendar=calendar, time_units=date_unit)
+        majloc = AutoDateCFtimeLocator(calendar=calendar, date_unit=date_unit)
+        majfmt = AutoDateCFtimeFormatter(
+            majloc, calendar=calendar, time_units=date_unit
+        )
 
         try:
             if date_type is not None:
