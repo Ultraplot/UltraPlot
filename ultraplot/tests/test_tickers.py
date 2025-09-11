@@ -412,6 +412,7 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
             ),
             "gregorian",
             None,
+            "YEARS",
         ),  # Case 1: Valid yearly resolution
         (
             cftime.date2num(
@@ -422,6 +423,7 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
             ),
             "gregorian",
             None,
+            "MONTHS",
         ),  # Case 2: Valid monthly resolution
         (
             cftime.date2num(
@@ -431,7 +433,8 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
                 cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
             ),
             "gregorian",
-            ValueError,
+            None,
+            "DAYS",
         ),  # Case 3: Empty range
         (
             cftime.date2num(
@@ -442,12 +445,27 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
             ),
             "gregorian",
             None,
+            "MONTHS",
+        ),  # Case 4: Months data range
+        (
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            "gregorian",
             None,
-        ),  # Case 4: Invalid date unit
+            None,
+        ),  # Case 5: Empty range (valid calendar)
     ],
 )
 def test_auto_datetime_locator_tick_values(
-    start_date, end_date, calendar, expected_exception
+    start_date,
+    end_date,
+    calendar,
+    expected_exception,
+    expected_resolution,
 ):
     from ultraplot.ticker import AutoCFDatetimeLocator
     import cftime
