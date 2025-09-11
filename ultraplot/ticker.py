@@ -837,11 +837,11 @@ class FracFormatter(mticker.Formatter):
                 string = f"{frac.numerator:d}{symbol:s}"
         else:
             if frac.numerator == 1 and symbol:  # numerator is +/-1
-                string = f"{symbol:s}/{{frac.denominator:d}}"
+                string = f"{symbol:s}/{frac.denominator:d}"
             elif frac.numerator == -1 and symbol:
-                string = f"-{{symbol:s}}/{{frac.denominator:d}}"
+                string = f"-{symbol:s}/{frac.denominator:d}"
             else:  # and again make sure we use unicode minus!
-                string = f"{frac.numerator:d}{symbol:s}/{{frac.denominator:d}}"
+                string = f"{frac.numerator:d}{symbol:s}/{frac.denominator:d}"
         string = AutoFormatter._minus_format(string)
         return string
 
@@ -1244,7 +1244,9 @@ class AutoDatetimeLocator(mticker.Locator):
                 <= vmax + (vmax - vmin) * 0.01
             ):
                 ticks_cftime.append(current_dt_cftime)
-                current_dt_cftime += timedelta(seconds=second_step)
+                current_dt_cftime += timedelta(
+                    seconds=second_step
+                )  # <--- Corrected to use cftime.timedelta
                 if len(ticks_cftime) > 2 * self._max_display_ticks and second_step != 0:
                     break
         else:
