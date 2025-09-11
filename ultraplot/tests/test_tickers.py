@@ -2,6 +2,7 @@ import pytest, numpy as np, xarray as xr, ultraplot as uplt, cftime
 from ultraplot.ticker import AutoCFDatetimeLocator
 from unittest.mock import patch
 import importlib
+from ultraplot.ticker import AutoCFDatetimeLocator
 
 
 @pytest.mark.mpl_image_compare
@@ -400,7 +401,7 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
 
 
 @pytest.mark.parametrize(
-    "start_date, end_date",
+    "start_date, end_date, calendar, expected_exception",
     [
         (
             cftime.date2num(
@@ -409,7 +410,9 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
             cftime.date2num(
                 cftime.DatetimeGregorian(2020, 1, 1), "days since 2000-01-01"
             ),
-        ),  # Case 1: Yearly resolution
+            "gregorian",
+            None,
+        ),  # Case 1: Valid yearly resolution
         (
             cftime.date2num(
                 cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
@@ -417,16 +420,49 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
             cftime.date2num(
                 cftime.DatetimeGregorian(2000, 12, 31), "days since 2000-01-01"
             ),
-        ),  # Case 2: Monthly resolution
+            "gregorian",
+            None,
+        ),  # Case 2: Valid monthly resolution
+        (
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            "gregorian",
+            ValueError,
+        ),  # Case 3: Empty range
+        (
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 12, 31), "days since 2000-01-01"
+            ),
+            "gregorian",
+            None,
+        ),  # Case 4: Invalid date unit
     ],
 )
-def test_auto_datetime_locator_tick_values(start_date, end_date):
+def test_auto_datetime_locator_tick_values(
+    start_date, end_date, calendar, expected_exception
+):
     from ultraplot.ticker import AutoCFDatetimeLocator
     import cftime
 
-    locator = AutoCFDatetimeLocator(calendar="gregorian")
-    ticks = locator.tick_values(start_date, end_date)
-    assert len(ticks) > 0
+    locator = AutoCFDatetimeLocator(calendar=calendar)
+    if expected_exception == ValueError:
+        with pytest.raises(
+            ValueError, match="Incorrectly formatted CF date-time unit_string"
+        ):
+            cftime.date2num(cftime.DatetimeGregorian(2000, 1, 1), "invalid unit")
+    elif expected_exception:
+        with pytest.raises(expected_exception):
+            locator.tick_values(start_date, end_date)
+    else:
+        ticks = locator.tick_values(start_date, end_date)
+        assert len(ticks) > 0
 
 
 @pytest.mark.parametrize(

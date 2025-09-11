@@ -991,8 +991,10 @@ class AutoCFDatetimeLocator(mticker.Locator):
 
     def tick_values(self, vmin, vmax):
         vmin, vmax = mtransforms.nonsingular(vmin, vmax, expander=1e-7, tiny=1e-13)
-        lower = cftime.num2date(vmin, self.date_unit, calendar=self.calendar)
-        upper = cftime.num2date(vmax, self.date_unit, calendar=self.calendar)
+        result = self._safe_num2date(vmin, vmax)
+        lower, upper = result if result else (None, None)
+        if lower is None or upper is None:
+            return np.array([])  # Return empty array if conversion fails
 
         resolution, _ = self.compute_resolution(vmin, vmax, lower, upper)
 
@@ -1021,12 +1023,10 @@ class AutoCFDatetimeLocator(mticker.Locator):
         elif resolution == "MONTHLY":
             # Generate all first-of-month dates between lower and upper bounds
             all_months_cftime = []
-            current_date = cftime.datetime(
-                lower.year, lower.month, 1, calendar=self.calendar
-            )
-            end_date_limit = cftime.datetime(
-                upper.year, upper.month, 1, calendar=self.calendar
-            )
+            current_date = self._safe_create_datetime(lower.year, lower.month, 1)
+            end_date_limit = self._safe_create_datetime(upper.year, upper.month, 1)
+            if current_date is None or end_date_limit is None:
+                return np.array([])  # Return empty array if date creation fails
 
             while current_date <= end_date_limit:
                 all_months_cftime.append(current_date)
@@ -1068,30 +1068,23 @@ class AutoCFDatetimeLocator(mticker.Locator):
 
         elif resolution == "DAILY":
             # MaxNLocator_days works directly on the numeric values (days since epoch)
-            days_numeric = mticker.MaxNLocator(
-                self._max_display_ticks,
-                integer=True,
-                steps=[1, 2, 4, 7, 10],
-                prune="both",
-            ).tick_values(vmin, vmax)
-            for dt_num in days_numeric:
-                try:
-                    ticks_cftime.append(
-                        cftime.num2date(dt_num, self.date_unit, calendar=self.calendar)
-                    )
-                except ValueError:
-                    pass
+            try:
+                days_numeric = self._safe_daily_locator(vmin, vmax)
+                if days_numeric is None:
+                    return np.array([])  # Return empty array if locator fails
+                for dt_num in days_numeric:
+                    tick = self._safe_num2date(dt_num)
+                    if tick is not None:
+                        ticks_cftime.append(tick)
+            except ValueError:
+                return np.array([])  # Return empty array if locator fails
 
         elif resolution == "HOURLY":
-            current_dt_cftime = cftime.datetime(
-                lower.year,
-                lower.month,
-                lower.day,
-                lower.hour,
-                0,
-                0,
-                calendar=self.calendar,
+            current_dt_cftime = self._safe_create_datetime(
+                lower.year, lower.month, lower.day, lower.hour
             )
+            if current_dt_cftime is None:
+                return np.array([])  # Return empty array if date creation fails
             total_hours = (vmax - vmin) * 24.0
             hour_step_candidates = [1, 2, 3, 4, 6, 8, 12]
             hour_step = 1
@@ -1141,15 +1134,18 @@ class AutoCFDatetimeLocator(mticker.Locator):
                     break
 
         elif resolution == "MINUTELY":
-            current_dt_cftime = cftime.datetime(
-                lower.year,
-                lower.month,
-                lower.day,
-                lower.hour,
-                lower.minute,
-                0,
-                calendar=self.calendar,
-            )
+            try:
+                current_dt_cftime = cftime.datetime(
+                    lower.year,
+                    lower.month,
+                    lower.day,
+                    lower.hour,
+                    lower.minute,
+                    0,
+                    calendar=self.calendar,
+                )
+            except ValueError:
+                return np.array([])  # Return empty array if date creation fails
             total_minutes = (vmax - vmin) * 24.0 * 60.0
             minute_step_candidates = [1, 2, 5, 10, 15, 20, 30]
             minute_step = 1
@@ -1174,15 +1170,18 @@ class AutoCFDatetimeLocator(mticker.Locator):
                     cftime.date2num(current_dt_cftime, self.date_unit, self.calendar)
                     < vmin - (vmax - vmin) * 2
                 ):
-                    current_dt_cftime = cftime.datetime(
-                        lower.year,
-                        lower.month,
-                        lower.day,
-                        lower.hour,
-                        lower.minute,
-                        0,
-                        calendar=self.calendar,
-                    )
+                    try:
+                        current_dt_cftime = cftime.datetime(
+                            lower.year,
+                            lower.month,
+                            lower.day,
+                            lower.hour,
+                            lower.minute,
+                            0,
+                            calendar=self.calendar,
+                        )
+                    except ValueError:
+                        return np.array([])  # Return empty array if date creation fails
                     break
 
             while (
@@ -1195,15 +1194,16 @@ class AutoCFDatetimeLocator(mticker.Locator):
                     break
 
         elif resolution == "SECONDLY":
-            current_dt_cftime = cftime.datetime(
+            current_dt_cftime = self._safe_create_datetime(
                 lower.year,
                 lower.month,
                 lower.day,
                 lower.hour,
                 lower.minute,
                 lower.second,
-                calendar=self.calendar,
             )
+            if current_dt_cftime is None:
+                return np.array([])  # Return empty array if date creation fails
             total_seconds = (vmax - vmin) * 24.0 * 60.0 * 60.0
             second_step_candidates = [1, 2, 5, 10, 15, 20, 30]
             second_step = 1
@@ -1275,6 +1275,61 @@ class AutoCFDatetimeLocator(mticker.Locator):
             return np.array([])
 
         return np.unique(np.array(ticks_numeric))
+
+    def _safe_num2date(self, value, vmax=None):
+        """
+        Safely converts numeric values to cftime.datetime objects.
+
+        If a single value is provided, it converts and returns a single datetime object.
+        If both value (vmin) and vmax are provided, it converts and returns a tuple of
+        datetime objects (lower, upper).
+
+        This helper is used to handle cases where the conversion might fail
+        due to invalid inputs or calendar-specific constraints. If the conversion
+        fails, it returns None or a tuple of Nones.
+        """
+        try:
+            if vmax is not None:
+                lower = cftime.num2date(value, self.date_unit, calendar=self.calendar)
+                upper = cftime.num2date(vmax, self.date_unit, calendar=self.calendar)
+                return lower, upper
+            else:
+                return cftime.num2date(value, self.date_unit, calendar=self.calendar)
+        except ValueError:
+            return (None, None) if vmax is not None else None
+
+    def _safe_create_datetime(self, year, month=1, day=1, hour=0, minute=0, second=0):
+        """
+        Safely creates a cftime.datetime object with the given date and time components.
+
+        This helper is used to handle cases where creating a datetime object might fail
+        due to invalid inputs (e.g., invalid dates in specific calendars). If the creation
+        fails, it returns None.
+        """
+        try:
+            return cftime.datetime(
+                year, month, day, hour, minute, second, calendar=self.calendar
+            )
+        except ValueError:
+            return None
+
+    def _safe_daily_locator(self, vmin, vmax):
+        """
+        Safely generates daily tick values using MaxNLocator.
+
+        This helper is used to handle cases where the locator might fail
+        due to invalid input ranges or other issues. If the locator fails,
+        it returns None.
+        """
+        try:
+            return mticker.MaxNLocator(
+                self._max_display_ticks,
+                integer=True,
+                steps=[1, 2, 4, 7, 10],
+                prune="both",
+            ).tick_values(vmin, vmax)
+        except ValueError:
+            return None
 
 
 class _CartopyFormatter(object):
