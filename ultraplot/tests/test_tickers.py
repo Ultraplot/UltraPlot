@@ -401,7 +401,7 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
 
 
 @pytest.mark.parametrize(
-    "start_date, end_date, calendar, expected_exception",
+    "start_date, end_date, calendar, expected_exception, expected_resolution",
     [
         (
             cftime.date2num(
@@ -442,6 +442,7 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
             ),
             "gregorian",
             None,
+            None,
         ),  # Case 4: Invalid date unit
     ],
 )
@@ -452,17 +453,55 @@ def test_auto_datetime_locator_tick_values(
     import cftime
 
     locator = AutoCFDatetimeLocator(calendar=calendar)
+    resolution = expected_resolution
     if expected_exception == ValueError:
         with pytest.raises(
             ValueError, match="Incorrectly formatted CF date-time unit_string"
         ):
             cftime.date2num(cftime.DatetimeGregorian(2000, 1, 1), "invalid unit")
-    elif expected_exception:
+    if expected_exception:
         with pytest.raises(expected_exception):
             locator.tick_values(start_date, end_date)
     else:
         ticks = locator.tick_values(start_date, end_date)
         assert len(ticks) > 0
+
+        # Verify that the ticks are at the correct resolution
+        if expected_resolution == "YEARLY":
+            assert all(
+                cftime.num2date(t, locator.date_unit, calendar=locator.calendar).month
+                == 1
+                for t in ticks
+            )
+            assert all(
+                cftime.num2date(t, locator.date_unit, calendar=locator.calendar).day
+                == 1
+                for t in ticks
+            )
+        elif expected_resolution == "MONTHLY":
+            assert all(
+                cftime.num2date(t, locator.date_unit, calendar=locator.calendar).day
+                == 1
+                for t in ticks
+            )
+        elif expected_resolution == "DAILY":
+            assert all(
+                cftime.num2date(t, locator.date_unit, calendar=locator.calendar).hour
+                == 0
+                for t in ticks
+            )
+        elif expected_resolution == "HOURLY":
+            assert all(
+                cftime.num2date(t, locator.date_unit, calendar=locator.calendar).minute
+                == 0
+                for t in ticks
+            )
+        elif expected_resolution == "MINUTELY":
+            assert all(
+                cftime.num2date(t, locator.date_unit, calendar=locator.calendar).second
+                == 0
+                for t in ticks
+            )
 
 
 @pytest.mark.parametrize(
