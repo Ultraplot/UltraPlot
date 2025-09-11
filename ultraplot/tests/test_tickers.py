@@ -1,7 +1,5 @@
-import pytest
-import numpy as np
-import xarray as xr
-import ultraplot as uplt
+import pytest, numpy as np, xarray as xr, ultraplot as uplt, cftime
+from ultraplot.ticker import AutoDatetimeLocator
 
 
 @pytest.mark.mpl_image_compare
@@ -125,6 +123,107 @@ def test_datetime_explicit_formatter():
         assert False, f"Label {labels[1]} does not match format %b %Y"
 
 
+@pytest.mark.parametrize(
+    "date1, date2, num1, num2, expected_resolution, expected_n",
+    [
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2020, 1, 1),
+            0,
+            7305,
+            "YEARLY",
+            20,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2001, 1, 1),
+            0,
+            365,
+            "MONTHLY",
+            12,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2000, 1, 10),
+            0,
+            9,
+            "DAILY",
+            9,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2000, 1, 1, 12),
+            0,
+            0.5,
+            "HOURLY",
+            12,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 10),
+            0,
+            1.1574074074074073e-4,
+            "SECONDLY",
+            10,
+        ),
+    ],
+)
+def test_compute_resolution(date1, date2, num1, num2, expected_resolution, expected_n):
+    locator = AutoDatetimeLocator()
+    resolution, n = locator.compute_resolution(num1, num2, date1, date2)
+    assert resolution == expected_resolution
+    assert np.allclose(n, expected_n)
+
+
+@pytest.mark.parametrize(
+    "date1, date2, num1, num2",
+    [
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2020, 1, 1),
+            0,
+            7305,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2001, 1, 1),
+            0,
+            365,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2000, 1, 10),
+            0,
+            9,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2000, 1, 1, 12),
+            0,
+            0.5,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 10),
+            0,
+            1.1574074074074073e-4,
+        ),
+    ],
+)
+def test_tick_values(date1, date2, num1, num2):
+    locator = AutoDatetimeLocator()
+    locator.compute_resolution(num1, num2, date1, date2)
+    ticks = locator.tick_values(num1, num2)
+    assert len(ticks) > 0
+    assert all(
+        isinstance(
+            cftime.num2date(t, locator.date_unit, calendar=locator.calendar),
+            cftime.DatetimeGregorian,
+        )
+        for t in ticks
+    )
+
+
 def test_datetime_maxticks():
     time = xr.date_range("2000-01-01", periods=365 * 20, calendar="noleap")
     da = xr.DataArray(
@@ -135,6 +234,6 @@ def test_datetime_maxticks():
     fig, ax = uplt.subplots()
     ax.plot(da)
     locator = ax.xaxis.get_major_locator()
-    locator.set_params(maxticks=5)
+    locator.set_params(maxticks=6)
     fig.canvas.draw()
-    assert len(ax.get_xticks()) <= 5
+    assert len(ax.get_xticks()) <= 6

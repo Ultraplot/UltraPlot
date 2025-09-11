@@ -11,6 +11,7 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 import matplotlib.transforms as mtransforms
 import matplotlib.units as munits
+from datetime import timedelta
 import numpy as np
 
 try:
@@ -906,19 +907,22 @@ class AutoDatetimeLocator(mticker.Locator):
     )
 
     def __init__(self, maxticks=None, calendar="standard", date_unit=None, minticks=3):
+        super().__init__()
         self.minticks = minticks
+        # These are thresholds for *determining resolution*, NOT directly for MaxNLocator tick count
         self.maxticks = {
-            "YEARLY": 11,
+            "YEARLY": 1,
             "MONTHLY": 12,
-            "DAILY": 11,
-            "HOURLY": 12,
-            "MINUTELY": 11,
-            "SECONDLY": 11,
+            "DAILY": 8,
+            "HOURLY": 11,
+            "MINUTELY": 1,
+            "SECONDLY": 11,  # Added for completeness, though not a resolution threshold
         }
         if maxticks is not None:
             if isinstance(maxticks, dict):
                 self.maxticks.update(maxticks)
             else:
+                # If a single value is provided for maxticks, apply it to all resolution *thresholds*
                 self.maxticks = dict.fromkeys(self.maxticks.keys(), maxticks)
 
         self.calendar = calendar
@@ -929,7 +933,10 @@ class AutoDatetimeLocator(mticker.Locator):
         self.resolution = _DEFAULT_RESOLUTION
         self._cached_resolution = {}
 
-    def set_params(self, maxticks=None, minticks=None):
+        # New: Default max ticks for Matplotlib's MaxNLocator, independent of resolution thresholds
+        self._max_display_ticks = 7  # A reasonable number for actual axis ticks
+
+    def set_params(self, maxticks=None, minticks=None, max_display_ticks=None):
         """Set the parameters for the locator."""
         if maxticks is not None:
             if isinstance(maxticks, dict):
@@ -938,9 +945,17 @@ class AutoDatetimeLocator(mticker.Locator):
                 self.maxticks = dict.fromkeys(self.maxticks.keys(), maxticks)
         if minticks is not None:
             self.minticks = minticks
+        if max_display_ticks is not None:
+            self._max_display_ticks = max_display_ticks
 
     def compute_resolution(self, num1, num2, date1, date2):
-        """Returns the resolution of the dates."""
+        """Returns the resolution of the dates.
+        Also updates self.calendar from date1 for consistency.
+        """
+        if isinstance(date1, cftime.datetime):
+            self.calendar = date1.calendar
+            # Assuming self.date_unit (e.g., "days since 0001-01-01") is a universal epoch.
+
         num_days = float(np.abs(num1 - num2))
 
         num_years = num_days / 365.0
@@ -953,7 +968,7 @@ class AutoDatetimeLocator(mticker.Locator):
             n = abs(date1.year - date2.year)
         elif num_months > self.maxticks["MONTHLY"]:
             resolution = "MONTHLY"
-            n = num_months
+            n = abs((date2.year - date1.year) * 12 + (date2.month - date1.month))
         elif num_days > self.maxticks["DAILY"]:
             resolution = "DAILY"
             n = num_days
@@ -979,88 +994,285 @@ class AutoDatetimeLocator(mticker.Locator):
         lower = cftime.num2date(vmin, self.date_unit, calendar=self.calendar)
         upper = cftime.num2date(vmax, self.date_unit, calendar=self.calendar)
 
-        resolution, n = self.compute_resolution(vmin, vmax, lower, upper)
+        resolution, _ = self.compute_resolution(vmin, vmax, lower, upper)
 
-        max_n_ticks = self.maxticks.get(resolution, 11)
-        _max_n_locator = mticker.MaxNLocator(max_n_ticks, integer=True, prune="both")
-        _max_n_locator_days = mticker.MaxNLocator(
-            max_n_ticks, integer=True, steps=[1, 2, 4, 7, 10], prune="both"
-        )
-
-        def has_year_zero(year):
-            result = dict()
-            if self.calendar in self.real_world_calendars and not bool(year):
-                result = dict(has_year_zero=True)
-            return result
+        ticks_cftime = []
 
         if resolution == "YEARLY":
-            years = _max_n_locator.tick_values(lower.year, upper.year)
-            ticks = [
-                cftime.datetime(
-                    int(year),
-                    1,
-                    1,
-                    calendar=self.calendar,
-                    **has_year_zero(year),
-                )
-                for year in years
-            ]
+            years_start = lower.year
+            years_end = upper.year
+            # Use MaxNLocator to find "nice" years to tick
+            year_candidates = mticker.MaxNLocator(
+                self._max_display_ticks, integer=True, prune="both"
+            ).tick_values(years_start, years_end)
+            for year in year_candidates:
+                if (
+                    year == 0 and self.calendar in self.real_world_calendars
+                ):  # Skip year 0 for real-world calendars
+                    continue
+                try:
+                    dt = cftime.datetime(int(year), 1, 1, calendar=self.calendar)
+                    ticks_cftime.append(dt)
+                except (
+                    ValueError
+                ):  # Catch potential errors for invalid dates in specific calendars
+                    pass
+
         elif resolution == "MONTHLY":
-            months_offset = _max_n_locator.tick_values(0, int(n))
-            ticks = []
-            for offset in months_offset:
-                year = lower.year + np.floor((lower.month + offset) / 12)
-                month = ((lower.month + offset) % 12) + 1
-                dt = cftime.datetime(
-                    int(year),
-                    int(month),
-                    1,
-                    calendar=self.calendar,
-                    **has_year_zero(year),
-                )
-                ticks.append(dt)
+            # Generate all first-of-month dates between lower and upper bounds
+            all_months_cftime = []
+            current_date = cftime.datetime(
+                lower.year, lower.month, 1, calendar=self.calendar
+            )
+            end_date_limit = cftime.datetime(
+                upper.year, upper.month, 1, calendar=self.calendar
+            )
+
+            while current_date <= end_date_limit:
+                all_months_cftime.append(current_date)
+                # Increment month
+                if current_date.month == 12:
+                    current_date = cftime.datetime(
+                        current_date.year + 1, 1, 1, calendar=self.calendar
+                    )
+                else:
+                    current_date = cftime.datetime(
+                        current_date.year,
+                        current_date.month + 1,
+                        1,
+                        calendar=self.calendar,
+                    )
+
+            # Select a reasonable number of these using a stride
+            num_all_months = len(all_months_cftime)
+            if num_all_months == 0:
+                pass
+            elif num_all_months <= self._max_display_ticks:
+                ticks_cftime = all_months_cftime
+            else:
+                stride = max(1, num_all_months // self._max_display_ticks)
+                ticks_cftime = all_months_cftime[::stride]
+                # Ensure first and last are included if not already
+                if (
+                    all_months_cftime
+                    and ticks_cftime
+                    and ticks_cftime[0] != all_months_cftime[0]
+                ):
+                    ticks_cftime.insert(0, all_months_cftime[0])
+                if (
+                    all_months_cftime
+                    and ticks_cftime
+                    and ticks_cftime[-1] != all_months_cftime[-1]
+                ):
+                    ticks_cftime.append(all_months_cftime[-1])
+
         elif resolution == "DAILY":
-            days = _max_n_locator_days.tick_values(vmin, vmax)
-            ticks = [
-                cftime.num2date(dt, self.date_unit, calendar=self.calendar)
-                for dt in days
-            ]
+            # MaxNLocator_days works directly on the numeric values (days since epoch)
+            days_numeric = mticker.MaxNLocator(
+                self._max_display_ticks,
+                integer=True,
+                steps=[1, 2, 4, 7, 10],
+                prune="both",
+            ).tick_values(vmin, vmax)
+            for dt_num in days_numeric:
+                try:
+                    ticks_cftime.append(
+                        cftime.num2date(dt_num, self.date_unit, calendar=self.calendar)
+                    )
+                except ValueError:
+                    pass
+
         elif resolution == "HOURLY":
-            hour_unit = "hours since 2000-01-01"
-            in_hours = cftime.date2num(
-                [lower, upper], hour_unit, calendar=self.calendar
+            current_dt_cftime = cftime.datetime(
+                lower.year,
+                lower.month,
+                lower.day,
+                lower.hour,
+                0,
+                0,
+                calendar=self.calendar,
             )
-            hours = _max_n_locator.tick_values(in_hours[0], in_hours[1])
-            ticks = [
-                cftime.num2date(dt, hour_unit, calendar=self.calendar) for dt in hours
-            ]
+            total_hours = (vmax - vmin) * 24.0
+            hour_step_candidates = [1, 2, 3, 4, 6, 8, 12]
+            hour_step = 1
+
+            if total_hours > 0:
+                hour_step = hour_step_candidates[
+                    np.argmin(
+                        np.abs(
+                            np.array(hour_step_candidates)
+                            - total_hours / self._max_display_ticks
+                        )
+                    )
+                ]
+                if hour_step == 0:
+                    hour_step = 1
+
+            while (
+                cftime.date2num(current_dt_cftime, self.date_unit, self.calendar) > vmin
+            ):
+                current_dt_cftime += timedelta(
+                    hours=-hour_step
+                )  # <--- Corrected to use cftime.timedelta
+                if (
+                    cftime.date2num(current_dt_cftime, self.date_unit, self.calendar)
+                    < vmin - (vmax - vmin) * 2
+                ):
+                    current_dt_cftime = cftime.datetime(
+                        lower.year,
+                        lower.month,
+                        lower.day,
+                        lower.hour,
+                        0,
+                        0,
+                        calendar=self.calendar,
+                    )  # Reset
+                    break  # Break if we overshot significantly
+
+            while (
+                cftime.date2num(current_dt_cftime, self.date_unit, self.calendar)
+                <= vmax + (vmax - vmin) * 0.01
+            ):  # Small buffer to include last tick
+                ticks_cftime.append(current_dt_cftime)
+                current_dt_cftime += timedelta(hours=hour_step)
+                if (
+                    len(ticks_cftime) > 2 * self._max_display_ticks and hour_step != 0
+                ):  # Safety break to prevent too many ticks
+                    break
+
         elif resolution == "MINUTELY":
-            minute_unit = "minutes since 2000-01-01"
-            in_minutes = cftime.date2num(
-                [lower, upper], minute_unit, calendar=self.calendar
+            current_dt_cftime = cftime.datetime(
+                lower.year,
+                lower.month,
+                lower.day,
+                lower.hour,
+                lower.minute,
+                0,
+                calendar=self.calendar,
             )
-            minutes = _max_n_locator.tick_values(in_minutes[0], in_minutes[1])
-            ticks = [
-                cftime.num2date(dt, minute_unit, calendar=self.calendar)
-                for dt in minutes
-            ]
+            total_minutes = (vmax - vmin) * 24.0 * 60.0
+            minute_step_candidates = [1, 2, 5, 10, 15, 20, 30]
+            minute_step = 1
+
+            if total_minutes > 0:
+                minute_step = minute_step_candidates[
+                    np.argmin(
+                        np.abs(
+                            np.array(minute_step_candidates)
+                            - total_minutes / self._max_display_ticks
+                        )
+                    )
+                ]
+                if minute_step == 0:
+                    minute_step = 1
+
+            while (
+                cftime.date2num(current_dt_cftime, self.date_unit, self.calendar) > vmin
+            ):
+                current_dt_cftime += timedelta(minutes=-minute_step)
+                if (
+                    cftime.date2num(current_dt_cftime, self.date_unit, self.calendar)
+                    < vmin - (vmax - vmin) * 2
+                ):
+                    current_dt_cftime = cftime.datetime(
+                        lower.year,
+                        lower.month,
+                        lower.day,
+                        lower.hour,
+                        lower.minute,
+                        0,
+                        calendar=self.calendar,
+                    )
+                    break
+
+            while (
+                cftime.date2num(current_dt_cftime, self.date_unit, self.calendar)
+                <= vmax + (vmax - vmin) * 0.01
+            ):
+                ticks_cftime.append(current_dt_cftime)
+                current_dt_cftime += timedelta(minutes=minute_step)
+                if len(ticks_cftime) > 2 * self._max_display_ticks and minute_step != 0:
+                    break
+
         elif resolution == "SECONDLY":
-            second_unit = "seconds since 2000-01-01"
-            in_seconds = cftime.date2num(
-                [lower, upper], second_unit, calendar=self.calendar
+            current_dt_cftime = cftime.datetime(
+                lower.year,
+                lower.month,
+                lower.day,
+                lower.hour,
+                lower.minute,
+                lower.second,
+                calendar=self.calendar,
             )
-            seconds = _max_n_locator.tick_values(in_seconds[0], in_seconds[1])
-            ticks = [
-                cftime.num2date(dt, second_unit, calendar=self.calendar)
-                for dt in seconds
-            ]
+            total_seconds = (vmax - vmin) * 24.0 * 60.0 * 60.0
+            second_step_candidates = [1, 2, 5, 10, 15, 20, 30]
+            second_step = 1
+
+            if total_seconds > 0:
+                second_step = second_step_candidates[
+                    np.argmin(
+                        np.abs(
+                            np.array(second_step_candidates)
+                            - total_seconds / self._max_display_ticks
+                        )
+                    )
+                ]
+                if second_step == 0:
+                    second_step = 1
+
+            while (
+                cftime.date2num(current_dt_cftime, self.date_unit, self.calendar) > vmin
+            ):
+                current_dt_cftime += timedelta(seconds=-second_step)
+                if (
+                    cftime.date2num(current_dt_cftime, self.date_unit, self.calendar)
+                    < vmin - (vmax - vmin) * 2
+                ):
+                    current_dt_cftime = cftime.datetime(
+                        lower.year,
+                        lower.month,
+                        lower.day,
+                        lower.hour,
+                        lower.minute,
+                        lower.second,
+                        calendar=self.calendar,
+                    )
+                    break
+
+            while (
+                cftime.date2num(current_dt_cftime, self.date_unit, self.calendar)
+                <= vmax + (vmax - vmin) * 0.01
+            ):
+                ticks_cftime.append(current_dt_cftime)
+                current_dt_cftime += timedelta(seconds=second_step)
+                if len(ticks_cftime) > 2 * self._max_display_ticks and second_step != 0:
+                    break
         else:
             emsg = f"Resolution {resolution} not implemented yet."
             raise ValueError(emsg)
 
         if self.calendar in self.real_world_calendars:
-            ticks = [t for t in ticks if t.year != 0]
-        return cftime.date2num(ticks, self.date_unit, calendar=self.calendar)
+            # Filters out year 0 for calendars where it's not applicable
+            ticks_cftime = [t for t in ticks_cftime if t.year != 0]
+
+        # Convert the generated cftime.datetime objects back to numeric values
+        ticks_numeric = []
+        for t in ticks_cftime:
+            try:
+                num_val = cftime.date2num(t, self.date_unit, calendar=self.calendar)
+                if vmin <= num_val <= vmax:  # Final filter for actual view interval
+                    ticks_numeric.append(num_val)
+            except ValueError:  # Handle potential issues with invalid cftime dates
+                pass
+
+        # Fallback: if no ticks are found (e.g., very short range or specific calendar issues),
+        # ensure at least two end points if vmin <= vmax
+        if not ticks_numeric and vmin <= vmax:
+            return np.array([vmin, vmax])
+        elif not ticks_numeric:  # If vmin > vmax or other edge cases
+            return np.array([])
+
+        return np.unique(np.array(ticks_numeric))
 
 
 class _CartopyFormatter(object):
