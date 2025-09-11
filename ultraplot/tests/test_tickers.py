@@ -1,5 +1,7 @@
 import pytest, numpy as np, xarray as xr, ultraplot as uplt, cftime
 from ultraplot.ticker import AutoDatetimeLocator
+from unittest.mock import patch
+import importlib
 
 
 @pytest.mark.mpl_image_compare
@@ -208,6 +210,19 @@ def test_compute_resolution(date1, date2, num1, num2, expected_resolution, expec
             0,
             1.1574074074074073e-4,
         ),
+        # Additional test cases to cover the while loop
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2000, 12, 31),
+            0,
+            365,
+        ),
+        (
+            cftime.DatetimeGregorian(2000, 1, 1),
+            cftime.DatetimeGregorian(2000, 1, 2),
+            0,
+            1,
+        ),
     ],
 )
 def test_tick_values(date1, date2, num1, num2):
@@ -237,3 +252,232 @@ def test_datetime_maxticks():
     locator.set_params(maxticks=6)
     fig.canvas.draw()
     assert len(ax.get_xticks()) <= 6
+
+
+@pytest.mark.parametrize("module_name", ["cftime", "cartopy.crs"])
+def test_missing_modules(module_name):
+    """Test fallback behavior when modules are missing."""
+    with patch.dict("sys.modules", {module_name: None}):
+        # Reload the ultraplot.ticker module to apply the mocked sys.modules
+        import ultraplot.ticker
+
+        importlib.reload(ultraplot.ticker)
+
+        if module_name == "cftime":
+            from ultraplot.ticker import cftime
+
+            assert cftime is None
+        elif module_name == "ccrs":
+            from ultraplot.ticker import (
+                ccrs,
+                LatitudeFormatter,
+                LongitudeFormatter,
+                _PlateCarreeFormatter,
+            )
+
+            assert ccrs is None
+            assert LatitudeFormatter is object
+            assert LongitudeFormatter is object
+            assert _PlateCarreeFormatter is object
+
+
+def test_index_locator():
+    from ultraplot.ticker import IndexLocator
+
+    # Initialize with default values
+    locator = IndexLocator()
+    assert locator._base == 1
+    assert locator._offset == 0
+
+    # Update parameters
+    locator.set_params(base=2, offset=1)
+    assert locator._base == 2
+    assert locator._offset == 1
+
+
+def test_default_precision_zerotrim():
+    from ultraplot.ticker import _default_precision_zerotrim
+
+    # Case 1: Default behavior
+    precision, zerotrim = _default_precision_zerotrim()
+    assert precision == 6  # Default when zerotrim is True
+    assert zerotrim is True
+
+    # Case 2: Explicit precision and zerotrim
+    precision, zerotrim = _default_precision_zerotrim(precision=3, zerotrim=False)
+    assert precision == 3
+    assert zerotrim is False
+
+
+def test_index_locator_tick_values():
+    from ultraplot.ticker import IndexLocator
+
+    locator = IndexLocator(base=2, offset=1)
+    ticks = locator.tick_values(0, 10)
+    assert np.array_equal(ticks, [1, 3, 5, 7, 9])
+
+
+def test_discrete_locator_call():
+    from ultraplot.ticker import DiscreteLocator
+
+    locator = DiscreteLocator(locs=[0, 1, 2, 3, 4])
+    ticks = locator()
+    assert np.array_equal(ticks, [0, 1, 2, 3, 4])
+
+
+def test_discrete_locator_set_params():
+    from ultraplot.ticker import DiscreteLocator
+
+    locator = DiscreteLocator(locs=[0, 1, 2, 3, 4])
+    locator.set_params(steps=[1, 2], nbins=3, minor=True, min_n_ticks=2)
+
+    assert np.array_equal(locator._steps, [1, 2, 10])
+    assert locator._nbins == 3
+    assert locator._minor is True
+    assert locator._min_n_ticks == 2
+
+
+def test_discrete_locator_tick_values():
+    from ultraplot.ticker import DiscreteLocator
+
+    # Create a locator with specific locations
+    locator = DiscreteLocator(locs=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    locator.set_params(steps=[1, 2], nbins=5, minor=False, min_n_ticks=2)
+
+    ticks = locator.tick_values(None, None)
+
+    assert np.array_equal(ticks, list(range(10)))
+
+
+@pytest.mark.parametrize(
+    "value, string, expected",
+    [
+        (1e-10, "0.0", True),  # Case 1: Small number close to zero
+        (1000, "1000", False),  # Case 2: Large number
+    ],
+)
+def test_auto_formatter_fix_small_number(value, string, expected):
+    from ultraplot.ticker import AutoFormatter
+
+    formatter = AutoFormatter()
+    result = formatter._fix_small_number(value, string)
+    if expected:
+        assert result != string
+    else:
+        assert result == string
+
+
+@pytest.mark.parametrize(
+    "start_date, end_date",
+    [
+        (
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            cftime.date2num(
+                cftime.DatetimeGregorian(2020, 1, 1), "days since 2000-01-01"
+            ),
+        ),
+        # Case 2: Monthly resolution
+        (
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 12, 31), "days since 2000-01-01"
+            ),
+        ),
+    ],
+)
+def test_auto_datetime_locator_tick_values(start_date, end_date):
+    from ultraplot.ticker import AutoDatetimeLocator
+
+    locator = AutoDatetimeLocator(calendar="gregorian")
+    import cftime
+
+    ticks = locator.tick_values(start_date, end_date)
+    assert len(ticks) > 0  # Ensure ticks are generated
+
+
+@pytest.mark.parametrize(
+    "start_date, end_date",
+    [
+        (
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            cftime.date2num(
+                cftime.DatetimeGregorian(2020, 1, 1), "days since 2000-01-01"
+            ),
+        ),  # Case 1: Yearly resolution
+        (
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+            ),
+            cftime.date2num(
+                cftime.DatetimeGregorian(2000, 12, 31), "days since 2000-01-01"
+            ),
+        ),  # Case 2: Monthly resolution
+    ],
+)
+def test_auto_datetime_locator_tick_values(start_date, end_date):
+    from ultraplot.ticker import AutoDatetimeLocator
+    import cftime
+
+    locator = AutoDatetimeLocator(calendar="gregorian")
+    ticks = locator.tick_values(start_date, end_date)
+    assert len(ticks) > 0
+
+
+@pytest.mark.parametrize(
+    "vmin, vmax, expected_ticks",
+    [
+        (5, 5, []),  # Case 1: Empty range
+        (-5, 5, [1, 3]),  # Case 2: Negative range
+    ],
+)
+def test_index_locator_tick_values_edge_cases(vmin, vmax, expected_ticks):
+    from ultraplot.ticker import IndexLocator
+
+    locator = IndexLocator(base=2, offset=1)
+    ticks = locator.tick_values(vmin, vmax)
+    print(f"vmin: {vmin}, vmax: {vmax}, ticks: {ticks}")
+    assert np.array_equal(ticks, expected_ticks)
+
+
+@pytest.mark.parametrize(
+    "locs, steps, nbins, expected_length, expected_ticks",
+    [
+        ([], None, None, 0, []),  # Case 1: Empty locs
+        ([5], None, None, 1, [5]),  # Case 2: Single loc
+        (np.arange(0, 100, 1), [1, 2], 10, 100, None),  # Case 3: Large range with steps
+    ],
+)
+def test_discrete_locator_tick_values_edge_cases(
+    locs, steps, nbins, expected_length, expected_ticks
+):
+    from ultraplot.ticker import DiscreteLocator
+
+    locator = DiscreteLocator(locs=locs)
+    if steps and nbins:
+        locator.set_params(steps=steps, nbins=nbins)
+    ticks = locator.tick_values(None, None)
+
+    assert len(ticks) == expected_length  # Check the number of ticks
+    if expected_ticks is not None:
+        assert np.array_equal(ticks, expected_ticks)  # Check the tick values
+
+
+@pytest.mark.parametrize(
+    "steps, expected",
+    [
+        ((0, 2000000), [1, 2, 3, 6, 10]),  # large range
+        ((0, 2), [1, 1.5, 2, 2.5, 3, 5, 10]),  # small range
+    ],
+)
+def test_degree_locator_guess_steps(steps, expected):
+    from ultraplot.ticker import DegreeLocator
+
+    locator = DegreeLocator()
+    locator._guess_steps(*steps)
+    assert np.array_equal(locator._steps, expected)
