@@ -728,7 +728,7 @@ class SciFormatter(mticker.Formatter):
         sign = parts[1][0].replace("+", "")
         exponent = parts[1][1:].lstrip("0")
         if exponent:
-            exponent = f"10^ {{{sign}{exponent}}}"
+            exponent = f"10^{{{sign}{exponent}}}"
         if significand and exponent:
             string = rf"{significand}{{\times}}{exponent}"
         else:
