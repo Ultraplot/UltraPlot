@@ -315,14 +315,28 @@ docstring._snippet_manager["axes.dualy"] = _dual_docstring.format(**_shared_y_ke
 
 @dataclass
 class _AxisParams:
+    # Floats
     min: float
     max: float
-    lim: tuple
-    reverse: bool
     margin: float
+    linewidth: float
+    rotation: float
+    ticklen: float
+    ticklenratio: float
+    tickwidth: float
+    tickwidthratio: float
+    ticklabelpad: float
+    ticklabelsize: float
+    labelpad: float
+    labelsize: float
+
+    # Tuples
+    lim: tuple
     bounds: tuple
     tickrange: tuple
     wraprange: tuple
+
+    # Strings
     scale: str
     scale_kw: dict
     spineloc: str
@@ -330,36 +344,36 @@ class _AxisParams:
     ticklabelloc: str
     labelloc: str
     offsetloc: str
-    grid: bool
-    gridminor: bool
-    locator: object
-    locator_kw: dict
-    minorlocator: object
-    minorlocator_kw: dict
-    formatter: object
-    formatter_kw: dict
-    label: str
-    label_kw: dict
-    color: str
-    gridcolor: str
-    linewidth: float
-    rotation: float
-    tickminor: bool
     tickdir: str
     tickcolor: str
-    ticklen: float
-    ticklenratio: float
-    tickwidth: float
-    tickwidthratio: float
     ticklabeldir: str
     ticklabelpad: float
     ticklabelcolor: str
     ticklabelsize: float
     ticklabelweight: str
-    labelpad: float
+    label: str
     labelcolor: str
-    labelsize: float
     labelweight: str
+    color: str
+    gridcolor: str
+
+    # Booleans
+    reverse: bool
+    grid: bool
+    gridminor: bool
+    tickminor: bool
+
+    # Objects
+    locator: object
+    minorlocator: object
+    formatter: object
+
+    # Dicts
+    scale_kw: dict
+    locator_kw: dict
+    minorlocator_kw: dict
+    formatter_kw: dict
+    label_kw: dict
 
     @classmethod
     def from_vars(cls, prefix, var_dict):
