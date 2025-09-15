@@ -338,7 +338,6 @@ class _AxisParams:
 
     # Strings
     scale: str
-    scale_kw: dict
     spineloc: str
     tickloc: str
     ticklabelloc: str
@@ -347,9 +346,7 @@ class _AxisParams:
     tickdir: str
     tickcolor: str
     ticklabeldir: str
-    ticklabelpad: float
     ticklabelcolor: str
-    ticklabelsize: float
     ticklabelweight: str
     label: str
     labelcolor: str
@@ -380,10 +377,15 @@ class _AxisParams:
         kwargs = {}
         for field in fields(cls):
             key = f"{prefix}{field.name}"
-            if field.name.endswith("_kw"):
-                kwargs[field.name] = var_dict.get(key, {})
-            else:
-                kwargs[field.name] = var_dict.get(key)
+            # Default *_kw to {}, others to None
+            value = var_dict.get(key, {} if field.name.endswith("_kw") else None)
+            # Cast to float if needed and not None
+            if field.type == float and value is not None:
+                try:
+                    value = float(value)
+                except Exception:
+                    pass  # silently ignore
+            kwargs[field.name] = value
         return cls(**kwargs)
 
 
