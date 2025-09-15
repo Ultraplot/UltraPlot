@@ -377,14 +377,44 @@ class _AxisParams:
         kwargs = {}
         for field in fields(cls):
             key = f"{prefix}{field.name}"
-            # Default *_kw to {}, others to None
-            value = var_dict.get(key, {} if field.name.endswith("_kw") else None)
-            # Cast to float if needed and not None
-            if field.type == float and value is not None:
-                try:
-                    value = float(value)
-                except Exception:
-                    pass  # silently ignore
+            value = var_dict.get(key, {} if field.type is dict else None)
+
+            # Type validation and casting
+            if value is not None:
+                if field.type is float:
+                    try:
+                        value = float(value)
+                    except Exception:
+                        raise ValueError(
+                            f"Field '{field.name}' expects a float, got {value!r}"
+                        )
+                elif field.type is int:
+                    try:
+                        value = int(value)
+                    except Exception:
+                        raise ValueError(
+                            f"Field '{field.name}' expects an int, got {value!r}"
+                        )
+                elif field.type is bool:
+                    # Accept bool or string representations
+                    if isinstance(value, str):
+                        value = value.lower() in ("true", "1", "yes", "on")
+                    else:
+                        value = bool(value)
+                elif field.type is dict:
+                    if not isinstance(value, dict):
+                        raise ValueError(
+                            f"Field '{field.name}' expects a dict, got {type(value).__name__}"
+                        )
+                elif field.type is tuple:
+                    if not isinstance(value, tuple):
+                        # Try to convert list to tuple
+                        if isinstance(value, list):
+                            value = tuple(value)
+                        else:
+                            raise ValueError(
+                                f"Field '{field.name}' expects a tuple, got {type(value).__name__}"
+                            )
             kwargs[field.name] = value
         return cls(**kwargs)
 
