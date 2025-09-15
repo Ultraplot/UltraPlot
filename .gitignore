@@ -26,6 +26,7 @@ docs/_static/*
 # Development subfolders
 dev
 sources
+.nox
 
 # Python extras
 .ipynb_checkpoints

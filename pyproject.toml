@@ -1,5 +1,6 @@
 [build-system]
 requires = [
+    "hatchling",
     "setuptools>=64",
     "setuptools_scm[toml]>=8",
     "wheel",
@@ -50,3 +51,27 @@ include-package-data = true
 [tool.setuptools_scm]
 write_to = "ultraplot/_version.py"
 write_to_template = "__version__ = '{version}'\n"
+
+[tool.basedpyright]
+include = ["ultraplot"]
+exclude = [
+  "**/__pycache__",
+  "**/node_modules",
+  "**/*.ipynb",   # ignore Jupyter notebooks
+  "**/*.pyi",     # ignore stub files
+]
+
+
+[tool.hatch.envs.test]
+type = "conda"
+command = "micromamba"
+environment_file = "./environment.yml"
+conda-forge = true
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13"]
+matplotlib = ["3.9", "3.10"]
+
+[tool.hatch.envs.test.scripts]
+# cov = "pytest --cov=ultraplot {args} ultraplot/tests"
+test = "pytest {args} ultraplot/tests"
