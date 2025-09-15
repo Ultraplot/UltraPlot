@@ -377,44 +377,32 @@ class _AxisParams:
         kwargs = {}
         for field in fields(cls):
             key = f"{prefix}{field.name}"
-            value = var_dict.get(key, {} if field.type is dict else None)
+            default = {} if field.type is dict else None
+            value = var_dict.get(key, default)
 
             # Type validation and casting
-            if value is not None:
-                if field.type is float:
-                    try:
+            try:
+                if value is not None:
+                    if field.type is float:
                         value = float(value)
-                    except Exception:
-                        raise ValueError(
-                            f"Field '{field.name}' expects a float, got {value!r}"
-                        )
-                elif field.type is int:
-                    try:
+                    elif field.type is int:
                         value = int(value)
-                    except Exception:
-                        raise ValueError(
-                            f"Field '{field.name}' expects an int, got {value!r}"
-                        )
-                elif field.type is bool:
-                    # Accept bool or string representations
-                    if isinstance(value, str):
-                        value = value.lower() in ("true", "1", "yes", "on")
-                    else:
+                    elif field.type is bool:
                         value = bool(value)
-                elif field.type is dict:
-                    if not isinstance(value, dict):
-                        raise ValueError(
-                            f"Field '{field.name}' expects a dict, got {type(value).__name__}"
-                        )
-                elif field.type is tuple:
-                    if not isinstance(value, tuple):
-                        # Try to convert list to tuple
+                    elif field.type is dict:
+                        if not isinstance(value, dict):
+                            raise TypeError
+                    elif field.type is tuple:
                         if isinstance(value, list):
                             value = tuple(value)
-                        else:
-                            raise ValueError(
-                                f"Field '{field.name}' expects a tuple, got {type(value).__name__}"
-                            )
+                        elif not isinstance(value, tuple):
+                            raise TypeError
+            except Exception:
+                warnings._warn_ultraplot(
+                    f"Could not cast key '{key}' value '{value}' to {field.type.__name__}; using default."
+                )
+                value = default
+
             kwargs[field.name] = value
         return cls(**kwargs)
 
