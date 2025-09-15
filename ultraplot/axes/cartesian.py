@@ -1378,6 +1378,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             xspineloc = _not_none(xspineloc, rc._get_loc_string("x", "axes.spines"))
             yspineloc = _not_none(yspineloc, rc._get_loc_string("y", "axes.spines"))
 
+            xrotation = _not_none(xrotation, rc.find("xrotation", context=True))
+            yrotation = _not_none(yrotation, rc.find("yrotation", context=True))
+            xscale = _not_none(xscale, rc.find("xscale", context=True))
+            yscale = _not_none(yscale, rc.find("yscale", context=True))
+
             axes_params = {s: _AxisParams.from_vars(s, locals()) for s in ("x", "y")}
 
             for s, params in axes_params.items():
