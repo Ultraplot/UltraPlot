@@ -1361,6 +1361,102 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             xscale = _not_none(xscale, rc.find("xscale", context=True))
             yscale = _not_none(yscale, rc.find("yscale", context=True))
 
+            x_params = dict(
+                labelpad=xlabelpad,
+                labelsize=xlabelsize,
+                linewidth=xlinewidth,
+                margin=xmargin,
+                max=xmax,
+                min=xmin,
+                rotation=xrotation,
+                ticklabelpad=xticklabelpad,
+                ticklabelsize=xticklabelsize,
+                ticklen=xticklen,
+                ticklenratio=xticklenratio,
+                tickwidth=xtickwidth,
+                tickwidthratio=xtickwidthratio,
+                bounds=xbounds,
+                lim=xlim,
+                tickrange=xtickrange,
+                wraprange=xwraprange,
+                color=xcolor,
+                gridcolor=xgridcolor,
+                label=xlabel,
+                labelcolor=xlabelcolor,
+                labelweight=xlabelweight,
+                labelloc=xlabelloc,
+                offsetloc=xoffsetloc,
+                scale=xscale,
+                spineloc=xspineloc,
+                tickcolor=xtickcolor,
+                tickdir=xtickdir,
+                ticklabelcolor=xticklabelcolor,
+                ticklabeldir=xticklabeldir,
+                ticklabelloc=xticklabelloc,
+                ticklabelweight=xticklabelweight,
+                tickloc=xtickloc,
+                grid=xgrid,
+                gridminor=xgridminor,
+                reverse=xreverse,
+                tickminor=xtickminor,
+                formatter=xformatter,
+                locator=xlocator,
+                minorlocator=xminorlocator,
+                formatter_kw=xformatter_kw,
+                label_kw=xlabel_kw,
+                locator_kw=xlocator_kw,
+                minorlocator_kw=xminorlocator_kw,
+                scale_kw=xscale_kw,
+            )
+
+            y_params = dict(
+                labelpad=ylabelpad,
+                labelsize=ylabelsize,
+                linewidth=ylinewidth,
+                margin=ymargin,
+                max=ymax,
+                min=ymin,
+                rotation=yrotation,
+                ticklabelpad=yticklabelpad,
+                ticklabelsize=yticklabelsize,
+                ticklen=yticklen,
+                ticklenratio=yticklenratio,
+                tickwidth=ytickwidth,
+                tickwidthratio=ytickwidthratio,
+                bounds=ybounds,
+                lim=ylim,
+                tickrange=ytickrange,
+                wraprange=ywraprange,
+                color=ycolor,
+                gridcolor=ygridcolor,
+                label=ylabel,
+                labelcolor=ylabelcolor,
+                labelweight=ylabelweight,
+                labelloc=ylabelloc,
+                offsetloc=yoffsetloc,
+                scale=yscale,
+                spineloc=yspineloc,
+                tickcolor=ytickcolor,
+                tickdir=ytickdir,
+                ticklabelcolor=yticklabelcolor,
+                ticklabeldir=yticklabeldir,
+                ticklabelloc=yticklabelloc,
+                ticklabelweight=yticklabelweight,
+                tickloc=ytickloc,
+                grid=ygrid,
+                gridminor=ygridminor,
+                reverse=yreverse,
+                tickminor=ytickminor,
+                formatter=yformatter,
+                locator=ylocator,
+                minorlocator=yminorlocator,
+                formatter_kw=yformatter_kw,
+                label_kw=ylabel_kw,
+                locator_kw=ylocator_kw,
+                minorlocator_kw=yminorlocator_kw,
+                scale_kw=yscale_kw,
+            )
+
             def _collect_axis_params(axis, prefix, local_vars):
                 return {
                     field.name: local_vars.get(
@@ -1373,6 +1469,16 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 axis: _AxisParams(**_collect_axis_params(axis, axis, locals()))
                 for axis in ("x", "y")
             }
+
+            # axes_params = {
+            #     "x": _AxisParams(**x_params),
+            #     "y": _AxisParams(**y_params),
+            # }
+
+            # axes_params = {
+            # axis: _AxisParams.from_vars(axis, locals())
+            # for axis in "xy"
+            # }
 
             for s, params in axes_params.items():
                 # Axis scale
