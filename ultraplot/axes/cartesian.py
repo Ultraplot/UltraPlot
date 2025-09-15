@@ -377,7 +377,7 @@ class _AxisParams:
         kwargs = {}
         for field in fields(cls):
             key = f"{prefix}{field.name}"
-            default = {} if isinstance(field.type, dict) else None
+            default = {} if field.type is dict else None
             value = var_dict.get(key, default)
             # Type validation and casting
             try:
