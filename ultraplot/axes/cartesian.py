@@ -19,7 +19,7 @@ from ..internals import ic  # noqa: F401
 from ..internals import _not_none, _pop_rc, _version_mpl, docstring, labels, warnings
 from . import plot, shared
 import matplotlib.axis as maxis
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 __all__ = ["CartesianAxes"]
 
@@ -363,60 +363,14 @@ class _AxisParams:
 
     @classmethod
     def from_vars(cls, prefix, var_dict):
-        # Helper to default *_kw keys to {} and others to None
-        def get_kw(key):
-            return var_dict.get(f"{prefix}{key}", {})  # for *_kw
-
-        def get(key):
-            return var_dict.get(f"{prefix}{key}")  # for others
-
-        return cls(
-            min=get("min"),
-            max=get("max"),
-            lim=get("lim"),
-            reverse=get("reverse"),
-            margin=get("margin"),
-            bounds=get("bounds"),
-            tickrange=get("tickrange"),
-            wraprange=get("wraprange"),
-            scale=get("scale"),
-            scale_kw=get_kw("scale_kw"),
-            spineloc=get("spineloc"),
-            tickloc=get("tickloc"),
-            ticklabelloc=get("ticklabelloc"),
-            labelloc=get("labelloc"),
-            offsetloc=get("offsetloc"),
-            grid=get("grid"),
-            gridminor=get("gridminor"),
-            locator=get("locator"),
-            locator_kw=get_kw("locator_kw"),
-            minorlocator=get("minorlocator"),
-            minorlocator_kw=get_kw("minorlocator_kw"),
-            formatter=get("formatter"),
-            formatter_kw=get_kw("formatter_kw"),
-            label=get("label"),
-            label_kw=get_kw("label_kw"),
-            color=get("color"),
-            gridcolor=get("gridcolor"),
-            linewidth=get("linewidth"),
-            rotation=get("rotation"),
-            tickminor=get("tickminor"),
-            tickdir=get("tickdir"),
-            tickcolor=get("tickcolor"),
-            ticklen=get("ticklen"),
-            ticklenratio=get("ticklenratio"),
-            tickwidth=get("tickwidth"),
-            tickwidthratio=get("tickwidthratio"),
-            ticklabeldir=get("ticklabeldir"),
-            ticklabelpad=get("ticklabelpad"),
-            ticklabelcolor=get("ticklabelcolor"),
-            ticklabelsize=get("ticklabelsize"),
-            ticklabelweight=get("ticklabelweight"),
-            labelpad=get("labelpad"),
-            labelcolor=get("labelcolor"),
-            labelsize=get("labelsize"),
-            labelweight=get("labelweight"),
-        )
+        kwargs = {}
+        for field in fields(cls):
+            key = f"{prefix}{field.name}"
+            if field.name.endswith("_kw"):
+                kwargs[field.name] = var_dict.get(key, {})
+            else:
+                kwargs[field.name] = var_dict.get(key)
+        return cls(**kwargs)
 
 
 class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
