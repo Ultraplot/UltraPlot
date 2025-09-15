@@ -316,61 +316,61 @@ docstring._snippet_manager["axes.dualy"] = _dual_docstring.format(**_shared_y_ke
 @dataclass
 class _AxisParams:
     # Floats
-    min: float
-    max: float
-    margin: float
+    labelpad: float
+    labelsize: float
     linewidth: float
+    margin: float
+    max: float
+    min: float
     rotation: float
+    ticklabelpad: float
+    ticklabelsize: float
     ticklen: float
     ticklenratio: float
     tickwidth: float
     tickwidthratio: float
-    ticklabelpad: float
-    ticklabelsize: float
-    labelpad: float
-    labelsize: float
 
     # Tuples
-    lim: tuple
     bounds: tuple
+    lim: tuple
     tickrange: tuple
     wraprange: tuple
 
     # Strings
-    scale: str
-    spineloc: str
-    tickloc: str
-    ticklabelloc: str
-    labelloc: str
-    offsetloc: str
-    tickdir: str
-    tickcolor: str
-    ticklabeldir: str
-    ticklabelcolor: str
-    ticklabelweight: str
+    color: str
+    gridcolor: str
     label: str
     labelcolor: str
     labelweight: str
-    color: str
-    gridcolor: str
+    labelloc: str
+    offsetloc: str
+    scale: str
+    spineloc: str
+    tickcolor: str
+    tickdir: str
+    ticklabelcolor: str
+    ticklabeldir: str
+    ticklabelloc: str
+    ticklabelweight: str
+    tickloc: str
 
     # Booleans
-    reverse: bool
     grid: bool
     gridminor: bool
+    reverse: bool
     tickminor: bool
 
     # Objects
+    formatter: object
     locator: object
     minorlocator: object
-    formatter: object
 
     # Dicts
-    scale_kw: dict
-    locator_kw: dict
-    minorlocator_kw: dict
     formatter_kw: dict
     label_kw: dict
+    locator_kw: dict
+    minorlocator_kw: dict
+    scale_kw: dict
 
     @classmethod
     def from_vars(cls, prefix, var_dict):
@@ -378,7 +378,7 @@ class _AxisParams:
         for field in fields(cls):
             key = f"{prefix}{field.name}"
             default = {} if isinstance(field.type, dict) else None
-            value = var_dict.get(key, default)
+  value = var_dict.get(key, default)
             # Type validation and casting
             try:
                 if value is not None:
