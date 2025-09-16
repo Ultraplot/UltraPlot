@@ -653,15 +653,19 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 the leftmost and bottommost is the *figure* sharing level.
         """
         # Handle X axis sharing
-        self._handle_axis_sharing(
-            source_axis=self._sharex._lonaxis,
-            target_axis=self._lonaxis,
-            which="x",
-        )
+        #
+        if self._sharex:
+            self._handle_axis_sharing(
+                source_axis=self._sharex._lonaxis,
+                target_axis=self._lonaxis,
+                which="x",
+            )
+
         # Handle Y axis sharing
-        self._handle_axis_sharing(
-            source_axis=self._sharey._lataxis, target_axis=self._lataxis, which="y"
-        )
+        if self._sharey:
+            self._handle_axis_sharing(
+                source_axis=self._sharey._lataxis, target_axis=self._lataxis, which="y"
+            )
 
         # This block is apart of the draw sequence as the
         # gridliner object is created late in the
