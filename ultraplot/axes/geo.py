@@ -653,7 +653,6 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 the leftmost and bottommost is the *figure* sharing level.
         """
         # Handle X axis sharing
-        #
         if self._sharex:
             self._handle_axis_sharing(
                 source_axis=self._sharex._lonaxis,
