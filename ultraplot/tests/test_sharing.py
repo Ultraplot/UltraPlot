@@ -75,6 +75,14 @@ def test_sharing_levels_x(share_level):
                 border_axes.add(axes)
     for axi in axs:
         tick_params = axi.xaxis.get_tick_params()
+        from ultraplot.internals.versions import _mpl_version
+        from packaging import version
+
+        directions = (
+            ["top", "bottom"]
+            if version.parse(str(_mpl_version)) < version.parse("3.10")
+            else ["left", "right"]
+        )
         for direction in ["top", "bottom"]:
             label_key = f"label{direction}"
             visible = tick_params.get(label_key, False)
