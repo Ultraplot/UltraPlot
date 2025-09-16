@@ -653,18 +653,15 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 the leftmost and bottommost is the *figure* sharing level.
         """
         # Handle X axis sharing
-        if self._sharex:
-            self._handle_axis_sharing(
-                source_axis=self._sharex._lonaxis,
-                target_axis=self._lonaxis,
-            )
-
+        self._handle_axis_sharing(
+            source_axis=self._sharex._lonaxis,
+            target_axis=self._lonaxis,
+            which="x",
+        )
         # Handle Y axis sharing
-        if self._sharey:
-            self._handle_axis_sharing(
-                source_axis=self._sharey._lataxis,
-                target_axis=self._lataxis,
-            )
+        self._handle_axis_sharing(
+            source_axis=self._sharey._lataxis, target_axis=self._lataxis, which="y"
+        )
 
         # This block is apart of the draw sequence as the
         # gridliner object is created late in the
@@ -710,6 +707,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self,
         source_axis: "GeoAxes",
         target_axis: "GeoAxes",
+        *,
+        which: str,
     ):
         """
         Helper method to handle axis sharing for both X and Y axes.
@@ -719,22 +718,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             target_axis: The target axis to apply sharing to
         """
         # Copy view interval and minor locator from source to target
-        source_view_interval = source_axis.get_view_interval()
-        source_locator = source_axis.get_minor_locator()
-
-        target_view_interval = target_axis.get_view_interval()
-        target_locator = target_axis.get_minor_locator()
-        if self.figure._sharex >= 2:
-            target_view_interval[0] = source_view_interval[0]
-            target_view_interval[1] = source_view_interval[1]
-            target_locator = source_locator
-        if self.figure._sharey >= 2:
-            target_view_interval[0] = source_view_interval[1]
-            target_view_interval[1] = source_view_interval[1]
-
-            target_locator = source_locator
-        target_axis.set_view_interval(*target_view_interval)
-        target_axis.set_minor_locator(target_locator)
+        if getattr(self.figure, f"_share{which}") >= 2:
+            target_axis.set_view_interval(*source_axis.get_view_interval())
+            target_axis.set_minor_locator(source_axis.get_minor_locator())
 
     @override
     def draw(self, renderer=None, *args, **kwargs):
