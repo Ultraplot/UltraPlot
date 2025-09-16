@@ -529,6 +529,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             if is_panel:
                 label_visibility[label_param] = is_parent_tick_on
             elif is_border or getattr(self.figure, f"_share{axis_name}") < 3:
+                # turn on sharing when on border
+                # or sharing is below 3
                 label_visibility[label_param] = (
                     is_this_tick_on or sharing_ticks[label_param_trans]
                 )

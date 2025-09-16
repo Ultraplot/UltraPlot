@@ -1058,7 +1058,7 @@ class Figure(mfigure.Figure):
         """
         We take the average here as the sharex and sharey should be the same value. In case this changes in the future we can track down the error easily
         """
-        return 0.5 * (self.figure._sharex + self.figure._sharey)
+        return min(self.figure._sharex, self.figure._sharey)
 
     def _add_axes_panel(self, ax, side=None, **kwargs):
         """
