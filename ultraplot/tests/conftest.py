@@ -4,6 +4,10 @@ import warnings, logging
 
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7394633ef (revert check)
 SEED = 51423
 
 
