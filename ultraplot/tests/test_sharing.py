@@ -62,6 +62,7 @@ def test_sharing_levels_x(share_level):
     axs.format(title=f"sharex = {share_level}")
     fig.canvas.draw()  # needed for checks
 
+    # Get the border axes
     if fig._sharex < 3:
         border_axes = set(axs)
     else:
@@ -73,20 +74,24 @@ def test_sharing_levels_x(share_level):
                 border_axes.update(axes)
             else:
                 border_axes.add(axes)
+
+    # Run tests
     for axi in axs:
         tick_params = axi.xaxis.get_tick_params()
+        # Get correct directions depending on mpl version
         from ultraplot.internals.versions import _version_mpl
         from packaging import version
 
-        directions = (
-            ["top", "bottom"]
-            if version.parse(str(_version_mpl)) < version.parse("3.10")
-            else ["left", "right"]
-        )
+        if version.parse(str(_version_mpl)) >= version.parse("3.10"):
+            direction_label_map = {"top": "labeltop", "bottom": "labelbottom"}
+        else:
+            direction_label_map = {"top": "labelright", "bottom": "labelleft"}
+
         for direction in ["top", "bottom"]:
-            label_key = f"label{direction}"
+            label_key = direction_label_map[direction]
             visible = tick_params.get(label_key, False)
             is_border = axi in fig._get_border_axes().get(direction, [])
+            print(axi.number, is_border, share_level, visible, tick_params)
             if direction == "bottom" and (fig._sharex < 3 or is_border):
                 assert visible
             else:
