@@ -2,6 +2,7 @@
 """
 The standard Cartesian axes used for most ultraplot figures.
 """
+from cProfile import label
 import copy
 import inspect
 
@@ -434,8 +435,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             labels._transfer_label(axis.label, shared_axis_obj.label)
             axis.label.set_visible(False)
 
-        # Handle tick label sharing (level > 2)
-        if level > 2:
+        if level >= 1:
             label_visibility = self._determine_tick_label_visibility(
                 axis,
                 shared_axis,
@@ -528,8 +528,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             is_parent_tick_on = sharing_ticks[label_param_trans]
             if is_panel:
                 label_visibility[label_param] = is_parent_tick_on
-            elif is_border:
-                label_visibility[label_param] = is_this_tick_on
+            elif is_border or getattr(self.figure, f"_share{axis_name}") < 3:
+                label_visibility[label_param] = (
+                    is_this_tick_on or sharing_ticks[label_param_trans]
+                )
         return label_visibility
 
     def _add_alt(self, sx, **kwargs):
