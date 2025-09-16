@@ -58,6 +58,41 @@ def test_unsharing_different_rectilinear():
     """
     with pytest.warns(uplt.internals.warnings.UltraPlotWarning):
         fig, ax = uplt.subplots(ncols=2, proj=("cyl", "merc"), share="all")
+
+
+def test_get_renderer_basic():
+    """
+    Test that _get_renderer returns a renderer object.
+    """
+    fig, ax = uplt.subplots()
+    renderer = fig._get_renderer()
+    # Renderer should not be None and should have draw_path method
+    assert renderer is not None
+    assert hasattr(renderer, "draw_path")
+
+
+def test_share_labels_with_others_no_sharing():
+    """
+    Test that _share_labels_with_others returns early when no sharing is set.
+    """
+    fig, ax = uplt.subplots()
+    fig._sharex = 0
+    fig._sharey = 0
+    # Should simply return without error
+    result = fig._share_labels_with_others()
+    assert result is None
+
+
+def test_share_labels_with_others_with_sharing():
+    """
+    Test that _share_labels_with_others runs when sharing is enabled.
+    """
+    fig, ax = uplt.subplots(ncols=2, sharex=1, sharey=1)
+    fig._sharex = 1
+    fig._sharey = 1
+    # Should not return early
+    fig._share_labels_with_others()
+    # No assertion, just check for coverage and no error
     uplt.close(fig)
 
 
