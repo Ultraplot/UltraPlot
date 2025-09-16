@@ -671,7 +671,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # build chain.
         if not self.stale:
             return
-        if self.figure._get_sharing_level() == 0:
+        if self.figure._sharex == 0 and self.figure._sharey == 0:
             return
 
     def _get_gridliner_labels(
@@ -719,10 +719,22 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             target_axis: The target axis to apply sharing to
         """
         # Copy view interval and minor locator from source to target
+        source_view_interval = source_axis.get_view_interval()
+        source_locator = source_axis.get_minor_locator()
 
-        if self.figure._get_sharing_level() >= 2:
-            target_axis.set_view_interval(*source_axis.get_view_interval())
-            target_axis.set_minor_locator(source_axis.get_minor_locator())
+        target_view_interval = target_axis.get_view_interval()
+        target_locator = target_axis.get_minor_locator()
+        if self.figure._sharex >= 2:
+            target_view_interval[0] = source_view_interval[0]
+            target_view_interval[1] = source_view_interval[1]
+            target_locator = source_locator
+        if self.figure._sharey >= 2:
+            target_view_interval[0] = source_view_interval[1]
+            target_view_interval[1] = source_view_interval[1]
+
+            target_locator = source_locator
+        target_axis.set_view_interval(*target_view_interval)
+        target_axis.set_minor_locator(target_locator)
 
     @override
     def draw(self, renderer=None, *args, **kwargs):

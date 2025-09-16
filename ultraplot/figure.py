@@ -1054,12 +1054,6 @@ class Figure(mfigure.Figure):
                 renderer = canvas.get_renderer()
         return renderer
 
-    def _get_sharing_level(self):
-        """
-        We take the average here as the sharex and sharey should be the same value. In case this changes in the future we can track down the error easily
-        """
-        return 0.5 * (self.figure._sharex + self.figure._sharey)
-
     def _add_axes_panel(self, ax, side=None, **kwargs):
         """
         Add an axes panel.
@@ -1270,7 +1264,7 @@ class Figure(mfigure.Figure):
         """
         # Only apply sharing of labels when we are
         # actually sharing labels.
-        if self._get_sharing_level() == 0:
+        if self._sharex == 0 and self._sharey == 0:
             return
         # Turn all labels off
         # Note: this action performs it for all the axes in
@@ -1971,7 +1965,7 @@ class Figure(mfigure.Figure):
         # When we apply formatting to all axes, we need
         # to potentially adjust the labels.
 
-        if len(axs) == len(self.axes) and self._get_sharing_level() > 0:
+        if len(axs) == len(self.axes) and (self._sharex or self._sharey):
             self._share_labels_with_others()
 
         # Warn unused keyword argument(s)

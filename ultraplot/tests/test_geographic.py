@@ -551,7 +551,7 @@ def test_sharing_levels():
             l2 = np.linalg.norm(
                 np.asarray(latview) - np.asarray(target_lat),
             )
-            level = ax.figure._get_sharing_level()
+            level = ax.figure._sharex
             if level <= 1:
                 share_x = share_y = False
             assert np.allclose(l1, 0) == share_x
