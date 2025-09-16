@@ -2,7 +2,6 @@
 """
 The standard Cartesian axes used for most ultraplot figures.
 """
-from cProfile import label
 import copy
 import inspect
 
