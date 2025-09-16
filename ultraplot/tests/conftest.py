@@ -4,7 +4,6 @@ import warnings, logging
 
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 
-
 SEED = 51423
 
 
