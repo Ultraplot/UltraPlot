@@ -664,7 +664,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # Handle Y axis sharing
         if self._sharey:
             self._handle_axis_sharing(
-                source_axis=self._sharey._lataxis, target_axis=self._lataxis, which="y"
+                source_axis=self._sharey._lataxis,
+                target_axis=self._lataxis,
+                which="y",
             )
 
         # This block is apart of the draw sequence as the
