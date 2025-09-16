@@ -2,6 +2,9 @@ import os, shutil, pytest, re, numpy as np, ultraplot as uplt
 from pathlib import Path
 import warnings, logging
 
+logging.getLogger("matplotlib").setLevel(logging.ERROR)
+
+
 SEED = 51423
 
 
