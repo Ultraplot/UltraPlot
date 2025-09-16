@@ -1965,7 +1965,7 @@ class Figure(mfigure.Figure):
         # When we apply formatting to all axes, we need
         # to potentially adjust the labels.
 
-        if len(axs) == len(self.axes) and (self._sharex or self._sharey):
+        if len(axs) == len(self.axes) and (self._sharex >= 3 and self._sharey >= 3):
             self._share_labels_with_others()
 
         # Warn unused keyword argument(s)
