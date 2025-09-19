@@ -8,6 +8,88 @@ import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        5,  # int
+        5.0,  # float
+        "1em",  # string with unit
+        "10pt",  # string with unit
+        "2px",  # string with unit
+    ],
+)
+@pytest.mark.parametrize(
+    "kw",
+    [
+        "xticklen",
+        "yticklen",
+        "xticklabelpad",
+        "yticklabelpad",
+        "xlabelpad",
+        "ylabelpad",
+        "xtickwidth",
+        "ytickwidth",
+        "xlabelsize",
+        "ylabelsize",
+        "xticklabelsize",
+        "yticklabelsize",
+    ],
+)
+def test_cartesian_format_units_accepts_various_types(kw, value):
+    """
+    Test that CartesianAxes.format() accepts int, float, and string with units
+    for all relevant padding/size/width/len arguments.
+    """
+    fig, ax = uplt.subplots(proj="cart")
+    kwargs = {kw: value}
+    ax.format(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "kw",
+    [
+        "xticklen",
+        "yticklen",
+        "xticklabelpad",
+        "yticklabelpad",
+        "xlabelpad",
+        "ylabelpad",
+        "xtickwidth",
+        "ytickwidth",
+        "xlabelsize",
+        "ylabelsize",
+        "xticklabelsize",
+        "yticklabelsize",
+    ],
+)
+def test_cartesian_format_units_invalid_type_raises(kw):
+    fig, ax = uplt.subplots(proj="cart")
+    with pytest.raises((TypeError, ValueError)):
+        ax.format(**{kw: object()})
+
+
+def test_cartesian_format_all_units_types():
+    """
+    Test that all relevant unit/padding/size/width/len arguments accept int, float, and string.
+    """
+    fig, ax = uplt.subplots(proj="cart")
+    kwargs = {
+        "xticklen": "1em",
+        "yticklen": 5,
+        "xticklabelpad": 2.5,
+        "yticklabelpad": "2px",
+        "xlabelpad": 3,
+        "ylabelpad": "10pt",
+        "xtickwidth": 1.5,
+        "ytickwidth": "2px",
+        "xlabelsize": "12pt",
+        "ylabelsize": 14,
+        "xticklabelsize": "1em",
+        "yticklabelsize": 10.0,
+    }
+    ax.format(**kwargs)
+
+
 def test_axis_access():
     # attempt to access the ax object 2d and linearly
     fig, ax = uplt.subplots(ncols=2, nrows=2)

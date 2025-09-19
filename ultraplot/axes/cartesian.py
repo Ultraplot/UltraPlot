@@ -20,6 +20,8 @@ from ..internals import _not_none, _pop_rc, _version_mpl, docstring, labels, war
 from . import plot, shared
 import matplotlib.axis as maxis
 
+from ..utils import units
+
 __all__ = ["CartesianAxes"]
 
 
@@ -1390,6 +1392,14 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 if scale is not None:
                     scale = constructor.Scale(scale, **scale_kw)
                     getattr(self, f"set_{s}scale")(scale)
+
+                # Explicitly sanitize unit-accepting arguments for this axis
+                ticklen = units(ticklen)
+                ticklabelpad = units(ticklabelpad)
+                labelpad = units(labelpad)
+                tickwidth = units(tickwidth)
+                labelsize = units(labelsize)
+                ticklabelsize = units(ticklabelsize)
 
                 # Axis limits
                 self._update_limits(s, min_=min_, max_=max_, lim=lim, reverse=reverse)
