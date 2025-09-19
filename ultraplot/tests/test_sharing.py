@@ -9,7 +9,7 @@ Ticks are visible only on the border plots when the sharing level is greater tha
 
 Or more verbosely:
     sharey = 0: no sharing, all labels and ticks visible
-    sharey = 1: share axis, all labels and ticks visible
+    sharey = 1: share axis labels, tick labels are still independent
     sharey = 2: share limits
     sharey = 3 or True, share both ticks and labels
 A similar story holds for sharex.
