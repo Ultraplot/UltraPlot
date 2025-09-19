@@ -5,7 +5,7 @@ Sharing levels for subplots determine the visbility of the axis labels and tick 
 
 Axis labels are pushed to the border subplots when the sharing level is greater than 1.
 
-Ticks are visible only on the border plots when the sharing levels is greater than 2.
+Ticks are visible only on the border plots when the sharing level is greater than 2.
 
 Or more verbosely:
     sharey = 0: no sharing, all labels and ticks visible
