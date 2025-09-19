@@ -91,7 +91,6 @@ def test_sharing_levels_x(share_level):
             label_key = direction_label_map[direction]
             visible = tick_params.get(label_key, False)
             is_border = axi in fig._get_border_axes().get(direction, [])
-            print(axi.number, is_border, share_level, visible, tick_params)
             if direction == "bottom" and (fig._sharex < 3 or is_border):
                 assert visible
             else:
