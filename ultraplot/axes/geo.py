@@ -657,6 +657,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._handle_axis_sharing(
                 source_axis=self._sharex._lonaxis,
                 target_axis=self._lonaxis,
+                which="x",
             )
 
         # Handle Y axis sharing
@@ -664,6 +665,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._handle_axis_sharing(
                 source_axis=self._sharey._lataxis,
                 target_axis=self._lataxis,
+                which="y",
             )
 
         # This block is apart of the draw sequence as the
@@ -671,7 +673,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # build chain.
         if not self.stale:
             return
-        if self.figure._get_sharing_level() == 0:
+        if self.figure._sharex == 0 and self.figure._sharey == 0:
             return
 
     def _get_gridliner_labels(
@@ -710,6 +712,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self,
         source_axis: "GeoAxes",
         target_axis: "GeoAxes",
+        *,
+        which: str,
     ):
         """
         Helper method to handle axis sharing for both X and Y axes.
@@ -719,8 +723,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             target_axis: The target axis to apply sharing to
         """
         # Copy view interval and minor locator from source to target
-
-        if self.figure._get_sharing_level() >= 2:
+        if getattr(self.figure, f"_share{which}") >= 2:
             target_axis.set_view_interval(*source_axis.get_view_interval())
             target_axis.set_minor_locator(source_axis.get_minor_locator())
 

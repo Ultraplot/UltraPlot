@@ -491,7 +491,8 @@ def test_get_gridliner_labels_cartopy():
     uplt.close(fig)
 
 
-def test_sharing_levels():
+@pytest.mark.parametrize("level", [0, 1, 2, 3, 4])
+def test_sharing_levels(level):
     """
     We can share limits or labels.
     We check if we can do both for the GeoAxes.
@@ -515,7 +516,6 @@ def test_sharing_levels():
 
     x = np.array([0, 10])
     y = np.array([0, 10])
-    sharing_levels = [0, 1, 2, 3, 4]
     lonlim = latlim = np.array((-10, 10))
 
     def assert_views_are_sharing(ax):
@@ -551,46 +551,45 @@ def test_sharing_levels():
             l2 = np.linalg.norm(
                 np.asarray(latview) - np.asarray(target_lat),
             )
-            level = ax.figure._get_sharing_level()
+            level = ax.figure._sharex
             if level <= 1:
                 share_x = share_y = False
             assert np.allclose(l1, 0) == share_x
             assert np.allclose(l2, 0) == share_y
 
-    for level in sharing_levels:
-        fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share=level)
-        ax.format(labels="both")
-        for axi in ax:
-            axi.format(
-                lonlim=lonlim * axi.number,
-                latlim=latlim * axi.number,
-            )
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share=level)
+    ax.format(labels="both")
+    for axi in ax:
+        axi.format(
+            lonlim=lonlim * axi.number,
+            latlim=latlim * axi.number,
+        )
 
-        fig.canvas.draw()
-        for idx, axi in enumerate(ax):
-            axi.plot(x * (idx + 1), y * (idx + 1))
+    fig.canvas.draw()
+    for idx, axi in enumerate(ax):
+        axi.plot(x * (idx + 1), y * (idx + 1))
 
-        fig.canvas.draw()  # need this to update the labels
-        # All the labels should be on
-        for axi in ax:
-            side_labels = axi._get_gridliner_labels(
-                left=True,
-                right=True,
-                top=True,
-                bottom=True,
-            )
-            s = 0
-            for dir, labels in side_labels.items():
-                s += any([label.get_visible() for label in labels])
+    fig.canvas.draw()  # need this to update the labels
+    # All the labels should be on
+    for axi in ax:
+        side_labels = axi._get_gridliner_labels(
+            left=True,
+            right=True,
+            top=True,
+            bottom=True,
+        )
+        s = 0
+        for dir, labels in side_labels.items():
+            s += any([label.get_visible() for label in labels])
 
-            assert_views_are_sharing(axi)
-            # When we share the labels but not the limits,
-            # we expect all ticks to be on
-            if level == 0:
-                assert s == 4
-            else:
-                assert s == 2
-        uplt.close(fig)
+        assert_views_are_sharing(axi)
+        # When we share the labels but not the limits,
+        # we expect all ticks to be on
+        if level < 3:
+            assert s == 4
+        else:
+            assert s == 2
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
