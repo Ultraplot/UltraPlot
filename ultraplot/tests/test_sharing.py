@@ -1,7 +1,7 @@
 import pytest, ultraplot as uplt
 
 """
-Sharing levels for subplots determine the visbility of the axis labels and tick labels.
+Sharing levels for subplots determine the visibility of the axis labels and tick labels.
 
 Axis labels are pushed to the border subplots when the sharing level is greater than 1.
 
