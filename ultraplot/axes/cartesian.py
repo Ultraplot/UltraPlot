@@ -19,6 +19,7 @@ from ..internals import ic  # noqa: F401
 from ..internals import _not_none, _pop_rc, _version_mpl, docstring, labels, warnings
 from . import plot, shared
 import matplotlib.axis as maxis
+from dataclasses import dataclass, fields
 
 from ..utils import units
 
@@ -312,6 +313,76 @@ _dual_docstring = _shared_docstring % {
 }  # noqa: E501
 docstring._snippet_manager["axes.dualx"] = _dual_docstring.format(**_shared_x_keys)
 docstring._snippet_manager["axes.dualy"] = _dual_docstring.format(**_shared_y_keys)
+
+
+@dataclass
+class _AxisParams:
+    # Floats
+    labelpad: float
+    labelsize: float
+    linewidth: float
+    margin: float
+    max: float
+    min: float
+    rotation: float
+    ticklabelpad: float
+    ticklabelsize: float
+    ticklen: float
+    ticklenratio: float
+    tickwidth: float
+    tickwidthratio: float
+
+    # Tuples
+    bounds: tuple
+    lim: tuple
+    tickrange: tuple
+    wraprange: tuple
+
+    # Strings
+    color: str
+    gridcolor: str
+    label: str
+    labelcolor: str
+    labelweight: str
+    labelloc: str
+    offsetloc: str
+    scale: str
+    spineloc: str
+    tickcolor: str
+    tickdir: str
+    ticklabelcolor: str
+    ticklabeldir: str
+    ticklabelloc: str
+    ticklabelweight: str
+    tickloc: str
+
+    # Booleans
+    grid: bool
+    gridminor: bool
+    reverse: bool
+    tickminor: bool
+
+    # Objects
+    formatter: object
+    locator: object
+    minorlocator: object
+
+    # Dicts
+    formatter_kw: dict
+    label_kw: dict
+    locator_kw: dict
+    minorlocator_kw: dict
+    scale_kw: dict
+
+    @classmethod
+    def from_vars(cls, prefix: str, var_dict: dict) -> "_AxisParams":
+        kwargs = {}
+        for field in fields(cls):
+            key = f"{prefix}{field.name}"
+            default = {} if field.type is dict else None
+            value = var_dict.get(key, default)
+            kwargs[field.name] = value
+        return cls(**kwargs)
 
 
 class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
@@ -1287,110 +1358,134 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             xspineloc = _not_none(xspineloc, rc._get_loc_string("x", "axes.spines"))
             yspineloc = _not_none(yspineloc, rc._get_loc_string("y", "axes.spines"))
 
-            # Loop over axes
-            for (
-                s,
-                min_,
-                max_,
-                lim,
-                reverse,
-                margin,
-                bounds,
-                tickrange,
-                wraprange,
-                scale,
-                scale_kw,
-                spineloc,
-                tickloc,
-                ticklabelloc,
-                labelloc,
-                offsetloc,
-                grid,
-                gridminor,
-                locator,
-                locator_kw,
-                minorlocator,
-                minorlocator_kw,
-                formatter,
-                formatter_kw,
-                label,
-                label_kw,
-                color,
-                gridcolor,
-                linewidth,
-                rotation,
-                tickminor,
-                tickdir,
-                tickcolor,
-                ticklen,
-                ticklenratio,
-                tickwidth,
-                tickwidthratio,
-                ticklabeldir,
-                ticklabelpad,
-                ticklabelcolor,
-                ticklabelsize,
-                ticklabelweight,
-                labelpad,
-                labelcolor,
-                labelsize,
-                labelweight,
-            ) in zip(
-                ("x", "y"),
-                (xmin, ymin),
-                (xmax, ymax),
-                (xlim, ylim),
-                (xreverse, yreverse),
-                (xmargin, ymargin),
-                (xbounds, ybounds),
-                (xtickrange, ytickrange),
-                (xwraprange, ywraprange),
-                (xscale, yscale),
-                (xscale_kw, yscale_kw),
-                (xspineloc, yspineloc),
-                (xtickloc, ytickloc),
-                (xticklabelloc, yticklabelloc),
-                (xlabelloc, ylabelloc),
-                (xoffsetloc, yoffsetloc),
-                (xgrid, ygrid),
-                (xgridminor, ygridminor),
-                (xlocator, ylocator),
-                (xlocator_kw, ylocator_kw),
-                (xminorlocator, yminorlocator),
-                (xminorlocator_kw, yminorlocator_kw),
-                (xformatter, yformatter),
-                (xformatter_kw, yformatter_kw),
-                (xlabel, ylabel),
-                (xlabel_kw, ylabel_kw),
-                (xcolor, ycolor),
-                (xgridcolor, ygridcolor),
-                (xlinewidth, ylinewidth),
-                (xrotation, yrotation),
-                (xtickminor, ytickminor),
-                (xtickdir, ytickdir),
-                (xtickcolor, ytickcolor),
-                (xticklen, yticklen),
-                (xticklenratio, yticklenratio),
-                (xtickwidth, ytickwidth),
-                (xtickwidthratio, ytickwidthratio),
-                (xticklabeldir, yticklabeldir),
-                (xticklabelpad, yticklabelpad),
-                (xticklabelcolor, yticklabelcolor),
-                (xticklabelsize, yticklabelsize),
-                (xticklabelweight, yticklabelweight),
-                (xlabelpad, ylabelpad),
-                (xlabelcolor, ylabelcolor),
-                (xlabelsize, ylabelsize),
-                (xlabelweight, ylabelweight),
-            ):
+            xrotation = _not_none(xrotation, rc.find("xrotation", context=True))
+            yrotation = _not_none(yrotation, rc.find("yrotation", context=True))
+            xscale = _not_none(xscale, rc.find("xscale", context=True))
+            yscale = _not_none(yscale, rc.find("yscale", context=True))
+
+            x_params = dict(
+                labelpad=xlabelpad,
+                labelsize=xlabelsize,
+                linewidth=xlinewidth,
+                margin=xmargin,
+                max=xmax,
+                min=xmin,
+                rotation=xrotation,
+                ticklabelpad=xticklabelpad,
+                ticklabelsize=xticklabelsize,
+                ticklen=xticklen,
+                ticklenratio=xticklenratio,
+                tickwidth=xtickwidth,
+                tickwidthratio=xtickwidthratio,
+                bounds=xbounds,
+                lim=xlim,
+                tickrange=xtickrange,
+                wraprange=xwraprange,
+                color=xcolor,
+                gridcolor=xgridcolor,
+                label=xlabel,
+                labelcolor=xlabelcolor,
+                labelweight=xlabelweight,
+                labelloc=xlabelloc,
+                offsetloc=xoffsetloc,
+                scale=xscale,
+                spineloc=xspineloc,
+                tickcolor=xtickcolor,
+                tickdir=xtickdir,
+                ticklabelcolor=xticklabelcolor,
+                ticklabeldir=xticklabeldir,
+                ticklabelloc=xticklabelloc,
+                ticklabelweight=xticklabelweight,
+                tickloc=xtickloc,
+                grid=xgrid,
+                gridminor=xgridminor,
+                reverse=xreverse,
+                tickminor=xtickminor,
+                formatter=xformatter,
+                locator=xlocator,
+                minorlocator=xminorlocator,
+                formatter_kw=xformatter_kw,
+                label_kw=xlabel_kw,
+                locator_kw=xlocator_kw,
+                minorlocator_kw=xminorlocator_kw,
+                scale_kw=xscale_kw,
+            )
+
+            y_params = dict(
+                labelpad=ylabelpad,
+                labelsize=ylabelsize,
+                linewidth=ylinewidth,
+                margin=ymargin,
+                max=ymax,
+                min=ymin,
+                rotation=yrotation,
+                ticklabelpad=yticklabelpad,
+                ticklabelsize=yticklabelsize,
+                ticklen=yticklen,
+                ticklenratio=yticklenratio,
+                tickwidth=ytickwidth,
+                tickwidthratio=ytickwidthratio,
+                bounds=ybounds,
+                lim=ylim,
+                tickrange=ytickrange,
+                wraprange=ywraprange,
+                color=ycolor,
+                gridcolor=ygridcolor,
+                label=ylabel,
+                labelcolor=ylabelcolor,
+                labelweight=ylabelweight,
+                labelloc=ylabelloc,
+                offsetloc=yoffsetloc,
+                scale=yscale,
+                spineloc=yspineloc,
+                tickcolor=ytickcolor,
+                tickdir=ytickdir,
+                ticklabelcolor=yticklabelcolor,
+                ticklabeldir=yticklabeldir,
+                ticklabelloc=yticklabelloc,
+                ticklabelweight=yticklabelweight,
+                tickloc=ytickloc,
+                grid=ygrid,
+                gridminor=ygridminor,
+                reverse=yreverse,
+                tickminor=ytickminor,
+                formatter=yformatter,
+                locator=ylocator,
+                minorlocator=yminorlocator,
+                formatter_kw=yformatter_kw,
+                label_kw=ylabel_kw,
+                locator_kw=ylocator_kw,
+                minorlocator_kw=yminorlocator_kw,
+                scale_kw=yscale_kw,
+            )
+
+            def _collect_axis_params(axis, prefix, local_vars):
+                return {
+                    field.name: local_vars.get(
+                        f"{prefix}{field.name}", {} if field.type is dict else None
+                    )
+                    for field in fields(_AxisParams)
+                }
+
+            axes_params = {
+                axis: _AxisParams(**_collect_axis_params(axis, axis, locals()))
+                for axis in ("x", "y")
+            }
+
+            # axes_params = {
+            #     "x": _AxisParams(**x_params),
+            #     "y": _AxisParams(**y_params),
+            # }
+
+            # axes_params = {
+            # axis: _AxisParams.from_vars(axis, locals())
+            # for axis in "xy"
+            # }
+
+            for s, params in axes_params.items():
                 # Axis scale
-                # WARNING: This relies on monkey patch of mscale.scale_factory
-                # that allows it to accept a custom scale class!
-                # WARNING: Changing axis scale also changes default locators
-                # and formatters, and restricts possible range of axis limits,
-                # so critical to do it first.
-                if scale is not None:
-                    scale = constructor.Scale(scale, **scale_kw)
+                if params.scale is not None:
+                    scale = constructor.Scale(params.scale, **params.scale_kw)
                     getattr(self, f"set_{s}scale")(scale)
 
                 # Explicitly sanitize unit-accepting arguments for this axis
@@ -1402,61 +1497,64 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 ticklabelsize = units(ticklabelsize)
 
                 # Axis limits
-                self._update_limits(s, min_=min_, max_=max_, lim=lim, reverse=reverse)
-                if margin is not None:
-                    self.margins(**{s: margin})
+                self._update_limits(
+                    s,
+                    min_=params.min,
+                    max_=params.max,
+                    lim=params.lim,
+                    reverse=params.reverse,
+                )
+                if params.margin is not None:
+                    self.margins(**{s: params.margin})
 
                 # Axis spine settings
-                # NOTE: This sets spine-specific color and linewidth settings. For
-                # non-specific settings _update_background is called in Axes.format()
-                self._update_spines(s, loc=spineloc, bounds=bounds)
+                self._update_spines(s, loc=params.spineloc, bounds=params.bounds)
                 self._update_background(
                     s,
-                    edgecolor=color,
-                    linewidth=linewidth,
-                    tickwidth=tickwidth,
-                    tickwidthratio=tickwidthratio,
+                    edgecolor=params.color,
+                    linewidth=params.linewidth,
+                    tickwidth=params.tickwidth,
+                    tickwidthratio=params.tickwidthratio,
                 )
 
                 # Axis tick settings
                 self._update_locs(
                     s,
-                    tickloc=tickloc,
-                    ticklabelloc=ticklabelloc,
-                    labelloc=labelloc,
-                    offsetloc=offsetloc,
+                    tickloc=params.tickloc,
+                    ticklabelloc=params.ticklabelloc,
+                    labelloc=params.labelloc,
+                    offsetloc=params.offsetloc,
                 )
-                self._update_rotation(s, rotation=rotation)
+                self._update_rotation(s, rotation=params.rotation)
                 self._update_ticks(
                     s,
-                    grid=grid,
-                    gridminor=gridminor,
-                    ticklen=ticklen,
-                    ticklenratio=ticklenratio,
-                    tickdir=tickdir,
-                    labeldir=ticklabeldir,
-                    labelpad=ticklabelpad,
-                    tickcolor=tickcolor,
-                    gridcolor=gridcolor,
-                    labelcolor=ticklabelcolor,
-                    labelsize=ticklabelsize,
-                    labelweight=ticklabelweight,
+                    grid=params.grid,
+                    gridminor=params.gridminor,
+                    ticklen=params.ticklen,
+                    ticklenratio=params.ticklenratio,
+                    tickdir=params.tickdir,
+                    labeldir=params.ticklabeldir,
+                    labelpad=params.ticklabelpad,
+                    tickcolor=params.tickcolor,
+                    gridcolor=params.gridcolor,
+                    labelcolor=params.ticklabelcolor,
+                    labelsize=params.ticklabelsize,
+                    labelweight=params.ticklabelweight,
                 )
 
                 # Axis label settings
-                # NOTE: This must come after set_label_position, or any ha and va
-                # overrides in label_kw are overwritten.
                 kw = dict(
-                    labelpad=labelpad,
-                    color=labelcolor,
-                    size=labelsize,
-                    weight=labelweight,
-                    **label_kw,
+                    labelpad=params.labelpad,
+                    color=params.labelcolor,
+                    size=params.labelsize,
+                    weight=params.labelweight,
+                    **params.label_kw,
                 )
-                self._update_labels(s, label, **kw)
+                self._update_labels(s, params.label, **kw)
 
                 # Axis locator
-                if minorlocator is True or minorlocator is False:  # must test identity
+                minorlocator = params.minorlocator
+                if minorlocator is True or minorlocator is False:
                     warnings._warn_ultraplot(
                         f"You passed {s}minorticks={minorlocator}, but this argument "
                         "is used to specify the tick locations. If you just want to "
@@ -1465,20 +1563,20 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                     minorlocator = None
                 self._update_locators(
                     s,
-                    locator,
+                    params.locator,
                     minorlocator,
-                    tickminor=tickminor,
-                    locator_kw=locator_kw,
-                    minorlocator_kw=minorlocator_kw,
+                    tickminor=params.tickminor,
+                    locator_kw=params.locator_kw,
+                    minorlocator_kw=params.minorlocator_kw,
                 )
 
                 # Axis formatter
                 self._update_formatter(
                     s,
-                    formatter,
-                    formatter_kw=formatter_kw,
-                    tickrange=tickrange,
-                    wraprange=wraprange,
+                    params.formatter,
+                    formatter_kw=params.formatter_kw,
+                    tickrange=params.tickrange,
+                    wraprange=params.wraprange,
                 )
 
                 # Ensure ticks are within axis bounds
