@@ -352,7 +352,7 @@ def test_sharing_labels_top_right():
                 [3, 4, 5],
                 [3, 4, 0],
             ],
-            3,  # default sharing level
+            True,  # default sharing level
             {"xticklabelloc": "t", "yticklabelloc": "r"},
             [1, 3, 4],  # y-axis labels visible indices
             [0, 1, 4],  # x-axis labels visible indices

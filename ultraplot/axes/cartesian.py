@@ -425,13 +425,15 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             label_params = ["labelleft", "labelright"]
             border_sides = ["left", "right"]
 
-        if shared_axis is None or not axis.get_visible():
+        if not axis.get_visible():
             return
 
         level = 3 if panel_group else sharing_level
 
         # Handle axis label sharing (level > 0)
-        if level > 0:
+        # If we are a border axis, @shared_axis may be None
+        # We propagate this through the _determine_tick_label_visiblity() logic
+        if level > 0 and shared_axis:
             shared_axis_obj = getattr(shared_axis, f"{axis_name}axis")
             labels._transfer_label(axis.label, shared_axis_obj.label)
             axis.label.set_visible(False)
@@ -483,8 +485,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             Dictionary of label visibility parameters
         """
         ticks = axis.get_tick_params()
-        shared_axis_obj = getattr(shared_axis, f"{axis_name}axis")
-        sharing_ticks = shared_axis_obj.get_tick_params()
+
+        sharing_ticks = {}
+        if shared_axis:
+            shared_axis_obj = getattr(shared_axis, f"{axis_name}axis")
+            sharing_ticks = shared_axis_obj.get_tick_params()
 
         label_visibility = {}
 
@@ -519,19 +524,22 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             if has_panel:
                 continue
             is_border = self in border_axes.get(border_side, [])
-            is_panel = (
-                self in shared_axis._panel_dict[border_side]
-                and self == shared_axis._panel_dict[border_side][-1]
-            )
+            is_panel = False
+            if shared_axis:
+                is_panel = (
+                    self in shared_axis._panel_dict[border_side]
+                    and self == shared_axis._panel_dict[border_side][-1]
+                )
             # Use automatic border detection logic
             # if we are a panel we "push" the labels outwards
             label_param_trans = _convert_label_param(label_param)
             is_this_tick_on = ticks[label_param_trans]
-            is_parent_tick_on = sharing_ticks[label_param_trans]
+            is_parent_tick_on = sharing_ticks.get(label_param_trans, False)
             if is_panel:
                 label_visibility[label_param] = is_parent_tick_on
             elif is_border:
                 label_visibility[label_param] = is_this_tick_on
+        print(self.number, label_visibility)
         return label_visibility
 
     def _add_alt(self, sx, **kwargs):
