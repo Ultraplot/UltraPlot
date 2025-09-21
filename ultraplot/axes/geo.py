@@ -1437,16 +1437,18 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         """
         # Deal with different cartopy versions
         left_labels, right_labels, bottom_labels, top_labels = self._get_side_labels()
+
         if self.gridlines_major is None:
             return False
+
         elif side == "labelleft":
-            return getattr(self.gridlines_major, left_labels)
+            return getattr(self.gridlines_major, left_labels) == "y"
         elif side == "labelright":
-            return getattr(self.gridlines_major, right_labels)
+            return getattr(self.gridlines_major, right_labels) == "y"
         elif side == "labelbottom":
-            return getattr(self.gridlines_major, bottom_labels)
+            return getattr(self.gridlines_major, bottom_labels) == "x"
         elif side == "labeltop":
-            return getattr(self.gridlines_major, top_labels)
+            return getattr(self.gridlines_major, top_labels) == "x"
         else:
             raise ValueError(f"Invalid side: {side}")
 
