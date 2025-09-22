@@ -1257,66 +1257,6 @@ class Figure(mfigure.Figure):
             if isinstance(ax, paxes.GeoAxes) and hasattr(ax, "set_global"):
                 ax.set_global()
 
-    def _share_labels_with_others(self, *, which="both"):
-        """
-        Helpers function to ensure the labels
-        are shared for rectilinear GeoAxes.
-        """
-        # Only apply sharing of labels when we are
-        # actually sharing labels.
-        if self._sharex == 0 and self._sharey == 0:
-            return
-        # Turn all labels off
-        # Note: this action performs it for all the axes in
-        # the figure. We use the stale here to only perform
-        # it once as it is an expensive action.
-        # The axis will be a border if it is either
-        # (a) on the edge
-        # (b) not next to a subplot
-        # (c) not next to a subplot of the same kind
-        border_axes = self._get_border_axes()
-        # Recode:
-        recoded = {}
-        for direction, axes in border_axes.items():
-            for axi in axes:
-                recoded[axi] = recoded.get(axi, []) + [direction]
-
-        default = dict(
-            labelleft=False,
-            labelright=False,
-            labeltop=False,
-            labelbottom=False,
-        )
-        sides = "top bottom left right".split()
-        for axi in self._iter_axes(hidden=False, panels=False, children=False):
-            # Turn the ticks on or off depending on the position
-            turn_on_or_off = default.copy()
-            for side in sides:
-                sidelabel = f"label{side}"
-                is_label_on = axi._is_ticklabel_on(sidelabel)
-                match side:
-                    case "left" | "right":
-                        if self._sharey < 3:
-                            turn_on_or_off[sidelabel] = is_label_on
-                        else:
-                            # When we are a border an the labels are on
-                            # we keep them on
-                            if side in recoded.get(axi, []):
-                                turn_on_or_off[sidelabel] = is_label_on
-                    case "top" | "bottom":
-                        if self._sharex < 3:
-                            turn_on_or_off[sidelabel] = is_label_on
-                        else:
-                            # When we are a border an the labels are on
-                            # we keep them on
-                            if side in recoded.get(axi, []):
-                                turn_on_or_off[sidelabel] = is_label_on
-
-            if isinstance(axi, paxes.GeoAxes):
-                axi._toggle_gridliner_labels(**turn_on_or_off)
-            else:
-                axi._apply_axis_sharing()
-
     def _toggle_axis_sharing(
         self,
         *,

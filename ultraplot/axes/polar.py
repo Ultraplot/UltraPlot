@@ -138,6 +138,11 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         for axis in (self.xaxis, self.yaxis):
             axis.set_tick_params(which="both", size=0)
 
+    @override
+    def _apply_axis_sharing(self):
+        # Not implemented. Silently pass
+        return
+
     def _update_formatter(self, x, *, formatter=None, formatter_kw=None):
         """
         Update the gridline label formatter.

@@ -722,6 +722,33 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             source_axis: The source axis to share from
             target_axis: The target axis to apply sharing to
         """
+
+        # Turn the ticks on or off depending on the position
+        sides = "top bottom".split() if which == "x" else "left right".split()
+        border_to_ax = self.figure._get_border_axes()
+        turn_on_or_off = {}
+        for side in sides:
+            sidelabel = f"label{side}"
+            is_label_on = self._is_ticklabel_on(sidelabel)
+            turn_on_or_off[sidelabel] = False  # default is False
+            match side:
+                case "left" | "right":
+                    if self.figure._sharey < 3:
+                        turn_on_or_off[sidelabel] = is_label_on
+                    else:
+                        # When we are a border an the labels are on
+                        # we keep them on
+                        if self in border_to_ax.get(side, False):
+                            turn_on_or_off[sidelabel] = is_label_on
+                case "top" | "bottom":
+                    if self.figure._sharex < 3:
+                        turn_on_or_off[sidelabel] = is_label_on
+                    else:
+                        # When we are a border an the labels are on
+                        # we keep them on
+                        if self in border_to_ax.get(side, False):
+                            turn_on_or_off[sidelabel] = is_label_on
+
         # Copy view interval and minor locator from source to target
         if getattr(self.figure, f"_share{which}") >= 2:
             target_axis.set_view_interval(*source_axis.get_view_interval())
