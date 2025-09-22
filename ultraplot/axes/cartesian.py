@@ -415,15 +415,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             shared_axis = self._sharex
             panel_group = self._panel_sharex_group
             sharing_level = self.figure._sharex
-            label_params = ["labeltop", "labelbottom"]
-            border_sides = ["top", "bottom"]
         else:  # axis_name == 'y'
             axis = self.yaxis
             shared_axis = self._sharey
             panel_group = self._panel_sharey_group
             sharing_level = self.figure._sharey
-            label_params = ["labelleft", "labelright"]
-            border_sides = ["left", "right"]
 
         if not axis.get_visible():
             return
@@ -440,55 +436,41 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         # Handle tick label sharing (level > 2)
         if level > 2:
-            label_visibility = self._determine_tick_label_visibility(
-                axis,
-                shared_axis,
-                axis_name,
-                label_params,
-                border_sides,
-                border_axes,
-            )
+            label_visibility = self._determine_tick_label_visibility(which=axis_name)
             axis.set_tick_params(which="both", **label_visibility)
         # Turn minor ticks off
         axis.set_minor_formatter(mticker.NullFormatter())
 
     def _determine_tick_label_visibility(
         self,
-        axis: maxis.Axis,
-        shared_axis: maxis.Axis,
-        axis_name: str,
-        label_params: list[str],
-        border_sides: list[str],
-        border_axes: dict[str, list[plot.PlotAxes]],
+        *,
+        which: str,
     ) -> dict[str, bool]:
         """
         Determine which tick labels should be visible based on sharing rules and borders.
 
         Parameters
         ----------
-        axis : matplotlib axis
-            The current axis object
-        shared_axis : Axes
-            The axes this one shares with
-        axis_name : str
-            Either 'x' or 'y'
-        label_params : list
-            List of label parameter names (e.g., ['labeltop', 'labelbottom'])
-        border_sides : list
-            List of border side names (e.g., ['top', 'bottom'])
-        border_axes : dict
-            Dictionary from _get_border_axes()
+        axis: str ('x' or 'y')
 
         Returns
         -------
         dict
             Dictionary of label visibility parameters
         """
+        axis = getattr(self, f"{which}axis")
+        shared_axis = getattr(self, f"_share{which}")
+        label_params = (
+            ("labeltop", "labelbottom") if which == "x" else ("labelleft", "labelright")
+        )
+        border_sides = ("top", "bottom") if which == "x" else ("left", "right")
+        border_axes = self.figure._get_border_axes()
+
         ticks = axis.get_tick_params()
 
         sharing_ticks = {}
         if shared_axis:
-            shared_axis_obj = getattr(shared_axis, f"{axis_name}axis")
+            shared_axis_obj = getattr(shared_axis, f"{which}axis")
             sharing_ticks = shared_axis_obj.get_tick_params()
 
         label_visibility = {}
@@ -497,32 +479,15 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             # Deal with logic not being consistent
             # in prior mpl versions
             if version.parse(str(_version_mpl)) <= version.parse("3.9"):
-                if label_param == "labeltop" and axis_name == "x":
+                if label_param == "labeltop" and which == "x":
                     label_param = "labelright"
-                elif label_param == "labelbottom" and axis_name == "x":
+                elif label_param == "labelbottom" and which == "x":
                     label_param = "labelleft"
             return label_param
 
         for label_param, border_side in zip(label_params, border_sides):
             # Check if user has explicitly set label location via format()
             label_visibility[label_param] = False
-            has_panel = False
-            for panel in self._panel_dict[border_side]:
-                # Check if the panel is a colorbar
-                colorbars = [
-                    values
-                    for key, values in self._colorbar_dict.items()
-                    if border_side in key  # key is tuple (side, top | center | lower)
-                ]
-                if not panel in colorbars:
-                    # Skip colorbar as their
-                    # yaxis is not shared
-                    has_panel = True
-                    break
-            # When we have a panel, let the panel have
-            # the labels and turn-off for this axis + side.
-            if has_panel:
-                continue
             is_border = self in border_axes.get(border_side, [])
             is_panel = False
             if shared_axis:
@@ -535,11 +500,13 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             label_param_trans = _convert_label_param(label_param)
             is_this_tick_on = ticks[label_param_trans]
             is_parent_tick_on = sharing_ticks.get(label_param_trans, False)
+            # print(self.number, is_panel, is_legend, is_colorbar, border_side)
             if is_panel:
                 label_visibility[label_param] = is_parent_tick_on
+            elif self.number is None:  # for legend, colorbars
+                label_visibility[label_param] = is_this_tick_on
             elif is_border:
                 label_visibility[label_param] = is_this_tick_on
-        print(self.number, label_visibility)
         return label_visibility
 
     def _add_alt(self, sx, **kwargs):
