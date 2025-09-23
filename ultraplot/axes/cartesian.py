@@ -412,8 +412,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         """
         if axis_name == "x":
             axis = self.xaxis
-            shared_axis = self._sharex
-            panel_group = self._panel_sharex_group
+            shared_axis = self._sharex  # do we share the xaxis?
+            panel_group = self._panel_sharex_group  # do we have a panel?
             sharing_level = self.figure._sharex
         else:  # axis_name == 'y'
             axis = self.yaxis
@@ -490,6 +490,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             label_visibility[label_param] = False
             is_border = self in border_axes.get(border_side, [])
             is_panel = False
+            is_colorbar = True if self._colorbar_fill else False
             if shared_axis:
                 is_panel = (
                     self in shared_axis._panel_dict[border_side]
@@ -500,12 +501,41 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             label_param_trans = _convert_label_param(label_param)
             is_this_tick_on = ticks[label_param_trans]
             is_parent_tick_on = sharing_ticks.get(label_param_trans, False)
-            # print(self.number, is_panel, is_legend, is_colorbar, border_side)
-            if is_panel:
-                label_visibility[label_param] = is_parent_tick_on
-            elif self.number is None:  # for legend, colorbars
+            are_we_sharing_labels_on_ax = (
+                self._panel_sharex_group if which == "x" else self._panel_sharey_group
+            )
+            # To share all axes we need to consider a few cases.
+
+            # Case 1 and 2: Sharing top and right labels only on the
+            # figure borders or when we are not an alternate axis
+
+            if is_colorbar:
                 label_visibility[label_param] = is_this_tick_on
-            elif is_border:
+            elif (
+                not self._altx_parent
+                and border_side == "top"
+                and self.figure._sharex > 2
+            ):
+                label_visibility[label_param] = is_border and is_this_tick_on
+            elif (
+                not self._alty_parent
+                and border_side == "right"
+                and self.figure._sharey > 2
+            ):
+                label_visibility[label_param] = is_border and is_this_tick_on
+            # Case 3: share axis labels when we are sharing axes set
+            elif (which == "x" and self._sharex) or (which == "y" and self._sharey):
+                # Shared subplot. Labels are off unless it's a border.
+                # On the border, respect the local tick setting.
+                label_visibility[label_param] = False
+            # or when we are sharing the labels
+            elif are_we_sharing_labels_on_ax:
+                # Panel sharing. Labels are off unless it's a border or the outermost panel.
+                label_visibility[label_param] = False
+            # Case 4: singular axes we check if the ticks are on
+            else:
+                # print("here", self.number, which, is_this_tick_on)
+                # Not sharing.
                 label_visibility[label_param] = is_this_tick_on
         return label_visibility
 
