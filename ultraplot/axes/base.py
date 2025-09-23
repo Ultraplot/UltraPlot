@@ -1518,6 +1518,12 @@ class Axes(maxes.Axes):
         for name in names:
             labels._transfer_label(self._title_dict[name], pax._title_dict[name])
 
+    def _apply_axis_sharing(self):
+        """
+        Should be implemented by subclasses but silently pass if not, e.g. for polar axes
+        """
+        raise ImplementationError("Axis sharing not implemented for this axes type.")
+
     def _apply_auto_share(self):
         """
         Automatically configure axis sharing based on the horizontal and

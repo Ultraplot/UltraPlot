@@ -652,26 +652,29 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 or to the *right* of the leftmost panel. But the sharing level used for
                 the leftmost and bottommost is the *figure* sharing level.
         """
+
+        # Share interval x
+        if self._sharex and self.figure._sharex >= 2:
+            self._lonaxis.set_view_interval(*self._sharex._lonaxis.get_view_interval())
+            self._lonaxis.set_minor_locator(self._sharex._lonaxis.get_minor_locator())
+
         # Handle X axis sharing
-        if self._sharex:
-            self._handle_axis_sharing(
-                source_axis=self._sharex._lonaxis,
-                target_axis=self._lonaxis,
-            )
+        self._handle_axis_sharing(which="x")
+
+        # Share interval y
+        if self._sharey and self.figure._sharey >= 2:
+            self._lataxis.set_view_interval(*self._sharey._lataxis.get_view_interval())
+            self._lataxis.set_minor_locator(self._sharey._lataxis.get_minor_locator())
 
         # Handle Y axis sharing
-        if self._sharey:
-            self._handle_axis_sharing(
-                source_axis=self._sharey._lataxis,
-                target_axis=self._lataxis,
-            )
+        self._handle_axis_sharing(which="y")
 
         # This block is apart of the draw sequence as the
         # gridliner object is created late in the
         # build chain.
         if not self.stale:
             return
-        if self.figure._get_sharing_level() == 0:
+        if self.figure._sharex == 0 and self.figure._sharey == 0:
             return
 
     def _get_gridliner_labels(
@@ -708,9 +711,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
     def _handle_axis_sharing(
         self,
-        source_axis: "GeoAxes",
-        target_axis: "GeoAxes",
-    ):
+        *,
+        which: str,
+    ) -> None:
         """
         Helper method to handle axis sharing for both X and Y axes.
 
@@ -718,11 +721,57 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             source_axis: The source axis to share from
             target_axis: The target axis to apply sharing to
         """
-        # Copy view interval and minor locator from source to target
+        if self.figure._sharex == 0 and which == "x":
+            return
+        if self.figure._sharey == 0 and which == "y":
+            return
+        # This logic is adapted from CartesianAxes._determine_tick_label_visibility
+        # to provide consistent tick label sharing behavior for GeoAxes.
+        # Per user guidance, it excludes panel and colorbar logic.
 
-        if self.figure._get_sharing_level() >= 2:
-            target_axis.set_view_interval(*source_axis.get_view_interval())
-            target_axis.set_minor_locator(source_axis.get_minor_locator())
+        axis = getattr(self, f"{which}axis")
+        ticks = axis.get_tick_params()
+        label_params = (
+            ("labeltop", "labelbottom") if which == "x" else ("labelleft", "labelright")
+        )
+        border_sides = ("top", "bottom") if which == "x" else ("left", "right")
+        border_axes = self.figure._get_border_axes()
+
+        turn_on_or_off = {}
+        for label_param, border_side in zip(label_params, border_sides):
+            is_border = self in border_axes.get(border_side, [])
+            is_this_tick_on = self._is_ticklabel_on(label_param)
+
+            # Case 1: Top-side of a shared X-axis (for primary axes).
+            if (
+                which == "x"
+                and not getattr(self, "_altx_parent", None)
+                and border_side == "top"
+                and self.figure._sharex > 2
+            ):
+
+                turn_on_or_off[label_param] = is_border and is_this_tick_on
+
+            # Case 2: Right-side of a shared Y-axis (for primary axes).
+            elif (
+                which == "y"
+                and not getattr(self, "_alty_parent", None)
+                and border_side == "right"
+                and self.figure._sharey > 2
+            ):
+                turn_on_or_off[label_param] = is_border and is_this_tick_on
+
+            # Case 3: Standard bottom/left shared axes.
+            elif which == "x" and not self._sharex is None and self.figure._sharex > 2:
+                turn_on_or_off[label_param] = is_border and is_this_tick_on
+            elif which == "y" and not self._sharey is None and self.figure._sharey > 2:
+                turn_on_or_off[label_param] = is_border and is_this_tick_on
+
+            # Case 4: Standalone axes (no sharing).
+            else:
+                turn_on_or_off[label_param] = is_this_tick_on
+
+        self._toggle_gridliner_labels(**turn_on_or_off)
 
     @override
     def draw(self, renderer=None, *args, **kwargs):
@@ -1434,8 +1483,10 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         """
         # Deal with different cartopy versions
         left_labels, right_labels, bottom_labels, top_labels = self._get_side_labels()
+
         if self.gridlines_major is None:
             return False
+
         elif side == "labelleft":
             return getattr(self.gridlines_major, left_labels)
         elif side == "labelright":
@@ -1465,8 +1516,9 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         togglers = (labelleft, labelright, labelbottom, labeltop)
         gl = self.gridlines_major
         for toggle, side in zip(togglers, side_labels):
-            if getattr(gl, side) != toggle:
-                setattr(gl, side, toggle)
+            if toggle is None:
+                continue
+            setattr(gl, side, toggle)
         if geo is not None:  # only cartopy 0.20 supported but harmless
             setattr(gl, "geo_labels", geo)
 
