@@ -570,7 +570,6 @@ def test_sharing_levels(level):
     for idx, axi in enumerate(ax):
         axi.plot(x * (idx + 1), y * (idx + 1))
 
-    fig.canvas.draw()  # need this to update the labels
     # All the labels should be on
     for axi in ax:
 
