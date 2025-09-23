@@ -71,31 +71,6 @@ def test_get_renderer_basic():
     assert hasattr(renderer, "draw_path")
 
 
-def test_share_labels_with_others_no_sharing():
-    """
-    Test that _share_labels_with_others returns early when no sharing is set.
-    """
-    fig, ax = uplt.subplots()
-    fig._sharex = 0
-    fig._sharey = 0
-    # Should simply return without error
-    result = fig._share_labels_with_others()
-    assert result is None
-
-
-def test_share_labels_with_others_with_sharing():
-    """
-    Test that _share_labels_with_others runs when sharing is enabled.
-    """
-    fig, ax = uplt.subplots(ncols=2, sharex=1, sharey=1)
-    fig._sharex = 1
-    fig._sharey = 1
-    # Should not return early
-    fig._share_labels_with_others()
-    # No assertion, just check for coverage and no error
-    uplt.close(fig)
-
-
 def test_figure_sharing_toggle():
     """
     Check if axis sharing and unsharing works
