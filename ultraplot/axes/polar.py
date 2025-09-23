@@ -3,7 +3,11 @@
 Polar axes using azimuth and radius instead of *x* and *y*.
 """
 import inspect
-from typing import override
+
+try:
+    from typing import override
+except:
+    from typing_extensions import override
 
 import matplotlib.projections.polar as mpolar
 import numpy as np
