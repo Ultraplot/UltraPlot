@@ -1490,7 +1490,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         elif side == "labelleft":
             return getattr(self.gridlines_major, left_labels)
         elif side == "labelright":
-            return getattr(self.gridlines_major, right_labels) == "y"
+            return getattr(self.gridlines_major, right_labels)
         elif side == "labelbottom":
             return getattr(self.gridlines_major, bottom_labels)
         elif side == "labeltop":
