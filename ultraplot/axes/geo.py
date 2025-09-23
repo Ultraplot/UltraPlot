@@ -652,19 +652,26 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 or to the *right* of the leftmost panel. But the sharing level used for
                 the leftmost and bottommost is the *figure* sharing level.
         """
+
+        # Share interval x
+        if self._sharex and self.figure._sharex >= 2:
+            self._lonaxis.set_view_interval(*self._sharex._lonaxis.get_view_interval())
+            self._lonaxis.set_minor_locator(self._sharex._lonaxis.get_minor_locator())
+
         # Handle X axis sharing
-        if self._sharex:
+        if self.figure._sharex > 2:
             self._handle_axis_sharing(
-                source_axis=self._sharex._lonaxis,
-                target_axis=self._lonaxis,
                 which="x",
             )
 
+        # Share interval y
+        if self._sharey and self.figure._sharey >= 2:
+            self._lataxis.set_view_interval(*self._sharey._lataxis.get_view_interval())
+            self._lataxis.set_minor_locator(self._sharey._lataxis.get_minor_locator())
+
         # Handle Y axis sharing
-        if self._sharey:
+        if self.figure._sharey > 2:
             self._handle_axis_sharing(
-                source_axis=self._sharey._lataxis,
-                target_axis=self._lataxis,
                 which="y",
             )
 
@@ -710,8 +717,6 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
     def _handle_axis_sharing(
         self,
-        source_axis: "GeoAxes",
-        target_axis: "GeoAxes",
         *,
         which: str,
     ):
@@ -722,15 +727,16 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             source_axis: The source axis to share from
             target_axis: The target axis to apply sharing to
         """
-
-        # Turn the ticks on or off depending on the position
-        sides = "top bottom".split() if which == "x" else "left right".split()
-        border_to_ax = self.figure._get_border_axes()
+        # Turn all labels off
+        # Note: this action performs it for all the axes in
+        # the figure. We use the stale here to only perform
+        # it once as it is an expensive action.
+        border_axes = self.figure._get_border_axes(same_type=False)
         turn_on_or_off = {}
+        sides = ("left", "right", "top", "bottom")
         for side in sides:
             sidelabel = f"label{side}"
             is_label_on = self._is_ticklabel_on(sidelabel)
-            turn_on_or_off[sidelabel] = False  # default is False
             match side:
                 case "left" | "right":
                     if self.figure._sharey < 3:
@@ -738,7 +744,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     else:
                         # When we are a border an the labels are on
                         # we keep them on
-                        if self in border_to_ax.get(side, False):
+                        if self in border_axes.get(side, []):
                             turn_on_or_off[sidelabel] = is_label_on
                 case "top" | "bottom":
                     if self.figure._sharex < 3:
@@ -746,13 +752,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     else:
                         # When we are a border an the labels are on
                         # we keep them on
-                        if self in border_to_ax.get(side, False):
+                        if self in border_axes.get(side, []):
                             turn_on_or_off[sidelabel] = is_label_on
-
-        # Copy view interval and minor locator from source to target
-        if getattr(self.figure, f"_share{which}") >= 2:
-            target_axis.set_view_interval(*source_axis.get_view_interval())
-            target_axis.set_minor_locator(source_axis.get_minor_locator())
+        self._toggle_gridliner_labels(**turn_on_or_off)
 
     @override
     def draw(self, renderer=None, *args, **kwargs):
