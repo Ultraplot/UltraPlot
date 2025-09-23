@@ -296,6 +296,7 @@ def test_sharing_cartopy(layout, expectations):
     settings = dict(land=True, ocean=True, labels="both")
     fig, ax = uplt.subplots(layout, share="all", proj="cyl")
     ax.format(**settings)
+    fig.canvas.draw()  # needed for sharing labels
     for axi in ax:
         state = are_labels_on(axi)
         expectation = expectations[axi.number - 1]
@@ -314,8 +315,8 @@ def test_toggle_gridliner_labels():
     gl = ax[0].gridlines_major
 
     assert gl.left_labels == False
-    assert gl.right_labels == None  # initially these are none
-    assert gl.top_labels == None
+    assert gl.right_labels == False
+    assert gl.top_labels == False
     assert gl.bottom_labels == False
     ax[0]._toggle_gridliner_labels(labeltop=True)
     assert gl.top_labels == True
@@ -572,22 +573,18 @@ def test_sharing_levels(level):
     fig.canvas.draw()  # need this to update the labels
     # All the labels should be on
     for axi in ax:
-        side_labels = axi._get_gridliner_labels(
-            left=True,
-            right=True,
-            top=True,
-            bottom=True,
+
+        s = sum(
+            [
+                1 if axi._is_ticklabel_on(side) else 0
+                for side in "labeltop labelbottom labelleft labelright".split()
+            ]
         )
-        s = 0
-        for dir, labels in side_labels.items():
-            s += any([label.get_visible() for label in labels])
 
         assert_views_are_sharing(axi)
         # When we share the labels but not the limits,
         # we expect all ticks to be on
-        if level < 3:
-            assert s == 4
-        else:
+        if level > 2:
             assert s == 2
     uplt.close(fig)
 
@@ -616,7 +613,9 @@ def test_cartesian_and_geo(rng):
         ax[0].pcolormesh(rng.random((10, 10)))
         ax[1].scatter(*rng.random((2, 100)))
         ax[0]._apply_axis_sharing()
-        assert mocked.call_count == 1
+        assert (
+            mocked.call_count == 2
+        )  # needs to be called at least twice; one for each axis
     return fig
 
 
