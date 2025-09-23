@@ -659,10 +659,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._lonaxis.set_minor_locator(self._sharex._lonaxis.get_minor_locator())
 
         # Handle X axis sharing
-        if self.figure._sharex > 2:
-            self._handle_axis_sharing(
-                which="x",
-            )
+        self._handle_axis_sharing(which="x")
 
         # Share interval y
         if self._sharey and self.figure._sharey >= 2:
@@ -670,10 +667,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._lataxis.set_minor_locator(self._sharey._lataxis.get_minor_locator())
 
         # Handle Y axis sharing
-        if self.figure._sharey > 2:
-            self._handle_axis_sharing(
-                which="y",
-            )
+        self._handle_axis_sharing(which="y")
 
         # This block is apart of the draw sequence as the
         # gridliner object is created late in the
@@ -719,7 +713,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self,
         *,
         which: str,
-    ):
+    ) -> None:
         """
         Helper method to handle axis sharing for both X and Y axes.
 
@@ -727,11 +721,22 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             source_axis: The source axis to share from
             target_axis: The target axis to apply sharing to
         """
-        # Turn all labels off
-        # Note: this action performs it for all the axes in
-        # the figure. We use the stale here to only perform
-        # it once as it is an expensive action.
-        border_axes = self.figure._get_border_axes(same_type=False)
+        if self.figure._sharex == 0 and which == "x":
+            return
+        if self.figure._sharey == 0 and which == "y":
+            return
+        # This logic is adapted from CartesianAxes._determine_tick_label_visibility
+        # to provide consistent tick label sharing behavior for GeoAxes.
+        # Per user guidance, it excludes panel and colorbar logic.
+
+        axis = getattr(self, f"{which}axis")
+        ticks = axis.get_tick_params()
+        label_params = (
+            ("labeltop", "labelbottom") if which == "x" else ("labelleft", "labelright")
+        )
+        border_sides = ("top", "bottom") if which == "x" else ("left", "right")
+        border_axes = self.figure._get_border_axes()
+
         turn_on_or_off = {}
         for label_param, border_side in zip(label_params, border_sides):
             is_border = self in border_axes.get(border_side, [])
@@ -744,6 +749,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 and border_side == "top"
                 and self.figure._sharex > 2
             ):
+
+                turn_on_or_off[label_param] = is_border and is_this_tick_on
 
             # Case 2: Right-side of a shared Y-axis (for primary axes).
             elif (
@@ -759,6 +766,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 turn_on_or_off[label_param] = is_border and is_this_tick_on
             elif which == "y" and not self._sharey is None and self.figure._sharey > 2:
                 turn_on_or_off[label_param] = is_border and is_this_tick_on
+
             # Case 4: Standalone axes (no sharing).
             else:
                 turn_on_or_off[label_param] = is_this_tick_on
@@ -1480,13 +1488,13 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             return False
 
         elif side == "labelleft":
-            return getattr(self.gridlines_major, left_labels) == "y"
+            return getattr(self.gridlines_major, left_labels)
         elif side == "labelright":
             return getattr(self.gridlines_major, right_labels) == "y"
         elif side == "labelbottom":
-            return getattr(self.gridlines_major, bottom_labels) == "x"
+            return getattr(self.gridlines_major, bottom_labels)
         elif side == "labeltop":
-            return getattr(self.gridlines_major, top_labels) == "x"
+            return getattr(self.gridlines_major, top_labels)
         else:
             raise ValueError(f"Invalid side: {side}")
 
@@ -1508,8 +1516,9 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         togglers = (labelleft, labelright, labelbottom, labeltop)
         gl = self.gridlines_major
         for toggle, side in zip(togglers, side_labels):
-            if getattr(gl, side) != toggle:
-                setattr(gl, side, toggle)
+            if toggle is None:
+                continue
+            setattr(gl, side, toggle)
         if geo is not None:  # only cartopy 0.20 supported but harmless
             setattr(gl, "geo_labels", geo)
 
