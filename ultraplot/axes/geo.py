@@ -733,27 +733,36 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # it once as it is an expensive action.
         border_axes = self.figure._get_border_axes(same_type=False)
         turn_on_or_off = {}
-        sides = ("left", "right", "top", "bottom")
-        for side in sides:
-            sidelabel = f"label{side}"
-            is_label_on = self._is_ticklabel_on(sidelabel)
-            match side:
-                case "left" | "right":
-                    if self.figure._sharey < 3:
-                        turn_on_or_off[sidelabel] = is_label_on
-                    else:
-                        # When we are a border an the labels are on
-                        # we keep them on
-                        if self in border_axes.get(side, []):
-                            turn_on_or_off[sidelabel] = is_label_on
-                case "top" | "bottom":
-                    if self.figure._sharex < 3:
-                        turn_on_or_off[sidelabel] = is_label_on
-                    else:
-                        # When we are a border an the labels are on
-                        # we keep them on
-                        if self in border_axes.get(side, []):
-                            turn_on_or_off[sidelabel] = is_label_on
+        for label_param, border_side in zip(label_params, border_sides):
+            is_border = self in border_axes.get(border_side, [])
+            is_this_tick_on = self._is_ticklabel_on(label_param)
+
+            # Case 1: Top-side of a shared X-axis (for primary axes).
+            if (
+                which == "x"
+                and not getattr(self, "_altx_parent", None)
+                and border_side == "top"
+                and self.figure._sharex > 2
+            ):
+
+            # Case 2: Right-side of a shared Y-axis (for primary axes).
+            elif (
+                which == "y"
+                and not getattr(self, "_alty_parent", None)
+                and border_side == "right"
+                and self.figure._sharey > 2
+            ):
+                turn_on_or_off[label_param] = is_border and is_this_tick_on
+
+            # Case 3: Standard bottom/left shared axes.
+            elif which == "x" and not self._sharex is None and self.figure._sharex > 2:
+                turn_on_or_off[label_param] = is_border and is_this_tick_on
+            elif which == "y" and not self._sharey is None and self.figure._sharey > 2:
+                turn_on_or_off[label_param] = is_border and is_this_tick_on
+            # Case 4: Standalone axes (no sharing).
+            else:
+                turn_on_or_off[label_param] = is_this_tick_on
+
         self._toggle_gridliner_labels(**turn_on_or_off)
 
     @override
