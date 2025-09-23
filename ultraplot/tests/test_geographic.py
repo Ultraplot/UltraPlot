@@ -586,6 +586,8 @@ def test_sharing_levels(level):
         # we expect all ticks to be on
         if level > 2:
             assert s == 2
+        else:
+            assert s == 4
     uplt.close(fig)
 
 
@@ -805,6 +807,7 @@ def test_sharing_cartopy_with_colorbar(rng):
     h = ax.imshow(data)[0]
     ax.format(land=True, labels="both")  # need this otherwise no labels are printed
     fig.colorbar(h, loc="r")
+    fig.canvas.draw()  # needed to  invoke axis sharing
 
     expectations = (
         [True, False, False, True],
