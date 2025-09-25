@@ -195,7 +195,7 @@ class _SubplotSpec(mgridspec.SubplotSpec):
         row2, col2 = divmod(self.num2, ncols)
         return row1, row2, col1, col2
 
-    def _get_grid_span(self, hidden=False) -> (int, int, int, int):
+    def _get_grid_span(self, hidden=True) -> (int, int, int, int):
         """
         Retrieve the location of the subplot within the
         gridspec. When hidden is False we only consider
@@ -203,11 +203,12 @@ class _SubplotSpec(mgridspec.SubplotSpec):
         """
         gs = self.get_gridspec()
         nrows, ncols = gs.nrows_total, gs.ncols_total
-        if not hidden:
+        if hidden:
+            x, y = np.unravel_index(self.num1, (nrows, ncols))
+        else:
             nrows, ncols = gs.nrows, gs.ncols
-        # Use num1 or num2
-        decoded = gs._decode_indices(self.num1)
-        x, y = np.unravel_index(decoded, (nrows, ncols))
+            decoded = gs._decode_indices(self.num1)
+            x, y = np.unravel_index(decoded, (nrows, ncols))
         span = self._get_rows_columns()
 
         xspan = span[1] - span[0] + 1  # inclusive

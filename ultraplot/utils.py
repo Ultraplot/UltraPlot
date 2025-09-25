@@ -918,7 +918,8 @@ def _get_subplot_layout(
     axis types. This function is used internally to determine
     the layout of axes in a GridSpec.
     """
-    grid = np.zeros((gs.nrows, gs.ncols))
+    grid = np.zeros((gs.nrows_total, gs.ncols_total), dtype=object)
+    grid.fill(None)
     grid_axis_type = np.zeros((gs.nrows, gs.ncols))
     # Collect grouper based on kinds of axes. This
     # would allow us to share labels across types
@@ -936,7 +937,7 @@ def _get_subplot_layout(
         grid[
             slice(*rowspan),
             slice(*colspan),
-        ] = axi.number
+        ] = axi
 
         # Allow grouping of mixed types
         axis_type = 1
@@ -1004,13 +1005,19 @@ class _Crawler:
 
         # Retrieve where the axis is in the grid
         spec = self.ax.get_subplotspec()
-        spans = spec._get_grid_span()
+        shape = (spec.get_gridspec().nrows_total, spec.get_gridspec().ncols_total)
+        x, y = np.unravel_index(spec.num1, shape)
+        spans = spec._get_rows_columns()
         rowspan = spans[:2]
         colspan = spans[-2:]
-        xs = range(*rowspan)
-        ys = range(*colspan)
+
+        a = rowspan[1] - rowspan[0]
+        b = colspan[1] - colspan[0]
+        xs = range(x, x + a + 1)
+        ys = range(y, y + b + 1)
+
         is_border = False
-        for x, y in product(xs, ys):
+        for xl, yl in product(xs, ys):
             pos = (x, y)
             if self.is_border(pos, d):
                 is_border = True
@@ -1037,11 +1044,11 @@ class _Crawler:
         elif y > self.grid.shape[1] - 1:
             return True
 
-        if self.grid[x, y] == 0 or self.grid_axis_type[x, y] != self.axis_type:
+        if self.grid[x, y] is None or self.grid_axis_type[x, y] != self.axis_type:
             return True
 
         # Check if we reached a plot or an internal edge
-        if self.grid[x, y] != self.target and self.grid[x, y] > 0:
+        if self.grid[x, y] != self.ax:
             return self._check_ranges(direction, other=self.grid[x, y])
 
         dx, dy = direction
@@ -1065,14 +1072,15 @@ class _Crawler:
         can share x.
         """
         this_spec = self.ax.get_subplotspec()
-        other_spec = self.ax.figure._subplot_dict[other].get_subplotspec()
+        other_spec = other.get_subplotspec()
 
         # Get the row and column spans of both axes
-        this_span = this_spec._get_grid_span()
+        this_span = this_spec._get_rows_columns()
         this_rowspan = this_span[:2]
         this_colspan = this_span[-2:]
 
         other_span = other_spec._get_grid_span()
+        other_span = other_spec._get_rows_columns()
         other_rowspan = other_span[:2]
         other_colspan = other_span[-2:]
 
@@ -1089,6 +1097,27 @@ class _Crawler:
             other_start, other_stop = other_rowspan
 
         if this_start == other_start and this_stop == other_stop:
+            # Check if it is a panel
+            mapper = {
+                (0, -1): "left",
+                (0, 1): "right",
+                (1, 0): "top",
+                (-1, 0): "bottom",
+            }
+            d = mapper[direction]
+            if self.ax.number is None:
+                parent = self.ax._panel_parent
+                if panels := parent._panel_dict.get(d, []):
+                    if self.ax == panels[-1]:
+                        if d in ("left", "right") and parent._sharey:
+                            return True
+                        elif d in ("top", "bottom") and parent._sharex:
+                            return True
+            elif self.ax.number is not None:
+                if d in ("left", "right") and not self.ax._sharey:
+                    return True
+                elif d in ("top", "bottom") and not self.ax._sharex:
+                    return True
             return False  # not a border
         return True
 

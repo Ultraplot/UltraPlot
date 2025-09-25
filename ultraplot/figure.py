@@ -20,6 +20,11 @@ import matplotlib.text as mtext
 import matplotlib.transforms as mtransforms
 import numpy as np
 
+try:
+    from typing import override
+except:
+    from typing_extensions import override
+
 from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
@@ -477,6 +482,21 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
     return canvas
 
 
+def _clear_border_cache(func):
+    """
+    Decorator that clears the border cache after function execution.
+    """
+
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        if hasattr(self, "_cache_border_axes"):
+            delattr(self, "_cache_border_axes")
+        return result
+
+    return wrapper
+
+
 class Figure(mfigure.Figure):
     """
     The `~matplotlib.figure.Figure` subclass used by ultraplot.
@@ -801,6 +821,95 @@ class Figure(mfigure.Figure):
         # NOTE: This ignores user-input rc_mode.
         self.format(rc_kw=rc_kw, rc_mode=1, skip_axes=True, **kw_format)
 
+    @override
+    def draw(self, renderer):
+        # implement the tick sharing here
+        # should be shareable --> either all cartesian or all geographic
+        # but no mixing (panels can be mixed)
+        # check which ticks are on for x or y and push the labels to the
+        # outer most on a given column or row.
+        # we can use get_border_axes for the outermost plots and then collect their outermost panels that are not colorbars
+        self._share_ticklabels(axis="x")
+        self._share_ticklabels(axis="y")
+        super().draw(renderer)
+
+    def _share_ticklabels(self, *, axis: str) -> None:
+        """
+        Tick label sharing is  determined at the figure level. While
+        each subplot controls the limits, we are dealing with the ticklabels
+        here as the complexity is easiier to deal with.
+            axis: str 'x' or 'y', row or columns to update
+        """
+        if not self.stale:
+            return
+        outer_axes = self._get_border_axes()
+        true_outer = {}
+
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+        # for panels
+        other_axis = "x" if axis == "y" else "y"
+        other_sides = ("left", "right") if axis == "x" else ("top", "bottom")
+        # Outer_axes contains the main grid but we need
+        # to add the panels that are on these axes potentially
+
+        tick_params = (
+            {"labeltop": False, "labelbottom": False}
+            if axis == "x"
+            else {"labelleft": False, "labelright": False}
+        )
+
+        # Check if any of the ticks are set to on for @axis
+        subplot_types = set()
+        for axi in self._iter_axes(panels=True, hidden=False):
+            if not type(axi) in (paxes.CartesianAxes, paxes.GeoAxes):
+                warnings._warn_ultraplot(
+                    f"Tick label sharing not implemented for {type(axi)} subplots."
+                )
+                return
+            subplot_types.add(type(axi))
+            match axis:
+                # Handle x
+                case "x" if isinstance(axi, paxes.CartesianAxes):
+                    tmp = axi.xaxis.get_tick_params()
+                    if tmp.get("labeltop"):
+                        tick_params["labeltop"] = tmp["labeltop"]
+                    if tmp.get("labelbottom"):
+                        tick_params["labelbottom"] = tmp["labelbottom"]
+
+                # TODO:
+                case "x" if isinstance(axi, paxes.GeoAxes):
+                    pass
+
+                # Handle y
+                case "y" if isinstance(axi, paxes.CartesianAxes):
+                    tmp = axi.yaxis.get_tick_params()
+                    if tmp.get("labelleft"):
+                        tick_params["labelleft"] = tmp["labelleft"]
+                    if tmp.get("labelright"):
+                        tick_params["labelright"] = tmp["labelright"]
+
+                # TODO:
+                case "y" if isinstance(axi, paxes.GeoAxes):
+                    pass
+
+        # We cannot mix types (yet)
+        if len(subplot_types) > 1:
+            warnings._warn_ultraplot(
+                "Tick label sharing not implemented for mixed subplot types."
+            )
+            return
+        for axi in self._iter_axes(panels=True, hidden=False):
+            tmp = tick_params.copy()
+            # For sharing limits and or axis labels we
+            # can leave the ticks as found
+            for side in sides:
+                label = f"label{side}"
+                if axi not in outer_axes[side]:
+                    tmp[label] = False
+
+            axi.tick_params(**tmp)
+        self.stale = True
+
     def _context_adjusting(self, cache=True):
         """
         Prevent re-running auto layout steps due to draws triggered by figure
@@ -928,8 +1037,9 @@ class Figure(mfigure.Figure):
         if gs is None:
             return border_axes
 
-        # Skip colorbars or panels etc
-        all_axes = [axi for axi in self.axes if axi.number is not None]
+        all_axes = []
+        for axi in self._iter_axes(panels=True):
+            all_axes.append(axi)
 
         # Handle empty cases
         nrows, ncols = gs.nrows, gs.ncols
@@ -941,26 +1051,45 @@ class Figure(mfigure.Figure):
         # Reconstruct the grid based on axis locations. Note that
         # spanning axes will fit into one of the boxes. Check
         # this with unittest to see how empty axes are handles
-        grid, grid_axis_type, seen_axis_type = _get_subplot_layout(
-            gs,
-            all_axes,
-            same_type=same_type,
-        )
+
+        gs = self.axes[0].get_gridspec()
+        shape = (gs.nrows_total, gs.ncols_total)
+        grid = np.zeros(shape, dtype=object)
+        grid.fill(None)
+        grid_axis_type = np.zeros(shape, dtype=int)
+        seen_axis_type = dict()
+        for axi in self._iter_axes(panels=True):
+            gs = axi.get_subplotspec()
+            x, y = np.unravel_index(gs.num1, shape)
+            span = gs._get_rows_columns()
+
+            xleft, xright, yleft, yright = span
+            xspan = xright - xleft + 1
+            yspan = yright - yleft + 1
+            number = axi.number
+            if type(axi) not in seen_axis_type:
+                seen_axis_type[type(axi)] = len(seen_axis_type)
+            type_number = seen_axis_type[type(axi)]
+            grid[x : x + xspan, y : y + yspan] = axi
+            grid_axis_type[x : x + xspan, y : y + yspan] = type_number
         # We check for all axes is they are a border or not
         # Note we could also write the crawler in a way where
         # it find the borders by moving around in the grid, without spawning on each axis point. We may change
         # this in the future
         for axi in all_axes:
             axis_type = seen_axis_type.get(type(axi), 1)
+            number = axi.number
+            if axi.number is None:
+                number = -axi._panel_parent.number
             crawler = _Crawler(
                 ax=axi,
                 grid=grid,
-                target=axi.number,
+                target=number,
                 axis_type=axis_type,
                 grid_axis_type=grid_axis_type,
             )
             for direction, is_border in crawler.find_edges():
-                if is_border:
+                if is_border and axi not in border_axes[direction]:
                     border_axes[direction].append(axi)
         self._cached_border_axes = border_axes
         return border_axes
@@ -1054,6 +1183,7 @@ class Figure(mfigure.Figure):
                 renderer = canvas.get_renderer()
         return renderer
 
+    @_clear_border_cache
     def _add_axes_panel(self, ax, side=None, **kwargs):
         """
         Add an axes panel.
@@ -1098,6 +1228,7 @@ class Figure(mfigure.Figure):
         axis.set_label_position(side)  # set label position
         return pax
 
+    @_clear_border_cache
     def _add_figure_panel(
         self, side=None, span=None, row=None, col=None, rows=None, cols=None, **kwargs
     ):
@@ -1132,6 +1263,7 @@ class Figure(mfigure.Figure):
         pax._panel_parent = None
         return pax
 
+    @_clear_border_cache
     def _add_subplot(self, *args, **kwargs):
         """
         The driver function for adding single subplots.
@@ -1240,9 +1372,6 @@ class Figure(mfigure.Figure):
 
         if ax.number:
             self._subplot_dict[ax.number] = ax
-        # Invalidate border axes cache
-        if hasattr(self, "_cached_border_axes"):
-            delattr(self, "_cached_border_axes")
         return ax
 
     def _unshare_axes(self):
@@ -1672,6 +1801,7 @@ class Figure(mfigure.Figure):
         if title is not None:
             self._suptitle.set_text(title)
 
+    @_clear_border_cache
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def add_axes(self, rect, **kwargs):

@@ -742,7 +742,7 @@ def test_geo_with_panels(rng):
             length=0.5,
         ),
     )
-    ax.format(oceancolor="blue", coast=True)
+    ax.format(oceancolor="blue", coast=True, latticklabels="r")
     return fig
 
 
