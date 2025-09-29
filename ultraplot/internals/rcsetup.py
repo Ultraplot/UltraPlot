@@ -264,6 +264,37 @@ def _validate_belongs(*options):
     return _validate_belongs
 
 
+_CFTIME_RESOLUTIONS = (
+    "SECONDLY",
+    "MINUTELY",
+    "HOURLY",
+    "DAILY",
+    "MONTHLY",
+    "YEARLY",
+)
+
+
+def _validate_cftime_resolution_format(units: dict) -> dict:
+    if not isinstance(units, dict):
+        raise ValueError("Cftime units expects a dict")
+
+    for resolution, format_ in units.items():
+        unit = _validate_cftime_resolution(resolution)
+
+    # Delegate format parsing to cftime
+    _rc_ultraplot_default["cftime.time_resolution_format"].update(units)
+    return _rc_ultraplot_default["cftime.time_resolution_format"]
+
+
+def _validate_cftime_resolution(unit: str) -> str:
+    if not isinstance(unit, str):
+        raise TypeError("Time unit cftime is expecting str")
+    if unit in _CFTIME_RESOLUTIONS:
+        return unit
+    msg = f"Unit not understood. Got {unit} expected one of: {_CFTIME_RESOLUTIONS}"
+    raise ValueError(msg)
+
+
 def _validate_cmap(subtype):
     """
     Validate the colormap or cycle. Possibly skip name registration check
@@ -999,13 +1030,25 @@ _rc_ultraplot_table = {
     ),
     "cftime.time_unit": (
         "days since 2000-01-01",
-        None,  # no validator
+        _validate_string,
         "Time unit for non-Gregorian calenadrs",
     ),
     "cftime.resolution": (
         "DAILY",
-        None,  # no validator
+        _validate_cftime_resolution,
         "Default time resolution for non-Gregorian calendars",
+    ),
+    "cftime.time_resolution_format": (
+        {
+            "SECONDLY": "%H:%M:%S",
+            "MINUTELY": "%H:%M",
+            "HOURLY": "%Y-%m-%d %H:%M",
+            "DAILY": "%Y-%m-%d",
+            "MONTHLY": "%Y-%m",
+            "YEARLY": "%Y",
+        },
+        _validate_cftime_resolution_format,
+        "Dict used for formatting non-Gregorian calendars",
     ),
     # Coastlines
     "coast": (False, _validate_bool, "Toggles coastline lines on and off."),
