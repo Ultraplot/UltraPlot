@@ -896,12 +896,7 @@ class AutoCFDatetimeFormatter(mticker.Formatter):
 class AutoCFDatetimeLocator(mticker.Locator):
     """Determines tick locations when plotting `cftime.datetime` data."""
 
-    real_world_calendars = (
-        "gregorian",
-        "julian",
-        "proleptic_gregorian",
-        "standard",
-    )
+    real_world_calendars = cftime._cftime._calendars
 
     def __init__(self, maxticks=None, calendar="standard", date_unit=None, minticks=3):
         super().__init__()
