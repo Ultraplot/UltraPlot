@@ -11,7 +11,7 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 import matplotlib.transforms as mtransforms
 import matplotlib.units as munits
-from datetime import timedelta
+from datetime import datetime, timedelta
 import numpy as np
 
 try:
@@ -896,9 +896,12 @@ class AutoCFDatetimeFormatter(mticker.Formatter):
 class AutoCFDatetimeLocator(mticker.Locator):
     """Determines tick locations when plotting `cftime.datetime` data."""
 
-    real_world_calendars = (
-        i.calendar for i in cftime.__dict__.values() if hasattr(i, "calendar")
-    )  # May break; there is no public api for cftime to get all calendars
+    if cftime:
+        real_world_calendars = (
+            i.calendar for i in cftime.__dict__.values() if hasattr(i, "calendar")
+        )  # May break; there is no public api for cftime to get all calendars
+    else:
+        real_world_calendars = ()
 
     def __init__(self, maxticks=None, calendar="standard", date_unit=None, minticks=3):
         super().__init__()
@@ -1431,16 +1434,17 @@ class CFTimeConverter(mdates.DateConverter):
         )
 
         try:
+            year = datetime.now().year
             if date_type is not None:
-                datemin = date_type(2000, 1, 1)
-                datemax = date_type(2010, 1, 1)
+                datemin = date_type(year - 10, 1, 1)
+                datemax = date_type(year, 1, 1)
             else:
                 # Fallback if date_type is None
-                datemin = cftime.DatetimeProlepticGregorian(2000, 1, 1)
-                datemax = cftime.DatetimeProlepticGregorian(2010, 1, 1)
+                datemin = cftime.DatetimeProlepticGregorian(year - 10, 1, 1)
+                datemax = cftime.DatetimeProlepticGregorian(year, 1, 1)
         except (TypeError, AttributeError):
-            datemin = cftime.DatetimeProlepticGregorian(2000, 1, 1)
-            datemax = cftime.DatetimeProlepticGregorian(2010, 1, 1)
+            datemin = cftime.DatetimeProlepticGregorian(year - 10, 1, 1)
+            datemax = cftime.DatetimeProlepticGregorian(year, 1, 1)
 
         return munits.AxisInfo(
             majloc=majloc,
