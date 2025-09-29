@@ -105,9 +105,6 @@ dms : bool, default: False
 """
 docstring._snippet_manager["ticker.dms"] = _dms_docstring
 
-
-_DEFAULT_RESOLUTION = "DAILY"
-_TIME_UNITS = "days since 2000-01-01"
 _RESOLUTION_TO_FORMAT = {
     "SECONDLY": "%H:%M:%S",
     "MINUTELY": "%H:%M",
@@ -882,7 +879,7 @@ class AutoCFDatetimeFormatter(mticker.Formatter):
     def __init__(self, locator, calendar, time_units=None):
         self.locator = locator
         self.calendar = calendar
-        self.time_units = time_units or _TIME_UNITS
+        self.time_units = time_units or rc["cftime.time_unit"]
 
     def pick_format(self, resolution):
         return _RESOLUTION_TO_FORMAT[resolution]
@@ -926,11 +923,11 @@ class AutoCFDatetimeLocator(mticker.Locator):
                 self.maxticks = dict.fromkeys(self.maxticks.keys(), maxticks)
 
         self.calendar = calendar
-        self.date_unit = date_unit or _TIME_UNITS
+        self.date_unit = date_unit or rc["cftime.time_unit"]
         if not self.date_unit.lower().startswith("days since"):
             emsg = "The date unit must be days since for a NetCDF time locator."
             raise ValueError(emsg)
-        self.resolution = _DEFAULT_RESOLUTION
+        self.resolution = rc["cftime.resolution"]
         self._cached_resolution = {}
 
         # New: Default max ticks for Matplotlib's MaxNLocator, independent of resolution thresholds
@@ -1425,7 +1422,7 @@ class CFTimeConverter(mdates.DateConverter):
         if unit is None:
             calendar, date_unit, date_type = (
                 "standard",
-                CFTimeConverter.standard_unit,
+                rc["cftime.standard_unit"],
                 getattr(cftime, "DatetimeProlepticGregorian", None),
             )
         else:
@@ -1496,7 +1493,7 @@ class CFTimeConverter(mdates.DateConverter):
                 "A calendar must be defined to plot dates using a cftime axis."
             )
 
-        return calendar, cls.standard_unit, date_type
+        return calendar, rc["cftime.standard_unit"], date_type
 
     @classmethod
     def convert(cls, value, unit, axis):
@@ -1525,7 +1522,7 @@ class CFTimeConverter(mdates.DateConverter):
                 return value  # Cannot convert
 
             calendar = first_value.calendar
-            date_unit = cls.standard_unit
+            date_unit = rc["cftime.standard_unit"]
 
         result = cftime.date2num(value, date_unit, calendar=calendar)
         return result

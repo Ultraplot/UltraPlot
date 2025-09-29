@@ -997,6 +997,16 @@ _rc_ultraplot_table = {
         _validate_fontweight,
         "Font weight for column labels on the bottom of the figure.",
     ),
+    "cftime.time_unit": (
+        "days since 2000-01-01",
+        None,  # no validator
+        "Time unit for non-Gregorian calenadrs",
+    ),
+    "cftime.resolution": (
+        "DAILY",
+        None,  # no validator
+        "Default time resolution for non-Gregorian calendars",
+    ),
     # Coastlines
     "coast": (False, _validate_bool, "Toggles coastline lines on and off."),
     "coast.alpha": (
