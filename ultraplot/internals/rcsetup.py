@@ -1031,12 +1031,12 @@ _rc_ultraplot_table = {
     "cftime.time_unit": (
         "days since 2000-01-01",
         _validate_string,
-        "Time unit for non-Gregorian calenadrs",
+        "Time unit for non-Gregorian calendars.",
     ),
     "cftime.resolution": (
         "DAILY",
         _validate_cftime_resolution,
-        "Default time resolution for non-Gregorian calendars",
+        "Default time resolution for non-Gregorian calendars.",
     ),
     "cftime.time_resolution_format": (
         {
@@ -1048,7 +1048,12 @@ _rc_ultraplot_table = {
             "YEARLY": "%Y",
         },
         _validate_cftime_resolution_format,
-        "Dict used for formatting non-Gregorian calendars",
+        "Dict used for formatting non-Gregorian calendars.",
+    ),
+    "cftime.max_display_ticks": (
+        7,
+        _validate_int,
+        "Number of ticks to display for cftime units.",
     ),
     # Coastlines
     "coast": (False, _validate_bool, "Toggles coastline lines on and off."),

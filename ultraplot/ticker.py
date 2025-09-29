@@ -928,8 +928,7 @@ class AutoCFDatetimeLocator(mticker.Locator):
         self.resolution = rc["cftime.resolution"]
         self._cached_resolution = {}
 
-        # New: Default max ticks for Matplotlib's MaxNLocator, independent of resolution thresholds
-        self._max_display_ticks = 7  # A reasonable number for actual axis ticks
+        self._max_display_ticks = rc["ctime.max_display_ticks"]
 
     def set_params(self, maxticks=None, minticks=None, max_display_ticks=None):
         """Set the parameters for the locator."""
