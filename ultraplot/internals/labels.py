@@ -4,8 +4,22 @@ Utilities related to matplotlib text labels.
 """
 import matplotlib.patheffects as mpatheffects
 import matplotlib.text as mtext
+from matplotlib.font_manager import FontProperties
+
 
 from . import ic  # noqa: F401
+
+
+def merge_font_properties(dest_fp, src_fp):
+    # Prefer dest_fp's values if set, otherwise use src_fp's
+    return FontProperties(
+        family=dest_fp.get_family() or src_fp.get_family(),
+        style=dest_fp.get_style() or src_fp.get_style(),
+        variant=dest_fp.get_variant() or src_fp.get_variant(),
+        weight=dest_fp.get_weight() or src_fp.get_weight(),
+        stretch=dest_fp.get_stretch() or src_fp.get_stretch(),
+        size=dest_fp.get_size() or src_fp.get_size(),
+    )
 
 
 def _transfer_label(src, dest):
@@ -15,8 +29,11 @@ def _transfer_label(src, dest):
     """
     text = src.get_text()
     dest.set_color(src.get_color())  # not a font property
-    dest.set_fontproperties(src.get_fontproperties())  # size, weight, etc.
-    if not text.strip():  # WARNING: must test strip() (see _align_axis_labels())
+    src_fp = src.get_font_properties()
+    dest_fp = dest.get_font_properties()
+    merged_fp = merge_font_properties(dest_fp, src_fp)  # dest takes precedence
+    dest.set_fontproperties(merged_fp)
+    if not text.strip():
         return
     dest.set_text(text)
     src.set_text("")
