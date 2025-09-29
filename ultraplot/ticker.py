@@ -1428,18 +1428,14 @@ class CFTimeConverter(mdates.DateConverter):
             majloc, calendar=calendar, time_units=date_unit
         )
 
-        try:
-            year = datetime.now().year
-            if date_type is not None:
-                datemin = date_type(year - 10, 1, 1)
-                datemax = date_type(year, 1, 1)
-            else:
-                # Fallback if date_type is None
-                datemin = cftime.DatetimeProlepticGregorian(year - 10, 1, 1)
-                datemax = cftime.DatetimeProlepticGregorian(year, 1, 1)
-        except (TypeError, AttributeError):
-            datemin = cftime.DatetimeProlepticGregorian(year - 10, 1, 1)
-            datemax = cftime.DatetimeProlepticGregorian(year, 1, 1)
+        year = datetime.now().year
+        if date_type is not None:
+            datemin = date_type(year - 10, 1, 1)
+            datemax = date_type(year, 1, 1)
+        else:
+            # Fallback if date_type is None
+            datemin = cftime.datetime(year - 10, 1, 1, calendar="standard")
+            datemax = cftime.datetime(year, 1, 1, calendar="standard")
 
         return munits.AxisInfo(
             majloc=majloc,
