@@ -1068,7 +1068,7 @@ class Figure(mfigure.Figure):
         grid.fill(None)
         grid_axis_type = np.zeros(shape, dtype=int)
         seen_axis_type = dict()
-        for axi in self._iter_axes(panels=True):
+        for axi in self._iter_axes(panels=True, hidden=True):
             gs = axi.get_subplotspec()
             x, y = np.unravel_index(gs.num1, shape)
             span = gs._get_rows_columns()
@@ -1080,12 +1080,14 @@ class Figure(mfigure.Figure):
             if type(axi) not in seen_axis_type:
                 seen_axis_type[type(axi)] = len(seen_axis_type)
             type_number = seen_axis_type[type(axi)]
-            grid[x : x + xspan, y : y + yspan] = axi
+            if axi.get_visible():
+                grid[x : x + xspan, y : y + yspan] = axi
             grid_axis_type[x : x + xspan, y : y + yspan] = type_number
         # We check for all axes is they are a border or not
         # Note we could also write the crawler in a way where
         # it find the borders by moving around in the grid, without spawning on each axis point. We may change
         # this in the future
+        print(grid, grid.shape)
         for axi in all_axes:
             axis_type = seen_axis_type.get(type(axi), 1)
             number = axi.number
@@ -1099,6 +1101,7 @@ class Figure(mfigure.Figure):
                 grid_axis_type=grid_axis_type,
             )
             for direction, is_border in crawler.find_edges():
+                # print(">>", axi.number, direction, is_border)
                 if is_border and axi not in border_axes[direction]:
                     border_axes[direction].append(axi)
         self._cached_border_axes = border_axes
