@@ -127,40 +127,40 @@ def test_datetime_explicit_formatter():
     "date1, date2, num1, num2, expected_resolution, expected_n",
     [
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2020, 1, 1),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2020, 1, 1, calendar="gregorian"),
             0,
             7305,
             "YEARLY",
             20,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2001, 1, 1),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2001, 1, 1, calendar="gregorian"),
             0,
             365,
             "MONTHLY",
             12,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2000, 1, 10),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2000, 1, 10, calendar="gregorian"),
             0,
             9,
             "DAILY",
             9,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2000, 1, 1, 12),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2000, 1, 1, 12, calendar="gregorian"),
             0,
             0.5,
             "HOURLY",
             12,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 10),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2000, 1, 1, 0, 0, 10, calendar="gregorian"),
             0,
             1.1574074074074073e-4,
             "SECONDLY",
@@ -179,45 +179,45 @@ def test_compute_resolution(date1, date2, num1, num2, expected_resolution, expec
     "date1, date2, num1, num2",
     [
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2020, 1, 1),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2020, 1, 1, calendar="gregorian"),
             0,
             7305,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2001, 1, 1),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2001, 1, 1, calendar="gregorian"),
             0,
             365,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2000, 1, 10),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2000, 1, 10, calendar="gregorian"),
             0,
             9,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2000, 1, 1, 12),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2000, 1, 1, 12, calendar="gregorian"),
             0,
             0.5,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2000, 1, 1, 0, 0, 10),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2000, 1, 1, 0, 0, 10, calendar="gregorian"),
             0,
             1.1574074074074073e-4,
         ),
         # Additional test cases to cover the while loop
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2000, 12, 31),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2000, 12, 31, calendar="gregorian"),
             0,
             365,
         ),
         (
-            cftime.DatetimeGregorian(2000, 1, 1),
-            cftime.DatetimeGregorian(2000, 1, 2),
+            cftime.datetime(2000, 1, 1, calendar="gregorian"),
+            cftime.datetime(2000, 1, 2, calendar="gregorian"),
             0,
             1,
         ),
@@ -231,7 +231,7 @@ def test_tick_values(date1, date2, num1, num2):
     assert all(
         isinstance(
             cftime.num2date(t, locator.date_unit, calendar=locator.calendar),
-            cftime.DatetimeGregorian,
+            cftime.datetime,
         )
         for t in ticks
     )
@@ -370,19 +370,23 @@ def test_auto_formatter_fix_small_number(value, string, expected):
     [
         (
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             cftime.date2num(
-                cftime.DatetimeGregorian(2020, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2020, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
         ),
         # Case 2: Monthly resolution
         (
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 12, 31), "days since 2000-01-01"
+                cftime.datetime(2000, 12, 31, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
         ),
     ],
@@ -402,10 +406,12 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
     [
         (
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             cftime.date2num(
-                cftime.DatetimeGregorian(2020, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2020, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             "gregorian",
             None,
@@ -473,7 +479,9 @@ def test_auto_datetime_locator_tick_values(
         with pytest.raises(
             ValueError, match="Incorrectly formatted CF date-time unit_string"
         ):
-            cftime.date2num(cftime.DatetimeGregorian(2000, 1, 1), "invalid unit")
+            cftime.date2num(
+                cftime.datetime(2000, 1, 1, calendar="gregorian"), "invalid unit"
+            )
     if expected_exception:
         with pytest.raises(expected_exception):
             locator.tick_values(start_date, end_date)
