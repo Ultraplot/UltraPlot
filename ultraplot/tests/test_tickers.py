@@ -116,14 +116,11 @@ def test_datetime_explicit_formatter():
     fig.canvas.draw()
 
     labels = [label.get_text() for label in ax.get_xticklabels()]
-    assert len(labels) > 0
+    assert len(labels) > 1
     # check first label
-    try:
-        import cftime
+    import cftime
 
-        cftime.datetime.strptime(labels[1], "%b %Y", calendar="noleap")
-    except (ValueError, IndexError):
-        assert False, f"Label {labels[1]} does not match format %b %Y"
+    cftime.datetime.strptime(labels[1], "%b %Y", calendar="noleap")
 
 
 @pytest.mark.parametrize(
