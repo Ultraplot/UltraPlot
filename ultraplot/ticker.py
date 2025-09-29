@@ -921,7 +921,6 @@ class AutoCFDatetimeLocator(mticker.Locator):
             else:
                 # If a single value is provided for maxticks, apply it to all resolution *thresholds*
                 self.maxticks = dict.fromkeys(self.maxticks.keys(), maxticks)
-        print(self.real_world_calendars)
 
         self.calendar = calendar
         self.date_unit = date_unit or rc["cftime.time_unit"]
