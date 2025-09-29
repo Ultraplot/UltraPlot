@@ -22,7 +22,7 @@ def merge_font_properties(dest_fp, src_fp):
     )
 
 
-def _transfer_label(src, dest):
+def _transfer_label(src: mtext.Text, dest: mtext.Text) -> None:
     """
     Transfer the input text object properties and content to the destination
     text object. Then clear the input object text.
@@ -31,8 +31,17 @@ def _transfer_label(src, dest):
     dest.set_color(src.get_color())  # not a font property
     src_fp = src.get_font_properties()
     dest_fp = dest.get_font_properties()
-    merged_fp = merge_font_properties(dest_fp, src_fp)  # dest takes precedence
-    dest.set_fontproperties(merged_fp)
+
+    # Track if we've already transferred to this dest
+    if not hasattr(dest, "_label_transferred"):
+        # First transfer: copy all from src
+        dest.set_fontproperties(src_fp)
+        dest._label_transferred = True
+    else:
+        # Subsequent transfers: preserve dest's manual changes
+        merged_fp = merge_font_properties(dest_fp, src_fp)  # dest takes precedence
+        dest.set_fontproperties(merged_fp)
+
     if not text.strip():
         return
     dest.set_text(text)
