@@ -931,7 +931,7 @@ class AutoCFDatetimeLocator(mticker.Locator):
         self.resolution = rc["cftime.resolution"]
         self._cached_resolution = {}
 
-        self._max_display_ticks = rc["ctime.max_display_ticks"]
+        self._max_display_ticks = rc["cftime.max_display_ticks"]
 
     def set_params(self, maxticks=None, minticks=None, max_display_ticks=None):
         """Set the parameters for the locator."""

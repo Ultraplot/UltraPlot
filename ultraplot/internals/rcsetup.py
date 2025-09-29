@@ -1040,11 +1040,11 @@ _rc_ultraplot_table = {
     ),
     "cftime.time_resolution_format": (
         {
-            "SECONDLY": "%H:%M:%S",
-            "MINUTELY": "%H:%M",
-            "HOURLY": "%Y-%m-%d %H:%M",
-            "DAILY": "%Y-%m-%d",
-            "MONTHLY": "%Y-%m",
+            "SECONDLY": "%S",
+            "MINUTELY": "%M",
+            "HOURLY": "%H",
+            "DAILY": "%d",
+            "MONTHLY": "%m",
             "YEARLY": "%Y",
         },
         _validate_cftime_resolution_format,
