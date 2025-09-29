@@ -896,7 +896,9 @@ class AutoCFDatetimeFormatter(mticker.Formatter):
 class AutoCFDatetimeLocator(mticker.Locator):
     """Determines tick locations when plotting `cftime.datetime` data."""
 
-    real_world_calendars = cftime._cftime._calendars
+    real_world_calendars = (
+        i.calendar for i in cftime.__dict__.values() if hasattr(i, "calendar")
+    )  # May break; there is no public api for cftime to get all calendars
 
     def __init__(self, maxticks=None, calendar="standard", date_unit=None, minticks=3):
         super().__init__()
@@ -916,6 +918,7 @@ class AutoCFDatetimeLocator(mticker.Locator):
             else:
                 # If a single value is provided for maxticks, apply it to all resolution *thresholds*
                 self.maxticks = dict.fromkeys(self.maxticks.keys(), maxticks)
+        print(self.real_world_calendars)
 
         self.calendar = calendar
         self.date_unit = date_unit or rc["cftime.time_unit"]
