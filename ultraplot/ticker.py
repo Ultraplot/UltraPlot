@@ -1411,8 +1411,6 @@ class CFTimeConverter(mdates.DateConverter):
     Converter for cftime.datetime data.
     """
 
-    standard_unit = "days since 2000-01-01"
-
     @staticmethod
     def axisinfo(unit, axis):
         """Returns the :class:`~matplotlib.units.AxisInfo` for *unit*."""
@@ -1422,7 +1420,7 @@ class CFTimeConverter(mdates.DateConverter):
         if unit is None:
             calendar, date_unit, date_type = (
                 "standard",
-                rc["cftime.standard_unit"],
+                rc["cftime.time_unit"],
                 getattr(cftime, "DatetimeProlepticGregorian", None),
             )
         else:
@@ -1494,7 +1492,7 @@ class CFTimeConverter(mdates.DateConverter):
                 "A calendar must be defined to plot dates using a cftime axis."
             )
 
-        return calendar, rc["cftime.standard_unit"], date_type
+        return calendar, rc["cftime.time_unit"], date_type
 
     @classmethod
     def convert(cls, value, unit, axis):
@@ -1523,7 +1521,7 @@ class CFTimeConverter(mdates.DateConverter):
                 return value  # Cannot convert
 
             calendar = first_value.calendar
-            date_unit = rc["cftime.standard_unit"]
+            date_unit = rc["cftime.time_unit"]
 
         result = cftime.date2num(value, date_unit, calendar=calendar)
         return result
