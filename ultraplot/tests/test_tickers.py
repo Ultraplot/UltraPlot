@@ -419,10 +419,12 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
         ),  # Case 1: Valid yearly resolution
         (
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 12, 31), "days since 2000-01-01"
+                cftime.datetime(2000, 12, 31, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             "gregorian",
             None,
@@ -430,10 +432,12 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
         ),  # Case 2: Valid monthly resolution
         (
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             "gregorian",
             None,
@@ -441,10 +445,12 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
         ),  # Case 3: Empty range
         (
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 12, 31), "days since 2000-01-01"
+                cftime.datetime(2000, 12, 31, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             "gregorian",
             None,
@@ -452,10 +458,12 @@ def test_auto_datetime_locator_tick_values(start_date, end_date):
         ),  # Case 4: Months data range
         (
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             cftime.date2num(
-                cftime.DatetimeGregorian(2000, 1, 1), "days since 2000-01-01"
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                "days since 2000-01-01",
             ),
             "gregorian",
             None,
