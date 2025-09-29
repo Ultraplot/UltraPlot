@@ -897,9 +897,7 @@ class AutoCFDatetimeLocator(mticker.Locator):
     """Determines tick locations when plotting `cftime.datetime` data."""
 
     if cftime:
-        real_world_calendars = (
-            i.calendar for i in cftime.__dict__.values() if hasattr(i, "calendar")
-        )  # May break; there is no public api for cftime to get all calendars
+        real_world_calendars = cftime._cftime._calendars
     else:
         real_world_calendars = ()
 
