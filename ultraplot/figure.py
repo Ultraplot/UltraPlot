@@ -861,7 +861,11 @@ class Figure(mfigure.Figure):
         # Check if any of the ticks are set to on for @axis
         subplot_types = set()
         for axi in self._iter_axes(panels=True, hidden=False):
-            if not type(axi) in (paxes.CartesianAxes, paxes.GeoAxes):
+            if not type(axi) in (
+                paxes.CartesianAxes,
+                paxes._CartopyAxes,
+                paxes._BasemapAxes,
+            ):
                 warnings._warn_ultraplot(
                     f"Tick label sharing not implemented for {type(axi)} subplots."
                 )
@@ -876,9 +880,9 @@ class Figure(mfigure.Figure):
                     if tmp.get("labelbottom"):
                         tick_params["labelbottom"] = tmp["labelbottom"]
 
-                # TODO:
                 case "x" if isinstance(axi, paxes.GeoAxes):
-                    pass
+                    tick_params["labeltop"] = axi._is_ticklabel_on("labeltop")
+                    tick_params["labelbottom"] = axi._is_ticklabel_on("labelbottom")
 
                 # Handle y
                 case "y" if isinstance(axi, paxes.CartesianAxes):
@@ -888,9 +892,9 @@ class Figure(mfigure.Figure):
                     if tmp.get("labelright"):
                         tick_params["labelright"] = tmp["labelright"]
 
-                # TODO:
                 case "y" if isinstance(axi, paxes.GeoAxes):
-                    pass
+                    tick_params["labelleft"] = axi._is_ticklabel_on("labelleft")
+                    tick_params["labelright"] = axi._is_ticklabel_on("labelright")
 
         # We cannot mix types (yet)
         if len(subplot_types) > 1:
@@ -907,7 +911,13 @@ class Figure(mfigure.Figure):
                 if axi not in outer_axes[side]:
                     tmp[label] = False
 
-            axi.tick_params(**tmp)
+            if isinstance(axi, paxes.GeoAxes):
+                # TODO: move this to tick_params?
+                # Deal with backends as tick_params is still a
+                # function
+                axi._toggle_gridliner_labels(**tmp)
+            else:
+                axi.tick_params(**tmp)
         self.stale = True
 
     def _context_adjusting(self, cache=True):

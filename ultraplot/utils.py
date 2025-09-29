@@ -1114,10 +1114,15 @@ class _Crawler:
                         elif d in ("top", "bottom") and parent._sharex:
                             return True
             elif self.ax.number is not None:
-                if d in ("left", "right") and not self.ax._sharey:
-                    return True
-                elif d in ("top", "bottom") and not self.ax._sharex:
-                    return True
+                # Defer import to prevent circular import
+                from . import axes as paxes
+
+                if isinstance(self.ax, paxes.CartesianAxes):
+                    if d in ("left", "right") and not self.ax._sharey:
+                        return True
+                    elif d in ("top", "bottom") and not self.ax._sharex:
+                        return True
+                # GeoAxes or Polar
             return False  # not a border
         return True
 
