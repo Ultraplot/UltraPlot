@@ -140,6 +140,34 @@ def test_inner_title_zorder():
     return fig
 
 
+def test_transfer_label_preserves_dest_font_properties():
+    """
+    Test that repeated _transfer_label calls do not overwrite dest's updated font properties.
+    """
+    import matplotlib.pyplot as plt
+    from ultraplot.internals.labels import _transfer_label
+
+    fig, ax = plt.subplots()
+    src = ax.text(0.1, 0.5, "Source", fontsize=10, fontweight="bold", color="red")
+    dest = ax.text(0.9, 0.5, "Dest", fontsize=12, fontweight="normal", color="blue")
+
+    # First transfer: dest gets src's font properties
+    _transfer_label(src, dest)
+    assert dest.get_fontsize() == 10
+    assert dest.get_fontweight() == "bold"
+    assert dest.get_text() == "Source"
+
+    # Change dest's font size
+    dest.set_fontsize(20)
+
+    # Second transfer: dest's font size should be preserved
+    src.set_text("New Source")
+    _transfer_label(src, dest)
+    assert dest.get_fontsize() == 20  # Should not be overwritten by src
+    assert dest.get_fontweight() == "bold"  # Still from src originally
+    assert dest.get_text() == "New Source"
+
+
 @pytest.mark.mpl_image_compare
 def test_font_adjustments():
     """
