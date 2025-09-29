@@ -10,7 +10,9 @@ from matplotlib.font_manager import FontProperties
 from . import ic  # noqa: F401
 
 
-def merge_font_properties(dest_fp, src_fp):
+def merge_font_properties(
+    dest_fp: FontProperties, src_fp: FontProperties
+) -> FontProperties:
     # Prefer dest_fp's values if set, otherwise use src_fp's
     return FontProperties(
         family=dest_fp.get_family() or src_fp.get_family(),
