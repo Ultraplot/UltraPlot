@@ -882,7 +882,7 @@ class AutoCFDatetimeFormatter(mticker.Formatter):
         self.time_units = time_units or rc["cftime.time_unit"]
 
     def pick_format(self, resolution):
-        return rc["cftime.resolution_format"][resolution]
+        return rc["cftime.time_resolution_format"][resolution]
 
     def __call__(self, x, pos=0):
         format_string = self.pick_format(self.locator.resolution)
