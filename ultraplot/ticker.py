@@ -1521,16 +1521,5 @@ class CFTimeConverter(mdates.DateConverter):
 
 
 if cftime is not None:
-    CFTIME_TYPES = [
-        cftime.datetime,
-        cftime.DatetimeNoLeap,
-        cftime.DatetimeAllLeap,
-        cftime.DatetimeProlepticGregorian,
-        cftime.DatetimeGregorian,
-        cftime.Datetime360Day,
-        cftime.DatetimeJulian,
-    ]
-    for date_type in CFTIME_TYPES:
-        # Don't register if it's already been done
-        if date_type not in munits.registry:
-            munits.registry[date_type] = CFTimeConverter()
+    if cftime.datetime not in munits.registry:
+        munits.registry[cftime.datetime] = CFTimeConverter()
