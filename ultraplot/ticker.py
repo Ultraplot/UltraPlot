@@ -1240,7 +1240,7 @@ class AutoCFDatetimeLocator(mticker.Locator):
                 ticks_cftime.append(current_dt_cftime)
                 current_dt_cftime += timedelta(
                     seconds=second_step
-                )  # <--- Corrected to use cftime.timedelta
+                )  # Uses standard library timedelta
                 if len(ticks_cftime) > 2 * self._max_display_ticks and second_step != 0:
                     break
         else:
