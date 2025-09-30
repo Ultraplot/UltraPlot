@@ -2,7 +2,6 @@ import pytest, numpy as np, xarray as xr, ultraplot as uplt, cftime
 from ultraplot.ticker import AutoCFDatetimeLocator
 from unittest.mock import patch
 import importlib
-from ultraplot.ticker import AutoCFDatetimeLocator
 
 
 @pytest.mark.mpl_image_compare
