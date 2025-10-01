@@ -680,22 +680,36 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         labelright=None,
         geo=None,
     ):
-        # For BasemapAxes the gridlines are dicts with key as the coordinate and  keys the line and label
-        # We override the dict here assuming the labels are mut excl due to the N S E W extra chars
+        """
+        Toggle visibility of gridliner labels for each direction.
+
+        Parameters
+        ----------
+        labeltop, labelbottom, labelleft, labelright : bool or None
+            Whether to show labels on each side. If None, do not change.
+        geo : optional
+            Not used in this method.
+        """
+        # Ensure gridlines_major is fully initialized
         if any(i is None for i in self.gridlines_major):
             return
+
         gridlabels = self._get_gridliner_labels(
             bottom=labelbottom, top=labeltop, left=labelleft, right=labelright
         )
-        bools = [labelbottom, labeltop, labelleft, labelright]
-        directions = "bottom top left right".split()
-        for direction, toggle in zip(directions, bools):
+
+        toggles = {
+            "bottom": labelbottom,
+            "top": labeltop,
+            "left": labelleft,
+            "right": labelright,
+        }
+
+        for direction, toggle in toggles.items():
             if toggle is None:
                 continue
-            for label in gridlabels.get(direction, []):
-                label.set_visible(toggle)
-
-        self._toggle_gridliner_labels(**turn_on_or_off)
+            if label := gridlabels.get(direction, None):
+                label.set_visible(bool(toggle) or toggle in ("x", "y"))
 
     @override
     def draw(self, renderer=None, *args, **kwargs):
