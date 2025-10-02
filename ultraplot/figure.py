@@ -842,6 +842,7 @@ class Figure(mfigure.Figure):
         """
         if not self.stale:
             return
+
         outer_axes = self._get_border_axes()
         true_outer = {}
 
@@ -851,12 +852,7 @@ class Figure(mfigure.Figure):
         other_sides = ("left", "right") if axis == "x" else ("top", "bottom")
         # Outer_axes contains the main grid but we need
         # to add the panels that are on these axes potentially
-
-        tick_params = (
-            {"labeltop": False, "labelbottom": False}
-            if axis == "x"
-            else {"labelleft": False, "labelright": False}
-        )
+        tick_params = {}
 
         # Check if any of the ticks are set to on for @axis
         subplot_types = set()
@@ -881,8 +877,10 @@ class Figure(mfigure.Figure):
                         tick_params["labelbottom"] = tmp["labelbottom"]
 
                 case "x" if isinstance(axi, paxes.GeoAxes):
-                    tick_params["labeltop"] = axi._is_ticklabel_on("labeltop")
-                    tick_params["labelbottom"] = axi._is_ticklabel_on("labelbottom")
+                    if axi._is_ticklabel_on("labeltop"):
+                        tick_params["labeltop"] = axi._is_ticklabel_on("labeltop")
+                    if axi._is_ticklabel_on("labelbottom"):
+                        tick_params["labelbottom"] = axi._is_ticklabel_on("labelbottom")
 
                 # Handle y
                 case "y" if isinstance(axi, paxes.CartesianAxes):
@@ -893,8 +891,10 @@ class Figure(mfigure.Figure):
                         tick_params["labelright"] = tmp["labelright"]
 
                 case "y" if isinstance(axi, paxes.GeoAxes):
-                    tick_params["labelleft"] = axi._is_ticklabel_on("labelleft")
-                    tick_params["labelright"] = axi._is_ticklabel_on("labelright")
+                    if axi._is_ticklabel_on("labelleft"):
+                        tick_params["labelleft"] = axi._is_ticklabel_on("labelleft")
+                    if axi._is_ticklabel_on("labelright"):
+                        tick_params["labelright"] = axi._is_ticklabel_on("labelright")
 
         # We cannot mix types (yet)
         if len(subplot_types) > 1:
@@ -911,6 +911,20 @@ class Figure(mfigure.Figure):
                 if axi not in outer_axes[side]:
                     tmp[label] = False
 
+            # Determine sharing level
+            level = getattr(self, f"_share{axis}")
+            if axis == "y":
+                # For panels
+                if hasattr(axi, "_panel_sharey_group") and axi._panel_sharey_group:
+                    level = 3
+            else:  # x-axis
+                # For panels
+                if hasattr(axi, "_panel_sharex_group") and axi._panel_sharex_group:
+                    level = 3
+
+            # Don't update when we are not sharing axis ticks
+            if level <= 2:
+                continue
             if isinstance(axi, paxes.GeoAxes):
                 # TODO: move this to tick_params?
                 # Deal with backends as tick_params is still a
@@ -1068,6 +1082,7 @@ class Figure(mfigure.Figure):
         grid.fill(None)
         grid_axis_type = np.zeros(shape, dtype=int)
         seen_axis_type = dict()
+        ax_type_mapping = dict()
         for axi in self._iter_axes(panels=True, hidden=True):
             gs = axi.get_subplotspec()
             x, y = np.unravel_index(gs.num1, shape)
@@ -1077,9 +1092,13 @@ class Figure(mfigure.Figure):
             xspan = xright - xleft + 1
             yspan = yright - yleft + 1
             number = axi.number
-            if type(axi) not in seen_axis_type:
-                seen_axis_type[type(axi)] = len(seen_axis_type)
-            type_number = seen_axis_type[type(axi)]
+            axis_type = type(axi)
+            if isinstance(axi, (paxes.GeoAxes)):
+                axis_type = axi.projection
+            if axis_type not in seen_axis_type:
+                seen_axis_type[axis_type] = len(seen_axis_type)
+            type_number = seen_axis_type[axis_type]
+            ax_type_mapping[axi] = type_number
             if axi.get_visible():
                 grid[x : x + xspan, y : y + yspan] = axi
             grid_axis_type[x : x + xspan, y : y + yspan] = type_number
@@ -1087,9 +1106,10 @@ class Figure(mfigure.Figure):
         # Note we could also write the crawler in a way where
         # it find the borders by moving around in the grid, without spawning on each axis point. We may change
         # this in the future
-        print(grid, grid.shape)
+        # print(grid, grid.shape)
+        # print(grid_axis_type)
         for axi in all_axes:
-            axis_type = seen_axis_type.get(type(axi), 1)
+            axis_type = ax_type_mapping[axi]
             number = axi.number
             if axi.number is None:
                 number = -axi._panel_parent.number

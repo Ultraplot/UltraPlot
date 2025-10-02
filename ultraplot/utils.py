@@ -1044,8 +1044,14 @@ class _Crawler:
         elif y > self.grid.shape[1] - 1:
             return True
 
-        if self.grid[x, y] is None or self.grid_axis_type[x, y] != self.axis_type:
+        if self.grid[x, y] is None:
             return True
+        if self.grid_axis_type[x, y] != self.axis_type:
+            if (
+                hasattr(self.grid[x, y], "_panel_side")
+                and self.grid[x, y]._panel_side is None
+            ):
+                return True
 
         # Check if we reached a plot or an internal edge
         if self.grid[x, y] != self.ax:

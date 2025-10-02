@@ -708,7 +708,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         for direction, toggle in toggles.items():
             if toggle is None:
                 continue
-            if label := gridlabels.get(direction, None):
+            for label in gridlabels.get(direction, []):
                 label.set_visible(bool(toggle) or toggle in ("x", "y"))
 
     @override
@@ -1424,7 +1424,6 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
 
         if self.gridlines_major is None:
             return False
-
         elif side == "labelleft":
             return getattr(self.gridlines_major, left_labels)
         elif side == "labelright":

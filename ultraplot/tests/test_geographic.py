@@ -613,7 +613,7 @@ def test_cartesian_and_geo(rng):
         ax.format(land=True, lonlim=(-10, 10), latlim=(-10, 10))
         ax[0].pcolormesh(rng.random((10, 10)))
         ax[1].scatter(*rng.random((2, 100)))
-        ax[0]._apply_axis_sharing()
+        fig.canvas.draw()
         assert (
             mocked.call_count == 2
         )  # needs to be called at least twice; one for each axis
@@ -742,7 +742,7 @@ def test_geo_with_panels(rng):
             length=0.5,
         ),
     )
-    ax.format(oceancolor="blue", coast=True, latticklabels="r")
+    ax.format(oceancolor="blue", coast=True)
     return fig
 
 
