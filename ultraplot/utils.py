@@ -997,8 +997,6 @@ class _Crawler:
         direction: str,
         d: tuple[int, int],
     ) -> tuple[str, bool]:
-        from itertools import product
-
         """
         Setup search for a specific direction.
         """
@@ -1045,10 +1043,7 @@ class _Crawler:
             return self.is_border((x + dx, y + dy), direction)
 
         if self.grid_axis_type[x, y] != self.axis_type:
-            if (
-                hasattr(self.grid[x, y], "_panel_side")
-                and self.grid[x, y]._panel_side is None
-            ):
+            if getattr(cell, "_panel_side", None) is None:
                 return True
 
         # Internal edge or plot reached
