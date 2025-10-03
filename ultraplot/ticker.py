@@ -1421,7 +1421,7 @@ class CFTimeConverter(mdates.DateConverter):
 
         year = datetime.now().year
         if date_type is not None:
-            datemin = date_type(year - 10, 1, 1)
+            datemin = date_type(year - 1, 1, 1)
             datemax = date_type(year, 1, 1)
         else:
             # Fallback if date_type is None
