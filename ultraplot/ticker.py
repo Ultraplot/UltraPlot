@@ -105,15 +105,6 @@ dms : bool, default: False
 """
 docstring._snippet_manager["ticker.dms"] = _dms_docstring
 
-_RESOLUTION_TO_FORMAT = {
-    "SECONDLY": "%H:%M:%S",
-    "MINUTELY": "%H:%M",
-    "HOURLY": "%Y-%m-%d %H:%M",
-    "DAILY": "%Y-%m-%d",
-    "MONTHLY": "%Y-%m",
-    "YEARLY": "%Y",
-}
-
 
 def _default_precision_zerotrim(precision=None, zerotrim=None):
     """
