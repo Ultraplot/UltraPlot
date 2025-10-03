@@ -1,0 +1,44 @@
+name: Validate Versions
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: true
+        type: string
+      matplotlib-version:
+        required: true
+        type: string
+
+jobs:
+  validate-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install tools
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install requests packaging
+
+      - name: Validate Python version
+        run: |
+          PY_VERSION="${{ inputs.python-version }}"
+          echo "Checking Python version: $PY_VERSION"
+
+          curl -s https://endoflife.date/api/python.json > python_eol.json
+
+          SUPPORTED=$(python3 - <<'PYCODE'
+import json
+from datetime import date
+data = json.load(open("python_eol.json"))
+today = date.today()
+supported = [d["cycle"] for d in data if d.get("eol") in (False, None) or date.fromisoformat(str(d["eol"])) >= today]
+print(",".join(supported))
+PYCODE
+)
+          echo "Supported Python versions: $SUPPORTED"
+
+          if ! echo "$SUPPORTED" | grep -qw "$PY_VERSION"; then
+            echo "❌ Python $PY_VERSION is EOL!"
+            exit 1
+          else
+            echo "✅ Python $PY_VERSION is supported."
+          fi
