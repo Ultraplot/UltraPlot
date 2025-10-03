@@ -291,6 +291,7 @@ def test_panel_sharing_top_right(layout):
         pax = ax[0].panel(dir)
     fig.canvas.draw()  # force redraw tick labels
     border_axes = fig._get_border_axes()
+    uplt.show(block=1)
 
     for axi in fig._iter_axes(panels=True):
         assert (

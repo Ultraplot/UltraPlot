@@ -6,6 +6,7 @@ import functools
 import inspect
 import os
 from numbers import Integral
+from packaging import version
 
 try:
     from typing import List
@@ -856,6 +857,25 @@ class Figure(mfigure.Figure):
 
         # Check if any of the ticks are set to on for @axis
         subplot_types = set()
+
+        from packaging import version
+        from .internals import _version_mpl
+
+        mpl_version = version.parse(str(_version_mpl))
+        use_new_labels = mpl_version >= version.parse("3.10")
+
+        label_map = {
+            "labeltop": "labeltop" if use_new_labels else "labelright",
+            "labelbottom": "labelbottom" if use_new_labels else "labelleft",
+            "labelleft": "labelleft",
+            "labelright": "labelright",
+        }
+
+        labelleft = label_map["labelleft"]
+        labelright = label_map["labelright"]
+        labeltop = label_map["labeltop"]
+        labelbottom = label_map["labelbottom"]
+
         for axi in self._iter_axes(panels=True, hidden=False):
             if not type(axi) in (
                 paxes.CartesianAxes,
@@ -871,10 +891,10 @@ class Figure(mfigure.Figure):
                 # Handle x
                 case "x" if isinstance(axi, paxes.CartesianAxes):
                     tmp = axi.xaxis.get_tick_params()
-                    if tmp.get("labeltop"):
-                        tick_params["labeltop"] = tmp["labeltop"]
-                    if tmp.get("labelbottom"):
-                        tick_params["labelbottom"] = tmp["labelbottom"]
+                    if tmp.get(labeltop):
+                        tick_params[labeltop] = tmp[labeltop]
+                    if tmp.get(labelbottom):
+                        tick_params[labelbottom] = tmp[labelbottom]
 
                 case "x" if isinstance(axi, paxes.GeoAxes):
                     if axi._is_ticklabel_on("labeltop"):
@@ -885,10 +905,10 @@ class Figure(mfigure.Figure):
                 # Handle y
                 case "y" if isinstance(axi, paxes.CartesianAxes):
                     tmp = axi.yaxis.get_tick_params()
-                    if tmp.get("labelleft"):
-                        tick_params["labelleft"] = tmp["labelleft"]
-                    if tmp.get("labelright"):
-                        tick_params["labelright"] = tmp["labelright"]
+                    if tmp.get(labelleft):
+                        tick_params[labelleft] = tmp[labelleft]
+                    if tmp.get(labelright):
+                        tick_params[labelright] = tmp[labelright]
 
                 case "y" if isinstance(axi, paxes.GeoAxes):
                     if axi._is_ticklabel_on("labelleft"):
@@ -908,6 +928,9 @@ class Figure(mfigure.Figure):
             # can leave the ticks as found
             for side in sides:
                 label = f"label{side}"
+                if isinstance(axi, paxes.CartesianAxes):
+                    # Ignore for geo as it internally converts
+                    label = label_map[label]
                 if axi not in outer_axes[side]:
                     tmp[label] = False
 
@@ -930,8 +953,8 @@ class Figure(mfigure.Figure):
                 # Deal with backends as tick_params is still a
                 # function
                 axi._toggle_gridliner_labels(**tmp)
-            else:
-                axi.tick_params(**tmp)
+            elif tmp:
+                getattr(axi, f"{axis}axis").set_tick_params(**tmp)
         self.stale = True
 
     def _context_adjusting(self, cache=True):
