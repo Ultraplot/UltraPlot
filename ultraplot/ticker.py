@@ -1089,9 +1089,7 @@ class AutoCFDatetimeLocator(mticker.Locator):
             while (
                 cftime.date2num(current_dt_cftime, self.date_unit, self.calendar) > vmin
             ):
-                current_dt_cftime += timedelta(
-                    hours=-hour_step
-                )  # <--- Corrected to use cftime.timedelta
+                current_dt_cftime += timedelta(hours=-hour_step)
                 if (
                     cftime.date2num(current_dt_cftime, self.date_unit, self.calendar)
                     < vmin - (vmax - vmin) * 2
