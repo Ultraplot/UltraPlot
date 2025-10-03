@@ -1003,6 +1003,8 @@ class _Crawler:
         Setup search for a specific direction.
         """
 
+        from itertools import product
+
         # Retrieve where the axis is in the grid
         spec = self.ax.get_subplotspec()
         shape = (spec.get_gridspec().nrows_total, spec.get_gridspec().ncols_total)
@@ -1033,19 +1035,15 @@ class _Crawler:
         Recursively move over the grid by following the direction.
         """
         x, y = pos
-        # Check if we are at an edge of the grid (out-of-bounds).
-        if x < 0:
-            return True
-        elif x > self.grid.shape[0] - 1:
+        # Edge of grid (out-of-bounds)
+        if not (0 <= x < self.grid.shape[0] and 0 <= y < self.grid.shape[1]):
             return True
 
-        if y < 0:
-            return True
-        elif y > self.grid.shape[1] - 1:
-            return True
+        cell = self.grid[x, y]
+        dx, dy = direction
+        if cell is None:
+            return self.is_border((x + dx, y + dy), direction)
 
-        if self.grid[x, y] is None:
-            return True
         if self.grid_axis_type[x, y] != self.axis_type:
             if (
                 hasattr(self.grid[x, y], "_panel_side")
@@ -1053,13 +1051,12 @@ class _Crawler:
             ):
                 return True
 
-        # Check if we reached a plot or an internal edge
-        if self.grid[x, y] != self.ax:
-            return self._check_ranges(direction, other=self.grid[x, y])
+        # Internal edge or plot reached
+        if cell != self.ax:
+            print(x, y, direction, self.ax, cell)
+            return self._check_ranges(direction, other=cell)
 
-        dx, dy = direction
-        pos = (x + dx, y + dy)
-        return self.is_border(pos, direction)
+        return self.is_border((x + dx, y + dy), direction)
 
     def _check_ranges(
         self,
@@ -1103,33 +1100,7 @@ class _Crawler:
             other_start, other_stop = other_rowspan
 
         if this_start == other_start and this_stop == other_stop:
-            # Check if it is a panel
-            mapper = {
-                (0, -1): "left",
-                (0, 1): "right",
-                (1, 0): "top",
-                (-1, 0): "bottom",
-            }
-            d = mapper[direction]
-            if self.ax.number is None:
-                parent = self.ax._panel_parent
-                if panels := parent._panel_dict.get(d, []):
-                    if self.ax == panels[-1]:
-                        if d in ("left", "right") and parent._sharey:
-                            return True
-                        elif d in ("top", "bottom") and parent._sharex:
-                            return True
-            elif self.ax.number is not None:
-                # Defer import to prevent circular import
-                from . import axes as paxes
-
-                if isinstance(self.ax, paxes.CartesianAxes):
-                    if d in ("left", "right") and not self.ax._sharey:
-                        return True
-                    elif d in ("top", "bottom") and not self.ax._sharex:
-                        return True
-                # GeoAxes or Polar
-            return False  # not a border
+            return False  # internal border
         return True
 
 
