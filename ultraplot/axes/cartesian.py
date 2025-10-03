@@ -386,6 +386,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # bottommost or to the *right* of the leftmost panel. But the sharing level
         # used for the leftmost and bottommost is the *figure* sharing level.
 
+        border_axes = self.figure._get_border_axes()
         # Apply X axis sharing
         self._apply_axis_sharing_for_axis("x", border_axes)
 
