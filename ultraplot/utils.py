@@ -1042,7 +1042,7 @@ class _Crawler:
         if cell is None:
             return self.is_border((x + dx, y + dy), direction)
 
-        if hasattr(cell, "_panel_hidden"):
+        if hasattr(cell, "_panel_hidden") and cell._panel_hidden:
             return self.is_border((x + dx, y + dy), direction)
 
         if self.grid_axis_type[x, y] != self.axis_type:
