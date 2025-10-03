@@ -1425,7 +1425,7 @@ class CFTimeConverter(mdates.DateConverter):
             datemax = date_type(year, 1, 1)
         else:
             # Fallback if date_type is None
-            datemin = cftime.datetime(year - 10, 1, 1, calendar="standard")
+            datemin = cftime.datetime(year - 1, 1, 1, calendar="standard")
             datemax = cftime.datetime(year, 1, 1, calendar="standard")
 
         return munits.AxisInfo(
