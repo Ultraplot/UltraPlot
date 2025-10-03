@@ -1048,7 +1048,6 @@ class _Crawler:
 
         # Internal edge or plot reached
         if cell != self.ax:
-            print(x, y, direction, self.ax, cell)
             return self._check_ranges(direction, other=cell)
 
         return self.is_border((x + dx, y + dy), direction)
