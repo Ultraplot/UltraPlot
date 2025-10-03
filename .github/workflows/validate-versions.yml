@@ -1,44 +1,33 @@
-name: Validate Versions
+name: Version Check
+
 on:
-  workflow_call:
-    inputs:
-      python-version:
-        required: true
-        type: string
-      matplotlib-version:
-        required: true
-        type: string
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  validate-versions:
+  check-versions:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Install tools
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install yq for toml parsing
+        run: pip install yq
+
+      - name: Read Python versions from pyproject.toml
+        id: versions
         run: |
-          python3 -m pip install --upgrade pip
-          pip install requests packaging
+          PYTHON_VERSION=$(tomlq -r .tool.poetry.dependencies.python < pyproject.toml | tr -d '"')
+          MATPLOTLIB_VERSION=$(tomlq -r .tool.poetry.dependencies.matplotlib < pyproject.toml | tr -d '"')
 
-      - name: Validate Python version
-        run: |
-          PY_VERSION="${{ inputs.python-version }}"
-          echo "Checking Python version: $PY_VERSION"
+          echo "python_version=$PYTHON_VERSION" >> $GITHUB_OUTPUT
+          echo "matplotlib_version=$MATPLOTLIB_VERSION" >> $GITHUB_OUTPUT
 
-          curl -s https://endoflife.date/api/python.json > python_eol.json
-
-          SUPPORTED=$(python3 - <<'PYCODE'
-import json
-from datetime import date
-data = json.load(open("python_eol.json"))
-today = date.today()
-supported = [d["cycle"] for d in data if d.get("eol") in (False, None) or date.fromisoformat(str(d["eol"])) >= today]
-print(",".join(supported))
-PYCODE
-)
-          echo "Supported Python versions: $SUPPORTED"
-
-          if ! echo "$SUPPORTED" | grep -qw "$PY_VERSION"; then
-            echo "❌ Python $PY_VERSION is EOL!"
-            exit 1
-          else
-            echo "✅ Python $PY_VERSION is supported."
-          fi
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.versions.outputs.python_version }}
