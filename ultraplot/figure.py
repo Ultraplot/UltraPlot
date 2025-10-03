@@ -1106,8 +1106,6 @@ class Figure(mfigure.Figure):
         # Note we could also write the crawler in a way where
         # it find the borders by moving around in the grid, without spawning on each axis point. We may change
         # this in the future
-        # print(grid, grid.shape)
-        # print(grid_axis_type)
         for axi in all_axes:
             axis_type = ax_type_mapping[axi]
             number = axi.number
@@ -1121,7 +1119,6 @@ class Figure(mfigure.Figure):
                 grid_axis_type=grid_axis_type,
             )
             for direction, is_border in crawler.find_edges():
-                # print(">>", axi.number, direction, is_border)
                 if is_border and axi not in border_axes[direction]:
                     border_axes[direction].append(axi)
         self._cached_border_axes = border_axes
