@@ -35,6 +35,7 @@ def test_auto_diverging1(rng):
     ax = fig.subplot(122)
     ax.pcolor(rng.random((10, 10)) * 5 - 3.5, colorbar="b")
     fig.format(toplabels=("Sequential", "Diverging"))
+    fig.canvas.draw()
     return fig
 
 
