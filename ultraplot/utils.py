@@ -1042,6 +1042,10 @@ class _Crawler:
         if cell is None:
             return self.is_border((x + dx, y + dy), direction)
 
+            # If legend or colorbar we should ignore
+            # if cell._is_legend() or cell._is_colorbar():
+            # return self.is_border((x + dx, y + dy), direction)
+
         if self.grid_axis_type[x, y] != self.axis_type:
             if getattr(cell, "_panel_side", None) is None:
                 return True

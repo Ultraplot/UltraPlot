@@ -1106,7 +1106,7 @@ class Figure(mfigure.Figure):
         grid_axis_type = np.zeros(shape, dtype=int)
         seen_axis_type = dict()
         ax_type_mapping = dict()
-        for axi in self._iter_axes(panels=True, hidden=True):
+        for axi in self._iter_axes(panels=True):
             gs = axi.get_subplotspec()
             x, y = np.unravel_index(gs.num1, shape)
             span = gs._get_rows_columns()
