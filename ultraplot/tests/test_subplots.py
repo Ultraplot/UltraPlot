@@ -290,27 +290,27 @@ def test_panel_sharing_top_right(layout):
     for dir in "left right top bottom".split():
         pax = ax[0].panel(dir)
     fig.canvas.draw()  # force redraw tick labels
-    for dir, paxs in ax[0]._panel_dict.items():
-        # Since we are sharing some of the ticks
-        # should be hidden depending on where the panel is
-        # in the grid
-        for pax in paxs:
-            match dir:
-                case "left":
-                    assert pax._is_ticklabel_on("labelleft")
-                    assert pax._is_ticklabel_on("labelbottom")
-                case "top":
-                    assert pax._is_ticklabel_on("labeltop") == False
-                    assert pax._is_ticklabel_on("labelbottom") == False
-                    assert pax._is_ticklabel_on("labelleft")
-                case "right":
-                    print(pax._is_ticklabel_on("labelright"))
-                    assert pax._is_ticklabel_on("labelright") == False
-                    assert pax._is_ticklabel_on("labelbottom")
-                case "bottom":
-                    assert pax._is_ticklabel_on("labelleft")
-                    assert pax._is_ticklabel_on("labelbottom") == False
+    border_axes = fig._get_border_axes()
 
-        # The sharing axis is not showing any ticks
-        assert ax[0]._is_ticklabel_on(dir) == False
+    for axi in fig._iter_axes(panels=True):
+        assert (
+            axi._is_ticklabel_on("labelleft")
+            if axi in border_axes["left"]
+            else not axi._is_ticklabel_on("labelleft")
+        )
+        assert (
+            axi._is_ticklabel_on("labeltop")
+            if axi in border_axes["top"]
+            else not axi._is_ticklabel_on("labeltop")
+        )
+        assert (
+            axi._is_ticklabel_on("labelright")
+            if axi in border_axes["right"]
+            else not axi._is_ticklabel_on("labelright")
+        )
+        assert (
+            axi._is_ticklabel_on("labelbottom")
+            if axi in border_axes["bottom"]
+            else not axi._is_ticklabel_on("labelbottom")
+        )
     return fig
