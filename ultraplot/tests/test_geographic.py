@@ -906,7 +906,7 @@ def test_grid_indexing_formatting(rng):
     # See https://github.com/Ultraplot/UltraPlot/issues/356
     lon = np.arange(0, 360, 10)
     lat = np.arange(-60, 60 + 1, 10)
-    data = rng.rnadom((len(lat), len(lon)))
+    data = rng.random((len(lat), len(lon)))
 
     fig, axs = uplt.subplots(nrows=3, ncols=2, proj="cyl", share=0)
     axs.format(coast=True)
