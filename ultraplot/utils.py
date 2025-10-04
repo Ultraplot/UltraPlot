@@ -1097,6 +1097,11 @@ class _Crawler:
             other_start, other_stop = other_rowspan
 
         if this_start == other_start and this_stop == other_stop:
+            if other._panel_parent is not None:
+                if dx == 0 and not other._panel_sharex_group:
+                    return True
+                elif dy == 0 and not other._panel_sharey_group:
+                    return True
             return False  # internal border
         return True
 

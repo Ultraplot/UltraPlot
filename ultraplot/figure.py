@@ -1142,6 +1142,7 @@ class Figure(mfigure.Figure):
                 grid_axis_type=grid_axis_type,
             )
             for direction, is_border in crawler.find_edges():
+                # print(">>", is_border, direction, axi.number)
                 if is_border and axi not in border_axes[direction]:
                     border_axes[direction].append(axi)
         self._cached_border_axes = border_axes
@@ -1273,6 +1274,23 @@ class Figure(mfigure.Figure):
         pax = self.add_subplot(ss, **kwargs)
         pax._panel_side = side
         pax._panel_share = share
+        if share:
+            # When we are sharing we remove the ticks by default
+            # as we "push" the labels out. See Figure._share_ticklabels.
+            # If we add the labels here it is more difficult to control
+            # for some ticks being on.
+            from packaging import version
+            from .internals import _version_mpl
+
+            params = {}
+            if version.parse(str(_version_mpl)) < version.parse("3.10"):
+                params = dict(labelleft=False, labelright=False)
+                pax.xaxis.set_tick_params(**params)
+                pax.yaxis.set_tick_params(**params)
+            else:
+                pax.xaxis.set_tick_params(labelbottom=False, labeltop=False)
+                pax.yaxis.set_tick_params(labelleft=False, labelright=False)
+
         pax._panel_parent = ax
         ax._panel_dict[side].append(pax)
         ax._apply_auto_share()

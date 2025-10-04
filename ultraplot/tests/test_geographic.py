@@ -613,15 +613,10 @@ def test_cartesian_and_geo(rng):
         ax.format(land=True, lonlim=(-10, 10), latlim=(-10, 10))
         ax[0].pcolormesh(rng.random((10, 10)))
         ax[1].scatter(*rng.random((2, 100)))
-<<<<<<< HEAD
         fig.canvas.draw()
         assert (
             mocked.call_count == 2
         )  # needs to be called at least twice; one for each axis
-=======
-        ax[0]._apply_axis_sharing()
-        assert mocked.call_count == 2
->>>>>>> hotfix-grid-index
     return fig
 
 
