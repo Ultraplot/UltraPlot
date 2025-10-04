@@ -1536,42 +1536,32 @@ class SubplotGrid(MutableSequence, list):
         >>> axs[1, 2]  # the subplot in the second row, third column
         >>> axs[:, 0]  # a SubplotGrid containing the subplots in the first column
         """
-        if isinstance(key, tuple) and len(key) == 1:
-            key = key[0]
-        # List-style indexing
-        if isinstance(key, (Integral, slice)):
-            slices = isinstance(key, slice)
-            objs = list.__getitem__(self, key)
-        # Gridspec-style indexing
-        elif (
-            isinstance(key, tuple)
-            and len(key) == 2
-            and all(isinstance(ikey, (Integral, slice)) for ikey in key)
-        ):
-            # WARNING: Permit no-op slicing of empty grids here
-            slices = any(isinstance(ikey, slice) for ikey in key)
-            objs = []
-            if self:
-                gs = self.gridspec
-                ss_key = gs._make_subplot_spec(key)  # obfuscates panels
-                row1_key, col1_key = divmod(ss_key.num1, gs.ncols)
-                row2_key, col2_key = divmod(ss_key.num2, gs.ncols)
-            for ax in self:
-                ss = ax._get_topmost_axes().get_subplotspec().get_topmost_subplotspec()
-                row1, col1 = divmod(ss.num1, gs.ncols)
-                row2, col2 = divmod(ss.num2, gs.ncols)
-                inrow = row1_key <= row1 <= row2_key or row1_key <= row2 <= row2_key
-                incol = col1_key <= col1 <= col2_key or col1_key <= col2 <= col2_key
-                if inrow and incol:
-                    objs.append(ax)
-            if not slices and len(objs) == 1:  # accounts for overlapping subplots
-                objs = objs[0]
+        # Allow 1D list-like indexing
+        if isinstance(key, int):
+            return list.__getitem__(self, key)
+        elif isinstance(key, slice):
+            return SubplotGrid(list.__getitem__(self, key))
+
+        # Allow 2D array-like indexing
+        # NOTE: We assume this is a 2D array of subplots, because this is
+        # how it is generated in the first place by ultraplot.figure().
+        # But it is possible to append subplots manually.
+        gs = self.gridspec
+        if gs is None:
+            raise IndexError(
+                f"{self.__class__.__name__} has no gridspec, cannot index with {key!r}."
+            )
+        nrows, ncols = gs.get_geometry()
+        axs = np.array(self, dtype=object).reshape(nrows, ncols)
+        objs = axs[key]
+        if hasattr(objs, "flat"):
+            objs = list(objs.flat)
+        elif not isinstance(objs, list):
+            objs = [objs]
+        if len(objs) == 1:
+            return objs[0]
         else:
-            raise IndexError(f"Invalid index {key!r}.")
-        if isinstance(objs, list):
             return SubplotGrid(objs)
-        else:
-            return objs
 
     def __setitem__(self, key, value):
         """
