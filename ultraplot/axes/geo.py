@@ -805,15 +805,18 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     array[4] = True  # possibly toggle geo spine labels
         elif not any(isinstance(_, str) for _ in array):
             if len(array) == 1:
-                array.append(False)  # default is to label bottom or left
+                array.append(None)
             if len(array) == 2:
-                array = [False, False, *array] if lon else [*array, False, False]
+                array = [None, None, *array] if lon else [*array, None, None]
             if len(array) == 4:
-                b = any(array) if rc["grid.geolabels"] else False
-                array.append(b)  # possibly toggle geo spine labels
+                b = (
+                    any(a for a in array if a is not None)
+                    if rc["grid.geolabels"]
+                    else None
+                )
+                array.append(b)
             if len(array) != 5:
                 raise ValueError(f"Invald boolean label array length {len(array)}.")
-            array = list(map(bool, array))
         else:
             raise ValueError(f"Invalid {which}label spec: {arg}.")
         return array
@@ -934,9 +937,13 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             # NOTE: Cartopy 0.18 and 0.19 inline labels require any of
             # top, bottom, left, or right to be toggled then ignores them.
             # Later versions of cartopy permit both or neither labels.
-            labels = _not_none(labels, rc.find("grid.labels", context=True))
-            lonlabels = _not_none(lonlabels, labels)
-            latlabels = _not_none(latlabels, labels)
+            if lonlabels is None and latlabels is None:
+                labels = _not_none(labels, rc.find("grid.labels", context=True))
+                lonlabels = labels
+                latlabels = labels
+            else:
+                lonlabels = _not_none(lonlabels, labels)
+                latlabels = _not_none(latlabels, labels)
             # Set the ticks
             self._toggle_ticks(lonlabels, "x")
             self._toggle_ticks(latlabels, "y")
@@ -1464,8 +1471,9 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         side_labels = _CartopyAxes._get_side_labels()
         togglers = (labelleft, labelright, labelbottom, labeltop)
         gl = self.gridlines_major
+
         for toggle, side in zip(togglers, side_labels):
-            if getattr(gl, side) != toggle:
+            if toggle is not None:
                 setattr(gl, side, toggle)
         if geo is not None:  # only cartopy 0.20 supported but harmless
             setattr(gl, "geo_labels", geo)
@@ -1760,6 +1768,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         for side, lon, lat in zip(
             "labelleft labelright labelbottom labeltop geo".split(), lonarray, latarray
         ):
+            sides[side] = None
             if lon and lat:
                 sides[side] = True
             elif lon:
