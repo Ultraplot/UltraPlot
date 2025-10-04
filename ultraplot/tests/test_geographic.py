@@ -895,3 +895,26 @@ def test_imshow_with_and_without_transform(rng):
     ax[2].imshow(data, transform=uplt.axes.geo.ccrs.PlateCarree())
     ax.format(title=["LCC", "No transform", "PlateCarree"])
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_grid_indexing_formatting(rng):
+    """
+    Check if subplotgrid is correctly selecting
+    the subplots based on non-shared axis formatting
+    """
+    # See https://github.com/Ultraplot/UltraPlot/issues/356
+    lon = np.arange(0, 360, 10)
+    lat = np.arange(-60, 60 + 1, 10)
+    data = rng.rnadom((len(lat), len(lon)))
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2, proj="cyl", share=0)
+    axs.format(coast=True)
+
+    for ax in axs:
+        m = ax.pcolor(lon, lat, data)
+        ax.colorbar(m)
+
+    axs[-1, :].format(lonlabels=True)
+    axs[:, 0].format(latlabels=True)
+    return fig
