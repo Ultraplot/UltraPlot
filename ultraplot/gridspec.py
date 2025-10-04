@@ -1552,7 +1552,20 @@ class SubplotGrid(MutableSequence, list):
                 f"{self.__class__.__name__} has no gridspec, cannot index with {key!r}."
             )
         nrows, ncols = gs.get_geometry()
-        axs = np.array(self, dtype=object).reshape(nrows, ncols)
+
+        # Build grid with None for empty slots
+        grid = np.full((nrows, ncols), None, dtype=object)
+        for ax in self:
+            spec = ax.get_subplotspec()
+            spans = spec._get_grid_span()
+            rowspan = spans[:2]
+            colspan = spans[-2:]
+
+            grid[
+                slice(*rowspan),
+                slice(*colspan),
+            ] = ax
+        axs = np.array(grid, dtype=object)
         objs = axs[key]
         if hasattr(objs, "flat"):
             objs = list(objs.flat)
