@@ -613,10 +613,15 @@ def test_cartesian_and_geo(rng):
         ax.format(land=True, lonlim=(-10, 10), latlim=(-10, 10))
         ax[0].pcolormesh(rng.random((10, 10)))
         ax[1].scatter(*rng.random((2, 100)))
+<<<<<<< HEAD
         fig.canvas.draw()
         assert (
             mocked.call_count == 2
         )  # needs to be called at least twice; one for each axis
+=======
+        ax[0]._apply_axis_sharing()
+        assert mocked.call_count == 2
+>>>>>>> hotfix-grid-index
     return fig
 
 
@@ -894,4 +899,27 @@ def test_imshow_with_and_without_transform(rng):
     ax[1].imshow(data, transform=None)
     ax[2].imshow(data, transform=uplt.axes.geo.ccrs.PlateCarree())
     ax.format(title=["LCC", "No transform", "PlateCarree"])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_grid_indexing_formatting(rng):
+    """
+    Check if subplotgrid is correctly selecting
+    the subplots based on non-shared axis formatting
+    """
+    # See https://github.com/Ultraplot/UltraPlot/issues/356
+    lon = np.arange(0, 360, 10)
+    lat = np.arange(-60, 60 + 1, 10)
+    data = rng.random((len(lat), len(lon)))
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2, proj="cyl", share=0)
+    axs.format(coast=True)
+
+    for ax in axs:
+        m = ax.pcolor(lon, lat, data)
+        ax.colorbar(m)
+
+    axs[-1, :].format(lonlabels=True)
+    axs[:, 0].format(latlabels=True)
     return fig
