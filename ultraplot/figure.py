@@ -2094,9 +2094,6 @@ class Figure(mfigure.Figure):
             }
             ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
             ax.number = store_old_number
-        # When we apply formatting to all axes, we need
-        # to potentially adjust the labels.
-
         # Warn unused keyword argument(s)
         kw = {
             key: value

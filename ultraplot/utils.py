@@ -1018,7 +1018,7 @@ class _Crawler:
 
         is_border = False
         for xl, yl in product(xs, ys):
-            pos = (x, y)
+            pos = (xl, yl)
             if self.is_border(pos, d):
                 is_border = True
                 break
