@@ -1557,16 +1557,27 @@ class SubplotGrid(MutableSequence, list):
             spec = ax.get_subplotspec()
             x1, x2, y1, y2 = spec._get_rows_columns(ncols=gs.ncols_total)
             grid[x1 : x2 + 1, y1 : y2 + 1] = ax
-        objs = grid[key]
+
+        new_key = []
+        for which, keyi in zip("hw", key):
+            try:
+                encoded_keyi = gs._encode_indices(keyi, which=which)
+            except:
+                raise IndexError(
+                    f"Attempted to access {key=} for gridspec {grid.shape=}"
+                )
+            new_key.append(encoded_keyi)
+        xs, ys = new_key
+        objs = grid[xs, ys]
         if hasattr(objs, "flat"):
-            objs = list(objs.flat)
+            objs = [obj for obj in objs.flat if obj is not None]
         elif not isinstance(objs, list):
             objs = [objs]
+
         if len(objs) == 1:
             return objs[0]
-        else:
-            objs = [obj for obj in objs if obj is not None]
-            return SubplotGrid(objs)
+        objs = [obj for obj in objs if obj is not None]
+        return SubplotGrid(objs)
 
     def __setitem__(self, key, value):
         """

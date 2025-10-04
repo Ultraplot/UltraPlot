@@ -325,5 +325,5 @@ def test_uneven_span_subplots(rng):
     axs[1, 1:].format(fc="blush")
     axs[1, :1].format(fc="sky blue")
     axs[-1, -1].format(fc="gray4", grid=False)
-    axs[0].plot((rng.random(50, 10) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
+    axs[0].plot((rng.random((50, 10)) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
     return fig
