@@ -1551,8 +1551,6 @@ class SubplotGrid(MutableSequence, list):
             raise IndexError(
                 f"{self.__class__.__name__} has no gridspec, cannot index with {key!r}."
             )
-        nrows, ncols = gs.get_geometry()
-
         # Build grid with None for empty slots
         grid = np.full((gs.nrows_total, gs.ncols_total), None, dtype=object)
         for ax in self:
