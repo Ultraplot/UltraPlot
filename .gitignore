@@ -30,6 +30,7 @@ sources
 # Python extras
 .ipynb_checkpoints
 *.log
+*.ipnyb
 *.pyc
 .*.pyc
 __pycache__

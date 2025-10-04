@@ -290,27 +290,40 @@ def test_panel_sharing_top_right(layout):
     for dir in "left right top bottom".split():
         pax = ax[0].panel(dir)
     fig.canvas.draw()  # force redraw tick labels
-    for dir, paxs in ax[0]._panel_dict.items():
-        # Since we are sharing some of the ticks
-        # should be hidden depending on where the panel is
-        # in the grid
-        for pax in paxs:
-            match dir:
-                case "left":
-                    assert pax._is_ticklabel_on("labelleft")
-                    assert pax._is_ticklabel_on("labelbottom")
-                case "top":
-                    assert pax._is_ticklabel_on("labeltop") == False
-                    assert pax._is_ticklabel_on("labelbottom") == False
-                    assert pax._is_ticklabel_on("labelleft")
-                case "right":
-                    print(pax._is_ticklabel_on("labelright"))
-                    assert pax._is_ticklabel_on("labelright") == False
-                    assert pax._is_ticklabel_on("labelbottom")
-                case "bottom":
-                    assert pax._is_ticklabel_on("labelleft")
-                    assert pax._is_ticklabel_on("labelbottom") == False
+    border_axes = fig._get_border_axes()
 
-        # The sharing axis is not showing any ticks
-        assert ax[0]._is_ticklabel_on(dir) == False
+    for axi in fig._iter_axes(panels=True):
+        assert (
+            axi._is_ticklabel_on("labelleft")
+            if axi in border_axes["left"]
+            else not axi._is_ticklabel_on("labelleft")
+        )
+        assert (
+            axi._is_ticklabel_on("labeltop")
+            if axi in border_axes["top"]
+            else not axi._is_ticklabel_on("labeltop")
+        )
+        assert (
+            axi._is_ticklabel_on("labelright")
+            if axi in border_axes["right"]
+            else not axi._is_ticklabel_on("labelright")
+        )
+        assert (
+            axi._is_ticklabel_on("labelbottom")
+            if axi in border_axes["bottom"]
+            else not axi._is_ticklabel_on("labelbottom")
+        )
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_uneven_span_subplots(rng):
+    fig = uplt.figure(refwidth=1, refnum=5, span=False)
+    axs = fig.subplots([[1, 1, 2], [3, 4, 2], [3, 4, 5]], hratios=[2.2, 1, 1])
+    axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Complex SubplotGrid")
+    axs[0].format(ec="black", fc="gray1", lw=1.4)
+    axs[1, 1:].format(fc="blush")
+    axs[1, :1].format(fc="sky blue")
+    axs[-1, -1].format(fc="gray4", grid=False)
+    axs[0].plot((rng.random((50, 10)) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
     return fig

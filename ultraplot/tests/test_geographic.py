@@ -296,6 +296,7 @@ def test_sharing_cartopy(layout, expectations):
     settings = dict(land=True, ocean=True, labels="both")
     fig, ax = uplt.subplots(layout, share="all", proj="cyl")
     ax.format(**settings)
+    fig.canvas.draw()  # needed for sharing labels
     for axi in ax:
         state = are_labels_on(axi)
         expectation = expectations[axi.number - 1]
@@ -314,8 +315,8 @@ def test_toggle_gridliner_labels():
     gl = ax[0].gridlines_major
 
     assert gl.left_labels == False
-    assert gl.right_labels == None  # initially these are none
-    assert gl.top_labels == None
+    assert gl.right_labels == False
+    assert gl.top_labels == False
     assert gl.bottom_labels == False
     ax[0]._toggle_gridliner_labels(labeltop=True)
     assert gl.top_labels == True
@@ -491,7 +492,8 @@ def test_get_gridliner_labels_cartopy():
     uplt.close(fig)
 
 
-def test_sharing_levels():
+@pytest.mark.parametrize("level", [0, 1, 2, 3, 4])
+def test_sharing_levels(level):
     """
     We can share limits or labels.
     We check if we can do both for the GeoAxes.
@@ -515,7 +517,6 @@ def test_sharing_levels():
 
     x = np.array([0, 10])
     y = np.array([0, 10])
-    sharing_levels = [0, 1, 2, 3, 4]
     lonlim = latlim = np.array((-10, 10))
 
     def assert_views_are_sharing(ax):
@@ -551,46 +552,42 @@ def test_sharing_levels():
             l2 = np.linalg.norm(
                 np.asarray(latview) - np.asarray(target_lat),
             )
-            level = ax.figure._get_sharing_level()
+            level = ax.figure._sharex
             if level <= 1:
                 share_x = share_y = False
             assert np.allclose(l1, 0) == share_x
             assert np.allclose(l2, 0) == share_y
 
-    for level in sharing_levels:
-        fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share=level)
-        ax.format(labels="both")
-        for axi in ax:
-            axi.format(
-                lonlim=lonlim * axi.number,
-                latlim=latlim * axi.number,
-            )
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share=level)
+    ax.format(labels="both")
+    for axi in ax:
+        axi.format(
+            lonlim=lonlim * axi.number,
+            latlim=latlim * axi.number,
+        )
 
-        fig.canvas.draw()
-        for idx, axi in enumerate(ax):
-            axi.plot(x * (idx + 1), y * (idx + 1))
+    fig.canvas.draw()
+    for idx, axi in enumerate(ax):
+        axi.plot(x * (idx + 1), y * (idx + 1))
 
-        fig.canvas.draw()  # need this to update the labels
-        # All the labels should be on
-        for axi in ax:
-            side_labels = axi._get_gridliner_labels(
-                left=True,
-                right=True,
-                top=True,
-                bottom=True,
-            )
-            s = 0
-            for dir, labels in side_labels.items():
-                s += any([label.get_visible() for label in labels])
+    # All the labels should be on
+    for axi in ax:
 
-            assert_views_are_sharing(axi)
-            # When we share the labels but not the limits,
-            # we expect all ticks to be on
-            if level == 0:
-                assert s == 4
-            else:
-                assert s == 2
-        uplt.close(fig)
+        s = sum(
+            [
+                1 if axi._is_ticklabel_on(side) else 0
+                for side in "labeltop labelbottom labelleft labelright".split()
+            ]
+        )
+
+        assert_views_are_sharing(axi)
+        # When we share the labels but not the limits,
+        # we expect all ticks to be on
+        if level > 2:
+            assert s == 2
+        else:
+            assert s == 4
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
@@ -616,8 +613,10 @@ def test_cartesian_and_geo(rng):
         ax.format(land=True, lonlim=(-10, 10), latlim=(-10, 10))
         ax[0].pcolormesh(rng.random((10, 10)))
         ax[1].scatter(*rng.random((2, 100)))
-        ax[0]._apply_axis_sharing()
-        assert mocked.call_count == 1
+        fig.canvas.draw()
+        assert (
+            mocked.call_count == 2
+        )  # needs to be called at least twice; one for each axis
     return fig
 
 
@@ -807,6 +806,7 @@ def test_sharing_cartopy_with_colorbar(rng):
     h = ax.imshow(data)[0]
     ax.format(land=True, labels="both")  # need this otherwise no labels are printed
     fig.colorbar(h, loc="r")
+    fig.canvas.draw()  # needed to  invoke axis sharing
 
     expectations = (
         [True, False, False, True],
@@ -894,4 +894,27 @@ def test_imshow_with_and_without_transform(rng):
     ax[1].imshow(data, transform=None)
     ax[2].imshow(data, transform=uplt.axes.geo.ccrs.PlateCarree())
     ax.format(title=["LCC", "No transform", "PlateCarree"])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_grid_indexing_formatting(rng):
+    """
+    Check if subplotgrid is correctly selecting
+    the subplots based on non-shared axis formatting
+    """
+    # See https://github.com/Ultraplot/UltraPlot/issues/356
+    lon = np.arange(0, 360, 10)
+    lat = np.arange(-60, 60 + 1, 10)
+    data = rng.random((len(lat), len(lon)))
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2, proj="cyl", share=0)
+    axs.format(coast=True)
+
+    for ax in axs:
+        m = ax.pcolor(lon, lat, data)
+        ax.colorbar(m)
+
+    axs[-1, :].format(lonlabels=True)
+    axs[:, 0].format(latlabels=True)
     return fig
