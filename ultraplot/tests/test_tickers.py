@@ -589,58 +589,98 @@ def test_degree_locator_guess_steps(steps, expected):
     assert np.array_equal(locator._steps, expected)
 
 
-def test_sci_formatter():
+import pytest
+
+
+@pytest.mark.parametrize(
+    "formatter_args, value, expected",
+    [
+        ({"precision": 2, "zerotrim": True}, 12345, r"$1.23{\times}10^{4}$"),
+        ({"precision": 2, "zerotrim": True}, 0.12345, r"$1.23{\times}10^{−1}$"),
+        ({"precision": 2, "zerotrim": True}, 0, r"$0$"),
+        ({"precision": 2, "zerotrim": True}, 1.2, r"$1.2$"),
+        ({"precision": 2, "zerotrim": False}, 1.2, r"$1.20$"),
+    ],
+)
+def test_sci_formatter(formatter_args, value, expected):
     from ultraplot.ticker import SciFormatter
 
-    formatter = SciFormatter(precision=2, zerotrim=True)
-    assert formatter(12345) == r"$1.23{\times}10^{4}$"
-    assert formatter(0.12345) == r"$1.23{\times}10^{−1}$"
-    assert formatter(0) == r"$0$"
-    assert formatter(1.2) == r"$1.2$"
-
-    formatter_no_trim = SciFormatter(precision=2, zerotrim=False)
-    assert formatter_no_trim(1.2) == r"$1.20$"
+    formatter = SciFormatter(**formatter_args)
+    assert formatter(value) == expected
 
 
-def test_sig_fig_formatter():
+@pytest.mark.parametrize(
+    "formatter_args, value, expected",
+    [
+        ({"sigfig": 3}, 12345, "12300"),
+        ({"sigfig": 3}, 123.45, "123"),
+        ({"sigfig": 3}, 0.12345, "0.123"),
+        ({"sigfig": 3}, 0.0012345, "0.00123"),
+        ({"sigfig": 2, "base": 5}, 87, "85"),
+        ({"sigfig": 2, "base": 5}, 8.7, "8.5"),
+    ],
+)
+def test_sig_fig_formatter(formatter_args, value, expected):
     from ultraplot.ticker import SigFigFormatter
 
-    formatter = SigFigFormatter(sigfig=3)
-    assert formatter(12345) == "12300"
-    assert formatter(123.45) == "123"
-    assert formatter(0.12345) == "0.123"
-    assert formatter(0.0012345) == "0.00123"
-
-    formatter = SigFigFormatter(sigfig=2, base=5)
-    assert formatter(87) == "85"
-    assert formatter(8.7) == "8.5"
+    formatter = SigFigFormatter(**formatter_args)
+    assert formatter(value) == expected
 
 
-def test_frac_formatter():
+@pytest.mark.parametrize(
+    "formatter_args, value, expected",
+    [
+        (
+            {"symbol": r"$\\pi$", "number": 3.141592653589793},
+            3.141592653589793 / 2,
+            r"$\\pi$/2",
+        ),
+        (
+            {"symbol": r"$\\pi$", "number": 3.141592653589793},
+            3.141592653589793,
+            r"$\\pi$",
+        ),
+        (
+            {"symbol": r"$\\pi$", "number": 3.141592653589793},
+            2 * 3.141592653589793,
+            r"2$\\pi$",
+        ),
+        ({"symbol": r"$\\pi$", "number": 3.141592653589793}, 0, "0"),
+        ({}, 0.5, "1/2"),
+        ({}, 1, "1"),
+        ({}, 1.5, "3/2"),
+    ],
+)
+def test_frac_formatter(formatter_args, value, expected):
+    from ultraplot.ticker import FracFormatter
+
+    formatter = FracFormatter(**formatter_args)
+    assert formatter(value) == expected
+
+
+def test_frac_formatter_unicode_minus():
     from ultraplot.ticker import FracFormatter
     from ultraplot.config import rc
     import numpy as np
 
     formatter = FracFormatter(symbol=r"$\\pi$", number=np.pi)
-    assert formatter(np.pi / 2) == r"$\\pi$/2"
-    assert formatter(np.pi) == r"$\\pi$"
-    assert formatter(2 * np.pi) == r"2$\\pi$"
     with rc.context({"axes.unicode_minus": True}):
         assert formatter(-np.pi / 2) == r"−$\\pi$/2"
-    assert formatter(0) == "0"
-    formatter_nosymbol = FracFormatter()
-    assert formatter_nosymbol(0.5) == "1/2"
-    assert formatter_nosymbol(1) == "1"
-    assert formatter_nosymbol(1.5) == "3/2"
 
 
-def test_cfdatetime_formatter_direct_call():
+@pytest.mark.parametrize(
+    "fmt, calendar, dt_args, expected",
+    [
+        ("%Y-%m-%d", "noleap", (2001, 2, 28), "2001-02-28"),
+    ],
+)
+def test_cfdatetime_formatter_direct_call(fmt, calendar, dt_args, expected):
     from ultraplot.ticker import CFDatetimeFormatter
     import cftime
 
-    formatter = CFDatetimeFormatter("%Y-%m-%d", calendar="noleap")
-    dt = cftime.datetime(2001, 2, 28, calendar="noleap")
-    assert formatter(dt) == "2001-02-28"
+    formatter = CFDatetimeFormatter(fmt, calendar=calendar)
+    dt = cftime.datetime(*dt_args, calendar=calendar)
+    assert formatter(dt) == expected
 
 
 @pytest.mark.parametrize(
