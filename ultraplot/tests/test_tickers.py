@@ -2,6 +2,7 @@ import pytest, numpy as np, xarray as xr, ultraplot as uplt, cftime
 from ultraplot.ticker import AutoCFDatetimeLocator
 from unittest.mock import patch
 import importlib
+import cartopy.crs as ccrs
 
 
 @pytest.mark.mpl_image_compare
@@ -586,3 +587,159 @@ def test_degree_locator_guess_steps(steps, expected):
     locator = DegreeLocator()
     locator._guess_steps(*steps)
     assert np.array_equal(locator._steps, expected)
+
+
+def test_sci_formatter():
+    from ultraplot.ticker import SciFormatter
+
+    formatter = SciFormatter(precision=2, zerotrim=True)
+    assert formatter(12345) == r"$1.23{\times}10^{4}$"
+    assert formatter(0.12345) == r"$1.23{\times}10^{−1}$"
+    assert formatter(0) == r"$0$"
+    assert formatter(1.2) == r"$1.2$"
+
+    formatter_no_trim = SciFormatter(precision=2, zerotrim=False)
+    assert formatter_no_trim(1.2) == r"$1.20$"
+
+
+def test_sig_fig_formatter():
+    from ultraplot.ticker import SigFigFormatter
+
+    formatter = SigFigFormatter(sigfig=3)
+    assert formatter(12345) == "12300"
+    assert formatter(123.45) == "123"
+    assert formatter(0.12345) == "0.123"
+    assert formatter(0.0012345) == "0.00123"
+
+    formatter = SigFigFormatter(sigfig=2, base=5)
+    assert formatter(87) == "85"
+    assert formatter(8.7) == "8.5"
+
+
+def test_frac_formatter():
+    from ultraplot.ticker import FracFormatter
+    from ultraplot.config import rc
+    import numpy as np
+
+    formatter = FracFormatter(symbol=r"$\\pi$", number=np.pi)
+    assert formatter(np.pi / 2) == r"$\\pi$/2"
+    assert formatter(np.pi) == r"$\\pi$"
+    assert formatter(2 * np.pi) == r"2$\\pi$"
+    with rc.context({"axes.unicode_minus": True}):
+        assert formatter(-np.pi / 2) == r"−$\\pi$/2"
+    assert formatter(0) == "0"
+    formatter_nosymbol = FracFormatter()
+    assert formatter_nosymbol(0.5) == "1/2"
+    assert formatter_nosymbol(1) == "1"
+    assert formatter_nosymbol(1.5) == "3/2"
+
+
+def test_cfdatetime_formatter_direct_call():
+    from ultraplot.ticker import CFDatetimeFormatter
+    import cftime
+
+    formatter = CFDatetimeFormatter("%Y-%m-%d", calendar="noleap")
+    dt = cftime.datetime(2001, 2, 28, calendar="noleap")
+    assert formatter(dt) == "2001-02-28"
+
+
+@pytest.mark.parametrize(
+    "start_date_str, end_date_str, calendar, resolution",
+    [
+        ("2000-01-01 00:00:00", "2000-01-01 12:00:00", "standard", "HOURLY"),
+        ("2000-01-01 00:00:00", "2000-01-01 00:10:00", "standard", "MINUTELY"),
+        ("2000-01-01 00:00:00", "2000-01-01 00:00:10", "standard", "SECONDLY"),
+    ],
+)
+def test_autocftime_locator_subdaily(
+    start_date_str, end_date_str, calendar, resolution
+):
+    from ultraplot.ticker import AutoCFDatetimeLocator
+    import cftime
+
+    locator = AutoCFDatetimeLocator(calendar=calendar)
+    units = locator.date_unit
+
+    start_dt = cftime.datetime.strptime(
+        start_date_str, "%Y-%m-%d %H:%M:%S", calendar=calendar
+    )
+    end_dt = cftime.datetime.strptime(
+        end_date_str, "%Y-%m-%d %H:%M:%S", calendar=calendar
+    )
+
+    start_num = cftime.date2num(start_dt, units, calendar=calendar)
+    end_num = cftime.date2num(end_dt, units, calendar=calendar)
+
+    res, _ = locator.compute_resolution(start_num, end_num, start_dt, end_dt)
+    assert res == resolution
+
+    ticks = locator.tick_values(start_num, end_num)
+    assert len(ticks) > 0
+
+
+def test_autocftime_locator_safe_helpers():
+    from ultraplot.ticker import AutoCFDatetimeLocator
+    import cftime
+
+    # Test _safe_num2date with invalid value
+    locator_gregorian = AutoCFDatetimeLocator(calendar="gregorian")
+    with pytest.raises(OverflowError):
+        locator_gregorian._safe_num2date(1e30)
+
+    # Test _safe_create_datetime with invalid date
+    locator_noleap = AutoCFDatetimeLocator(calendar="noleap")
+    assert locator_noleap._safe_create_datetime(2001, 2, 29) is None
+
+
+def test_autocftime_locator_safe_daily_locator():
+    from ultraplot.ticker import AutoCFDatetimeLocator
+
+    locator = AutoCFDatetimeLocator()
+    assert locator._safe_daily_locator(0, 10) is not None
+
+
+def test_latitude_locator():
+    from ultraplot.ticker import LatitudeLocator
+    import numpy as np
+
+    locator = LatitudeLocator()
+    ticks = np.array(locator.tick_values(-100, 100))
+    assert np.all(ticks >= -90)
+    assert np.all(ticks <= 90)
+
+
+def test_cftime_converter():
+    from ultraplot.ticker import CFTimeConverter, cftime
+    from ultraplot.config import rc
+    import numpy as np
+
+    converter = CFTimeConverter()
+
+    # test default_units
+    assert converter.default_units(np.array([1, 2]), None) is None
+    assert converter.default_units([], None) is None
+    assert converter.default_units([1, 2], None) is None
+    with pytest.raises(ValueError):
+        converter.default_units(
+            [
+                cftime.datetime(2000, 1, 1, calendar="gregorian"),
+                cftime.datetime(2000, 1, 1, calendar="noleap"),
+            ],
+            None,
+        )
+
+    with pytest.raises(ValueError):
+        converter.default_units(cftime.datetime(2000, 1, 1, calendar=""), None)
+
+    # test convert
+    assert converter.convert(1, None, None) == 1
+    assert np.array_equal(
+        converter.convert(np.array([1, 2]), None, None), np.array([1, 2])
+    )
+    assert converter.convert([1, 2], None, None) == [1, 2]
+    assert converter.convert([], None, None) == []
+
+    # test axisinfo with no unit
+    with rc.context({"cftime.time_unit": "days since 2000-01-01"}):
+        info = converter.axisinfo(None, None)
+        assert isinstance(info.majloc, uplt.ticker.AutoCFDatetimeLocator)
