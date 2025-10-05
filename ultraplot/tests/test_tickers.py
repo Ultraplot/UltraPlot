@@ -751,8 +751,8 @@ def test_auto_formatter_options(formatter_args, values, expected, ylim):
     if ylim is not None:
         ax.set_ylim(*ylim)
     fig.canvas.draw()
-    # Set formatter.locs to a broader array to mimic real tick locations
-    formatter.locs = values + [v + 1 for v in values] + [v - 1 for v in values]
+    # Use the tick locations set by matplotlib after drawing the canvas
+    # formatter.locs is now set by matplotlib; do not assign manually
     for val, exp in zip(values, expected):
         try:
             result = formatter(val)
