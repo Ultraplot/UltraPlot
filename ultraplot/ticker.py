@@ -426,24 +426,19 @@ class AutoFormatter(mticker.ScalarFormatter):
         x, tail = self._neg_pos_format(x, self._negpos, wraprange=self._wraprange)
 
         # Default string formatting
-        print(x, pos)
         string = super().__call__(x, pos)
-        print(string)
 
         # Fix issue where non-zero string is formatted as zero
         string = self._fix_small_number(x, string)
-        print(string)
 
         # Custom string formatting
         string = self._minus_format(string)
-        print(string)
         if self._zerotrim:
             string = self._trim_trailing_zeros(string, self._get_decimal_point())
 
         # Prefix and suffix
         string = self._add_prefix_suffix(string, self._prefix, self._suffix)
         string = string + tail  # add negative-positive indicator
-        print(string)
         return string
 
     def get_offset(self):
