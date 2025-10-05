@@ -28,5 +28,6 @@ dependencies:
   - sphinx-design
   - networkx
   - pyarrow
+  - cftime
   - pip:
       - git+https://github.com/ultraplot/UltraTheme.git
