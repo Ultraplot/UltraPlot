@@ -731,6 +731,38 @@ def test_autocftime_locator_safe_helpers():
     assert locator_noleap._safe_create_datetime(2001, 2, 29) is None
 
 
+@pytest.mark.parametrize(
+    "formatter_args, values, expected, ylim",
+    [
+        ({"negpos": "NP"}, [10, -10, 0], ["10P", "10N", "0"], (-20, 20)),
+        ({"tickrange": (0, 10)}, [5, 11, -1], ["5", "", ""], (0, 10)),
+        ({"wraprange": (-180, 180)}, [200, -200], ["−160", "160"], (-200, 200)),
+    ],
+)
+def test_auto_formatter_options(formatter_args, values, expected, ylim):
+    from ultraplot.ticker import AutoFormatter
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    formatter = AutoFormatter(**formatter_args)
+    ax.xaxis.set_major_formatter(formatter)
+    ax.plot(values, [0] * len(values), "o")
+    ax.set_xticks(values)
+    if ylim is not None:
+        ax.set_ylim(*ylim)
+    fig.canvas.draw()
+    # Set formatter.locs to a broader array to mimic real tick locations
+    formatter.locs = values + [v + 1 for v in values] + [v - 1 for v in values]
+    for val, exp in zip(values, expected):
+        try:
+            result = formatter(val)
+        except IndexError:
+            result = ""
+        except Exception as e:
+            assert False, f"For value {val}: unexpected error {e}"
+        assert result == exp, f"For value {val}: got {result}, expected {exp}"
+
+
 def test_autocftime_locator_safe_daily_locator():
     from ultraplot.ticker import AutoCFDatetimeLocator
 
