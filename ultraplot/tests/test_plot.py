@@ -517,7 +517,6 @@ def test_validate_vector_shapes_fail():
     grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=3)
     u = np.ones((2, 2))
     v = np.ones(grid.shape)
-    import pytest
 
     with pytest.raises(ValueError):
         uplt.axes.plot._validate_vector_shapes(u, v, grid)
