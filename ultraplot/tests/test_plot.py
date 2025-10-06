@@ -547,7 +547,6 @@ def test_generate_start_points():
     )
     assert sp2.shape[1] == 2
     # Should raise if outside boundaries
-    import pytest
 
     bad_points = np.array([[10, 10]])
     with pytest.raises(ValueError):
