@@ -482,6 +482,10 @@ def test_curved_quiver(rng):
 
 
 def test_setup_grid_and_mask():
+    """
+    Test that _setup_grid_and_mask creates grid, mask, and domain map objects
+    with expected attributes and shapes for a simple input.
+    """
     x = np.linspace(0, 1, 5)
     y = np.linspace(0, 1, 5)
     grid, mask, dmap = uplt.axes.plot._setup_grid_and_mask(x, y, density=5)
@@ -492,6 +496,9 @@ def test_setup_grid_and_mask():
 
 
 def test_validate_vector_shapes_pass():
+    """
+    Test that _validate_vector_shapes passes when u and v match the grid shape.
+    """
     x = np.linspace(0, 1, 3)
     y = np.linspace(0, 1, 3)
     grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=3)
@@ -502,6 +509,9 @@ def test_validate_vector_shapes_pass():
 
 
 def test_validate_vector_shapes_fail():
+    """
+    Test that _validate_vector_shapes raises ValueError when u and v do not match the grid shape.
+    """
     x = np.linspace(0, 1, 3)
     y = np.linspace(0, 1, 3)
     grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=3)
@@ -514,6 +524,9 @@ def test_validate_vector_shapes_fail():
 
 
 def test_normalize_magnitude():
+    """
+    Test that _normalize_magnitude returns a normalized array with max value 1.0 and correct shape.
+    """
     u = np.array([[1, 2], [3, 4]])
     v = np.array([[4, 3], [2, 1]])
     mag = uplt.axes.plot._normalize_magnitude(u, v)
@@ -522,6 +535,10 @@ def test_normalize_magnitude():
 
 
 def test_generate_start_points():
+    """
+    Test that _generate_start_points returns valid grid coordinates for seed points,
+    and raises ValueError for points outside the grid boundaries.
+    """
     x = np.linspace(0, 1, 5)
     y = np.linspace(0, 1, 5)
     grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=5)
@@ -540,6 +557,11 @@ def test_generate_start_points():
 
 
 def test_calculate_trajectories():
+    """
+    Test that _calculate_trajectories calls the integrator for each seed point
+    and returns lists of trajectories and edges of correct length.
+    """
+
     # Use a dummy integrator that returns a fixed trajectory
     def dummy_integrate(xg, yg):
         return ([np.array([xg, xg + 1]), np.array([yg, yg + 1])], False)
@@ -558,6 +580,9 @@ def test_calculate_trajectories():
 
 
 def test_handle_multicolor_lines():
+    """
+    Test that _handle_multicolor_lines returns masked color array, norm, cmap, and an empty line_colors list.
+    """
     color = np.array([[0, 1], [2, 3]])
     norm = None
     cmap = None

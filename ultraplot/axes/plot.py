@@ -182,7 +182,7 @@ x, y : 1D or 2D arrays
     Grid coordinates.
 u, v : 2D arrays
     Vector components.
-c : color or 2D array, optional
+color : color or 2D array, optional
     Streamline color.
 density : float or (float, float), optional
     Controls the closeness of streamlines.
@@ -190,8 +190,6 @@ grains : int or (int, int), optional
     Number of seed points in x and y.
 linewidth : float or 2D array, optional
     Width of streamlines.
-color : color or 2D array, optional
-    Streamline color.
 cmap, norm : optional
     Colormap and normalization for array colors.
 arrowsize : float, optional
@@ -204,14 +202,10 @@ zorder : float, optional
     Z-order for lines/arrows.
 start_points : (N, 2) array, optional
     Starting points for streamlines.
-integration_direction : {'forward', 'backward', 'both'}, optional
-    Direction to integrate streamlines.
-broken_streamlines : bool, optional
-    If True, streamlines may terminate early.
 
 Returns
 -------
-StreamplotSet
+CurvedQuiverSet
     Container with attributes:
     - lines: LineCollection of streamlines
     - arrows: PatchCollection of arrows
