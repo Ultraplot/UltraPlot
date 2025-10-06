@@ -479,3 +479,93 @@ def test_curved_quiver(rng):
     axs[2].set_title("curved_quiver")
     fig.colorbar(m.lines, ax=axs[:], label="speed")
     return fig
+
+
+def test_setup_grid_and_mask():
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    grid, mask, dmap = uplt.axes.plot._setup_grid_and_mask(x, y, density=5)
+    assert grid.shape == (5, 5)
+    assert hasattr(mask, "shape")
+    assert hasattr(dmap, "grid")
+    assert hasattr(dmap, "mask")
+
+
+def test_validate_vector_shapes_pass():
+    x = np.linspace(0, 1, 3)
+    y = np.linspace(0, 1, 3)
+    grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=3)
+    u = np.ones(grid.shape)
+    v = np.ones(grid.shape)
+    # Should not raise
+    uplt.axes.plot._validate_vector_shapes(u, v, grid)
+
+
+def test_validate_vector_shapes_fail():
+    x = np.linspace(0, 1, 3)
+    y = np.linspace(0, 1, 3)
+    grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=3)
+    u = np.ones((2, 2))
+    v = np.ones(grid.shape)
+    import pytest
+
+    with pytest.raises(ValueError):
+        uplt.axes.plot._validate_vector_shapes(u, v, grid)
+
+
+def test_normalize_magnitude():
+    u = np.array([[1, 2], [3, 4]])
+    v = np.array([[4, 3], [2, 1]])
+    mag = uplt.axes.plot._normalize_magnitude(u, v)
+    assert np.allclose(np.max(mag), 1.0)
+    assert mag.shape == u.shape
+
+
+def test_generate_start_points():
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=5)
+    sp2 = uplt.axes.plot._generate_start_points(
+        x, y, grains=5, start_points=None, grid=grid
+    )
+    assert sp2.shape[1] == 2
+    # Should raise if outside boundaries
+    import pytest
+
+    bad_points = np.array([[10, 10]])
+    with pytest.raises(ValueError):
+        uplt.axes.plot._generate_start_points(
+            x, y, grains=5, start_points=bad_points, grid=grid
+        )
+
+
+def test_calculate_trajectories():
+    # Use a dummy integrator that returns a fixed trajectory
+    def dummy_integrate(xg, yg):
+        return ([np.array([xg, xg + 1]), np.array([yg, yg + 1])], False)
+
+    sp2 = np.array([[0, 0], [1, 1]])
+
+    class DummyDMap:
+        def data2grid(self, xs, ys):
+            return xs, ys
+
+    trajectories, edges = uplt.axes.plot._calculate_trajectories(
+        sp2, DummyDMap(), dummy_integrate
+    )
+    assert len(trajectories) == 2
+    assert len(edges) == 2
+
+
+def test_handle_multicolor_lines():
+    color = np.array([[0, 1], [2, 3]])
+    norm = None
+    cmap = None
+    grid = mock.Mock()
+    out_color, out_norm, out_cmap, line_colors = (
+        uplt.axes.plot._handle_multicolor_lines(color, norm, cmap, grid)
+    )
+    assert out_color.shape == color.shape
+    assert hasattr(out_norm, "autoscale")
+    assert hasattr(out_cmap, "__call__")
+    assert isinstance(line_colors, list)
