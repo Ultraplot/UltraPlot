@@ -2145,35 +2145,6 @@ class PlotAxes(base.Axes):
         stream_container = CurvedQuiverSet(lc, ac)
         return stream_container
 
-    def _add_plot_elements(
-        self,
-        streamlines,
-        arrows,
-        grid,
-        line_kw,
-        arrow_kw,
-        use_multicolor_lines,
-        line_colors,
-        cmap,
-        norm,
-        transform,
-    ):
-        """
-        Add line and arrow collections to the axes, set sticky edges, and return the container.
-        """
-        lc = mcollections.LineCollection(streamlines, transform=transform, **line_kw)
-        lc.sticky_edges.x[:] = [grid.x_origin, grid.x_origin + grid.width]
-        lc.sticky_edges.y[:] = [grid.y_origin, grid.y_origin + grid.height]
-        if use_multicolor_lines:
-            lc.set_array(np.ma.hstack(line_colors))
-            lc.set_cmap(cmap)
-            lc.set_norm(norm)
-        self.add_collection(lc)
-        self.autoscale_view()
-        ac = mcollections.PatchCollection(arrows)
-        stream_container = CurvedQuiverSet(lc, ac)
-        return stream_container
-
     def _call_native(self, name, *args, **kwargs):
         """
         Call the plotting method and redirect internal calls to native methods.
