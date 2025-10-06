@@ -36,8 +36,6 @@ from packaging import version
 import numpy as np
 import numpy.ma as ma
 
-from matplotlib.streamplot import StreamplotSet
-
 from .. import colors as pcolors
 from .. import constructor, utils
 from ..config import rc
