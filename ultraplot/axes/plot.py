@@ -1719,7 +1719,7 @@ def _get_integrator(u, v, dmap, minlength, resolution, magnitude):
     def forward_time(xi, yi):
         ds_dt = _interpgrid(speed, xi, yi)
         if ds_dt == 0:
-            raise TerminateTrajectory()
+            raise _TerminateTrajectory()
         dt_ds = 1.0 / ds_dt
         ui = _interpgrid(u, xi, yi)
         vi = _interpgrid(v, xi, yi)
