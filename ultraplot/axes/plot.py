@@ -1904,7 +1904,7 @@ def _interpgrid(a, xi, yi):
 
     if not isinstance(xi, np.ndarray):
         if np.ma.is_masked(ai):
-            raise TerminateTrajectory
+            raise _TerminateTrajectory
     return ai
 
 
