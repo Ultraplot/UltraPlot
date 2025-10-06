@@ -2147,7 +2147,6 @@ class PlotAxes(base.Axes):
         stream_container = CurvedQuiverSet(lc, ac)
         return stream_container
 
-
     def _add_plot_elements(
         self,
         streamlines,
@@ -6021,7 +6020,6 @@ class PlotAxes(base.Axes):
         # Update kwargs and handle cmap
         kw.update(_pop_props(kw, "collection"))
 
-
         center_levels = kw.pop("center_levels", None)
         kw = self._parse_cmap(
             triangulation.x, triangulation.y, z, center_levels=center_levels, **kw
@@ -6145,6 +6143,7 @@ class PlotAxes(base.Axes):
     boxes = warnings._rename_objs("0.8.0", boxes=box)
     violins = warnings._rename_objs("0.8.0", violins=violin)
 
+
 #
 def _setup_grid_and_mask(x, y, density):
     """
@@ -6157,6 +6156,7 @@ def _setup_grid_and_mask(x, y, density):
     dmap = _DomainMap(grid, mask)
     return grid, mask, dmap
 
+
 def _validate_vector_shapes(u, v, grid):
     """
     Helper for `curved_quiver`.
@@ -6165,6 +6165,7 @@ def _validate_vector_shapes(u, v, grid):
     """
     if u.shape != grid.shape or v.shape != grid.shape:
         raise ValueError("'u' and 'v' must be of shape 'Grid(x,y)'")
+
 
 def _normalize_magnitude(u, v):
     """
@@ -6177,6 +6178,7 @@ def _normalize_magnitude(u, v):
     magnitude = np.sqrt(u**2 + v**2)
     magnitude /= np.max(magnitude)
     return magnitude
+
 
 def _generate_start_points(x, y, grains, start_points, grid):
     """
@@ -6200,6 +6202,7 @@ def _generate_start_points(x, y, grains, start_points, grid):
     sp2[:, 1] -= grid.y_origin
     return sp2
 
+
 def _calculate_trajectories(sp2, dmap, integrate):
     """
     Helper for `curved_quiver`.
@@ -6216,6 +6219,7 @@ def _calculate_trajectories(sp2, dmap, integrate):
             trajectories.append(t[0])
             edges.append(t[1])
     return trajectories, edges
+
 
 def _handle_multicolor_lines(color, norm, cmap, grid):
     """
