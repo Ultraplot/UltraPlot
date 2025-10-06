@@ -447,3 +447,35 @@ def test_inhomogeneous_violin(rng):
     for violin in violins:
         assert violin.get_paths()  # Ensure paths are created
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_curved_quiver(rng):
+    # Create a grid
+    x = np.linspace(-4, 4, 20)
+    y = np.linspace(-3, 3, 20)
+    X, Y = np.meshgrid(x, y)
+
+    # Define a rotational vector field (circular flow)
+    U = -Y
+    V = X
+    speed = np.sqrt(U**2 + V**2)
+
+    # Create a figure and axes
+    fig, axs = uplt.subplots(ncols=3, sharey=True, figsize=(12, 4))
+
+    # Left plot: matplotlib's streamplot
+    axs[0].streamplot(X, Y, U, V, color=speed)
+    axs[0].set_title("streamplot (native)")
+
+    # Middle plot: quiver
+    axs[1].quiver(X, Y, U, V, speed)
+    axs[1].set_title("quiver")
+
+    # Right plot: curved_quiver
+    m = axs[2].curved_quiver(
+        X, Y, U, V, color=speed, arrow_at_end=True, scale=2.0, grains=10
+    )
+    axs[2].set_title("curved_quiver")
+    fig.colorbar(m.lines, ax=axs[:], label="speed")
+    return fig

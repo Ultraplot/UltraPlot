@@ -31,9 +31,12 @@ import matplotlib.patches as mpatches
 import matplotlib.ticker as mticker
 import matplotlib.pyplot as mplt
 import matplotlib as mpl
+from matplotlib.streamplot import StreamplotSet
 from packaging import version
 import numpy as np
 import numpy.ma as ma
+
+from matplotlib.streamplot import StreamplotSet
 
 from .. import colors as pcolors
 from .. import constructor, utils
@@ -170,6 +173,50 @@ globe : bool, default: False
 docstring._snippet_manager["plot.args_1d_shared"] = _args_1d_shared_docstring
 docstring._snippet_manager["plot.args_2d_shared"] = _args_2d_shared_docstring
 
+_curved_quiver_docstring = """
+Draws curved vector field arrows (streamlines with arrows) for 2D vector fields.
+
+Parameters
+----------
+x, y : 1D or 2D arrays
+    Grid coordinates.
+u, v : 2D arrays
+    Vector components.
+c : color or 2D array, optional
+    Streamline color.
+density : float or (float, float), optional
+    Controls the closeness of streamlines.
+grains : int or (int, int), optional
+    Number of seed points in x and y.
+linewidth : float or 2D array, optional
+    Width of streamlines.
+color : color or 2D array, optional
+    Streamline color.
+cmap, norm : optional
+    Colormap and normalization for array colors.
+arrowsize : float, optional
+    Arrow size scaling.
+arrowstyle : str, optional
+    Arrow style specification.
+transform : optional
+    Matplotlib transform.
+zorder : float, optional
+    Z-order for lines/arrows.
+start_points : (N, 2) array, optional
+    Starting points for streamlines.
+integration_direction : {'forward', 'backward', 'both'}, optional
+    Direction to integrate streamlines.
+broken_streamlines : bool, optional
+    If True, streamlines may terminate early.
+
+Returns
+-------
+StreamplotSet
+    Container with attributes:
+    - lines: LineCollection of streamlines
+    - arrows: PatchCollection of arrows
+"""
+docstring._snippet_manager["plot.curved_quiver"] = _args_2d_shared_docstring
 
 # Auto colorbar and legend docstring
 _guide_docstring = """
@@ -1493,28 +1540,648 @@ def _inside_seaborn_call():
     return False
 
 
+# The following helper classes and functions for curved_quiver are based on the
+# work in the `dfm_tools` repository.
+# Original file: https://github.com/Deltares/dfm_tools/blob/829e76f48ebc42460aae118cc190147a595a5f26/dfm_tools/modplot.py
+
+
+class _TerminateTrajectory(Exception):
+    pass
+
+
+from dataclasses import dataclass
+
+
+@dataclass
+class CurvedQuiverSet(StreamplotSet):
+    lines: object
+    arrows: object
+
+
+class _DomainMap(object):
+    """Map representing different coordinate systems.
+
+    Coordinate definitions:
+    * axes-coordinates goes from 0 to 1 in the domain.
+    * data-coordinates are specified by the input x-y coordinates.
+    * grid-coordinates goes from 0 to N and 0 to M for an N x M grid,
+      where N and M match the shape of the input data.
+    * mask-coordinates goes from 0 to N and 0 to M for an N x M mask,
+      where N and M are user-specified to control the density of
+      streamlines.
+
+    This class also has methods for adding trajectories to the
+    StreamMask. Before adding a trajectory, run `start_trajectory` to
+    keep track of regions crossed by a given trajectory. Later, if you
+    decide the trajectory is bad (e.g., if the trajectory is very
+    short) just call `undo_trajectory`.
+    """
+
+    def __init__(self, grid, mask):
+        self.grid = grid
+        self.mask = mask
+
+        # Constants for conversion between grid- and mask-coordinates
+        self.x_grid2mask = (mask.nx - 1) / grid.nx
+        self.y_grid2mask = (mask.ny - 1) / grid.ny
+        self.x_mask2grid = 1.0 / self.x_grid2mask
+        self.y_mask2grid = 1.0 / self.y_grid2mask
+
+        self.x_data2grid = 1.0 / grid.dx
+        self.y_data2grid = 1.0 / grid.dy
+
+    def grid2mask(self, xi, yi):
+        """Return nearest space in mask-coords from given grid-coords."""
+        return (int((xi * self.x_grid2mask) + 0.5), int((yi * self.y_grid2mask) + 0.5))
+
+    def mask2grid(self, xm, ym):
+        return xm * self.x_mask2grid, ym * self.y_mask2grid
+
+    def data2grid(self, xd, yd):
+        return xd * self.x_data2grid, yd * self.y_data2grid
+
+    def grid2data(self, xg, yg):
+        return xg / self.x_data2grid, yg / self.y_data2grid
+
+    def start_trajectory(self, xg, yg):
+        xm, ym = self.grid2mask(xg, yg)
+        self.mask._start_trajectory(xm, ym)
+
+    def reset_start_point(self, xg, yg):
+        xm, ym = self.grid2mask(xg, yg)
+        self.mask._current_xy = (xm, ym)
+
+    def update_trajectory(self, xg, yg):
+        xm, ym = self.grid2mask(xg, yg)
+        # self.mask._update_trajectory(xm, ym)
+
+    def undo_trajectory(self):
+        self.mask._undo_trajectory()
+
+
+class _Grid(object):
+    """Grid of data."""
+
+    def __init__(self, x, y):
+        if x.ndim == 1:
+            pass
+        elif x.ndim == 2:
+            x_row = x[0, :]
+            if not np.allclose(x_row, x):
+                raise ValueError("The rows of 'x' must be equal")
+            x = x_row
+        else:
+            raise ValueError("'x' can have at maximum 2 dimensions")
+
+        if y.ndim == 1:
+            pass
+        elif y.ndim == 2:
+            y_col = y[:, 0]
+            if not np.allclose(y_col, y.T):
+                raise ValueError("The columns of 'y' must be equal")
+            y = y_col
+        else:
+            raise ValueError("'y' can have at maximum 2 dimensions")
+
+        self.nx = len(x)
+        self.ny = len(y)
+        self.dx = x[1] - x[0]
+        self.dy = y[1] - y[0]
+        self.x_origin = x[0]
+        self.y_origin = y[0]
+        self.width = x[-1] - x[0]
+        self.height = y[-1] - y[0]
+
+    @property
+    def shape(self):
+        return self.ny, self.nx
+
+    def within_grid(self, xi, yi):
+        """Return True if point is a valid index of grid."""
+        # Note that xi/yi can be floats; so, for example, we can't simply check
+        # `xi < self.nx` since `xi` can be `self.nx - 1 < xi < self.nx`
+        return xi >= 0 and xi <= self.nx - 1 and yi >= 0 and yi <= self.ny - 1
+
+
+class _StreamMask(object):
+    """Mask to keep track of discrete regions crossed by streamlines.
+
+    The resolution of this grid determines the approximate spacing
+    between trajectories. Streamlines are only allowed to pass through
+    zeroed cells: When a streamline enters a cell, that cell is set to
+    1, and no new streamlines are allowed to enter.
+    """
+
+    def __init__(self, density):
+        if np.isscalar(density):
+            if density <= 0:
+                raise ValueError("If a scalar, 'density' must be positive")
+            self.nx = self.ny = int(30 * density)
+        else:
+            if len(density) != 2:
+                raise ValueError("'density' can have at maximum 2 dimensions")
+            self.nx = int(30 * density[0])
+            self.ny = int(30 * density[1])
+
+        self._mask = np.zeros((self.ny, self.nx))
+        self.shape = self._mask.shape
+        self._current_xy = None
+
+    def __getitem__(self, *args):
+        return self._mask.__getitem__(*args)
+
+    def _start_trajectory(self, xm, ym):
+        """Start recording streamline trajectory"""
+        self._traj = []
+        self._update_trajectory(xm, ym)
+
+    def _undo_trajectory(self):
+        """Remove current trajectory from mask"""
+        for t in self._traj:
+            self._mask.__setitem__(t, 0)
+
+    def _update_trajectory(self, xm, ym):
+        """Update current trajectory position in mask.
+
+        If the new position has already been filled, raise
+        `InvalidIndexError`.
+        """
+        # if self._current_xy != (xm, ym):
+        #    if self[ym, xm] == 0:
+        self._traj.append((ym, xm))
+        self._mask[ym, xm] = 1
+        self._current_xy = (xm, ym)
+        #    else:
+        #        raise InvalidIndexError
+
+
+def _get_integrator(u, v, dmap, minlength, resolution, magnitude):
+    # rescale velocity onto grid-coordinates for integrations.
+    u, v = dmap.data2grid(u, v)
+
+    # speed (path length) will be in axes-coordinates
+    u_ax = u / dmap.grid.nx
+    v_ax = v / dmap.grid.ny
+    speed = np.ma.sqrt(u_ax**2 + v_ax**2)
+
+    def forward_time(xi, yi):
+        ds_dt = _interpgrid(speed, xi, yi)
+        if ds_dt == 0:
+            raise TerminateTrajectory()
+        dt_ds = 1.0 / ds_dt
+        ui = _interpgrid(u, xi, yi)
+        vi = _interpgrid(v, xi, yi)
+        return ui * dt_ds, vi * dt_ds
+
+    def integrate(x0, y0):
+        """Return x, y grid-coordinates of trajectory based on starting point.
+
+        Integrate both forward and backward in time from starting point
+        in grid coordinates. Integration is terminated when a trajectory
+        reaches a domain boundary or when it crosses into an already
+        occupied cell in the StreamMask. The resulting trajectory is
+        None if it is shorter than `minlength`.
+        """
+        stotal, x_traj, y_traj = 0.0, [], []
+        dmap.start_trajectory(x0, y0)
+        dmap.reset_start_point(x0, y0)
+        stotal, x_traj, y_traj, m_total, hit_edge = _integrate_rk12(
+            x0, y0, dmap, forward_time, resolution, magnitude
+        )
+
+        if len(x_traj) > 1:
+            return (x_traj, y_traj), hit_edge
+        else:
+            # reject short trajectories
+            dmap.undo_trajectory()
+            return None
+
+    return integrate
+
+
+def _integrate_rk12(x0, y0, dmap, f, resolution, magnitude):
+    """2nd-order Runge-Kutta algorithm with adaptive step size.
+
+    This method is also referred to as the improved Euler's method, or
+    Heun's method. This method is favored over higher-order methods
+    because:
+
+    1. To get decent looking trajectories and to sample every mask cell
+       on the trajectory we need a small timestep, so a lower order
+       solver doesn't hurt us unless the data is *very* high
+       resolution. In fact, for cases where the user inputs data
+       smaller or of similar grid size to the mask grid, the higher
+       order corrections are negligible because of the very fast linear
+       interpolation used in `interpgrid`.
+
+    2. For high resolution input data (i.e. beyond the mask
+       resolution), we must reduce the timestep. Therefore, an
+       adaptive timestep is more suited to the problem as this would be
+       very hard to judge automatically otherwise.
+
+    This integrator is about 1.5 - 2x as fast as both the RK4 and RK45
+    solvers in most setups on my machine. I would recommend removing
+    the other two to keep things simple.
+    """
+    # This error is below that needed to match the RK4 integrator. It
+    # is set for visual reasons -- too low and corners start
+    # appearing ugly and jagged. Can be tuned.
+    maxerror = 0.003
+
+    # This limit is important (for all integrators) to avoid the
+    # trajectory skipping some mask cells. We could relax this
+    # condition if we use the code which is commented out below to
+    # increment the location gradually. However, due to the efficient
+    # nature of the interpolation, this doesn't boost speed by much
+    # for quite a bit of complexity.
+    maxds = min(1.0 / dmap.mask.nx, 1.0 / dmap.mask.ny, 0.1)
+    ds = maxds
+
+    stotal = 0
+    xi = x0
+    yi = y0
+    xf_traj = []
+    yf_traj = []
+    m_total = []
+    hit_edge = False
+
+    while dmap.grid.within_grid(xi, yi):
+        xf_traj.append(xi)
+        yf_traj.append(yi)
+        m_total.append(_interpgrid(magnitude, xi, yi))
+
+        try:
+            k1x, k1y = f(xi, yi)
+            k2x, k2y = f(xi + ds * k1x, yi + ds * k1y)
+        except IndexError:
+            # Out of the domain on one of the intermediate integration steps.
+            # Take an Euler step to the boundary to improve neatness.
+            ds, xf_traj, yf_traj = _euler_step(xf_traj, yf_traj, dmap, f)
+            stotal += ds
+            hit_edge = True
+            break
+        except TerminateTrajectory:
+            break
+
+        dx1 = ds * k1x
+        dy1 = ds * k1y
+        dx2 = ds * 0.5 * (k1x + k2x)
+        dy2 = ds * 0.5 * (k1y + k2y)
+
+        nx, ny = dmap.grid.shape
+        # Error is normalized to the axes coordinates
+        error = np.sqrt(((dx2 - dx1) / nx) ** 2 + ((dy2 - dy1) / ny) ** 2)
+
+        # Only save step if within error tolerance
+        if error < maxerror:
+            xi += dx2
+            yi += dy2
+            dmap.update_trajectory(xi, yi)
+            if not dmap.grid.within_grid(xi, yi):
+                hit_edge = True
+            if (stotal + ds) > resolution * np.mean(m_total):
+                break
+            stotal += ds
+
+        # recalculate stepsize based on step error
+        if error == 0:
+            ds = maxds
+        else:
+            ds = min(maxds, 0.85 * ds * (maxerror / error) ** 0.5)
+
+    return stotal, xf_traj, yf_traj, m_total, hit_edge
+
+
+def _euler_step(xf_traj, yf_traj, dmap, f):
+    """Simple Euler integration step that extends streamline to boundary."""
+    ny, nx = dmap.grid.shape
+    xi = xf_traj[-1]
+    yi = yf_traj[-1]
+    cx, cy = f(xi, yi)
+
+    if cx == 0:
+        dsx = np.inf
+    elif cx < 0:
+        dsx = xi / -cx
+    else:
+        dsx = (nx - 1 - xi) / cx
+
+    if cy == 0:
+        dsy = np.inf
+    elif cy < 0:
+        dsy = yi / -cy
+    else:
+        dsy = (ny - 1 - yi) / cy
+
+    ds = min(dsx, dsy)
+
+    xf_traj.append(xi + cx * ds)
+    yf_traj.append(yi + cy * ds)
+
+    return ds, xf_traj, yf_traj
+
+
+def _interpgrid(a, xi, yi):
+    """Fast 2D, linear interpolation on an integer grid"""
+    Ny, Nx = np.shape(a)
+
+    if isinstance(xi, np.ndarray):
+        x = xi.astype(int)
+        y = yi.astype(int)
+
+        # Check that xn, yn don't exceed max index
+        xn = np.clip(x + 1, 0, Nx - 1)
+        yn = np.clip(y + 1, 0, Ny - 1)
+    else:
+        x = int(xi)
+        y = int(yi)
+        xn = min(x + 1, Nx - 1)
+        yn = min(y + 1, Ny - 1)
+
+    a00 = a[y, x]
+    a01 = a[y, xn]
+    a10 = a[yn, x]
+    a11 = a[yn, xn]
+
+    xt = xi - x
+    yt = yi - y
+
+    a0 = a00 * (1 - xt) + a01 * xt
+    a1 = a10 * (1 - xt) + a11 * xt
+    ai = a0 * (1 - yt) + a1 * yt
+
+    if not isinstance(xi, np.ndarray):
+        if np.ma.is_masked(ai):
+            raise TerminateTrajectory
+    return ai
+
+
+def _gen_starting_points(x, y, grains):
+    eps = np.finfo(np.float32).eps
+    tmp_x = np.linspace(x.min() + eps, x.max() - eps, grains)
+    tmp_y = np.linspace(y.min() + eps, y.max() - eps, grains)
+    xs = np.tile(tmp_x, grains)
+    ys = np.repeat(tmp_y, grains)
+    seed_points = np.array([list(xs), list(ys)])
+    return seed_points.T
+
+
 class PlotAxes(base.Axes):
     """
     The second lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
     Implements all plotting overrides.
     """
 
-    def __init__(self, *args, **kwargs):
+    @docstring._snippet_manager
+    def curved_quiver(
+        self,
+        x,
+        y,
+        u,
+        v,
+        linewidth=None,
+        color=None,
+        cmap=None,
+        norm=None,
+        arrowsize=1,
+        arrowstyle="-|>",
+        transform=None,
+        zorder=None,
+        start_points=None,
+        scale=1.0,
+        grains=15,
+        density=10,
+        arrow_at_end=True,
+    ):
         """
-        Parameters
-        ----------
-        *args, **kwargs
-            Passed to `ultraplot.axes.Axes`.
+        %(plot.curved_quiver)s
 
-        See also
-        --------
-        matplotlib.axes.Axes
-        ultraplot.axes.Axes
-        ultraplot.axes.CartesianAxes
-        ultraplot.axes.PolarAxes
-        ultraplot.axes.GeoAxes
+        Notes
+        -----
+        The implementation of this function is based on the `dfm_tools` repository.
+        Original file: https://github.com/Deltares/dfm_tools/blob/829e76f48ebc42460aae118cc190147a595a5f26/dfm_tools/modplot.py
         """
-        super().__init__(*args, **kwargs)
+        grid = _Grid(x, y)
+        mask = _StreamMask(density)
+        dmap = _DomainMap(grid, mask)
+
+        if zorder is None:
+            zorder = mlines.Line2D.zorder
+
+        # default to data coordinates
+        if transform is None:
+            transform = self.transData
+
+        if color is None:
+            color = self._get_lines.get_next_color()
+
+        if linewidth is None:
+            linewidth = rc["lines.linewidth"]
+
+        line_kw = {}
+        arrow_kw = dict(arrowstyle=arrowstyle, mutation_scale=10 * arrowsize)
+
+        use_multicolor_lines = isinstance(color, np.ndarray)
+        if use_multicolor_lines:
+            if color.shape != grid.shape:
+                raise ValueError(
+                    "If 'color' is given, must have the shape of 'Grid(x,y)'"
+                )
+            line_colors = []
+            color = np.ma.masked_invalid(color)
+        else:
+            line_kw["color"] = color
+            arrow_kw["color"] = color
+
+        if isinstance(linewidth, np.ndarray):
+            if linewidth.shape != grid.shape:
+                raise ValueError(
+                    "If 'linewidth' is given, must have the shape of 'Grid(x,y)'"
+                )
+            line_kw["linewidth"] = []
+        else:
+            line_kw["linewidth"] = linewidth
+            arrow_kw["linewidth"] = linewidth
+
+        line_kw["zorder"] = zorder
+        arrow_kw["zorder"] = zorder
+
+        ## Sanity checks.
+        if u.shape != grid.shape or v.shape != grid.shape:
+            raise ValueError("'u' and 'v' must be of shape 'Grid(x,y)'")
+
+        u = np.ma.masked_invalid(u)
+        v = np.ma.masked_invalid(v)
+        magnitude = np.sqrt(u**2 + v**2)
+        magnitude /= np.max(magnitude)
+
+        resolution = scale / grains
+        minlength = 0.9 * resolution
+
+        integrate = _get_integrator(u, v, dmap, minlength, resolution, magnitude)
+
+        trajectories = []
+        edges = []
+
+        if start_points is None:
+            start_points = _gen_starting_points(x, y, grains)
+
+        sp2 = np.asanyarray(start_points, dtype=float).copy()
+
+        # Check if start_points are outside the data boundaries
+        for xs, ys in sp2:
+            if not (
+                grid.x_origin <= xs <= grid.x_origin + grid.width
+                and grid.y_origin <= ys <= grid.y_origin + grid.height
+            ):
+                raise ValueError(
+                    "Starting point ({}, {}) outside of data "
+                    "boundaries".format(xs, ys)
+                )
+
+        # Convert start_points from data to array coords
+        # Shift the seed points from the bottom left of the data so that
+        # data2grid works properly.
+        sp2[:, 0] -= grid.x_origin
+        sp2[:, 1] -= grid.y_origin
+
+        for xs, ys in sp2:
+            xg, yg = dmap.data2grid(xs, ys)
+            t = integrate(xg, yg)
+            if t is not None:
+                trajectories.append(t[0])
+                edges.append(t[1])
+
+        if use_multicolor_lines:
+            if norm is None:
+                norm = mcolors.Normalize(color.min(), color.max())
+            if cmap is None:
+                cmap = constructor.Colormap(rc["image.cmap"])
+            else:
+                cmap = mcm.get_cmap(cmap)
+
+        streamlines = []
+        arrows = []
+        for t, edge in zip(trajectories, edges):
+            tgx = np.array(t[0])
+            tgy = np.array(t[1])
+
+            # Rescale from grid-coordinates to data-coordinates.
+            tx, ty = dmap.grid2data(*np.array(t))
+            tx += grid.x_origin
+            ty += grid.y_origin
+
+            points = np.transpose([tx, ty]).reshape(-1, 1, 2)
+            streamlines.extend(np.hstack([points[:-1], points[1:]]))
+
+            if len(tx) < 2:
+                continue
+
+            # Add arrows
+            s = np.cumsum(np.sqrt(np.diff(tx) ** 2 + np.diff(ty) ** 2))
+            if arrow_at_end:
+                if len(tx) < 2:
+                    continue
+
+                arrow_tail = (tx[-1], ty[-1])
+
+                # Extrapolate to find arrow head
+                xg, yg = dmap.data2grid(tx[-1] - grid.x_origin, ty[-1] - grid.y_origin)
+
+                ui = _interpgrid(u, xg, yg)
+                vi = _interpgrid(v, xg, yg)
+
+                norm_v = np.sqrt(ui**2 + vi**2)
+                if norm_v > 0:
+                    ui /= norm_v
+                    vi /= norm_v
+
+                if len(s) > 0:
+                    # use average segment length
+                    arrow_length = arrowsize * (s[-1] / len(s))
+                else:
+                    # fallback for very short streamlines
+                    arrow_length = arrowsize * 0.1 * np.mean([grid.dx, grid.dy])
+
+                arrow_head = (tx[-1] + ui * arrow_length, ty[-1] + vi * arrow_length)
+                n = len(s) - 1 if len(s) > 0 else 0
+            else:
+                n = np.searchsorted(s, s[-1] / 2.0)
+                arrow_tail = (tx[n], ty[n])
+                arrow_head = (np.mean(tx[n : n + 2]), np.mean(ty[n : n + 2]))
+
+            if isinstance(linewidth, np.ndarray):
+                line_widths = _interpgrid(linewidth, tgx, tgy)[:-1]
+                line_kw["linewidth"].extend(line_widths)
+                arrow_kw["linewidth"] = line_widths[n]
+
+            if use_multicolor_lines:
+                color_values = _interpgrid(color, tgx, tgy)[:-1]
+                line_colors.append(color_values)
+                arrow_kw["color"] = cmap(norm(color_values[n]))
+
+            if not edge:
+                p = mpatches.FancyArrowPatch(
+                    arrow_tail, arrow_head, transform=transform, **arrow_kw
+                )
+            else:
+                continue
+
+            ds = np.sqrt(
+                (arrow_tail[0] - arrow_head[0]) ** 2
+                + (arrow_tail[1] - arrow_head[1]) ** 2
+            )
+            if ds < 1e-15:
+                continue  # remove vanishingly short arrows that cause Patch to fail
+
+            self.add_patch(p)
+            arrows.append(p)
+
+        lc = mcollections.LineCollection(streamlines, transform=transform, **line_kw)
+        lc.sticky_edges.x[:] = [grid.x_origin, grid.x_origin + grid.width]
+        lc.sticky_edges.y[:] = [grid.y_origin, grid.y_origin + grid.height]
+
+        if use_multicolor_lines:
+            lc.set_array(np.ma.hstack(line_colors))
+            lc.set_cmap(cmap)
+            lc.set_norm(norm)
+
+        self.add_collection(lc)
+        self.autoscale_view()
+
+        ac = mcollections.PatchCollection(arrows)
+        stream_container = CurvedQuiverSet(lc, ac)
+        return stream_container
+
+
+    def _add_plot_elements(
+        self,
+        streamlines,
+        arrows,
+        grid,
+        line_kw,
+        arrow_kw,
+        use_multicolor_lines,
+        line_colors,
+        cmap,
+        norm,
+        transform,
+    ):
+        """
+        Add line and arrow collections to the axes, set sticky edges, and return the container.
+        """
+        lc = mcollections.LineCollection(streamlines, transform=transform, **line_kw)
+        lc.sticky_edges.x[:] = [grid.x_origin, grid.x_origin + grid.width]
+        lc.sticky_edges.y[:] = [grid.y_origin, grid.y_origin + grid.height]
+        if use_multicolor_lines:
+            lc.set_array(np.ma.hstack(line_colors))
+            lc.set_cmap(cmap)
+            lc.set_norm(norm)
+        self.add_collection(lc)
+        self.autoscale_view()
+        ac = mcollections.PatchCollection(arrows)
+        stream_container = CurvedQuiverSet(lc, ac)
+        return stream_container
 
     def _call_native(self, name, *args, **kwargs):
         """
@@ -5359,6 +6026,8 @@ class PlotAxes(base.Axes):
 
         # Update kwargs and handle cmap
         kw.update(_pop_props(kw, "collection"))
+
+
         center_levels = kw.pop("center_levels", None)
         kw = self._parse_cmap(
             triangulation.x, triangulation.y, z, center_levels=center_levels, **kw
@@ -5481,3 +6150,92 @@ class PlotAxes(base.Axes):
     # Rename the shorthands
     boxes = warnings._rename_objs("0.8.0", boxes=box)
     violins = warnings._rename_objs("0.8.0", violins=violin)
+
+#
+def _setup_grid_and_mask(x, y, density):
+    """
+    Helper for `curved_quiver`.
+
+    Initializes and returns the grid, stream mask, and domain map objects for the vector field.
+    """
+    grid = _Grid(x, y)
+    mask = _StreamMask(density)
+    dmap = _DomainMap(grid, mask)
+    return grid, mask, dmap
+
+def _validate_vector_shapes(u, v, grid):
+    """
+    Helper for `curved_quiver`.
+
+    Validates that the shapes of `u` and `v` match the grid shape. Raises ValueError if not.
+    """
+    if u.shape != grid.shape or v.shape != grid.shape:
+        raise ValueError("'u' and 'v' must be of shape 'Grid(x,y)'")
+
+def _normalize_magnitude(u, v):
+    """
+    Helper for `curved_quiver`.
+
+    Computes and returns the normalized magnitude array for the vector field.
+    """
+    u = np.ma.masked_invalid(u)
+    v = np.ma.masked_invalid(v)
+    magnitude = np.sqrt(u**2 + v**2)
+    magnitude /= np.max(magnitude)
+    return magnitude
+
+def _generate_start_points(x, y, grains, start_points, grid):
+    """
+    Helper for `curved_quiver`.
+
+    Generates or validates starting points for streamlines, ensuring they are within grid boundaries.
+    Returns points in grid coordinates.
+    """
+    if start_points is None:
+        start_points = _gen_starting_points(x, y, grains)
+    sp2 = np.asanyarray(start_points, dtype=float).copy()
+    for xs, ys in sp2:
+        if not (
+            grid.x_origin <= xs <= grid.x_origin + grid.width
+            and grid.y_origin <= ys <= grid.y_origin + grid.height
+        ):
+            raise ValueError(
+                "Starting point ({}, {}) outside of data boundaries".format(xs, ys)
+            )
+    sp2[:, 0] -= grid.x_origin
+    sp2[:, 1] -= grid.y_origin
+    return sp2
+
+def _calculate_trajectories(sp2, dmap, integrate):
+    """
+    Helper for `curved_quiver`.
+
+    Integrates trajectories from each starting point using the provided integrator.
+    Returns lists of trajectories and edges.
+    """
+    trajectories = []
+    edges = []
+    for xs, ys in sp2:
+        xg, yg = dmap.data2grid(xs, ys)
+        t = integrate(xg, yg)
+        if t is not None:
+            trajectories.append(t[0])
+            edges.append(t[1])
+    return trajectories, edges
+
+def _handle_multicolor_lines(color, norm, cmap, grid):
+    """
+    Helper for `curved_quiver`.
+
+    Prepares colormap and normalization for multicolor lines.
+    Returns updated color, norm, cmap, and a list for line colors.
+    """
+    line_colors = []
+    if norm is None:
+        norm = mcolors.Normalize(color.min(), color.max())
+    if cmap is None:
+        cmap = constructor.Colormap(rc["image.cmap"])
+    else:
+        cmap = mcm.get_cmap(cmap)
+    color = np.ma.masked_invalid(color)
+    return color, norm, cmap, line_colors
