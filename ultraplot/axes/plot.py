@@ -13,7 +13,6 @@ from numbers import Integral, Number
 from typing import Any, Union, Iterable, Optional
 
 from dataclasses import dataclass
-from typing import Any, Union
 from collections.abc import Callable
 from collections.abc import Iterable
 
