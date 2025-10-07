@@ -208,8 +208,34 @@ CurvedQuiverSet
     - lines: LineCollection of streamlines
     - arrows: PatchCollection of arrows
 """
-docstring._snippet_manager["plot.curved_quiver"] = _args_2d_shared_docstring
+_curved_quiver_docstring = """
+density : float or (float, float), optional
+    Controls the closeness of streamlines.
+grains : int or (int, int), optional
+    Number of seed points in x and y.
+linewidth : float or 2D array, optional
+    Width of streamlines.
+cmap, norm : optional
+    Colormap and normalization for array colors.
+arrowsize : float, optional
+    Arrow size scaling.
+arrowstyle : str, optional
+    Arrow style specification.
+transform : optional
+    Matplotlib transform.
+zorder : float, optional
+    Z-order for lines/arrows.
+start_points : (N, 2) array, optional
+    Starting points for streamlines.
 
+Returns
+-------
+CurvedQuiverSet
+    Container with attributes:
+    - lines: LineCollection of streamlines
+    - arrows: PatchCollection of arrows
+"""
+docstring._snippet_manager["plot.curved_quiver"] = _curved_quiver_docstring
 # Auto colorbar and legend docstring
 _guide_docstring = """
 colorbar : bool, int, or str, optional
