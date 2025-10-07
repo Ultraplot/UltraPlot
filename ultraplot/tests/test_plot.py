@@ -558,6 +558,7 @@ def test_calculate_trajectories():
     assert len(results) == seeds.shape[0]
 
 
+@pytest.mark.mpl_image_compare
 def test_curved_quiver_multicolor_lines():
     """
     Test that curved_quiver handles color arrays and returns a lines object.
@@ -576,3 +577,4 @@ def test_curved_quiver_multicolor_lines():
     assert isinstance(m.lines, LineCollection)
     assert m.lines.get_array().size > 0  # we have colors set
     assert m.lines.get_cmap() is not None
+    return fig
