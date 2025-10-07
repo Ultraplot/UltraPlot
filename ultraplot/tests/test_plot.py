@@ -503,8 +503,6 @@ def test_validate_vector_shapes_fail():
     grid = uplt.axes.plot.CurvedQuiverSolver.Grid(x, y)
     u = np.ones((2, 2))
     v = np.ones(grid.shape)
-    import pytest
-
     with pytest.raises(AssertionError):
         assert u.shape == grid.shape
 
