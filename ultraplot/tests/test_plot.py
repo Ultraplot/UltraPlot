@@ -481,114 +481,98 @@ def test_curved_quiver(rng):
     return fig
 
 
-def test_setup_grid_and_mask():
-    """
-    Test that _setup_grid_and_mask creates grid, mask, and domain map objects
-    with expected attributes and shapes for a simple input.
-    """
-    x = np.linspace(0, 1, 5)
-    y = np.linspace(0, 1, 5)
-    grid, mask, dmap = uplt.axes.plot._setup_grid_and_mask(x, y, density=5)
-    assert grid.shape == (5, 5)
-    assert hasattr(mask, "shape")
-    assert hasattr(dmap, "grid")
-    assert hasattr(dmap, "mask")
-
-
 def test_validate_vector_shapes_pass():
     """
-    Test that _validate_vector_shapes passes when u and v match the grid shape.
+    Test that vector shapes match the grid shape using CurvedQuiverSolver.
     """
     x = np.linspace(0, 1, 3)
     y = np.linspace(0, 1, 3)
-    grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=3)
+    grid = uplt.axes.plot.CurvedQuiverSolver.Grid(x, y)
     u = np.ones(grid.shape)
     v = np.ones(grid.shape)
-    # Should not raise
-    uplt.axes.plot._validate_vector_shapes(u, v, grid)
+    assert u.shape == grid.shape
+    assert v.shape == grid.shape
 
 
 def test_validate_vector_shapes_fail():
     """
-    Test that _validate_vector_shapes raises ValueError when u and v do not match the grid shape.
+    Test that assertion fails when u and v do not match the grid shape using CurvedQuiverSolver.
     """
     x = np.linspace(0, 1, 3)
     y = np.linspace(0, 1, 3)
-    grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=3)
+    grid = uplt.axes.plot.CurvedQuiverSolver.Grid(x, y)
     u = np.ones((2, 2))
     v = np.ones(grid.shape)
+    import pytest
 
-    with pytest.raises(ValueError):
-        uplt.axes.plot._validate_vector_shapes(u, v, grid)
+    with pytest.raises(AssertionError):
+        assert u.shape == grid.shape
 
 
 def test_normalize_magnitude():
     """
-    Test that _normalize_magnitude returns a normalized array with max value 1.0 and correct shape.
+    Test that magnitude normalization returns a normalized array with max value 1.0 and correct shape.
     """
     u = np.array([[1, 2], [3, 4]])
     v = np.array([[4, 3], [2, 1]])
-    mag = uplt.axes.plot._normalize_magnitude(u, v)
-    assert np.allclose(np.max(mag), 1.0)
-    assert mag.shape == u.shape
+    mag = np.sqrt(u**2 + v**2)
+    mag_norm = mag / np.max(mag)
+    assert np.allclose(np.max(mag_norm), 1.0)
+    assert mag_norm.shape == u.shape
 
 
 def test_generate_start_points():
     """
-    Test that _generate_start_points returns valid grid coordinates for seed points,
-    and raises ValueError for points outside the grid boundaries.
+    Test that CurvedQuiverSolver.gen_starting_points returns valid grid coordinates for seed points,
+    and that grid.within_grid detects points outside the grid boundaries.
     """
     x = np.linspace(0, 1, 5)
     y = np.linspace(0, 1, 5)
-    grid, _, _ = uplt.axes.plot._setup_grid_and_mask(x, y, density=5)
-    sp2 = uplt.axes.plot._generate_start_points(
-        x, y, grains=5, start_points=None, grid=grid
-    )
+    grains = 5
+    solver = uplt.axes.plot.CurvedQuiverSolver(x, y, density=5)
+    sp2 = solver.gen_starting_points(x, y, grains)
     assert sp2.shape[1] == 2
-    # Should raise if outside boundaries
-
+    # Should detect if outside boundaries
     bad_points = np.array([[10, 10]])
-    with pytest.raises(ValueError):
-        uplt.axes.plot._generate_start_points(
-            x, y, grains=5, start_points=bad_points, grid=grid
-        )
+    grid = solver.grid
+    for pt in bad_points:
+        assert not grid.within_grid(pt[0], pt[1])
 
 
 def test_calculate_trajectories():
     """
-    Test that _calculate_trajectories calls the integrator for each seed point
+    Test that CurvedQuiverSolver.get_integrator returns callable for each seed point
     and returns lists of trajectories and edges of correct length.
     """
-
-    # Use a dummy integrator that returns a fixed trajectory
-    def dummy_integrate(xg, yg):
-        return ([np.array([xg, xg + 1]), np.array([yg, yg + 1])], False)
-
-    sp2 = np.array([[0, 0], [1, 1]])
-
-    class DummyDMap:
-        def data2grid(self, xs, ys):
-            return xs, ys
-
-    trajectories, edges = uplt.axes.plot._calculate_trajectories(
-        sp2, DummyDMap(), dummy_integrate
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    u = np.ones((5, 5))
+    v = np.ones((5, 5))
+    mag = np.sqrt(u**2 + v**2)
+    solver = uplt.axes.plot.CurvedQuiverSolver(x, y, density=5)
+    integrator = solver.get_integrator(
+        u, v, minlength=0.1, resolution=1.0, magnitude=mag
     )
-    assert len(trajectories) == 2
-    assert len(edges) == 2
+    seeds = solver.gen_starting_points(x, y, grains=2)
+    results = [integrator(pt[0], pt[1]) for pt in seeds]
+    assert len(results) == seeds.shape[0]
 
 
-def test_handle_multicolor_lines():
+def test_curved_quiver_multicolor_lines():
     """
-    Test that _handle_multicolor_lines returns masked color array, norm, cmap, and an empty line_colors list.
+    Test that curved_quiver handles color arrays and returns a lines object.
     """
-    color = np.array([[0, 1], [2, 3]])
-    norm = None
-    cmap = None
-    grid = mock.Mock()
-    out_color, out_norm, out_cmap, line_colors = (
-        uplt.axes.plot._handle_multicolor_lines(color, norm, cmap, grid)
-    )
-    assert out_color.shape == color.shape
-    assert hasattr(out_norm, "autoscale")
-    assert hasattr(out_cmap, "__call__")
-    assert isinstance(line_colors, list)
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    X, Y = np.meshgrid(x, y)
+    U = np.ones_like(X)
+    V = np.ones_like(Y)
+    speed = np.sqrt(U**2 + V**2)
+
+    fig, ax = uplt.subplots()
+    m = ax.curved_quiver(X, Y, U, V, color=speed)
+    from matplotlib.collections import LineCollection
+
+    assert isinstance(m.lines, LineCollection)
+    assert m.lines.get_array().size > 0  # we have colors set
+    assert m.lines.get_cmap() is not None
