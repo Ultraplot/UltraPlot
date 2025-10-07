@@ -1533,7 +1533,6 @@ def _inside_seaborn_call():
     return False
 
 
-
 class PlotAxes(base.Axes):
     """
     The second lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
@@ -5743,8 +5742,6 @@ class _TerminateTrajectory(Exception):
     pass
 
 
-
-
 @dataclass
 class CurvedQuiverSet(StreamplotSet):
     lines: object
@@ -5771,7 +5768,9 @@ class CurvedQuiverSolver:
         short) just call `undo_trajectory`.
         """
 
-        def __init__(self, grid: "CurvedQuiverSolver.Grid", mask: "CurvedQuiverSolver.StreamMask") -> None:
+        def __init__(
+            self, grid: "CurvedQuiverSolver.Grid", mask: "CurvedQuiverSolver.StreamMask"
+        ) -> None:
             self.grid = grid
             self.mask = mask
 
@@ -5786,7 +5785,10 @@ class CurvedQuiverSolver:
 
         def grid2mask(self, xi: float, yi: float) -> tuple[int, int]:
             """Return nearest space in mask-coords from given grid-coords."""
-            return (int((xi * self.x_grid2mask) + 0.5), int((yi * self.y_grid2mask) + 0.5))
+            return (
+                int((xi * self.x_grid2mask) + 0.5),
+                int((yi * self.y_grid2mask) + 0.5),
+            )
 
         def mask2grid(self, xm: int, ym: int) -> tuple[float, float]:
             return xm * self.x_mask2grid, ym * self.y_mask2grid
@@ -5811,7 +5813,6 @@ class CurvedQuiverSolver:
 
         def undo_trajectory(self) -> None:
             self.mask._undo_trajectory()
-
 
     class Grid(object):
         """Grid of data."""
@@ -5856,7 +5857,6 @@ class CurvedQuiverSolver:
             # `xi < self.nx` since `xi` can be `self.nx - 1 < xi < self.nx`
             return xi >= 0 and xi <= self.nx - 1 and yi >= 0 and yi <= self.ny - 1
 
-
     class StreamMask(object):
         """Mask to keep track of discrete regions crossed by streamlines.
 
@@ -5865,6 +5865,7 @@ class CurvedQuiverSolver:
         zeroed cells: When a streamline enters a cell, that cell is set to
         1, and no new streamlines are allowed to enter.
         """
+
         def __init__(self, density):
             if np.isscalar(density):
                 if density <= 0:
@@ -5892,6 +5893,7 @@ class CurvedQuiverSolver:
             """Remove current trajectory from mask"""
             for t in self._traj:
                 self._mask.__setitem__(t, 0)
+
         def _update_trajectory(self, xm: int, ym: int) -> None:
             """Update current trajectory position in mask.
 
@@ -5903,12 +5905,21 @@ class CurvedQuiverSolver:
             self._mask[ym, xm] = 1
             self._current_xy = (xm, ym)
 
-    def __init__(self, x: np.ndarray, y: np.ndarray, density: float | tuple[float, float]) -> None:
+    def __init__(
+        self, x: np.ndarray, y: np.ndarray, density: float | tuple[float, float]
+    ) -> None:
         self.grid = CurvedQuiverSolver.Grid(x, y)
         self.mask = CurvedQuiverSolver.StreamMask(density)
         self.domain_map = CurvedQuiverSolver.DomainMap(self.grid, self.mask)
 
-    def get_integrator(self, u: np.ndarray, v: np.ndarray, minlength: float, resolution: float, magnitude: np.ndarray) -> Callable[[float, float], tuple[tuple[list[float], list[float]], bool] | None]:
+    def get_integrator(
+        self,
+        u: np.ndarray,
+        v: np.ndarray,
+        minlength: float,
+        resolution: float,
+        magnitude: np.ndarray,
+    ) -> Callable[[float, float], tuple[tuple[list[float], list[float]], bool] | None]:
         # rescale velocity onto grid-coordinates for integrations.
         u, v = self.domain_map.data2grid(u, v)
 
@@ -5926,7 +5937,9 @@ class CurvedQuiverSolver:
             vi = self.interpgrid(v, xi, yi)
             return ui * dt_ds, vi * dt_ds
 
-        def integrate(x0: float, y0: float) -> tuple[tuple[list[float], list[float], bool]] | None:
+        def integrate(
+            x0: float, y0: float
+        ) -> tuple[tuple[list[float], list[float], bool]] | None:
             """Return x, y grid-coordinates of trajectory based on starting point.
 
             Integrate both forward and backward in time from starting point
@@ -5951,7 +5964,14 @@ class CurvedQuiverSolver:
 
         return integrate
 
-    def integrate_rk12(self, x0: float, y0: float, f: Callable[[float, float], tuple[float, float]], resolution: float, magnitude: np.ndarray,) -> tuple[float, list[float], list[float], list[float], bool]:
+    def integrate_rk12(
+        self,
+        x0: float,
+        y0: float,
+        f: Callable[[float, float], tuple[float, float]],
+        resolution: float,
+        magnitude: np.ndarray,
+    ) -> tuple[float, list[float], list[float], list[float], bool]:
         """2nd-order Runge-Kutta algorithm with adaptive step size.
 
         This method is also referred to as the improved Euler's method, or
