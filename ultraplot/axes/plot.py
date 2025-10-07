@@ -1734,7 +1734,9 @@ class PlotAxes(base.Axes):
                     arrow_length = arrowsize * (s[-1] / len(s))
                 else:
                     # fallback for very short streamlines
-                    arrow_length = arrowsize * 0.1 * np.mean([solver.grid.dx, solver.grid.dy])
+                    arrow_length = (
+                        arrowsize * 0.1 * np.mean([solver.grid.dx, solver.grid.dy])
+                    )
 
                 arrow_head = (tx[-1] + ui * arrow_length, ty[-1] + vi * arrow_length)
                 n = len(s) - 1 if len(s) > 0 else 0
