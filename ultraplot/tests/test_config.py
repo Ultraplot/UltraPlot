@@ -1,4 +1,5 @@
 import ultraplot as uplt, pytest
+import importlib
 
 
 def test_wrong_keyword_reset():
@@ -17,3 +18,17 @@ def test_wrong_keyword_reset():
     fig, ax = uplt.subplots(proj="cyl")
     ax.format(coastcolor="black")
     fig.canvas.draw()
+
+
+def test_cycle_in_rc_file(tmp_path):
+    """
+    Test that loading an rc file correctly overwrites the cycle setting.
+    """
+    rc_content = "cycle: colorblind"
+    rc_file = tmp_path / "test.rc"
+    rc_file.write_text(rc_content)
+
+    # Load the file directly. This should overwrite any existing settings.
+    uplt.rc.load(str(rc_file))
+
+    assert uplt.rc["cycle"] == "colorblind"
