@@ -78,12 +78,8 @@ with _benchmark("fonts"):
 
 # Validate colormap names and propagate 'cycle' to 'axes.prop_cycle'
 # NOTE: cmap.sequential also updates siblings 'cmap' and 'image.cmap'
-from .config import rc, _deferred_rc_settings
+from .config import rc
 from .internals import rcsetup, warnings
-
-for k, v in _deferred_rc_settings.items():
-    rc[k] = v
-_deferred_rc_settings.clear()
 
 
 rcsetup.VALIDATE_REGISTERED_CMAPS = True
