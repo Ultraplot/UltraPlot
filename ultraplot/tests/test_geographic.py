@@ -314,8 +314,8 @@ def test_toggle_gridliner_labels():
     gl = ax[0].gridlines_major
 
     assert gl.left_labels == False
-    assert gl.right_labels == None  # initially these are none
-    assert gl.top_labels == None
+    assert gl.right_labels == False
+    assert gl.top_labels == False
     assert gl.bottom_labels == False
     ax[0]._toggle_gridliner_labels(labeltop=True)
     assert gl.top_labels == True
@@ -617,7 +617,7 @@ def test_cartesian_and_geo(rng):
         ax[0].pcolormesh(rng.random((10, 10)))
         ax[1].scatter(*rng.random((2, 100)))
         ax[0]._apply_axis_sharing()
-        assert mocked.call_count == 1
+        assert mocked.call_count == 2
     return fig
 
 
@@ -894,4 +894,27 @@ def test_imshow_with_and_without_transform(rng):
     ax[1].imshow(data, transform=None)
     ax[2].imshow(data, transform=uplt.axes.geo.ccrs.PlateCarree())
     ax.format(title=["LCC", "No transform", "PlateCarree"])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_grid_indexing_formatting(rng):
+    """
+    Check if subplotgrid is correctly selecting
+    the subplots based on non-shared axis formatting
+    """
+    # See https://github.com/Ultraplot/UltraPlot/issues/356
+    lon = np.arange(0, 360, 10)
+    lat = np.arange(-60, 60 + 1, 10)
+    data = rng.random((len(lat), len(lon)))
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2, proj="cyl", share=0)
+    axs.format(coast=True)
+
+    for ax in axs:
+        m = ax.pcolor(lon, lat, data)
+        ax.colorbar(m)
+
+    axs[-1, :].format(lonlabels=True)
+    axs[:, 0].format(latlabels=True)
     return fig
