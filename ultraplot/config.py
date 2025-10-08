@@ -18,6 +18,7 @@ from collections import namedtuple
 from collections.abc import MutableMapping
 from numbers import Real
 
+
 import cycler
 import matplotlib as mpl
 import matplotlib.colors as mcolors
@@ -26,6 +27,7 @@ import matplotlib.mathtext  # noqa: F401
 import matplotlib.style.core as mstyle
 import numpy as np
 from matplotlib import RcParams
+from typing import Callable, Any, Dict
 
 from .internals import ic  # noqa: F401
 from .internals import (
@@ -157,6 +159,34 @@ docstring._snippet_manager["rc.color_args"] = _color_docstring
 docstring._snippet_manager["rc.font_args"] = _font_docstring
 docstring._snippet_manager["rc.cmap_exts"] = _cmap_exts_docstring
 docstring._snippet_manager["rc.cycle_exts"] = _cycle_exts_docstring
+
+_rc_register_handler_docstring = """
+        Register a callback function to be executed when a setting is modified.
+
+        This is an extension point for "special" settings that require complex
+        logic or have side-effects, such as updating other matplotlib settings.
+        It is used internally to decouple the configuration system from other
+        subsystems and avoid circular imports.
+
+        Parameters
+        ----------
+        name : str
+            The name of the setting (e.g., ``'cycle'``).
+        func : callable
+            The handler function to be executed. The function must accept a
+            single positional argument, which is the new `value` of the
+            setting, and must return a dictionary. The keys of the dictionary
+            should be valid ``matplotlib`` rc setting names, and the values
+            will be applied to the ``rc_matplotlib`` object.
+
+        Example
+        -------
+        >>> def _cycle_handler(value):
+        ...     # ... logic to create a cycler object from the value ...
+        ...     return {'axes.prop_cycle': new_cycler}
+        >>> rc.register_handler('cycle', _cycle_handler)
+        """
+docstring._snippet_manager["rc.register_handler"] = _rc_register_handler_docstring
 
 
 def _init_user_file():
@@ -764,7 +794,16 @@ class Configurator(MutableMapping, dict):
         %(rc.params)s
         """
         self._context = []
+        self._setting_handlers = {}
         self._init(local=local, user=user, default=default, **kwargs)
+
+    def register_handler(
+        self, name: str, func: Callable[[Any], Dict[str, Any]]
+    ) -> None:
+        """
+        %(rc.register_handler)s
+        """
+        self._setting_handlers[name] = func
 
     def __getitem__(self, key):
         """
@@ -849,7 +888,7 @@ class Configurator(MutableMapping, dict):
             rc_matplotlib.update(kw_matplotlib)
         del self._context[-1]
 
-    def _init(self, *, local, user, default, skip_cycle=False):
+    def _init(self, *, local, user, default):
         """
         Initialize the configurator.
         """
@@ -863,9 +902,7 @@ class Configurator(MutableMapping, dict):
             rc_matplotlib.update(rcsetup._rc_matplotlib_default)
             rc_ultraplot.update(rcsetup._rc_ultraplot_default)
             for key, value in rc_ultraplot.items():
-                kw_ultraplot, kw_matplotlib = self._get_item_dicts(
-                    key, value, skip_cycle=skip_cycle
-                )
+                kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
                 rc_matplotlib.update(kw_matplotlib)
                 rc_ultraplot.update(kw_ultraplot)
 
@@ -950,7 +987,7 @@ class Configurator(MutableMapping, dict):
         if mode == 0:  # otherwise return None
             raise KeyError(f"Invalid rc setting {key!r}.")
 
-    def _get_item_dicts(self, key, value, skip_cycle=False):
+    def _get_item_dicts(self, key, value):
         """
         Return dictionaries for updating the `rc_ultraplot` and `rc_matplotlib`
         properties associated with this key. Used when setting items, entering
@@ -970,13 +1007,13 @@ class Configurator(MutableMapping, dict):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", mpl.MatplotlibDeprecationWarning)
             warnings.simplefilter("ignore", warnings.UltraPlotWarning)
-            for key in keys:
-                if key in rc_matplotlib:
-                    kw_matplotlib[key] = value
-                elif key in rc_ultraplot:
-                    kw_ultraplot[key] = value
+            for key_i in keys:
+                if key_i in rc_matplotlib:
+                    kw_matplotlib[key_i] = value
+                elif key_i in rc_ultraplot:
+                    kw_ultraplot[key_i] = value
                 else:
-                    raise KeyError(f"Invalid rc setting {key!r}.")
+                    raise KeyError(f"Invalid rc setting {key_i!r}.")
 
         # Special key: configure inline backend
         if contains("inlineformat"):
@@ -989,14 +1026,9 @@ class Configurator(MutableMapping, dict):
                 kw_matplotlib.update(ikw_matplotlib)
                 kw_ultraplot.update(_infer_ultraplot_dict(ikw_matplotlib))
 
-        # Cycler
-        # NOTE: Have to skip this step during initial ultraplot import
-        elif contains("cycle") and not skip_cycle:
-            from .colors import _get_cmap_subtype
-
-            cmap = _get_cmap_subtype(value, "discrete")
-            kw_matplotlib["axes.prop_cycle"] = cycler.cycler("color", cmap.colors)
-            kw_matplotlib["patch.facecolor"] = "C0"
+        # Generic handler for special properties
+        if key in self._setting_handlers:
+            kw_matplotlib.update(self._setting_handlers[key](value))
 
         # Turning bounding box on should turn border off and vice versa
         elif contains("abc.bbox", "title.bbox", "abc.border", "title.border"):
@@ -1820,7 +1852,7 @@ rc_ultraplot = rcsetup._rc_ultraplot_default.copy()  # a validated rcParams-styl
 
 #: Instance of `Configurator`. This controls both `rc_matplotlib` and `rc_ultraplot`
 #: settings. See the :ref:`configuration guide <ug_config>` for details.
-rc = Configurator(skip_cycle=True)
+rc = Configurator()
 
 # Deprecated
 RcConfigurator = warnings._rename_objs(
