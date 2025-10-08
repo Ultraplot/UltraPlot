@@ -18,6 +18,8 @@ from collections import namedtuple
 from collections.abc import MutableMapping
 from numbers import Real
 
+_deferred_rc_settings = {}
+
 import cycler
 import matplotlib as mpl
 import matplotlib.colors as mcolors
@@ -993,12 +995,14 @@ class Configurator(MutableMapping, dict):
 
         # Cycler
         # NOTE: Have to skip this step during initial ultraplot import
-        elif contains("cycle") and not skip_cycle:
-            from .colors import _get_cmap_subtype
+        elif contains("cycle"):
+            kw_ultraplot["cycle"] = value
+            if not skip_cycle:
+                from .colors import _get_cmap_subtype
 
-            cmap = _get_cmap_subtype(value, "discrete")
-            kw_matplotlib["axes.prop_cycle"] = cycler.cycler("color", cmap.colors)
-            kw_matplotlib["patch.facecolor"] = "C0"
+                cmap = _get_cmap_subtype(value, "discrete")
+                kw_matplotlib["axes.prop_cycle"] = cycler.cycler("color", cmap.colors)
+                kw_matplotlib["patch.facecolor"] = "C0"
 
         # Turning bounding box on should turn border off and vice versa
         elif contains("abc.bbox", "title.bbox", "abc.border", "title.border"):
@@ -1680,6 +1684,10 @@ class Configurator(MutableMapping, dict):
         """
         rcdict = self._load_file(path)
         for key, value in rcdict.items():
+            if skip_cycle and "cycle" in key:
+                global _deferred_rc_settings
+                _deferred_rc_settings[key] = value
+                continue
             self.__setitem__(key, value, skip_cycle=skip_cycle)
 
     @staticmethod
