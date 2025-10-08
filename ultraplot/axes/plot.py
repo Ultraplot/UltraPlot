@@ -34,6 +34,7 @@ import matplotlib as mpl
 from matplotlib.streamplot import StreamplotSet
 from packaging import version
 import numpy as np
+from typing import Optional, Union, Any
 import numpy.ma as ma
 
 from .. import colors as pcolors
@@ -1571,19 +1572,19 @@ class PlotAxes(base.Axes):
         y: np.ndarray,
         u: np.ndarray,
         v: np.ndarray,
-        linewidth=None,
-        color=None,
-        cmap=None,
-        norm=None,
-        arrowsize=None,
-        arrowstyle=None,
-        transform=None,
-        zorder=None,
-        start_points=None,
-        scale=None,
-        grains=None,
-        density=None,
-        arrow_at_end=None,
+        linewidth: Optional[float] = None,
+        color: Optional[Union[str, Any]] = None,
+        cmap: Optional[Any] = None,
+        norm: Optional[Any] = None,
+        arrowsize: Optional[float] = None,
+        arrowstyle: Optional[str] = None,
+        transform: Optional[Any] = None,
+        zorder: Optional[int] = None,
+        start_points: Optional[np.ndarray] = None,
+        scale: Optional[float] = None,
+        grains: Optional[int] = None,
+        density: Optional[int] = None,
+        arrow_at_end: Optional[bool] = None,
     ):
         """
         %(plot.curved_quiver)s
