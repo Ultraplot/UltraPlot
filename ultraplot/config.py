@@ -27,6 +27,7 @@ import matplotlib.mathtext  # noqa: F401
 import matplotlib.style.core as mstyle
 import numpy as np
 from matplotlib import RcParams
+from typing import Callable, Any, Dict
 
 from .internals import ic  # noqa: F401
 from .internals import (
@@ -768,8 +769,36 @@ class Configurator(MutableMapping, dict):
         self._setting_handlers = {}
         self._init(local=local, user=user, default=default, **kwargs)
 
-    def register_handler(self, name, func):
-        """Register a handler for a specific setting."""
+    def register_handler(
+        self, name: str, func: Callable[[Any], Dict[str, Any]]
+    ) -> None:
+        """
+        Register a callback function to be executed when a setting is modified.
+
+        This is an extension point for "special" settings that require complex
+        logic or have side-effects, such as updating other matplotlib settings.
+        It is used internally to decouple the configuration system from other
+        subsystems and avoid circular imports.
+
+        Parameters
+        ----------
+        name : str
+            The name of the setting (e.g., ``'cycle'``).
+        func : callable
+            The handler function to be executed. The function must accept a
+            single positional argument, which is the new `value` of the
+            setting, and must return a dictionary. The keys of the dictionary
+            should be valid ``matplotlib`` rc setting names, and the values
+            will be applied to the ``rc_matplotlib`` object.
+
+        Example
+        -------
+        >>> def _cycle_handler(value):
+        ...     # ... logic to create a cycler object from the value ...
+        ...     return {'axes.prop_cycle': new_cycler}
+        >>> rc.register_handler('cycle', _cycle_handler)
+        """
+
         self._setting_handlers[name] = func
 
     def __getitem__(self, key):
