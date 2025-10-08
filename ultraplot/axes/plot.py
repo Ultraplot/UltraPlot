@@ -12,7 +12,6 @@ from numbers import Integral, Number
 
 from typing import Any, Union, Iterable, Optional
 
-from dataclasses import dataclass
 from collections.abc import Callable
 from collections.abc import Iterable
 
@@ -31,7 +30,6 @@ import matplotlib.patches as mpatches
 import matplotlib.ticker as mticker
 import matplotlib.pyplot as mplt
 import matplotlib as mpl
-from matplotlib.streamplot import StreamplotSet
 from packaging import version
 import numpy as np
 from typing import Optional, Union, Any
