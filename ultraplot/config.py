@@ -778,12 +778,14 @@ class Configurator(MutableMapping, dict):
             pass
         return rc_matplotlib[key]  # might issue matplotlib removed/renamed error
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value, *, skip_cycle=False):
         """
         Modify an `rc_matplotlib` or `rc_ultraplot` setting using dictionary notation
         (e.g., ``uplt.rc[name] = value``).
         """
-        kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
+        kw_ultraplot, kw_matplotlib = self._get_item_dicts(
+            key, value, skip_cycle=skip_cycle
+        )
         rc_ultraplot.update(kw_ultraplot)
         rc_matplotlib.update(kw_matplotlib)
 
@@ -874,7 +876,7 @@ class Configurator(MutableMapping, dict):
         if user:
             user_path = self.user_file()
             if os.path.isfile(user_path):
-                self.load(user_path)
+                self.load(user_path, skip_cycle=skip_cycle)
 
         # Update from local paths
         if local:
@@ -882,7 +884,7 @@ class Configurator(MutableMapping, dict):
             for path in local_paths:
                 if path == user_path:  # local files always have precedence
                     continue
-                self.load(path)
+                self.load(path, skip_cycle=skip_cycle)
 
     @staticmethod
     def _validate_key(key, value=None):
@@ -1663,7 +1665,7 @@ class Configurator(MutableMapping, dict):
 
         return rcdict
 
-    def load(self, path):
+    def load(self, path, *, skip_cycle=False):
         """
         Load settings from the specified file.
 
@@ -1678,7 +1680,7 @@ class Configurator(MutableMapping, dict):
         """
         rcdict = self._load_file(path)
         for key, value in rcdict.items():
-            self.__setitem__(key, value)
+            self.__setitem__(key, value, skip_cycle=skip_cycle)
 
     @staticmethod
     def _save_rst(path):
