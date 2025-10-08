@@ -485,9 +485,11 @@ def test_validate_vector_shapes_pass():
     """
     Test that vector shapes match the grid shape using CurvedQuiverSolver.
     """
+    from ultraplot.axes.plot_types.curved_quiver import Grid
+
     x = np.linspace(0, 1, 3)
     y = np.linspace(0, 1, 3)
-    grid = uplt.axes.plot.CurvedQuiverSolver.Grid(x, y)
+    grid = Grid(x, y)
     u = np.ones(grid.shape)
     v = np.ones(grid.shape)
     assert u.shape == grid.shape
@@ -498,9 +500,11 @@ def test_validate_vector_shapes_fail():
     """
     Test that assertion fails when u and v do not match the grid shape using CurvedQuiverSolver.
     """
+    from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver, Grid
+
     x = np.linspace(0, 1, 3)
     y = np.linspace(0, 1, 3)
-    grid = uplt.axes.plot.CurvedQuiverSolver.Grid(x, y)
+    grid = Grid(x, y)
     u = np.ones((2, 2))
     v = np.ones(grid.shape)
     with pytest.raises(AssertionError):
@@ -524,10 +528,12 @@ def test_generate_start_points():
     Test that CurvedQuiverSolver.gen_starting_points returns valid grid coordinates for seed points,
     and that grid.within_grid detects points outside the grid boundaries.
     """
+    from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver
+
     x = np.linspace(0, 1, 5)
     y = np.linspace(0, 1, 5)
     grains = 5
-    solver = uplt.axes.plot.CurvedQuiverSolver(x, y, density=5)
+    solver = CurvedQuiverSolver(x, y, density=5)
     sp2 = solver.gen_starting_points(x, y, grains)
     assert sp2.shape[1] == 2
     # Should detect if outside boundaries
@@ -542,12 +548,14 @@ def test_calculate_trajectories():
     Test that CurvedQuiverSolver.get_integrator returns callable for each seed point
     and returns lists of trajectories and edges of correct length.
     """
+    from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver
+
     x = np.linspace(0, 1, 5)
     y = np.linspace(0, 1, 5)
     u = np.ones((5, 5))
     v = np.ones((5, 5))
     mag = np.sqrt(u**2 + v**2)
-    solver = uplt.axes.plot.CurvedQuiverSolver(x, y, density=5)
+    solver = CurvedQuiverSolver(x, y, density=5)
     integrator = solver.get_integrator(
         u, v, minlength=0.1, resolution=1.0, magnitude=mag
     )
