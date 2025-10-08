@@ -1567,23 +1567,23 @@ class PlotAxes(base.Axes):
     @docstring._snippet_manager
     def curved_quiver(
         self,
-        x,
-        y,
-        u,
-        v,
+        x: np.ndarray,
+        y: np.ndarray,
+        u: np.ndarray,
+        v: np.ndarray,
         linewidth=None,
         color=None,
         cmap=None,
         norm=None,
-        arrowsize=1,
-        arrowstyle="-|>",
+        arrowsize=None,
+        arrowstyle=None,
         transform=None,
         zorder=None,
         start_points=None,
-        scale=1.0,
-        grains=15,
-        density=10,
-        arrow_at_end=True,
+        scale=None,
+        grains=None,
+        density=None,
+        arrow_at_end=None,
     ):
         """
         %(plot.curved_quiver)s
@@ -1595,19 +1595,21 @@ class PlotAxes(base.Axes):
         """
         from .plot_types.curved_quiver import CurvedQuiverSolver, CurvedQuiverSet
 
+        # Parse inputs
+        arrowsize = _not_none(arrowsize, rc["curved_quiver.arrowsize"])
+        arrowstyle = _not_none(arrowstyle, rc["curved_quiver.arrowstyle"])
+        zorder = _not_none(zorder, mlines.Line2D.zorder)
+        transform = _not_none(transform, self.transData)
+        color = _not_none(color, self._get_lines.get_next_color())
+        linewidth = _not_none(linewidth, rc["lines.linewidth"])
+        scale = _not_none(scale, rc["curved_quiver.scale"])
+        grains = _not_none(grains, rc["curved_quiver.grains"])
+        density = _not_none(density, rc["curved_quiver.density"])
+        arrows_at_end = _not_none(arrow_at_end, rc["curved_quiver.arrows_at_end"])
+
         solver = CurvedQuiverSolver(x, y, density)
         if zorder is None:
             zorder = mlines.Line2D.zorder
-
-        # default to data coordinates
-        if transform is None:
-            transform = self.transData
-
-        if color is None:
-            color = self._get_lines.get_next_color()
-
-        if linewidth is None:
-            linewidth = rc["lines.linewidth"]
 
         line_kw = {}
         arrow_kw = dict(arrowstyle=arrowstyle, mutation_scale=10 * arrowsize)
@@ -1650,7 +1652,6 @@ class PlotAxes(base.Axes):
         minlength = 0.9 * resolution
 
         integrate = solver.get_integrator(u, v, minlength, resolution, magnitude)
-
         trajectories = []
         edges = []
 
