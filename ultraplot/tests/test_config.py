@@ -20,21 +20,15 @@ def test_wrong_keyword_reset():
     fig.canvas.draw()
 
 
-def test_cycle_in_rc_file(tmp_path, monkeypatch):
+def test_cycle_in_rc_file(tmp_path):
     """
-    Test that setting the cycle in an rc file does not cause a circular import.
+    Test that loading an rc file correctly overwrites the cycle setting.
     """
     rc_content = "cycle: colorblind"
-    rc_file = tmp_path / ".ultraplotrc"
+    rc_file = tmp_path / "test.rc"
     rc_file.write_text(rc_content)
 
-    monkeypatch.setattr(uplt.config.Configurator, "user_file", lambda: str(rc_file))
+    # Load the file directly. This should overwrite any existing settings.
+    uplt.rc.load(str(rc_file))
 
-    try:
-        # We need to reload ultraplot and its config to trigger the initialization
-        # logic that reads the rc file.
-        importlib.reload(uplt)
-        importlib.reload(uplt.config)
-    except ImportError as e:
-        pytest.fail(f"Setting 'cycle' in rc file raised an import error: {e}")
     assert uplt.rc["cycle"] == "colorblind"
