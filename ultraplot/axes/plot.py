@@ -5765,9 +5765,6 @@ class PlotAxes(base.Axes):
 # The following helper classes and functions for curved_quiver are based on the
 # work in the `dfm_tools` repository.
 # Original file: https://github.com/Deltares/dfm_tools/blob/829e76f48ebc42460aae118cc190147a595a5f26/dfm_tools/modplot.py
-class _TerminateTrajectory(Exception):
-    pass
-
 
 @dataclass
 class CurvedQuiverSet(StreamplotSet):
@@ -5932,6 +5929,8 @@ class CurvedQuiverSolver:
             self._mask[ym, xm] = 1
             self._current_xy = (xm, ym)
 
+    class TerminateTrajectory(Exception):
+        pass
     def __init__(
         self, x: np.ndarray, y: np.ndarray, density: float | tuple[float, float]
     ) -> None:
@@ -5958,7 +5957,7 @@ class CurvedQuiverSolver:
         def forward_time(xi: float, yi: float) -> tuple[float, float]:
             ds_dt = self.interpgrid(speed, xi, yi)
             if ds_dt == 0:
-                raise _TerminateTrajectory()
+                raise CurvedQuiverSolver.TerminateTrajectory()
             dt_ds = 1.0 / ds_dt
             ui = self.interpgrid(u, xi, yi)
             vi = self.interpgrid(v, xi, yi)
@@ -6059,7 +6058,7 @@ class CurvedQuiverSolver:
                 stotal += ds
                 hit_edge = True
                 break
-            except _TerminateTrajectory:
+            except CurvedQuiverSolver.TerminateTrajectory:
                 break
 
             dx1 = ds * k1x
@@ -6149,7 +6148,7 @@ class CurvedQuiverSolver:
 
         if not isinstance(xi, np.ndarray):
             if np.ma.is_masked(ai):
-                raise _TerminateTrajectory
+                raise CurvedQuiverSolver.TerminateTrajectory
         return ai
 
     def gen_starting_points(self, x, y, grains):
