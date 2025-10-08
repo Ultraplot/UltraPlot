@@ -30,19 +30,14 @@ import numpy as np
 import numpy.ma as ma
 
 from .config import rc
-import cycler
 
 
 def _cycle_handler(value):
-    """
-    Handler for the 'cycle' rc setting.
-    Registration is deferred as it causes a a circular import loop
-    """
-    from .colors import _get_cmap_subtype
+    """Handler for the 'cycle' rc setting."""
+    from .constructor import Cycle
 
-    cmap = _get_cmap_subtype(value, "discrete")
     return {
-        "axes.prop_cycle": cycler.cycler("color", cmap.colors),
+        "axes.prop_cycle": Cycle(value),
         "patch.facecolor": "C0",
     }
 
