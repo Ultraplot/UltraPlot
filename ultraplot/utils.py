@@ -1046,8 +1046,8 @@ class _Crawler:
             return self.is_border((x + dx, y + dy), direction)
 
         if self.grid_axis_type[x, y] != self.axis_type:
-            if getattr(cell, "_panel_side", None) is None:
-                return True
+            if cell in self.ax._panel_dict.get(cell._panel_side, []):
+                return self.is_border((x + dx, y + dy), direction)
 
         # Internal edge or plot reached
         if cell != self.ax:
@@ -1097,12 +1097,43 @@ class _Crawler:
             other_start, other_stop = other_rowspan
 
         if this_start == other_start and this_stop == other_stop:
-            if other._panel_parent is not None:
-                if dx == 0 and not other._panel_sharex_group:
+            # We may hit an internal border if we are at
+            # the interface with a panel that is not sharing
+            dmap = {
+                (-1, 0): "bottom",
+                (1, 0): "top",
+                (0, -1): "left",
+                (0, 1): "right",
+            }
+            side = dmap[direction]
+            if self.ax.number is None:  # panel
+                parent = self.ax._panel_parent
+
+                panels = parent._panel_dict.get(side, [])
+                # If we are a panel at the end we are a border
+                # only if we are not sharing axes
+                if side in ("left", "right"):
+                    if self.ax._sharey is None:
+                        return True
+                    elif not self.ax._panel_sharey_group:
+                        return True
+                elif side in ("top", "bottom"):
+                    if self.ax._sharex is None:
+                        return True
+                    elif not self.ax._panel_sharex_group:
+                        return True
+
+            # Only consider when we are interfacing with a panel
+            # axes on the outside will also not share when they are in top
+            # or left
+            elif side in ("left", "right") and self.ax._sharey is None:
+                if other.number is None:
                     return True
-                elif dy == 0 and not other._panel_sharey_group:
+            elif side in ("bottom", "top") and self.ax._sharex is None:
+                if other.number is None:
                     return True
-            return False  # internal border
+
+            return False
         return True
 
 

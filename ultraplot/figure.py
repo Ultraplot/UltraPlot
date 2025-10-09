@@ -886,7 +886,8 @@ class Figure(mfigure.Figure):
                     f"Tick label sharing not implemented for {type(axi)} subplots."
                 )
                 return
-            subplot_types.add(type(axi))
+            if not axi._panel_side:
+                subplot_types.add(type(axi))
             match axis:
                 # Handle x
                 case "x" if isinstance(axi, paxes.CartesianAxes):
@@ -940,18 +941,21 @@ class Figure(mfigure.Figure):
                 # For panels
                 if hasattr(axi, "_panel_sharey_group") and axi._panel_sharey_group:
                     level = 3
+                elif axi._panel_side and axi._sharey:
+                    level = 3
             else:  # x-axis
                 # For panels
                 if hasattr(axi, "_panel_sharex_group") and axi._panel_sharex_group:
                     level = 3
+                elif axi._panel_side and axi._sharex:
+                    level = 3
 
-            # Don't update when we are not sharing axis ticks
-            if level <= 2:
+            if level < 3:
                 continue
             if isinstance(axi, paxes.GeoAxes):
                 # TODO: move this to tick_params?
-                # Deal with backends as tick_params is still a
-                # function
+                # Tick_params is independent of gridliner objects
+                # Depending on the backend tick params is useful or not
                 axi._toggle_gridliner_labels(**tmp)
             elif tmp:
                 getattr(axi, f"{axis}axis").set_tick_params(**tmp)
