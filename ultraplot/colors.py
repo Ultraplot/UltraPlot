@@ -30,6 +30,20 @@ import numpy as np
 import numpy.ma as ma
 
 from .config import rc
+
+
+def _cycle_handler(value):
+    """Handler for the 'cycle' rc setting."""
+    from .constructor import Cycle
+
+    return {
+        "axes.prop_cycle": Cycle(value),
+        "patch.facecolor": "C0",
+    }
+
+
+rc.register_handler("cycle", _cycle_handler)
+
 from .internals import ic  # noqa: F401
 from .internals import (
     _kwargs_to_args,
