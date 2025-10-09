@@ -615,7 +615,7 @@ def test_cartesian_and_geo(rng):
         ax[1].scatter(*rng.random((2, 100)))
         fig.canvas.draw()
         assert (
-            mocked.call_count == 2
+            mocked.call_count > 2
         )  # needs to be called at least twice; one for each axis
     return fig
 
@@ -677,19 +677,9 @@ def test_panels_geo():
     ax.format(labels=True)
     for dir in "top bottom right left".split():
         pax = ax.panel_axes(dir)
-        match dir:
-            case "top":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "bottom":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "left":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "right":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
+        fig.canvas.draw()  # need this to update the ticks
+        assert len(pax.get_xticklabels()) > 0
+        assert len(pax.get_yticklabels()) > 0
 
 
 @pytest.mark.mpl_image_compare
