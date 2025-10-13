@@ -836,28 +836,19 @@ class Figure(mfigure.Figure):
 
     def _share_ticklabels(self, *, axis: str) -> None:
         """
-        Tick label sharing is  determined at the figure level. While
+        Tick label sharing is determined at the figure level. While
         each subplot controls the limits, we are dealing with the ticklabels
-        here as the complexity is easiier to deal with.
+        here as the complexity is easier to deal with.
             axis: str 'x' or 'y', row or columns to update
         """
         if not self.stale:
             return
 
         outer_axes = self._get_border_axes()
-        true_outer = {}
 
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
-        # for panels
-        other_axis = "x" if axis == "y" else "y"
-        other_sides = ("left", "right") if axis == "x" else ("top", "bottom")
-        # Outer_axes contains the main grid but we need
-        # to add the panels that are on these axes potentially
-        tick_params = {}
 
-        # Check if any of the ticks are set to on for @axis
-        subplot_types = set()
-
+        # Version-dependent label name mapping for reading back params
         from packaging import version
         from .internals import _version_mpl
 
@@ -876,89 +867,127 @@ class Figure(mfigure.Figure):
         labeltop = label_map["labeltop"]
         labelbottom = label_map["labelbottom"]
 
-        for axi in self._iter_axes(panels=True, hidden=False):
-            if not type(axi) in (
-                paxes.CartesianAxes,
-                paxes._CartopyAxes,
-                paxes._BasemapAxes,
-            ):
-                warnings._warn_ultraplot(
-                    f"Tick label sharing not implemented for {type(axi)} subplots."
-                )
-                return
-            if not axi._panel_side:
-                subplot_types.add(type(axi))
-            match axis:
-                # Handle x
-                case "x" if isinstance(axi, paxes.CartesianAxes):
-                    tmp = axi.xaxis.get_tick_params()
-                    if tmp.get(labeltop):
-                        tick_params[labeltop] = tmp[labeltop]
-                    if tmp.get(labelbottom):
-                        tick_params[labelbottom] = tmp[labelbottom]
+        # Group axes by row (for x) or column (for y)
+        def _group_key(ax):
+            ss = ax.get_subplotspec()
+            return ss.rowspan.start if axis == "x" else ss.colspan.start
 
-                case "x" if isinstance(axi, paxes.GeoAxes):
-                    if axi._is_ticklabel_on("labeltop"):
-                        tick_params["labeltop"] = axi._is_ticklabel_on("labeltop")
-                    if axi._is_ticklabel_on("labelbottom"):
-                        tick_params["labelbottom"] = axi._is_ticklabel_on("labelbottom")
-
-                # Handle y
-                case "y" if isinstance(axi, paxes.CartesianAxes):
-                    tmp = axi.yaxis.get_tick_params()
-                    if tmp.get(labelleft):
-                        tick_params[labelleft] = tmp[labelleft]
-                    if tmp.get(labelright):
-                        tick_params[labelright] = tmp[labelright]
-
-                case "y" if isinstance(axi, paxes.GeoAxes):
-                    if axi._is_ticklabel_on("labelleft"):
-                        tick_params["labelleft"] = axi._is_ticklabel_on("labelleft")
-                    if axi._is_ticklabel_on("labelright"):
-                        tick_params["labelright"] = axi._is_ticklabel_on("labelright")
-
-        # We cannot mix types (yet)
-        if len(subplot_types) > 1:
-            warnings._warn_ultraplot(
-                "Tick label sharing not implemented for mixed subplot types."
-            )
-            return
-        for axi in self._iter_axes(panels=True, hidden=False):
-            tmp = tick_params.copy()
-            # For sharing limits and or axis labels we
-            # can leave the ticks as found
-            for side in sides:
-                label = f"label{side}"
-                if isinstance(axi, paxes.CartesianAxes):
-                    # Ignore for geo as it internally converts
-                    label = label_map[label]
-                if axi not in outer_axes[side]:
-                    tmp[label] = False
-
-            # Determine sharing level
-            level = getattr(self, f"_share{axis}")
-            if axis == "y":
-                # For panels
-                if hasattr(axi, "_panel_sharey_group") and axi._panel_sharey_group:
-                    level = 3
-                elif axi._panel_side and axi._sharey:
-                    level = 3
-            else:  # x-axis
-                # For panels
-                if hasattr(axi, "_panel_sharex_group") and axi._panel_sharex_group:
-                    level = 3
-                elif axi._panel_side and axi._sharex:
-                    level = 3
-
-            if level < 3:
+        axes = list(self._iter_axes(panels=True, hidden=False))
+        groups = {}
+        for axi in axes:
+            try:
+                key = _group_key(axi)
+            except Exception:
+                # If we can't get a subplotspec, skip grouping for this axes
                 continue
-            if isinstance(axi, paxes.GeoAxes):
-                # TODO: move this to tick_params?
-                # Tick_params is independent of gridliner objects
-                # Depending on the backend tick params is useful or not
-                axi._toggle_gridliner_labels(**tmp)
-            elif tmp:
-                getattr(axi, f"{axis}axis").set_tick_params(**tmp)
+            groups.setdefault(key, []).append(axi)
+
+        # Process each group independently
+        for key, group_axes in groups.items():
+            # Build baseline from MAIN axes only (exclude panels)
+            tick_params_group = {}
+            subplot_types_group = set()
+            unsupported_found = False
+
+            for axi in group_axes:
+                # Only main axes "vote" for baseline
+                if getattr(axi, "_panel_side", None):
+                    continue
+                # Supported axes types
+                if not isinstance(
+                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+                ):
+                    warnings._warn_ultraplot(
+                        f"Tick label sharing not implemented for {type(axi)} subplots."
+                    )
+                    unsupported_found = True
+                    break
+                subplot_types_group.add(type(axi))
+                match axis:
+                    # Handle x
+                    case "x" if isinstance(axi, paxes.CartesianAxes):
+                        tmp = axi.xaxis.get_tick_params()
+                        if tmp.get(labeltop):
+                            tick_params_group[labeltop] = tmp[labeltop]
+                        if tmp.get(labelbottom):
+                            tick_params_group[labelbottom] = tmp[labelbottom]
+                    case "x" if isinstance(axi, paxes.GeoAxes):
+                        if axi._is_ticklabel_on("labeltop"):
+                            tick_params_group["labeltop"] = axi._is_ticklabel_on(
+                                "labeltop"
+                            )
+                        if axi._is_ticklabel_on("labelbottom"):
+                            tick_params_group["labelbottom"] = axi._is_ticklabel_on(
+                                "labelbottom"
+                            )
+
+                    # Handle y
+                    case "y" if isinstance(axi, paxes.CartesianAxes):
+                        tmp = axi.yaxis.get_tick_params()
+                        if tmp.get(labelleft):
+                            tick_params_group[labelleft] = tmp[labelleft]
+                        if tmp.get(labelright):
+                            tick_params_group[labelright] = tmp[labelright]
+                    case "y" if isinstance(axi, paxes.GeoAxes):
+                        if axi._is_ticklabel_on("labelleft"):
+                            tick_params_group["labelleft"] = axi._is_ticklabel_on(
+                                "labelleft"
+                            )
+                        if axi._is_ticklabel_on("labelright"):
+                            tick_params_group["labelright"] = axi._is_ticklabel_on(
+                                "labelright"
+                            )
+
+            # Skip group if unsupported axes were found
+            if unsupported_found:
+                continue
+
+            # We cannot mix types (yet) within a group
+            if len(subplot_types_group) > 1:
+                warnings._warn_ultraplot(
+                    "Tick label sharing not implemented for mixed subplot types."
+                )
+                continue
+
+            # Apply baseline to all axes in the group (including panels)
+            for axi in group_axes:
+                tmp = tick_params_group.copy()
+
+                # Respect figure border sides: only keep labels on true borders
+                for side in sides:
+                    label = f"label{side}"
+                    if isinstance(axi, paxes.CartesianAxes):
+                        # For cartesian, use version-mapped key when reading/writing
+                        label = label_map[label]
+                    if axi not in outer_axes[side]:
+                        tmp[label] = False
+
+                # Determine sharing level for this axes
+                level = getattr(self, f"_share{axis}")
+                if axis == "y":
+                    if hasattr(axi, "_panel_sharey_group") and axi._panel_sharey_group:
+                        level = 3
+                    elif getattr(axi, "_panel_side", None) and getattr(
+                        axi, "_sharey", None
+                    ):
+                        level = 3
+                else:  # x-axis
+                    if hasattr(axi, "_panel_sharex_group") and axi._panel_sharex_group:
+                        level = 3
+                    elif getattr(axi, "_panel_side", None) and getattr(
+                        axi, "_sharex", None
+                    ):
+                        level = 3
+
+                if level < 3:
+                    continue
+
+                # Apply to geo/cartesian appropriately
+                if isinstance(axi, paxes.GeoAxes):
+                    axi._toggle_gridliner_labels(**tmp)
+                elif tmp:
+                    getattr(axi, f"{axis}axis").set_tick_params(**tmp)
+
         self.stale = True
 
     def _context_adjusting(self, cache=True):
@@ -1278,29 +1307,17 @@ class Figure(mfigure.Figure):
         pax = self.add_subplot(ss, **kwargs)
         pax._panel_side = side
         pax._panel_share = share
-        if share:
-            # When we are sharing we remove the ticks by default
-            # as we "push" the labels out. See Figure._share_ticklabels.
-            # If we add the labels here it is more difficult to control
-            # for some ticks being on.
-            from packaging import version
-            from .internals import _version_mpl
-
-            params = {}
-            if version.parse(str(_version_mpl)) < version.parse("3.10"):
-                params = dict(labelleft=False, labelright=False)
-                pax.xaxis.set_tick_params(**params)
-                pax.yaxis.set_tick_params(**params)
-            else:
-                pax.xaxis.set_tick_params(labelbottom=False, labeltop=False)
-                pax.yaxis.set_tick_params(labelleft=False, labelright=False)
-
         pax._panel_parent = ax
         ax._panel_dict[side].append(pax)
         ax._apply_auto_share()
         axis = pax.yaxis if side in ("left", "right") else pax.xaxis
         getattr(axis, "tick_" + side)()  # set tick and tick label position
         axis.set_label_position(side)  # set label position
+        # Turn off top/right panel tick labels by default; sharing will push them later
+        if side == "top":
+            pax.xaxis.set_tick_params(labeltop=False)
+        elif side == "right":
+            pax.yaxis.set_tick_params(labelright=False)
         return pax
 
     @_clear_border_cache
