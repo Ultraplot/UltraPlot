@@ -485,11 +485,11 @@ def test_validate_vector_shapes_pass():
     """
     Test that vector shapes match the grid shape using CurvedQuiverSolver.
     """
-    from ultraplot.axes.plot_types.curved_quiver import Grid
+    from ultraplot.axes.plot_types.curved_quiver import _Grid
 
     x = np.linspace(0, 1, 3)
     y = np.linspace(0, 1, 3)
-    grid = Grid(x, y)
+    grid = _Grid(x, y)
     u = np.ones(grid.shape)
     v = np.ones(grid.shape)
     assert u.shape == grid.shape
@@ -500,11 +500,11 @@ def test_validate_vector_shapes_fail():
     """
     Test that assertion fails when u and v do not match the grid shape using CurvedQuiverSolver.
     """
-    from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver, Grid
+    from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver, _Grid
 
     x = np.linspace(0, 1, 3)
     y = np.linspace(0, 1, 3)
-    grid = Grid(x, y)
+    grid = _Grid(x, y)
     u = np.ones((2, 2))
     v = np.ones(grid.shape)
     with pytest.raises(AssertionError):

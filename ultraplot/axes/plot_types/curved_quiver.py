@@ -310,7 +310,7 @@ class CurvedQuiverSolver:
                 stotal += ds
                 hit_edge = True
                 break
-            except TerminateTrajectory:
+            except _CurvedQuiverTerminateTrajectory:
                 break
 
             dx1 = ds * k1x
