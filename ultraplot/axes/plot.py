@@ -1580,6 +1580,9 @@ class PlotAxes(base.Axes):
         density = _not_none(density, rc["curved_quiver.density"])
         arrows_at_end = _not_none(arrow_at_end, rc["curved_quiver.arrows_at_end"])
 
+        if cmap:
+            cmap = constructor.Colormap(cmap)
+
         solver = CurvedQuiverSolver(x, y, density)
         if zorder is None:
             zorder = mlines.Line2D.zorder
