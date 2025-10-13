@@ -20,7 +20,7 @@ class CurvedQuiverSet(StreamplotSet):
     arrows: object
 
 
-class DomainMap(object):
+class _DomainMap(object):
     """Map representing different coordinate systems.
 
     Coordinate definitions:
