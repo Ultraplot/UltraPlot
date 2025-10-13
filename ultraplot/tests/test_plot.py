@@ -609,12 +609,11 @@ def test_curved_quiver_color_and_cmap(rng, cmap):
     V = np.ones_like(Y)
 
     # Deal with color or cmap
+    color = rng.random(X.shape)
     if cmap == "k":
         cmap = None
         color = "k"
-    else:
-        speed = rng.random(X.shape)
 
     fig, ax = uplt.subplots()
-    ax.curved_quiver(X, Y, U, V, color=speed, cmap=cmap)
+    ax.curved_quiver(X, Y, U, V, color=color, cmap=cmap)
     return fig
