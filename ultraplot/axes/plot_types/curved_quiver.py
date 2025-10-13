@@ -128,7 +128,7 @@ class CurvedQuiverGrid(object):
         return xi >= 0 and xi <= self.nx - 1 and yi >= 0 and yi <= self.ny - 1
 
 
-class StreamMask(object):
+class _StreamMask(object):
     """Mask to keep track of discrete regions crossed by streamlines.
 
     The resolution of this grid determines the approximate spacing
