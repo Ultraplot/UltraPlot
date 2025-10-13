@@ -587,3 +587,34 @@ def test_curved_quiver_multicolor_lines():
     assert m.lines.get_array().size > 0  # we have colors set
     assert m.lines.get_cmap() is not None
     return fig
+
+
+@pytest.mark.mpl_image_compare
+@pytest.mark.parametrize(
+    "color_or_cmap",
+    (
+        "k",  # color
+        "viridis",  # built-in
+        "viko",  # bundled with ultraplot
+    ),
+)
+def test_curved_quiver_color_and_cmap(rng, cmap):
+    """
+    Check that we can pass colors or colormaps
+    """
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    X, Y = np.meshgrid(x, y)
+    U = np.ones_like(X)
+    V = np.ones_like(Y)
+
+    # Deal with color or cmap
+    if cmap == "k":
+        cmap = None
+        color = "k"
+    else:
+        speed = rng.random(X.shape)
+
+    fig, ax = uplt.subplots()
+    ax.curved_quiver(X, Y, U, V, color=speed, cmap=cmap)
+    return fig
