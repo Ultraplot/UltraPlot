@@ -84,7 +84,7 @@ class _DomainMap(object):
         self.mask._undo_trajectory()
 
 
-class Grid(object):
+class CurvedQuiverGrid(object):
     """Grid of data."""
 
     def __init__(self, x: np.ndarray, y: np.ndarray) -> None:
