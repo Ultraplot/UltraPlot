@@ -177,7 +177,7 @@ class _StreamMask(object):
         self._current_xy = (xm, ym)
 
 
-class CurvedQuiverTerminateTrajectory(Exception):
+class _CurvedQuiverTerminateTrajectory(Exception):
     pass
 
 
@@ -186,9 +186,9 @@ class CurvedQuiverSolver:
     def __init__(
         self, x: np.ndarray, y: np.ndarray, density: float | tuple[float, float]
     ) -> None:
-        self.grid = Grid(x, y)
-        self.mask = StreamMask(density)
-        self.domain_map = DomainMap(self.grid, self.mask)
+        self.grid = _Grid(x, y)
+        self.mask = _StreamMask(density)
+        self.domain_map = _DomainMap(self.grid, self.mask)
 
     def get_integrator(
         self,
@@ -209,7 +209,7 @@ class CurvedQuiverSolver:
         def forward_time(xi: float, yi: float) -> tuple[float, float]:
             ds_dt = self.interpgrid(speed, xi, yi)
             if ds_dt == 0:
-                raise TerminateTrajectory()
+                raise _CurvedQuiverTerminateTrajectory()
             dt_ds = 1.0 / ds_dt
             ui = self.interpgrid(u, xi, yi)
             vi = self.interpgrid(v, xi, yi)
@@ -400,7 +400,7 @@ class CurvedQuiverSolver:
 
         if not isinstance(xi, np.ndarray):
             if np.ma.is_masked(ai):
-                raise TerminateTrajectory
+                raise _CurvedQuiverTerminateTrajectory
         return ai
 
     def gen_starting_points(self, x, y, grains):
