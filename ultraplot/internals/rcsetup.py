@@ -890,6 +890,37 @@ _addendum_font = (
     "interpreted by `~ultraplot.utils.units`. Numeric units are points."
 )
 _rc_ultraplot_table = {
+    # Curved quiver settings
+    "curved_quiver.arrowsize": (
+        1.0,
+        _validate_float,
+        "Default size scaling for arrows in curved quiver plots.",
+    ),
+    "curved_quiver.arrowstyle": (
+        "-|>",
+        _validate_string,
+        "Default arrow style for curved quiver plots.",
+    ),
+    "curved_quiver.scale": (
+        1.0,
+        _validate_float,
+        "Default scale factor for curved quiver plots.",
+    ),
+    "curved_quiver.grains": (
+        15,
+        _validate_int,
+        "Default number of grains (segments) for curved quiver arrows.",
+    ),
+    "curved_quiver.density": (
+        10,
+        _validate_int,
+        "Default density of arrows for curved quiver plots.",
+    ),
+    "curved_quiver.arrows_at_end": (
+        True,
+        _validate_bool,
+        "Whether to draw arrows at the end of curved quiver lines by default.",
+    ),
     # Stylesheet
     "style": (
         None,
