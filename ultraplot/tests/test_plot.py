@@ -591,7 +591,7 @@ def test_curved_quiver_multicolor_lines():
 
 @pytest.mark.mpl_image_compare
 @pytest.mark.parametrize(
-    "color_or_cmap",
+    "cmap",
     (
         "k",  # color
         "viridis",  # built-in
