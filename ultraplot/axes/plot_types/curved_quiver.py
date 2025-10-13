@@ -177,7 +177,7 @@ class _StreamMask(object):
         self._current_xy = (xm, ym)
 
 
-class TerminateTrajectory(Exception):
+class CurvedQuiverTerminateTrajectory(Exception):
     pass
 
 
