@@ -84,7 +84,7 @@ class _DomainMap(object):
         self.mask._undo_trajectory()
 
 
-class CurvedQuiverGrid(object):
+class _CurvedQuiverGrid(object):
     """Grid of data."""
 
     def __init__(self, x: np.ndarray, y: np.ndarray) -> None:
@@ -186,7 +186,7 @@ class CurvedQuiverSolver:
     def __init__(
         self, x: np.ndarray, y: np.ndarray, density: float | tuple[float, float]
     ) -> None:
-        self.grid = _Grid(x, y)
+        self.grid = _CurvedQuiverGrid(x, y)
         self.mask = _StreamMask(density)
         self.domain_map = _DomainMap(self.grid, self.mask)
 
