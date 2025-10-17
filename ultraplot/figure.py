@@ -849,23 +849,17 @@ class Figure(mfigure.Figure):
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
 
         # Version-dependent label name mapping for reading back params
-        from packaging import version
-        from .internals import _version_mpl
-
-        mpl_version = version.parse(str(_version_mpl))
-        use_new_labels = mpl_version >= version.parse("3.10")
-
-        label_map = {
-            "labeltop": "labeltop" if use_new_labels else "labelright",
-            "labelbottom": "labelbottom" if use_new_labels else "labelleft",
-            "labelleft": "labelleft",
-            "labelright": "labelright",
-        }
-
-        labelleft = label_map["labelleft"]
-        labelright = label_map["labelright"]
-        labeltop = label_map["labeltop"]
-        labelbottom = label_map["labelbottom"]
+        first_axi = next(self._iter_axes(panels=True), None)
+        if first_axi is None:
+            labelleft = "labelleft"
+            labelright = "labelright"
+            labeltop = "labeltop"
+            labelbottom = "labelbottom"
+        else:
+            labelleft = first_axi._label_key("labelleft")
+            labelright = first_axi._label_key("labelright")
+            labeltop = first_axi._label_key("labeltop")
+            labelbottom = first_axi._label_key("labelbottom")
 
         # Group axes by row (for x) or column (for y)
         def _group_key(ax):

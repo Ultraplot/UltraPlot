@@ -3261,6 +3261,25 @@ class Axes(maxes.Axes):
         # Not in the same panel group
         return False
 
+    def _label_key(self, side: str) -> str:
+        """
+        Map requested side name to the correct tick_params key across mpl versions.
+
+        This accounts for the API change around Matplotlib 3.10 where labeltop/labelbottom
+        became first-class tick parameter keys. For older versions, these map to
+        labelright/labelleft respectively.
+        """
+        from packaging import version
+        from .internals import _version_mpl
+
+        use_new = version.parse(str(_version_mpl)) >= version.parse("3.10")
+        if side == "labeltop":
+            return "labeltop" if use_new else "labelright"
+        if side == "labelbottom":
+            return "labelbottom" if use_new else "labelleft"
+        # "labelleft" and "labelright" are stable across versions
+        return side
+
     def _is_ticklabel_on(self, side: str) -> bool:
         """
         Check if tick labels are on for the specified sides.
@@ -3275,24 +3294,7 @@ class Axes(maxes.Axes):
         if side in ["labelright", "labeltop"]:
             label = "label2"
 
-
-        from packaging import version
-        from .internals import _version_mpl
-        mpl_version = version.parse(str(_version_mpl))
-        use_new_labels = mpl_version >= version.parse("3.10")
-
-        label_map = {
-            "labeltop": "labeltop" if use_new_labels else "labelright",
-            "labelbottom": "labelbottom" if use_new_labels else "labelleft",
-            "labelleft": "labelleft",
-            "labelright": "labelright",
-        }
-        return axis.get_tick_params().get(label_map[side], False)
-        for tick in axis.get_major_ticks():
-            print(tick, getattr(tick, label).get_visible())
-            if getattr(tick, label).get_visible():
-                return True
-        return False
+        return axis.get_tick_params().get(self._label_key(side), False)
 
     @docstring._snippet_manager
     def inset(self, *args, **kwargs):
