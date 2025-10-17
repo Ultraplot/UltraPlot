@@ -303,37 +303,37 @@ def test_panel_sharing_top_right(layout):
     assert not panel._is_ticklabel_on("labeltop")
 
     panel = ax[0]._panel_dict["top"][-1]
-    assert panel._is_tick_label_on("labelleft")
-    assert not panel._is_tick_label_on("labelbottom")
-    assert not panel._is_tick_label_on("labelright")
-    assert not panel._is_tick_label_on("labeltop")
+    assert panel._is_ticklabel_on("labelleft")
+    assert not panel._is_ticklabel_on("labelbottom")
+    assert not panel._is_ticklabel_on("labelright")
+    assert not panel._is_ticklabel_on("labeltop")
 
     panel = ax[0]._panel_dict["right"][-1]
-    assert not panel._is_tick_label_on("labelleft")
-    assert panel._is_tick_label_on("labelbottom")
-    assert not panel._is_tick_label_on("labelright")
-    assert not panel._is_tick_label_on("labeltop")
+    assert not panel._is_ticklabel_on("labelleft")
+    assert panel._is_ticklabel_on("labelbottom")
+    assert not panel._is_ticklabel_on("labelright")
+    assert not panel._is_ticklabel_on("labeltop")
 
     panel = ax[0]._panel_dict["bottom"][-1]
-    assert panel._is_tick_label_on("labelleft")
-    assert not panel._is_tick_label_on("labelbottom")
-    assert not panel._is_tick_label_on("labelright")
-    assert not panel._is_tick_label_on("labeltop")
+    assert panel._is_ticklabel_on("labelleft")
+    assert not panel._is_ticklabel_on("labelbottom")
+    assert not panel._is_ticklabel_on("labelright")
+    assert not panel._is_ticklabel_on("labeltop")
 
-    assert not ax[1]._is_tick_label_on("labelleft")
-    assert not ax[1]._is_tick_label_on("labelright")
-    assert not ax[1]._is_tick_label_on("labeltop")
-    assert not ax[1]._is_tick_label_on("labelbottom")
+    assert not ax[1]._is_ticklabel_on("labelleft")
+    assert not ax[1]._is_ticklabel_on("labelright")
+    assert not ax[1]._is_ticklabel_on("labeltop")
+    assert not ax[1]._is_ticklabel_on("labelbottom")
 
-    assert ax[2]._is_tick_label_on("labelleft")
-    assert not ax[2]._is_tick_label_on("labelright")
-    assert not ax[2]._is_tick_label_on("labeltop")
-    assert ax[2]._is_tick_label_on("labelbottom")
+    assert ax[2]._is_ticklabel_on("labelleft")
+    assert not ax[2]._is_ticklabel_on("labelright")
+    assert not ax[2]._is_ticklabel_on("labeltop")
+    assert ax[2]._is_ticklabel_on("labelbottom")
 
-    assert not ax[2]._is_tick_label_on("labelleft")
-    assert not ax[2]._is_tick_label_on("labelright")
-    assert not ax[2]._is_tick_label_on("labeltop")
-    assert ax[2]._is_tick_label_on("labelbottom")
+    assert not ax[3]._is_ticklabel_on("labelleft")
+    assert not ax[3]._is_ticklabel_on("labelright")
+    assert not ax[3]._is_ticklabel_on("labeltop")
+    assert ax[3]._is_ticklabel_on("labelbottom")
 
     return fig
 
