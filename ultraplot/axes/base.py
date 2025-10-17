@@ -3274,7 +3274,11 @@ class Axes(maxes.Axes):
         label = "label1"
         if side in ["labelright", "labeltop"]:
             label = "label2"
+
+        print(self, self._panel_side, axis.get_tick_params())
+        return axis.get_tick_params().get(side, False)
         for tick in axis.get_major_ticks():
+            print(tick, getattr(tick, label).get_visible())
             if getattr(tick, label).get_visible():
                 return True
         return False

@@ -290,12 +290,14 @@ def test_panel_sharing_top_right(layout):
     for dir in "left right top bottom".split():
         pax = ax[0].panel(dir)
     fig.canvas.draw()  # force redraw tick labels
-    border_axes = fig._get_border_axes()
+
+    # Main panel: ticks are off
     assert not ax[0]._is_ticklabel_on("labelleft")
     assert not ax[0]._is_ticklabel_on("labelright")
     assert not ax[0]._is_ticklabel_on("labeltop")
     assert not ax[0]._is_ticklabel_on("labelbottom")
 
+    # For panels the inside ticks are off
     panel = ax[0]._panel_dict["left"][-1]
     assert panel._is_ticklabel_on("labelleft")
     assert panel._is_ticklabel_on("labelbottom")

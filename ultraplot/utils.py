@@ -1112,11 +1112,15 @@ class _Crawler:
             side = dmap[direction]
             if self.ax.number is None:  # panel
                 panel_side = getattr(self.ax, "_panel_side", None)
-                # Non-sharing panels: treat as border only on their outward side
+                # Non-sharing panels: border only on their outward side
                 if not getattr(self.ax, "_panel_share", False):
                     return side == panel_side
-                # Sharing panels: do not treat interfaces as borders; rely on OOB
-                # detection for true figure borders
+                # Sharing panels: border only if this is the outward side and this
+                # panel is the outer-most panel for that side relative to its parent.
+                parent = self.ax._panel_parent
+                panels = parent._panel_dict.get(panel_side, [])
+                if side == panel_side and panels and panels[-1] is self.ax:
+                    return True
                 return False
 
             else:  # main axis
