@@ -1107,36 +1107,19 @@ class _Crawler:
             }
             side = dmap[direction]
             if self.ax.number is None:  # panel
-                # For panels we need to check if we are apart
-                # of a group that is sharing its axes
-                # For top andight the pattern should be
-                # reversed as the sharing axis is the left-most
-                # or bottom-most plot.
-                # Note that for panels to left or right, it will
-                # always turn the x ticks of whether sharing is set or not
-                # not sure if this is a bug or a feature.
-                if side in ("left", "right"):
-                    if self.ax.figure._sharey >= 3:
-                        if self.ax._panel_sharey_group is True and side == "right":
-                            return True
-                        elif self.ax._panel_sharey_group is False and side == "left":
-                            return True
-                elif side in ("top", "bottom"):
-                    if self.ax.figure._sharex >= 3:
-                        if side == "bottom" and not self.ax._panel_sharex_group:
-                            return True
-                        elif side == "top" and self.ax._panel_sharex_group:
-                            return True
+                panel_side = getattr(self.ax, "_panel_side", None)
+                # Non-sharing panels: treat as border only on their outward side
+                if not getattr(self.ax, "_panel_share", False):
+                    return side == panel_side
+                # Sharing panels: do not treat interfaces as borders; rely on OOB
+                # detection for true figure borders
+                return False
 
-            # Only consider when we are interfacing with a panel
-            # axes on the outside will also not share when they are in top
-            # or left
-            elif side in ("left", "right"):
-                if other.number is None and not other._panel_sharey_group:
-                    return True
-            elif side in ("bottom", "top"):
-                if other.number is None and not other._panel_sharex_group:
-                    return True
+            else:  # main axis
+                # When a main axes interfaces with a panel, the border lies beyond
+                # the outer-most panel, not at the interface with the main.
+                if getattr(other, "number", None) is None:
+                    return False
 
             return False
         return True

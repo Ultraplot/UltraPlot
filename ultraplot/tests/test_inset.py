@@ -7,6 +7,7 @@ def test_inset_basic():
     # spacing, aspect ratios, and axis sharing
     gs = uplt.GridSpec(nrows=2, ncols=2)
     fig = uplt.figure(refwidth=1.5, share=False)
+    fig.canvas.draw()
     for ss, side in zip(gs, "tlbr"):
         ax = fig.add_subplot(ss)
         px = ax.panel_axes(side, width="3em")

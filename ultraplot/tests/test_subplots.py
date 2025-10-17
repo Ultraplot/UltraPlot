@@ -343,10 +343,51 @@ def test_uneven_span_subplots(rng):
 
 
 @pytest.mark.parametrize("share_panels", [True, False])
-@pytest.mark.mpl_image_compare
-def test_sharing_panels(share_panels):
-    fig, ax = uplt.subplots(nrows=2)
-    ax.panel("r", share=share_panels)
-    ax.format(ytickloc="right")
-    uplt.show(block=1)
-    return fig
+def test_panel_ticklabels_all_sides_share_and_no_share(share_panels):
+    # 2x2 grid; add panels on all sides of the first axes
+    fig, ax = uplt.subplots(nrows=2, ncols=2)
+    axi = ax[0]
+
+    # Create panels on all sides with configurable sharing
+    pax_left = axi.panel("left", share=share_panels)
+    pax_right = axi.panel("right", share=share_panels)
+    pax_top = axi.panel("top", share=share_panels)
+    pax_bottom = axi.panel("bottom", share=share_panels)
+
+    # Force draw so ticklabel state is resolved
+    fig.canvas.draw()
+
+    def assert_panel(axi_panel, side, share_flag):
+        on_left = axi_panel._is_ticklabel_on("labelleft")
+        on_right = axi_panel._is_ticklabel_on("labelright")
+        on_top = axi_panel._is_ticklabel_on("labeltop")
+        on_bottom = axi_panel._is_ticklabel_on("labelbottom")
+
+        # Inside (toward the main) must be off in all cases
+        if side == "left":
+            # Inside is right
+            assert not on_right
+        elif side == "right":
+            # Inside is left
+            assert not on_left
+        elif side == "top":
+            # Inside is bottom
+            assert not on_bottom
+        elif side == "bottom":
+            # Inside is top
+            assert not on_top
+
+        if not share_flag:
+            # For non-sharing panels, prefer outside labels on for top/right
+            if side == "right":
+                assert on_right
+            if side == "top":
+                assert on_top
+            # For left/bottom non-sharing, we don't enforce outside on here
+            # (baseline may keep left/bottom on the main)
+
+    # Check each panel side
+    assert_panel(pax_left, "left", share_panels)
+    assert_panel(pax_right, "right", share_panels)
+    assert_panel(pax_top, "top", share_panels)
+    assert_panel(pax_bottom, "bottom", share_panels)
