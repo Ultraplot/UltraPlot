@@ -292,27 +292,50 @@ def test_panel_sharing_top_right(layout):
     fig.canvas.draw()  # force redraw tick labels
     border_axes = fig._get_border_axes()
 
-    for axi in fig._iter_axes(panels=True):
-        assert (
-            axi._is_ticklabel_on("labelleft")
-            if axi in border_axes["left"]
-            else not axi._is_ticklabel_on("labelleft")
-        )
-        assert (
-            axi._is_ticklabel_on("labeltop")
-            if axi in border_axes["top"]
-            else not axi._is_ticklabel_on("labeltop")
-        )
-        assert (
-            axi._is_ticklabel_on("labelright")
-            if axi in border_axes["right"]
-            else not axi._is_ticklabel_on("labelright")
-        )
-        assert (
-            axi._is_ticklabel_on("labelbottom")
-            if axi in border_axes["bottom"]
-            else not axi._is_ticklabel_on("labelbottom")
-        )
+    assert not ax[0]._is_tick_label_on("labelleft")
+    assert not ax[0]._is_tick_label_on("labelright")
+    assert not ax[0]._is_tick_label_on("labeltop")
+    assert not ax[0]._is_tick_label_on("labelbottom")
+
+    panel = ax[0]._panel_dict["left"][-1]
+    assert panel._is_tick_label_on("labelleft")
+    assert panel._is_tick_label_on("labelbottom")
+    assert not panel._is_tick_label_on("labelright")
+    assert not panel._is_tick_label_on("labeltop")
+
+    panel = ax[0]._panel_dict["top"][-1]
+    assert panel._is_tick_label_on("labelleft")
+    assert not panel._is_tick_label_on("labelbottom")
+    assert not panel._is_tick_label_on("labelright")
+    assert not panel._is_tick_label_on("labeltop")
+
+    panel = ax[0]._panel_dict["right"][-1]
+    assert not panel._is_tick_label_on("labelleft")
+    assert panel._is_tick_label_on("labelbottom")
+    assert not panel._is_tick_label_on("labelright")
+    assert not panel._is_tick_label_on("labeltop")
+
+    panel = ax[0]._panel_dict["bottom"][-1]
+    assert panel._is_tick_label_on("labelleft")
+    assert not panel._is_tick_label_on("labelbottom")
+    assert not panel._is_tick_label_on("labelright")
+    assert not panel._is_tick_label_on("labeltop")
+
+    assert not ax[1]._is_tick_label_on("labelleft")
+    assert not ax[1]._is_tick_label_on("labelright")
+    assert not ax[1]._is_tick_label_on("labeltop")
+    assert not ax[1]._is_tick_label_on("labelbottom")
+
+    assert ax[2]._is_tick_label_on("labelleft")
+    assert not ax[2]._is_tick_label_on("labelright")
+    assert not ax[2]._is_tick_label_on("labeltop")
+    assert ax[2]._is_tick_label_on("labelbottom")
+
+    assert not ax[2]._is_tick_label_on("labelleft")
+    assert not ax[2]._is_tick_label_on("labelright")
+    assert not ax[2]._is_tick_label_on("labeltop")
+    assert ax[2]._is_tick_label_on("labelbottom")
+
     return fig
 
 
