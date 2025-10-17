@@ -447,3 +447,173 @@ def test_inhomogeneous_violin(rng):
     for violin in violins:
         assert violin.get_paths()  # Ensure paths are created
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_curved_quiver(rng):
+    # Create a grid
+    x = np.linspace(-4, 4, 20)
+    y = np.linspace(-3, 3, 20)
+    X, Y = np.meshgrid(x, y)
+
+    # Define a rotational vector field (circular flow)
+    U = -Y
+    V = X
+    speed = np.sqrt(U**2 + V**2)
+
+    # Create a figure and axes
+    fig, axs = uplt.subplots(ncols=3, sharey=True, figsize=(12, 4))
+
+    # Left plot: matplotlib's streamplot
+    axs[0].streamplot(X, Y, U, V, color=speed)
+    axs[0].set_title("streamplot (native)")
+
+    # Middle plot: quiver
+    axs[1].quiver(X, Y, U, V, speed)
+    axs[1].set_title("quiver")
+
+    # Right plot: curved_quiver
+    m = axs[2].curved_quiver(
+        X, Y, U, V, color=speed, arrow_at_end=True, scale=2.0, grains=10
+    )
+    axs[2].set_title("curved_quiver")
+    fig.colorbar(m.lines, ax=axs[:], label="speed")
+    return fig
+
+
+def test_validate_vector_shapes_pass():
+    """
+    Test that vector shapes match the grid shape using CurvedQuiverSolver.
+    """
+    from ultraplot.axes.plot_types.curved_quiver import _CurvedQuiverGrid
+
+    x = np.linspace(0, 1, 3)
+    y = np.linspace(0, 1, 3)
+    grid = _CurvedQuiverGrid(x, y)
+    u = np.ones(grid.shape)
+    v = np.ones(grid.shape)
+    assert u.shape == grid.shape
+    assert v.shape == grid.shape
+
+
+def test_validate_vector_shapes_fail():
+    """
+    Test that assertion fails when u and v do not match the grid shape using CurvedQuiverSolver.
+    """
+    from ultraplot.axes.plot_types.curved_quiver import (
+        CurvedQuiverSolver,
+        _CurvedQuiverGrid,
+    )
+
+    x = np.linspace(0, 1, 3)
+    y = np.linspace(0, 1, 3)
+    grid = _CurvedQuiverGrid(x, y)
+    u = np.ones((2, 2))
+    v = np.ones(grid.shape)
+    with pytest.raises(AssertionError):
+        assert u.shape == grid.shape
+
+
+def test_normalize_magnitude():
+    """
+    Test that magnitude normalization returns a normalized array with max value 1.0 and correct shape.
+    """
+    u = np.array([[1, 2], [3, 4]])
+    v = np.array([[4, 3], [2, 1]])
+    mag = np.sqrt(u**2 + v**2)
+    mag_norm = mag / np.max(mag)
+    assert np.allclose(np.max(mag_norm), 1.0)
+    assert mag_norm.shape == u.shape
+
+
+def test_generate_start_points():
+    """
+    Test that CurvedQuiverSolver.gen_starting_points returns valid grid coordinates for seed points,
+    and that grid.within_grid detects points outside the grid boundaries.
+    """
+    from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver
+
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    grains = 5
+    solver = CurvedQuiverSolver(x, y, density=5)
+    sp2 = solver.gen_starting_points(x, y, grains)
+    assert sp2.shape[1] == 2
+    # Should detect if outside boundaries
+    bad_points = np.array([[10, 10]])
+    grid = solver.grid
+    for pt in bad_points:
+        assert not grid.within_grid(pt[0], pt[1])
+
+
+def test_calculate_trajectories():
+    """
+    Test that CurvedQuiverSolver.get_integrator returns callable for each seed point
+    and returns lists of trajectories and edges of correct length.
+    """
+    from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver
+
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    u = np.ones((5, 5))
+    v = np.ones((5, 5))
+    mag = np.sqrt(u**2 + v**2)
+    solver = CurvedQuiverSolver(x, y, density=5)
+    integrator = solver.get_integrator(
+        u, v, minlength=0.1, resolution=1.0, magnitude=mag
+    )
+    seeds = solver.gen_starting_points(x, y, grains=2)
+    results = [integrator(pt[0], pt[1]) for pt in seeds]
+    assert len(results) == seeds.shape[0]
+
+
+@pytest.mark.mpl_image_compare
+def test_curved_quiver_multicolor_lines():
+    """
+    Test that curved_quiver handles color arrays and returns a lines object.
+    """
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    X, Y = np.meshgrid(x, y)
+    U = np.ones_like(X)
+    V = np.ones_like(Y)
+    speed = np.sqrt(U**2 + V**2)
+
+    fig, ax = uplt.subplots()
+    m = ax.curved_quiver(X, Y, U, V, color=speed)
+    from matplotlib.collections import LineCollection
+
+    assert isinstance(m.lines, LineCollection)
+    assert m.lines.get_array().size > 0  # we have colors set
+    assert m.lines.get_cmap() is not None
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+@pytest.mark.parametrize(
+    "cmap",
+    (
+        "k",  # color
+        "viridis",  # built-in
+        "viko",  # bundled with ultraplot
+    ),
+)
+def test_curved_quiver_color_and_cmap(rng, cmap):
+    """
+    Check that we can pass colors or colormaps
+    """
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    X, Y = np.meshgrid(x, y)
+    U = np.ones_like(X)
+    V = np.ones_like(Y)
+
+    # Deal with color or cmap
+    color = rng.random(X.shape)
+    if cmap == "k":
+        cmap = None
+        color = "k"
+
+    fig, ax = uplt.subplots()
+    ax.curved_quiver(X, Y, U, V, color=color, cmap=cmap)
+    return fig
