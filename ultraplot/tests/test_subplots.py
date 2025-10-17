@@ -340,3 +340,13 @@ def test_uneven_span_subplots(rng):
     axs[-1, -1].format(fc="gray4", grid=False)
     axs[0].plot((rng.random((50, 10)) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
     return fig
+
+
+@pytest.mark.parametrize("share_panels", [True, False])
+@pytest.mark.mpl_image_compare
+def test_sharing_panels(share_panels):
+    fig, ax = uplt.subplots(nrows=2)
+    ax.panel("r", share=share_panels)
+    ax.format(ytickloc="right")
+    uplt.show(block=1)
+    return fig

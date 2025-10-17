@@ -50,3 +50,6 @@ include-package-data = true
 [tool.setuptools_scm]
 write_to = "ultraplot/_version.py"
 write_to_template = "__version__ = '{version}'\n"
+
+[tool.pytest.ini_options]
+addopts = "--ignore=dbt_packages"

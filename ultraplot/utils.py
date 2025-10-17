@@ -1131,11 +1131,11 @@ class _Crawler:
             # Only consider when we are interfacing with a panel
             # axes on the outside will also not share when they are in top
             # or left
-            elif side in ("left", "right") and self.ax._sharey is None:
-                if other.number is None:
+            elif side in ("left", "right"):
+                if other.number is None and not other._panel_sharey_group:
                     return True
-            elif side in ("bottom", "top") and self.ax._sharex is None:
-                if other.number is None:
+            elif side in ("bottom", "top"):
+                if other.number is None and not other._panel_sharex_group:
                     return True
 
             return False

@@ -961,6 +961,7 @@ class Figure(mfigure.Figure):
                         label = label_map[label]
                     if axi not in outer_axes[side]:
                         tmp[label] = False
+
                     from .axes.cartesian import OPPOSITE_SIDE
 
                     if axi._panel_side and OPPOSITE_SIDE[axi._panel_side] == side:
