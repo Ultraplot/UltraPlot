@@ -1317,19 +1317,45 @@ class Figure(mfigure.Figure):
         axis = pax.yaxis if side in ("left", "right") else pax.xaxis
         getattr(axis, "tick_" + side)()  # set tick and tick label position
         axis.set_label_position(side)  # set label position
+        # Sync limits and formatters with parent when sharing to ensure consistent ticks
+        if share:
+            # Copy limits for the shared axis
+            if side in ("left", "right"):
+                try:
+                    pax.set_ylim(ax.get_ylim())
+                except Exception:
+                    pass
+            else:
+                try:
+                    pax.set_xlim(ax.get_xlim())
+                except Exception:
+                    pass
+            # Align with backend: for GeoAxes, use lon/lat degree formatters on panels.
+            # Otherwise, copy the parent's axis formatters.
+            if isinstance(ax, paxes.GeoAxes):
+                fmt_key = "deglat" if side in ("left", "right") else "deglon"
+                axis.set_major_formatter(constructor.Formatter(fmt_key))
+            else:
+                paxis = ax.yaxis if side in ("left", "right") else ax.xaxis
+                axis.set_major_formatter(paxis.get_major_formatter())
+                axis.set_minor_formatter(paxis.get_minor_formatter())
         # Prefer outside tick labels for non-sharing top/right panels; otherwise defer to sharing
         if side == "top":
+            # Ensure main votes for top labels so baseline includes them
+            ax.xaxis.set_tick_params(labeltop=True)
             if not share:
                 pax.xaxis.set_tick_params(labeltop=True)
-                pax.yaxis.set_tick_params(labelbottom=False)
+                ax.xaxis.set_tick_params(labelbottom=False)
             else:
                 pax.xaxis.set_tick_params(labeltop=False)
                 ax.xaxis.set_tick_params(labeltop=False)
             pax.yaxis.set_tick_params(labelleft=True)
         elif side == "right":
+            # Ensure main votes for right labels so baseline includes them
+            ax.yaxis.set_tick_params(labelright=True)
             if not share:
                 pax.yaxis.set_tick_params(labelright=True)
-                pax.yaxis.set_tick_params(labelleft=False)
+                ax.yaxis.set_tick_params(labelleft=False)
             else:
                 pax.yaxis.set_tick_params(labelright=False)
                 pax.yaxis.set_tick_params(labelleft=False)

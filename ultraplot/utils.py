@@ -1046,7 +1046,11 @@ class _Crawler:
             return self.is_border((x + dx, y + dy), direction)
 
         if self.grid_axis_type[x, y] != self.axis_type:
-            if cell in self.ax._panel_dict.get(cell._panel_side, []):
+            # Allow traversing across the parent<->panel interface even when types differ
+            # e.g., GeoAxes main with cartesian panel or vice versa
+            if getattr(self.ax, "_panel_parent", None) is cell:
+                return self.is_border((x + dx, y + dy), direction)
+            if getattr(cell, "_panel_parent", None) is self.ax:
                 return self.is_border((x + dx, y + dy), direction)
 
         # Internal edge or plot reached
