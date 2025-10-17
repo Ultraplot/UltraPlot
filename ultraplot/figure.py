@@ -1342,22 +1342,22 @@ class Figure(mfigure.Figure):
         # Push main axes tick labels to the outside relative to the added panel
         if isinstance(ax, paxes.GeoAxes):
             if side == "top":
-                ax._toggle_gridliner_labels(labeltop=False)
+                ax._toggle_gridliner_labels(labeltop=False, labelbottom=True)
             elif side == "bottom":
-                ax._toggle_gridliner_labels(labelbottom=False)
+                ax._toggle_gridliner_labels(labelbottom=False, labeltop=True)
             elif side == "left":
-                ax._toggle_gridliner_labels(labelleft=False)
+                ax._toggle_gridliner_labels(labelleft=False, labelright=True)
             elif side == "right":
-                ax._toggle_gridliner_labels(labelright=False)
+                ax._toggle_gridliner_labels(labelright=False, labelleft=True)
         else:
             if side == "top":
-                ax.xaxis.set_tick_params(abeltop=False)
+                ax.xaxis.set_tick_params(labeltop=False, labelbottom=True)
             elif side == "bottom":
-                ax.xaxis.set_tick_params(labelbottom=False)
+                ax.xaxis.set_tick_params(labelbottom=False, labeltop=True)
             elif side == "left":
-                ax.yaxis.set_tick_params(labelleft=False)
+                ax.yaxis.set_tick_params(labelleft=False, labelright=True)
             elif side == "right":
-                ax.yaxis.set_tick_params(labelright=False)
+                ax.yaxis.set_tick_params(labelright=False, labelleft=True)
 
         # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
         if side == "top":
