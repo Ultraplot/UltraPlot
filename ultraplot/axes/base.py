@@ -3275,8 +3275,19 @@ class Axes(maxes.Axes):
         if side in ["labelright", "labeltop"]:
             label = "label2"
 
-        print(self, self._panel_side, axis.get_tick_params())
-        return axis.get_tick_params().get(side, False)
+
+        from packaging import version
+        from .internals import _version_mpl
+        mpl_version = version.parse(str(_version_mpl))
+        use_new_labels = mpl_version >= version.parse("3.10")
+
+        label_map = {
+            "labeltop": "labeltop" if use_new_labels else "labelright",
+            "labelbottom": "labelbottom" if use_new_labels else "labelleft",
+            "labelleft": "labelleft",
+            "labelright": "labelright",
+        }
+        return axis.get_tick_params().get(label_map[side], False)
         for tick in axis.get_major_ticks():
             print(tick, getattr(tick, label).get_visible())
             if getattr(tick, label).get_visible():
