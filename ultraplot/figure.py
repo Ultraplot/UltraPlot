@@ -961,6 +961,10 @@ class Figure(mfigure.Figure):
                         label = label_map[label]
                     if axi not in outer_axes[side]:
                         tmp[label] = False
+                    from .axes.cartesian import OPPOSITE_SIDE
+
+                    if axi._panel_side and OPPOSITE_SIDE[axi._panel_side] == side:
+                        tmp[label] = False
 
                 # Determine sharing level for this axes
                 level = getattr(self, f"_share{axis}")
@@ -1313,11 +1317,24 @@ class Figure(mfigure.Figure):
         axis = pax.yaxis if side in ("left", "right") else pax.xaxis
         getattr(axis, "tick_" + side)()  # set tick and tick label position
         axis.set_label_position(side)  # set label position
-        # Turn off top/right panel tick labels by default; sharing will push them later
+        # Prefer outside tick labels for non-sharing top/right panels; otherwise defer to sharing
         if side == "top":
-            pax.xaxis.set_tick_params(labeltop=False)
+            if not share:
+                pax.xaxis.set_tick_params(labeltop=True)
+                pax.yaxis.set_tick_params(labelbottom=False)
+            else:
+                pax.xaxis.set_tick_params(labeltop=False)
+                pax.yaxis.set_tick_params(labelbottom=False)
+                ax.xaxis.set_tick_params(labeltop=False)
         elif side == "right":
-            pax.yaxis.set_tick_params(labelright=False)
+            if not share:
+                pax.yaxis.set_tick_params(labelright=True)
+                pax.yaxis.set_tick_params(labelleft=False)
+            else:
+                pax.yaxis.set_tick_params(labelright=False)
+                pax.yaxis.set_tick_params(labelleft=False)
+                ax.yaxis.set_tick_params(labelright=False)
+
         return pax
 
     @_clear_border_cache

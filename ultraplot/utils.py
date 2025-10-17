@@ -1107,21 +1107,26 @@ class _Crawler:
             }
             side = dmap[direction]
             if self.ax.number is None:  # panel
-                parent = self.ax._panel_parent
-
-                panels = parent._panel_dict.get(side, [])
-                # If we are a panel at the end we are a border
-                # only if we are not sharing axes
+                # For panels we need to check if we are apart
+                # of a group that is sharing its axes
+                # For top andight the pattern should be
+                # reversed as the sharing axis is the left-most
+                # or bottom-most plot.
+                # Note that for panels to left or right, it will
+                # always turn the x ticks of whether sharing is set or not
+                # not sure if this is a bug or a feature.
                 if side in ("left", "right"):
-                    if self.ax._sharey is None:
-                        return True
-                    elif not self.ax._panel_sharey_group:
-                        return True
+                    if self.ax.figure._sharey >= 3:
+                        if self.ax._panel_sharey_group is True and side == "right":
+                            return True
+                        elif self.ax._panel_sharey_group is False and side == "left":
+                            return True
                 elif side in ("top", "bottom"):
-                    if self.ax._sharex is None:
-                        return True
-                    elif not self.ax._panel_sharex_group:
-                        return True
+                    if self.ax.figure._sharex >= 3:
+                        if side == "bottom" and not self.ax._panel_sharex_group:
+                            return True
+                        elif side == "top" and self.ax._panel_sharex_group:
+                            return True
 
             # Only consider when we are interfacing with a panel
             # axes on the outside will also not share when they are in top
