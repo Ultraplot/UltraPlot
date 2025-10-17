@@ -3270,7 +3270,7 @@ class Axes(maxes.Axes):
         labelright/labelleft respectively.
         """
         from packaging import version
-        from .internals import _version_mpl
+        from ..internals import _version_mpl
 
         use_new = version.parse(str(_version_mpl)) >= version.parse("3.10")
         if side == "labeltop":
