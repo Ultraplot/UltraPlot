@@ -952,7 +952,7 @@ class Figure(mfigure.Figure):
                     label = f"label{side}"
                     if isinstance(axi, paxes.CartesianAxes):
                         # For cartesian, use version-mapped key when reading/writing
-                        label = axi._label_key[label]
+                        label = axi._label_key(label)
                     if axi not in outer_axes[side]:
                         tmp[label] = False
                     from .axes.cartesian import OPPOSITE_SIDE
