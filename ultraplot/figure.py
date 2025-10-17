@@ -1340,24 +1340,26 @@ class Figure(mfigure.Figure):
                 axis.set_major_formatter(paxis.get_major_formatter())
                 axis.set_minor_formatter(paxis.get_minor_formatter())
         # Push main axes tick labels to the outside relative to the added panel
-        if isinstance(ax, paxes.GeoAxes):
-            if side == "top":
-                ax._toggle_gridliner_labels(labeltop=False)
-            elif side == "bottom":
-                ax._toggle_gridliner_labels(labelbottom=False)
-            elif side == "left":
-                ax._toggle_gridliner_labels(labelleft=False)
-            elif side == "right":
-                ax._toggle_gridliner_labels(labelright=False)
-        else:
-            if side == "top":
-                ax.xaxis.set_tick_params(labeltop=False)
-            elif side == "bottom":
-                ax.xaxis.set_tick_params(labelbottom=False)
-            elif side == "left":
-                ax.yaxis.set_tick_params(labelleft=False)
-            elif side == "right":
-                ax.yaxis.set_tick_params(labelright=False)
+        # Skip this for filled panels (colorbars/legends)
+        if not kw.get("filled", False):
+            if isinstance(ax, paxes.GeoAxes):
+                if side == "top":
+                    ax._toggle_gridliner_labels(labeltop=False)
+                elif side == "bottom":
+                    ax._toggle_gridliner_labels(labelbottom=False)
+                elif side == "left":
+                    ax._toggle_gridliner_labels(labelleft=False)
+                elif side == "right":
+                    ax._toggle_gridliner_labels(labelright=False)
+            else:
+                if side == "top":
+                    ax.xaxis.set_tick_params(labeltop=False)
+                elif side == "bottom":
+                    ax.xaxis.set_tick_params(labelbottom=False)
+                elif side == "left":
+                    ax.yaxis.set_tick_params(labelleft=False)
+                elif side == "right":
+                    ax.yaxis.set_tick_params(labelright=False)
 
         # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
         if side == "top":
