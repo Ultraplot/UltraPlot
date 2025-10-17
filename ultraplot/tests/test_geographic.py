@@ -675,13 +675,34 @@ def test_check_tricontourf():
 def test_panels_geo():
     fig, ax = uplt.subplots(proj="cyl")
     ax.format(labels=True)
-    fig.canvas.draw()
-    for dir in "top bottom right left".split():
+    dirs = "top bottom right left".split()
+    for dir in dirs:
         pax = ax.panel_axes(dir)
-        fig.canvas.draw()  # need this to update the ticks
-        # assert len(pax.get_xticklabels()) > 0
-        # assert len(pax.get_yticklabels()) > 0
-    uplt.show(block=1)
+    fig.canvas.draw()
+    pax = ax[0]._panel_dict["left"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["top"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert not pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["bottom"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["right"][-1]
+    assert not pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+    return fig
 
 
 @pytest.mark.mpl_image_compare

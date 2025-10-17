@@ -1339,26 +1339,37 @@ class Figure(mfigure.Figure):
                 paxis = ax.yaxis if side in ("left", "right") else ax.xaxis
                 axis.set_major_formatter(paxis.get_major_formatter())
                 axis.set_minor_formatter(paxis.get_minor_formatter())
-        # Prefer outside tick labels for non-sharing top/right panels; otherwise defer to sharing
-        if side == "top":
-            # Ensure main votes for top labels so baseline includes them
-            ax.xaxis.set_tick_params(labeltop=True)
-            if not share:
-                pax.xaxis.set_tick_params(labeltop=True)
+        # Push main axes tick labels to the outside relative to the added panel
+        if isinstance(ax, paxes.GeoAxes):
+            if side == "top":
+                ax._toggle_gridliner_labels(labeltop=False)
+            elif side == "bottom":
+                ax._toggle_gridliner_labels(labelbottom=False)
+            elif side == "left":
+                ax._toggle_gridliner_labels(labelleft=False)
+            elif side == "right":
+                ax._toggle_gridliner_labels(labelright=False)
+        else:
+            if side == "top":
+                ax.xaxis.set_tick_params(abeltop=False)
+            elif side == "bottom":
                 ax.xaxis.set_tick_params(labelbottom=False)
+            elif side == "left":
+                ax.yaxis.set_tick_params(labelleft=False)
+            elif side == "right":
+                ax.yaxis.set_tick_params(labelright=False)
+
+        # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
+        if side == "top":
+            if not share:
+                pax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
             else:
                 pax.xaxis.set_tick_params(labeltop=False)
-                ax.xaxis.set_tick_params(labeltop=False)
-            pax.yaxis.set_tick_params(labelleft=True)
         elif side == "right":
-            # Ensure main votes for right labels so baseline includes them
-            ax.yaxis.set_tick_params(labelright=True)
             if not share:
-                pax.yaxis.set_tick_params(labelright=True)
-                ax.yaxis.set_tick_params(labelleft=False)
+                pax.yaxis.set_tick_params(labelright=True, labelleft=False)
             else:
                 pax.yaxis.set_tick_params(labelright=False)
-                pax.yaxis.set_tick_params(labelleft=False)
                 ax.yaxis.set_tick_params(labelright=False)
 
         return pax
