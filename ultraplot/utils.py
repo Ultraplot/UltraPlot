@@ -1122,13 +1122,6 @@ class _Crawler:
                 if side == panel_side and panels and panels[-1] is self.ax:
                     return True
                 return False
-
-            else:  # main axis
-                # When a main axes interfaces with a panel, the border lies beyond
-                # the outer-most panel, not at the interface with the main.
-                if getattr(other, "number", None) is None:
-                    return False
-
             return False
         return True
 
