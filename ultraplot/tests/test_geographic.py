@@ -702,6 +702,10 @@ def test_panels_geo():
     assert not pax._is_ticklabel_on("labelright")
     assert not pax._is_ticklabel_on("labeltop")
     assert pax._is_ticklabel_on("labelbottom")
+
+    for dir in dirs:
+        not ax[0]._is_ticklabel_on(f"label{dir}")
+
     return fig
 
 
