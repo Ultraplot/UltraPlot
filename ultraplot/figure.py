@@ -1324,8 +1324,8 @@ class Figure(mfigure.Figure):
                 pax.yaxis.set_tick_params(labelbottom=False)
             else:
                 pax.xaxis.set_tick_params(labeltop=False)
-                pax.yaxis.set_tick_params(labelbottom=False)
                 ax.xaxis.set_tick_params(labeltop=False)
+            pax.yaxis.set_tick_params(labelleft=True)
         elif side == "right":
             if not share:
                 pax.yaxis.set_tick_params(labelright=True)
