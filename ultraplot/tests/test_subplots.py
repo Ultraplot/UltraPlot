@@ -290,29 +290,53 @@ def test_panel_sharing_top_right(layout):
     for dir in "left right top bottom".split():
         pax = ax[0].panel(dir)
     fig.canvas.draw()  # force redraw tick labels
-    for dir, paxs in ax[0]._panel_dict.items():
-        # Since we are sharing some of the ticks
-        # should be hidden depending on where the panel is
-        # in the grid
-        for pax in paxs:
-            match dir:
-                case "left":
-                    assert pax._is_ticklabel_on("labelleft")
-                    assert pax._is_ticklabel_on("labelbottom")
-                case "top":
-                    assert pax._is_ticklabel_on("labeltop") == False
-                    assert pax._is_ticklabel_on("labelbottom") == False
-                    assert pax._is_ticklabel_on("labelleft")
-                case "right":
-                    print(pax._is_ticklabel_on("labelright"))
-                    assert pax._is_ticklabel_on("labelright") == False
-                    assert pax._is_ticklabel_on("labelbottom")
-                case "bottom":
-                    assert pax._is_ticklabel_on("labelleft")
-                    assert pax._is_ticklabel_on("labelbottom") == False
 
-        # The sharing axis is not showing any ticks
-        assert ax[0]._is_ticklabel_on(dir) == False
+    # Main panel: ticks are off
+    assert not ax[0]._is_ticklabel_on("labelleft")
+    assert not ax[0]._is_ticklabel_on("labelright")
+    assert not ax[0]._is_ticklabel_on("labeltop")
+    assert not ax[0]._is_ticklabel_on("labelbottom")
+
+    # For panels the inside ticks are off
+    panel = ax[0]._panel_dict["left"][-1]
+    assert panel._is_ticklabel_on("labelleft")
+    assert panel._is_ticklabel_on("labelbottom")
+    assert not panel._is_ticklabel_on("labelright")
+    assert not panel._is_ticklabel_on("labeltop")
+
+    panel = ax[0]._panel_dict["top"][-1]
+    assert panel._is_ticklabel_on("labelleft")
+    assert not panel._is_ticklabel_on("labelbottom")
+    assert not panel._is_ticklabel_on("labelright")
+    assert not panel._is_ticklabel_on("labeltop")
+
+    panel = ax[0]._panel_dict["right"][-1]
+    assert not panel._is_ticklabel_on("labelleft")
+    assert panel._is_ticklabel_on("labelbottom")
+    assert not panel._is_ticklabel_on("labelright")
+    assert not panel._is_ticklabel_on("labeltop")
+
+    panel = ax[0]._panel_dict["bottom"][-1]
+    assert panel._is_ticklabel_on("labelleft")
+    assert not panel._is_ticklabel_on("labelbottom")
+    assert not panel._is_ticklabel_on("labelright")
+    assert not panel._is_ticklabel_on("labeltop")
+
+    assert not ax[1]._is_ticklabel_on("labelleft")
+    assert not ax[1]._is_ticklabel_on("labelright")
+    assert not ax[1]._is_ticklabel_on("labeltop")
+    assert not ax[1]._is_ticklabel_on("labelbottom")
+
+    assert ax[2]._is_ticklabel_on("labelleft")
+    assert not ax[2]._is_ticklabel_on("labelright")
+    assert not ax[2]._is_ticklabel_on("labeltop")
+    assert ax[2]._is_ticklabel_on("labelbottom")
+
+    assert not ax[3]._is_ticklabel_on("labelleft")
+    assert not ax[3]._is_ticklabel_on("labelright")
+    assert not ax[3]._is_ticklabel_on("labeltop")
+    assert ax[3]._is_ticklabel_on("labelbottom")
+
     return fig
 
 
@@ -327,3 +351,67 @@ def test_uneven_span_subplots(rng):
     axs[-1, -1].format(fc="gray4", grid=False)
     axs[0].plot((rng.random((50, 10)) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_uneven_span_subplots(rng):
+    fig = uplt.figure(refwidth=1, refnum=5, span=False)
+    axs = fig.subplots([[1, 1, 2], [3, 4, 2], [3, 4, 5]], hratios=[2.2, 1, 1])
+    axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Complex SubplotGrid")
+    axs[0].format(ec="black", fc="gray1", lw=1.4)
+    axs[1, 1:].format(fc="blush")
+    axs[1, :1].format(fc="sky blue")
+    axs[-1, -1].format(fc="gray4", grid=False)
+    axs[0].plot((rng.random((50, 10)) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
+    return fig
+
+
+@pytest.mark.parametrize("share_panels", [True, False])
+def test_panel_ticklabels_all_sides_share_and_no_share(share_panels):
+    # 2x2 grid; add panels on all sides of the first axes
+    fig, ax = uplt.subplots(nrows=2, ncols=2)
+    axi = ax[0]
+
+    # Create panels on all sides with configurable sharing
+    pax_left = axi.panel("left", share=share_panels)
+    pax_right = axi.panel("right", share=share_panels)
+    pax_top = axi.panel("top", share=share_panels)
+    pax_bottom = axi.panel("bottom", share=share_panels)
+
+    # Force draw so ticklabel state is resolved
+    fig.canvas.draw()
+
+    def assert_panel(axi_panel, side, share_flag):
+        on_left = axi_panel._is_ticklabel_on("labelleft")
+        on_right = axi_panel._is_ticklabel_on("labelright")
+        on_top = axi_panel._is_ticklabel_on("labeltop")
+        on_bottom = axi_panel._is_ticklabel_on("labelbottom")
+
+        # Inside (toward the main) must be off in all cases
+        if side == "left":
+            # Inside is right
+            assert not on_right
+        elif side == "right":
+            # Inside is left
+            assert not on_left
+        elif side == "top":
+            # Inside is bottom
+            assert not on_bottom
+        elif side == "bottom":
+            # Inside is top
+            assert not on_top
+
+        if not share_flag:
+            # For non-sharing panels, prefer outside labels on for top/right
+            if side == "right":
+                assert on_right
+            if side == "top":
+                assert on_top
+            # For left/bottom non-sharing, we don't enforce outside on here
+            # (baseline may keep left/bottom on the main)
+
+    # Check each panel side
+    assert_panel(pax_left, "left", share_panels)
+    assert_panel(pax_right, "right", share_panels)
+    assert_panel(pax_top, "top", share_panels)
+    assert_panel(pax_bottom, "bottom", share_panels)

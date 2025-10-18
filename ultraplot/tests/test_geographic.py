@@ -296,6 +296,7 @@ def test_sharing_cartopy(layout, expectations):
     settings = dict(land=True, ocean=True, labels="both")
     fig, ax = uplt.subplots(layout, share="all", proj="cyl")
     ax.format(**settings)
+    fig.canvas.draw()  # needed for sharing labels
     for axi in ax:
         state = are_labels_on(axi)
         expectation = expectations[axi.number - 1]
@@ -491,7 +492,8 @@ def test_get_gridliner_labels_cartopy():
     uplt.close(fig)
 
 
-def test_sharing_levels():
+@pytest.mark.parametrize("level", [0, 1, 2, 3, 4])
+def test_sharing_levels(level):
     """
     We can share limits or labels.
     We check if we can do both for the GeoAxes.
@@ -515,7 +517,6 @@ def test_sharing_levels():
 
     x = np.array([0, 10])
     y = np.array([0, 10])
-    sharing_levels = [0, 1, 2, 3, 4]
     lonlim = latlim = np.array((-10, 10))
 
     def assert_views_are_sharing(ax):
@@ -551,46 +552,42 @@ def test_sharing_levels():
             l2 = np.linalg.norm(
                 np.asarray(latview) - np.asarray(target_lat),
             )
-            level = ax.figure._get_sharing_level()
+            level = ax.figure._sharex
             if level <= 1:
                 share_x = share_y = False
             assert np.allclose(l1, 0) == share_x
             assert np.allclose(l2, 0) == share_y
 
-    for level in sharing_levels:
-        fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share=level)
-        ax.format(labels="both")
-        for axi in ax:
-            axi.format(
-                lonlim=lonlim * axi.number,
-                latlim=latlim * axi.number,
-            )
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share=level)
+    ax.format(labels="both")
+    for axi in ax:
+        axi.format(
+            lonlim=lonlim * axi.number,
+            latlim=latlim * axi.number,
+        )
 
-        fig.canvas.draw()
-        for idx, axi in enumerate(ax):
-            axi.plot(x * (idx + 1), y * (idx + 1))
+    fig.canvas.draw()
+    for idx, axi in enumerate(ax):
+        axi.plot(x * (idx + 1), y * (idx + 1))
 
-        fig.canvas.draw()  # need this to update the labels
-        # All the labels should be on
-        for axi in ax:
-            side_labels = axi._get_gridliner_labels(
-                left=True,
-                right=True,
-                top=True,
-                bottom=True,
-            )
-            s = 0
-            for dir, labels in side_labels.items():
-                s += any([label.get_visible() for label in labels])
+    # All the labels should be on
+    for axi in ax:
 
-            assert_views_are_sharing(axi)
-            # When we share the labels but not the limits,
-            # we expect all ticks to be on
-            if level == 0:
-                assert s == 4
-            else:
-                assert s == 2
-        uplt.close(fig)
+        s = sum(
+            [
+                1 if axi._is_ticklabel_on(side) else 0
+                for side in "labeltop labelbottom labelleft labelright".split()
+            ]
+        )
+
+        assert_views_are_sharing(axi)
+        # When we share the labels but not the limits,
+        # we expect all ticks to be on
+        if level > 2:
+            assert s == 2
+        else:
+            assert s == 4
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
@@ -616,8 +613,10 @@ def test_cartesian_and_geo(rng):
         ax.format(land=True, lonlim=(-10, 10), latlim=(-10, 10))
         ax[0].pcolormesh(rng.random((10, 10)))
         ax[1].scatter(*rng.random((2, 100)))
-        ax[0]._apply_axis_sharing()
-        assert mocked.call_count == 2
+        fig.canvas.draw()
+        assert (
+            mocked.call_count > 2
+        )  # needs to be called at least twice; one for each axis
     return fig
 
 
@@ -676,21 +675,38 @@ def test_check_tricontourf():
 def test_panels_geo():
     fig, ax = uplt.subplots(proj="cyl")
     ax.format(labels=True)
-    for dir in "top bottom right left".split():
+    dirs = "top bottom right left".split()
+    for dir in dirs:
         pax = ax.panel_axes(dir)
-        match dir:
-            case "top":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "bottom":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "left":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "right":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
+    fig.canvas.draw()
+    pax = ax[0]._panel_dict["left"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["top"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert not pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["bottom"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["right"][-1]
+    assert not pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+
+    for dir in dirs:
+        not ax[0]._is_ticklabel_on(f"label{dir}")
+
+    return fig
 
 
 @pytest.mark.mpl_image_compare
@@ -807,6 +823,7 @@ def test_sharing_cartopy_with_colorbar(rng):
     h = ax.imshow(data)[0]
     ax.format(land=True, labels="both")  # need this otherwise no labels are printed
     fig.colorbar(h, loc="r")
+    fig.canvas.draw()  # needed to  invoke axis sharing
 
     expectations = (
         [True, False, False, True],
