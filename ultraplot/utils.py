@@ -1017,8 +1017,8 @@ class _Crawler:
         ys = range(y, y + b + 1)
 
         is_border = False
-        for xl, yl in product(xs, ys):
-            pos = (xl, yl)
+        for x, y in product(xs, ys):
+            pos = (x, y)
             if self.is_border(pos, d):
                 is_border = True
                 break
@@ -1121,7 +1121,6 @@ class _Crawler:
                 panels = parent._panel_dict.get(panel_side, [])
                 if side == panel_side and panels and panels[-1] is self.ax:
                     return True
-                return False
             return False
         return True
 
