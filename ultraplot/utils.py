@@ -918,7 +918,8 @@ def _get_subplot_layout(
     axis types. This function is used internally to determine
     the layout of axes in a GridSpec.
     """
-    grid = np.zeros((gs.nrows, gs.ncols))
+    grid = np.zeros((gs.nrows_total, gs.ncols_total), dtype=object)
+    grid.fill(None)
     grid_axis_type = np.zeros((gs.nrows, gs.ncols))
     # Collect grouper based on kinds of axes. This
     # would allow us to share labels across types
@@ -936,7 +937,7 @@ def _get_subplot_layout(
         grid[
             slice(*rowspan),
             slice(*colspan),
-        ] = axi.number
+        ] = axi
 
         # Allow grouping of mixed types
         axis_type = 1
@@ -996,22 +997,28 @@ class _Crawler:
         direction: str,
         d: tuple[int, int],
     ) -> tuple[str, bool]:
-        from itertools import product
-
         """
         Setup search for a specific direction.
         """
 
+        from itertools import product
+
         # Retrieve where the axis is in the grid
         spec = self.ax.get_subplotspec()
-        spans = spec._get_grid_span()
+        shape = (spec.get_gridspec().nrows_total, spec.get_gridspec().ncols_total)
+        x, y = np.unravel_index(spec.num1, shape)
+        spans = spec._get_rows_columns()
         rowspan = spans[:2]
         colspan = spans[-2:]
-        xs = range(*rowspan)
-        ys = range(*colspan)
+
+        a = rowspan[1] - rowspan[0]
+        b = colspan[1] - colspan[0]
+        xs = range(x, x + a + 1)
+        ys = range(y, y + b + 1)
+
         is_border = False
-        for x, y in product(xs, ys):
-            pos = (x, y)
+        for xl, yl in product(xs, ys):
+            pos = (xl, yl)
             if self.is_border(pos, d):
                 is_border = True
                 break
@@ -1026,27 +1033,31 @@ class _Crawler:
         Recursively move over the grid by following the direction.
         """
         x, y = pos
-        # Check if we are at an edge of the grid (out-of-bounds).
-        if x < 0:
-            return True
-        elif x > self.grid.shape[0] - 1:
+        # Edge of grid (out-of-bounds)
+        if not (0 <= x < self.grid.shape[0] and 0 <= y < self.grid.shape[1]):
             return True
 
-        if y < 0:
-            return True
-        elif y > self.grid.shape[1] - 1:
-            return True
-
-        if self.grid[x, y] == 0 or self.grid_axis_type[x, y] != self.axis_type:
-            return True
-
-        # Check if we reached a plot or an internal edge
-        if self.grid[x, y] != self.target and self.grid[x, y] > 0:
-            return self._check_ranges(direction, other=self.grid[x, y])
-
+        cell = self.grid[x, y]
         dx, dy = direction
-        pos = (x + dx, y + dy)
-        return self.is_border(pos, direction)
+        if cell is None:
+            return self.is_border((x + dx, y + dy), direction)
+
+        if hasattr(cell, "_panel_hidden") and cell._panel_hidden:
+            return self.is_border((x + dx, y + dy), direction)
+
+        if self.grid_axis_type[x, y] != self.axis_type:
+            # Allow traversing across the parent<->panel interface even when types differ
+            # e.g., GeoAxes main with cartesian panel or vice versa
+            if getattr(self.ax, "_panel_parent", None) is cell:
+                return self.is_border((x + dx, y + dy), direction)
+            if getattr(cell, "_panel_parent", None) is self.ax:
+                return self.is_border((x + dx, y + dy), direction)
+
+        # Internal edge or plot reached
+        if cell != self.ax:
+            return self._check_ranges(direction, other=cell)
+
+        return self.is_border((x + dx, y + dy), direction)
 
     def _check_ranges(
         self,
@@ -1065,14 +1076,15 @@ class _Crawler:
         can share x.
         """
         this_spec = self.ax.get_subplotspec()
-        other_spec = self.ax.figure._subplot_dict[other].get_subplotspec()
+        other_spec = other.get_subplotspec()
 
         # Get the row and column spans of both axes
-        this_span = this_spec._get_grid_span()
+        this_span = this_spec._get_rows_columns()
         this_rowspan = this_span[:2]
         this_colspan = this_span[-2:]
 
         other_span = other_spec._get_grid_span()
+        other_span = other_spec._get_rows_columns()
         other_rowspan = other_span[:2]
         other_colspan = other_span[-2:]
 
@@ -1089,7 +1101,28 @@ class _Crawler:
             other_start, other_stop = other_rowspan
 
         if this_start == other_start and this_stop == other_stop:
-            return False  # not a border
+            # We may hit an internal border if we are at
+            # the interface with a panel that is not sharing
+            dmap = {
+                (-1, 0): "bottom",
+                (1, 0): "top",
+                (0, -1): "left",
+                (0, 1): "right",
+            }
+            side = dmap[direction]
+            if self.ax.number is None:  # panel
+                panel_side = getattr(self.ax, "_panel_side", None)
+                # Non-sharing panels: border only on their outward side
+                if not getattr(self.ax, "_panel_share", False):
+                    return side == panel_side
+                # Sharing panels: border only if this is the outward side and this
+                # panel is the outer-most panel for that side relative to its parent.
+                parent = self.ax._panel_parent
+                panels = parent._panel_dict.get(panel_side, [])
+                if side == panel_side and panels and panels[-1] is self.ax:
+                    return True
+                return False
+            return False
         return True
 
 
