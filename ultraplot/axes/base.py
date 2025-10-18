@@ -3271,7 +3271,8 @@ class Axes(maxes.Axes):
         """
         from packaging import version
         from ..internals import _version_mpl
-        #TODO: internal deprecation warning when we drop 3.9, we need to remove this
+
+        # TODO: internal deprecation warning when we drop 3.9, we need to remove this
 
         use_new = version.parse(str(_version_mpl)) >= version.parse("3.10")
         if side == "labeltop":
