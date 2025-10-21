@@ -897,7 +897,6 @@ class Figure(mfigure.Figure):
         axs = self._subplot_dict.values()
         if not axs:
             return []
-        ranges = np.array([ax._range_subplotspec(x) for ax in axs])
         axs = self._get_border_axes()[side]
         return axs
 
