@@ -898,11 +898,7 @@ class Figure(mfigure.Figure):
         if not axs:
             return []
         ranges = np.array([ax._range_subplotspec(x) for ax in axs])
-        edge = ranges[:, 0].min() if side in ("left", "top") else ranges[:, 1].max()
-        idx = 0 if side in ("left", "top") else 1
-        axs = [ax for ax in axs if ax._range_subplotspec(x)[idx] == edge]
-        axs = [ax for ax in sorted(axs, key=lambda ax: ax._range_subplotspec(y)[0])]
-        axs = [ax for ax in axs if ax.get_visible()]
+        axs = self._get_border_axes()[side]
         return axs
 
     def _get_border_axes(
