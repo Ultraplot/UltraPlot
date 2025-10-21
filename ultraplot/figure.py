@@ -893,7 +893,6 @@ class Figure(mfigure.Figure):
         """
         Return the main axes along the edge of the figure.
         """
-        x, y = "xy" if side in ("left", "right") else "yx"
         axs = self._subplot_dict.values()
         if not axs:
             return []
