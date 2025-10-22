@@ -348,3 +348,18 @@ def test_non_rectangular_outside_labels_top():
     ax.format(leftlabels=[1, 3, 4])
     ax.format(toplabels=[1, 2])
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_outside_labels_with_panels():
+    fig, ax = uplt.subplots(
+        ncols=2,
+        nrows=2,
+    )
+    # Create extreme case where we add a lot of panels
+    # This should push the left labels further left
+    for idx in range(5):
+        ax[0].panel("left")
+    ax.format(leftlabels=["A", "B"])
+    uplt.show(block=1)
+    return fig
