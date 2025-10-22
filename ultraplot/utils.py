@@ -1093,6 +1093,34 @@ class _Crawler:
         return True
 
 
+def check_for_update(package_name: str) -> None:
+    import json
+    import urllib.request
+    from importlib.metadata import version, PackageNotFoundError
+
+    try:
+        current_version = version(package_name)
+    except PackageNotFoundError:
+        return  # package not installed (e.g. during dev)
+
+    try:
+        with urllib.request.urlopen(
+            f"https://pypi.org/pypi/{package_name}/json", timeout=2
+        ) as resp:
+            data = json.load(resp)
+            latest_version = data["info"]["version"]
+    except Exception:
+        return  # fail silently, e.g. no internet
+
+    # Skip local dev versions
+    if latest_version != current_version and "dev" not in current_version:
+        print(
+            f"\033[93m⚠️  A newer version of {package_name} is available: "
+            f"{current_version} → {latest_version}\n"
+            f"Run: pip install -U {package_name}\033[0m"
+        )
+
+
 # Deprecations
 shade, saturate = warnings._rename_objs(
     "0.6.0",

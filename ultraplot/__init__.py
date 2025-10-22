@@ -111,3 +111,7 @@ for _src in (rc_ultraplot, rc_matplotlib):
             warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
             _src[_key] = "black"  # fill value
 from .colors import _cmap_database as colormaps
+from .utils import check_for_update
+
+if rc["ultraplot.check_for_latest_version"]:
+    check_for_update("ultraplot")
