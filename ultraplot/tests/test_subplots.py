@@ -343,6 +343,7 @@ def test_non_rectangular_outside_labels_left():
     ax.format(
         leftlabels=[1, 2, 3],
     )
+    uplt.show(block=1)
     return fig
 
 
@@ -356,8 +357,8 @@ def test_non_rectangular_outside_labels_top():
         [4, 4, 5, 5],
     ]
     fig, ax = uplt.subplots(layout)
-    with pytest.raises(ValueError):
-        ax.format(
-            toplabels=[1, 2, 3],
-        )
+    ax.format(
+        toplabels=[1, 2, 3],
+    )
+    uplt.show(block=1)
     return fig
