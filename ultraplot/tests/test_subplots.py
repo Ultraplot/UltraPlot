@@ -341,7 +341,7 @@ def test_non_rectangular_outside_labels_top():
     ]
 
     fig, ax = uplt.subplots(
-        gridspec,
+        layout,
     )
     ax.format(rightlabels=[2, 3, 5])
     ax.format(bottomlabels=[4, 5])

@@ -903,7 +903,9 @@ class Figure(mfigure.Figure):
             raise ValueError(f"Invalid side {side!r}.")
         from .utils import _get_subplot_layout
 
-        grid = _get_subplot_layout(self._gridspec, list(self._iter_axes()))[0]
+        grid = _get_subplot_layout(
+            self._gridspec, list(self._iter_axes(panels=False, hidden=False))
+        )[0]
         # From the @side we find the first non-zero
         # entry in each row or column and collect the axes
         if side == "left":
