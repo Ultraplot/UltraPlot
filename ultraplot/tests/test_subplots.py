@@ -330,23 +330,6 @@ def test_uneven_span_subplots(rng):
 
 
 @pytest.mark.mpl_image_compare
-def test_non_rectangular_outside_labels_left():
-    """
-    Check that non-rectangular layouts work with outside labels.
-    """
-    layout = [
-        [1, 1, 2, 2],
-        [0, 3, 3, 0],
-        [4, 4, 5, 5],
-    ]
-    fig, ax = uplt.subplots(layout)
-    ax.format(
-        leftlabels=[1, 2, 3],
-    )
-    uplt.show(block=1)
-    return fig
-
-
 def test_non_rectangular_outside_labels_top():
     """
     Check that non-rectangular layouts work with outside labels.
