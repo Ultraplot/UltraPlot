@@ -1312,27 +1312,13 @@ class Figure(mfigure.Figure):
         getattr(axis, "tick_" + side)()  # set tick and tick label position
         axis.set_label_position(side)  # set label position
         # Sync limits and formatters with parent when sharing to ensure consistent ticks
-        if share:
-            # Copy limits for the shared axis
-            if side in ("left", "right"):
-                try:
-                    pax.set_ylim(ax.get_ylim())
-                except Exception:
-                    pass
-            else:
-                try:
-                    pax.set_xlim(ax.get_xlim())
-                except Exception:
-                    pass
+        # Copy limits for the shared axis
+        # Note: for non-geo axes this is handled by auto sharing
+        if share and isinstance(ax, paxes.GeoAxes):
             # Align with backend: for GeoAxes, use lon/lat degree formatters on panels.
             # Otherwise, copy the parent's axis formatters.
-            if isinstance(ax, paxes.GeoAxes):
-                fmt_key = "deglat" if side in ("left", "right") else "deglon"
-                axis.set_major_formatter(constructor.Formatter(fmt_key))
-            else:
-                paxis = ax.yaxis if side in ("left", "right") else ax.xaxis
-                axis.set_major_formatter(paxis.get_major_formatter())
-                axis.set_minor_formatter(paxis.get_minor_formatter())
+            fmt_key = "deglat" if side in ("left", "right") else "deglon"
+            axis.set_major_formatter(constructor.Formatter(fmt_key))
         # Push main axes tick labels to the outside relative to the added panel
         # Skip this for filled panels (colorbars/legends)
         if not kw.get("filled", False) and share:

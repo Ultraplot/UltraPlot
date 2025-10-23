@@ -430,7 +430,6 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             shared_axis_obj = getattr(shared_axis, f"{axis_name}axis")
             labels._transfer_label(axis.label, shared_axis_obj.label)
             axis.label.set_visible(False)
-
         # Turn minor ticks off
         axis.set_minor_formatter(mticker.NullFormatter())
 
@@ -618,7 +617,6 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 ax1.set_yscale(ax2.get_yscale())
             if ax1.get_autoscaley_on() and not ax2.get_autoscaley_on():
                 ax1.set_ylim(ax2.get_ylim())
-        print(self.get_ylim(), sharey.get_ylim())
         self.sharey(sharey)
         if sharey.yaxis.isDefault_majloc and not self.yaxis.isDefault_majloc:
             sharey.yaxis.set_major_locator(self.yaxis.get_major_locator())

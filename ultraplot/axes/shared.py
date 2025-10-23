@@ -226,5 +226,5 @@ class _SharedAxes(object):
         get_autoscale = getattr(other, f"get_autoscale{which}_on")
 
         lim0, lim1 = limits
-        set_lim(lim0, lim1, emit=False, auto=get_autoscale())  # Set scale
-        this_axis._scale = other_axis._scale
+        # set_lim(lim0, lim1, emit=False, auto=get_autoscale())  # Set scale
+        # this_axis._scale = other_axis._scale
