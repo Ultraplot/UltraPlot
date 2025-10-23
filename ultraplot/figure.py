@@ -892,17 +892,42 @@ class Figure(mfigure.Figure):
     def _get_align_axes(self, side):
         """
         Return the main axes along the edge of the figure.
+
+        For 'left'/'right': select one extreme axis per row (leftmost/rightmost).
+        For 'top'/'bottom': select one extreme axis per column (topmost/bottommost).
         """
-        x, y = "xy" if side in ("left", "right") else "yx"
-        axs = self._subplot_dict.values()
+        axs = tuple(self._subplot_dict.values())
         if not axs:
             return []
-        ranges = np.array([ax._range_subplotspec(x) for ax in axs])
-        edge = ranges[:, 0].min() if side in ("left", "top") else ranges[:, 1].max()
-        idx = 0 if side in ("left", "top") else 1
-        axs = [ax for ax in axs if ax._range_subplotspec(x)[idx] == edge]
-        axs = [ax for ax in sorted(axs, key=lambda ax: ax._range_subplotspec(y)[0])]
-        axs = [ax for ax in axs if ax.get_visible()]
+        if side not in ("left", "right", "top", "bottom"):
+            raise ValueError(f"Invalid side {side!r}.")
+        from .utils import _get_subplot_layout
+
+        grid = _get_subplot_layout(
+            self._gridspec, list(self._iter_axes(panels=False, hidden=False))
+        )[0]
+        # From the @side we find the first non-zero
+        # entry in each row or column and collect the axes
+        if side == "left":
+            options = grid
+        elif side == "right":
+            options = grid[:, ::-1]
+        elif side == "top":
+            options = grid.T
+        else:  # bottom
+            options = grid.T[:, ::-1]
+        uids = set()
+        for option in options:
+            idx = np.where(option > 0)[0]
+            if idx.size > 0:
+                first = idx.min()
+                number = option[first].astype(int)
+                uids.add(number)
+        axs = []
+        # Collect correct axes
+        for axi in self._iter_axes():
+            if axi.number in uids and axi not in axs:
+                axs.append(axi)
         return axs
 
     def _get_border_axes(
