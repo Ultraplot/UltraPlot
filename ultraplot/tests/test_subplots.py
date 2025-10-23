@@ -354,7 +354,6 @@ def test_uneven_span_subplots(rng):
 
 
 @pytest.mark.mpl_image_compare
-<<<<<<< HEAD
 def test_uneven_span_subplots(rng):
     fig = uplt.figure(refwidth=1, refnum=5, span=False)
     axs = fig.subplots([[1, 1, 2], [3, 4, 2], [3, 4, 5]], hratios=[2.2, 1, 1])
@@ -416,7 +415,8 @@ def test_panel_ticklabels_all_sides_share_and_no_share(share_panels):
     assert_panel(pax_right, "right", share_panels)
     assert_panel(pax_top, "top", share_panels)
     assert_panel(pax_bottom, "bottom", share_panels)
-=======
+
+
 def test_non_rectangular_outside_labels_top():
     """
     Check that non-rectangular layouts work with outside labels.
@@ -450,4 +450,3 @@ def test_outside_labels_with_panels():
     ax.format(leftlabels=["A", "B"])
     uplt.show(block=1)
     return fig
->>>>>>> main
