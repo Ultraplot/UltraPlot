@@ -227,4 +227,6 @@ class _SharedAxes(object):
 
         lim0, lim1 = limits
         set_lim(lim0, lim1, emit=False, auto=get_autoscale())  # Set scale
+
+        # Override scale
         this_axis._scale = other_axis._scale
