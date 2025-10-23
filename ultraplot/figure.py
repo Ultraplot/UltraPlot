@@ -1105,10 +1105,10 @@ class Figure(mfigure.Figure):
             options = grid.T[:, ::-1]
         uids = set()
         for option in options:
-            idx = np.where(option > 0)[0]
+            idx = np.where(option != None)[0]
             if idx.size > 0:
                 first = idx.min()
-                number = option[first].astype(int)
+                number = option[first].number
                 uids.add(number)
         axs = []
         # Collect correct axes
