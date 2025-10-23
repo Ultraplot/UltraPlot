@@ -1121,7 +1121,9 @@ class _Crawler:
                 panels = parent._panel_dict.get(panel_side, [])
                 if side == panel_side and panels and panels[-1] is self.ax:
                     return True
-                return False
+            else:  # main axis
+                if other._panel_parent and not other._panel_share:
+                    return True
             return False
         return True
 

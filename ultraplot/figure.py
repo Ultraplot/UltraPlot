@@ -1335,7 +1335,7 @@ class Figure(mfigure.Figure):
                 axis.set_minor_formatter(paxis.get_minor_formatter())
         # Push main axes tick labels to the outside relative to the added panel
         # Skip this for filled panels (colorbars/legends)
-        if not kw.get("filled", False):
+        if not kw.get("filled", False) and share:
             if isinstance(ax, paxes.GeoAxes):
                 if side == "top":
                     ax._toggle_gridliner_labels(labeltop=False)
