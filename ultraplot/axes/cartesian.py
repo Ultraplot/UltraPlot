@@ -477,6 +477,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self.format(**{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)})
         setattr(ax, f"_alt{sx}_parent", self)
         getattr(ax, f"{sy}axis").set_visible(False)
+        getattr(ax, f"{sy}axis").set_ticks([])
         getattr(ax, "patch").set_visible(False)
         return ax
 
