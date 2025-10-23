@@ -388,15 +388,14 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         border_axes = self.figure._get_border_axes()
         # Apply X axis sharing
-        self._apply_axis_sharing_for_axis("x", border_axes)
+        self._apply_axis_sharing_for_axis("x")
 
         # Apply Y axis sharing
-        self._apply_axis_sharing_for_axis("y", border_axes)
+        self._apply_axis_sharing_for_axis("y")
 
     def _apply_axis_sharing_for_axis(
         self,
         axis_name: str,
-        border_axes: dict[str, plot.PlotAxes],
     ) -> None:
         """
         Apply axis sharing for a specific axis (x or y).
@@ -419,7 +418,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             panel_group = self._panel_sharey_group
             sharing_level = self.figure._sharey
 
-        if not axis.get_visible():
+        if shared_axis is None or not axis.get_visible():
             return
 
         level = 3 if panel_group else sharing_level
@@ -427,7 +426,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # Handle axis label sharing (level > 0)
         # If we are a border axis, @shared_axis may be None
         # We propagate this through the _determine_tick_label_visiblity() logic
-        if level > 0 and shared_axis:
+        if level > 0:
             shared_axis_obj = getattr(shared_axis, f"{axis_name}axis")
             labels._transfer_label(axis.label, shared_axis_obj.label)
             axis.label.set_visible(False)
@@ -619,6 +618,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 ax1.set_yscale(ax2.get_yscale())
             if ax1.get_autoscaley_on() and not ax2.get_autoscaley_on():
                 ax1.set_ylim(ax2.get_ylim())
+        print(self.get_ylim(), sharey.get_ylim())
         self.sharey(sharey)
         if sharey.yaxis.isDefault_majloc and not self.yaxis.isDefault_majloc:
             sharey.yaxis.set_major_locator(self.yaxis.get_major_locator())

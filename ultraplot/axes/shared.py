@@ -212,7 +212,6 @@ class _SharedAxes(object):
             )
 
         self._shared_axes[which].join(self, other)
-
         # Get axis objects
         this_axis = getattr(self, f"{which}axis")
         other_axis = getattr(other, f"{which}axis")
@@ -227,7 +226,5 @@ class _SharedAxes(object):
         get_autoscale = getattr(other, f"get_autoscale{which}_on")
 
         lim0, lim1 = limits
-        set_lim(lim0, lim1, emit=False, auto=get_autoscale())
-
-        # Set scale
+        set_lim(lim0, lim1, emit=False, auto=get_autoscale())  # Set scale
         this_axis._scale = other_axis._scale

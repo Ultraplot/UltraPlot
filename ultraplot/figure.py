@@ -1590,19 +1590,19 @@ class Figure(mfigure.Figure):
                 # shared axes behave consistently.
                 if which == "x":
                     other._sharex = ref
-                    ref.xaxis.major = other.xaxis.major
-                    ref.xaxis.minor = other.xaxis.minor
-                    lim = other.get_xlim()
-                    ref.set_xlim(*lim, emit=False, auto=other.get_autoscalex_on())
-                    ref.xaxis._scale = other.xaxis._scale
+                    other.xaxis.major = ref.xaxis.major
+                    other.xaxis.minor = ref.xaxis.minor
+                    lim = ref.get_xlim()
+                    other.set_xlim(*lim, emit=False, auto=ref.get_autoscalex_on())
+                    other.xaxis._scale = ref.xaxis._scale
                 if which == "y":
                     # This logic is from sharey
                     other._sharey = ref
-                    ref.yaxis.major = other.yaxis.major
-                    ref.yaxis.minor = other.yaxis.minor
-                    lim = other.get_ylim()
-                    ref.set_ylim(*lim, emit=False, auto=other.get_autoscaley_on())
-                    ref.yaxis._scale = other.yaxis._scale
+                    other.yaxis.major = ref.yaxis.major
+                    other.yaxis.minor = ref.yaxis.minor
+                    lim = ref.get_ylim()
+                    other.set_ylim(*lim, emit=False, auto=ref.get_autoscaley_on())
+                    other.yaxis._scale = ref.yaxis._scale
 
     def _add_subplots(
         self,
