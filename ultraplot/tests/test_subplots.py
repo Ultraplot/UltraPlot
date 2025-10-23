@@ -327,3 +327,39 @@ def test_uneven_span_subplots(rng):
     axs[-1, -1].format(fc="gray4", grid=False)
     axs[0].plot((rng.random((50, 10)) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_non_rectangular_outside_labels_top():
+    """
+    Check that non-rectangular layouts work with outside labels.
+    """
+    layout = [
+        [1, 1, 2, 2],
+        [0, 3, 3, 0],
+        [4, 4, 5, 5],
+    ]
+
+    fig, ax = uplt.subplots(
+        layout,
+    )
+    ax.format(rightlabels=[2, 3, 5])
+    ax.format(bottomlabels=[4, 5])
+    ax.format(leftlabels=[1, 3, 4])
+    ax.format(toplabels=[1, 2])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_outside_labels_with_panels():
+    fig, ax = uplt.subplots(
+        ncols=2,
+        nrows=2,
+    )
+    # Create extreme case where we add a lot of panels
+    # This should push the left labels further left
+    for idx in range(5):
+        ax[0].panel("left")
+    ax.format(leftlabels=["A", "B"])
+    uplt.show(block=1)
+    return fig
