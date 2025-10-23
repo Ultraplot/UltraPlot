@@ -929,7 +929,7 @@ def _get_subplot_layout(
     for axi in all_axes:
         # Infer coordinate from grdispec
         spec = axi.get_subplotspec()
-        spans = spec._get_grid_span()
+        spans = spec._get_grid_span(hidden=True)
         rowspan = spans[:2]
         colspan = spans[-2:]
 
@@ -1083,7 +1083,7 @@ class _Crawler:
         this_rowspan = this_span[:2]
         this_colspan = this_span[-2:]
 
-        other_span = other_spec._get_grid_span()
+        other_span = other_spec._get_grid_span(hidden=True)
         other_span = other_spec._get_rows_columns()
         other_rowspan = other_span[:2]
         other_colspan = other_span[-2:]

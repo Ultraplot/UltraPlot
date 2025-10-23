@@ -195,7 +195,7 @@ class _SubplotSpec(mgridspec.SubplotSpec):
         row2, col2 = divmod(self.num2, ncols)
         return row1, row2, col1, col2
 
-    def _get_grid_span(self, hidden=True) -> (int, int, int, int):
+    def _get_grid_span(self, hidden=False) -> (int, int, int, int):
         """
         Retrieve the location of the subplot within the
         gridspec. When hidden is False we only consider
