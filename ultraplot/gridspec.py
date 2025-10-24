@@ -1595,8 +1595,6 @@ class SubplotGrid(MutableSequence, list):
         if len(objs) == 1:
             return objs[0]
         objs = [obj for obj in objs if obj is not None]
-        print(objs)
-
         return SubplotGrid(objs)
 
     def __setitem__(self, key, value):
