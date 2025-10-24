@@ -1045,8 +1045,24 @@ class _Crawler:
             return self._check_ranges(direction, other=self.grid[x, y])
 
         dx, dy = direction
-        pos = (x + dx, y + dy)
-        return self.is_border(pos, direction)
+        if cell is None:
+            return self.is_border((x + dx, y + dy), direction)
+
+        if hasattr(cell, "_panel_hidden") and cell._panel_hidden:
+            return self.is_border((x + dx, y + dy), direction)
+
+        if self.grid_axis_type[x, y] != self.axis_type:
+            # Allow traversing across the parent<->panel interface even when types differ
+            # e.g., GeoAxes main with cartesian panel or vice versa
+            if getattr(self.ax, "_panel_parent", None) is cell:
+                return self._check_ranges(direction, other=cell)
+            elif getattr(cell, "_panel_parent", None) is self.ax:
+                return self._check_ranges(direction, other=cell)
+        # Internal edge or plot reached
+        if cell != self.ax:
+            return self._check_ranges(direction, other=cell)
+
+        return self.is_border((x + dx, y + dy), direction)
 
     def _check_ranges(
         self,

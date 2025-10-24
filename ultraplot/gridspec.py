@@ -411,13 +411,15 @@ class GridSpec(mgridspec.GridSpec):
             num1, num2 = self._encode_indices(num1, num2)
         return _SubplotSpec(self, num1, num2)
 
-    def _encode_indices(self, *args, which=None):
+    def _encode_indices(self, *args, which=None, panel=False):
         """
-        Convert indices from the "unhidden" gridspec geometry into indices for the
+        Convert indices from the selected gridspec geometry into indices for the
         total geometry. If `which` is not passed these should be flattened indices.
+        When `panel` is True, indices are interpreted relative to panel slots
+        along the specified axis; otherwise they refer to non-panel slots.
         """
         nums = []
-        idxs = self._get_indices(which)
+        idxs = self._get_indices(which=which, panel=panel)
         for arg in args:
             try:
                 nums.append(idxs[arg])
@@ -425,13 +427,15 @@ class GridSpec(mgridspec.GridSpec):
                 raise ValueError(f"Invalid gridspec index {arg}.")
         return nums[0] if len(nums) == 1 else nums
 
-    def _decode_indices(self, *args, which=None):
+    def _decode_indices(self, *args, which=None, panel=False):
         """
-        Convert indices from the total geometry into the "unhidden" gridspec
+        Convert indices from the total geometry into the selected gridspec
         geometry. If `which` is not passed these should be flattened indices.
+        When `panel` is True, indices are interpreted relative to panel slots
+        along the specified axis; otherwise they refer to non-panel slots.
         """
         nums = []
-        idxs = self._get_indices(which)
+        idxs = self._get_indices(which=which, panel=panel)
         for arg in args:
             try:
                 nums.append(idxs.index(arg))
@@ -1552,17 +1556,29 @@ class SubplotGrid(MutableSequence, list):
                 f"{self.__class__.__name__} has no gridspec, cannot index with {key!r}."
             )
         # Build grid with None for empty slots
-        grid = np.full((gs.nrows_total, gs.ncols_total), None, dtype=object)
+        from .utils import _get_subplot_layout
+
+        print(self)
+        grid = _get_subplot_layout(gs, [i for i in self])[0]
+
+        # Determine if along each axis this grid consists only of panel slots
+        used_rows = set()
+        used_cols = set()
         for ax in self:
-            spec = ax.get_subplotspec()
-            x1, x2, y1, y2 = spec._get_rows_columns(ncols=gs.ncols_total)
-            grid[x1 : x2 + 1, y1 : y2 + 1] = ax
+            ss = ax.get_subplotspec().get_topmost_subplotspec()
+            r1, r2, c1, c2 = ss._get_rows_columns()
+            used_rows.update(range(r1, r2 + 1))
+            used_cols.update(range(c1, c2 + 1))
+        panel_h = all(gs._hpanels[i] for i in used_rows) if used_rows else False
+        panel_w = all(gs._wpanels[i] for i in used_cols) if used_cols else False
 
         new_key = []
         for which, keyi in zip("hw", key):
             try:
-                encoded_keyi = gs._encode_indices(keyi, which=which)
-            except:
+                panel_flag = panel_h if which == "h" else panel_w
+                encoded_keyi = gs._encode_indices(keyi, which=which, panel=panel_flag)
+                print(encoded_keyi)
+            except Exception:
                 raise IndexError(
                     f"Attempted to access {key=} for gridspec {grid.shape=}"
                 )
@@ -1573,10 +1589,13 @@ class SubplotGrid(MutableSequence, list):
             objs = [obj for obj in objs.flat if obj is not None]
         elif not isinstance(objs, list):
             objs = [objs]
+        print(objs)
 
         if len(objs) == 1:
             return objs[0]
         objs = [obj for obj in objs if obj is not None]
+        print(objs)
+
         return SubplotGrid(objs)
 
     def __setitem__(self, key, value):
