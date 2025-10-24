@@ -1344,6 +1344,11 @@ class Figure(mfigure.Figure):
             # Otherwise, copy the parent's axis formatters.
             fmt_key = "deglat" if side in ("left", "right") else "deglon"
             axis.set_major_formatter(constructor.Formatter(fmt_key))
+            # Update limits
+            axis._set_lim(
+                *getattr(ax, f"get_{'y' if side in ('left','right') else 'x'}lim")(),
+                auto=False,
+            )
         # Push main axes tick labels to the outside relative to the added panel
         # Skip this for filled panels (colorbars/legends)
         if not kw.get("filled", False) and share:
