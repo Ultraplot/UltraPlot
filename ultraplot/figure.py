@@ -1376,12 +1376,15 @@ class Figure(mfigure.Figure):
             if not share:
                 pax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
             else:
-                pax.xaxis.set_tick_params(labeltop=False)
+                on = ax.xaxis.get_tick_params()["labeltop"]
+                pax.xaxis.set_tick_params(labeltop=on)
+                ax.yaxis.set_tick_params(labeltop=False)
         elif side == "right":
             if not share:
                 pax.yaxis.set_tick_params(labelright=True, labelleft=False)
             else:
-                # pax.yaxis.set_tick_params(labelright=False)
+                on = ax.yaxis.get_tick_params()["labelright"]
+                pax.yaxis.set_tick_params(labelright=on)
                 ax.yaxis.set_tick_params(labelright=False)
 
         return pax

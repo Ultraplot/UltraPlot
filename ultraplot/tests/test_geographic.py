@@ -733,10 +733,11 @@ def test_geo_with_panels(rng):
     elevation = np.clip(elevation, 0, 4000)
 
     fig, ax = uplt.subplots(nrows=2, proj="cyl")
-    pax = ax[0].panel("r")
-    pax.barh(lat_zoom, elevation.sum(axis=1))
-    pax = ax[1].panel("r")
-    pax.barh(lat_zoom - 30, elevation.sum(axis=1))
+    ax.format(lonlabels="r")  # by default they are off
+    pax = ax.panel("r")
+    z = elevation.sum()
+    pax[0].barh(lat_zoom, elevation.sum(axis=1))
+    pax[1].barh(lat_zoom - 30, elevation.sum(axis=1))
     ax[0].pcolormesh(
         lon_zoom,
         lat_zoom,
@@ -760,6 +761,8 @@ def test_geo_with_panels(rng):
         ),
     )
     ax.format(oceancolor="blue", coast=True)
+    for axi in pax:
+        axi.tick_params(axis="x", labelsize=8, labelrotation=90)
     return fig
 
 
