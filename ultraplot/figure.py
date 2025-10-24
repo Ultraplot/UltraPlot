@@ -845,7 +845,6 @@ class Figure(mfigure.Figure):
             return
 
         outer_axes = self._get_border_axes()
-
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
 
         # Group axes by row (for x) or column (for y)
@@ -903,13 +902,11 @@ class Figure(mfigure.Figure):
         """
         from collections import defaultdict
 
-        # Group axes by row (for x) or column (for y)
         def _group_key(ax):
             ss = ax.get_subplotspec()
             return ss.rowspan.start if axis == "x" else ss.colspan.start
 
-        axes = list(self._iter_axes(panels=True, hidden=False))
-        groups = {}
+        groups = defaultdict(list)
         for axi in axes:
             try:
                 key = _group_key(axi)
@@ -1419,7 +1416,12 @@ class Figure(mfigure.Figure):
         # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
         if side == "top":
             if not share:
-                pax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
+                pax.xaxis.set_tick_params(
+                    **{
+                        pax._label_key("labeltop"): True,
+                        pax._label_key("labelbottom"): False,
+                    }
+                )
             else:
                 on = ax.xaxis.get_tick_params()[ax._label_key("labeltop")]
                 pax.xaxis.set_tick_params(**{pax._label_key("labeltop"): on})
