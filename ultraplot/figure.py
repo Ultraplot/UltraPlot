@@ -848,18 +848,60 @@ class Figure(mfigure.Figure):
 
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
 
+        # Group axes by row (for x) or column (for y)
+        axes = list(self._iter_axes(panels=True, hidden=False))
+        groups = self._group_axes_by_axis(axes, axis)
+
         # Version-dependent label name mapping for reading back params
+        label_keys = self._label_key_map()
+
+        # Process each group independently
+        for _, group_axes in groups.items():
+            # Build baseline from MAIN axes only (exclude panels)
+            baseline, skip_group = self._compute_baseline_tick_state(
+                group_axes, axis, label_keys
+            )
+            if skip_group:
+                continue
+
+            # Apply baseline to all axes in the group (including panels)
+            for axi in group_axes:
+                # Respect figure border sides and panel opposite sides
+                masked = self._apply_border_mask(axi, baseline, sides, outer_axes)
+
+                # Determine sharing level for this axes
+                print(self._effective_share_level(axi, axis, sides))
+
+                if self._effective_share_level(axi, axis, sides) < 3:
+                    continue
+
+                # Apply to geo/cartesian appropriately
+                self._set_ticklabel_state(axi, axis, masked)
+
+        self.stale = True
+
+    def _label_key_map(self):
+        """
+        Return a mapping for version-dependent label keys for Matplotlib tick params.
+        """
         first_axi = next(self._iter_axes(panels=True), None)
         if first_axi is None:
-            labelleft = "labelleft"
-            labelright = "labelright"
-            labeltop = "labeltop"
-            labelbottom = "labelbottom"
-        else:
-            labelleft = first_axi._label_key("labelleft")
-            labelright = first_axi._label_key("labelright")
-            labeltop = first_axi._label_key("labeltop")
-            labelbottom = first_axi._label_key("labelbottom")
+            return {
+                "labelleft": "labelleft",
+                "labelright": "labelright",
+                "labeltop": "labeltop",
+                "labelbottom": "labelbottom",
+            }
+        return {
+            name: first_axi._label_key(name)
+            for name in ("labelleft", "labelright", "labeltop", "labelbottom")
+        }
+
+    def _group_axes_by_axis(self, axes, axis: str):
+        """
+        Group axes by row (x) or column (y). Panels included; invalid subplotspec skipped.
+        """
+        from collections import defaultdict
 
         # Group axes by row (for x) or column (for y)
         def _group_key(ax):
@@ -874,119 +916,122 @@ class Figure(mfigure.Figure):
             except Exception:
                 # If we can't get a subplotspec, skip grouping for this axes
                 continue
-            groups.setdefault(key, []).append(axi)
+            groups[key].append(axi)
+        return groups
 
-        # Process each group independently
-        for key, group_axes in groups.items():
-            # Build baseline from MAIN axes only (exclude panels)
-            tick_params_group = {}
-            subplot_types_group = set()
-            unsupported_found = False
+    def _compute_baseline_tick_state(self, group_axes, axis: str, label_keys):
+        """
+        Build a baseline ticklabel visibility dict from MAIN axes (panels excluded).
+        Returns (baseline_dict, skip_group: bool). Emits warnings when encountering
+        unsupported or mixed subplot types.
+        """
+        baseline = {}
+        subplot_types = set()
+        unsupported_found = False
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
 
-            for axi in group_axes:
-                # Only main axes "vote" for baseline
-                if getattr(axi, "_panel_side", None):
-                    continue
-                # Supported axes types
-                if not isinstance(
-                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
-                ):
-                    warnings._warn_ultraplot(
-                        f"Tick label sharing not implemented for {type(axi)} subplots."
-                    )
-                    unsupported_found = True
-                    break
-                subplot_types_group.add(type(axi))
-                match axis:
-                    # Handle x
-                    case "x" if isinstance(axi, paxes.CartesianAxes):
-                        tmp = axi.xaxis.get_tick_params()
-                        if tmp.get(labeltop):
-                            tick_params_group[labeltop] = tmp[labeltop]
-                        if tmp.get(labelbottom):
-                            tick_params_group[labelbottom] = tmp[labelbottom]
-                    case "x" if isinstance(axi, paxes.GeoAxes):
-                        if axi._is_ticklabel_on("labeltop"):
-                            tick_params_group["labeltop"] = axi._is_ticklabel_on(
-                                "labeltop"
-                            )
-                        if axi._is_ticklabel_on("labelbottom"):
-                            tick_params_group["labelbottom"] = axi._is_ticklabel_on(
-                                "labelbottom"
-                            )
-
-                    # Handle y
-                    case "y" if isinstance(axi, paxes.CartesianAxes):
-                        tmp = axi.yaxis.get_tick_params()
-                        if tmp.get(labelleft):
-                            tick_params_group[labelleft] = tmp[labelleft]
-                        if tmp.get(labelright):
-                            tick_params_group[labelright] = tmp[labelright]
-                    case "y" if isinstance(axi, paxes.GeoAxes):
-                        if axi._is_ticklabel_on("labelleft"):
-                            tick_params_group["labelleft"] = axi._is_ticklabel_on(
-                                "labelleft"
-                            )
-                        if axi._is_ticklabel_on("labelright"):
-                            tick_params_group["labelright"] = axi._is_ticklabel_on(
-                                "labelright"
-                            )
-
-            # Skip group if unsupported axes were found
-            if unsupported_found:
+        for axi in group_axes:
+            # Only main axes "vote"
+            if getattr(axi, "_panel_side", None):
                 continue
 
-            # We cannot mix types (yet) within a group
-            if len(subplot_types_group) > 1:
+            # Supported axes types
+            if not isinstance(
+                axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+            ):
                 warnings._warn_ultraplot(
-                    "Tick label sharing not implemented for mixed subplot types."
+                    f"Tick label sharing not implemented for {type(axi)} subplots."
                 )
-                continue
+                unsupported_found = True
+                break
 
-            # Apply baseline to all axes in the group (including panels)
-            for axi in group_axes:
-                tmp = tick_params_group.copy()
+            subplot_types.add(type(axi))
 
-                # Respect figure border sides: only keep labels on true borders
+            # Collect label visibility state
+            if isinstance(axi, paxes.CartesianAxes):
+                params = getattr(axi, f"{axis}axis").get_tick_params()
                 for side in sides:
-                    label = f"label{side}"
-                    if isinstance(axi, paxes.CartesianAxes):
-                        # For cartesian, use version-mapped key when reading/writing
-                        label = axi._label_key(label)
-                    if axi not in outer_axes[side]:
-                        tmp[label] = False
-                    from .axes.cartesian import OPPOSITE_SIDE
+                    key = label_keys[f"label{side}"]
+                    if params.get(key):
+                        baseline[key] = params[key]
+            elif isinstance(axi, paxes.GeoAxes):
+                for side in sides:
+                    key = f"label{side}"
+                    if axi._is_ticklabel_on(key):
+                        baseline[key] = axi._is_ticklabel_on(key)
 
-                    if axi._panel_side and OPPOSITE_SIDE[axi._panel_side] == side:
-                        tmp[label] = False
+        if unsupported_found:
+            return {}, True
 
-                # Determine sharing level for this axes
-                level = getattr(self, f"_share{axis}")
-                if axis == "y":
-                    if hasattr(axi, "_panel_sharey_group") and axi._panel_sharey_group:
-                        level = 3
-                    elif getattr(axi, "_panel_side", None) and getattr(
-                        axi, "_sharey", None
-                    ):
-                        level = 3
-                else:  # x-axis
-                    if hasattr(axi, "_panel_sharex_group") and axi._panel_sharex_group:
-                        level = 3
-                    elif getattr(axi, "_panel_side", None) and getattr(
-                        axi, "_sharex", None
-                    ):
-                        level = 3
+        # We cannot mix types (yet) within a group
+        if len(subplot_types) > 1:
+            warnings._warn_ultraplot(
+                "Tick label sharing not implemented for mixed subplot types."
+            )
+            return {}, True
 
-                if level < 3:
-                    continue
+        return baseline, False
 
-                # Apply to geo/cartesian appropriately
-                if isinstance(axi, paxes.GeoAxes):
-                    axi._toggle_gridliner_labels(**tmp)
-                elif tmp:
-                    getattr(axi, f"{axis}axis").set_tick_params(**tmp)
+    def _apply_border_mask(
+        self, axi, baseline: dict, sides: tuple[str, str], outer_axes
+    ):
+        """
+        Apply figure-border constraints and panel opposite-side suppression.
+        Keeps label key mapping per-axis for cartesian.
+        """
+        from .axes.cartesian import OPPOSITE_SIDE
 
-        self.stale = True
+        masked = baseline.copy()
+        for side in sides:
+            label = f"label{side}"
+            if isinstance(axi, paxes.CartesianAxes):
+                # Use per-axis version-mapped key when writing
+                label = axi._label_key(label)
+
+            # Only keep labels on true figure borders
+            if axi not in outer_axes[side]:
+                masked[label] = False
+
+            # For panels, suppress labels on their opposite side
+            if (
+                getattr(axi, "_panel_side", None)
+                and OPPOSITE_SIDE[axi._panel_side] == side
+            ):
+                masked[label] = False
+
+        return masked
+
+    def _effective_share_level(self, axi, axis: str, sides: tuple[str, str]) -> int:
+        """
+        Compute the effective share level for an axes, considering panel groups and
+        adjacent panels. Fixes the original variable leak by checking any relevant side.
+        """
+        level = getattr(self, f"_share{axis}")
+
+        # Panel group-level sharing
+        if getattr(axi, f"_panel_share{axis}_group", None):
+            return 3
+
+        # Panel member sharing
+        if getattr(axi, "_panel_side", None) and getattr(axi, f"_share{axis}", None):
+            return 3
+
+        # Adjacent panels on any relevant side
+        panel_dict = getattr(axi, "_panel_dict", {})
+        for side in sides:
+            side_panels = panel_dict.get(side) or []
+            if side_panels and getattr(side_panels[0], f"_share{axis}", False):
+                return 3
+        return level
+
+    def _set_ticklabel_state(self, axi, axis: str, state: dict):
+        """Apply the computed ticklabel state to cartesian or geo axes."""
+        if isinstance(axi, paxes.GeoAxes):
+            axi._toggle_gridliner_labels(**state)
+        elif state:
+            # Convert "x"/"y" to booleans for cartesian
+            cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
+            getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
 
     def _context_adjusting(self, cache=True):
         """
@@ -1363,29 +1408,34 @@ class Figure(mfigure.Figure):
                     ax._toggle_gridliner_labels(labelright=False)
             else:
                 if side == "top":
-                    ax.xaxis.set_tick_params(labeltop=False)
+                    ax.xaxis.set_tick_params(**{ax._label_key("labeltop"): False})
                 elif side == "bottom":
-                    ax.xaxis.set_tick_params(labelbottom=False)
+                    ax.xaxis.set_tick_params(**{ax._label_key("labelbottom"): False})
                 elif side == "left":
-                    ax.yaxis.set_tick_params(labelleft=False)
+                    ax.yaxis.set_tick_params(**{ax._label_key("labelleft"): False})
                 elif side == "right":
-                    ax.yaxis.set_tick_params(labelright=False)
+                    ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
 
         # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
         if side == "top":
             if not share:
                 pax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
             else:
-                on = ax.xaxis.get_tick_params()["labeltop"]
-                pax.xaxis.set_tick_params(labeltop=on)
+                on = ax.xaxis.get_tick_params()[ax._label_key("labeltop")]
+                pax.xaxis.set_tick_params(**{pax._label_key("labeltop"): on})
                 ax.yaxis.set_tick_params(labeltop=False)
         elif side == "right":
             if not share:
-                pax.yaxis.set_tick_params(labelright=True, labelleft=False)
+                pax.yaxis.set_tick_params(
+                    **{
+                        pax._label_key("labelright"): True,
+                        pax._label_key("labelleft"): False,
+                    }
+                )
             else:
-                on = ax.yaxis.get_tick_params()["labelright"]
-                pax.yaxis.set_tick_params(labelright=on)
-                ax.yaxis.set_tick_params(labelright=False)
+                on = ax.yaxis.get_tick_params()[ax._label_key("labelright")]
+                pax.yaxis.set_tick_params(**{pax._label_key("labelright"): on})
+                ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
 
         return pax
 
