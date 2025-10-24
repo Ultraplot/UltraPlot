@@ -761,8 +761,6 @@ def test_geo_with_panels(rng):
         ),
     )
     ax.format(oceancolor="blue", coast=True)
-    for axi in pax:
-        axi.tick_params(axis="x", labelsize=8, labelrotation=90)
     return fig
 
 

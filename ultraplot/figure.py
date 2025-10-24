@@ -869,8 +869,6 @@ class Figure(mfigure.Figure):
                 masked = self._apply_border_mask(axi, baseline, sides, outer_axes)
 
                 # Determine sharing level for this axes
-                print(self._effective_share_level(axi, axis, sides))
-
                 if self._effective_share_level(axi, axis, sides) < 3:
                     continue
 
@@ -1240,7 +1238,6 @@ class Figure(mfigure.Figure):
                 grid_axis_type=grid_axis_type,
             )
             for direction, is_border in crawler.find_edges():
-                # print(">>", is_border, direction, axi.number)
                 if is_border and axi not in border_axes[direction]:
                     border_axes[direction].append(axi)
         self._cached_border_axes = border_axes
