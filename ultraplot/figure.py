@@ -1347,7 +1347,7 @@ class Figure(mfigure.Figure):
             # Update limits
             axis._set_lim(
                 *getattr(ax, f"get_{'y' if side in ('left','right') else 'x'}lim")(),
-                auto=False,
+                auto=True,
             )
         # Push main axes tick labels to the outside relative to the added panel
         # Skip this for filled panels (colorbars/legends)
