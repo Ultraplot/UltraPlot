@@ -1381,7 +1381,7 @@ class Figure(mfigure.Figure):
             if not share:
                 pax.yaxis.set_tick_params(labelright=True, labelleft=False)
             else:
-                pax.yaxis.set_tick_params(labelright=False)
+                # pax.yaxis.set_tick_params(labelright=False)
                 ax.yaxis.set_tick_params(labelright=False)
 
         return pax
