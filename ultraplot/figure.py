@@ -1002,6 +1002,9 @@ class Figure(mfigure.Figure):
         adjacent panels. Fixes the original variable leak by checking any relevant side.
         """
         level = getattr(self, f"_share{axis}")
+        # If figure-level sharing is disabled (0/False), don't promote due to panels
+        if not level or (isinstance(level, (int, float)) and level < 1):
+            return level
 
         # Panel group-level sharing
         if getattr(axi, f"_panel_share{axis}_group", None):
@@ -1017,6 +1020,7 @@ class Figure(mfigure.Figure):
             side_panels = panel_dict.get(side) or []
             if side_panels and getattr(side_panels[0], f"_share{axis}", False):
                 return 3
+
         return level
 
     def _set_ticklabel_state(self, axi, axis: str, state: dict):
