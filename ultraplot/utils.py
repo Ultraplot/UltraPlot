@@ -1049,9 +1049,9 @@ class _Crawler:
             # Allow traversing across the parent<->panel interface even when types differ
             # e.g., GeoAxes main with cartesian panel or vice versa
             if getattr(self.ax, "_panel_parent", None) is cell:
-                return self.is_border((x + dx, y + dy), direction)
+                return self._check_ranges(direction, other=cell)
             if getattr(cell, "_panel_parent", None) is self.ax:
-                return self.is_border((x + dx, y + dy), direction)
+                return self._check_ranges(direction, other=cell)
 
         # Internal edge or plot reached
         if cell != self.ax:
