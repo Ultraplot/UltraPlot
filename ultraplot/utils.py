@@ -1041,6 +1041,8 @@ class _Crawler:
         dx, dy = direction
         if cell is None:
             return self.is_border((x + dx, y + dy), direction)
+        if getattr(cell, "_colorbar_fill", None) is not None:
+            return self.is_border((x + dx, y + dy), direction)
 
         if hasattr(cell, "_panel_hidden") and cell._panel_hidden:
             return self.is_border((x + dx, y + dy), direction)
