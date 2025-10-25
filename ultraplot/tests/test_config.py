@@ -32,3 +32,65 @@ def test_cycle_in_rc_file(tmp_path):
     uplt.rc.load(str(rc_file))
 
     assert uplt.rc["cycle"] == "colorblind"
+
+
+import io
+from unittest.mock import patch, MagicMock
+from importlib.metadata import PackageNotFoundError
+from ultraplot.utils import check_for_update
+
+
+@patch("builtins.print")
+@patch("importlib.metadata.version")
+def test_package_not_installed(mock_version, mock_print):
+    mock_version.side_effect = PackageNotFoundError
+    check_for_update("fakepkg")
+    mock_print.assert_not_called()
+
+
+@patch("builtins.print")
+@patch("importlib.metadata.version", return_value="1.0.0")
+@patch("urllib.request.urlopen")
+def test_network_failure(mock_urlopen, mock_version, mock_print):
+    mock_urlopen.side_effect = Exception("Network down")
+    check_for_update("fakepkg")
+    mock_print.assert_not_called()
+
+
+@patch("builtins.print")
+@patch("importlib.metadata.version", return_value="1.0.0")
+@patch("urllib.request.urlopen")
+def test_no_update_available(mock_urlopen, mock_version, mock_print):
+    mock_resp = MagicMock()
+    mock_resp.__enter__.return_value = io.StringIO('{"info": {"version": "1.0.0"}}')
+    mock_urlopen.return_value = mock_resp
+
+    check_for_update("fakepkg")
+    mock_print.assert_not_called()
+
+
+@patch("builtins.print")
+@patch("importlib.metadata.version", return_value="1.0.0")
+@patch("urllib.request.urlopen")
+def test_update_available(mock_urlopen, mock_version, mock_print):
+    mock_resp = MagicMock()
+    mock_resp.__enter__.return_value = io.StringIO('{"info": {"version": "1.2.0"}}')
+    mock_urlopen.return_value = mock_resp
+
+    check_for_update("fakepkg")
+    mock_print.assert_called_once()
+    msg = mock_print.call_args[0][0]
+    assert "A newer version of fakepkg is available" in msg
+    assert "1.0.0 → 1.2.0" in msg
+
+
+@patch("builtins.print")
+@patch("importlib.metadata.version", return_value="1.0.0dev")
+@patch("urllib.request.urlopen")
+def test_dev_version_skipped(mock_urlopen, mock_version, mock_print):
+    mock_resp = MagicMock()
+    mock_resp.__enter__.return_value = io.StringIO('{"info": {"version": "2.0.0"}}')
+    mock_urlopen.return_value = mock_resp
+
+    check_for_update("fakepkg")
+    mock_print.assert_not_called()
