@@ -1945,6 +1945,11 @@ _rc_ultraplot_table = {
         "The format string used to format `pint.Quantity` default unit labels "
         "using ``format(units, unitformat)``. See also :rcraw:`autoformat`.",
     ),
+    "ultraplot.check_for_latest_version": (
+        False,
+        _validate_bool,
+        "Whether to check for the latest version of UltraPlot on PyPI when importing",
+    ),
 }
 
 # Child settings. Changing the parent changes all the children, but
