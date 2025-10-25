@@ -209,3 +209,73 @@ def test_cycle_rc_setting(cycle, raises_error):
     else:
         with uplt.rc.context(cycle=cycle):
             pass
+
+
+def test_rc_check_key():
+    """
+    Test the _check_key method in _RcParams
+    """
+    from ultraplot.internals.rcsetup import _RcParams
+
+    # Create a test instance
+    rc_params = _RcParams({"test_key": "test_value"}, {"test_key": lambda x: x})
+
+    # Test valid key
+    key, value = rc_params._check_key("test_key", "new_value")
+    assert key == "test_key"
+    assert value == "new_value"
+
+    # Test new key (should be registered with default validator)
+    key, value = rc_params._check_key("new_key", "new_value")
+    assert key == "new_key"
+    assert value == "new_value"
+    assert "new_key" in rc_params._validate
+
+
+def test_rc_repr():
+    """
+    Test the __repr__ method in _RcParams
+    """
+    from ultraplot.internals.rcsetup import _RcParams
+
+    # Create a test instance
+    rc_params = _RcParams({"test_key": "test_value"}, {"test_key": lambda x: x})
+
+    # Test __repr__
+    repr_str = repr(rc_params)
+    assert "RcParams" in repr_str
+    assert "test_key" in repr_str
+
+
+def test_rc_validators():
+    """
+    Test validators in _RcParams
+    """
+    from ultraplot.internals.rcsetup import _RcParams
+
+    # Create a test instance with various validators
+    validators = {
+        "int_val": lambda x: int(x),
+        "float_val": lambda x: float(x),
+        "str_val": lambda x: str(x),
+    }
+    rc_params = _RcParams(
+        {"int_val": 1, "float_val": 1.0, "str_val": "test"}, validators
+    )
+
+    # Test valid values
+    rc_params["int_val"] = 2
+    assert rc_params["int_val"] == 2
+
+    rc_params["float_val"] = 2.5
+    assert rc_params["float_val"] == 2.5
+
+    rc_params["str_val"] = "new_value"
+    assert rc_params["str_val"] == "new_value"
+
+    # Test invalid values
+    with pytest.raises(ValueError):
+        rc_params["int_val"] = "not_an_int"
+
+    with pytest.raises(ValueError):
+        rc_params["float_val"] = "not_a_float"
