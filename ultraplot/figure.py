@@ -491,8 +491,13 @@ def _clear_border_cache(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         result = func(self, *args, **kwargs)
+<<<<<<< HEAD
         if hasattr(self, "_cache_border_axes"):
             delattr(self, "_cache_border_axes")
+=======
+        if hasattr(self, "_cached_border_axes"):
+            delattr(self, "_cached_border_axes")
+>>>>>>> main
         return result
 
     return wrapper
@@ -845,6 +850,7 @@ class Figure(mfigure.Figure):
             return
 
         outer_axes = self._get_border_axes()
+<<<<<<< HEAD
 
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
 
@@ -862,18 +868,80 @@ class Figure(mfigure.Figure):
             labelbottom = first_axi._label_key("labelbottom")
 
         # Group axes by row (for x) or column (for y)
+=======
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+
+        # Group axes by row (for x) or column (for y)
+        axes = list(self._iter_axes(panels=True, hidden=False))
+        groups = self._group_axes_by_axis(axes, axis)
+
+        # Version-dependent label name mapping for reading back params
+        label_keys = self._label_key_map()
+
+        # Process each group independently
+        for _, group_axes in groups.items():
+            # Build baseline from MAIN axes only (exclude panels)
+            baseline, skip_group = self._compute_baseline_tick_state(
+                group_axes, axis, label_keys
+            )
+            if skip_group:
+                continue
+
+            # Apply baseline to all axes in the group (including panels)
+            for axi in group_axes:
+                # Respect figure border sides and panel opposite sides
+                masked = self._apply_border_mask(axi, baseline, sides, outer_axes)
+
+                # Determine sharing level for this axes
+                if self._effective_share_level(axi, axis, sides) < 3:
+                    continue
+
+                # Apply to geo/cartesian appropriately
+                self._set_ticklabel_state(axi, axis, masked)
+
+        self.stale = True
+
+    def _label_key_map(self):
+        """
+        Return a mapping for version-dependent label keys for Matplotlib tick params.
+        """
+        first_axi = next(self._iter_axes(panels=True), None)
+        if first_axi is None:
+            return {
+                "labelleft": "labelleft",
+                "labelright": "labelright",
+                "labeltop": "labeltop",
+                "labelbottom": "labelbottom",
+            }
+        return {
+            name: first_axi._label_key(name)
+            for name in ("labelleft", "labelright", "labeltop", "labelbottom")
+        }
+
+    def _group_axes_by_axis(self, axes, axis: str):
+        """
+        Group axes by row (x) or column (y). Panels included; invalid subplotspec skipped.
+        """
+        from collections import defaultdict
+
+>>>>>>> main
         def _group_key(ax):
             ss = ax.get_subplotspec()
             return ss.rowspan.start if axis == "x" else ss.colspan.start
 
+<<<<<<< HEAD
         axes = list(self._iter_axes(panels=True, hidden=False))
         groups = {}
+=======
+        groups = defaultdict(list)
+>>>>>>> main
         for axi in axes:
             try:
                 key = _group_key(axi)
             except Exception:
                 # If we can't get a subplotspec, skip grouping for this axes
                 continue
+<<<<<<< HEAD
             groups.setdefault(key, []).append(axi)
 
         # Process each group independently
@@ -987,6 +1055,129 @@ class Figure(mfigure.Figure):
                     getattr(axi, f"{axis}axis").set_tick_params(**tmp)
 
         self.stale = True
+=======
+            groups[key].append(axi)
+        return groups
+
+    def _compute_baseline_tick_state(self, group_axes, axis: str, label_keys):
+        """
+        Build a baseline ticklabel visibility dict from MAIN axes (panels excluded).
+        Returns (baseline_dict, skip_group: bool). Emits warnings when encountering
+        unsupported or mixed subplot types.
+        """
+        baseline = {}
+        subplot_types = set()
+        unsupported_found = False
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+
+        for axi in group_axes:
+            # Only main axes "vote"
+            if getattr(axi, "_panel_side", None):
+                continue
+
+            # Supported axes types
+            if not isinstance(
+                axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+            ):
+                warnings._warn_ultraplot(
+                    f"Tick label sharing not implemented for {type(axi)} subplots."
+                )
+                unsupported_found = True
+                break
+
+            subplot_types.add(type(axi))
+
+            # Collect label visibility state
+            if isinstance(axi, paxes.CartesianAxes):
+                params = getattr(axi, f"{axis}axis").get_tick_params()
+                for side in sides:
+                    key = label_keys[f"label{side}"]
+                    if params.get(key):
+                        baseline[key] = params[key]
+            elif isinstance(axi, paxes.GeoAxes):
+                for side in sides:
+                    key = f"label{side}"
+                    if axi._is_ticklabel_on(key):
+                        baseline[key] = axi._is_ticklabel_on(key)
+
+        if unsupported_found:
+            return {}, True
+
+        # We cannot mix types (yet) within a group
+        if len(subplot_types) > 1:
+            warnings._warn_ultraplot(
+                "Tick label sharing not implemented for mixed subplot types."
+            )
+            return {}, True
+
+        return baseline, False
+
+    def _apply_border_mask(
+        self, axi, baseline: dict, sides: tuple[str, str], outer_axes
+    ):
+        """
+        Apply figure-border constraints and panel opposite-side suppression.
+        Keeps label key mapping per-axis for cartesian.
+        """
+        from .axes.cartesian import OPPOSITE_SIDE
+
+        masked = baseline.copy()
+        for side in sides:
+            label = f"label{side}"
+            if isinstance(axi, paxes.CartesianAxes):
+                # Use per-axis version-mapped key when writing
+                label = axi._label_key(label)
+
+            # Only keep labels on true figure borders
+            if axi not in outer_axes[side]:
+                masked[label] = False
+
+            # For panels, suppress labels on their opposite side
+            if (
+                getattr(axi, "_panel_side", None)
+                and OPPOSITE_SIDE[axi._panel_side] == side
+            ):
+                masked[label] = False
+
+        return masked
+
+    def _effective_share_level(self, axi, axis: str, sides: tuple[str, str]) -> int:
+        """
+        Compute the effective share level for an axes, considering panel groups and
+        adjacent panels. Fixes the original variable leak by checking any relevant side.
+        """
+        level = getattr(self, f"_share{axis}")
+        # If figure-level sharing is disabled (0/False), don't promote due to panels
+        if not level or (isinstance(level, (int, float)) and level < 1):
+            return level
+
+        # Panel group-level sharing
+        if getattr(axi, f"_panel_share{axis}_group", None):
+            return 3
+
+        # Panel member sharing
+        if getattr(axi, "_panel_side", None) and getattr(axi, f"_share{axis}", None):
+            return 3
+
+        # Adjacent panels on any relevant side
+        panel_dict = getattr(axi, "_panel_dict", {})
+        for side in sides:
+            side_panels = panel_dict.get(side) or []
+            if side_panels and getattr(side_panels[0], f"_share{axis}", False):
+                return 3
+
+        return level
+
+    def _set_ticklabel_state(self, axi, axis: str, state: dict):
+        """Apply the computed ticklabel state to cartesian or geo axes."""
+        if state:
+            # Normalize "x"/"y" values to booleans for both Geo and Cartesian axes
+            cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
+            if isinstance(axi, paxes.GeoAxes):
+                axi._toggle_gridliner_labels(**cleaned)
+            else:
+                getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
+>>>>>>> main
 
     def _context_adjusting(self, cache=True):
         """
@@ -1079,17 +1270,42 @@ class Figure(mfigure.Figure):
     def _get_align_axes(self, side):
         """
         Return the main axes along the edge of the figure.
+
+        For 'left'/'right': select one extreme axis per row (leftmost/rightmost).
+        For 'top'/'bottom': select one extreme axis per column (topmost/bottommost).
         """
-        x, y = "xy" if side in ("left", "right") else "yx"
-        axs = self._subplot_dict.values()
+        axs = tuple(self._subplot_dict.values())
         if not axs:
             return []
-        ranges = np.array([ax._range_subplotspec(x) for ax in axs])
-        edge = ranges[:, 0].min() if side in ("left", "top") else ranges[:, 1].max()
-        idx = 0 if side in ("left", "top") else 1
-        axs = [ax for ax in axs if ax._range_subplotspec(x)[idx] == edge]
-        axs = [ax for ax in sorted(axs, key=lambda ax: ax._range_subplotspec(y)[0])]
-        axs = [ax for ax in axs if ax.get_visible()]
+        if side not in ("left", "right", "top", "bottom"):
+            raise ValueError(f"Invalid side {side!r}.")
+        from .utils import _get_subplot_layout
+
+        grid = _get_subplot_layout(
+            self._gridspec, list(self._iter_axes(panels=False, hidden=False))
+        )[0]
+        # From the @side we find the first non-zero
+        # entry in each row or column and collect the axes
+        if side == "left":
+            options = grid
+        elif side == "right":
+            options = grid[:, ::-1]
+        elif side == "top":
+            options = grid.T
+        else:  # bottom
+            options = grid.T[:, ::-1]
+        uids = set()
+        for option in options:
+            idx = np.where(option != None)[0]
+            if idx.size > 0:
+                first = idx.min()
+                number = option[first].number
+                uids.add(number)
+        axs = []
+        # Collect correct axes
+        for axi in self._iter_axes():
+            if axi.number in uids and axi not in axs:
+                axs.append(axi)
         return axs
 
     def _get_border_axes(
@@ -1173,7 +1389,10 @@ class Figure(mfigure.Figure):
                 grid_axis_type=grid_axis_type,
             )
             for direction, is_border in crawler.find_edges():
+<<<<<<< HEAD
                 # print(">>", is_border, direction, axi.number)
+=======
+>>>>>>> main
                 if is_border and axi not in border_axes[direction]:
                     border_axes[direction].append(axi)
         self._cached_border_axes = border_axes
@@ -1300,6 +1519,13 @@ class Figure(mfigure.Figure):
             raise RuntimeError("The gridspec must be active.")
         kw = _pop_params(kwargs, gs._insert_panel_slot)
         ss, share = gs._insert_panel_slot(side, ax, **kw)
+        # Guard: GeoAxes with non-rectilinear projections cannot share with panels
+        if isinstance(ax, paxes.GeoAxes) and not ax._is_rectilinear():
+            if share:
+                warnings._warn_ultraplot(
+                    "Panel sharing disabled for non-rectilinear GeoAxes projections."
+                )
+            share = False
         kwargs["autoshare"] = False
         kwargs.setdefault("number", False)  # power users might number panels
         pax = self.add_subplot(ss, **kwargs)
@@ -1312,6 +1538,7 @@ class Figure(mfigure.Figure):
         getattr(axis, "tick_" + side)()  # set tick and tick label position
         axis.set_label_position(side)  # set label position
         # Sync limits and formatters with parent when sharing to ensure consistent ticks
+<<<<<<< HEAD
         if share:
             # Copy limits for the shared axis
             if side in ("left", "right"):
@@ -1336,6 +1563,23 @@ class Figure(mfigure.Figure):
         # Push main axes tick labels to the outside relative to the added panel
         # Skip this for filled panels (colorbars/legends)
         if not kw.get("filled", False):
+=======
+        # Copy limits for the shared axis
+        # Note: for non-geo axes this is handled by auto sharing
+        if share and isinstance(ax, paxes.GeoAxes):
+            # Align with backend: for GeoAxes, use lon/lat degree formatters on panels.
+            # Otherwise, copy the parent's axis formatters.
+            fmt_key = "deglat" if side in ("left", "right") else "deglon"
+            axis.set_major_formatter(constructor.Formatter(fmt_key))
+            # Update limits
+            axis._set_lim(
+                *getattr(ax, f"get_{'y' if side in ('left','right') else 'x'}lim")(),
+                auto=True,
+            )
+        # Push main axes tick labels to the outside relative to the added panel
+        # Skip this for filled panels (colorbars/legends)
+        if not kw.get("filled", False) and share:
+>>>>>>> main
             if isinstance(ax, paxes.GeoAxes):
                 if side == "top":
                     ax._toggle_gridliner_labels(labeltop=False)
@@ -1347,6 +1591,7 @@ class Figure(mfigure.Figure):
                     ax._toggle_gridliner_labels(labelright=False)
             else:
                 if side == "top":
+<<<<<<< HEAD
                     ax.xaxis.set_tick_params(labeltop=False)
                 elif side == "bottom":
                     ax.xaxis.set_tick_params(labelbottom=False)
@@ -1354,10 +1599,20 @@ class Figure(mfigure.Figure):
                     ax.yaxis.set_tick_params(labelleft=False)
                 elif side == "right":
                     ax.yaxis.set_tick_params(labelright=False)
+=======
+                    ax.xaxis.set_tick_params(**{ax._label_key("labeltop"): False})
+                elif side == "bottom":
+                    ax.xaxis.set_tick_params(**{ax._label_key("labelbottom"): False})
+                elif side == "left":
+                    ax.yaxis.set_tick_params(**{ax._label_key("labelleft"): False})
+                elif side == "right":
+                    ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
+>>>>>>> main
 
         # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
         if side == "top":
             if not share:
+<<<<<<< HEAD
                 pax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
             else:
                 pax.xaxis.set_tick_params(labeltop=False)
@@ -1367,6 +1622,30 @@ class Figure(mfigure.Figure):
             else:
                 pax.yaxis.set_tick_params(labelright=False)
                 ax.yaxis.set_tick_params(labelright=False)
+=======
+                pax.xaxis.set_tick_params(
+                    **{
+                        pax._label_key("labeltop"): True,
+                        pax._label_key("labelbottom"): False,
+                    }
+                )
+            else:
+                on = ax.xaxis.get_tick_params()[ax._label_key("labeltop")]
+                pax.xaxis.set_tick_params(**{pax._label_key("labeltop"): on})
+                ax.yaxis.set_tick_params(labeltop=False)
+        elif side == "right":
+            if not share:
+                pax.yaxis.set_tick_params(
+                    **{
+                        pax._label_key("labelright"): True,
+                        pax._label_key("labelleft"): False,
+                    }
+                )
+            else:
+                on = ax.yaxis.get_tick_params()[ax._label_key("labelright")]
+                pax.yaxis.set_tick_params(**{pax._label_key("labelright"): on})
+                ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
+>>>>>>> main
 
         return pax
 
@@ -1590,19 +1869,19 @@ class Figure(mfigure.Figure):
                 # shared axes behave consistently.
                 if which == "x":
                     other._sharex = ref
-                    ref.xaxis.major = other.xaxis.major
-                    ref.xaxis.minor = other.xaxis.minor
-                    lim = other.get_xlim()
-                    ref.set_xlim(*lim, emit=False, auto=other.get_autoscalex_on())
-                    ref.xaxis._scale = other.xaxis._scale
+                    other.xaxis.major = ref.xaxis.major
+                    other.xaxis.minor = ref.xaxis.minor
+                    lim = ref.get_xlim()
+                    other.set_xlim(*lim, emit=False, auto=ref.get_autoscalex_on())
+                    other.xaxis._scale = ref.xaxis._scale
                 if which == "y":
                     # This logic is from sharey
                     other._sharey = ref
-                    ref.yaxis.major = other.yaxis.major
-                    ref.yaxis.minor = other.yaxis.minor
-                    lim = other.get_ylim()
-                    ref.set_ylim(*lim, emit=False, auto=other.get_autoscaley_on())
-                    ref.yaxis._scale = other.yaxis._scale
+                    other.yaxis.major = ref.yaxis.major
+                    other.yaxis.minor = ref.yaxis.minor
+                    lim = ref.get_ylim()
+                    other.set_ylim(*lim, emit=False, auto=ref.get_autoscaley_on())
+                    other.yaxis._scale = ref.yaxis._scale
 
     def _add_subplots(
         self,

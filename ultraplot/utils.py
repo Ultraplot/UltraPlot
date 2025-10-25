@@ -929,7 +929,7 @@ def _get_subplot_layout(
     for axi in all_axes:
         # Infer coordinate from grdispec
         spec = axi.get_subplotspec()
-        spans = spec._get_grid_span()
+        spans = spec._get_grid_span(hidden=True)
         rowspan = spans[:2]
         colspan = spans[-2:]
 
@@ -1017,8 +1017,8 @@ class _Crawler:
         ys = range(y, y + b + 1)
 
         is_border = False
-        for x, y in product(xs, ys):
-            pos = (x, y)
+        for xl, yl in product(xs, ys):
+            pos = (xl, yl)
             if self.is_border(pos, d):
                 is_border = True
                 break
@@ -1041,6 +1041,8 @@ class _Crawler:
         dx, dy = direction
         if cell is None:
             return self.is_border((x + dx, y + dy), direction)
+        if getattr(cell, "_colorbar_fill", None) is not None:
+            return self.is_border((x + dx, y + dy), direction)
 
         if hasattr(cell, "_panel_hidden") and cell._panel_hidden:
             return self.is_border((x + dx, y + dy), direction)
@@ -1049,9 +1051,10 @@ class _Crawler:
             # Allow traversing across the parent<->panel interface even when types differ
             # e.g., GeoAxes main with cartesian panel or vice versa
             if getattr(self.ax, "_panel_parent", None) is cell:
-                return self.is_border((x + dx, y + dy), direction)
+                return self._check_ranges(direction, other=cell)
             if getattr(cell, "_panel_parent", None) is self.ax:
-                return self.is_border((x + dx, y + dy), direction)
+                return self._check_ranges(direction, other=cell)
+            return False
 
         # Internal edge or plot reached
         if cell != self.ax:
@@ -1083,7 +1086,7 @@ class _Crawler:
         this_rowspan = this_span[:2]
         this_colspan = this_span[-2:]
 
-        other_span = other_spec._get_grid_span()
+        other_span = other_spec._get_grid_span(hidden=True)
         other_span = other_spec._get_rows_columns()
         other_rowspan = other_span[:2]
         other_colspan = other_span[-2:]
@@ -1120,6 +1123,9 @@ class _Crawler:
                 parent = self.ax._panel_parent
                 panels = parent._panel_dict.get(panel_side, [])
                 if side == panel_side and panels and panels[-1] is self.ax:
+                    return True
+            else:  # main axis
+                if other._panel_parent and not other._panel_share:
                     return True
             return False
         return True

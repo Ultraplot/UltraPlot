@@ -1545,6 +1545,8 @@ class Axes(maxes.Axes):
                     iax._panel_sharex_group = True
                     iax._sharex_setup(bottom)  # parent is bottom-most
             paxs = shared(self._panel_dict["top"])
+            if paxs and self.figure._sharex > 0:
+                self._panel_sharex_group = True
             for iax in paxs:
                 iax._panel_sharex_group = True
                 iax._sharex_setup(bottom)
@@ -1559,6 +1561,8 @@ class Axes(maxes.Axes):
                     iax._panel_sharey_group = True
                     iax._sharey_setup(left)  # parent is left-most
             paxs = shared(self._panel_dict["right"])
+            if paxs and self.figure._sharey > 0:
+                self._panel_sharey_group = True
             for iax in paxs:
                 iax._panel_sharey_group = True
                 iax._sharey_setup(left)

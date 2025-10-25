@@ -9,6 +9,46 @@ from ultraplot.internals.warnings import UltraPlotWarning
 
 
 @pytest.mark.parametrize(
+    "side,row_sel,col_sel,expected_len,fmt_kwargs",
+    [
+        ("right", slice(None), -1, 2, {"yticklabelloc": "l"}),
+        ("left", slice(None), -1, 2, {"yticklabelloc": "l"}),
+        ("top", -1, slice(None), 2, {"xticklabelloc": "b"}),
+        ("bottom", -1, slice(None), 2, {"xticklabelloc": "b"}),
+    ],
+)
+@pytest.mark.mpl_image_compare
+def test_panel_only_gridspec_indexing_panels(
+    side, row_sel, col_sel, expected_len, fmt_kwargs
+):
+    """
+    Ensure indexing works for grids that consist only of panel axes across sides.
+    For left/right panels, we index the last panel column with pax[:, -1].
+    For top/bottom panels, we index the last panel row with pax[-1, :].
+    """
+    fig, ax = uplt.subplots(nrows=2, ncols=2)
+    pax = ax.panel(side)
+
+    # Should be able to index the desired panel slice without raising
+    sub = pax[row_sel, col_sel]
+
+    # It should return the expected number of panel axes
+    try:
+        n = len(sub)
+    except TypeError:
+        pytest.fail("Expected a SubplotGrid selection, got a single Axes.")
+    else:
+        assert n == expected_len
+
+    # And formatting should work on the selection
+    sub.format(**fmt_kwargs)
+
+    # Draw to finalize layout and return figure for image comparison
+    fig.canvas.draw()
+    return fig
+
+
+@pytest.mark.parametrize(
     "value",
     [
         5,  # int
@@ -352,7 +392,7 @@ def test_sharing_labels_top_right():
                 [3, 4, 5],
                 [3, 4, 0],
             ],
-            3,  # default sharing level
+            True,  # default sharing level
             {"xticklabelloc": "t", "yticklabelloc": "r"},
             [1, 3, 4],  # y-axis labels visible indices
             [0, 1, 4],  # x-axis labels visible indices
@@ -405,6 +445,7 @@ def test_sharing_labels_with_layout(
 
     # Format axes with the specified tick label locations
     ax.format(**tick_loc)
+    fig.canvas.draw()  # needed for sharing labels
 
     # Calculate the indices where labels should be hidden
     all_indices = list(range(len(ax)))
