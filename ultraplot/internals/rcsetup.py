@@ -314,8 +314,7 @@ def _validate_cmap(subtype, cycle=False):
             name = getattr(value, "name", None)
             if isinstance(name, str):
                 from ..colors import _cmap_database  # avoid circular imports
-
-                _cmap_database[name] = value
+                _cmap_database.register(value, name = name)
                 return name
         elif cycle:
             from ..constructor import Cycle

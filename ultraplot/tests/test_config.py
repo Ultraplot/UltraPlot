@@ -107,6 +107,7 @@ def test_dev_version_skipped(mock_urlopen, mock_version, mock_print):
             ),
             False,
         ),
+        (uplt.colormaps.get_cmap("viridis"), False),
         (1234, True),
     ],
 )
