@@ -4,6 +4,7 @@ Utilities for global configuration.
 """
 import functools
 import re, matplotlib as mpl
+import threading
 from collections.abc import MutableMapping
 from numbers import Integral, Real
 
@@ -562,15 +563,41 @@ def _yaml_table(rcdict, comment=True, description=False):
 
 class _RcParams(MutableMapping, dict):
     """
-    A simple dictionary with locked inputs and validated assignments.
+    A thread-safe dictionary with validated assignments and thread-local storage used to store the configuration of UltraPlot.
+
+    It uses reentrant locks (RLock) to ensure that multiple threads can safely read and write to the configuration without causing data corruption.
+
+    Example
+    -------
+    >>> with rc_params:
+    ...     rc_params['key'] = 'value'  # Thread-local change
+    ...     # Changes are automatically cleaned up when exiting the context
     """
 
     # NOTE: By omitting __delitem__ in MutableMapping we effectively
     # disable mutability. Also disables deleting items with pop().
     def __init__(self, source, validate):
         self._validate = validate
+        self._lock = threading.RLock()
+        self._local = threading.local()
+        self._local.changes = {}  # Initialize thread-local storage
+        # Register all initial keys in the validation dictionary
+        for key in source:
+            if key not in validate:
+                validate[key] = lambda x: x  # Default validator
         for key, value in source.items():
             self.__setitem__(key, value)  # trigger validation
+
+    def __enter__(self):
+        """Context manager entry - initialize thread-local storage if needed."""
+        if not hasattr(self._local, "changes"):
+            self._local.changes = {}
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - clean up thread-local storage."""
+        if hasattr(self._local, "changes"):
+            del self._local.changes
 
     def __repr__(self):
         return RcParams.__repr__(self)
@@ -587,22 +614,33 @@ class _RcParams(MutableMapping, dict):
         yield from sorted(dict.__iter__(self))
 
     def __getitem__(self, key):
-        key, _ = self._check_key(key)
-        return dict.__getitem__(self, key)
+        with self._lock:
+            key, _ = self._check_key(key)
+            # Check thread-local storage first
+            if key in self._local.changes:
+                return self._local.changes[key]
+            # Check global dictionary (will raise KeyError if not found)
+            return dict.__getitem__(self, key)
 
     def __setitem__(self, key, value):
-        key, value = self._check_key(key, value)
-        if key not in self._validate:
-            raise KeyError(f"Invalid rc key {key!r}.")
-        try:
-            value = self._validate[key](value)
-        except (ValueError, TypeError) as error:
-            raise ValueError(f"Key {key}: {error}") from None
-        if key is not None:
-            dict.__setitem__(self, key, value)
+        with self._lock:
+            key, value = self._check_key(key, value)
+            # Validate the value
+            try:
+                value = self._validate[key](value)
+            except KeyError:
+                # If key doesn't exist in validation, add it with default validator
+                self._validate[key] = lambda x: x
+                # Re-validate with new validator
+                value = self._validate[key](value)
+            except (ValueError, TypeError) as error:
+                raise ValueError(f"Key {key}: {error}") from None
+            if key is not None:
+                # Store in both thread-local storage and main dictionary
+                self._local.changes[key] = value
+                dict.__setitem__(self, key, value)
 
-    @staticmethod
-    def _check_key(key, value=None):
+    def _check_key(self, key, value=None):
         # NOTE: If we assigned from the Configurator then the deprecated key will
         # still propagate to the same 'children' as the new key.
         # NOTE: This also translates values for special cases of renamed keys.
@@ -624,10 +662,21 @@ class _RcParams(MutableMapping, dict):
                 f"The rc setting {key!r} was removed in version {version}."
                 + (info and " " + info)
             )
+        # Register new keys in the validation dictionary
+        if key not in self._validate:
+            self._validate[key] = lambda x: x  # Default validator
         return key, value
 
     def copy(self):
-        source = {key: dict.__getitem__(self, key) for key in self}
+        with self._lock:
+            # Create a copy that includes both global and thread-local changes
+            source = {}
+            # Start with global values
+            for key in self:
+                if key not in self._local.changes:
+                    source[key] = dict.__getitem__(self, key)
+            # Add thread-local changes
+            source.update(self._local.changes)
         return _RcParams(source, self._validate)
 
 
