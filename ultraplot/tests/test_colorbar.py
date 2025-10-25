@@ -363,6 +363,53 @@ def test_label_placement_fig_colorbar2():
     return fig
 
 
+def test_colorbar_does_not_promote_panel_group_with_share_false():
+    """
+    Colorbars should not affect panel group membership, and panels should
+    not promote sharing when the figure-level share is disabled.
+    """
+    fig, ax = uplt.subplots(nrows=2, share=False)
+    ax[0].panel("right")
+    ax[0].colorbar("magma", loc="top")
+    fig.canvas.draw()
+    assert ax[0]._panel_sharey_group is False
+
+
+def test_legend_does_not_promote_panel_group_with_share_false():
+    """
+    Legends should not affect panel group membership, and panels should
+    not promote sharing when the figure-level share is disabled.
+    """
+    fig, ax = uplt.subplots(ncols=2, share=False)
+    ax[0].panel("top")
+    ax[0].legend(loc="right")
+    fig.canvas.draw()
+    assert ax[0]._panel_sharex_group is False
+
+
+def test_border_axes_update_after_panel_with_colorbar_and_legend():
+    """
+    Adding a panel should update border axes cache even if colorbars/legends exist.
+    The main axes should no longer be considered the outermost on that side; the
+    new panel should be instead.
+    """
+    fig, ax = uplt.subplots()
+    # Add guides that could affect layout
+    ax.colorbar("magma", loc="top")
+    ax.legend(loc="right")
+
+    before = fig._get_border_axes()
+    pax = ax.panel("right")
+    fig.canvas.draw()
+    after = fig._get_border_axes()
+
+    # Right border before: main axes is outermost
+    assert ax in before.get("right", [])
+    # Right border after: main axes is no longer outermost; panel is
+    assert ax not in after.get("right", [])
+    assert pax in after.get("right", [])
+
+
 @pytest.mark.parametrize(
     ("labelloc", "cbarloc"),
     product(
