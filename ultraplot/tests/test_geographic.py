@@ -296,6 +296,7 @@ def test_sharing_cartopy(layout, expectations):
     settings = dict(land=True, ocean=True, labels="both")
     fig, ax = uplt.subplots(layout, share="all", proj="cyl")
     ax.format(**settings)
+    fig.canvas.draw()  # needed for sharing labels
     for axi in ax:
         state = are_labels_on(axi)
         expectation = expectations[axi.number - 1]
@@ -352,6 +353,80 @@ def test_toggle_gridliner_labels():
         for label in labels:
             assert label.get_visible() == expectation
     uplt.close(fig)
+
+
+def test_geo_panel_group_respects_figure_share():
+    """
+    Ensure that panel-only configurations do not promote sharing when figure-level
+    sharing is disabled, and do promote when figure-level sharing is enabled for GeoAxes.
+    """
+    # Right-only panels with share=False should NOT mark y panel-group
+    fig, ax = uplt.subplots(nrows=2, proj="cyl", share=False)
+    ax[0].panel("right")
+    fig.canvas.draw()
+    assert ax[0]._panel_sharey_group is False
+
+    # Right-only panels with share='labels' SHOULD mark y panel-group
+    fig2, ax2 = uplt.subplots(nrows=2, proj="cyl", share="labels")
+    ax2[0].panel("right")
+    fig2.canvas.draw()
+    assert ax2[0]._panel_sharey_group is True
+
+    # Top-only panels with share=False should NOT mark x panel-group
+    fig3, ax3 = uplt.subplots(ncols=2, proj="cyl", share=False)
+    ax3[0].panel("top")
+    fig3.canvas.draw()
+    assert ax3[0]._panel_sharex_group is False
+
+    # Top-only panels with share='labels' SHOULD mark x panel-group
+    fig4, ax4 = uplt.subplots(ncols=2, proj="cyl", share="labels")
+    ax4[0].panel("top")
+    fig4.canvas.draw()
+    assert ax4[0]._panel_sharex_group is True
+
+
+def test_geo_panel_share_flag_controls_membership():
+    """
+    Panels created with share=False should not join panel share groups even when
+    the figure has sharing enabled, for GeoAxes as well.
+    """
+    # Y panels: right-only with panel share=False
+    fig, ax = uplt.subplots(nrows=2, proj="cyl", share="labels")
+    ax[0].panel("right", share=False)
+    fig.canvas.draw()
+    assert ax[0]._panel_sharey_group is False
+
+    # X panels: top-only with panel share=False
+    fig2, ax2 = uplt.subplots(ncols=2, proj="cyl", share="labels")
+    ax2[0].panel("top", share=False)
+    fig2.canvas.draw()
+    assert ax2[0]._panel_sharex_group is False
+
+
+def test_geo_non_rectilinear_right_panel_forces_no_share_and_warns():
+    """
+    Non-rectilinear Geo projections should not allow panel sharing; adding a right panel
+    should warn and force panel share=False, and not promote the main axes to y panel group.
+    """
+    fig, ax = uplt.subplots(nrows=1, proj="aeqd", share="labels")
+    with pytest.warns(uplt.warnings.UltraPlotWarning):
+        pax = ax[0].panel("right")  # should warn and force share=False internally
+    fig.canvas.draw()
+    assert ax[0]._panel_sharey_group is False
+    assert pax._panel_share is False
+
+
+def test_geo_non_rectilinear_top_panel_forces_no_share_and_warns():
+    """
+    Non-rectilinear Geo projections should not allow panel sharing; adding a top panel
+    should warn and force panel share=False, and not promote the main axes to x panel group.
+    """
+    fig, ax = uplt.subplots(ncols=1, proj="aeqd", share="labels")
+    with pytest.warns(uplt.warnings.UltraPlotWarning):
+        pax = ax[0].panel("top")  # should warn and force share=False internally
+    fig.canvas.draw()
+    assert ax[0]._panel_sharex_group is False
+    assert pax._panel_share is False
 
 
 def test_sharing_geo_limits():
@@ -491,7 +566,8 @@ def test_get_gridliner_labels_cartopy():
     uplt.close(fig)
 
 
-def test_sharing_levels():
+@pytest.mark.parametrize("level", [0, 1, 2, 3, 4])
+def test_sharing_levels(level):
     """
     We can share limits or labels.
     We check if we can do both for the GeoAxes.
@@ -515,7 +591,6 @@ def test_sharing_levels():
 
     x = np.array([0, 10])
     y = np.array([0, 10])
-    sharing_levels = [0, 1, 2, 3, 4]
     lonlim = latlim = np.array((-10, 10))
 
     def assert_views_are_sharing(ax):
@@ -551,46 +626,42 @@ def test_sharing_levels():
             l2 = np.linalg.norm(
                 np.asarray(latview) - np.asarray(target_lat),
             )
-            level = ax.figure._get_sharing_level()
+            level = ax.figure._sharex
             if level <= 1:
                 share_x = share_y = False
             assert np.allclose(l1, 0) == share_x
             assert np.allclose(l2, 0) == share_y
 
-    for level in sharing_levels:
-        fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share=level)
-        ax.format(labels="both")
-        for axi in ax:
-            axi.format(
-                lonlim=lonlim * axi.number,
-                latlim=latlim * axi.number,
-            )
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share=level)
+    ax.format(labels="both")
+    for axi in ax:
+        axi.format(
+            lonlim=lonlim * axi.number,
+            latlim=latlim * axi.number,
+        )
 
-        fig.canvas.draw()
-        for idx, axi in enumerate(ax):
-            axi.plot(x * (idx + 1), y * (idx + 1))
+    fig.canvas.draw()
+    for idx, axi in enumerate(ax):
+        axi.plot(x * (idx + 1), y * (idx + 1))
 
-        fig.canvas.draw()  # need this to update the labels
-        # All the labels should be on
-        for axi in ax:
-            side_labels = axi._get_gridliner_labels(
-                left=True,
-                right=True,
-                top=True,
-                bottom=True,
-            )
-            s = 0
-            for dir, labels in side_labels.items():
-                s += any([label.get_visible() for label in labels])
+    # All the labels should be on
+    for axi in ax:
 
-            assert_views_are_sharing(axi)
-            # When we share the labels but not the limits,
-            # we expect all ticks to be on
-            if level == 0:
-                assert s == 4
-            else:
-                assert s == 2
-        uplt.close(fig)
+        s = sum(
+            [
+                1 if axi._is_ticklabel_on(side) else 0
+                for side in "labeltop labelbottom labelleft labelright".split()
+            ]
+        )
+
+        assert_views_are_sharing(axi)
+        # When we share the labels but not the limits,
+        # we expect all ticks to be on
+        if level > 2:
+            assert s == 2
+        else:
+            assert s == 4
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
@@ -616,8 +687,10 @@ def test_cartesian_and_geo(rng):
         ax.format(land=True, lonlim=(-10, 10), latlim=(-10, 10))
         ax[0].pcolormesh(rng.random((10, 10)))
         ax[1].scatter(*rng.random((2, 100)))
-        ax[0]._apply_axis_sharing()
-        assert mocked.call_count == 2
+        fig.canvas.draw()
+        assert (
+            mocked.call_count >= 2
+        )  # needs to be called at least twice; one for each axis
     return fig
 
 
@@ -676,21 +749,38 @@ def test_check_tricontourf():
 def test_panels_geo():
     fig, ax = uplt.subplots(proj="cyl")
     ax.format(labels=True)
-    for dir in "top bottom right left".split():
+    dirs = "top bottom right left".split()
+    for dir in dirs:
         pax = ax.panel_axes(dir)
-        match dir:
-            case "top":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "bottom":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "left":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
-            case "right":
-                assert len(pax.get_xticklabels()) > 0
-                assert len(pax.get_yticklabels()) > 0
+    fig.canvas.draw()
+    pax = ax[0]._panel_dict["left"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["top"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert not pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["bottom"][-1]
+    assert pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+
+    pax = ax[0]._panel_dict["right"][-1]
+    assert not pax._is_ticklabel_on("labelleft")  # should not error
+    assert not pax._is_ticklabel_on("labelright")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+
+    for dir in dirs:
+        not ax[0]._is_ticklabel_on(f"label{dir}")
+
+    return fig
 
 
 @pytest.mark.mpl_image_compare
@@ -717,10 +807,11 @@ def test_geo_with_panels(rng):
     elevation = np.clip(elevation, 0, 4000)
 
     fig, ax = uplt.subplots(nrows=2, proj="cyl")
-    pax = ax[0].panel("r")
-    pax.barh(lat_zoom, elevation.sum(axis=1))
-    pax = ax[1].panel("r")
-    pax.barh(lat_zoom - 30, elevation.sum(axis=1))
+    ax.format(lonlabels="r")  # by default they are off
+    pax = ax.panel("r")
+    z = elevation.sum()
+    pax[0].barh(lat_zoom, elevation.sum(axis=1))
+    pax[1].barh(lat_zoom - 30, elevation.sum(axis=1))
     ax[0].pcolormesh(
         lon_zoom,
         lat_zoom,
@@ -807,6 +898,7 @@ def test_sharing_cartopy_with_colorbar(rng):
     h = ax.imshow(data)[0]
     ax.format(land=True, labels="both")  # need this otherwise no labels are printed
     fig.colorbar(h, loc="r")
+    fig.canvas.draw()  # needed to  invoke axis sharing
 
     expectations = (
         [True, False, False, True],
