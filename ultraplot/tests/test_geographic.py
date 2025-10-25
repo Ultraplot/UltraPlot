@@ -403,6 +403,32 @@ def test_geo_panel_share_flag_controls_membership():
     assert ax2[0]._panel_sharex_group is False
 
 
+def test_geo_non_rectilinear_right_panel_forces_no_share_and_warns():
+    """
+    Non-rectilinear Geo projections should not allow panel sharing; adding a right panel
+    should warn and force panel share=False, and not promote the main axes to y panel group.
+    """
+    fig, ax = uplt.subplots(nrows=1, proj="aeqd", share="labels")
+    with pytest.warns(uplt.warnings.UltraPlotWarning):
+        pax = ax[0].panel("right")  # should warn and force share=False internally
+    fig.canvas.draw()
+    assert ax[0]._panel_sharey_group is False
+    assert pax._panel_share is False
+
+
+def test_geo_non_rectilinear_top_panel_forces_no_share_and_warns():
+    """
+    Non-rectilinear Geo projections should not allow panel sharing; adding a top panel
+    should warn and force panel share=False, and not promote the main axes to x panel group.
+    """
+    fig, ax = uplt.subplots(ncols=1, proj="aeqd", share="labels")
+    with pytest.warns(uplt.warnings.UltraPlotWarning):
+        pax = ax[0].panel("top")  # should warn and force share=False internally
+    fig.canvas.draw()
+    assert ax[0]._panel_sharex_group is False
+    assert pax._panel_share is False
+
+
 def test_sharing_geo_limits():
     """
     Test that we can share limits on GeoAxes

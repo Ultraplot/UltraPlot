@@ -1368,6 +1368,13 @@ class Figure(mfigure.Figure):
             raise RuntimeError("The gridspec must be active.")
         kw = _pop_params(kwargs, gs._insert_panel_slot)
         ss, share = gs._insert_panel_slot(side, ax, **kw)
+        # Guard: GeoAxes with non-rectilinear projections cannot share with panels
+        if isinstance(ax, paxes.GeoAxes) and not ax._is_rectilinear():
+            if share:
+                warnings._warn_ultraplot(
+                    "Panel sharing disabled for non-rectilinear GeoAxes projections."
+                )
+            share = False
         kwargs["autoshare"] = False
         kwargs.setdefault("number", False)  # power users might number panels
         pax = self.add_subplot(ss, **kwargs)
