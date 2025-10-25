@@ -393,20 +393,21 @@ def test_border_axes_update_after_panel_with_colorbar_and_legend():
     The main axes should no longer be considered the outermost on that side; the
     new panel should be instead.
     """
-    fig, ax = uplt.subplots()
+    fig, axs = uplt.subplots()
+    axi = axs[0]
     # Add guides that could affect layout
-    ax.colorbar("magma", loc="top")
-    ax.legend(loc="right")
+    axi.colorbar("magma", loc="top")
+    axi.legend(loc="right")
 
     before = fig._get_border_axes()
-    pax = ax.panel("right")
+    pax = axi.panel("right")
     fig.canvas.draw()
     after = fig._get_border_axes()
 
     # Right border before: main axes is outermost
-    assert ax in before.get("right", [])
+    assert axi in before.get("right", [])
     # Right border after: main axes is no longer outermost; panel is
-    assert ax not in after.get("right", [])
+    assert axi not in after.get("right", [])
     assert pax in after.get("right", [])
 
 

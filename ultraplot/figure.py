@@ -1025,12 +1025,13 @@ class Figure(mfigure.Figure):
 
     def _set_ticklabel_state(self, axi, axis: str, state: dict):
         """Apply the computed ticklabel state to cartesian or geo axes."""
-        if isinstance(axi, paxes.GeoAxes):
-            axi._toggle_gridliner_labels(**state)
-        elif state:
-            # Convert "x"/"y" to booleans for cartesian
+        if state:
+            # Normalize "x"/"y" values to booleans for both Geo and Cartesian axes
             cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
-            getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
+            if isinstance(axi, paxes.GeoAxes):
+                axi._toggle_gridliner_labels(**cleaned)
+            else:
+                getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
 
     def _context_adjusting(self, cache=True):
         """
