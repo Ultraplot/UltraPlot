@@ -498,3 +498,70 @@ def test_panel_share_flag_controls_group_membership():
     ax2[0].panel("top", share=False)
     fig2.canvas.draw()
     assert ax2[0]._panel_sharex_group is False
+
+
+def test_ticklabels_with_guides_share_true_cartesian():
+    """
+    With share=True, tick labels should only appear on bottom row and left column
+    even when colorbars and legends are present on borders.
+    """
+    rng = np.random.default_rng(0)
+    fig, ax = uplt.subplots(nrows=2, ncols=2, share=True)
+    m = ax[0].pcolormesh(rng.random((8, 8)), colorbar="r")  # outer right colorbar
+    ax[3].legend(loc="bottom")  # bottom legend
+    fig.canvas.draw()
+    for i, axi in enumerate(ax):
+        on_left = axi._is_ticklabel_on("labelleft")
+        on_right = axi._is_ticklabel_on("labelright")
+        on_top = axi._is_ticklabel_on("labeltop")
+        on_bottom = axi._is_ticklabel_on("labelbottom")
+
+        # Left column indices: 0, 2
+        if i % 2 == 0:
+            assert on_left
+            assert not on_right
+        else:
+            assert not on_left
+            assert not on_right
+
+        # Bottom row indices: 2, 3
+        if i // 2 == 1:
+            assert on_bottom
+            assert not on_top
+        else:
+            assert not on_bottom
+            assert not on_top
+
+
+def test_ticklabels_with_guides_share_true_geo():
+    """
+    With share=True on GeoAxes, tick labels should only appear on bottom row and left column
+    even when colorbars and legends are present on borders.
+    """
+    rng = np.random.default_rng(1)
+    fig, ax = uplt.subplots(nrows=2, ncols=2, share=True, proj="cyl")
+    ax.format(labels="both", land=True)  # ensure gridliner labels can be toggled
+    ax[0].pcolormesh(rng.random((10, 10)), colorbar="r")  # outer right colorbar
+    ax[3].legend(loc="bottom")  # bottom legend
+    fig.canvas.draw()
+    for i, axi in enumerate(ax):
+        on_left = axi._is_ticklabel_on("labelleft")
+        on_right = axi._is_ticklabel_on("labelright")
+        on_top = axi._is_ticklabel_on("labeltop")
+        on_bottom = axi._is_ticklabel_on("labelbottom")
+
+        # Left column indices: 0, 2
+        if i % 2 == 0:
+            assert on_left
+            assert not on_right
+        else:
+            assert not on_left
+            assert not on_right
+
+        # Bottom row indices: 2, 3
+        if i // 2 == 1:
+            assert on_bottom
+            assert not on_top
+        else:
+            assert not on_bottom
+            assert not on_top
