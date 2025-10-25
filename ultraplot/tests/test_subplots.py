@@ -20,6 +20,18 @@ def test_align_labels():
 
 
 @pytest.mark.mpl_image_compare
+@pytest.mark.parametrize("share", [0, 1, 2, 3, 4])
+def test_all_share_levels(share):
+    N = 10
+    x = np.arange(N)
+    fig, ax = uplt.subplots(nrows=2, ncols=2, share=share)
+    ax[0].plot(x, x)
+    ax[-1].plot(x * 1000, x * 1000)
+    ax.format(xlabel="xlabel", ylabel="ylabel", suptitle=f"Share level={share}")
+    return fig
+
+
+@pytest.mark.mpl_image_compare
 def test_share_all_basic():
     """
     Test sharing level all.
