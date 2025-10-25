@@ -295,13 +295,14 @@ def _validate_cftime_resolution(unit: str) -> str:
     raise ValueError(msg)
 
 
-def _validate_cmap(subtype):
+def _validate_cmap(subtype, cycle=False):
     """
     Validate the colormap or cycle. Possibly skip name registration check
     and assign the colormap name rather than a colormap instance.
     """
 
     def _validate_cmap(value):
+
         name = value
         if isinstance(value, str):
             if VALIDATE_REGISTERED_CMAPS:
@@ -314,8 +315,15 @@ def _validate_cmap(subtype):
             if isinstance(name, str):
                 from ..colors import _cmap_database  # avoid circular imports
 
-                _cmap_database[name] = value
+                _cmap_database.register(value, name=name)
                 return name
+        elif cycle:
+            from ..constructor import Cycle
+
+            if isinstance(value, Cycler):
+                return Cycle(value)
+            elif np.iterable(value):
+                return Cycle(value)
         raise ValueError(f"Invalid colormap or color cycle name {name!r}.")
 
     return _validate_cmap
@@ -1195,7 +1203,7 @@ _rc_ultraplot_table = {
     # Color cycle additions
     "cycle": (
         CYCLE,
-        _validate_cmap("discrete"),
+        _validate_cmap("discrete", cycle=True),
         "Name of the color cycle assigned to :rcraw:`axes.prop_cycle`.",
     ),
     # Colormap additions
