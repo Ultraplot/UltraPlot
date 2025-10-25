@@ -491,8 +491,8 @@ def _clear_border_cache(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         result = func(self, *args, **kwargs)
-        if hasattr(self, "_cache_border_axes"):
-            delattr(self, "_cache_border_axes")
+        if hasattr(self, "_cached_border_axes"):
+            delattr(self, "_cached_border_axes")
         return result
 
     return wrapper
