@@ -448,7 +448,6 @@ def test_outside_labels_with_panels():
     for idx in range(5):
         ax[0].panel("left")
     ax.format(leftlabels=["A", "B"])
-    uplt.show(block=1)
     return fig
 
 
