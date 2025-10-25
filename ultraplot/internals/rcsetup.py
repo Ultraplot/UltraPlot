@@ -316,7 +316,9 @@ def _validate_cmap(subtype):
 
                 _cmap_database[name] = value
                 return name
-        raise ValueError(f"Invalid colormap or color cycle name {name!r}.")
+        elif isinstance(value, Cycler):
+            return value
+        raise ValueError(f"Invalid colormap or lor cycle {name!r}.")
 
     return _validate_cmap
 
