@@ -652,27 +652,16 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 or to the *right* of the leftmost panel. But the sharing level used for
                 the leftmost and bottommost is the *figure* sharing level.
         """
-        # Handle X axis sharing
-        if self._sharex:
-            self._handle_axis_sharing(
-                source_axis=self._sharex._lonaxis,
-                target_axis=self._lonaxis,
-            )
 
-        # Handle Y axis sharing
-        if self._sharey:
-            self._handle_axis_sharing(
-                source_axis=self._sharey._lataxis,
-                target_axis=self._lataxis,
-            )
+        # Share interval x
+        if self._sharex and self.figure._sharex >= 2:
+            self._lonaxis.set_view_interval(*self._sharex._lonaxis.get_view_interval())
+            self._lonaxis.set_minor_locator(self._sharex._lonaxis.get_minor_locator())
 
-        # This block is apart of the draw sequence as the
-        # gridliner object is created late in the
-        # build chain.
-        if not self.stale:
-            return
-        if self.figure._get_sharing_level() == 0:
-            return
+        # Share interval y
+        if self._sharey and self.figure._sharey >= 2:
+            self._lataxis.set_view_interval(*self._sharey._lataxis.get_view_interval())
+            self._lataxis.set_minor_locator(self._sharey._lataxis.get_minor_locator())
 
     def _get_gridliner_labels(
         self,
@@ -691,38 +680,36 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         labelright=None,
         geo=None,
     ):
-        # For BasemapAxes the gridlines are dicts with key as the coordinate and  keys the line and label
-        # We override the dict here assuming the labels are mut excl due to the N S E W extra chars
+        """
+        Toggle visibility of gridliner labels for each direction.
+
+        Parameters
+        ----------
+        labeltop, labelbottom, labelleft, labelright : bool or None
+            Whether to show labels on each side. If None, do not change.
+        geo : optional
+            Not used in this method.
+        """
+        # Ensure gridlines_major is fully initialized
         if any(i is None for i in self.gridlines_major):
             return
+
         gridlabels = self._get_gridliner_labels(
             bottom=labelbottom, top=labeltop, left=labelleft, right=labelright
         )
-        bools = [labelbottom, labeltop, labelleft, labelright]
-        directions = "bottom top left right".split()
-        for direction, toggle in zip(directions, bools):
+
+        toggles = {
+            "bottom": labelbottom,
+            "top": labeltop,
+            "left": labelleft,
+            "right": labelright,
+        }
+
+        for direction, toggle in toggles.items():
             if toggle is None:
                 continue
             for label in gridlabels.get(direction, []):
-                label.set_visible(toggle)
-
-    def _handle_axis_sharing(
-        self,
-        source_axis: "GeoAxes",
-        target_axis: "GeoAxes",
-    ):
-        """
-        Helper method to handle axis sharing for both X and Y axes.
-
-        Args:
-            source_axis: The source axis to share from
-            target_axis: The target axis to apply sharing to
-        """
-        # Copy view interval and minor locator from source to target
-
-        if self.figure._get_sharing_level() >= 2:
-            target_axis.set_view_interval(*source_axis.get_view_interval())
-            target_axis.set_minor_locator(source_axis.get_minor_locator())
+                label.set_visible(bool(toggle) or toggle in ("x", "y"))
 
     @override
     def draw(self, renderer=None, *args, **kwargs):
@@ -1441,6 +1428,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         """
         # Deal with different cartopy versions
         left_labels, right_labels, bottom_labels, top_labels = self._get_side_labels()
+
         if self.gridlines_major is None:
             return False
         elif side == "labelleft":
