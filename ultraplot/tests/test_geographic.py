@@ -355,6 +355,54 @@ def test_toggle_gridliner_labels():
     uplt.close(fig)
 
 
+def test_geo_panel_group_respects_figure_share():
+    """
+    Ensure that panel-only configurations do not promote sharing when figure-level
+    sharing is disabled, and do promote when figure-level sharing is enabled for GeoAxes.
+    """
+    # Right-only panels with share=False should NOT mark y panel-group
+    fig, ax = uplt.subplots(nrows=2, proj="cyl", share=False)
+    ax[0].panel("right")
+    fig.canvas.draw()
+    assert ax[0]._panel_sharey_group is False
+
+    # Right-only panels with share='labels' SHOULD mark y panel-group
+    fig2, ax2 = uplt.subplots(nrows=2, proj="cyl", share="labels")
+    ax2[0].panel("right")
+    fig2.canvas.draw()
+    assert ax2[0]._panel_sharey_group is True
+
+    # Top-only panels with share=False should NOT mark x panel-group
+    fig3, ax3 = uplt.subplots(ncols=2, proj="cyl", share=False)
+    ax3[0].panel("top")
+    fig3.canvas.draw()
+    assert ax3[0]._panel_sharex_group is False
+
+    # Top-only panels with share='labels' SHOULD mark x panel-group
+    fig4, ax4 = uplt.subplots(ncols=2, proj="cyl", share="labels")
+    ax4[0].panel("top")
+    fig4.canvas.draw()
+    assert ax4[0]._panel_sharex_group is True
+
+
+def test_geo_panel_share_flag_controls_membership():
+    """
+    Panels created with share=False should not join panel share groups even when
+    the figure has sharing enabled, for GeoAxes as well.
+    """
+    # Y panels: right-only with panel share=False
+    fig, ax = uplt.subplots(nrows=2, proj="cyl", share="labels")
+    ax[0].panel("right", share=False)
+    fig.canvas.draw()
+    assert ax[0]._panel_sharey_group is False
+
+    # X panels: top-only with panel share=False
+    fig2, ax2 = uplt.subplots(ncols=2, proj="cyl", share="labels")
+    ax2[0].panel("top", share=False)
+    fig2.canvas.draw()
+    assert ax2[0]._panel_sharex_group is False
+
+
 def test_sharing_geo_limits():
     """
     Test that we can share limits on GeoAxes
