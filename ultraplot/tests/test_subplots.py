@@ -549,22 +549,26 @@ def test_ticklabels_with_guides_share_true_geo():
         on_right = axi._is_ticklabel_on("labelright")
         on_top = axi._is_ticklabel_on("labeltop")
         on_bottom = axi._is_ticklabel_on("labelbottom")
-
-        # Left column indices: 0, 2
-        if i % 2 == 0:
+        if i == 0:
             assert on_left
-            assert not on_right
-        else:
-            assert not on_left
-            assert not on_right
-
-        # Bottom row indices: 2, 3
-        if i // 2 == 1:
-            assert on_bottom
-            assert not on_top
-        else:
+            assert on_top
             assert not on_bottom
+            assert not on_right
+        elif i == 1:
+            assert not on_left
+            assert on_top
+            assert not on_bottom
+            assert on_right
+        elif i == 2:
+            assert on_left
             assert not on_top
+            assert on_bottom
+            assert not on_right
+        else:  # i == 3
+            assert not on_left
+            assert not on_top
+            assert on_bottom
+            assert on_right
 
 
 def test_deep_panel_stacks_border_detection():
