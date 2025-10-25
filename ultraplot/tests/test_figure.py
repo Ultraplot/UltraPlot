@@ -58,7 +58,17 @@ def test_unsharing_different_rectilinear():
     """
     with pytest.warns(uplt.internals.warnings.UltraPlotWarning):
         fig, ax = uplt.subplots(ncols=2, proj=("cyl", "merc"), share="all")
-    uplt.close(fig)
+
+
+def test_get_renderer_basic():
+    """
+    Test that _get_renderer returns a renderer object.
+    """
+    fig, ax = uplt.subplots()
+    renderer = fig._get_renderer()
+    # Renderer should not be None and should have draw_path method
+    assert renderer is not None
+    assert hasattr(renderer, "draw_path")
 
 
 def test_figure_sharing_toggle():

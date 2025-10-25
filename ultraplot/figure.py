@@ -6,6 +6,7 @@ import functools
 import inspect
 import os
 from numbers import Integral
+from packaging import version
 
 try:
     from typing import List
@@ -19,6 +20,11 @@ import matplotlib.projections as mproj
 import matplotlib.text as mtext
 import matplotlib.transforms as mtransforms
 import numpy as np
+
+try:
+    from typing import override
+except:
+    from typing_extensions import override
 
 from . import axes as paxes
 from . import constructor
@@ -477,6 +483,21 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
     return canvas
 
 
+def _clear_border_cache(func):
+    """
+    Decorator that clears the border cache after function execution.
+    """
+
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        if hasattr(self, "_cached_border_axes"):
+            delattr(self, "_cached_border_axes")
+        return result
+
+    return wrapper
+
+
 class Figure(mfigure.Figure):
     """
     The `~matplotlib.figure.Figure` subclass used by ultraplot.
@@ -801,6 +822,217 @@ class Figure(mfigure.Figure):
         # NOTE: This ignores user-input rc_mode.
         self.format(rc_kw=rc_kw, rc_mode=1, skip_axes=True, **kw_format)
 
+    @override
+    def draw(self, renderer):
+        # implement the tick sharing here
+        # should be shareable --> either all cartesian or all geographic
+        # but no mixing (panels can be mixed)
+        # check which ticks are on for x or y and push the labels to the
+        # outer most on a given column or row.
+        # we can use get_border_axes for the outermost plots and then collect their outermost panels that are not colorbars
+        self._share_ticklabels(axis="x")
+        self._share_ticklabels(axis="y")
+        super().draw(renderer)
+
+    def _share_ticklabels(self, *, axis: str) -> None:
+        """
+        Tick label sharing is determined at the figure level. While
+        each subplot controls the limits, we are dealing with the ticklabels
+        here as the complexity is easier to deal with.
+            axis: str 'x' or 'y', row or columns to update
+        """
+        if not self.stale:
+            return
+
+        outer_axes = self._get_border_axes()
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+
+        # Group axes by row (for x) or column (for y)
+        axes = list(self._iter_axes(panels=True, hidden=False))
+        groups = self._group_axes_by_axis(axes, axis)
+
+        # Version-dependent label name mapping for reading back params
+        label_keys = self._label_key_map()
+
+        # Process each group independently
+        for _, group_axes in groups.items():
+            # Build baseline from MAIN axes only (exclude panels)
+            baseline, skip_group = self._compute_baseline_tick_state(
+                group_axes, axis, label_keys
+            )
+            if skip_group:
+                continue
+
+            # Apply baseline to all axes in the group (including panels)
+            for axi in group_axes:
+                # Respect figure border sides and panel opposite sides
+                masked = self._apply_border_mask(axi, baseline, sides, outer_axes)
+
+                # Determine sharing level for this axes
+                if self._effective_share_level(axi, axis, sides) < 3:
+                    continue
+
+                # Apply to geo/cartesian appropriately
+                self._set_ticklabel_state(axi, axis, masked)
+
+        self.stale = True
+
+    def _label_key_map(self):
+        """
+        Return a mapping for version-dependent label keys for Matplotlib tick params.
+        """
+        first_axi = next(self._iter_axes(panels=True), None)
+        if first_axi is None:
+            return {
+                "labelleft": "labelleft",
+                "labelright": "labelright",
+                "labeltop": "labeltop",
+                "labelbottom": "labelbottom",
+            }
+        return {
+            name: first_axi._label_key(name)
+            for name in ("labelleft", "labelright", "labeltop", "labelbottom")
+        }
+
+    def _group_axes_by_axis(self, axes, axis: str):
+        """
+        Group axes by row (x) or column (y). Panels included; invalid subplotspec skipped.
+        """
+        from collections import defaultdict
+
+        def _group_key(ax):
+            ss = ax.get_subplotspec()
+            return ss.rowspan.start if axis == "x" else ss.colspan.start
+
+        groups = defaultdict(list)
+        for axi in axes:
+            try:
+                key = _group_key(axi)
+            except Exception:
+                # If we can't get a subplotspec, skip grouping for this axes
+                continue
+            groups[key].append(axi)
+        return groups
+
+    def _compute_baseline_tick_state(self, group_axes, axis: str, label_keys):
+        """
+        Build a baseline ticklabel visibility dict from MAIN axes (panels excluded).
+        Returns (baseline_dict, skip_group: bool). Emits warnings when encountering
+        unsupported or mixed subplot types.
+        """
+        baseline = {}
+        subplot_types = set()
+        unsupported_found = False
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+
+        for axi in group_axes:
+            # Only main axes "vote"
+            if getattr(axi, "_panel_side", None):
+                continue
+
+            # Supported axes types
+            if not isinstance(
+                axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+            ):
+                warnings._warn_ultraplot(
+                    f"Tick label sharing not implemented for {type(axi)} subplots."
+                )
+                unsupported_found = True
+                break
+
+            subplot_types.add(type(axi))
+
+            # Collect label visibility state
+            if isinstance(axi, paxes.CartesianAxes):
+                params = getattr(axi, f"{axis}axis").get_tick_params()
+                for side in sides:
+                    key = label_keys[f"label{side}"]
+                    if params.get(key):
+                        baseline[key] = params[key]
+            elif isinstance(axi, paxes.GeoAxes):
+                for side in sides:
+                    key = f"label{side}"
+                    if axi._is_ticklabel_on(key):
+                        baseline[key] = axi._is_ticklabel_on(key)
+
+        if unsupported_found:
+            return {}, True
+
+        # We cannot mix types (yet) within a group
+        if len(subplot_types) > 1:
+            warnings._warn_ultraplot(
+                "Tick label sharing not implemented for mixed subplot types."
+            )
+            return {}, True
+
+        return baseline, False
+
+    def _apply_border_mask(
+        self, axi, baseline: dict, sides: tuple[str, str], outer_axes
+    ):
+        """
+        Apply figure-border constraints and panel opposite-side suppression.
+        Keeps label key mapping per-axis for cartesian.
+        """
+        from .axes.cartesian import OPPOSITE_SIDE
+
+        masked = baseline.copy()
+        for side in sides:
+            label = f"label{side}"
+            if isinstance(axi, paxes.CartesianAxes):
+                # Use per-axis version-mapped key when writing
+                label = axi._label_key(label)
+
+            # Only keep labels on true figure borders
+            if axi not in outer_axes[side]:
+                masked[label] = False
+
+            # For panels, suppress labels on their opposite side
+            if (
+                getattr(axi, "_panel_side", None)
+                and OPPOSITE_SIDE[axi._panel_side] == side
+            ):
+                masked[label] = False
+
+        return masked
+
+    def _effective_share_level(self, axi, axis: str, sides: tuple[str, str]) -> int:
+        """
+        Compute the effective share level for an axes, considering panel groups and
+        adjacent panels. Fixes the original variable leak by checking any relevant side.
+        """
+        level = getattr(self, f"_share{axis}")
+        # If figure-level sharing is disabled (0/False), don't promote due to panels
+        if not level or (isinstance(level, (int, float)) and level < 1):
+            return level
+
+        # Panel group-level sharing
+        if getattr(axi, f"_panel_share{axis}_group", None):
+            return 3
+
+        # Panel member sharing
+        if getattr(axi, "_panel_side", None) and getattr(axi, f"_share{axis}", None):
+            return 3
+
+        # Adjacent panels on any relevant side
+        panel_dict = getattr(axi, "_panel_dict", {})
+        for side in sides:
+            side_panels = panel_dict.get(side) or []
+            if side_panels and getattr(side_panels[0], f"_share{axis}", False):
+                return 3
+
+        return level
+
+    def _set_ticklabel_state(self, axi, axis: str, state: dict):
+        """Apply the computed ticklabel state to cartesian or geo axes."""
+        if state:
+            # Normalize "x"/"y" values to booleans for both Geo and Cartesian axes
+            cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
+            if isinstance(axi, paxes.GeoAxes):
+                axi._toggle_gridliner_labels(**cleaned)
+            else:
+                getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
+
     def _context_adjusting(self, cache=True):
         """
         Prevent re-running auto layout steps due to draws triggered by figure
@@ -918,10 +1150,10 @@ class Figure(mfigure.Figure):
             options = grid.T[:, ::-1]
         uids = set()
         for option in options:
-            idx = np.where(option > 0)[0]
+            idx = np.where(option != None)[0]
             if idx.size > 0:
                 first = idx.min()
-                number = option[first].astype(int)
+                number = option[first].number
                 uids.add(number)
         axs = []
         # Collect correct axes
@@ -953,8 +1185,9 @@ class Figure(mfigure.Figure):
         if gs is None:
             return border_axes
 
-        # Skip colorbars or panels etc
-        all_axes = [axi for axi in self.axes if axi.number is not None]
+        all_axes = []
+        for axi in self._iter_axes(panels=True):
+            all_axes.append(axi)
 
         # Handle empty cases
         nrows, ncols = gs.nrows, gs.ncols
@@ -966,26 +1199,51 @@ class Figure(mfigure.Figure):
         # Reconstruct the grid based on axis locations. Note that
         # spanning axes will fit into one of the boxes. Check
         # this with unittest to see how empty axes are handles
-        grid, grid_axis_type, seen_axis_type = _get_subplot_layout(
-            gs,
-            all_axes,
-            same_type=same_type,
-        )
+
+        gs = self.axes[0].get_gridspec()
+        shape = (gs.nrows_total, gs.ncols_total)
+        grid = np.zeros(shape, dtype=object)
+        grid.fill(None)
+        grid_axis_type = np.zeros(shape, dtype=int)
+        seen_axis_type = dict()
+        ax_type_mapping = dict()
+        for axi in self._iter_axes(panels=True, hidden=True):
+            gs = axi.get_subplotspec()
+            x, y = np.unravel_index(gs.num1, shape)
+            span = gs._get_rows_columns()
+
+            xleft, xright, yleft, yright = span
+            xspan = xright - xleft + 1
+            yspan = yright - yleft + 1
+            number = axi.number
+            axis_type = type(axi)
+            if isinstance(axi, (paxes.GeoAxes)):
+                axis_type = axi.projection
+            if axis_type not in seen_axis_type:
+                seen_axis_type[axis_type] = len(seen_axis_type)
+            type_number = seen_axis_type[axis_type]
+            ax_type_mapping[axi] = type_number
+            if axi.get_visible():
+                grid[x : x + xspan, y : y + yspan] = axi
+            grid_axis_type[x : x + xspan, y : y + yspan] = type_number
         # We check for all axes is they are a border or not
         # Note we could also write the crawler in a way where
         # it find the borders by moving around in the grid, without spawning on each axis point. We may change
         # this in the future
         for axi in all_axes:
-            axis_type = seen_axis_type.get(type(axi), 1)
+            axis_type = ax_type_mapping[axi]
+            number = axi.number
+            if axi.number is None:
+                number = -axi._panel_parent.number
             crawler = _Crawler(
                 ax=axi,
                 grid=grid,
-                target=axi.number,
+                target=number,
                 axis_type=axis_type,
                 grid_axis_type=grid_axis_type,
             )
             for direction, is_border in crawler.find_edges():
-                if is_border:
+                if is_border and axi not in border_axes[direction]:
                     border_axes[direction].append(axi)
         self._cached_border_axes = border_axes
         return border_axes
@@ -1079,12 +1337,7 @@ class Figure(mfigure.Figure):
                 renderer = canvas.get_renderer()
         return renderer
 
-    def _get_sharing_level(self):
-        """
-        We take the average here as the sharex and sharey should be the same value. In case this changes in the future we can track down the error easily
-        """
-        return 0.5 * (self.figure._sharex + self.figure._sharey)
-
+    @_clear_border_cache
     def _add_axes_panel(self, ax, side=None, **kwargs):
         """
         Add an axes panel.
@@ -1116,6 +1369,13 @@ class Figure(mfigure.Figure):
             raise RuntimeError("The gridspec must be active.")
         kw = _pop_params(kwargs, gs._insert_panel_slot)
         ss, share = gs._insert_panel_slot(side, ax, **kw)
+        # Guard: GeoAxes with non-rectilinear projections cannot share with panels
+        if isinstance(ax, paxes.GeoAxes) and not ax._is_rectilinear():
+            if share:
+                warnings._warn_ultraplot(
+                    "Panel sharing disabled for non-rectilinear GeoAxes projections."
+                )
+            share = False
         kwargs["autoshare"] = False
         kwargs.setdefault("number", False)  # power users might number panels
         pax = self.add_subplot(ss, **kwargs)
@@ -1127,8 +1387,70 @@ class Figure(mfigure.Figure):
         axis = pax.yaxis if side in ("left", "right") else pax.xaxis
         getattr(axis, "tick_" + side)()  # set tick and tick label position
         axis.set_label_position(side)  # set label position
+        # Sync limits and formatters with parent when sharing to ensure consistent ticks
+        # Copy limits for the shared axis
+        # Note: for non-geo axes this is handled by auto sharing
+        if share and isinstance(ax, paxes.GeoAxes):
+            # Align with backend: for GeoAxes, use lon/lat degree formatters on panels.
+            # Otherwise, copy the parent's axis formatters.
+            fmt_key = "deglat" if side in ("left", "right") else "deglon"
+            axis.set_major_formatter(constructor.Formatter(fmt_key))
+            # Update limits
+            axis._set_lim(
+                *getattr(ax, f"get_{'y' if side in ('left','right') else 'x'}lim")(),
+                auto=True,
+            )
+        # Push main axes tick labels to the outside relative to the added panel
+        # Skip this for filled panels (colorbars/legends)
+        if not kw.get("filled", False) and share:
+            if isinstance(ax, paxes.GeoAxes):
+                if side == "top":
+                    ax._toggle_gridliner_labels(labeltop=False)
+                elif side == "bottom":
+                    ax._toggle_gridliner_labels(labelbottom=False)
+                elif side == "left":
+                    ax._toggle_gridliner_labels(labelleft=False)
+                elif side == "right":
+                    ax._toggle_gridliner_labels(labelright=False)
+            else:
+                if side == "top":
+                    ax.xaxis.set_tick_params(**{ax._label_key("labeltop"): False})
+                elif side == "bottom":
+                    ax.xaxis.set_tick_params(**{ax._label_key("labelbottom"): False})
+                elif side == "left":
+                    ax.yaxis.set_tick_params(**{ax._label_key("labelleft"): False})
+                elif side == "right":
+                    ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
+
+        # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
+        if side == "top":
+            if not share:
+                pax.xaxis.set_tick_params(
+                    **{
+                        pax._label_key("labeltop"): True,
+                        pax._label_key("labelbottom"): False,
+                    }
+                )
+            else:
+                on = ax.xaxis.get_tick_params()[ax._label_key("labeltop")]
+                pax.xaxis.set_tick_params(**{pax._label_key("labeltop"): on})
+                ax.yaxis.set_tick_params(labeltop=False)
+        elif side == "right":
+            if not share:
+                pax.yaxis.set_tick_params(
+                    **{
+                        pax._label_key("labelright"): True,
+                        pax._label_key("labelleft"): False,
+                    }
+                )
+            else:
+                on = ax.yaxis.get_tick_params()[ax._label_key("labelright")]
+                pax.yaxis.set_tick_params(**{pax._label_key("labelright"): on})
+                ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
+
         return pax
 
+    @_clear_border_cache
     def _add_figure_panel(
         self, side=None, span=None, row=None, col=None, rows=None, cols=None, **kwargs
     ):
@@ -1163,6 +1485,7 @@ class Figure(mfigure.Figure):
         pax._panel_parent = None
         return pax
 
+    @_clear_border_cache
     def _add_subplot(self, *args, **kwargs):
         """
         The driver function for adding single subplots.
@@ -1271,9 +1594,6 @@ class Figure(mfigure.Figure):
 
         if ax.number:
             self._subplot_dict[ax.number] = ax
-        # Invalidate border axes cache
-        if hasattr(self, "_cached_border_axes"):
-            delattr(self, "_cached_border_axes")
         return ax
 
     def _unshare_axes(self):
@@ -1287,56 +1607,6 @@ class Figure(mfigure.Figure):
         for ax in self.axes:
             if isinstance(ax, paxes.GeoAxes) and hasattr(ax, "set_global"):
                 ax.set_global()
-
-    def _share_labels_with_others(self, *, which="both"):
-        """
-        Helpers function to ensure the labels
-        are shared for rectilinear GeoAxes.
-        """
-        # Only apply sharing of labels when we are
-        # actually sharing labels.
-        if self._get_sharing_level() == 0:
-            return
-        # Turn all labels off
-        # Note: this action performs it for all the axes in
-        # the figure. We use the stale here to only perform
-        # it once as it is an expensive action.
-        # The axis will be a border if it is either
-        # (a) on the edge
-        # (b) not next to a subplot
-        # (c) not next to a subplot of the same kind
-        border_axes = self._get_border_axes()
-        # Recode:
-        recoded = {}
-        for direction, axes in border_axes.items():
-            for axi in axes:
-                recoded[axi] = recoded.get(axi, []) + [direction]
-
-        are_ticks_on = False
-        default = dict(
-            labelleft=are_ticks_on,
-            labelright=are_ticks_on,
-            labeltop=are_ticks_on,
-            labelbottom=are_ticks_on,
-        )
-        for axi in self._iter_axes(hidden=False, panels=False, children=False):
-            # Turn the ticks on or off depending on the position
-            sides = recoded.get(axi, [])
-            turn_on_or_off = default.copy()
-
-            for side in sides:
-                sidelabel = f"label{side}"
-                is_label_on = axi._is_ticklabel_on(sidelabel)
-                if is_label_on:
-                    # When we are a border an the labels are on
-                    # we keep them on
-                    assert sidelabel in turn_on_or_off
-                    turn_on_or_off[sidelabel] = True
-
-            if isinstance(axi, paxes.GeoAxes):
-                axi._toggle_gridliner_labels(**turn_on_or_off)
-            else:
-                axi._apply_axis_sharing()
 
     def _toggle_axis_sharing(
         self,
@@ -1400,19 +1670,19 @@ class Figure(mfigure.Figure):
                 # shared axes behave consistently.
                 if which == "x":
                     other._sharex = ref
-                    ref.xaxis.major = other.xaxis.major
-                    ref.xaxis.minor = other.xaxis.minor
-                    lim = other.get_xlim()
-                    ref.set_xlim(*lim, emit=False, auto=other.get_autoscalex_on())
-                    ref.xaxis._scale = other.xaxis._scale
+                    other.xaxis.major = ref.xaxis.major
+                    other.xaxis.minor = ref.xaxis.minor
+                    lim = ref.get_xlim()
+                    other.set_xlim(*lim, emit=False, auto=ref.get_autoscalex_on())
+                    other.xaxis._scale = ref.xaxis._scale
                 if which == "y":
                     # This logic is from sharey
                     other._sharey = ref
-                    ref.yaxis.major = other.yaxis.major
-                    ref.yaxis.minor = other.yaxis.minor
-                    lim = other.get_ylim()
-                    ref.set_ylim(*lim, emit=False, auto=other.get_autoscaley_on())
-                    ref.yaxis._scale = other.yaxis._scale
+                    other.yaxis.major = ref.yaxis.major
+                    other.yaxis.minor = ref.yaxis.minor
+                    lim = ref.get_ylim()
+                    other.set_ylim(*lim, emit=False, auto=ref.get_autoscaley_on())
+                    other.yaxis._scale = ref.yaxis._scale
 
     def _add_subplots(
         self,
@@ -1753,6 +2023,7 @@ class Figure(mfigure.Figure):
         if title is not None:
             self._suptitle.set_text(title)
 
+    @_clear_border_cache
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def add_axes(self, rect, **kwargs):
@@ -1847,7 +2118,6 @@ class Figure(mfigure.Figure):
         # subsequent tight layout really weird. Have to resize twice.
         _draw_content()
         if not gs:
-            print("hello")
             return
         if aspect:
             gs._auto_layout_aspect()
@@ -1993,12 +2263,6 @@ class Figure(mfigure.Figure):
             }
             ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
             ax.number = store_old_number
-        # When we apply formatting to all axes, we need
-        # to potentially adjust the labels.
-
-        if len(axs) == len(self.axes) and self._get_sharing_level() > 0:
-            self._share_labels_with_others()
-
         # Warn unused keyword argument(s)
         kw = {
             key: value
@@ -2009,53 +2273,6 @@ class Figure(mfigure.Figure):
             warnings._warn_ultraplot(
                 f"Ignoring unused projection-specific format() keyword argument(s): {kw}"  # noqa: E501
             )
-
-    def _share_labels_with_others(self, *, which="both"):
-        """
-        Helpers function to ensure the labels
-        are shared for rectilinear GeoAxes.
-        """
-        # Turn all labels off
-        # Note: this action performs it for all the axes in
-        # the figure. We use the stale here to only perform
-        # it once as it is an expensive action.
-        border_axes = self._get_border_axes(same_type=False)
-        # Recode:
-        recoded = {}
-        for direction, axes in border_axes.items():
-            for axi in axes:
-                recoded[axi] = recoded.get(axi, []) + [direction]
-
-        # We turn off the tick labels when the scale and
-        # ticks are shared (level > 0)
-        are_ticks_on = False
-        default = dict(
-            labelleft=are_ticks_on,
-            labelright=are_ticks_on,
-            labeltop=are_ticks_on,
-            labelbottom=are_ticks_on,
-        )
-        for axi in self._iter_axes(hidden=False, panels=False, children=False):
-            # Turn the ticks on or off depending on the position
-            sides = recoded.get(axi, [])
-            turn_on_or_off = default.copy()
-            # The axis will be a border if it is either
-            # (a) on the edge
-            # (b) not next to a subplot
-            # (c) not next to a subplot of the same kind
-            for side in sides:
-                sidelabel = f"label{side}"
-                is_label_on = axi._is_ticklabel_on(sidelabel)
-                if is_label_on:
-                    # When we are a border an the labels are on
-                    # we keep them on
-                    assert sidelabel in turn_on_or_off
-                    turn_on_or_off[sidelabel] = True
-
-            if isinstance(axi, paxes.GeoAxes):
-                axi._toggle_gridliner_labels(**turn_on_or_off)
-            else:
-                axi.tick_params(which=which, **turn_on_or_off)
 
     @docstring._concatenate_inherited
     @docstring._snippet_manager

@@ -4,6 +4,11 @@ Polar axes using azimuth and radius instead of *x* and *y*.
 """
 import inspect
 
+try:
+    from typing import override
+except:
+    from typing_extensions import override
+
 import matplotlib.projections.polar as mpolar
 import numpy as np
 
@@ -137,6 +142,11 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         self.yaxis.isDefault_majfmt = True
         for axis in (self.xaxis, self.yaxis):
             axis.set_tick_params(which="both", size=0)
+
+    @override
+    def _apply_axis_sharing(self):
+        # Not implemented. Silently pass
+        return
 
     def _update_formatter(self, x, *, formatter=None, formatter_kw=None):
         """

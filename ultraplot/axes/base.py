@@ -1545,6 +1545,8 @@ class Axes(maxes.Axes):
                     iax._panel_sharex_group = True
                     iax._sharex_setup(bottom)  # parent is bottom-most
             paxs = shared(self._panel_dict["top"])
+            if paxs and self.figure._sharex > 0:
+                self._panel_sharex_group = True
             for iax in paxs:
                 iax._panel_sharex_group = True
                 iax._sharex_setup(bottom)
@@ -1559,6 +1561,8 @@ class Axes(maxes.Axes):
                     iax._panel_sharey_group = True
                     iax._sharey_setup(left)  # parent is left-most
             paxs = shared(self._panel_dict["right"])
+            if paxs and self.figure._sharey > 0:
+                self._panel_sharey_group = True
             for iax in paxs:
                 iax._panel_sharey_group = True
                 iax._sharey_setup(left)
@@ -3261,6 +3265,27 @@ class Axes(maxes.Axes):
         # Not in the same panel group
         return False
 
+    def _label_key(self, side: str) -> str:
+        """
+        Map requested side name to the correct tick_params key across mpl versions.
+
+        This accounts for the API change around Matplotlib 3.10 where labeltop/labelbottom
+        became first-class tick parameter keys. For older versions, these map to
+        labelright/labelleft respectively.
+        """
+        from packaging import version
+        from ..internals import _version_mpl
+
+        # TODO: internal deprecation warning when we drop 3.9, we need to remove this
+
+        use_new = version.parse(str(_version_mpl)) >= version.parse("3.10")
+        if side == "labeltop":
+            return "labeltop" if use_new else "labelright"
+        if side == "labelbottom":
+            return "labelbottom" if use_new else "labelleft"
+        # "labelleft" and "labelright" are stable across versions
+        return side
+
     def _is_ticklabel_on(self, side: str) -> bool:
         """
         Check if tick labels are on for the specified sides.
@@ -3274,10 +3299,8 @@ class Axes(maxes.Axes):
         label = "label1"
         if side in ["labelright", "labeltop"]:
             label = "label2"
-        for tick in axis.get_major_ticks():
-            if getattr(tick, label).get_visible():
-                return True
-        return False
+
+        return axis.get_tick_params().get(self._label_key(side), False)
 
     @docstring._snippet_manager
     def inset(self, *args, **kwargs):

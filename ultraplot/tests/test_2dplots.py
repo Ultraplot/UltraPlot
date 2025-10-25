@@ -30,12 +30,12 @@ def test_auto_diverging1(rng):
     """
     # Test with basic data
     fig = uplt.figure()
-    # fig.format(collabels=('Auto sequential', 'Auto diverging'), suptitle='Default')
     ax = fig.subplot(121)
     ax.pcolor(rng.random((10, 10)) * 5, colorbar="b")
     ax = fig.subplot(122)
     ax.pcolor(rng.random((10, 10)) * 5 - 3.5, colorbar="b")
     fig.format(toplabels=("Sequential", "Diverging"))
+    fig.canvas.draw()
     return fig
 
 
