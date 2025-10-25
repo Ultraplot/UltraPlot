@@ -94,3 +94,29 @@ def test_dev_version_skipped(mock_urlopen, mock_version, mock_print):
 
     check_for_update("fakepkg")
     mock_print.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "cycle, raises_error",
+    [
+        ("qual1", False),
+        (["#5790fc", "#f89c20", "#e42536", "#964a8b", "#9c9ca1", "#7a21dd"], False),
+        (
+            uplt.constructor.Cycle(
+                ["#5790fc", "#f89c20", "#e42536", "#964a8b", "#9c9ca1", "#7a21dd"]
+            ),
+            False,
+        ),
+        (uplt.colormaps.get_cmap("viridis"), False),
+        (1234, True),
+    ],
+)
+def test_cycle_rc_setting(cycle, raises_error):
+    """
+    Test various ways to set the cycle in rc
+    """
+    if raises_error:
+        with pytest.raises(ValueError):
+            uplt.rc["cycle"] = cycle
+    else:
+        uplt.rc["cycle"] = cycle
