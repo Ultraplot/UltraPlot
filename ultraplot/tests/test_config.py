@@ -29,7 +29,7 @@ def test_cycle_in_rc_file(tmp_path):
     rc_file = tmp_path / "test.rc"
     rc_file.write_text(rc_content)
     rc.load(str(rc_file))
-    assert uplt.rc["cycle"] == "colorblind"
+    assert rc["cycle"] == "colorblind"
 
 
 import io
