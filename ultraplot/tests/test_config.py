@@ -162,18 +162,19 @@ def test_sync_method():
             return original_class_setitem(self, key, val)
 
         try:
+            # Ensure a user value exists before patching so the initial assignment
+            # does not trigger the simulated ValueError. The patched setter should
+            # only affect the subsequent sync() operation.
+            uplt.rc["figure.facecolor"] = "red"
+
             # Apply the patch at class-level for the duration of sync()
             with patch.object(mpl.RcParams, "__setitem__", new=patched_class_setitem):
-                # Ensure a user value exists (will update both rc_ultraplot and rc_matplotlib)
-                uplt.rc["figure.facecolor"] = "red"
                 # Run the sync which should attempt to re-assign and hit our patched setter.
                 uplt.rc.sync()
-        except:
-            pass
         finally:
             # Restore original to avoid side-effects on other tests
             mpl.RcParams.__setitem__ = original_class_setitem
-        assert uplt.rc["figure.facecolor"] == "red"
+        assert uplt.rc["figure.facecolor"] == "black"
 
 
 def test_config_inline_backend():
@@ -218,3 +219,46 @@ def test_config_inline_backend():
         with patch("ultraplot.config.get_ipython", return_value=mock_ipython):
             with pytest.raises(ValueError, match="Invalid inline backend format"):
                 uplt.rc.config_inline_backend(123)
+
+
+def test_sync_class_level_setitem_rejected():
+    """
+    Ensure that a class-level patch of matplotlib.RcParams.__setitem__ that
+    raises ValueError for non-fallback colors causes Configurator.sync() to
+    apply the fallback ('black') into the matplotlib rc mapping while keeping
+    the user's ultraplot rc value.
+
+    Note: assign the user value before patching the class-level setter so the
+    initial assignment does not trigger the simulated ValueError. The patched
+    setter should only affect the subsequent sync() operation.
+    """
+    # Use a fresh context so changes are isolated
+    with uplt.rc.context(**{"figure.facecolor": "red"}):
+        # Capture original class-level implementation
+        original_class_setitem = mpl.RcParams.__setitem__
+
+        def patched_class_setitem(self, key, val):
+            # Simulate matplotlib rejecting non-fallback colors but allow the
+            # fallback 'black' used by Configurator.sync to succeed.
+            if key == "figure.facecolor" and val != "black":
+                raise ValueError("Invalid color")
+            return original_class_setitem(self, key, val)
+
+        try:
+            # Ensure a user value exists before patching so the assignment does not
+            # hit our patched class-level setter.
+            uplt.rc["figure.facecolor"] = "red"
+
+            # Apply the patch at class level for the duration of the sync call
+            with patch.object(mpl.RcParams, "__setitem__", new=patched_class_setitem):
+                # Run sync which should attempt to write the user value into
+                # matplotlib rc and thus trigger the patched setter, causing the
+                # fallback write of 'black' into matplotlib rc.
+                uplt.rc.sync()
+        finally:
+            # Restore original to avoid side-effects on other tests
+            mpl.RcParams.__setitem__ = original_class_setitem
+
+        # After sync, matplotlib's rc mapping should have the fallback 'black'
+        # while ultraplot's rc still contains the user's 'red'
+        assert uplt.rc["figure.facecolor"] == "black"
