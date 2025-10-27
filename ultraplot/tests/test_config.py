@@ -173,9 +173,6 @@ def test_sync_method():
         finally:
             # Restore original to avoid side-effects on other tests
             mpl.RcParams.__setitem__ = original_class_setitem
-
-        # After sync the matplotlib rc should have been set to the fallback 'black'
-        # while the ultraplot rc (user setting) remains 'red'.
         assert uplt.rc["figure.facecolor"] == "red"
 
 
