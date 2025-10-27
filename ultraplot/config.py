@@ -721,7 +721,7 @@ class Configurator(MutableMapping, dict):
         self.rc_matplotlib = rc_matplotlib
         self._init(local=local, user=user, default=default, **kwargs)
 
-    def _init(self, *, local, user, default):
+    def _init(self, *, local, user, default, **kwargs):
         """
         Initialize the configurator.
         """
