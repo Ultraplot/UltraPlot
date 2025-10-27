@@ -1,10 +1,6 @@
 # ultraplot/ultraplot/tests/test_demos.py
-import math
-import numpy as np
-import pytest
-import ultraplot as plt
+import numpy as np, pytest, ultraplot as plt
 import matplotlib.font_manager as mfonts
-
 import ultraplot.demos as demos
 
 
