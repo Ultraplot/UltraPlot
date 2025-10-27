@@ -68,6 +68,8 @@ COLORS_KEEP = ("red", "green", "blue", "cyan", "yellow", "magenta", "white", "bl
 
 # Configurator docstrings
 _rc_docstring = """
+rc_ultraplot : ~`ultraplot.rcsetup._RcParams`: rc parameters specific to ultraplot.
+rc_matplotlib : ~`matplotlib.RcParams`: rc parameters specific to matplotlib.
 local : bool, default: True
     Whether to load settings from the `~Configurator.local_files` file.
 user : bool, default: True
