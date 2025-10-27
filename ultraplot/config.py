@@ -68,8 +68,8 @@ COLORS_KEEP = ("red", "green", "blue", "cyan", "yellow", "magenta", "white", "bl
 
 # Configurator docstrings
 _rc_docstring = """
-rc_ultraplot : ~`ultraplot.rcsetup._RcParams`: rc parameters specific to ultraplot.
-rc_matplotlib : ~`matplotlib.RcParams`: rc parameters specific to matplotlib.
+rc_ultraplot : ~`ultraplot.rcsetup._RcParams` | None: rc parameters specific to ultraplot. Defaults to `rcsetup._rc_ultraplot_default`.
+rc_matplotlib : ~`matplotlib.RcParams` | None: rc parameters specific to matplotlib. Defualts to `matplotlib.rcParams`.
 local : bool, default: True
     Whether to load settings from the `~Configurator.local_files` file.
 user : bool, default: True
@@ -705,8 +705,8 @@ class Configurator(MutableMapping, dict):
     @docstring._snippet_manager
     def __init__(
         self,
-        rc_ultraplot: dict,
-        rc_matplotlib: dict,
+        rc_ultraplot: dict | None = None,
+        rc_matplotlib: dict | None = None,
         local=True,
         user=True,
         default=True,
@@ -719,6 +719,10 @@ class Configurator(MutableMapping, dict):
         """
         self._context = []
         self._setting_handlers = {}
+        if rc_ultraplot is None:
+            rc_ultraplot = rcsetup._rc_ultraplot_default.copy()
+        if rc_matplotlib is None:
+            rc_matplotlib = mpl.rcParams
         self.rc_ultraplot = rc_ultraplot
         self.rc_matplotlib = rc_matplotlib
         self._init(local=local, user=user, default=default, **kwargs)
