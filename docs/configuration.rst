@@ -14,10 +14,10 @@ A dictionary-like object named :obj:`~ultraplot.config.rc`, belonging to the
 :class:`~ultraplot.config.Configurator` class, is created when you import UltraPlot.
 This is your one-stop shop for working with
 `matplotlib settings <ug_rcmpl_>`_
-stored in :attr:`~ultraplot.config.rc.rc_matplotlib`
+stored in :obj:`~ultraplot.config.rc.rc_matplotlib`
 (our name for the :obj:`~matplotlib.rcParams` dictionary)
 and :ref:`ultraplot settings <ug_rcUltraPlot>`
-stored in :attr:`~ultraplot.config.rc.rc_ultraplot`.
+stored in :obj:`~ultraplot.config.rc.rc_ultraplot`.
 
 To change global settings on-the-fly, simply update :obj:`~ultraplot.config.rc`
 using either dot notation or as you would any other dictionary:
