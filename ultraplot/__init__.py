@@ -98,18 +98,9 @@ for _key in (
 
 # Validate color names now that colors are registered
 # NOTE: This updates all settings with 'color' in name (harmless if it's not a color)
-from .config import rc_ultraplot, rc_matplotlib
-
 rcsetup.VALIDATE_REGISTERED_COLORS = True
-for _src in (rc_ultraplot, rc_matplotlib):
-    for _key in _src:  # loop through unsynced properties
-        if "color" not in _key:
-            continue
-        try:
-            _src[_key] = _src[_key]
-        except ValueError as err:
-            warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
-            _src[_key] = "black"  # fill value
+rc.sync()  # triggers validation
+
 from .colors import _cmap_database as colormaps
 from .utils import check_for_update
 

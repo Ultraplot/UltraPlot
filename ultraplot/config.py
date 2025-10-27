@@ -56,16 +56,11 @@ logging.getLogger("matplotlib.mathtext").setLevel(logging.ERROR)
 __all__ = [
     "Configurator",
     "rc",
-    "rc_ultraplot",
-    "rc_matplotlib",
     "use_style",
-    "config_inline_backend",
     "register_cmaps",
     "register_cycles",
     "register_colors",
     "register_fonts",
-    "RcConfigurator",  # deprecated
-    "inline_backend_fmt",  # deprecated
 ]
 
 # Constants
@@ -405,64 +400,6 @@ def _infer_ultraplot_dict(kw_params):
     return kw_ultraplot
 
 
-def config_inline_backend(fmt=None):
-    """
-    Set up the ipython `inline backend display format \
-<https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-matplotlib>`__
-    and ensure that inline figures always look the same as saved figures.
-    This runs the following ipython magic commands:
-
-    .. code-block:: ipython
-
-        %config InlineBackend.figure_formats = rc['inlineformat']
-        %config InlineBackend.rc = {}  # never override rc settings
-        %config InlineBackend.close_figures = True  # cells start with no active figures
-        %config InlineBackend.print_figure_kwargs = {'bbox_inches': None}
-
-    When the inline backend is inactive or unavailable, this has no effect.
-    This function is called when you modify the :rcraw:`inlineformat` property.
-
-    Parameters
-    ----------
-    fmt : str or sequence, default: :rc:`inlineformat`
-        The inline backend file format or a list thereof. Valid formats
-        include ``'jpg'``, ``'png'``, ``'svg'``, ``'pdf'``, and ``'retina'``.
-
-    See also
-    --------
-    Configurator
-    """
-    # Note if inline backend is unavailable this will fail silently
-    ipython = get_ipython()
-    if ipython is None:
-        return
-    fmt = _not_none(fmt, rc_ultraplot["inlineformat"])
-    if isinstance(fmt, str):
-        fmt = [fmt]
-    elif np.iterable(fmt):
-        fmt = list(fmt)
-    else:
-        raise ValueError(f"Invalid inline backend format {fmt!r}. Must be string.")
-
-    # IPython < 9.0.0
-    if hasattr(ipython, "magic"):
-        ipython.magic("config InlineBackend.figure_formats = " + repr(fmt))
-        ipython.magic("config InlineBackend.rc = {}")
-        ipython.magic("config InlineBackend.close_figures = True")
-        ipython.magic(
-            "config InlineBackend.print_figure_kwargs = {'bbox_inches': None}"
-        )
-
-    # IPython >= 9.0.0
-    else:
-        ipython.run_line_magic("config", "InlineBackend.figure_formats = " + repr(fmt))
-        ipython.run_line_magic("config", "InlineBackend.rc = {}")
-        ipython.run_line_magic("config", "InlineBackend.close_figures = True")
-        ipython.run_line_magic(
-            "config", "InlineBackend.print_figure_kwargs = {'bbox_inches': None}"
-        )
-
-
 def use_style(style):
     """
     Apply the `matplotlib style(s) \
@@ -487,8 +424,8 @@ def use_style(style):
     # so much *more* than changing rc params or quick settings, so it is
     # nice to have dedicated function instead of just another rc_param name.
     kw_matplotlib = _get_style_dict(style)
-    rc_matplotlib.update(kw_matplotlib)
-    rc_ultraplot.update(_infer_ultraplot_dict(kw_matplotlib))
+    rc.rc_matplotlib.update(kw_matplotlib)
+    rc.rc_ultraplot.update(_infer_ultraplot_dict(kw_matplotlib))
 
 
 @docstring._snippet_manager
@@ -763,31 +700,16 @@ class Configurator(MutableMapping, dict):
     on import. See the :ref:`user guide <ug_config>` for details.
     """
 
-    def __repr__(self):
-        cls = type("rc", (dict,), {})  # temporary class with short name
-        src = cls({key: val for key, val in rc_ultraplot.items() if "." not in key})
-        return type(rc_matplotlib).__repr__(src).strip()[:-1] + ",\n    ...\n    })"
-
-    def __str__(self):
-        cls = type("rc", (dict,), {})  # temporary class with short name
-        src = cls({key: val for key, val in rc_ultraplot.items() if "." not in key})
-        return type(rc_matplotlib).__str__(src) + "\n..."
-
-    def __iter__(self):
-        yield from rc_ultraplot  # sorted ultraplot settings, ignoring deprecations
-        yield from rc_matplotlib  # sorted matplotlib settings, ignoring deprecations
-
-    def __len__(self):
-        return len(tuple(iter(self)))
-
-    def __delitem__(self, key):  # noqa: U100
-        raise RuntimeError("rc settings cannot be deleted.")
-
-    def __delattr__(self, attr):  # noqa: U100
-        raise RuntimeError("rc settings cannot be deleted.")
-
     @docstring._snippet_manager
-    def __init__(self, local=True, user=True, default=True, **kwargs):
+    def __init__(
+        self,
+        rc_ultraplot: dict,
+        rc_matplotlib: dict,
+        local=True,
+        user=True,
+        default=True,
+        **kwargs,
+    ):
         """
         Parameters
         ----------
@@ -795,7 +717,43 @@ class Configurator(MutableMapping, dict):
         """
         self._context = []
         self._setting_handlers = {}
+        self.rc_ultraplot = rc_ultraplot
+        self.rc_matplotlib = rc_matplotlib
         self._init(local=local, user=user, default=default, **kwargs)
+
+    def _init(self, *, local, user, default):
+        """
+        Initialize the configurator.
+        """
+        # Always remove context objects
+        self._context.clear()
+
+        # Update from default settings
+        # NOTE: see _remove_blacklisted_style_params bugfix
+        if default:
+            self.rc_matplotlib.update(_get_style_dict("original", filter=False))
+            self.rc_matplotlib.update(rcsetup._rc_matplotlib_default)
+            self.rc_ultraplot.update(rcsetup._rc_ultraplot_default)
+            for key, value in self.rc_ultraplot.items():
+                kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
+                self.rc_matplotlib.update(kw_matplotlib)
+                self.rc_ultraplot.update(kw_ultraplot)
+
+        # Update from user home
+        user_path = None
+        if user:
+            user_path = self.user_file()
+            if os.path.isfile(user_path):
+                self.load(user_path)
+
+        # Update from local paths
+        if local:
+            local_paths = self.local_files()
+            for path in local_paths:
+                if path == user_path:  # local files always have precedence
+                    continue
+                self.load(path)
+        self.sync()
 
     def register_handler(
         self, name: str, func: Callable[[Any], Dict[str, Any]]
@@ -812,10 +770,10 @@ class Configurator(MutableMapping, dict):
         """
         key, _ = self._validate_key(key)  # might issue ultraplot removed/renamed error
         try:
-            return rc_ultraplot[key]
+            return self.rc_ultraplot[key]
         except KeyError:
             pass
-        return rc_matplotlib[key]  # might issue matplotlib removed/renamed error
+        return self.rc_matplotlib[key]  # might issue matplotlib removed/renamed error
 
     def __setitem__(self, key, value):
         """
@@ -823,15 +781,15 @@ class Configurator(MutableMapping, dict):
         (e.g., ``uplt.rc[name] = value``).
         """
         kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
-        rc_ultraplot.update(kw_ultraplot)
-        rc_matplotlib.update(kw_matplotlib)
+        self.rc_ultraplot.update(kw_ultraplot)
+        self.rc_matplotlib.update(kw_matplotlib)
 
     def __getattr__(self, attr):
         """
         Return an `rc_matplotlib` or `rc_ultraplot` setting using "dot" notation
         (e.g., ``value = uplt.rc.name``).
         """
-        if attr[:1] == "_":
+        if attr[:1] == "_" or attr in ("rc_ultraplot", "rc_matplotlib"):
             return super().__getattribute__(attr)  # raise built-in error
         else:
             return self.__getitem__(attr)
@@ -841,10 +799,39 @@ class Configurator(MutableMapping, dict):
         Modify an `rc_matplotlib` or `rc_ultraplot` setting using "dot" notation
         (e.g., ``uplt.rc.name = value``).
         """
-        if attr[:1] == "_":
+        if attr[:1] == "_" or attr in ("rc_ultraplot", "rc_matplotlib"):
             super().__setattr__(attr, value)
         else:
             self.__setitem__(attr, value)
+
+    def __repr__(self):
+        cls = type("rc", (dict,), {})  # temporary class with short name
+        src = cls(
+            {key: val for key, val in self.rc_ultraplot.items() if "." not in key}
+        )
+        return (
+            type(self.rc_matplotlib).__repr__(src).strip()[:-1] + ",\n    ...\n    })"
+        )
+
+    def __str__(self):
+        cls = type("rc", (dict,), {})  # temporary class with short name
+        src = cls(
+            {key: val for key, val in self.rc_ultraplot.items() if "." not in key}
+        )
+        return type(self.rc_matplotlib).__str__(src) + "\n..."
+
+    def __iter__(self):
+        yield from self.rc_ultraplot  # sorted ultraplot settings, ignoring deprecations
+        yield from self.rc_matplotlib  # sorted matplotlib settings, ignoring deprecations
+
+    def __len__(self):
+        return len(tuple(iter(self)))
+
+    def __delitem__(self, key):  # noqa: U100
+        raise RuntimeError("rc settings cannot be deleted.")
+
+    def __delattr__(self, attr):  # noqa: U100
+        raise RuntimeError("rc settings cannot be deleted.")
 
     def __enter__(self):
         """
@@ -866,7 +853,7 @@ class Configurator(MutableMapping, dict):
                 raise e
 
             for rc_dict, kw_new in zip(
-                (rc_ultraplot, rc_matplotlib),
+                (self.rc_ultraplot, self.rc_matplotlib),
                 (kw_ultraplot, kw_matplotlib),
             ):
                 for key, value in kw_new.items():
@@ -884,45 +871,11 @@ class Configurator(MutableMapping, dict):
         context = self._context[-1]
         for key, value in context.rc_old.items():
             kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
-            rc_ultraplot.update(kw_ultraplot)
-            rc_matplotlib.update(kw_matplotlib)
+            self.rc_ultraplot.update(kw_ultraplot)
+            self.rc_matplotlib.update(kw_matplotlib)
         del self._context[-1]
 
-    def _init(self, *, local, user, default):
-        """
-        Initialize the configurator.
-        """
-        # Always remove context objects
-        self._context.clear()
-
-        # Update from default settings
-        # NOTE: see _remove_blacklisted_style_params bugfix
-        if default:
-            rc_matplotlib.update(_get_style_dict("original", filter=False))
-            rc_matplotlib.update(rcsetup._rc_matplotlib_default)
-            rc_ultraplot.update(rcsetup._rc_ultraplot_default)
-            for key, value in rc_ultraplot.items():
-                kw_ultraplot, kw_matplotlib = self._get_item_dicts(key, value)
-                rc_matplotlib.update(kw_matplotlib)
-                rc_ultraplot.update(kw_ultraplot)
-
-        # Update from user home
-        user_path = None
-        if user:
-            user_path = self.user_file()
-            if os.path.isfile(user_path):
-                self.load(user_path)
-
-        # Update from local paths
-        if local:
-            local_paths = self.local_files()
-            for path in local_paths:
-                if path == user_path:  # local files always have precedence
-                    continue
-                self.load(path)
-
-    @staticmethod
-    def _validate_key(key, value=None):
+    def _validate_key(self, key, value=None):
         """
         Validate setting names and handle `rc_ultraplot` deprecations.
         """
@@ -934,13 +887,13 @@ class Configurator(MutableMapping, dict):
         key = key.lower()
         if "." not in key:
             key = rcsetup._rc_nodots.get(key, key)
-        key, value = rc_ultraplot._check_key(
+        key, value = self.rc_ultraplot._check_key(
             key, value
         )  # may issue deprecation warning
+
         return key, value
 
-    @staticmethod
-    def _validate_value(key, value):
+    def _validate_value(self, key, value):
         """
         Validate setting values and convert numpy ndarray to list if possible.
         """
@@ -952,8 +905,8 @@ class Configurator(MutableMapping, dict):
         # are being read rather than after the end of the file reading.
         if isinstance(value, np.ndarray):
             value = value.item() if value.size == 1 else value.tolist()
-        validate_matplotlib = getattr(rc_matplotlib, "validate", None)
-        validate_ultraplot = rc_ultraplot._validate
+        validate_matplotlib = getattr(self.rc_matplotlib, "validate", None)
+        validate_ultraplot = self.rc_ultraplot._validate
         if validate_matplotlib is not None and key in validate_matplotlib:
             value = validate_matplotlib[key](value)
         elif key in validate_ultraplot:
@@ -970,9 +923,9 @@ class Configurator(MutableMapping, dict):
             mode = self._context_mode
         cache = tuple(context.rc_new for context in self._context)
         if mode == 0:
-            rcdicts = (*cache, rc_ultraplot, rc_matplotlib)
+            rcdicts = (*cache, self.rc_ultraplot, self.rc_matplotlib)
         elif mode == 1:
-            rcdicts = (*cache, rc_ultraplot)  # added settings only!
+            rcdicts = (*cache, self.rc_ultraplot)  # added settings only!
         elif mode == 2:
             rcdicts = (*cache,)
         else:
@@ -1008,16 +961,16 @@ class Configurator(MutableMapping, dict):
             warnings.simplefilter("ignore", mpl.MatplotlibDeprecationWarning)
             warnings.simplefilter("ignore", warnings.UltraPlotWarning)
             for key_i in keys:
-                if key_i in rc_matplotlib:
+                if key_i in self.rc_matplotlib:
                     kw_matplotlib[key_i] = value
-                elif key_i in rc_ultraplot:
+                elif key_i in self.rc_ultraplot:
                     kw_ultraplot[key_i] = value
                 else:
                     raise KeyError(f"Invalid rc setting {key_i!r}.")
 
         # Special key: configure inline backend
         if contains("inlineformat"):
-            config_inline_backend(value)
+            self.config_inline_backend(value)
 
         # Special key: apply stylesheet
         elif contains("style"):
@@ -1043,14 +996,14 @@ class Configurator(MutableMapping, dict):
             kw_ultraplot.update(
                 {
                     key: value
-                    for key, value in rc_ultraplot.items()
+                    for key, value in self.rc_ultraplot.items()
                     if key in rcsetup.FONT_KEYS and value in mfonts.font_scalings
                 }
             )
             kw_matplotlib.update(
                 {
                     key: value
-                    for key, value in rc_matplotlib.items()
+                    for key, value in self.rc_matplotlib.items()
                     if key in rcsetup.FONT_KEYS and value in mfonts.font_scalings
                 }
             )
@@ -1059,9 +1012,9 @@ class Configurator(MutableMapping, dict):
         elif contains("tick.len", "tick.lenratio"):
             if contains("tick.len"):
                 ticklen = value
-                ratio = rc_ultraplot["tick.lenratio"]
+                ratio = self.rc_ultraplot["tick.lenratio"]
             else:
-                ticklen = rc_ultraplot["tick.len"]
+                ticklen = self.rc_ultraplot["tick.len"]
                 ratio = value
             kw_matplotlib["xtick.minor.size"] = ticklen * ratio
             kw_matplotlib["ytick.minor.size"] = ticklen * ratio
@@ -1070,9 +1023,9 @@ class Configurator(MutableMapping, dict):
         elif contains("tick.width", "tick.widthratio"):
             if contains("tick.width"):
                 tickwidth = value
-                ratio = rc_ultraplot["tick.widthratio"]
+                ratio = self.rc_ultraplot["tick.widthratio"]
             else:
-                tickwidth = rc_ultraplot["tick.width"]
+                tickwidth = self.rc_ultraplot["tick.width"]
                 ratio = value
             kw_matplotlib["xtick.minor.width"] = tickwidth * ratio
             kw_matplotlib["ytick.minor.width"] = tickwidth * ratio
@@ -1081,9 +1034,9 @@ class Configurator(MutableMapping, dict):
         elif contains("grid.width", "grid.widthratio"):
             if contains("grid.width"):
                 gridwidth = value
-                ratio = rc_ultraplot["grid.widthratio"]
+                ratio = self.rc_ultraplot["grid.widthratio"]
             else:
-                gridwidth = rc_ultraplot["grid.width"]
+                gridwidth = self.rc_ultraplot["grid.width"]
                 ratio = value
             kw_ultraplot["gridminor.linewidth"] = gridwidth * ratio
             kw_ultraplot["gridminor.width"] = gridwidth * ratio
@@ -1097,6 +1050,65 @@ class Configurator(MutableMapping, dict):
             kw_matplotlib["axes.grid.which"] = which
 
         return kw_ultraplot, kw_matplotlib
+
+    def config_inline_backend(self, fmt=None):
+        """
+        Set up the ipython `inline backend display format \
+    <https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-matplotlib>`__
+        and ensure that inline figures always look the same as saved figures.
+        This runs the following ipython magic commands:
+
+        .. code-block:: ipython
+
+            %config InlineBackend.figure_formats = rc['inlineformat']
+            %config InlineBackend.rc = {}  # never override rc settings
+            %config InlineBackend.close_figures = True  # cells start with no active figures
+            %config InlineBackend.print_figure_kwargs = {'bbox_inches': None}
+
+        When the inline backend is inactive or unavailable, this has no effect.
+        This function is called when you modify the :rcraw:`inlineformat` property.
+
+        Parameters
+        ----------
+        fmt : str or sequence, default: :rc:`inlineformat`
+            The inline backend file format or a list thereof. Valid formats
+            include ``'jpg'``, ``'png'``, ``'svg'``, ``'pdf'``, and ``'retina'``.
+
+        See also
+        --------
+        Configurator
+        """
+        # Note if inline backend is unavailable this will fail silently
+        ipython = get_ipython()
+        if ipython is None:
+            return
+        fmt = _not_none(fmt, self.rc_ultraplot["inlineformat"])
+        if isinstance(fmt, str):
+            fmt = [fmt]
+        elif np.iterable(fmt):
+            fmt = list(fmt)
+        else:
+            raise ValueError(f"Invalid inline backend format {fmt!r}. Must be string.")
+
+        # IPython < 9.0.0
+        if hasattr(ipython, "magic"):
+            ipython.magic("config InlineBackend.figure_formats = " + repr(fmt))
+            ipython.magic("config InlineBackend.rc = {}")
+            ipython.magic("config InlineBackend.close_figures = True")
+            ipython.magic(
+                "config InlineBackend.print_figure_kwargs = {'bbox_inches': None}"
+            )
+
+        # IPython >= 9.0.0
+        else:
+            ipython.run_line_magic(
+                "config", "InlineBackend.figure_formats = " + repr(fmt)
+            )
+            ipython.run_line_magic("config", "InlineBackend.rc = {}")
+            ipython.run_line_magic("config", "InlineBackend.close_figures = True")
+            ipython.run_line_magic(
+                "config", "InlineBackend.print_figure_kwargs = {'bbox_inches': None}"
+            )
 
     @staticmethod
     def _get_axisbelow_zorder(axisbelow):
@@ -1797,6 +1809,20 @@ class Configurator(MutableMapping, dict):
         user_dict = self.changed if user else None
         self._save_yaml(path, user_dict, comment=comment, description=description)
 
+    def sync(self):
+        """
+        Sync settings between ultraplot and matplotlib rc dictionaries.
+        """
+        for _src in (self.rc_ultraplot, self.rc_matplotlib):
+            for _key in _src:  # loop through unsynced properties
+                if "color" not in _key:
+                    continue
+                try:
+                    _src[_key] = _src[_key]
+                except ValueError as err:
+                    warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
+                    _src[_key] = "black"  # fill value
+
     @property
     def _context_mode(self):
         """
@@ -1842,23 +1868,9 @@ class Configurator(MutableMapping, dict):
 _init_user_folders()
 _init_user_file()
 
-#: A dictionary-like container of matplotlib settings. Assignments are
-#: validated and restricted to recognized setting names.
-rc_matplotlib = mpl.rcParams  # PEP8 4 lyfe
-
-#: A dictionary-like container of ultraplot settings. Assignments are
-#: validated and restricted to recognized setting names.
-rc_ultraplot = rcsetup._rc_ultraplot_default.copy()  # a validated rcParams-style dict
-
 #: Instance of `Configurator`. This controls both `rc_matplotlib` and `rc_ultraplot`
 #: settings. See the :ref:`configuration guide <ug_config>` for details.
-rc = Configurator()
-
-# Deprecated
-RcConfigurator = warnings._rename_objs(
-    "0.8.0",
-    RcConfigurator=Configurator,
-)
-inline_backend_fmt = warnings._rename_objs(
-    "0.6.0", inline_backend_fmt=config_inline_backend
+rc = Configurator(
+    rc_ultraplot=rcsetup._rc_ultraplot_default.copy(),
+    rc_matplotlib=mpl.rcParams,
 )
