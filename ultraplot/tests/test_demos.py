@@ -9,6 +9,7 @@ def test_show_channels_requires_arg():
         demos.show_channels()
 
 
+@pytest.mark.mpl_image_compare
 def test_show_channels_basic():
     """Basic invocation of show_channels returns a figure and axes of expected length."""
     # Request fewer samples and fewer channels to keep the figure small
@@ -20,8 +21,10 @@ def test_show_channels_basic():
     # Each axis should have a title set
     for ax in axs:
         assert isinstance(ax.get_title(), str)
+    return fig
 
 
+@pytest.mark.mpl_image_compare
 def test_show_colorspaces_default_and_options():
     """show_colorspaces should create three panels (hcl/hsl/hpl)."""
     fig, axs = demos.show_colorspaces()
@@ -31,16 +34,19 @@ def test_show_colorspaces_default_and_options():
     # Titles should include the space names
     titles = [ax.get_title().upper() for ax in axs]
     assert any("HCL" in t or "HSL" in t or "HPL" in t for t in titles)
+    return fig
 
 
-def test_show_cmaps_and_cycles_return_fig_and_axes():
+@pytest.mark.parametrize("demo", ["show_cmaps", "show_cycles"])
+@pytest.mark.mpl_image_compare
+def test_show_cmaps_and_cycles_return_fig_and_axes(demo):
     """show_cmaps and show_cycles should return a figure and axes collection."""
-    fig_c, axs_c = demos.show_cmaps()
-    fig_y, axs_y = demos.show_cycles()
-    assert fig_c is not None and fig_y is not None
-    assert hasattr(axs_c, "__len__") and hasattr(axs_y, "__len__")
-    assert len(axs_c) > 0
-    assert len(axs_y) > 0
+    fig, axs = getattr(demos, demo)()
+    assert fig is not None
+    assert hasattr(axs, "__len__")
+    assert len(axs) > 0
+    # Return a figure for image comparison (use the colormap figure)
+    return fig
 
 
 def test__filter_colors_behavior():
@@ -69,10 +75,12 @@ def test__filter_colors_behavior():
     assert not demos._filter_colors(hcl_endpoint, ihue=3, nhues=4, minsat=10)
 
 
-def test_show_colors_basic_and_titles():
+@pytest.mark.mpl_image_compare
+@pytest.mark.parametrize("nhues,minsat", [(4, 10), (8, 15)])
+def test_show_colors_basic_and_titles(nhues, minsat):
     """show_colors generates axes with titles for requested categories."""
-    # Reduce nhues to make test faster and deterministic
-    fig, axs = demos.show_colors(nhues=4, minsat=10)
+    # Use parameterized nhues/minsat to exercise behavior deterministically
+    fig, axs = demos.show_colors(nhues=nhues, minsat=minsat)
     assert fig is not None
     assert hasattr(axs, "__len__")
     assert len(axs) > 0
@@ -81,8 +89,10 @@ def test_show_colors_basic_and_titles():
         title = ax.get_title()
         assert isinstance(title, str)
         assert title != ""
+    return fig
 
 
+@pytest.mark.mpl_image_compare
 def test_show_fonts_with_existing_font():
     """show_fonts should accept a real font name from the system and return a figure."""
     # Pick a font that is available in the matplotlib font manager
@@ -101,3 +111,4 @@ def test_show_fonts_with_existing_font():
         texts = ax.texts
         assert hasattr(texts, "__len__")
         assert len(texts) >= 1
+    return fig
