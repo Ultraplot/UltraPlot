@@ -957,6 +957,7 @@ def show_colors(*, nhues=17, minsat=10, unknown="User", include=None, ignore=Non
             names = np.array([name for ipairs in hclpairs for name, _ in ipairs])
             ncols, nrows = 4, len(names) // 4 + 1
 
+        names = np.asarray(names).copy()
         names.resize((ncols, nrows))  # fill empty slots with empty string
         namess[cat] = names
 
