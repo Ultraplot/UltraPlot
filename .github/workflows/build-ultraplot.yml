@@ -77,8 +77,7 @@ jobs:
           git checkout ${{ github.event.pull_request.base.sha }}
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           pytest -W ignore \
-            --mpl-generate-path=baseline \
-            --mpl-generate-hash-library=baseline/comparison_hashes.json \
+            --mpl-generate-hash-library=./baseline/comparison_hashes.json \
             --mpl-default-style="./ultraplot.yml"\
             ultraplot/tests
           git checkout ${{ github.sha }}  # Return to PR branch
@@ -89,11 +88,11 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           pytest -W ignore \
               --mpl \
-              --mpl-hash-library=baseline/comparison_hashes.json \
+              --mpl-hash-library=./baseline/comparison_hashes.json \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
-              --store-failed-only ultraplot/tests
+              ultraplot/tests
 
       # Return the html output of the comparison even if failed
       - name: Upload comparison failures
