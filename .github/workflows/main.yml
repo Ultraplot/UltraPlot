@@ -130,7 +130,7 @@ jobs:
     uses: ./.github/workflows/build-ultraplot.yml
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }}-${{ matrix.matplotlib-version }}
-      cancel-in-progress: false
+      cancel-in-progress: true
     with:
       python-version: ${{ matrix.python-version }}
       matplotlib-version: ${{ matrix.matplotlib-version }}
