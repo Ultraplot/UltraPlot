@@ -3,6 +3,7 @@
 Test subplot layout.
 """
 import numpy as np, ultraplot as uplt, pytest
+from numpy._typing import _32Bit
 
 
 @pytest.mark.mpl_image_compare
@@ -631,3 +632,49 @@ def test_right_panel_and_right_colorbar_border_priority():
     assert axi not in right_borders
     # Either the panel or the colorbar axes should be recognized as a right border
     assert (pax in right_borders) or (cbar.ax in right_borders)
+
+
+@pytest.mark.mpl_image_compare
+def test_grid_geo_and_cartesian():
+    """
+    Check that sharing geo and cartesian axes in a grid works.
+    For a grid like
+
+        | 1 | 2 |
+        | 3 | 4 |
+    We expect the 2nd plot to be a bottom edge and 4 too if 4 is a geo axes.
+    """
+
+    layout = [[1, 2], [3, 4]]
+    fig, axs = uplt.subplots(layout, proj=(None, None, None, "cyl"))
+    axs[-1].format(
+        land=True,
+        ocean=True,
+        landcolor="green",
+        oceancolor="ocean blue",
+        title="Cylindrical Projection",
+        lonlabels=True,
+        latlabels=True,
+        grid=0,
+    )
+    outer_axes = fig._get_border_axes()
+    assert axs[0] in outer_axes["top"]
+    assert axs[1] in outer_axes["top"]
+    assert axs[2] not in outer_axes["top"]
+    assert axs[3] in outer_axes["top"]
+
+    assert axs[0] not in outer_axes["bottom"]
+    assert axs[1] in outer_axes["bottom"]
+    assert axs[2] in outer_axes["bottom"]
+    assert axs[3] in outer_axes["bottom"]
+
+    assert axs[0] in outer_axes["left"]
+    assert axs[1] not in outer_axes["left"]
+    assert axs[2] in outer_axes["left"]
+    assert axs[3] in outer_axes["left"]
+
+    assert axs[0] not in outer_axes["right"]
+    assert axs[1] in outer_axes["right"]
+    assert axs[2] in outer_axes["right"]
+    assert axs[3] in outer_axes["right"]
+    return fig
