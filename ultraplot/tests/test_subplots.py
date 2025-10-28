@@ -3,7 +3,6 @@
 Test subplot layout.
 """
 import numpy as np, ultraplot as uplt, pytest
-from numpy._typing import _32Bit
 
 
 @pytest.mark.mpl_image_compare
