@@ -77,7 +77,7 @@ jobs:
           git checkout ${{ github.event.pull_request.base.sha }}
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           pytest -W ignore \
-            --mpl-generate-hash-library=./baseline/comparison_hashes.json \
+            --mpl-generate-path=./baseline/ \
             --mpl-default-style="./ultraplot.yml"\
             ultraplot/tests
           git checkout ${{ github.sha }}  # Return to PR branch
@@ -88,7 +88,7 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           pytest -W ignore \
               --mpl \
-              --mpl-hash-library=./baseline/comparison_hashes.json \
+              --mpl-baseline-path=./baseline/ \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
