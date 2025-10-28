@@ -1559,7 +1559,6 @@ class SubplotGrid(MutableSequence, list):
         # Build grid with None for empty slots
         from .utils import _get_subplot_layout
 
-        print(self)
         grid = _get_subplot_layout(gs, [i for i in self])[0]
 
         # Determine if along each axis this grid consists only of panel slots
@@ -1578,7 +1577,6 @@ class SubplotGrid(MutableSequence, list):
             try:
                 panel_flag = panel_h if which == "h" else panel_w
                 encoded_keyi = gs._encode_indices(keyi, which=which, panel=panel_flag)
-                print(encoded_keyi)
             except Exception:
                 raise IndexError(
                     f"Attempted to access {key=} for gridspec {grid.shape=}"
@@ -1590,7 +1588,6 @@ class SubplotGrid(MutableSequence, list):
             objs = [obj for obj in objs.flat if obj is not None]
         elif not isinstance(objs, list):
             objs = [objs]
-        print(objs)
 
         if len(objs) == 1:
             return objs[0]
