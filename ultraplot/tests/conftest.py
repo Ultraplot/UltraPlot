@@ -18,6 +18,7 @@ def rng():
 def close_figures_after_test():
     yield
     uplt.close("all")
+    assert uplt.pyplot.get_fignums() == [], f"Open figures {uplt.pyplot.get_fignums()}"
 
 
 # Define command line option
