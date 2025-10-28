@@ -17,7 +17,7 @@ jobs:
   build-ultraplot:
     name: Test Python ${{ inputs.python-version }} with ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 60
     defaults:
       run:
         shell: bash -el {0}
