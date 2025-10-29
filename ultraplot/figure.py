@@ -1234,7 +1234,11 @@ class Figure(mfigure.Figure):
             axis_type = ax_type_mapping[axi]
             number = axi.number
             if axi.number is None:
-                number = -axi._panel_parent.number
+                if axi._panel_parent is not None:
+                    number = -axi._panel_parent.number
+                else:
+                    # Figure panel without parent - use a unique negative number
+                    number = -1000 - all_axes.index(axi)
             crawler = _Crawler(
                 ax=axi,
                 grid=grid,
@@ -1338,7 +1342,17 @@ class Figure(mfigure.Figure):
         return renderer
 
     @_clear_border_cache
-    def _add_axes_panel(self, ax, side=None, **kwargs):
+    def _add_axes_panel(
+        self,
+        ax,
+        side=None,
+        span=None,
+        row=None,
+        col=None,
+        rows=None,
+        cols=None,
+        **kwargs,
+    ):
         """
         Add an axes panel.
         """
@@ -1368,6 +1382,35 @@ class Figure(mfigure.Figure):
         if not gs:
             raise RuntimeError("The gridspec must be active.")
         kw = _pop_params(kwargs, gs._insert_panel_slot)
+
+        # Validate and determine span override from span/row/col/rows/cols parameters
+        span_override = None
+        if side in ("left", "right"):
+            # Vertical panels: should use rows parameter, not cols
+            if _not_none(cols, col) is not None and _not_none(rows, row) is None:
+                raise ValueError(
+                    f"For {side!r} colorbars (vertical), use 'rows=' or 'row=' "
+                    "to specify span, not 'cols=' or 'col='."
+                )
+            if span is not None and _not_none(rows, row) is None:
+                warnings._warn_ultraplot(
+                    f"For {side!r} colorbars (vertical), prefer 'rows=' over 'span=' "
+                    "for clarity. Using 'span' as rows."
+                )
+            span_override = _not_none(rows, row, span)
+        else:
+            # Horizontal panels: should use cols parameter, not rows
+            if _not_none(rows, row) is not None and _not_none(cols, col, span) is None:
+                raise ValueError(
+                    f"For {side!r} colorbars (horizontal), use 'cols=' or 'span=' "
+                    "to specify span, not 'rows=' or 'row='."
+                )
+            span_override = _not_none(cols, col, span)
+
+        # Pass span_override to gridspec if provided
+        if span_override is not None:
+            kw["span_override"] = span_override
+
         ss, share = gs._insert_panel_slot(side, ax, **kw)
         # Guard: GeoAxes with non-rectilinear projections cannot share with panels
         if isinstance(ax, paxes.GeoAxes) and not ax._is_rectilinear():
@@ -2341,8 +2384,33 @@ class Figure(mfigure.Figure):
                 cb = super().colorbar(mappable, cax=cax, **kwargs)
         # Axes panel colorbar
         elif ax is not None:
-            cb = ax.colorbar(
-                mappable, values, space=space, pad=pad, width=width, loc=loc, **kwargs
+            # Check if span parameters are provided
+            has_span = _not_none(span, row, col, rows, cols) is not None
+
+            # Extract a single axes from array if span is provided
+            # Otherwise, pass the array as-is for normal colorbar behavior
+            if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
+                try:
+                    ax_single = next(iter(ax))
+                except (TypeError, StopIteration):
+                    ax_single = ax
+            else:
+                ax_single = ax
+
+            # Pass span parameters through to axes colorbar
+            cb = ax_single.colorbar(
+                mappable,
+                values,
+                space=space,
+                pad=pad,
+                width=width,
+                loc=loc,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
+                **kwargs,
             )
         # Figure panel colorbar
         else:

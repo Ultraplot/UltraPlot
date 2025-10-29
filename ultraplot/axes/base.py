@@ -963,7 +963,18 @@ class Axes(maxes.Axes):
         self.add_artist(patch)
         return patch
 
-    def _add_guide_panel(self, loc="fill", align="center", length=0, **kwargs):
+    def _add_guide_panel(
+        self,
+        loc="fill",
+        align="center",
+        length=0,
+        span=None,
+        row=None,
+        col=None,
+        rows=None,
+        cols=None,
+        **kwargs,
+    ):
         """
         Add a panel to be filled by an "outer" colorbar or legend.
         """
@@ -984,7 +995,16 @@ class Axes(maxes.Axes):
                     ax = pax
                     break
             if ax is None:
-                ax = self.panel_axes(loc, filled=True, **kwargs)
+                ax = self.panel_axes(
+                    loc,
+                    filled=True,
+                    span=span,
+                    row=row,
+                    col=col,
+                    rows=rows,
+                    cols=cols,
+                    **kwargs,
+                )
         else:
             raise ValueError(f"Invalid filled panel location {loc!r}.")
         for s in ax.spines.values():
@@ -1008,6 +1028,11 @@ class Axes(maxes.Axes):
         pad=None,
         width=None,
         length=None,
+        span=None,
+        row=None,
+        col=None,
+        rows=None,
+        cols=None,
         shrink=None,
         label=None,
         title=None,
@@ -1123,7 +1148,17 @@ class Axes(maxes.Axes):
             kwargs.update({"align": align, "length": length})
             extendsize = _not_none(extendsize, rc["colorbar.extend"])
             ax = self._add_guide_panel(
-                loc, align, length=length, width=width, space=space, pad=pad
+                loc,
+                align,
+                length=length,
+                width=width,
+                space=space,
+                pad=pad,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
             )  # noqa: E501
             cax, kwargs = ax._parse_colorbar_filled(**kwargs)
         else:

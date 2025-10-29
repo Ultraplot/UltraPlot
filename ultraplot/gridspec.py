@@ -587,6 +587,63 @@ class GridSpec(mgridspec.GridSpec):
         # NOTE: Convert using the lengthwise indices
         return slot, iratio, slice(start, stop + 1)
 
+    def _parse_panel_arg_with_span(self, side, ax, span_override):
+        """
+        Parse panel arg with span override. Uses ax for position, span for extent.
+
+        Parameters
+        ----------
+        side : str
+            Panel side ('left', 'right', 'top', 'bottom')
+        ax : Axes
+            The axes to position the panel relative to
+        span_override : int or tuple
+            The span extent (1-indexed like subplot numbers)
+
+        Returns
+        -------
+        slot : str
+            Panel slot identifier
+        iratio : int
+            Panel position index
+        span : slice
+            Encoded span slice for the panel extent
+        """
+        # Get the axes position
+        ss = ax.get_subplotspec().get_topmost_subplotspec()
+        row1, row2, col1, col2 = ss._get_rows_columns()
+
+        # Determine slot and index based on side
+        slot = side[0]
+        offset = len(ax._panel_dict[side]) + 1
+
+        if side in ("left", "right"):
+            # Panel is vertical, span controls rows
+            iratio = col1 - offset if side == "left" else col2 + offset
+            # Parse span as row specification (1-indexed input, convert to 0-indexed)
+            if isinstance(span_override, Integral):
+                span_start, span_stop = span_override - 1, span_override - 1
+            else:
+                span_override = np.atleast_1d(span_override)
+                span_start, span_stop = span_override[0] - 1, span_override[-1] - 1
+        else:
+            # Panel is horizontal, span controls columns
+            iratio = row1 - offset if side == "top" else row2 + offset
+            # Parse span as column specification (1-indexed input, convert to 0-indexed)
+            if isinstance(span_override, Integral):
+                span_start, span_stop = span_override - 1, span_override - 1
+            else:
+                span_override = np.atleast_1d(span_override)
+                span_start, span_stop = span_override[0] - 1, span_override[-1] - 1
+
+        # Encode indices for gridspec
+        which = "h" if side in ("left", "right") else "w"
+        span_start_encoded, span_stop_encoded = self._encode_indices(
+            span_start, span_stop, which=which
+        )
+
+        return slot, iratio, slice(span_start_encoded, span_stop_encoded + 1)
+
     def _insert_panel_slot(
         self,
         side,
@@ -597,6 +654,7 @@ class GridSpec(mgridspec.GridSpec):
         space=None,
         pad=None,
         filled=False,
+        span_override=None,
     ):
         """
         Insert a panel slot into the existing gridspec. The `side` is the panel side
@@ -608,7 +666,11 @@ class GridSpec(mgridspec.GridSpec):
             raise RuntimeError("Figure must be assigned to gridspec.")
         if side not in ("left", "right", "bottom", "top"):
             raise ValueError(f"Invalid side {side}.")
-        slot, idx, span = self._parse_panel_arg(side, arg)
+        # Use span override if provided
+        if span_override is not None:
+            slot, idx, span = self._parse_panel_arg_with_span(side, arg, span_override)
+        else:
+            slot, idx, span = self._parse_panel_arg(side, arg)
         pad = units(pad, "em", "in")
         space = units(space, "em", "in")
         width = units(width, "in")
