@@ -276,6 +276,19 @@ space : unit-spec, default: None
 pad : unit-spec, default: :rc:`subplots.panelpad`
     The :ref:`tight layout padding <ug_tight>` between the panel and the subplot.
     %(units.em)s
+row, rows
+    Aliases for `span` for panels on the left or right side (vertical panels).
+col, cols
+    Aliases for `span` for panels on the top or bottom side (horizontal panels).
+span : int or 2-tuple of int, default: None
+    Integer(s) indicating the span of the panel across rows and columns of
+    subplots. For panels on the left or right side, use `rows` or `row` to
+    specify which rows the panel should span. For panels on the top or bottom
+    side, use `cols` or `col` to specify which columns the panel should span.
+    For example, ``ax.panel('b', col=1)`` draws a panel beneath only the
+    leftmost column, and ``ax.panel('b', cols=(1, 2))`` draws a panel beneath
+    the left two columns. By default the panel will span all rows or columns
+    aligned with the parent axes.
 share : bool, default: True
     Whether to enable axis sharing between the *x* and *y* axes of the
     main subplot and the panel long axes for each panel in the "stack".
