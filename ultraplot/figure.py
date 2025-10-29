@@ -1340,13 +1340,13 @@ class Figure(mfigure.Figure):
     @_clear_border_cache
     def _add_axes_panel(
         self,
-        ax,
-        side=None,
-        span=None,
-        row=None,
-        col=None,
-        rows=None,
-        cols=None,
+        ax: "paxes.Axes",
+        side: Optional[str] = None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
         **kwargs,
     ) -> "paxes.Axes":
         """
