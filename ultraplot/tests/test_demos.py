@@ -14,7 +14,6 @@ def test_show_channels_requires_arg():
         demos.show_channels()
 
 
-@pytest.mark.skip("sanitycheck")
 @pytest.mark.mpl_image_compare
 def test_show_channels_basic():
     """Basic invocation of show_channels returns a figure and axes of expected length."""

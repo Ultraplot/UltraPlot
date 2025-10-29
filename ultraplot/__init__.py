@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 A succinct matplotlib wrapper for making beautiful, publication-quality graphics.
-test me
 """
 # SCM versioning
 name = "ultraplot"
