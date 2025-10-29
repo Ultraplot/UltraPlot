@@ -1352,7 +1352,7 @@ class Figure(mfigure.Figure):
         rows=None,
         cols=None,
         **kwargs,
-    ):
+    ) -> "paxes.Axes":
         """
         Add an axes panel.
         """
@@ -1495,8 +1495,15 @@ class Figure(mfigure.Figure):
 
     @_clear_border_cache
     def _add_figure_panel(
-        self, side=None, span=None, row=None, col=None, rows=None, cols=None, **kwargs
-    ):
+        self,
+        side: Optional[str] = None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        **kwargs,
+    ) -> "paxes.Axes":
         """
         Add a figure panel.
         """
@@ -2323,16 +2330,16 @@ class Figure(mfigure.Figure):
         self,
         mappable,
         values=None,
-        loc=None,
-        location=None,
-        row=None,
-        col=None,
-        rows=None,
-        cols=None,
-        span=None,
-        space=None,
-        pad=None,
-        width=None,
+        loc: Optional[str] = None,
+        location: Optional[str] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        space: Optional[Union[float, str]] = None,
+        pad: Optional[Union[float, str]] = None,
+        width: Optional[Union[float, str]] = None,
         **kwargs,
     ):
         """

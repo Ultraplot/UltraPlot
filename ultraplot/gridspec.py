@@ -12,7 +12,7 @@ import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
 import matplotlib.transforms as mtransforms
 import numpy as np
-from typing import List
+from typing import List, Optional, Union, Tuple
 from functools import wraps
 
 from . import axes as paxes
@@ -587,7 +587,12 @@ class GridSpec(mgridspec.GridSpec):
         # NOTE: Convert using the lengthwise indices
         return slot, iratio, slice(start, stop + 1)
 
-    def _parse_panel_arg_with_span(self, side, ax, span_override):
+    def _parse_panel_arg_with_span(
+        self,
+        side: str,
+        ax: "paxes.Axes",
+        span_override: Optional[Union[int, Tuple[int, int]]],
+    ) -> Tuple[str, int, slice]:
         """
         Parse panel arg with span override. Uses ax for position, span for extent.
 
@@ -646,15 +651,15 @@ class GridSpec(mgridspec.GridSpec):
 
     def _insert_panel_slot(
         self,
-        side,
+        side: str,
         arg,
         *,
-        share=None,
-        width=None,
-        space=None,
-        pad=None,
-        filled=False,
-        span_override=None,
+        share: Optional[bool] = None,
+        width: Optional[Union[float, str]] = None,
+        space: Optional[Union[float, str]] = None,
+        pad: Optional[Union[float, str]] = None,
+        filled: bool = False,
+        span_override: Optional[Union[int, Tuple[int, int]]] = None,
     ):
         """
         Insert a panel slot into the existing gridspec. The `side` is the panel side
