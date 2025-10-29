@@ -9,9 +9,9 @@ from numbers import Integral
 from packaging import version
 
 try:
-    from typing import List
+    from typing import List, Optional, Union, Tuple
 except ImportError:
-    from typing_extensions import List
+    from typing_extensions import List, Optional, Union, Tuple
 
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
@@ -1234,11 +1234,7 @@ class Figure(mfigure.Figure):
             axis_type = ax_type_mapping[axi]
             number = axi.number
             if axi.number is None:
-                if axi._panel_parent is not None:
-                    number = -axi._panel_parent.number
-                else:
-                    # Figure panel without parent - use a unique negative number
-                    number = -1000 - all_axes.index(axi)
+                number = -axi._panel_parent.number
             crawler = _Crawler(
                 ax=axi,
                 grid=grid,

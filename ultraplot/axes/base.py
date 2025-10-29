@@ -8,7 +8,7 @@ import inspect
 import re
 import types
 from numbers import Integral, Number
-from typing import Union, Iterable, MutableMapping
+from typing import Union, Iterable, MutableMapping, Optional, Tuple
 from collections.abc import Iterable as IterableType
 
 try:
@@ -978,16 +978,16 @@ class Axes(maxes.Axes):
 
     def _add_guide_panel(
         self,
-        loc="fill",
-        align="center",
-        length=0,
-        span=None,
-        row=None,
-        col=None,
-        rows=None,
-        cols=None,
+        loc: str = "fill",
+        align: str = "center",
+        length: Union[float, str] = 0,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
         **kwargs,
-    ):
+    ) -> "Axes":
         """
         Add a panel to be filled by an "outer" colorbar or legend.
         """
@@ -1035,18 +1035,18 @@ class Axes(maxes.Axes):
         mappable,
         values=None,
         *,
-        loc=None,
-        align=None,
-        space=None,
-        pad=None,
-        width=None,
-        length=None,
-        span=None,
-        row=None,
-        col=None,
-        rows=None,
-        cols=None,
-        shrink=None,
+        loc: Optional[str] = None,
+        align: Optional[str] = None,
+        space: Optional[Union[float, str]] = None,
+        pad: Optional[Union[float, str]] = None,
+        width: Optional[Union[float, str]] = None,
+        length: Optional[Union[float, str]] = None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        shrink: Optional[Union[float, str]] = None,
         label=None,
         title=None,
         reverse=False,
