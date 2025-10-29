@@ -1054,7 +1054,7 @@ class _Crawler:
                 return self._check_ranges(direction, other=cell)
             if getattr(cell, "_panel_parent", None) is self.ax:
                 return self._check_ranges(direction, other=cell)
-            return False
+            return True
 
         # Internal edge or plot reached
         if cell != self.ax:
