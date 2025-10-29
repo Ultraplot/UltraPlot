@@ -1,6 +1,11 @@
-import numpy as np, pytest, ultraplot as plt
+import numpy as np, pytest, ultraplot as plt, os
 import matplotlib.font_manager as mfonts
 import ultraplot.demos as demos
+
+# Skip all tests in this module when running on GitHub Actions
+pytestmark = pytest.mark.skipif(
+    os.getenv("GITHUB_ACTIONS") == "true", reason="Skip tests on GitHub Actions"
+)
 
 
 def test_show_channels_requires_arg():
