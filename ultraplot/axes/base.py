@@ -8,7 +8,7 @@ import inspect
 import re
 import types
 from numbers import Integral, Number
-from typing import Union, Iterable, MutableMapping
+from typing import Union, Iterable, MutableMapping, Optional, Tuple
 from collections.abc import Iterable as IterableType
 
 try:
@@ -987,7 +987,7 @@ class Axes(maxes.Axes):
         rows: Optional[Union[int, Tuple[int, int]]] = None,
         cols: Optional[Union[int, Tuple[int, int]]] = None,
         **kwargs,
-    ):
+    ) -> "Axes":
         """
         Add a panel to be filled by an "outer" colorbar or legend.
         """
