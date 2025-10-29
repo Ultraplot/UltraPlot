@@ -2342,7 +2342,7 @@ class Figure(mfigure.Figure):
         # Axes panel colorbar
         elif ax is not None:
             cb = ax.colorbar(
-                mappable, values, space=space, pad=pad, width=width, **kwargs
+                mappable, values, space=space, pad=pad, width=width, loc=loc, **kwargs
             )
         # Figure panel colorbar
         else:
