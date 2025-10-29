@@ -1,6 +1,7 @@
 import os, shutil, pytest, re, numpy as np, ultraplot as uplt
 from pathlib import Path
-import warnings, logging
+import warnings, logging, gc
+from matplotlib._pylab_helpers import Gcf
 
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 SEED = 51423
@@ -19,6 +20,8 @@ def close_figures_after_test():
     yield
     uplt.close("all")
     assert uplt.pyplot.get_fignums() == [], f"Open figures {uplt.pyplot.get_fignums()}"
+    Gcf.destroy_all()
+    gc.collect()
 
 
 # Define command line option
