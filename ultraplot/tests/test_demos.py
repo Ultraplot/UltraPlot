@@ -30,7 +30,6 @@ def test_show_channels_basic():
     return fig
 
 
-@pytest.mark.skip("sanitycheck")
 @pytest.mark.mpl_image_compare
 def test_show_colorspaces_default_and_options():
     """show_colorspaces should create three panels (hcl/hsl/hpl)."""
@@ -44,7 +43,6 @@ def test_show_colorspaces_default_and_options():
     return fig
 
 
-@pytest.mark.skip("sanitycheck")
 @pytest.mark.parametrize("demo", ["show_cmaps", "show_cycles"])
 @pytest.mark.mpl_image_compare
 def test_show_cmaps_and_cycles_return_fig_and_axes(demo):
@@ -83,7 +81,6 @@ def test__filter_colors_behavior():
     assert not demos._filter_colors(hcl_endpoint, ihue=3, nhues=4, minsat=10)
 
 
-@pytest.mark.skip("sanitycheck")
 @pytest.mark.mpl_image_compare
 @pytest.mark.parametrize("nhues,minsat", [(4, 10), (8, 15)])
 def test_show_colors_basic_and_titles(nhues, minsat):
@@ -101,7 +98,6 @@ def test_show_colors_basic_and_titles(nhues, minsat):
     return fig
 
 
-@pytest.mark.skip("sanitycheck")
 @pytest.mark.mpl_image_compare
 def test_show_fonts_with_existing_font():
     """show_fonts should accept a real font name from the system and return a figure."""
