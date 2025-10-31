@@ -571,3 +571,199 @@ def test_inset_colorbar_orientation(loc, orientation, labelloc):
             found = True
             break
     assert found, f"Colorbar not found for loc='{loc}' with orientation='{orientation}'"
+
+
+def test_colorbar_span_bottom():
+    """Test bottom colorbar with span parameter."""
+
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Colorbar below row 1, spanning columns 1-2
+    cb = fig.colorbar(cm, ax=axs[0, :], span=(1, 2), loc="bottom")
+
+    # Verify colorbar was created
+    assert cb is not None
+
+    # Verify position (should span only columns 1-2)
+    pos = cb.ax.get_position()
+    col0_left = axs[0, 0].get_position().x0
+    col1_right = axs[0, 1].get_position().x1
+    assert abs(pos.x0 - col0_left) < 0.1
+    assert abs(pos.x1 - col1_right) < 0.1
+
+
+def test_colorbar_span_top():
+    """Test top colorbar with span parameter."""
+    import numpy as np
+
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Colorbar above row 2, spanning columns 2-3
+    cb = fig.colorbar(cm, ax=axs[1, :], cols=(2, 3), loc="top")
+
+    assert cb is not None
+
+
+def test_colorbar_span_right():
+    """Test right colorbar with rows parameter."""
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Colorbar right of column 1, spanning rows 1-2
+    cb = fig.colorbar(cm, ax=axs[:, 0], rows=(1, 2), loc="right")
+
+    assert cb is not None
+
+
+def test_colorbar_span_left():
+    """Test left colorbar with rows parameter."""
+    import numpy as np
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Colorbar left of column 2, spanning rows 2-3
+    cb = fig.colorbar(cm, ax=axs[:, 1], rows=(2, 3), loc="left")
+
+    assert cb is not None
+
+
+def test_colorbar_span_validation_left_with_cols_error():
+    """Test that LEFT colorbar raises error with cols parameter."""
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    with pytest.raises(ValueError, match="left.*vertical.*use 'rows='.*not 'cols='"):
+        fig.colorbar(cm, ax=axs[0, 0], cols=(1, 2), loc="left")
+
+
+def test_colorbar_span_validation_right_with_cols_error():
+    """Test that RIGHT colorbar raises error with cols parameter."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    with pytest.raises(ValueError, match="right.*vertical.*use 'rows='.*not 'cols='"):
+        fig.colorbar(cm, ax=axs[0, 0], cols=(1, 2), loc="right")
+
+
+def test_colorbar_span_validation_top_with_rows_error():
+    """Test that TOP colorbar raises error with rows parameter."""
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    with pytest.raises(ValueError, match="top.*horizontal.*use 'cols='.*not 'rows='"):
+        fig.colorbar(cm, ax=axs[0, 0], rows=(1, 2), loc="top")
+
+
+def test_colorbar_span_validation_bottom_with_rows_error():
+    """Test that BOTTOM colorbar raises error with rows parameter."""
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    with pytest.raises(
+        ValueError, match="bottom.*horizontal.*use 'cols='.*not 'rows='"
+    ):
+        fig.colorbar(cm, ax=axs[0, 0], rows=(1, 2), loc="bottom")
+
+
+def test_colorbar_span_validation_left_with_span_warns():
+    """Test that LEFT colorbar with span parameter issues warning."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    with pytest.warns(match="left.*vertical.*prefer 'rows='"):
+        cb = fig.colorbar(cm, ax=axs[0, 0], span=(1, 2), loc="left")
+        assert cb is not None
+
+
+def test_colorbar_span_validation_right_with_span_warns():
+    """Test that RIGHT colorbar with span parameter issues warning."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    with pytest.warns(match="right.*vertical.*prefer 'rows='"):
+        cb = fig.colorbar(cm, ax=axs[0, 0], span=(1, 2), loc="right")
+        assert cb is not None
+
+
+def test_colorbar_array_without_span():
+    """Test that colorbar on array without span preserves original behavior."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Should create colorbar for all axes in the array
+    cb = fig.colorbar(cm, ax=axs[:], loc="right")
+    assert cb is not None
+
+
+def test_colorbar_array_with_span():
+    """Test that colorbar on array with span uses first axis + span extent."""
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Should use first axis position with span extent
+    cb = fig.colorbar(cm, ax=axs[0, :], span=(1, 2), loc="bottom")
+    assert cb is not None
+
+    # Verify it spans only columns 1-2
+    pos = cb.ax.get_position()
+    col0_left = axs[0, 0].get_position().x0
+    col1_right = axs[0, 1].get_position().x1
+    assert abs(pos.x0 - col0_left) < 0.1
+    assert abs(pos.x1 - col1_right) < 0.1
+
+
+def test_colorbar_row_without_span():
+    """Test that colorbar on row without span spans entire row."""
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Should span all 3 columns
+    cb = fig.colorbar(cm, ax=axs[0, :], loc="bottom")
+    assert cb is not None
+
+
+def test_colorbar_column_without_span():
+    """Test that colorbar on column without span spans entire column."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Should span all 3 rows
+    cb = fig.colorbar(cm, ax=axs[:, 0], loc="right")
+    assert cb is not None
+
+
+def test_colorbar_multiple_sides_with_span():
+    """Test multiple colorbars on different sides with span control."""
+    fig, axs = uplt.subplots(nrows=3, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Create colorbars on all 4 sides with different spans
+    cb_bottom = fig.colorbar(cm, ax=axs[0, 0], span=(1, 2), loc="bottom")
+    cb_top = fig.colorbar(cm, ax=axs[1, 0], span=(2, 3), loc="top")
+    cb_right = fig.colorbar(cm, ax=axs[0, 0], rows=(1, 2), loc="right")
+    cb_left = fig.colorbar(cm, ax=axs[0, 1], rows=(2, 3), loc="left")
+
+    assert cb_bottom is not None
+    assert cb_top is not None
+    assert cb_right is not None
+    assert cb_left is not None
