@@ -250,3 +250,30 @@ def test_suptitle_kw_position_reverted(ha, expectation):
     assert np.isclose(x, expectation, atol=0.1), f"Expected x={expectation}, got {x=}"
 
     uplt.close("all")
+
+
+def test_disable_matplotlib_native_layout_flags_and_warnings():
+    """
+    Ensure that native matplotlib layout flags are disabled by ultraplot and that
+    UltraPlotWarning is emitted when creating a Figure while the matplotlib
+    rc flags 'figure.autolayout' or 'figure.constrained_layout.use' are True.
+
+    This verifies the branches that call warnings._warn_ultraplot(...) and
+    then set the flags to False inside Figure.__init__.
+    """
+    # Ensure the matplotlib-related rc flags are set on the ultraplot rc wrapper
+    # prior to creating a figure.
+    uplt.rc.rc_matplotlib["figure.autolayout"] = True
+    uplt.rc.rc_matplotlib["figure.constrained_layout.use"] = True
+
+    # Creating the figure should emit at least one UltraPlotWarning (we don't
+    # rely on exact message content) and should reset the matplotlib rc flags.
+    with pytest.warns(uplt.internals.warnings.UltraPlotWarning):
+        fig = uplt.figure()
+
+    # After construction, the matplotlib rc flags should have been set to False.
+    assert uplt.rc.rc_matplotlib.get("figure.autolayout", False) is False
+    assert uplt.rc.rc_matplotlib.get("figure.constrained_layout.use", False) is False
+
+    # Clean up
+    uplt.close(fig)
