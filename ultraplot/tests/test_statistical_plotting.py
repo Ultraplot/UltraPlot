@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # import ultraplot as uplt
-import numpy as np, pandas as pd, ultraplot as uplt
+import numpy as np
+import pandas as pd
 import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -71,3 +74,24 @@ def test_panel_dist(rng):
         px.hist(x, bins, color=color, fill=True, ec="k")
         px.format(grid=False, ylocator=[], title=title, titleloc="l")
     return fig
+
+    @pytest.mark.mpl_image_compare
+    def test_input_violin_box_options():
+        """
+        Test various box options in violin plots.
+        """
+        data = np.array([0, 1, 2, 3]).reshape(-1, 1)
+
+        fig, axes = uplt.subplots(ncols=4)
+        axes[0].bar(data, median=True, boxpctiles=True, bars=False)
+        axes[0].format(title="boxpctiles")
+
+        axes[1].bar(data, median=True, boxpctile=True, bars=False)
+        axes[1].format(title="boxpctile")
+
+        axes[2].bar(data, median=True, boxstd=True, bars=False)
+        axes[2].format(title="boxstd")
+
+        axes[3].bar(data, median=True, boxstds=True, bars=False)
+        axes[3].format(title="boxstds")
+        return fig

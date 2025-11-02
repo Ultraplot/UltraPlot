@@ -8,50 +8,46 @@ import inspect
 import itertools
 import re
 import sys
+from collections.abc import Callable, Iterable
 from numbers import Integral, Number
+from typing import Any, Iterable, Optional, Union
 
-from typing import Any, Union, Iterable, Optional
-
-from collections.abc import Callable
-from collections.abc import Iterable
-
-from ..utils import units
+import matplotlib as mpl
 import matplotlib.artist as martist
 import matplotlib.axes as maxes
 import matplotlib.cbook as cbook
 import matplotlib.cm as mcm
 import matplotlib.collections as mcollections
 import matplotlib.colors as mcolors
-import matplotlib.contour as mcontour
 import matplotlib.container as mcontainer
+import matplotlib.contour as mcontour
 import matplotlib.image as mimage
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
-import matplotlib.ticker as mticker
 import matplotlib.pyplot as mplt
-import matplotlib as mpl
-from packaging import version
+import matplotlib.ticker as mticker
 import numpy as np
-from typing import Optional, Union, Any
 import numpy.ma as ma
+from packaging import version
 
 from .. import colors as pcolors
 from .. import constructor, utils
 from ..config import rc
-from ..internals import ic  # noqa: F401
 from ..internals import (
     _get_aliases,
     _not_none,
     _pop_kwargs,
     _pop_params,
     _pop_props,
+    _version_mpl,
     context,
     docstring,
     guides,
+    ic,  # noqa: F401
     inputs,
     warnings,
-    _version_mpl,
 )
+from ..utils import units
 from . import base
 
 try:
@@ -1566,7 +1562,7 @@ class PlotAxes(base.Axes):
         The implementation of this function is based on the `dfm_tools` repository.
         Original file: https://github.com/Deltares/dfm_tools/blob/829e76f48ebc42460aae118cc190147a595a5f26/dfm_tools/modplot.py
         """
-        from .plot_types.curved_quiver import CurvedQuiverSolver, CurvedQuiverSet
+        from .plot_types.curved_quiver import CurvedQuiverSet, CurvedQuiverSolver
 
         # Parse inputs
         arrowsize = _not_none(arrowsize, rc["curved_quiver.arrowsize"])
@@ -2087,7 +2083,7 @@ class PlotAxes(base.Axes):
         ):  # ugly kludge to check for shading
             if all(_ is None for _ in (bardata, barstds, barpctiles)):
                 barstds, barpctiles = default_barstds, default_barpctiles
-            if all(_ is None for _ in (boxdata, boxstds, boxpctile)):
+            if all(_ is None for _ in (boxdata, boxstds, boxpctiles)):
                 boxstds, boxpctiles = default_boxstds, default_boxpctiles
         showbars = any(
             _ is not None and _ is not False for _ in (barstds, barpctiles, bardata)
