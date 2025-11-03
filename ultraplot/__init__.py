@@ -16,8 +16,8 @@ version = __version__
 from . import internals, externals, tests  # noqa: F401
 from .internals.benchmarks import _benchmark
 
-with _benchmark("pyplot"):
-    from matplotlib import pyplot  # noqa: F401
+# Defer pyplot import - it's the biggest import time bottleneck
+# It will be imported lazily in ui.py when needed
 with _benchmark("cartopy"):
     try:
         import cartopy  # noqa: F401
