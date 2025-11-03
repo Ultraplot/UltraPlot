@@ -16,8 +16,8 @@ version = __version__
 from . import internals, externals, tests  # noqa: F401
 from .internals.benchmarks import _benchmark
 
-with _benchmark("pyplot"):
-    from matplotlib import pyplot  # noqa: F401
+# Defer pyplot import - it's the biggest import time bottleneck
+# It will be imported lazily in ui.py when needed
 with _benchmark("cartopy"):
     try:
         import cartopy  # noqa: F401
@@ -115,3 +115,13 @@ from .utils import check_for_update
 
 if rc["ultraplot.check_for_latest_version"]:
     check_for_update("ultraplot")
+
+
+# Lazy pyplot access for backward compatibility
+def __getattr__(name):
+    """Lazy load pyplot when accessed as ultraplot.pyplot."""
+    if name == "pyplot":
+        from .ui import _get_pyplot
+
+        return _get_pyplot()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
