@@ -115,3 +115,13 @@ from .utils import check_for_update
 
 if rc["ultraplot.check_for_latest_version"]:
     check_for_update("ultraplot")
+
+
+# Lazy pyplot access for backward compatibility
+def __getattr__(name):
+    """Lazy load pyplot when accessed as ultraplot.pyplot."""
+    if name == "pyplot":
+        from .ui import _get_pyplot
+
+        return _get_pyplot()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

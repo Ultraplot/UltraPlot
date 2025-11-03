@@ -18,6 +18,8 @@ __all__ = [
     "ion",
     "ioff",
     "isinteractive",
+    # Note: pyplot is NOT in __all__ to prevent eager loading during star import
+    # It's accessible via __getattr__ for lazy loading: import ultraplot as uplt; uplt.pyplot
 ]
 
 # Lazy pyplot import
@@ -32,6 +34,14 @@ def _get_pyplot():
 
         _plt = plt
     return _plt
+
+
+# Make pyplot accessible at module level
+def __getattr__(name):
+    """Lazy load pyplot when accessed as module attribute."""
+    if name == "pyplot":
+        return _get_pyplot()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
 # Docstrings
