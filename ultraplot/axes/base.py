@@ -8,7 +8,7 @@ import inspect
 import re
 import types
 from numbers import Integral, Number
-from typing import Union, Iterable, MutableMapping
+from typing import Union, Iterable, MutableMapping, Optional, Tuple
 from collections.abc import Iterable as IterableType
 
 try:
@@ -276,6 +276,19 @@ space : unit-spec, default: None
 pad : unit-spec, default: :rc:`subplots.panelpad`
     The :ref:`tight layout padding <ug_tight>` between the panel and the subplot.
     %(units.em)s
+row, rows
+    Aliases for `span` for panels on the left or right side (vertical panels).
+col, cols
+    Aliases for `span` for panels on the top or bottom side (horizontal panels).
+span : int or 2-tuple of int, default: None
+    Integer(s) indicating the span of the panel across rows and columns of
+    subplots. For panels on the left or right side, use `rows` or `row` to
+    specify which rows the panel should span. For panels on the top or bottom
+    side, use `cols` or `col` to specify which columns the panel should span.
+    For example, ``ax.panel('b', col=1)`` draws a panel beneath only the
+    leftmost column, and ``ax.panel('b', cols=(1, 2))`` draws a panel beneath
+    the left two columns. By default the panel will span all rows or columns
+    aligned with the parent axes.
 share : bool, default: True
     Whether to enable axis sharing between the *x* and *y* axes of the
     main subplot and the panel long axes for each panel in the "stack".
@@ -963,7 +976,18 @@ class Axes(maxes.Axes):
         self.add_artist(patch)
         return patch
 
-    def _add_guide_panel(self, loc="fill", align="center", length=0, **kwargs):
+    def _add_guide_panel(
+        self,
+        loc: str = "fill",
+        align: str = "center",
+        length: Union[float, str] = 0,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        **kwargs,
+    ) -> "Axes":
         """
         Add a panel to be filled by an "outer" colorbar or legend.
         """
@@ -984,7 +1008,16 @@ class Axes(maxes.Axes):
                     ax = pax
                     break
             if ax is None:
-                ax = self.panel_axes(loc, filled=True, **kwargs)
+                ax = self.panel_axes(
+                    loc,
+                    filled=True,
+                    span=span,
+                    row=row,
+                    col=col,
+                    rows=rows,
+                    cols=cols,
+                    **kwargs,
+                )
         else:
             raise ValueError(f"Invalid filled panel location {loc!r}.")
         for s in ax.spines.values():
@@ -1002,13 +1035,18 @@ class Axes(maxes.Axes):
         mappable,
         values=None,
         *,
-        loc=None,
-        align=None,
-        space=None,
-        pad=None,
-        width=None,
-        length=None,
-        shrink=None,
+        loc: Optional[str] = None,
+        align: Optional[str] = None,
+        space: Optional[Union[float, str]] = None,
+        pad: Optional[Union[float, str]] = None,
+        width: Optional[Union[float, str]] = None,
+        length: Optional[Union[float, str]] = None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        shrink: Optional[Union[float, str]] = None,
         label=None,
         title=None,
         reverse=False,
@@ -1123,7 +1161,17 @@ class Axes(maxes.Axes):
             kwargs.update({"align": align, "length": length})
             extendsize = _not_none(extendsize, rc["colorbar.extend"])
             ax = self._add_guide_panel(
-                loc, align, length=length, width=width, space=space, pad=pad
+                loc,
+                align,
+                length=length,
+                width=width,
+                space=space,
+                pad=pad,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
             )  # noqa: E501
             cax, kwargs = ax._parse_colorbar_filled(**kwargs)
         else:
