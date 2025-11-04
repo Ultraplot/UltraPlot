@@ -3,11 +3,12 @@
 Utilities for global configuration.
 """
 import functools
-import re, matplotlib as mpl
+import re
 import threading
 from collections.abc import MutableMapping
 from numbers import Integral, Real
 
+import matplotlib as mpl
 import matplotlib.rcsetup as msetup
 import numpy as np
 from cycler import Cycler
@@ -21,8 +22,10 @@ if hasattr(mpl, "_fontconfig_pattern"):
 else:
     from matplotlib.fontconfig_pattern import parse_fontconfig_pattern
 
-from . import ic  # noqa: F401
-from . import warnings
+from . import (
+    ic,  # noqa: F401
+    warnings,
+)
 from .versions import _version_mpl
 
 # Regex for "probable" unregistered named colors. Try to retain warning message for
@@ -567,11 +570,22 @@ class _RcParams(MutableMapping, dict):
 
     It uses reentrant locks (RLock) to ensure that multiple threads can safely read and write to the configuration without causing data corruption.
 
+    Thread-local isolation:
+    - Inside a context manager (`with rc_params:`), changes are isolated to the current thread
+    - These changes do not affect the global rc_params or other threads
+    - When the context exits, thread-local changes are discarded
+    - Outside a context manager, changes are global and persistent
+
     Example
     -------
+    >>> # Global change (persistent)
+    >>> rc_params['key'] = 'global_value'
+
+    >>> # Thread-local change (temporary, isolated)
     >>> with rc_params:
-    ...     rc_params['key'] = 'value'  # Thread-local change
-    ...     # Changes are automatically cleaned up when exiting the context
+    ...     rc_params['key'] = 'thread_local_value'  # Only visible in this thread
+    ...     print(rc_params['key'])  # 'thread_local_value'
+    >>> print(rc_params['key'])  # 'global_value' (thread-local change discarded)
     """
 
     # NOTE: By omitting __delitem__ in MutableMapping we effectively
@@ -580,7 +594,7 @@ class _RcParams(MutableMapping, dict):
         self._validate = validate
         self._lock = threading.RLock()
         self._local = threading.local()
-        self._local.changes = {}  # Initialize thread-local storage
+        # Don't initialize changes here - it will be created in __enter__ when needed
         # Register all initial keys in the validation dictionary
         for key in source:
             if key not in validate:
@@ -616,8 +630,8 @@ class _RcParams(MutableMapping, dict):
     def __getitem__(self, key):
         with self._lock:
             key, _ = self._check_key(key)
-            # Check thread-local storage first
-            if key in self._local.changes:
+            # Check thread-local storage first (if in a context)
+            if hasattr(self._local, "changes") and key in self._local.changes:
                 return self._local.changes[key]
             # Check global dictionary (will raise KeyError if not found)
             return dict.__getitem__(self, key)
@@ -636,9 +650,12 @@ class _RcParams(MutableMapping, dict):
             except (ValueError, TypeError) as error:
                 raise ValueError(f"Key {key}: {error}") from None
             if key is not None:
-                # Store in both thread-local storage and main dictionary
-                self._local.changes[key] = value
-                dict.__setitem__(self, key, value)
+                # If in a context (thread-local storage exists), store there only
+                # Otherwise, store in the main dictionary (global, persistent)
+                if hasattr(self._local, "changes"):
+                    self._local.changes[key] = value
+                else:
+                    dict.__setitem__(self, key, value)
 
     def _check_key(self, key, value=None):
         # NOTE: If we assigned from the Configurator then the deprecated key will
@@ -673,10 +690,10 @@ class _RcParams(MutableMapping, dict):
             source = {}
             # Start with global values
             for key in self:
-                if key not in self._local.changes:
-                    source[key] = dict.__getitem__(self, key)
-            # Add thread-local changes
-            source.update(self._local.changes)
+                source[key] = dict.__getitem__(self, key)
+            # Add thread-local changes (if in a context)
+            if hasattr(self._local, "changes"):
+                source.update(self._local.changes)
         return _RcParams(source, self._validate)
 
 

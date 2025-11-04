@@ -1,7 +1,10 @@
-import ultraplot as uplt, pytest
 import importlib
 import threading
 import time
+
+import pytest
+
+import ultraplot as uplt
 
 
 def test_wrong_keyword_reset():
@@ -33,8 +36,9 @@ def test_cycle_in_rc_file(tmp_path):
 
 
 import io
-from unittest.mock import patch, MagicMock
 from importlib.metadata import PackageNotFoundError
+from unittest.mock import MagicMock, patch
+
 from ultraplot.utils import check_for_update
 
 
@@ -97,8 +101,8 @@ def test_dev_version_skipped(mock_urlopen, mock_version, mock_print):
 def test_rcparams_thread_safety():
     """
     Test that _RcParams is thread-safe when accessed concurrently.
-    Each thread works with its own unique key to verify proper isolation.
-    Thread-local changes are properly managed with context manager.
+    Thread-local changes inside context managers are isolated and don't persist.
+    Changes outside context managers are global and persistent.
     """
     # Create a new _RcParams instance for testing
     from ultraplot.internals.rcsetup import _RcParams
@@ -111,31 +115,29 @@ def test_rcparams_thread_safety():
     num_threads = 5
     operations_per_thread = 20
 
-    # Each thread will work with its own unique key
-    thread_keys = {}
+    # Track successful thread completions
+    thread_success = {}
 
     def worker(thread_id):
-        """Thread function that works with its own unique key using context manager."""
-        # Each thread gets its own unique key
+        """Thread function that makes thread-local changes that don't persist."""
         thread_key = f"thread_{thread_id}_key"
-        thread_keys[thread_id] = thread_key
 
-        # Use context manager to ensure proper thread-local cleanup
-        with rc_params:
-            # Initialize the key with a base value
-            rc_params[thread_key] = f"initial_{thread_id}"
+        try:
+            # Use context manager for thread-local changes
+            with rc_params:
+                # Initialize the key with a base value (thread-local)
+                rc_params[thread_key] = f"initial_{thread_id}"
 
-            # Perform operations
-            for i in range(operations_per_thread):
-                try:
+                # Perform operations
+                for i in range(operations_per_thread):
                     # Read the current value
                     current = rc_params[thread_key]
 
-                    # Update with new value
+                    # Update with new value (thread-local)
                     new_value = f"thread_{thread_id}_value_{i}"
                     rc_params[thread_key] = new_value
 
-                    # Verify the update worked
+                    # Verify the update worked within this thread
                     assert rc_params[thread_key] == new_value
 
                     # Also read some base keys to test mixed access
@@ -143,9 +145,19 @@ def test_rcparams_thread_safety():
                         base_key = f"base_key_{i % 3}"
                         base_value = rc_params[base_key]
                         assert isinstance(base_value, str)
+                        assert base_value == f"base_value_{i % 3}"
 
-                except Exception as e:
-                    raise AssertionError(f"Thread {thread_id} failed: {str(e)}")
+            # After exiting context, thread-local changes should be gone
+            # The key should NOT exist in the global rc_params
+            assert (
+                thread_key not in rc_params
+            ), f"Thread {thread_id}'s key persisted (should be thread-local only)"
+
+            thread_success[thread_id] = True
+
+        except Exception as e:
+            thread_success[thread_id] = False
+            raise AssertionError(f"Thread {thread_id} failed: {str(e)}")
 
     # Create and start threads
     threads = []
@@ -158,29 +170,27 @@ def test_rcparams_thread_safety():
     for t in threads:
         t.join()
 
-    # Verify each thread's key exists and has the expected final value
+    # Verify all threads completed successfully
     for thread_id in range(num_threads):
-        thread_key = thread_keys[thread_id]
-        assert thread_key in rc_params, f"Thread {thread_id}'s key was lost"
-        final_value = rc_params[thread_key]
-        assert final_value == f"thread_{thread_id}_value_{operations_per_thread - 1}"
+        assert thread_success.get(
+            thread_id, False
+        ), f"Thread {thread_id} did not complete successfully"
 
-    # Verify base keys are still intact
+    # Verify base keys are still intact and unchanged
     for key, expected_value in base_keys.items():
         assert key in rc_params, f"Base key {key} was lost"
         assert rc_params[key] == expected_value, f"Base key {key} value was corrupted"
 
-    # Verify that thread-local changes are properly merged
-    # Create a copy to verify the copy includes thread-local changes
-    rc_copy = rc_params.copy()
-    assert len(rc_copy) == len(base_keys) + num_threads, "Copy doesn't include all keys"
+    # Verify that ONLY base keys exist (no thread keys should persist)
+    assert len(rc_params) == len(
+        base_keys
+    ), f"Expected {len(base_keys)} keys, found {len(rc_params)}"
 
-    # Verify all keys are in the copy
-    for key in base_keys:
-        assert key in rc_copy, f"Base key {key} missing from copy"
-    for thread_id in range(num_threads):
-        thread_key = thread_keys[thread_id]
-        assert thread_key in rc_copy, f"Thread {thread_id}'s key missing from copy"
+    # Test that global changes (outside context) DO persist
+    test_key = "global_test_key"
+    rc_params[test_key] = "global_value"
+    assert test_key in rc_params
+    assert rc_params[test_key] == "global_value"
 
 
 @pytest.mark.parametrize(
