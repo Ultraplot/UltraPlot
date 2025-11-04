@@ -98,18 +98,125 @@ def test_dev_version_skipped(mock_urlopen, mock_version, mock_print):
     mock_print.assert_not_called()
 
 
-def test_rcparams_thread_safety():
-    """
-    Test that _RcParams is thread-safe when accessed concurrently.
-    Thread-local changes inside context managers are isolated and don't persist.
-    Changes outside context managers are global and persistent.
-    """
-    # Create a new _RcParams instance for testing
+# Helper functions for parameterized thread-safety test
+def _setup_ultraplot_rcparams():
+    """Create a new _RcParams instance for testing."""
     from ultraplot.internals.rcsetup import _RcParams
 
-    # Initialize with base keys
     base_keys = {f"base_key_{i}": f"base_value_{i}" for i in range(3)}
-    rc_params = _RcParams(base_keys, {k: lambda x: x for k in base_keys})
+    validators = {k: lambda x: x for k in base_keys}
+    return _RcParams(base_keys, validators)
+
+
+def _setup_matplotlib_rcparams():
+    """Get the rc_matplotlib wrapper."""
+    from ultraplot.config import rc_matplotlib
+
+    return rc_matplotlib
+
+
+def _ultraplot_thread_keys(thread_id):
+    """Generate thread-specific keys for ultraplot (custom keys allowed)."""
+    return (
+        f"thread_{thread_id}_key",  # key
+        f"initial_{thread_id}",  # initial_value
+        lambda i: f"thread_{thread_id}_value_{i}",  # value_fn
+    )
+
+
+def _matplotlib_thread_keys(thread_id):
+    """Generate thread-specific keys for matplotlib (must use valid keys)."""
+    return (
+        "font.size",  # key - must be valid matplotlib param
+        10 + thread_id * 2,  # initial_value - unique per thread
+        lambda i: 10 + thread_id * 2,  # value_fn - same value in loop
+    )
+
+
+def _ultraplot_base_keys_check(rc_params):
+    """Return list of base keys to verify for ultraplot."""
+    return [(f"base_key_{i % 3}", f"base_value_{i % 3}") for i in range(20)]
+
+
+def _matplotlib_base_keys_check(rc_matplotlib):
+    """Return list of base keys to verify for matplotlib."""
+    return [("font.size", rc_matplotlib["font.size"])]
+
+
+def _ultraplot_global_test(rc_params):
+    """Return test key/value for global change test (ultraplot)."""
+    return (
+        "global_test_key",  # key
+        "global_value",  # value
+        lambda: None,  # cleanup_fn - no cleanup needed
+    )
+
+
+def _matplotlib_global_test(rc_matplotlib):
+    """Return test key/value for global change test (matplotlib)."""
+    original_value = rc_matplotlib._rcparams["font.size"]
+    return (
+        "font.size",  # key
+        99,  # value
+        lambda: rc_matplotlib.__setitem__("font.size", original_value),  # cleanup_fn
+    )
+
+
+@pytest.mark.parametrize(
+    "rc_type,setup_fn,thread_keys_fn,base_keys_fn,global_test_fn",
+    [
+        (
+            "ultraplot",
+            _setup_ultraplot_rcparams,
+            _ultraplot_thread_keys,
+            _ultraplot_base_keys_check,
+            _ultraplot_global_test,
+        ),
+        (
+            "matplotlib",
+            _setup_matplotlib_rcparams,
+            _matplotlib_thread_keys,
+            _matplotlib_base_keys_check,
+            _matplotlib_global_test,
+        ),
+    ],
+)
+def test_rcparams_thread_safety(
+    rc_type, setup_fn, thread_keys_fn, base_keys_fn, global_test_fn
+):
+    """
+    Test that rcParams (both _RcParams and rc_matplotlib) are thread-safe with thread-local isolation.
+
+    This parameterized test verifies thread-safety for both ultraplot's _RcParams and matplotlib's
+    rc_matplotlib wrapper. The key difference is that _RcParams allows custom keys while rc_matplotlib
+    must use valid matplotlib parameter keys.
+
+    Thread-local changes inside context managers are isolated and don't persist.
+    Changes outside context managers are global and persistent.
+
+    Parameters
+    ----------
+    rc_type : str
+        Either "ultraplot" or "matplotlib" to identify which rcParams is being tested
+    setup_data : callable
+        Function that returns the rc_params object to test
+    thread_keys_fn : callable
+        Function that takes thread_id and returns (key, initial_value, value_fn)
+        - For ultraplot: custom keys like "thread_0_key"
+        - For matplotlib: valid keys like "font.size"
+    base_keys_check_fn : callable
+        Function that returns list of (key, expected_value) tuples to verify
+    global_test_fn : callable
+        Function that returns (key, value, cleanup_fn) for testing global changes
+    """
+    # Setup rc_params object
+    rc_params = setup_fn()
+
+    # Store original values for base keys (before any modifications)
+    if rc_type == "matplotlib":
+        original_values = {key: rc_params[key] for key, _ in base_keys_fn(rc_params)}
+    else:
+        original_values = {f"base_key_{i}": f"base_value_{i}" for i in range(3)}
 
     # Number of threads and operations per thread
     num_threads = 5
@@ -120,21 +227,18 @@ def test_rcparams_thread_safety():
 
     def worker(thread_id):
         """Thread function that makes thread-local changes that don't persist."""
-        thread_key = f"thread_{thread_id}_key"
+        thread_key, initial_value, value_fn = thread_keys_fn(thread_id)
 
         try:
             # Use context manager for thread-local changes
             with rc_params:
                 # Initialize the key with a base value (thread-local)
-                rc_params[thread_key] = f"initial_{thread_id}"
+                rc_params[thread_key] = initial_value
 
                 # Perform operations
                 for i in range(operations_per_thread):
-                    # Read the current value
-                    current = rc_params[thread_key]
-
                     # Update with new value (thread-local)
-                    new_value = f"thread_{thread_id}_value_{i}"
+                    new_value = value_fn(i)
                     rc_params[thread_key] = new_value
 
                     # Verify the update worked within this thread
@@ -142,16 +246,27 @@ def test_rcparams_thread_safety():
 
                     # Also read some base keys to test mixed access
                     if i % 5 == 0:
-                        base_key = f"base_key_{i % 3}"
+                        base_key, expected_value = base_keys_fn(rc_params)[0]
                         base_value = rc_params[base_key]
-                        assert isinstance(base_value, str)
-                        assert base_value == f"base_value_{i % 3}"
+                        assert isinstance(base_value, (str, int, float, list))
+                        if rc_type == "ultraplot":
+                            assert base_value == expected_value
+
+                    # Small delay for matplotlib to increase chance of race conditions
+                    if rc_type == "matplotlib":
+                        time.sleep(0.001)
 
             # After exiting context, thread-local changes should be gone
-            # The key should NOT exist in the global rc_params
-            assert (
-                thread_key not in rc_params
-            ), f"Thread {thread_id}'s key persisted (should be thread-local only)"
+            if rc_type == "ultraplot":
+                # For ultraplot, custom keys should not exist
+                assert (
+                    thread_key not in rc_params
+                ), f"Thread {thread_id}'s key persisted (should be thread-local only)"
+            else:
+                # For matplotlib, value should revert to original
+                assert (
+                    rc_params[thread_key] == original_values[thread_key]
+                ), f"Thread {thread_id}'s change persisted (should be thread-local only)"
 
             thread_success[thread_id] = True
 
