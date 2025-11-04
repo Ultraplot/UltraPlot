@@ -292,20 +292,24 @@ def test_rcparams_thread_safety(
         ), f"Thread {thread_id} did not complete successfully"
 
     # Verify base keys are still intact and unchanged
-    for key, expected_value in base_keys.items():
+    for key, expected_value in original_values.items():
         assert key in rc_params, f"Base key {key} was lost"
         assert rc_params[key] == expected_value, f"Base key {key} value was corrupted"
 
-    # Verify that ONLY base keys exist (no thread keys should persist)
-    assert len(rc_params) == len(
-        base_keys
-    ), f"Expected {len(base_keys)} keys, found {len(rc_params)}"
+    # Verify that ONLY base keys exist for ultraplot (no thread keys should persist)
+    if rc_type == "ultraplot":
+        assert len(rc_params) == len(
+            original_values
+        ), f"Expected {len(original_values)} keys, found {len(rc_params)}"
 
     # Test that global changes (outside context) DO persist
-    test_key = "global_test_key"
-    rc_params[test_key] = "global_value"
+    test_key, test_value, cleanup_fn = global_test_fn(rc_params)
+    rc_params[test_key] = test_value
     assert test_key in rc_params
-    assert rc_params[test_key] == "global_value"
+    assert rc_params[test_key] == test_value
+
+    # Cleanup if needed
+    cleanup_fn()
 
 
 @pytest.mark.parametrize(
