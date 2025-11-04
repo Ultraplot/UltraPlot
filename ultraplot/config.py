@@ -14,10 +14,11 @@ import logging
 import os
 import re
 import sys
+import threading
 from collections import namedtuple
 from collections.abc import MutableMapping
 from numbers import Real
-
+from typing import Any, Callable, Dict
 
 import cycler
 import matplotlib as mpl
@@ -27,9 +28,7 @@ import matplotlib.mathtext  # noqa: F401
 import matplotlib.style.core as mstyle
 import numpy as np
 from matplotlib import RcParams
-from typing import Callable, Any, Dict
 
-from .internals import ic  # noqa: F401
 from .internals import (
     _not_none,
     _pop_kwargs,
@@ -37,6 +36,7 @@ from .internals import (
     _translate_grid,
     _version_mpl,
     docstring,
+    ic,  # noqa: F401
     rcsetup,
     warnings,
 )
@@ -1842,9 +1842,134 @@ class Configurator(MutableMapping, dict):
 _init_user_folders()
 _init_user_file()
 
+
+class _ThreadSafeRcParams(MutableMapping):
+    """
+    Thread-safe wrapper for matplotlib.rcParams with thread-local isolation support.
+
+    This wrapper ensures that matplotlib's rcParams can be safely accessed from
+    multiple threads, and provides thread-local isolation when used as a context manager.
+
+    Thread-local isolation:
+    - Inside a context manager (`with rc_matplotlib:`), changes are isolated to the current thread
+    - These changes do not affect the global rc_matplotlib or other threads
+    - When the context exits, thread-local changes are discarded
+    - Outside a context manager, changes are global and persistent
+
+    Example
+    -------
+    >>> # Global change (persistent)
+    >>> rc_matplotlib['font.size'] = 12
+
+    >>> # Thread-local change (temporary, isolated)
+    >>> with rc_matplotlib:
+    ...     rc_matplotlib['font.size'] = 20  # Only visible in this thread
+    ...     print(rc_matplotlib['font.size'])  # 20
+    >>> print(rc_matplotlib['font.size'])  # 12 (thread-local change discarded)
+    """
+
+    def __init__(self, rcparams):
+        self._rcparams = rcparams
+        self._lock = threading.RLock()
+        self._local = threading.local()
+
+    def __enter__(self):
+        """Context manager entry - initialize thread-local storage."""
+        if not hasattr(self._local, "changes"):
+            self._local.changes = {}
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - clean up thread-local storage."""
+        if hasattr(self._local, "changes"):
+            del self._local.changes
+
+    def __repr__(self):
+        with self._lock:
+            return repr(self._rcparams)
+
+    def __str__(self):
+        with self._lock:
+            return str(self._rcparams)
+
+    def __len__(self):
+        with self._lock:
+            return len(self._rcparams)
+
+    def __iter__(self):
+        with self._lock:
+            return iter(self._rcparams)
+
+    def __getitem__(self, key):
+        with self._lock:
+            # Check thread-local storage first (if in a context)
+            if hasattr(self._local, "changes") and key in self._local.changes:
+                return self._local.changes[key]
+            # Check global rcParams
+            return self._rcparams[key]
+
+    def __setitem__(self, key, value):
+        with self._lock:
+            # If in a context (thread-local storage exists), store there only
+            # Otherwise, store in the main rcParams (global, persistent)
+            if hasattr(self._local, "changes"):
+                self._local.changes[key] = value
+            else:
+                self._rcparams[key] = value
+
+    def __delitem__(self, key):
+        with self._lock:
+            if hasattr(self._local, "changes") and key in self._local.changes:
+                del self._local.changes[key]
+            else:
+                del self._rcparams[key]
+
+    def __contains__(self, key):
+        with self._lock:
+            if hasattr(self._local, "changes") and key in self._local.changes:
+                return True
+            return key in self._rcparams
+
+    def keys(self):
+        with self._lock:
+            return self._rcparams.keys()
+
+    def values(self):
+        with self._lock:
+            return self._rcparams.values()
+
+    def items(self):
+        with self._lock:
+            return self._rcparams.items()
+
+    def get(self, key, default=None):
+        with self._lock:
+            if hasattr(self._local, "changes") and key in self._local.changes:
+                return self._local.changes[key]
+            return self._rcparams.get(key, default)
+
+    def copy(self):
+        with self._lock:
+            result = self._rcparams.copy()
+            # Add thread-local changes (if in a context)
+            if hasattr(self._local, "changes"):
+                result.update(self._local.changes)
+            return result
+
+    def update(self, *args, **kwargs):
+        with self._lock:
+            if hasattr(self._local, "changes"):
+                # In a context - update thread-local storage
+                self._local.changes.update(*args, **kwargs)
+            else:
+                # Outside context - update global rcParams
+                self._rcparams.update(*args, **kwargs)
+
+
 #: A dictionary-like container of matplotlib settings. Assignments are
 #: validated and restricted to recognized setting names.
-rc_matplotlib = mpl.rcParams  # PEP8 4 lyfe
+#: This is a thread-safe wrapper around matplotlib.rcParams with thread-local isolation.
+rc_matplotlib = _ThreadSafeRcParams(mpl.rcParams)
 
 #: A dictionary-like container of ultraplot settings. Assignments are
 #: validated and restricted to recognized setting names.
