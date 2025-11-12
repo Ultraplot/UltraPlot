@@ -8,50 +8,47 @@ import inspect
 import itertools
 import re
 import sys
+from collections.abc import Callable, Iterable
 from numbers import Integral, Number
+from typing import Any, Iterable, Optional, Union
 
-from typing import Any, Union, Iterable, Optional
-
-from collections.abc import Callable
-from collections.abc import Iterable
-
-from ..utils import units
+import matplotlib as mpl
 import matplotlib.artist as martist
 import matplotlib.axes as maxes
 import matplotlib.cbook as cbook
 import matplotlib.cm as mcm
 import matplotlib.collections as mcollections
 import matplotlib.colors as mcolors
-import matplotlib.contour as mcontour
 import matplotlib.container as mcontainer
+import matplotlib.contour as mcontour
 import matplotlib.image as mimage
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
-import matplotlib.ticker as mticker
 import matplotlib.pyplot as mplt
-import matplotlib as mpl
-from packaging import version
+import matplotlib.ticker as mticker
+import networkx as nx
 import numpy as np
-from typing import Optional, Union, Any
 import numpy.ma as ma
+from packaging import version
 
 from .. import colors as pcolors
 from .. import constructor, utils
 from ..config import rc
-from ..internals import ic  # noqa: F401
 from ..internals import (
     _get_aliases,
     _not_none,
     _pop_kwargs,
     _pop_params,
     _pop_props,
+    _version_mpl,
     context,
     docstring,
     guides,
+    ic,  # noqa: F401
     inputs,
     warnings,
-    _version_mpl,
 )
+from ..utils import units
 from . import base
 
 try:
@@ -1566,7 +1563,7 @@ class PlotAxes(base.Axes):
         The implementation of this function is based on the `dfm_tools` repository.
         Original file: https://github.com/Deltares/dfm_tools/blob/829e76f48ebc42460aae118cc190147a595a5f26/dfm_tools/modplot.py
         """
-        from .plot_types.curved_quiver import CurvedQuiverSolver, CurvedQuiverSet
+        from .plot_types.curved_quiver import CurvedQuiverSet, CurvedQuiverSolver
 
         # Parse inputs
         arrowsize = _not_none(arrowsize, rc["curved_quiver.arrowsize"])
@@ -2237,6 +2234,8 @@ class PlotAxes(base.Axes):
         # Draw dark and light shading from distributions or explicit errdata
         eobjs = []
         fill = self.fill_between if vert else self.fill_betweenx
+        seaborn_ctx = _inside_seaborn_call()
+
         if drawfade:
             edata, label = inputs._dist_range(
                 y,
@@ -2250,7 +2249,29 @@ class PlotAxes(base.Axes):
                 absolute=True,
             )
             if edata is not None:
-                eobj = fill(x, *edata, label=label, **fadeprops)
+                synthetic = False
+                eff_label = label
+                if seaborn_ctx and eff_label is None:
+                    eff_label = "_ultraplot_fade"
+                    synthetic = True
+
+                eobj = fill(x, *edata, label=eff_label, **fadeprops)
+                if synthetic:
+                    try:
+                        setattr(eobj, "_ultraplot_synthetic", True)
+                        if hasattr(eobj, "set_label"):
+                            eobj.set_label("_ultraplot_fade")
+
+                    except Exception:
+                        pass
+                    for _obj in guides._iter_iterables(eobj):
+                        try:
+                            setattr(_obj, "_ultraplot_synthetic", True)
+                            if hasattr(_obj, "set_label"):
+                                _obj.set_label("_ultraplot_fade")
+
+                        except Exception:
+                            pass
                 eobjs.append(eobj)
         if drawshade:
             edata, label = inputs._dist_range(
@@ -2265,9 +2286,32 @@ class PlotAxes(base.Axes):
                 absolute=True,
             )
             if edata is not None:
-                eobj = fill(x, *edata, label=label, **shadeprops)
+                synthetic = False
+                eff_label = label
+                if seaborn_ctx and eff_label is None:
+                    eff_label = "_ultraplot_shade"
+                    synthetic = True
+
+                eobj = fill(x, *edata, label=eff_label, **shadeprops)
+                if synthetic:
+                    try:
+                        setattr(eobj, "_ultraplot_synthetic", True)
+                        if hasattr(eobj, "set_label"):
+                            eobj.set_label("_ultraplot_shade")
+
+                    except Exception:
+                        pass
+                    for _obj in guides._iter_iterables(eobj):
+                        try:
+                            setattr(_obj, "_ultraplot_synthetic", True)
+                            if hasattr(_obj, "set_label"):
+                                _obj.set_label("_ultraplot_shade")
+
+                        except Exception:
+                            pass
                 eobjs.append(eobj)
 
+        kwargs["distribution"] = distribution
         kwargs["distribution"] = distribution
         return (*eobjs, kwargs)
 
@@ -3626,6 +3670,11 @@ class PlotAxes(base.Axes):
         objs, xsides = [], []
         kws = kwargs.copy()
         kws.update(_pop_props(kws, "line"))
+        # Disable auto label inference for seaborn primary plot calls
+        seaborn_ctx = _inside_seaborn_call()
+
+        if seaborn_ctx:
+            kws["autolabels"] = False
         kws, extents = self._inbounds_extent(**kws)
         for xs, ys, fmt in self._iter_arg_pairs(*pairs):
             xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, **kws)
@@ -3775,7 +3824,7 @@ class PlotAxes(base.Axes):
         orientation: str = "horizontal",
         n_bins: int = 50,
         **kwargs,
-    ) -> "Collection":
+    ) -> mcollections.Collection:
 
         # Parse input parameters
         ss, _ = self._parse_markersize(ss, **kwargs)
@@ -4363,7 +4412,13 @@ class PlotAxes(base.Axes):
         **kwargs,
     ):
         """
-        Apply area shading.
+        Apply area shading (fill_between / fill_betweenx) with seaborn helper tagging.
+
+        We tag seaborn-generated confidence interval / helper polygons as synthetic
+        unless the user explicitly supplies a label (label/labels/value/values or
+        shadelabel/fadelabel passed through error shading). Synthetic artists are
+        marked with _ultraplot_synthetic=True and given an underscore label so they
+        are ignored by legend collection.
         """
         # Parse input arguments
         kw = kwargs.copy()
@@ -4373,33 +4428,80 @@ class PlotAxes(base.Axes):
         stack = _not_none(stack=stack, stacked=stacked)
         xs, ys1, ys2, kw = self._parse_1d_args(xs, ys1, ys2, vert=vert, **kw)
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
+        guide_kw = _pop_params(kw, self._update_guide)
 
-        # Draw patches with default edge width zero
+        # Determine seaborn helper context and whether user explicitly labeled
+        seaborn_ctx = _inside_seaborn_call()
+
+        # Determine if the user explicitly passed labels before parsing/inference.
+        # Use the original kwargs, not the post-parse kw which may include inferred labels.
+        user_label_explicit = any(
+            kwargs.get(key) is not None
+            for key in ("label", "labels", "value", "values")
+        )
+
+        # Draw patches
         y0 = 0
         objs, xsides, ysides = [], [], []
-        guide_kw = _pop_params(kw, self._update_guide)
         for _, n, x, y1, y2, w, kw in self._iter_arg_cols(xs, ys1, ys2, where, **kw):
             kw = self._parse_cycle(n, **kw)
+
+            # If stacking requested, adjust y arrays
             if stack:
-                y1 = y1 + y0  # avoid in-place modification
+                y1 = y1 + y0
                 y2 = y2 + y0
-                y0 = y0 + y2 - y1  # irrelevant that we added y0 to both
-            if negpos:  # NOTE: if user passes 'where' will issue a warning
+                y0 = y0 + y2 - y1
+
+            # Decide on synthetic tagging:
+            # If seaborn created these (helper context) AND no explicit user label,
+            # any auto-inferred label should be suppressed from legend.
+            synthetic = seaborn_ctx
+            if seaborn_ctx:
+                kw["label"] = "_ultraplot_fill"
+
+            # Draw object (negpos splits into two silent_list items)
+            if negpos:
                 obj = self._call_negpos(name, x, y1, y2, where=w, use_where=True, **kw)
             else:
                 obj = self._call_native(name, x, y1, y2, where=w, **kw)
+
+            # Tag underlying artists if synthetic — apply to the returned object itself
+            # and to any nested artists. Also force an underscore label on the object
+            # so seaborn-provided explicit handles won't leak it into legends.
+            if synthetic:
+                try:
+                    setattr(obj, "_ultraplot_synthetic", True)
+                    if hasattr(obj, "set_label"):
+                        obj.set_label("_ultraplot_fill")
+
+                except Exception:
+                    pass
+                for art in guides._iter_iterables(obj):
+                    try:
+                        setattr(art, "_ultraplot_synthetic", True)
+                        if hasattr(art, "set_label"):
+                            art.set_label("_ultraplot_fill")
+
+                    except Exception:
+                        pass
+
+            # Patch edge fixes
             self._fix_patch_edges(obj, **edgefix_kw, **kw)
+
+            # Track sides for sticky edges
             xsides.append(x)
             for y in (y1, y2):
                 self._inbounds_xylim(extents, x, y, vert=vert)
-                if y.size == 1:  # add sticky edges if bounds are scalar
+                if y.size == 1:
                     ysides.append(y)
             objs.append(obj)
 
         # Draw guide and add sticky edges
+        # Draw guide and add sticky edges
         self._update_guide(objs, **guide_kw)
         for axis, sides in zip("xy" if vert else "yx", (xsides, ysides)):
             self._fix_sticky_edges(objs, axis, *sides)
+        return objs[0] if len(objs) == 1 else cbook.silent_list("PolyCollection", objs)
         return objs[0] if len(objs) == 1 else cbook.silent_list("PolyCollection", objs)
 
     @docstring._snippet_manager

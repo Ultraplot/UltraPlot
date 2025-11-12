@@ -6,10 +6,11 @@ Implements basic shared functionality.
 import copy
 import inspect
 import re
+import sys
 import types
-from numbers import Integral, Number
-from typing import Union, Iterable, MutableMapping, Optional, Tuple
 from collections.abc import Iterable as IterableType
+from numbers import Integral, Number
+from typing import Iterable, MutableMapping, Optional, Tuple, Union
 
 try:
     # From python 3.12
@@ -34,12 +35,39 @@ import numpy as np
 from matplotlib import cbook
 from packaging import version
 
-from .. import legend as plegend
+
+def _inside_seaborn_call():
+    """
+    Detect seaborn internals on the call stack. Used to suppress on-the-fly
+    guide updates that can cause duplicate legends/colorbars during seaborn calls.
+    """
+    try:
+        frame = sys._getframe()
+    except Exception as e:
+        print(e)
+        return False
+    absolute_names = (
+        "seaborn.distributions",
+        "seaborn.categorical",
+        "seaborn.relational",
+        "seaborn.regression",
+        "seaborn.lineplot",
+    )
+    print(
+        frame,
+    )
+    while frame is not None:
+        if frame.f_globals.get("__name__", "") in absolute_names:
+            return True
+        frame = frame.f_back
+    return False
+
+
 from .. import colors as pcolors
 from .. import constructor
+from .. import legend as plegend
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import ic  # noqa: F401
 from ..internals import (
     _kwargs_to_args,
     _not_none,
@@ -51,6 +79,7 @@ from ..internals import (
     _version_mpl,
     docstring,
     guides,
+    ic,  # noqa: F401
     labels,
     rcsetup,
     warnings,
@@ -1739,6 +1768,7 @@ class Axes(maxes.Axes):
         handler_map_full = plegend.Legend.get_default_handler_map()
         handler_map_full = handler_map_full.copy()
         handler_map_full.update(handler_map or {})
+        # Prefer synthetic tagging to exclude helper artists; see _ultraplot_synthetic flag on artists.
         for ax in axs:
             for attr in ("lines", "patches", "collections", "containers"):
                 for handle in getattr(ax, attr, []):  # guard against API changes
@@ -1746,7 +1776,12 @@ class Axes(maxes.Axes):
                     handler = plegend.Legend.get_legend_handler(
                         handler_map_full, handle
                     )  # noqa: E501
-                    if handler and label and label[0] != "_":
+                    if (
+                        handler
+                        and label
+                        and label[0] != "_"
+                        and not getattr(handle, "_ultraplot_synthetic", False)
+                    ):
                         handles.append(handle)
         return handles
 
@@ -1894,14 +1929,21 @@ class Axes(maxes.Axes):
         colorbar_kw = colorbar_kw or {}
         guides._cache_guide_kw(objs, "legend", legend_kw)
         guides._cache_guide_kw(objs, "colorbar", colorbar_kw)
+        print("here", legend)
         if legend:
             align = legend_kw.pop("align", None)
             queue = legend_kw.pop("queue", queue_legend)
-            self.legend(objs, loc=legend, align=align, queue=queue, **legend_kw)
+            # Avoid immediate legend creation inside seaborn to prevent duplicates
+            if not _inside_seaborn_call():
+                self.legend(objs, loc=legend, align=align, queue=queue, **legend_kw)
         if colorbar:
             align = colorbar_kw.pop("align", None)
             queue = colorbar_kw.pop("queue", queue_colorbar)
-            self.colorbar(objs, loc=colorbar, align=align, queue=queue, **colorbar_kw)
+            # Avoid immediate colorbar creation inside seaborn to prevent duplicates
+            if not _inside_seaborn_call():
+                self.colorbar(
+                    objs, loc=colorbar, align=align, queue=queue, **colorbar_kw
+                )
 
     @staticmethod
     def _parse_frame(guide, fancybox=None, shadow=None, **kwargs):
@@ -2423,6 +2465,8 @@ class Axes(maxes.Axes):
             labs = []
             for obj in objs:
                 if hasattr(obj, "get_label"):  # e.g. silent list
+                    if getattr(obj, "_ultraplot_synthetic", False):
+                        continue
                     lab = obj.get_label()
                     if lab is not None and not str(lab).startswith("_"):
                         labs.append(lab)
@@ -2453,10 +2497,21 @@ class Axes(maxes.Axes):
                     if hs:
                         handles.extend(hs)
                     elif obj:  # fallback to first element
-                        handles.append(obj[0])
+                        # Skip synthetic helpers and fill_between collections
+                        if (
+                            not getattr(obj[0], "_ultraplot_synthetic", False)
+                            and type(obj[0]).__name__ != "FillBetweenPolyCollection"
+                        ):
+                            handles.append(obj[0])
                     else:
                         handles.append(obj)
                 elif hasattr(obj, "get_label"):
+                    # Skip synthetic helpers and fill_between collections
+                    if (
+                        getattr(obj, "_ultraplot_synthetic", False)
+                        or type(obj).__name__ == "FillBetweenPolyCollection"
+                    ):
+                        continue
                     handles.append(obj)
                 else:
                     warnings._warn_ultraplot(f"Ignoring invalid legend handle {obj!r}.")
@@ -3322,6 +3377,7 @@ class Axes(maxes.Axes):
         labelright/labelleft respectively.
         """
         from packaging import version
+
         from ..internals import _version_mpl
 
         # TODO: internal deprecation warning when we drop 3.9, we need to remove this
