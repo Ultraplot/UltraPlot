@@ -1929,14 +1929,26 @@ class Axes(maxes.Axes):
         if legend:
             align = legend_kw.pop("align", None)
             queue = legend_kw.pop("queue", queue_legend)
-            # Avoid immediate legend creation inside seaborn to prevent duplicates
-            if not _inside_seaborn_call():
+            # Avoid immediate legend creation inside seaborn or when external mode is enabled
+            if not (
+                getattr(self, "_integration_external", None) is True
+                or (
+                    getattr(self, "_integration_external", None) is None
+                    and _inside_seaborn_call()
+                )
+            ):
                 self.legend(objs, loc=legend, align=align, queue=queue, **legend_kw)
         if colorbar:
             align = colorbar_kw.pop("align", None)
             queue = colorbar_kw.pop("queue", queue_colorbar)
-            # Avoid immediate colorbar creation inside seaborn to prevent duplicates
-            if not _inside_seaborn_call():
+            # Avoid immediate colorbar creation inside seaborn or when external mode is enabled
+            if not (
+                getattr(self, "_integration_external", None) is True
+                or (
+                    getattr(self, "_integration_external", None) is None
+                    and _inside_seaborn_call()
+                )
+            ):
                 self.colorbar(
                     objs, loc=colorbar, align=align, queue=queue, **colorbar_kw
                 )
@@ -3777,6 +3789,65 @@ class Axes(maxes.Axes):
 # NOTE: This is needed for __init__
 Axes._format_signatures = {Axes: inspect.signature(Axes.format)}
 Axes.format = docstring._obfuscate_kwargs(Axes.format)
+
+
+# External-mode API: opt-in per-axes control to disable UltraPlot helper behaviors
+def _axes_set_external(self, value=True):
+    """
+    Mark this axes as 'external' to UltraPlot helper behaviors.
+
+    When external is True:
+      - On-the-fly guide creation (legend/colorbar) during plotting is deferred.
+      - UltraPlot auto-label inference and synthetic tagging are intended to be skipped
+        by call sites that consult this flag.
+      - Sizing tweaks meant for external libs (e.g., seaborn) can be suppressed/enabled
+        by consulting this flag.
+
+    Acceptable values:
+      - True: force external mode on this axes
+      - False: force UltraPlot mode on this axes
+      - None: clear override; fall back to rc/auto detection at call sites
+    """
+    if value not in (True, False, None):
+        raise ValueError("set_external expects True, False, or None")
+    setattr(self, "_integration_external", value)
+    return self
+
+
+class _AxesExternalContext:
+    """
+    Context manager to temporarily toggle external mode for a single axes.
+    """
+
+    def __init__(self, ax, value=True):
+        self._ax = ax
+        self._value = value
+        self._prev = getattr(ax, "_integration_external", None)
+
+    def __enter__(self):
+        # Default is True (enable external mode) if value is None
+        self._ax._integration_external = True if self._value is None else self._value
+        return self._ax
+
+    def __exit__(self, exc_type, exc, tb):
+        self._ax._integration_external = self._prev
+
+
+def _axes_external(self, value=True):
+    """
+    Return a context manager that toggles external mode during the block.
+
+    Example:
+        with ax.external():
+            sns.lineplot(..., ax=ax)
+        ax.legend()
+    """
+    return _AxesExternalContext(self, value)
+
+
+# Bind API to Axes
+Axes.set_external = _axes_set_external
+Axes.external = _axes_external
 
 
 def _get_pos_from_locator(
