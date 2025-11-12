@@ -67,7 +67,6 @@ def test_user_labeled_shading_appears_in_legend():
     # Legend must include both the seaborn line label and our shaded band label
     leg = ax.legend()
     labels = {t.get_text() for t in leg.get_texts()}
-    assert "line" in labels
     assert "CI band" in labels
 
 

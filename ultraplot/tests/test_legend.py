@@ -225,6 +225,66 @@ def test_sync_label_dict(rng):
     uplt.close(fig)
 
 
+def test_external_mode_defers_on_the_fly_legend():
+    """
+    External mode should defer on-the-fly legend creation until explicitly requested.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    ax.plot([0, 1], label="a", legend="b")
+
+    # No legend should have been created yet
+    assert getattr(ax[0], "legend_", None) is None
+
+    # Explicit legend creation should include the plotted label
+    leg = ax.legend(loc="b")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "a" in labels
+    uplt.close(fig)
+
+
+def test_external_mode_mixing_context_manager():
+    """
+    Mixing external and internal plotting on the same axes:
+    - Inside ax.external(): on-the-fly legend is deferred
+    - Outside: UltraPlot-native plotting resumes as normal
+    - Final explicit ax.legend() consolidates both kinds of artists
+    """
+    fig, ax = uplt.subplots()
+
+    with ax.external():
+        ax.plot([0, 1], label="ext", legend="b")  # deferred
+
+    ax.line([0, 1], label="int")  # normal UL behavior
+
+    leg = ax.legend(loc="b")
+    labels = {t.get_text() for t in leg.get_texts()}
+    assert {"ext", "int"}.issubset(labels)
+    uplt.close(fig)
+
+
+def test_external_mode_toggle_enables_auto():
+    """
+    Toggling external mode back off should resume on-the-fly guide creation.
+    """
+    fig, ax = uplt.subplots()
+
+    ax.set_external(True)
+    ax.plot([0, 1], label="a", legend="b")
+    assert getattr(ax[0], "legend_", None) is None  # deferred
+
+    ax.set_external(False)
+    ax.plot([0, 1], label="b", legend="b")
+    # Now legend should be created automatically
+    assert getattr(ax[0], "legend_", None) is not None
+
+    # Ensure final legend contains both entries
+    leg = ax.legend(loc="b")
+    labels = {t.get_text() for t in leg.get_texts()}
+    assert {"a", "b"}.issubset(labels)
+    uplt.close(fig)
+
+
 def test_synthetic_handles_filtered():
     """
     Synthetic-tagged helper artists must be ignored by legend parsing even when
