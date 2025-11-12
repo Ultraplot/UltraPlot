@@ -120,8 +120,8 @@ def test_error_shading_explicit_label_external(monkeypatch):
     x = np.linspace(0, 2 * np.pi, 50)
     y = np.sin(x)
 
-    # Request shading with an explicit label
-    ret = ax.plot(x, y, shadestd=0.5, distribution="normal", shadelabel="Band")
+    # Request shading with an explicit label using explicit shadedata bounds
+    ret = ax.plot(x, y, shadedata=np.vstack([y - 0.5, y + 0.5]), shadelabel="Band")
     # ret is a silent_list; the first element may be a tuple containing shading + line
     item = ret[0]
     handles = []
