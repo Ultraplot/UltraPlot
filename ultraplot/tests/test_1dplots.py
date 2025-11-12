@@ -5,8 +5,64 @@ Test 1D plotting overrides.
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
+import pytest
 
 import ultraplot as uplt
+
+
+def test_bar_absolute_width_seaborn_vs_external(monkeypatch):
+    """
+    Under seaborn detection, bars default to absolute_width=True (width in data units).
+    With explicit external mode enabled, auto absolute width is suppressed and widths
+    are converted relative to the coordinate step size.
+    """
+    import ultraplot.axes.plot as plot_mod
+
+    # Force seaborn detection on
+    monkeypatch.setattr(plot_mod, "_inside_seaborn_call", lambda: True)
+
+    x = [0, 10]
+    h = [1, 2]
+
+    # Case 1: seaborn detection active, external=False -> absolute widths (~0.8 in data units)
+    fig, ax = uplt.subplots()
+    ax.set_external(False)
+    bars_abs = ax.bar(x, h)  # default width
+    w_abs = [r.get_width() for r in bars_abs.patches]
+
+    # Case 2: seaborn detection active, external=True -> relative widths (~0.8 * step)
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    bars_rel = ax.bar(x, h)
+    w_rel = [r.get_width() for r in bars_rel.patches]
+
+    # With step=10, we expect relative width ~ 0.8 * 10 = 8
+    assert pytest.approx(w_abs[0], rel=1e-6) == 0.8
+    assert w_rel[0] > w_abs[0] * 5  # conservative bound; expect >> 0.8
+    assert not np.allclose(w_abs, w_rel)
+
+
+def test_bar_absolute_width_manual_override(monkeypatch):
+    """
+    Users can override seaborn-driven absolute width by passing absolute_width=False.
+    """
+    import ultraplot.axes.plot as plot_mod
+
+    # Force seaborn detection on
+    monkeypatch.setattr(plot_mod, "_inside_seaborn_call", lambda: True)
+
+    x = [0, 10]
+    h = [1, 2]
+
+    fig, ax = uplt.subplots()
+    ax.set_external(False)  # seaborn path active by default
+    bars_rel = ax.bar(x, h, absolute_width=False)
+    w_rel = [r.get_width() for r in bars_rel.patches]
+
+    # Relative width should scale with step size (10), so should be meaningfully larger than 0.8
+    assert w_rel[0] > 4.0
+
+
 import pytest
 
 

@@ -47,6 +47,102 @@ This file is used to test base properties of ultraplot.axes.plot. For higher ord
 """
 
 
+def test_external_preserves_explicit_label():
+    """
+    In external mode, explicit labels must still be respected even when autolabels are disabled.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    (h,) = ax.plot([0, 1, 2], [0, 1, 0], label="X")
+    leg = ax.legend(h, loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "X" in labels
+
+
+def test_external_disables_autolabels_no_label():
+    """
+    In external mode, if no labels are provided, autolabels are disabled and a placeholder is used.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    (h,) = ax.plot([0, 1, 2], [0, 1, 0])
+    # Explicitly pass the handle so we test the label on that artist
+    leg = ax.legend(h, loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    # With no explicit labels and autolabels disabled, a placeholder is used
+    assert labels and labels[0] in ("_no_label", "")
+
+
+def test_scatter_seaborn_absolute_vs_external(monkeypatch):
+    """
+    When seaborn context is detected, UltraPlot forces absolute marker sizes by default.
+    In explicit external mode, this auto absolute sizing is suppressed.
+    """
+    import ultraplot.axes.plot as plot_mod
+
+    # Force seaborn detection to True
+    monkeypatch.setattr(plot_mod, "_inside_seaborn_call", lambda: True)
+
+    # Case 1: seaborn detection active, external=False -> absolute sizing
+    fig, ax = uplt.subplots()
+    ax.set_external(False)
+    s = np.array([0.0, 1.0])
+    col_abs = ax.scatter([0, 1], [0, 1], s=s)
+    sizes_abs = np.array(col_abs.get_sizes())
+
+    # Case 2: seaborn detection active, external=True -> relative sizing (scaled)
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    col_rel = ax.scatter([0, 1], [0, 1], s=s)
+    sizes_rel = np.array(col_rel.get_sizes())
+
+    # Under absolute sizing, min size is 0; under relative scaling, min size should be >= 1
+    assert sizes_abs.min() == 0
+    assert sizes_rel.min() >= 1
+    # And the arrays should differ
+    assert not np.allclose(sizes_abs, sizes_rel)
+
+
+def test_error_shading_explicit_label_external(monkeypatch):
+    """
+    When seaborn context is detected but external mode is on, synthetic tagging is skipped.
+    Explicit shadelabel must be preserved and usable in the legend.
+    """
+    from matplotlib.collections import PolyCollection
+
+    import ultraplot.axes.plot as plot_mod
+
+    # Force seaborn detection to True
+    monkeypatch.setattr(plot_mod, "_inside_seaborn_call", lambda: True)
+
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    x = np.linspace(0, 2 * np.pi, 50)
+    y = np.sin(x)
+
+    # Request shading with an explicit label
+    ret = ax.plot(x, y, shadestd=0.5, distribution="normal", shadelabel="Band")
+    # ret is a silent_list; the first element may be a tuple containing shading + line
+    item = ret[0]
+    handles = []
+    if isinstance(item, tuple):
+        for obj in item:
+            if isinstance(obj, PolyCollection):
+                handles.append(obj)
+    else:
+        # No tuple returned; fallback (unlikely when shadestd is set)
+        pass
+
+    # Build a legend using only the shading handle(s) and verify label
+    if handles:
+        leg = ax.legend(handles, loc="best")
+        labels = [t.get_text() for t in leg.get_texts()]
+        assert "Band" in labels
+    else:
+        # If no shading handle was returned, fail explicitly to highlight coverage gap
+        assert False, "Expected shading handles to be returned when shadestd is set"
+
+
 def test_graph_nodes_kw():
     """Test the graph method by setting keywords for nodes"""
     import networkx as nx
