@@ -2235,6 +2235,7 @@ class PlotAxes(base.Axes):
         eobjs = []
         fill = self.fill_between if vert else self.fill_betweenx
         seaborn_ctx = _inside_seaborn_call()
+        explicit_external = getattr(self, "_integration_external", None) is True
 
         if drawfade:
             edata, label = inputs._dist_range(
@@ -2251,7 +2252,7 @@ class PlotAxes(base.Axes):
             if edata is not None:
                 synthetic = False
                 eff_label = label
-                if seaborn_ctx and eff_label is None:
+                if seaborn_ctx and not explicit_external and eff_label is None:
                     eff_label = "_ultraplot_fade"
                     synthetic = True
 
@@ -2288,7 +2289,7 @@ class PlotAxes(base.Axes):
             if edata is not None:
                 synthetic = False
                 eff_label = label
-                if seaborn_ctx and eff_label is None:
+                if seaborn_ctx and not explicit_external and eff_label is None:
                     eff_label = "_ultraplot_shade"
                     synthetic = True
 
@@ -3672,10 +3673,8 @@ class PlotAxes(base.Axes):
         objs, xsides = [], []
         kws = kwargs.copy()
         kws.update(_pop_props(kws, "line"))
-        # Disable auto label inference for seaborn primary plot calls
-        seaborn_ctx = _inside_seaborn_call()
-
-        if seaborn_ctx:
+        # Disable auto label inference when in external context
+        if self._in_external_context():
             kws["autolabels"] = False
         kws, extents = self._inbounds_extent(**kws)
         for xs, ys, fmt in self._iter_arg_pairs(*pairs):
@@ -4288,7 +4287,10 @@ class PlotAxes(base.Axes):
         if s is not None:
             s = inputs._to_numpy_array(s)
             if absolute_size is None:
-                absolute_size = s.size == 1 or _inside_seaborn_call()
+                explicit_external = getattr(self, "_integration_external", None) is True
+                absolute_size = s.size == 1 or (
+                    _inside_seaborn_call() and not explicit_external
+                )
             if not absolute_size or smin is not None or smax is not None:
                 smin = _not_none(smin, 1)
                 smax = _not_none(smax, rc["lines.markersize"] ** (1, 2)[area_size])
@@ -4725,7 +4727,8 @@ class PlotAxes(base.Axes):
         xs, hs, kw = self._parse_1d_args(xs, hs, orientation=orientation, **kw)
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         if absolute_width is None:
-            absolute_width = _inside_seaborn_call()
+            explicit_external = getattr(self, "_integration_external", None) is True
+            absolute_width = _inside_seaborn_call() and not explicit_external
 
         # Call func after converting bar width
         b0 = 0
