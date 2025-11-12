@@ -2,7 +2,11 @@
 """
 Test legends.
 """
-import numpy as np, pandas as pd, ultraplot as uplt, pytest
+import numpy as np
+import pandas as pd
+import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare

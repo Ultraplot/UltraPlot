@@ -2494,19 +2494,13 @@ class Axes(maxes.Axes):
                         handles.extend(hs)
                     elif obj:  # fallback to first element
                         # Skip synthetic helpers and fill_between collections
-                        if (
-                            not getattr(obj[0], "_ultraplot_synthetic", False)
-                            and type(obj[0]).__name__ != "FillBetweenPolyCollection"
-                        ):
+                        if not getattr(obj[0], "_ultraplot_synthetic", False):
                             handles.append(obj[0])
                     else:
                         handles.append(obj)
                 elif hasattr(obj, "get_label"):
                     # Skip synthetic helpers and fill_between collections
-                    if (
-                        getattr(obj, "_ultraplot_synthetic", False)
-                        or type(obj).__name__ == "FillBetweenPolyCollection"
-                    ):
+                    if getattr(obj, "_ultraplot_synthetic", False):
                         continue
                     handles.append(obj)
                 else:
