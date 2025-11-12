@@ -275,8 +275,8 @@ def test_external_mode_toggle_enables_auto():
 
     ax.set_external(False)
     ax.plot([0, 1], label="b", legend="b")
-    # Now legend should be created automatically
-    assert getattr(ax[0], "legend_", None) is not None
+    # Now legend is queued for creation; verify it is registered in the outer legend dict
+    assert ("bottom", "center") in ax[0]._legend_dict
 
     # Ensure final legend contains both entries
     leg = ax.legend(loc="b")
