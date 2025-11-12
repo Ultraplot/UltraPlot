@@ -231,13 +231,13 @@ def test_external_mode_defers_on_the_fly_legend():
     """
     fig, ax = uplt.subplots()
     ax.set_external(True)
-    ax.plot([0, 1], label="a", legend="b")
+    (h,) = ax.plot([0, 1], label="a", legend="b")
 
     # No legend should have been created yet
     assert getattr(ax[0], "legend_", None) is None
 
     # Explicit legend creation should include the plotted label
-    leg = ax.legend(loc="b")
+    leg = ax.legend(h, loc="b")
     labels = [t.get_text() for t in leg.get_texts()]
     assert "a" in labels
     uplt.close(fig)
@@ -253,11 +253,11 @@ def test_external_mode_mixing_context_manager():
     fig, ax = uplt.subplots()
 
     with ax.external():
-        ax.plot([0, 1], label="ext", legend="b")  # deferred
+        (ext,) = ax.plot([0, 1], label="ext", legend="b")  # deferred
 
-    ax.line([0, 1], label="int")  # normal UL behavior
+    (intr,) = ax.line([0, 1], label="int")  # normal UL behavior
 
-    leg = ax.legend(loc="b")
+    leg = ax.legend([ext, intr], loc="b")
     labels = {t.get_text() for t in leg.get_texts()}
     assert {"ext", "int"}.issubset(labels)
     uplt.close(fig)
@@ -270,16 +270,16 @@ def test_external_mode_toggle_enables_auto():
     fig, ax = uplt.subplots()
 
     ax.set_external(True)
-    ax.plot([0, 1], label="a", legend="b")
+    (ha,) = ax.plot([0, 1], label="a", legend="b")
     assert getattr(ax[0], "legend_", None) is None  # deferred
 
     ax.set_external(False)
-    ax.plot([0, 1], label="b", legend="b")
+    (hb,) = ax.plot([0, 1], label="b", legend="b")
     # Now legend is queued for creation; verify it is registered in the outer legend dict
     assert ("bottom", "center") in ax[0]._legend_dict
 
     # Ensure final legend contains both entries
-    leg = ax.legend(loc="b")
+    leg = ax.legend([ha, hb], loc="b")
     labels = {t.get_text() for t in leg.get_texts()}
     assert {"a", "b"}.issubset(labels)
     uplt.close(fig)
@@ -331,14 +331,14 @@ def test_seaborn_defers_on_the_fly_legend(monkeypatch):
     import ultraplot.axes.base as base_mod
 
     monkeypatch.setattr(base_mod, "_inside_seaborn_call", lambda: True)
-    ax.plot([0, 1], label="a", legend="b")
+    (h,) = ax.plot([0, 1], label="a", legend="b")
 
     # No legend should have been created yet
     assert getattr(ax[0], "legend_", None) is None
 
     # Now allow legend creation and explicitly request it
     monkeypatch.setattr(base_mod, "_inside_seaborn_call", lambda: False)
-    leg = ax.legend(loc="b")
+    leg = ax.legend(h, loc="b")
     labels = [t.get_text() for t in leg.get_texts()]
     assert "a" in labels
     uplt.close(fig)
