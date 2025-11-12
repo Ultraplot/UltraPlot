@@ -3098,7 +3098,9 @@ class PlotAxes(base.Axes):
                 resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
             case str() if cycle.lower() == "none":
                 resolved_cycle = None
-            case str() | int() | Iterable():
+            case str() | int():
+                resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
+            case _ if isinstance(cycle, Iterable):
                 resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
             case _:
                 resolved_cycle = None
