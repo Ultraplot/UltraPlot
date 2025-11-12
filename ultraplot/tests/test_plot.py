@@ -1,11 +1,44 @@
-from cycler import V
-import pandas as pd
-from pandas.core.arrays.arrow.accessors import pa
-import ultraplot as uplt, pytest, numpy as np
 from unittest import mock
 from unittest.mock import patch
 
+import numpy as np
+import pandas as pd
+import pytest
+from cycler import V
+from pandas.core.arrays.arrow.accessors import pa
+
+import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
+
+
+@pytest.mark.mpl_image_compare
+def test_seaborn_lineplot_legend_hue_only():
+    """
+    Regression test: seaborn lineplot on UltraPlot axes should not add spurious
+    legend entries like 'y'/'ymin'. Only hue categories should appear unless the user
+    explicitly labels helper bands.
+    """
+    fig, ax = uplt.subplots()
+    df = pd.DataFrame(
+        {
+            "xcol": np.concatenate([np.arange(10)] * 2),
+            "ycol": np.concatenate([np.arange(10), 1.5 * np.arange(10)]),
+            "hcol": ["h1"] * 10 + ["h2"] * 10,
+        }
+    )
+
+    sns.lineplot(data=df, x="xcol", y="ycol", hue="hcol", ax=ax)
+
+    # Create (or refresh) legend and collect labels
+    leg = ax.legend()
+    labels = {t.get_text() for t in leg.get_texts()}
+
+    # Should contain only hue levels; must not contain inferred 'y' or CI helpers
+    assert "y" not in labels
+    assert "ymin" not in labels
+    assert {"h1", "h2"}.issubset(labels)
+    return fig
+
 
 """
 This file is used to test base properties of ultraplot.axes.plot. For higher order plotting related functions, please use 1d and 2plots
