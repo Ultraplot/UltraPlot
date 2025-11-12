@@ -2592,6 +2592,19 @@ class PlotAxes(base.Axes):
         colorbar_kw_labels = _not_none(
             kwargs.get("colorbar_kw", {}).pop("values", None),
         )
+        # Track whether the user explicitly provided labels/values so we can
+        # preserve them even when autolabels is disabled.
+        _user_labels_explicit = any(
+            v is not None
+            for v in (
+                label,
+                labels,
+                value,
+                values,
+                legend_kw_labels,
+                colorbar_kw_labels,
+            )
+        )
 
         labels = _not_none(
             label=label,
@@ -2631,9 +2644,9 @@ class PlotAxes(base.Axes):
 
         # Apply the labels or values
         if labels is not None:
-            if autovalues:
+            if autovalues or (value is not None or values is not None):
                 kwargs["values"] = inputs._to_numpy_array(labels)
-            elif autolabels:
+            elif autolabels or _user_labels_explicit:
                 kwargs["labels"] = inputs._to_numpy_array(labels)
 
         # Apply title for legend or colorbar that uses the labels or values
