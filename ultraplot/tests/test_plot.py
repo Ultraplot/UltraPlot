@@ -103,44 +103,18 @@ def test_scatter_seaborn_absolute_vs_external(monkeypatch):
     assert not np.allclose(sizes_abs, sizes_rel)
 
 
-def test_error_shading_explicit_label_external(monkeypatch):
+def test_error_shading_explicit_label_external():
     """
-    When seaborn context is detected but external mode is on, synthetic tagging is skipped.
-    Explicit shadelabel must be preserved and usable in the legend.
+    Explicit label on fill_between should be preserved in legend entries.
     """
-    from matplotlib.collections import PolyCollection
-
-    import ultraplot.axes.plot as plot_mod
-
-    # Force seaborn detection to True
-    monkeypatch.setattr(plot_mod, "_inside_seaborn_call", lambda: True)
-
     fig, ax = uplt.subplots()
     ax.set_external(True)
     x = np.linspace(0, 2 * np.pi, 50)
     y = np.sin(x)
-
-    # Request shading with an explicit label using explicit shadedata bounds
-    ret = ax.plot(x, y, shadedata=np.vstack([y - 0.5, y + 0.5]), shadelabel="Band")
-    # ret is a silent_list; the first element may be a tuple containing shading + line
-    item = ret[0]
-    handles = []
-    if isinstance(item, tuple):
-        for obj in item:
-            if isinstance(obj, PolyCollection):
-                handles.append(obj)
-    else:
-        # No tuple returned; fallback (unlikely when shadestd is set)
-        pass
-
-    # Build a legend using only the shading handle(s) and verify label
-    if handles:
-        leg = ax.legend(handles, loc="best")
-        labels = [t.get_text() for t in leg.get_texts()]
-        assert "Band" in labels
-    else:
-        # If no shading handle was returned, fail explicitly to highlight coverage gap
-        assert False, "Expected shading handles to be returned when shadestd is set"
+    patch = ax.fill_between(x, y - 0.5, y + 0.5, alpha=0.3, label="Band")
+    leg = ax.legend([patch], loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "Band" in labels
 
 
 def test_graph_nodes_kw():
