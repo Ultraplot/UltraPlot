@@ -223,3 +223,62 @@ def test_sync_label_dict(rng):
         0
     ]._legend_dict, "Old legend not removed from dict"
     uplt.close(fig)
+
+
+def test_synthetic_handles_filtered():
+    """
+    Synthetic-tagged helper artists must be ignored by legend parsing even when
+    explicitly passed as handles.
+    """
+    fig, ax = uplt.subplots()
+    (h1,) = ax.plot([0, 1], label="visible")
+    (h2,) = ax.plot([1, 0], label="helper")
+    # Mark helper as synthetic; it should be filtered out from legend entries
+    setattr(h2, "_ultraplot_synthetic", True)
+
+    leg = ax.legend([h1, h2], loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "visible" in labels
+    assert "helper" not in labels
+    uplt.close(fig)
+
+
+def test_fill_between_included_in_legend():
+    """
+    Legitimate fill_between/area handles must appear in legends (regression for
+    previously skipped FillBetweenPolyCollection).
+    """
+    fig, ax = uplt.subplots()
+    x = np.arange(5)
+    y1 = np.zeros(5)
+    y2 = np.ones(5)
+    ax.fill_between(x, y1, y2, label="band")
+
+    leg = ax.legend(loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "band" in labels
+    uplt.close(fig)
+
+
+def test_seaborn_defers_on_the_fly_legend(monkeypatch):
+    """
+    When detected inside a seaborn call, on-the-fly legend creation is deferred
+    (no legend is created until explicitly requested).
+    """
+    fig, ax = uplt.subplots()
+
+    # Force seaborn context detection to True
+    import ultraplot.axes.base as base_mod
+
+    monkeypatch.setattr(base_mod, "_inside_seaborn_call", lambda: True)
+    ax.plot([0, 1], label="a", legend="b")
+
+    # No legend should have been created yet
+    assert getattr(ax[0], "legend_", None) is None
+
+    # Now allow legend creation and explicitly request it
+    monkeypatch.setattr(base_mod, "_inside_seaborn_call", lambda: False)
+    leg = ax.legend(loc="b")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "a" in labels
+    uplt.close(fig)
