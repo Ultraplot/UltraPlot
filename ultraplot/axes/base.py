@@ -53,9 +53,6 @@ def _inside_seaborn_call():
         "seaborn.regression",
         "seaborn.lineplot",
     )
-    print(
-        frame,
-    )
     while frame is not None:
         if frame.f_globals.get("__name__", "") in absolute_names:
             return True
@@ -1929,7 +1926,6 @@ class Axes(maxes.Axes):
         colorbar_kw = colorbar_kw or {}
         guides._cache_guide_kw(objs, "legend", legend_kw)
         guides._cache_guide_kw(objs, "colorbar", colorbar_kw)
-        print("here", legend)
         if legend:
             align = legend_kw.pop("align", None)
             queue = legend_kw.pop("queue", queue_legend)
