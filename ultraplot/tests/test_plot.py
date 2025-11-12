@@ -18,6 +18,8 @@ def test_seaborn_lineplot_legend_hue_only():
     legend entries like 'y'/'ymin'. Only hue categories should appear unless the user
     explicitly labels helper bands.
     """
+    import seaborn as sns
+
     fig, ax = uplt.subplots()
     df = pd.DataFrame(
         {
