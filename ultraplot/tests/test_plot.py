@@ -29,7 +29,8 @@ def test_seaborn_lineplot_legend_hue_only():
         }
     )
 
-    sns.lineplot(data=df, x="xcol", y="ycol", hue="hcol", ax=ax)
+    with ax.external():
+        sns.lineplot(data=df, x="xcol", y="ycol", hue="hcol", ax=ax)
 
     # Create (or refresh) legend and collect labels
     leg = ax.legend()
