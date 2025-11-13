@@ -70,7 +70,7 @@ def test_external_disables_autolabels_no_label():
     leg = ax.legend(h, loc="best")
     labels = [t.get_text() for t in leg.get_texts()]
     # With no explicit labels and autolabels disabled, a placeholder is used
-    assert labels and labels[0] in ("_no_label", "")
+    assert (not labels) or (labels[0] in ("_no_label", ""))
 
 
 def test_scatter_seaborn_absolute_vs_external(monkeypatch):
