@@ -318,27 +318,3 @@ def test_fill_between_included_in_legend():
     labels = [t.get_text() for t in leg.get_texts()]
     assert "band" in labels
     uplt.close(fig)
-
-
-def test_seaborn_defers_on_the_fly_legend(monkeypatch):
-    """
-    When detected inside a seaborn call, on-the-fly legend creation is deferred
-    (no legend is created until explicitly requested).
-    """
-    fig, ax = uplt.subplots()
-
-    # Force seaborn context detection to True
-    import ultraplot.axes.base as base_mod
-
-    monkeypatch.setattr(base_mod, "_inside_seaborn_call", lambda: True)
-    (h,) = ax.plot([0, 1], label="a", legend="b")
-
-    # No legend should have been created yet
-    assert getattr(ax[0], "legend_", None) is None
-
-    # Now allow legend creation and explicitly request it
-    monkeypatch.setattr(base_mod, "_inside_seaborn_call", lambda: False)
-    leg = ax.legend(h, loc="b")
-    labels = [t.get_text() for t in leg.get_texts()]
-    assert "a" in labels
-    uplt.close(fig)

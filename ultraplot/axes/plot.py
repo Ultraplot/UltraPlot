@@ -1509,25 +1509,6 @@ def _parse_vert(
     return kwargs
 
 
-def _inside_seaborn_call():
-    """
-    Try to detect `seaborn` calls to `scatter` and `bar` and then automatically
-    apply `absolute_size` and `absolute_width`.
-    """
-    frame = sys._getframe()
-    absolute_names = (
-        "seaborn.distributions",
-        "seaborn.categorical",
-        "seaborn.relational",
-        "seaborn.regression",
-    )
-    while frame is not None:
-        if frame.f_globals.get("__name__", "") in absolute_names:
-            return True
-        frame = frame.f_back
-    return False
-
-
 class PlotAxes(base.Axes):
     """
     The second lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
@@ -2234,8 +2215,6 @@ class PlotAxes(base.Axes):
         # Draw dark and light shading from distributions or explicit errdata
         eobjs = []
         fill = self.fill_between if vert else self.fill_betweenx
-        seaborn_ctx = _inside_seaborn_call()
-        explicit_external = getattr(self, "_integration_external", None) is True
 
         if drawfade:
             edata, label = inputs._dist_range(
@@ -2252,7 +2231,7 @@ class PlotAxes(base.Axes):
             if edata is not None:
                 synthetic = False
                 eff_label = label
-                if seaborn_ctx and not explicit_external and eff_label is None:
+                if self._in_external_context() and eff_label is None:
                     eff_label = "_ultraplot_fade"
                     synthetic = True
 
@@ -2262,7 +2241,6 @@ class PlotAxes(base.Axes):
                         setattr(eobj, "_ultraplot_synthetic", True)
                         if hasattr(eobj, "set_label"):
                             eobj.set_label("_ultraplot_fade")
-
                     except Exception:
                         pass
                     for _obj in guides._iter_iterables(eobj):
@@ -2270,7 +2248,6 @@ class PlotAxes(base.Axes):
                             setattr(_obj, "_ultraplot_synthetic", True)
                             if hasattr(_obj, "set_label"):
                                 _obj.set_label("_ultraplot_fade")
-
                         except Exception:
                             pass
                 eobjs.append(eobj)
@@ -2289,7 +2266,7 @@ class PlotAxes(base.Axes):
             if edata is not None:
                 synthetic = False
                 eff_label = label
-                if seaborn_ctx and not explicit_external and eff_label is None:
+                if self._in_external_context() and eff_label is None:
                     eff_label = "_ultraplot_shade"
                     synthetic = True
 
@@ -2299,7 +2276,6 @@ class PlotAxes(base.Axes):
                         setattr(eobj, "_ultraplot_synthetic", True)
                         if hasattr(eobj, "set_label"):
                             eobj.set_label("_ultraplot_shade")
-
                     except Exception:
                         pass
                     for _obj in guides._iter_iterables(eobj):
@@ -2307,7 +2283,6 @@ class PlotAxes(base.Axes):
                             setattr(_obj, "_ultraplot_synthetic", True)
                             if hasattr(_obj, "set_label"):
                                 _obj.set_label("_ultraplot_shade")
-
                         except Exception:
                             pass
                 eobjs.append(eobj)
@@ -4300,10 +4275,7 @@ class PlotAxes(base.Axes):
         if s is not None:
             s = inputs._to_numpy_array(s)
             if absolute_size is None:
-                explicit_external = getattr(self, "_integration_external", None) is True
-                absolute_size = s.size == 1 or (
-                    _inside_seaborn_call() and not explicit_external
-                )
+                absolute_size = s.size == 1
             if not absolute_size or smin is not None or smax is not None:
                 smin = _not_none(smin, 1)
                 smax = _not_none(smax, rc["lines.markersize"] ** (1, 2)[area_size])
@@ -4447,15 +4419,7 @@ class PlotAxes(base.Axes):
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         guide_kw = _pop_params(kw, self._update_guide)
 
-        # Determine seaborn helper context and whether user explicitly labeled
-        seaborn_ctx = _inside_seaborn_call()
-
-        # Determine if the user explicitly passed labels before parsing/inference.
-        # Use the original kwargs, not the post-parse kw which may include inferred labels.
-        user_label_explicit = any(
-            kwargs.get(key) is not None
-            for key in ("label", "labels", "value", "values")
-        )
+        # External override only; no seaborn-based tagging
 
         # Draw patches
         y0 = 0
@@ -4469,12 +4433,12 @@ class PlotAxes(base.Axes):
                 y2 = y2 + y0
                 y0 = y0 + y2 - y1
 
-            # Decide on synthetic tagging:
-            # If seaborn created these (helper context) AND no explicit user label,
-            # any auto-inferred label should be suppressed from legend.
-            synthetic = seaborn_ctx
-            if seaborn_ctx:
+            # External override: if in external mode and no explicit label was provided,
+            # mark fill as synthetic so it is ignored by legend parsing unless explicitly labeled.
+            synthetic = False
+            if self._in_external_context() and kw.get("label", None) is None:
                 kw["label"] = "_ultraplot_fill"
+                synthetic = True
 
             # Draw object (negpos splits into two silent_list items)
             if negpos:
@@ -4482,15 +4446,11 @@ class PlotAxes(base.Axes):
             else:
                 obj = self._call_native(name, x, y1, y2, where=w, **kw)
 
-            # Tag underlying artists if synthetic — apply to the returned object itself
-            # and to any nested artists. Also force an underscore label on the object
-            # so seaborn-provided explicit handles won't leak it into legends.
             if synthetic:
                 try:
                     setattr(obj, "_ultraplot_synthetic", True)
                     if hasattr(obj, "set_label"):
                         obj.set_label("_ultraplot_fill")
-
                 except Exception:
                     pass
                 for art in guides._iter_iterables(obj):
@@ -4498,9 +4458,10 @@ class PlotAxes(base.Axes):
                         setattr(art, "_ultraplot_synthetic", True)
                         if hasattr(art, "set_label"):
                             art.set_label("_ultraplot_fill")
-
                     except Exception:
                         pass
+
+            # No synthetic tagging or seaborn-based label overrides
 
             # Patch edge fixes
             self._fix_patch_edges(obj, **edgefix_kw, **kw)
@@ -4740,8 +4701,7 @@ class PlotAxes(base.Axes):
         xs, hs, kw = self._parse_1d_args(xs, hs, orientation=orientation, **kw)
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         if absolute_width is None:
-            explicit_external = getattr(self, "_integration_external", None) is True
-            absolute_width = _inside_seaborn_call() and not explicit_external
+            absolute_width = False
 
         # Call func after converting bar width
         b0 = 0

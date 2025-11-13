@@ -28,30 +28,6 @@ def test_colorbar_defers_external_mode():
     assert ax[0]._colorbar_dict[("bottom", "center")] is cb
 
 
-def test_colorbar_defers_in_seaborn_context(monkeypatch):
-    """
-    When seaborn context is detected, on-the-fly colorbar creation is deferred
-    until explicitly requested.
-    """
-    import numpy as np
-
-    import ultraplot.axes.base as base_mod
-
-    monkeypatch.setattr(base_mod, "_inside_seaborn_call", lambda: True)
-
-    fig, ax = uplt.subplots()
-    m = ax.pcolor(np.random.random((6, 4)), colorbar="b")
-
-    # Still no colorbar should be registered immediately
-    assert ("bottom", "center") not in ax[0]._colorbar_dict
-
-    # Allow colorbar creation and request explicitly
-    monkeypatch.setattr(base_mod, "_inside_seaborn_call", lambda: False)
-    cb = ax.colorbar(m, loc="b")
-    assert ("bottom", "center") in ax[0]._colorbar_dict
-    assert ax[0]._colorbar_dict[("bottom", "center")] is cb
-
-
 def test_explicit_legend_with_handles_under_external_mode():
     """
     Under external mode, legend auto-creation is deferred. Passing explicit handles

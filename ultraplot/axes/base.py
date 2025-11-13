@@ -35,31 +35,6 @@ import numpy as np
 from matplotlib import cbook
 from packaging import version
 
-
-def _inside_seaborn_call():
-    """
-    Detect seaborn internals on the call stack. Used to suppress on-the-fly
-    guide updates that can cause duplicate legends/colorbars during seaborn calls.
-    """
-    try:
-        frame = sys._getframe()
-    except Exception as e:
-        print(e)
-        return False
-    absolute_names = (
-        "seaborn.distributions",
-        "seaborn.categorical",
-        "seaborn.relational",
-        "seaborn.regression",
-        "seaborn.lineplot",
-    )
-    while frame is not None:
-        if frame.f_globals.get("__name__", "") in absolute_names:
-            return True
-        frame = frame.f_back
-    return False
-
-
 from .. import colors as pcolors
 from .. import constructor
 from .. import legend as plegend
@@ -769,12 +744,7 @@ class _ExternalModeMixin:
         Return True if UltraPlot helper behaviors should be suppressed.
         """
         mode = getattr(self, "_integration_external", None)
-        if mode is True:
-            return True
-        if mode is False:
-            return False
-        # Fallback to auto-detection (seaborn frame check) when no override set
-        return _inside_seaborn_call()
+        return mode is True
 
 
 class Axes(_ExternalModeMixin, maxes.Axes):

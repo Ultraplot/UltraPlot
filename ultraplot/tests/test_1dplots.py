@@ -10,57 +10,43 @@ import pytest
 import ultraplot as uplt
 
 
-def test_bar_absolute_width_seaborn_vs_external(monkeypatch):
+def test_bar_relative_width_by_default_external_and_internal():
     """
-    Under seaborn detection, bars default to absolute_width=True (width in data units).
-    With explicit external mode enabled, auto absolute width is suppressed and widths
-    are converted relative to the coordinate step size.
+    Bars use relative widths by default regardless of external mode.
     """
-    import ultraplot.axes.plot as plot_mod
-
-    # Force seaborn detection on
-    monkeypatch.setattr(plot_mod, "_inside_seaborn_call", lambda: True)
-
     x = [0, 10]
     h = [1, 2]
 
-    # Case 1: seaborn detection active, external=False -> absolute widths (~0.8 in data units)
+    # Internal (external=False): relative width scales with step size
     fig, ax = uplt.subplots()
     ax.set_external(False)
-    bars_abs = ax.bar(x, h)  # default width
-    w_abs = [r.get_width() for r in bars_abs.patches]
+    bars_int = ax.bar(x, h)
+    w_int = [r.get_width() for r in bars_int.patches]
 
-    # Case 2: seaborn detection active, external=True -> relative widths (~0.8 * step)
+    # External (external=True): same default relative behavior
     fig, ax = uplt.subplots()
     ax.set_external(True)
-    bars_rel = ax.bar(x, h)
-    w_rel = [r.get_width() for r in bars_rel.patches]
+    bars_ext = ax.bar(x, h)
+    w_ext = [r.get_width() for r in bars_ext.patches]
 
-    # With step=10, we expect relative width ~ 0.8 * 10 = 8
-    assert pytest.approx(w_abs[0], rel=1e-6) == 0.8
-    assert w_rel[0] > w_abs[0] * 5  # conservative bound; expect >> 0.8
-    assert not np.allclose(w_abs, w_rel)
+    # With step=10, expect ~ 0.8 * 10 = 8
+    assert pytest.approx(w_int[0], rel=1e-6) == 8.0
+    assert pytest.approx(w_ext[0], rel=1e-6) == 8.0
 
 
-def test_bar_absolute_width_manual_override(monkeypatch):
+def test_bar_absolute_width_manual_override():
     """
-    Users can override seaborn-driven absolute width by passing absolute_width=False.
+    Users can force absolute width by passing absolute_width=True.
     """
-    import ultraplot.axes.plot as plot_mod
-
-    # Force seaborn detection on
-    monkeypatch.setattr(plot_mod, "_inside_seaborn_call", lambda: True)
-
     x = [0, 10]
     h = [1, 2]
 
     fig, ax = uplt.subplots()
-    ax.set_external(False)  # seaborn path active by default
-    bars_rel = ax.bar(x, h, absolute_width=False)
-    w_rel = [r.get_width() for r in bars_rel.patches]
+    bars_abs = ax.bar(x, h, absolute_width=True)
+    w_abs = [r.get_width() for r in bars_abs.patches]
 
-    # Relative width should scale with step size (10), so should be meaningfully larger than 0.8
-    assert w_rel[0] > 4.0
+    # Absolute width should be the raw width (default 0.8) in data units
+    assert pytest.approx(w_abs[0], rel=1e-6) == 0.8
 
 
 import pytest
