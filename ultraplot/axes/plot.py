@@ -2231,7 +2231,9 @@ class PlotAxes(base.Axes):
             if edata is not None:
                 synthetic = False
                 eff_label = label
-                if self._in_external_context() and eff_label is None:
+                if self._in_external_context() and (
+                    eff_label is None or str(eff_label) in ("y", "ymin", "ymax")
+                ):
                     eff_label = "_ultraplot_fade"
                     synthetic = True
 
@@ -2266,7 +2268,9 @@ class PlotAxes(base.Axes):
             if edata is not None:
                 synthetic = False
                 eff_label = label
-                if self._in_external_context() and eff_label is None:
+                if self._in_external_context() and (
+                    eff_label is None or str(eff_label) in ("y", "ymin", "ymax")
+                ):
                     eff_label = "_ultraplot_shade"
                     synthetic = True
 
@@ -4436,7 +4440,10 @@ class PlotAxes(base.Axes):
             # External override: if in external mode and no explicit label was provided,
             # mark fill as synthetic so it is ignored by legend parsing unless explicitly labeled.
             synthetic = False
-            if self._in_external_context() and kw.get("label", None) is None:
+            if self._in_external_context() and (
+                kw.get("label", None) is None
+                or str(kw.get("label")) in ("y", "ymin", "ymax")
+            ):
                 kw["label"] = "_ultraplot_fill"
                 synthetic = True
 
