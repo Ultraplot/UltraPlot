@@ -28,8 +28,9 @@ def test_seaborn_helpers_filtered_from_legend():
         }
     )
 
-    # Draw seaborn lineplot (which may create helper artists internally)
-    sns.lineplot(data=df, x="x", y="y", hue="hue", ax=ax)
+    # Use explicit external mode to engage UL's integration behavior for helper artists
+    with ax.external():
+        sns.lineplot(data=df, x="x", y="y", hue="hue", ax=ax)
 
     # Explicitly create legend and verify labels
     leg = ax.legend()
