@@ -2,7 +2,11 @@
 """
 Test legends.
 """
-import numpy as np, pandas as pd, ultraplot as uplt, pytest
+import numpy as np
+import pandas as pd
+import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -218,4 +222,99 @@ def test_sync_label_dict(rng):
     assert ("lower right", "center") not in ax[
         0
     ]._legend_dict, "Old legend not removed from dict"
+    uplt.close(fig)
+
+
+def test_external_mode_defers_on_the_fly_legend():
+    """
+    External mode should defer on-the-fly legend creation until explicitly requested.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    (h,) = ax.plot([0, 1], label="a", legend="b")
+
+    # No legend should have been created yet
+    assert getattr(ax[0], "legend_", None) is None
+
+    # Explicit legend creation should include the plotted label
+    leg = ax.legend(h, loc="b")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "a" in labels
+    uplt.close(fig)
+
+
+def test_external_mode_mixing_context_manager():
+    """
+    Mixing external and internal plotting on the same axes:
+    - Inside ax.external(): on-the-fly legend is deferred
+    - Outside: UltraPlot-native plotting resumes as normal
+    - Final explicit ax.legend() consolidates both kinds of artists
+    """
+    fig, ax = uplt.subplots()
+
+    with ax.external():
+        (ext,) = ax.plot([0, 1], label="ext", legend="b")  # deferred
+
+    (intr,) = ax.line([0, 1], label="int")  # normal UL behavior
+
+    leg = ax.legend([ext, intr], loc="b")
+    labels = {t.get_text() for t in leg.get_texts()}
+    assert {"ext", "int"}.issubset(labels)
+    uplt.close(fig)
+
+
+def test_external_mode_toggle_enables_auto():
+    """
+    Toggling external mode back off should resume on-the-fly guide creation.
+    """
+    fig, ax = uplt.subplots()
+
+    ax.set_external(True)
+    (ha,) = ax.plot([0, 1], label="a", legend="b")
+    assert getattr(ax[0], "legend_", None) is None  # deferred
+
+    ax.set_external(False)
+    (hb,) = ax.plot([0, 1], label="b", legend="b")
+    # Now legend is queued for creation; verify it is registered in the outer legend dict
+    assert ("bottom", "center") in ax[0]._legend_dict
+
+    # Ensure final legend contains both entries
+    leg = ax.legend([ha, hb], loc="b")
+    labels = {t.get_text() for t in leg.get_texts()}
+    assert {"a", "b"}.issubset(labels)
+    uplt.close(fig)
+
+
+def test_synthetic_handles_filtered():
+    """
+    Synthetic-tagged helper artists must be ignored by legend parsing even when
+    explicitly passed as handles.
+    """
+    fig, ax = uplt.subplots()
+    (h1,) = ax.plot([0, 1], label="visible")
+    (h2,) = ax.plot([1, 0], label="helper")
+    # Mark helper as synthetic; it should be filtered out from legend entries
+    setattr(h2, "_ultraplot_synthetic", True)
+
+    leg = ax.legend([h1, h2], loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "visible" in labels
+    assert "helper" not in labels
+    uplt.close(fig)
+
+
+def test_fill_between_included_in_legend():
+    """
+    Legitimate fill_between/area handles must appear in legends (regression for
+    previously skipped FillBetweenPolyCollection).
+    """
+    fig, ax = uplt.subplots()
+    x = np.arange(5)
+    y1 = np.zeros(5)
+    y2 = np.ones(5)
+    ax.fill_between(x, y1, y2, label="band")
+
+    leg = ax.legend(loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "band" in labels
     uplt.close(fig)
