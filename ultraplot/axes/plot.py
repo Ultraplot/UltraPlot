@@ -5252,6 +5252,11 @@ class PlotAxes(base.Axes):
             center_levels=center_levels,
             **kw,
         )
+        # Change the default behavior for weights/C to compute
+        # the total of the weights, not their average.
+        reduce_C_function = kw.get("reduce_C_function", None)
+        if reduce_C_function is None:
+            kw["reduce_C_function"] = np.sum
         norm = kw.get("norm", None)
         if norm is not None and not isinstance(norm, pcolors.DiscreteNorm):
             norm.vmin = norm.vmax = None  # remove nonsense values
