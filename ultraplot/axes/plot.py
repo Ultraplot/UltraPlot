@@ -4730,10 +4730,10 @@ class PlotAxes(base.Axes):
             new_lim = (current_lim[0], max_extent + padding)
             getattr(self, f"set_{which}lim")(new_lim)
         lim = [getattr(self.dataLim, f"{other_which}{idx}") for idx in range(0, 2)]
-        lim = (lim[0] - w / 2, lim[1] + w/2)
+        lim = (lim[0] - w / 2, lim[1] + w / 2)
 
         current_lim = getattr(self, f"get_{other_which}lim")()
-        new_lim = ((min(lim[0], current_lim[0]), max(lim[1], current_lim[1])))
+        new_lim = (min(lim[0], current_lim[0]), max(lim[1], current_lim[1]))
         getattr(self, f"set_{other_which}lim")(new_lim)
         return bar_labels
 
