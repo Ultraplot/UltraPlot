@@ -156,6 +156,7 @@ def test_seaborn_swarmplot():
     return fig
 
 
+@pytest.mark.mpl_image_compare
 def test_seaborn_hist(rng):
     """
     Test seaborn histograms (smoke test using external mode contexts).
@@ -187,10 +188,7 @@ def test_seaborn_hist(rng):
             multiple="stack",
             ax=axs[3],
         )
-
-    # Smoke assertions: ensure axes exist
-    for a in axs:
-        assert a is not None
+    return fig
 
 
 @pytest.mark.mpl_image_compare
