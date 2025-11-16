@@ -2292,7 +2292,6 @@ class PlotAxes(base.Axes):
                 eobjs.append(eobj)
 
         kwargs["distribution"] = distribution
-        kwargs["distribution"] = distribution
         return (*eobjs, kwargs)
 
     def _fix_contour_edges(self, method, *args, **kwargs):
