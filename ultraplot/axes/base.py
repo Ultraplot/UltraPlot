@@ -713,9 +713,8 @@ class _ExternalModeMixin:
         value:
           - True: force external behavior (defer on-the-fly guides, etc.)
           - False: force UltraPlot behavior
-          - None: clear override; fallback to auto detection at call sites
         """
-        if value not in (True, False, None):
+        if value not in (True, False):
             raise ValueError("set_external expects True, False, or None")
         setattr(self, "_integration_external", value)
         return self
