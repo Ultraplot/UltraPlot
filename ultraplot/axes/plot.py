@@ -4822,6 +4822,7 @@ class PlotAxes(base.Axes):
         # Find the maximum extent of text + bar position
         max_extent = current_lim[1]  # Start with current upper limit
 
+        w = 0
         for label, bar in zip(bar_labels, container):
             # Get text bounding box
             bbox = label.get_window_extent(renderer=self.figure.canvas.get_renderer())
@@ -4832,21 +4833,25 @@ class PlotAxes(base.Axes):
                 bar_end = bar.get_width() + bar.get_x()
                 text_end = bar_end + bbox_data.width
                 max_extent = max(max_extent, text_end)
+                w = max(w, bar.get_height())
             else:
                 # For vertical bars, check if text extends beyond top edge
                 bar_end = bar.get_height() + bar.get_y()
                 text_end = bar_end + bbox_data.height
                 max_extent = max(max_extent, text_end)
+                w = max(w, bar.get_width())
 
         # Only adjust limits if text extends beyond current range
         if max_extent > current_lim[1]:
             padding = (max_extent - current_lim[1]) * 1.25  # Add a bit of padding
             new_lim = (current_lim[0], max_extent + padding)
             getattr(self, f"set_{which}lim")(new_lim)
+        lim = [getattr(self.dataLim, f"{other_which}{idx}") for idx in range(0, 2)]
+        lim = (lim[0] - w / 4, lim[1] + w / 4)
 
-        # Keep the other axis unchanged
-        getattr(self, f"set_{other_which}lim")(other_lim)
-
+        current_lim = getattr(self, f"get_{other_which}lim")()
+        new_lim = (min(lim[0], current_lim[0]), max(lim[1], current_lim[1]))
+        getattr(self, f"set_{other_which}lim")(new_lim)
         return bar_labels
 
     @inputs._preprocess_or_redirect("x", "height", "width", "bottom")

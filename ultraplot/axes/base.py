@@ -2692,9 +2692,19 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     setattr(sibling, f"_share{which}", None)
                 this_ax = getattr(self, f"{which}axis")
                 sib_ax = getattr(sibling, f"{which}axis")
-                # Reset formatters
-                this_ax.major = copy.deepcopy(this_ax.major)
-                this_ax.minor = copy.deepcopy(this_ax.minor)
+                # Reset formatters by creating new Ticker objects.
+                # A deepcopy can trigger redraws.
+                new_major = maxis.Ticker()
+                if this_ax.major:
+                    new_major.locator = copy.copy(this_ax.major.locator)
+                    new_major.formatter = copy.copy(this_ax.major.formatter)
+                this_ax.major = new_major
+
+                new_minor = maxis.Ticker()
+                if this_ax.minor:
+                    new_minor.locator = copy.copy(this_ax.minor.locator)
+                    new_minor.formatter = copy.copy(this_ax.minor.formatter)
+                this_ax.minor = new_minor
 
     def _sharex_setup(self, sharex, **kwargs):
         """
