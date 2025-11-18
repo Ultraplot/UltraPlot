@@ -26,7 +26,6 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as mplt
 import matplotlib.ticker as mticker
-import networkx as nx
 import numpy as np
 import numpy.ma as ma
 from packaging import version
