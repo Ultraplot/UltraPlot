@@ -715,7 +715,7 @@ class _ExternalModeMixin:
           - False: force UltraPlot behavior
         """
         if value not in (True, False):
-            raise ValueError("set_external expects True, False, or None")
+            raise ValueError("set_external expects True or False")
         setattr(self, "_integration_external", value)
         return self
 
