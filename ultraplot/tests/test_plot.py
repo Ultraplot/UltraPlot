@@ -693,3 +693,38 @@ def test_curved_quiver_color_and_cmap(rng, cmap):
     fig, ax = uplt.subplots()
     ax.curved_quiver(X, Y, U, V, color=color, cmap=cmap)
     return fig
+
+
+def test_histogram_norms():
+    """
+    Check that all histograms-like plotting functions
+    use the sum of the weights.
+    """
+    rng = np.random.default_rng(seed=100)
+    x, y = rng.normal(size=(2, 100))
+    w = rng.uniform(size=100)
+
+    fig, axs = uplt.subplots()
+    _, _, bars = axs.hist(x, weights=w, bins=5)
+    tot_weights = np.sum([bar.get_height() for bar in bars])
+    np.testing.assert_allclose(tot_weights, np.sum(w))
+
+    fig, axs = uplt.subplots()
+    _, _, _, qm = axs.hist2d(x, y, weights=w, bins=5)
+    tot_weights = np.sum(qm.get_array())
+    np.testing.assert_allclose(tot_weights, np.sum(w))
+
+    fig, axs = uplt.subplots()
+    pc = axs.hexbin(x, y, weights=w, gridsize=5)
+    tot_weights = np.sum(pc.get_array())
+    np.testing.assert_allclose(tot_weights, np.sum(w))
+
+    # check that a different reduce_C_function produces
+    # a different result
+    fig, axs = uplt.subplots()
+    pc = axs.hexbin(x, y, weights=w, gridsize=5, reduce_C_function=np.max)
+    tot_weights = np.sum(pc.get_array())
+    # check they are not equal and that the different is not
+    # due to floating point errors
+    assert tot_weights != np.sum(w)
+    assert not np.allclose(tot_weights, np.sum(w))
