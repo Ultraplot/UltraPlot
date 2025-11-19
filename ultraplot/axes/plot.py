@@ -4737,7 +4737,7 @@ class PlotAxes(base.Axes):
         xs, hs, kw = self._parse_1d_args(xs, hs, orientation=orientation, **kw)
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         if absolute_width is None:
-            absolute_width = False
+            absolute_width = False or self._in_external_context()
 
         # Call func after converting bar width
         b0 = 0

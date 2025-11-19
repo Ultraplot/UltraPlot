@@ -31,7 +31,7 @@ def test_bar_relative_width_by_default_external_and_internal():
 
     # With step=10, expect ~ 0.8 * 10 = 8
     assert pytest.approx(w_int[0], rel=1e-6) == 8.0
-    assert pytest.approx(w_ext[0], rel=1e-6) == 8.0
+    assert pytest.approx(w_ext[0], rel=1e-6) == 0.8
 
 
 def test_bar_absolute_width_manual_override():
