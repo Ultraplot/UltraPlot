@@ -1,15 +1,91 @@
-from cycler import V
-import pandas as pd
-from pandas.core.arrays.arrow.accessors import pa
-import ultraplot as uplt, pytest, numpy as np
 from unittest import mock
 from unittest.mock import patch
 
+import numpy as np
+import pandas as pd
+import pytest
+from cycler import V
+from pandas.core.arrays.arrow.accessors import pa
+
+import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
+
+
+@pytest.mark.mpl_image_compare
+def test_seaborn_lineplot_legend_hue_only():
+    """
+    Regression test: seaborn lineplot on UltraPlot axes should not add spurious
+    legend entries like 'y'/'ymin'. Only hue categories should appear unless the user
+    explicitly labels helper bands.
+    """
+    import seaborn as sns
+
+    fig, ax = uplt.subplots()
+    df = pd.DataFrame(
+        {
+            "xcol": np.concatenate([np.arange(10)] * 2),
+            "ycol": np.concatenate([np.arange(10), 1.5 * np.arange(10)]),
+            "hcol": ["h1"] * 10 + ["h2"] * 10,
+        }
+    )
+
+    with ax.external():
+        sns.lineplot(data=df, x="xcol", y="ycol", hue="hcol", ax=ax)
+
+    # Create (or refresh) legend and collect labels
+    leg = ax.legend()
+    labels = {t.get_text() for t in leg.get_texts()}
+
+    # Should contain only hue levels; must not contain inferred 'y' or CI helpers
+    assert "y" not in labels
+    assert "ymin" not in labels
+    assert {"h1", "h2"}.issubset(labels)
+    return fig
+
 
 """
 This file is used to test base properties of ultraplot.axes.plot. For higher order plotting related functions, please use 1d and 2plots
 """
+
+
+def test_external_preserves_explicit_label():
+    """
+    In external mode, explicit labels must still be respected even when autolabels are disabled.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    (h,) = ax.plot([0, 1, 2], [0, 1, 0], label="X")
+    leg = ax.legend(h, loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "X" in labels
+
+
+def test_external_disables_autolabels_no_label():
+    """
+    In external mode, if no labels are provided, autolabels are disabled and a placeholder is used.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    (h,) = ax.plot([0, 1, 2], [0, 1, 0])
+    # Explicitly pass the handle so we test the label on that artist
+    leg = ax.legend(h, loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    # With no explicit labels and autolabels disabled, a placeholder is used
+    assert (not labels) or (labels[0] in ("_no_label", ""))
+
+
+def test_error_shading_explicit_label_external():
+    """
+    Explicit label on fill_between should be preserved in legend entries.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    x = np.linspace(0, 2 * np.pi, 50)
+    y = np.sin(x)
+    patch = ax.fill_between(x, y - 0.5, y + 0.5, alpha=0.3, label="Band")
+    leg = ax.legend([patch], loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "Band" in labels
 
 
 def test_graph_nodes_kw():
