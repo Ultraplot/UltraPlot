@@ -5,8 +5,50 @@ Test 1D plotting overrides.
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
+import pytest
 
 import ultraplot as uplt
+
+
+def test_bar_relative_width_by_default_external_and_internal():
+    """
+    Bars use relative widths by default regardless of external mode.
+    """
+    x = [0, 10]
+    h = [1, 2]
+
+    # Internal (external=False): relative width scales with step size
+    fig, ax = uplt.subplots()
+    ax.set_external(False)
+    bars_int = ax.bar(x, h)
+    w_int = [r.get_width() for r in bars_int.patches]
+
+    # External (external=True): same default relative behavior
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    bars_ext = ax.bar(x, h)
+    w_ext = [r.get_width() for r in bars_ext.patches]
+
+    # With step=10, expect ~ 0.8 * 10 = 8
+    assert pytest.approx(w_int[0], rel=1e-6) == 8.0
+    assert pytest.approx(w_ext[0], rel=1e-6) == 0.8
+
+
+def test_bar_absolute_width_manual_override():
+    """
+    Users can force absolute width by passing absolute_width=True.
+    """
+    x = [0, 10]
+    h = [1, 2]
+
+    fig, ax = uplt.subplots()
+    bars_abs = ax.bar(x, h, absolute_width=True)
+    w_abs = [r.get_width() for r in bars_abs.patches]
+
+    # Absolute width should be the raw width (default 0.8) in data units
+    assert pytest.approx(w_abs[0], rel=1e-6) == 0.8
+
+
 import pytest
 
 

@@ -4,7 +4,48 @@ Test colorbars.
 """
 import numpy as np
 import pytest
+
 import ultraplot as uplt
+
+
+def test_colorbar_defers_external_mode():
+    """
+    External mode should defer on-the-fly colorbar creation until explicitly requested.
+    """
+    import numpy as np
+
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    m = ax.pcolor(np.random.random((5, 5)), colorbar="b")
+
+    # No colorbar should have been registered/created yet
+    assert isinstance(ax[0]._colorbar_dict, dict)
+    assert len(ax[0]._colorbar_dict) == 0
+
+    # Explicit colorbar creation should register the colorbar at the requested loc
+    cb = ax.colorbar(m, loc="b")
+    assert ("bottom", "center") in ax[0]._colorbar_dict
+    assert ax[0]._colorbar_dict[("bottom", "center")] is cb
+
+
+def test_explicit_legend_with_handles_under_external_mode():
+    """
+    Under external mode, legend auto-creation is deferred. Passing explicit handles
+    to legend() must work immediately.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    (h,) = ax.plot([0, 1], label="LegendLabel", legend="b")
+
+    # No legend queued/created yet
+    assert ("bottom", "center") not in ax[0]._legend_dict
+
+    # Explicit legend with handle should contain our label
+    leg = ax.legend(h, loc="b")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "LegendLabel" in labels
+
+
 from itertools import product
 
 
