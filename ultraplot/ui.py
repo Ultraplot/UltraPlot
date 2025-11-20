@@ -2,8 +2,6 @@
 """
 The starting point for creating ultraplot figures.
 """
-import matplotlib.pyplot as plt
-
 from . import axes as paxes
 from . import figure as pfigure
 from . import gridspec as pgridspec
@@ -20,7 +18,30 @@ __all__ = [
     "ion",
     "ioff",
     "isinteractive",
+    # Note: pyplot is NOT in __all__ to prevent eager loading during star import
+    # It's accessible via __getattr__ for lazy loading: import ultraplot as uplt; uplt.pyplot
 ]
+
+# Lazy pyplot import
+_plt = None
+
+
+def _get_pyplot():
+    """Get matplotlib.pyplot, importing it lazily on first use."""
+    global _plt
+    if _plt is None:
+        import matplotlib.pyplot as plt
+
+        _plt = plt
+    return _plt
+
+
+# Make pyplot accessible at module level
+def __getattr__(name):
+    """Lazy load pyplot when accessed as module attribute."""
+    if name == "pyplot":
+        return _get_pyplot()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
 # Docstrings
@@ -58,6 +79,7 @@ def show(*args, **kwargs):
     *args, **kwargs
         Passed to `matplotlib.pyplot.show`.
     """
+    plt = _get_pyplot()
     return plt.show(*args, **kwargs)
 
 
@@ -72,6 +94,7 @@ def close(*args, **kwargs):
     *args, **kwargs
         Passed to `matplotlib.pyplot.close`.
     """
+    plt = _get_pyplot()
     return plt.close(*args, **kwargs)
 
 
@@ -86,6 +109,7 @@ def switch_backend(*args, **kwargs):
     *args, **kwargs
         Passed to `matplotlib.pyplot.switch_backend`.
     """
+    plt = _get_pyplot()
     return plt.switch_backend(*args, **kwargs)
 
 
@@ -95,6 +119,7 @@ def ion():
     Call `matplotlib.pyplot.ion`.
     %(ui.pyplot)s
     """
+    plt = _get_pyplot()
     return plt.ion()
 
 
@@ -104,6 +129,7 @@ def ioff():
     Call `matplotlib.pyplot.ioff`.
     %(ui.pyplot)s
     """
+    plt = _get_pyplot()
     return plt.ioff()
 
 
@@ -113,6 +139,7 @@ def isinteractive():
     Call `matplotlib.pyplot.isinteractive`.
     %(ui.pyplot)s
     """
+    plt = _get_pyplot()
     return plt.isinteractive()
 
 
@@ -141,6 +168,7 @@ def figure(**kwargs):
     matplotlib.figure.Figure
     """
     _parse_figsize(kwargs)
+    plt = _get_pyplot()
     return plt.figure(FigureClass=pfigure.Figure, **kwargs)
 
 
