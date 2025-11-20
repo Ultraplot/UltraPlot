@@ -6,10 +6,11 @@ Implements basic shared functionality.
 import copy
 import inspect
 import re
+import sys
 import types
-from numbers import Integral, Number
-from typing import Union, Iterable, MutableMapping, Optional, Tuple
 from collections.abc import Iterable as IterableType
+from numbers import Integral, Number
+from typing import Iterable, MutableMapping, Optional, Tuple, Union
 
 try:
     # From python 3.12
@@ -34,12 +35,11 @@ import numpy as np
 from matplotlib import cbook
 from packaging import version
 
-from .. import legend as plegend
 from .. import colors as pcolors
 from .. import constructor
+from .. import legend as plegend
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import ic  # noqa: F401
 from ..internals import (
     _kwargs_to_args,
     _not_none,
@@ -51,6 +51,7 @@ from ..internals import (
     _version_mpl,
     docstring,
     guides,
+    ic,  # noqa: F401
     labels,
     rcsetup,
     warnings,
@@ -700,7 +701,52 @@ class _TransformedBoundsLocator:
         return bbox
 
 
-class Axes(maxes.Axes):
+class _ExternalModeMixin:
+    """
+    Mixin providing explicit external-mode control and a context manager.
+    """
+
+    def set_external(self, value=True):
+        """
+        Set explicit external-mode override for this axes.
+
+        value:
+          - True: force external behavior (defer on-the-fly guides, etc.)
+          - False: force UltraPlot behavior
+        """
+        if value not in (True, False):
+            raise ValueError("set_external expects True or False")
+        setattr(self, "_integration_external", value)
+        return self
+
+    class _ExternalContext:
+        def __init__(self, ax, value=True):
+            self._ax = ax
+            self._value = True if value is None else value
+            self._prev = getattr(ax, "_integration_external", None)
+
+        def __enter__(self):
+            self._ax._integration_external = self._value
+            return self._ax
+
+        def __exit__(self, exc_type, exc, tb):
+            self._ax._integration_external = self._prev
+
+    def external(self, value=True):
+        """
+        Context manager toggling external mode during the block.
+        """
+        return _ExternalModeMixin._ExternalContext(self, value)
+
+    def _in_external_context(self):
+        """
+        Return True if UltraPlot helper behaviors should be suppressed.
+        """
+        mode = getattr(self, "_integration_external", None)
+        return mode is True
+
+
+class Axes(_ExternalModeMixin, maxes.Axes):
     """
     The lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
     Implements basic universal features.
@@ -822,6 +868,7 @@ class Axes(maxes.Axes):
         self._panel_sharey_group = False  # see _apply_auto_share
         self._panel_side = None
         self._tight_bbox = None  # bounding boxes are saved
+        self._integration_external = None  # explicit external-mode override (None=auto)
         self.xaxis.isDefault_minloc = True  # ensure enabled at start (needed for dual)
         self.yaxis.isDefault_minloc = True
 
@@ -1739,6 +1786,7 @@ class Axes(maxes.Axes):
         handler_map_full = plegend.Legend.get_default_handler_map()
         handler_map_full = handler_map_full.copy()
         handler_map_full.update(handler_map or {})
+        # Prefer synthetic tagging to exclude helper artists; see _ultraplot_synthetic flag on artists.
         for ax in axs:
             for attr in ("lines", "patches", "collections", "containers"):
                 for handle in getattr(ax, attr, []):  # guard against API changes
@@ -1746,7 +1794,12 @@ class Axes(maxes.Axes):
                     handler = plegend.Legend.get_legend_handler(
                         handler_map_full, handle
                     )  # noqa: E501
-                    if handler and label and label[0] != "_":
+                    if (
+                        handler
+                        and label
+                        and label[0] != "_"
+                        and not getattr(handle, "_ultraplot_synthetic", False)
+                    ):
                         handles.append(handle)
         return handles
 
@@ -1897,11 +1950,17 @@ class Axes(maxes.Axes):
         if legend:
             align = legend_kw.pop("align", None)
             queue = legend_kw.pop("queue", queue_legend)
-            self.legend(objs, loc=legend, align=align, queue=queue, **legend_kw)
+            # Avoid immediate legend creation in external context
+            if not self._in_external_context():
+                self.legend(objs, loc=legend, align=align, queue=queue, **legend_kw)
         if colorbar:
             align = colorbar_kw.pop("align", None)
             queue = colorbar_kw.pop("queue", queue_colorbar)
-            self.colorbar(objs, loc=colorbar, align=align, queue=queue, **colorbar_kw)
+            # Avoid immediate colorbar creation in external context
+            if not self._in_external_context():
+                self.colorbar(
+                    objs, loc=colorbar, align=align, queue=queue, **colorbar_kw
+                )
 
     @staticmethod
     def _parse_frame(guide, fancybox=None, shadow=None, **kwargs):
@@ -2423,6 +2482,8 @@ class Axes(maxes.Axes):
             labs = []
             for obj in objs:
                 if hasattr(obj, "get_label"):  # e.g. silent list
+                    if getattr(obj, "_ultraplot_synthetic", False):
+                        continue
                     lab = obj.get_label()
                     if lab is not None and not str(lab).startswith("_"):
                         labs.append(lab)
@@ -2453,10 +2514,15 @@ class Axes(maxes.Axes):
                     if hs:
                         handles.extend(hs)
                     elif obj:  # fallback to first element
-                        handles.append(obj[0])
+                        # Skip synthetic helpers and fill_between collections
+                        if not getattr(obj[0], "_ultraplot_synthetic", False):
+                            handles.append(obj[0])
                     else:
                         handles.append(obj)
                 elif hasattr(obj, "get_label"):
+                    # Skip synthetic helpers and fill_between collections
+                    if getattr(obj, "_ultraplot_synthetic", False):
+                        continue
                     handles.append(obj)
                 else:
                     warnings._warn_ultraplot(f"Ignoring invalid legend handle {obj!r}.")
@@ -3332,6 +3398,7 @@ class Axes(maxes.Axes):
         labelright/labelleft respectively.
         """
         from packaging import version
+
         from ..internals import _version_mpl
 
         # TODO: internal deprecation warning when we drop 3.9, we need to remove this
