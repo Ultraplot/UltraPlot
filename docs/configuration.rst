@@ -19,6 +19,10 @@ stored in :obj:`~ultraplot.config.rc_matplotlib`
 and :ref:`ultraplot settings <ug_rcUltraPlot>`
 stored in :obj:`~ultraplot.config.rc_ultraplot`.
 
+Both :obj:`~ultraplot.config.rc_matplotlib` and :obj:`~ultraplot.config.rc_ultraplot`
+are **thread-safe** and support **thread-local isolation** via context managers.
+See :ref:`thread-safety and context managers <ug_rcthreadsafe>` for details.
+
 To change global settings on-the-fly, simply update :obj:`~ultraplot.config.rc`
 using either dot notation or as you would any other dictionary:
 
@@ -50,6 +54,85 @@ to the :func:`~ultraplot.config.Configurator.context` command:
        fig, ax = uplt.subplots()
    with uplt.rc.context({'name1': value1, 'name2': value2}):
        fig, ax = uplt.subplots()
+
+See :ref:`thread-safety and context managers <ug_rcthreadsafe>` for important
+information about thread-local isolation and parallel testing.
+
+.. _ug_rcthreadsafe:
+
+Thread-safety and context managers
+-----------------------------------
+
+Both :obj:`~ultraplot.config.rc_matplotlib` and :obj:`~ultraplot.config.rc_ultraplot`
+are **thread-safe** and support **thread-local isolation** through context managers.
+This is particularly useful for parallel testing or multi-threaded applications.
+
+**Global changes** (outside context managers) are persistent and visible to all threads:
+
+.. code-block:: python
+
+   import ultraplot as uplt
+
+   # Global change - persists and affects all threads
+   uplt.rc['font.size'] = 12
+   uplt.rc_matplotlib['axes.grid'] = True
+
+**Thread-local changes** (inside context managers) are isolated and temporary:
+
+.. code-block:: python
+
+   import ultraplot as uplt
+
+   original_size = uplt.rc['font.size']  # e.g., 10
+
+   with uplt.rc_matplotlib:
+       # This change is ONLY visible in the current thread
+       uplt.rc_matplotlib['font.size'] = 20
+       print(uplt.rc_matplotlib['font.size'])  # 20
+
+   # After exiting context, change is discarded
+   print(uplt.rc_matplotlib['font.size'])  # 10 (back to original)
+
+This is especially useful for **parallel test execution**, where each test thread
+can modify settings without affecting other threads or the main thread:
+
+.. code-block:: python
+
+   import threading
+   import ultraplot as uplt
+
+   def test_worker(thread_id):
+       """Each thread can have isolated settings."""
+       with uplt.rc_matplotlib:
+           # Thread-specific settings
+           uplt.rc_matplotlib['font.size'] = 10 + thread_id * 2
+           uplt.rc['axes.grid'] = True
+
+           # Create plots, run tests, etc.
+           fig, ax = uplt.subplots()
+           # ...
+
+       # Settings automatically restored after context exit
+
+   # Run tests in parallel - no interference between threads
+   threads = [threading.Thread(target=test_worker, args=(i,)) for i in range(5)]
+   for t in threads:
+       t.start()
+   for t in threads:
+       t.join()
+
+**Key points:**
+
+* Changes **outside** a context manager are **global and persistent**
+* Changes **inside** a context manager (``with rc:`` or ``with rc_matplotlib:``) are **thread-local and temporary**
+* Thread-local changes are automatically discarded when the context exits
+* Each thread sees its own isolated copy of settings within a context
+* This works for both :obj:`~ultraplot.config.rc`, :obj:`~ultraplot.config.rc_matplotlib`, and :obj:`~ultraplot.config.rc_ultraplot`
+
+.. note::
+
+   A complete working example demonstrating thread-safe configuration usage
+   can be found in ``docs/thread_safety_example.py``.
 
 
 In all of these examples, if the setting name contains dots,
