@@ -359,7 +359,6 @@ def test_legend_span_right():
 
 def test_legend_span_left():
     """Test left legend with rows parameter."""
-    import numpy as np
 
     fig, axs = uplt.subplots(nrows=3, ncols=2)
     axs[0, 0].plot([], [], label="test")
