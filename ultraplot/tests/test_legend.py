@@ -335,7 +335,6 @@ def test_legend_span_bottom():
 
 def test_legend_span_top():
     """Test top legend with span parameter."""
-    import numpy as np
 
     fig, axs = uplt.subplots(nrows=2, ncols=3)
     axs[0, 0].plot([], [], label="test")
