@@ -1456,6 +1456,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         titlefontcolor=None,
         handle_kw=None,
         handler_map=None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
         **kwargs,
     ):
         """
@@ -1493,7 +1498,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         # Generate and prepare the legend axes
         if loc in ("fill", "left", "right", "top", "bottom"):
-            lax = self._add_guide_panel(loc, align, width=width, space=space, pad=pad)
+            lax = self._add_guide_panel(
+                loc,
+                align,
+                width=width,
+                space=space,
+                pad=pad,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
+            )
             kwargs.setdefault("borderaxespad", 0)
             if not frameon:
                 kwargs.setdefault("borderpad", 0)
@@ -3560,7 +3576,19 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
     @docstring._concatenate_inherited  # also obfuscates params
     @docstring._snippet_manager
-    def legend(self, handles=None, labels=None, loc=None, location=None, **kwargs):
+    def legend(
+        self,
+        handles=None,
+        labels=None,
+        loc=None,
+        location=None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        **kwargs,
+    ):
         """
         Add an inset legend or outer legend along the edge of the axes.
 
@@ -3622,7 +3650,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if queue:
             self._register_guide("legend", (handles, labels), (loc, align), **kwargs)
         else:
-            return self._add_legend(handles, labels, loc=loc, align=align, **kwargs)
+            return self._add_legend(
+                handles,
+                labels,
+                loc=loc,
+                align=align,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
+                **kwargs,
+            )
 
     @docstring._concatenate_inherited
     @docstring._snippet_manager
