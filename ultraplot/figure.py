@@ -6,12 +6,13 @@ import functools
 import inspect
 import os
 from numbers import Integral
+
 from packaging import version
 
 try:
-    from typing import List, Optional, Union, Tuple
+    from typing import List, Optional, Tuple, Union
 except ImportError:
-    from typing_extensions import List, Optional, Union, Tuple
+    from typing_extensions import List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
@@ -30,7 +31,6 @@ from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
 from .config import rc, rc_matplotlib
-from .internals import ic  # noqa: F401
 from .internals import (
     _not_none,
     _pop_params,
@@ -38,10 +38,11 @@ from .internals import (
     _translate_loc,
     context,
     docstring,
+    ic,  # noqa: F401
     labels,
     warnings,
 )
-from .utils import units, _get_subplot_layout, _Crawler
+from .utils import _Crawler, _get_subplot_layout, units
 
 __all__ = [
     "Figure",
@@ -2395,15 +2396,16 @@ class Figure(mfigure.Figure):
             if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
                 try:
                     ax_single = next(iter(ax))
+
                 except (TypeError, StopIteration):
                     ax_single = ax
             else:
                 ax_single = ax
 
             # Pass span parameters through to axes legend
-            leg = ax_single.legend(
-                handles,
-                labels,
+            cb = ax_single.colorbar(
+                mappable,
+                values,
                 space=space,
                 pad=pad,
                 width=width,
