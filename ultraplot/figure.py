@@ -2402,7 +2402,7 @@ class Figure(mfigure.Figure):
             else:
                 ax_single = ax
 
-            # Pass span parameters through to axes legend
+            # Pass span parameters through to axes colorbar
             cb = ax_single.colorbar(
                 mappable,
                 values,
