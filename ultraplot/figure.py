@@ -42,7 +42,7 @@ from .internals import (
     labels,
     warnings,
 )
-from .utils import _Crawler, _get_subplot_layout, units
+from .utils import _Crawler, units
 
 __all__ = [
     "Figure",
