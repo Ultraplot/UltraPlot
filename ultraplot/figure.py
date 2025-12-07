@@ -6,12 +6,13 @@ import functools
 import inspect
 import os
 from numbers import Integral
+
 from packaging import version
 
 try:
-    from typing import List, Optional, Union, Tuple
+    from typing import List, Optional, Tuple, Union
 except ImportError:
-    from typing_extensions import List, Optional, Union, Tuple
+    from typing_extensions import List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
@@ -30,7 +31,6 @@ from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
 from .config import rc, rc_matplotlib
-from .internals import ic  # noqa: F401
 from .internals import (
     _not_none,
     _pop_params,
@@ -38,10 +38,11 @@ from .internals import (
     _translate_loc,
     context,
     docstring,
+    ic,  # noqa: F401
     labels,
     warnings,
 )
-from .utils import units, _get_subplot_layout, _Crawler
+from .utils import _Crawler, units
 
 __all__ = [
     "Figure",
@@ -1385,12 +1386,12 @@ class Figure(mfigure.Figure):
             # Vertical panels: should use rows parameter, not cols
             if _not_none(cols, col) is not None and _not_none(rows, row) is None:
                 raise ValueError(
-                    f"For {side!r} colorbars (vertical), use 'rows=' or 'row=' "
+                    f"For {side!r} panels (vertical), use 'rows=' or 'row=' "
                     "to specify span, not 'cols=' or 'col='."
                 )
             if span is not None and _not_none(rows, row) is None:
                 warnings._warn_ultraplot(
-                    f"For {side!r} colorbars (vertical), prefer 'rows=' over 'span=' "
+                    f"For {side!r} panels (vertical), prefer 'rows=' over 'span=' "
                     "for clarity. Using 'span' as rows."
                 )
             span_override = _not_none(rows, row, span)
@@ -1398,7 +1399,7 @@ class Figure(mfigure.Figure):
             # Horizontal panels: should use cols parameter, not rows
             if _not_none(rows, row) is not None and _not_none(cols, col, span) is None:
                 raise ValueError(
-                    f"For {side!r} colorbars (horizontal), use 'cols=' or 'span=' "
+                    f"For {side!r} panels (horizontal), use 'cols=' or 'span=' "
                     "to specify span, not 'rows=' or 'row='."
                 )
             span_override = _not_none(cols, col, span)
@@ -2395,6 +2396,7 @@ class Figure(mfigure.Figure):
             if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
                 try:
                     ax_single = next(iter(ax))
+
                 except (TypeError, StopIteration):
                     ax_single = ax
             else:
@@ -2474,8 +2476,31 @@ class Figure(mfigure.Figure):
         ax = kwargs.pop("ax", None)
         # Axes panel legend
         if ax is not None:
-            leg = ax.legend(
-                handles, labels, space=space, pad=pad, width=width, **kwargs
+            # Check if span parameters are provided
+            has_span = _not_none(span, row, col, rows, cols) is not None
+
+            # Extract a single axes from array if span is provided
+            # Otherwise, pass the array as-is for normal legend behavior
+            if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
+                try:
+                    ax_single = next(iter(ax))
+                except (TypeError, StopIteration):
+                    ax_single = ax
+            else:
+                ax_single = ax
+            leg = ax_single.legend(
+                handles,
+                labels,
+                loc=loc,
+                space=space,
+                pad=pad,
+                width=width,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
+                **kwargs,
             )
         # Figure panel legend
         else:
