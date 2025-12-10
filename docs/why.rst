@@ -205,7 +205,7 @@ Links
 * For more on colormaps,
   see :ref:`this page <ug_apply_cmap>`.
 * For more on normalizers,
-  see :ref:`this page <ug_apply_norm>`.
+  see :ref:`this page <ug_norm>`.
 * For more on color cycles, see
   :ref:`this page <ug_apply_cycle>`.
 
@@ -882,7 +882,7 @@ Limitation
 ----------
 
 Matplotlib :obj:`~matplotlib.rcParams` can be changed persistently by placing
-`matplotlibrc` :ref:`ug_mplrc` files in the same directory as your python script.
+ref:`matplotlibrc <ug_mplrc>` files in the same directory as your python script.
 But it can be difficult to design and store your own colormaps and color cycles for
 future use. It is also difficult to get matplotlib to use custom ``.ttf`` and
 ``.otf`` font files, which may be desirable when you are working on
