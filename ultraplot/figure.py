@@ -499,6 +499,241 @@ def _clear_border_cache(func):
     return wrapper
 
 
+class _ExternalAxesMixin:
+    """
+    Mixin class that provides ultraplot-compatible interface methods for external axes.
+
+    This allows external axes classes (like mpltern.TernaryAxes) to be used
+    seamlessly within ultraplot figures by providing stub implementations of
+    ultraplot-specific methods.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Filter ultraplot-specific kwargs before passing to external axes.
+        """
+        # Pop ultraplot-specific kwargs that external axes don't understand
+        _subplot_spec = kwargs.pop("_subplot_spec", None)
+        self._number = None
+        number = kwargs.pop("number", None)
+        autoshare = kwargs.pop("autoshare", None)
+
+        # Pop format-related kwargs
+        rc_kw, rc_mode = _pop_rc(kwargs)
+
+        # Pop any other ultraplot-specific format parameters
+        ultraplot_keys = [
+            "abc",
+            "abcloc",
+            "abcstyle",
+            "abcformat",
+            "abcborder",
+            "abcbbox",
+            "title",
+            "ltitle",
+            "ctitle",
+            "rtitle",
+            "ultitle",
+            "uctitle",
+            "urtitle",
+            "lltitle",
+            "lctitle",
+            "lrtitle",
+            "titleloc",
+            "titlepad",
+            "titleabove",
+            "toplabels",
+            "leftlabels",
+            "rightlabels",
+            "bottomlabels",
+        ]
+        for key in ultraplot_keys:
+            kwargs.pop(key, None)
+
+        # Call the parent external axes class
+        super().__init__(*args, **kwargs)
+
+        # Initialize ultraplot-specific attributes that might be accessed
+        self._panel_hidden = False
+        self._panel_parent = None
+        self._panel_side = None
+        self._inset_parent = None
+        self._inset_zoom = False
+
+        # Set the subplotspec if provided (after initialization to avoid passing it through)
+        if _subplot_spec is not None:
+            self.set_subplotspec(_subplot_spec)
+
+        # Set number if provided (as a simple attribute)
+        if number is not None:
+            self.number = number
+
+    def _reposition_subplot(self):
+        """
+        Stub for ultraplot's subplot repositioning. External axes handle their
+        own positioning through matplotlib's standard mechanisms.
+        """
+        # For external axes, we rely on matplotlib's standard SubplotBase positioning
+        if hasattr(super(), "_reposition_subplot"):
+            super()._reposition_subplot()
+        # Otherwise do nothing - matplotlib will handle it
+
+    def _apply_auto_share(self):
+        """
+        Stub for ultraplot's auto-sharing feature. External axes don't participate
+        in ultraplot's axis sharing system.
+        """
+        # External axes don't support ultraplot's auto-share mechanism
+        pass
+
+    def _iter_axes(self, hidden=True, children=True, panels=True):
+        """
+        Stub for ultraplot's axes iteration. External axes are leaf nodes.
+        """
+        # External axes don't have child axes like panels or insets in ultraplot's system
+        # So we just yield ourselves
+        yield self
+
+    def _get_topmost_axes(self):
+        """
+        Stub for ultraplot's topmost axes getter. External axes don't have parents.
+        """
+        # External axes are always topmost (no panel parents)
+        return self
+
+    def _add_queued_guides(self):
+        """
+        Stub for ultraplot's queued guides system. External axes don't use this.
+        """
+        # External axes don't support ultraplot's guide queuing mechanism
+        pass
+
+    def _apply_title_above(self):
+        """
+        Stub for ultraplot's title positioning. External axes use standard matplotlib.
+        """
+        pass
+
+    def _update_title_position(self, renderer=None):
+        """
+        Stub for ultraplot's title position updates. External axes handle this via matplotlib.
+        """
+        # Call parent's implementation if it exists (matplotlib's version)
+        if hasattr(super(), "_update_title_position"):
+            super()._update_title_position(renderer)
+
+    def _update_abc(self):
+        """
+        Stub for ultraplot's a-b-c label updates. External axes don't support this.
+        """
+        pass
+
+    def _label_key(self, name):
+        """
+        Stub for ultraplot's label key system. External axes use standard matplotlib.
+        """
+        # Return a simple key based on the axes position
+        return (name, id(self))
+
+    def _is_panel_group_member(self):
+        """
+        Stub for ultraplot's panel group detection. External axes are not panels.
+        """
+        return False
+
+    def _update_share_labels(self, target, value=None):
+        """
+        Stub for ultraplot's share label system. External axes don't participate.
+        """
+        pass
+
+    def _range_subplotspec(self, x):
+        """
+        Stub for ultraplot's subplotspec range calculation. External axes use standard layout.
+        """
+        # Return a simple range based on the subplotspec
+        ss = self.get_subplotspec()
+        if ss is None:
+            return (0, 1)
+        # Get the gridspec geometry and position
+        nrows, ncols, start, stop = ss.get_geometry()
+        # Convert 1D indices to row/col
+        if x:  # horizontal
+            col_start = start % ncols
+            col_stop = stop % ncols
+            return (col_start, col_stop + 1)
+        else:  # vertical
+            row_start = start // ncols
+            row_stop = stop // ncols
+            return (row_start, row_stop + 1)
+
+    def _range_tightbbox(self, x, renderer):
+        """
+        Stub for ultraplot's tight bbox range calculation. External axes use standard matplotlib.
+        """
+        # Use standard matplotlib tight bbox
+        bbox = self.get_tightbbox(renderer)
+        if bbox is None:
+            return (0, 1)
+        if x:  # horizontal
+            return (bbox.x0, bbox.x1)
+        else:  # vertical
+            return (bbox.y0, bbox.y1)
+
+    def format(self, *args, **kwargs):
+        """
+        Stub for ultraplot's format method. External axes don't support full formatting.
+
+        This is a no-op for external axes since they have their own formatting methods.
+        We silently ignore ultraplot-specific formatting calls to allow Figure.format()
+        to work with external axes.
+        """
+        # Silently ignore formatting calls for external axes
+        # They can use their native formatting methods instead
+        pass
+
+
+# Cache for wrapped external axes classes
+_external_axes_cache = {}
+
+
+def _wrap_external_axes(projection_class):
+    """
+    Create a wrapper class for external axes that makes them ultraplot-compatible.
+
+    Parameters
+    ----------
+    projection_class : type
+        The external axes class to wrap (e.g., mpltern.TernaryAxes)
+
+    Returns
+    -------
+    type
+        A new class that inherits from both _ExternalAxesMixin and the projection_class
+    """
+    # Check cache first
+    if projection_class in _external_axes_cache:
+        return _external_axes_cache[projection_class]
+
+    # Create wrapper class with multiple inheritance
+    # Order matters: Mixin first so it can filter kwargs before external axes sees them
+    class_name = f"_UltraplotWrapped{projection_class.__name__}"
+    wrapper_class = type(
+        class_name,
+        (_ExternalAxesMixin, projection_class),
+        {
+            "__module__": projection_class.__module__,
+            "__doc__": f"Ultraplot-wrapped {projection_class.__name__}",
+            "name": class_name,  # Required by matplotlib's projection registry
+        },
+    )
+
+    # Cache it
+    _external_axes_cache[projection_class] = wrapper_class
+
+    return wrapper_class
+
+
 class Figure(mfigure.Figure):
     """
     The `~matplotlib.figure.Figure` subclass used by ultraplot.
@@ -1097,7 +1332,12 @@ class Figure(mfigure.Figure):
             except (KeyError, ValueError):
                 pass
             else:
+                name = "ultraplot_" + proj
+        if name is None and isinstance(proj, str):
+            # Check if the name is registered globally in Matplotlib (e.g., 'ternary', 'polar', '3d')
+            if proj in mproj.get_projection_names():
                 name = proj
+            # If not found anywhere, leave name as None so geographic projections can be tried
         # Helpful error message
         if (
             name is None
@@ -1116,10 +1356,10 @@ class Figure(mfigure.Figure):
         # NOTE: Also raises errors due to unexpected projection type
         if name is None:
             proj = constructor.Proj(proj, backend=backend, include_axes=True, **proj_kw)
-            name = proj._proj_backend
+            name = "ultraplot_" + proj._proj_backend
             kwargs["map_projection"] = proj
 
-        kwargs["projection"] = "ultraplot_" + name
+        kwargs["projection"] = name
         return kwargs
 
     def _get_align_axes(self, side):
@@ -1616,6 +1856,44 @@ class Figure(mfigure.Figure):
         kwargs.setdefault("label", f"subplot_{self._subplot_counter}")
         kwargs.setdefault("number", 1 + max(self._subplot_dict, default=0))
         kwargs.pop("refwidth", None)  # TODO: remove this
+
+        # Use container approach for external projections to make them ultraplot-compatible
+        projection_name = kwargs.get("projection")
+        external_axes_class = None
+        external_axes_kwargs = {}
+
+        if projection_name and isinstance(projection_name, str):
+            # Check if this is an external (non-ultraplot) projection
+            if not projection_name.startswith("ultraplot_"):
+                try:
+                    # Get the projection class
+                    proj_class = mproj.get_projection_class(projection_name)
+
+                    # Check if it's not a built-in ultraplot axes
+                    if not issubclass(proj_class, paxes.Axes):
+                        # Store the external axes class and original projection name
+                        external_axes_class = proj_class
+                        external_axes_kwargs["projection"] = projection_name
+
+                        # Create or get the container class for this external axes type
+                        from .axes.container import create_external_axes_container
+
+                        container_name = f"_ultraplot_container_{projection_name}"
+
+                        # Check if container is already registered
+                        if container_name not in mproj.get_projection_names():
+                            container_class = create_external_axes_container(
+                                proj_class, projection_name=container_name
+                            )
+                            mproj.register_projection(container_class)
+
+                        # Use the container projection and pass external axes info
+                        kwargs["projection"] = container_name
+                        kwargs["external_axes_class"] = external_axes_class
+                        kwargs["external_axes_kwargs"] = external_axes_kwargs
+                except (KeyError, ValueError):
+                    # Projection not found, let matplotlib handle the error
+                    pass
 
         ax = super().add_subplot(ss, _subplot_spec=ss, **kwargs)
         # Allow sharing for GeoAxes if rectilinear

@@ -1694,7 +1694,10 @@ class SubplotGrid(MutableSequence, list):
         if self:
             gridspec = self.gridspec  # compare against existing gridspec
         for item in items.flat:
-            if not isinstance(item, paxes.Axes):
+            # Accept both ultraplot axes and wrapped external axes
+            from .figure import _ExternalAxesMixin
+
+            if not isinstance(item, (paxes.Axes, _ExternalAxesMixin)):
                 raise ValueError(message.format(f"the object {item!r}"))
             item = item._get_topmost_axes()
             if not isinstance(item, maxes.SubplotBase):

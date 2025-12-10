@@ -2662,7 +2662,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if not isinstance(self, maxes.SubplotBase):
             raise RuntimeError("Axes must be a subplot.")
         ss = self.get_subplotspec().get_topmost_subplotspec()
-        row1, row2, col1, col2 = ss._get_rows_columns()
+
+        # Check if this is an ultraplot SubplotSpec with _get_rows_columns method
+        if not hasattr(ss, "_get_rows_columns"):
+            # Fall back to standard matplotlib SubplotSpec attributes
+            # This can happen when axes are created directly without ultraplot's gridspec
+            if hasattr(ss, "rowspan") and hasattr(ss, "colspan"):
+                row1, row2 = ss.rowspan.start, ss.rowspan.stop - 1
+                col1, col2 = ss.colspan.start, ss.colspan.stop - 1
+            else:
+                # Unable to determine range, return default
+                row1, row2, col1, col2 = 0, 0, 0, 0
+        else:
+            row1, row2, col1, col2 = ss._get_rows_columns()
+
         if s == "x":
             return (col1, col2)
         else:
