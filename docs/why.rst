@@ -499,7 +499,7 @@ like :func:`~ultraplot.axes.PlotAxes.pcolor` and :func:`~ultraplot.axes.PlotAxes
   plots. This can be disabled by setting :rcraw:`cmap.discrete` to ``False`` or
   by passing ``discrete=False`` to :class:`~ultraplot.axes.PlotAxes` commands.
 * The :class:`~ultraplot.colors.DivergingNorm` normalizer is perfect for data with a
-  :ref:`natural midpoint <ug_norm>` and offers both "fair" and "unfair" scaling.
+  :ref:`natural midpoint <ug_apply_norm>` and offers both "fair" and "unfair" scaling.
   The :class:`~ultraplot.colors.SegmentedNorm` normalizer can generate
   uneven color gradations useful for :ref:`unusual data distributions <ug_norm>`.
 * The :func:`~ultraplot.axes.PlotAxes.heatmap` command invokes
@@ -882,7 +882,7 @@ Limitation
 ----------
 
 Matplotlib :obj:`~matplotlib.rcParams` can be changed persistently by placing
-`matplotlibrc` :ref:`ug_mplrc` files in the same directory as your python script.
+ref:`matplotlibrc <ug_mplrc>` files in the same directory as your python script.
 But it can be difficult to design and store your own colormaps and color cycles for
 future use. It is also difficult to get matplotlib to use custom ``.ttf`` and
 ``.otf`` font files, which may be desirable when you are working on
