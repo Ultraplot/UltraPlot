@@ -205,7 +205,7 @@ Links
 * For more on colormaps,
   see :ref:`this page <ug_apply_cmap>`.
 * For more on normalizers,
-  see :ref:`this page <ug_norm>`.
+  see :ref:`this page <ug_apply_norm>`.
 * For more on color cycles, see
   :ref:`this page <ug_apply_cycle>`.
 
@@ -499,7 +499,7 @@ like :func:`~ultraplot.axes.PlotAxes.pcolor` and :func:`~ultraplot.axes.PlotAxes
   plots. This can be disabled by setting :rcraw:`cmap.discrete` to ``False`` or
   by passing ``discrete=False`` to :class:`~ultraplot.axes.PlotAxes` commands.
 * The :class:`~ultraplot.colors.DivergingNorm` normalizer is perfect for data with a
-  :ref:`natural midpoint <ug_norm>` and offers both "fair" and "unfair" scaling.
+  :ref:`natural midpoint <ug_apply_norm>` and offers both "fair" and "unfair" scaling.
   The :class:`~ultraplot.colors.SegmentedNorm` normalizer can generate
   uneven color gradations useful for :ref:`unusual data distributions <ug_norm>`.
 * The :func:`~ultraplot.axes.PlotAxes.heatmap` command invokes
