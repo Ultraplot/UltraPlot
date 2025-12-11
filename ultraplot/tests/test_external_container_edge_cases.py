@@ -59,6 +59,52 @@ class MinimalExternalAxes:
     def set_zorder(self, zorder):
         self._zorder = zorder
 
+    def get_axes_locator(self):
+        """Return axes locator (for matplotlib 3.9 compatibility)."""
+        return None
+
+    def get_in_layout(self):
+        """Return whether axes participates in layout (matplotlib 3.9 compatibility)."""
+        return True
+
+    def set_in_layout(self, value):
+        """Set whether axes participates in layout (matplotlib 3.9 compatibility)."""
+        pass
+
+    def get_clip_on(self):
+        """Return whether clipping is enabled (matplotlib 3.9 compatibility)."""
+        return True
+
+    def get_rasterized(self):
+        """Return whether axes is rasterized (matplotlib 3.9 compatibility)."""
+        return False
+
+    def get_agg_filter(self):
+        """Return agg filter (matplotlib 3.9 compatibility)."""
+        return None
+
+    def get_sketch_params(self):
+        """Return sketch params (matplotlib 3.9 compatibility)."""
+        return None
+
+    def get_path_effects(self):
+        """Return path effects (matplotlib 3.9 compatibility)."""
+        return []
+
+    def get_figure(self):
+        """Return the figure (matplotlib 3.9 compatibility)."""
+        return self.figure
+
+    def get_transform(self):
+        """Return the transform (matplotlib 3.9 compatibility)."""
+        from matplotlib.transforms import IdentityTransform
+
+        return IdentityTransform()
+
+    def get_transformed_clip_path_and_affine(self):
+        """Return transformed clip path (matplotlib 3.9 compatibility)."""
+        return None, None
+
     @property
     def zorder(self):
         return self._zorder
