@@ -501,7 +501,7 @@ like :func:`~ultraplot.axes.PlotAxes.pcolor` and :func:`~ultraplot.axes.PlotAxes
 * The :class:`~ultraplot.colors.DivergingNorm` normalizer is perfect for data with a
   :ref:`natural midpoint <ug_apply_norm>` and offers both "fair" and "unfair" scaling.
   The :class:`~ultraplot.colors.SegmentedNorm` normalizer can generate
-  uneven color gradations useful for :ref:`unusual data distributions <ug_norm>`.
+  uneven color gradations useful for :ref:`unusual data distributions <ug_apply_norm>`.
 * The :func:`~ultraplot.axes.PlotAxes.heatmap` command invokes
   :func:`~ultraplot.axes.PlotAxes.pcolormesh` then applies an `equal axes apect ratio
   <https://matplotlib.org/stable/gallery/subplots_axes_and_figures/axis_equal_demo.html>`__,

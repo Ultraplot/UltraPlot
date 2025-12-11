@@ -78,8 +78,9 @@
 #    complex arrangements of subplots, colorbars, and legends.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 fig = uplt.figure(share=False, refwidth=2.3)
@@ -183,8 +184,9 @@ ax.contour(
 )
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 N = 10
 state = np.random.RandomState(51423)
@@ -232,8 +234,9 @@ for j, ax in enumerate(axs):
 # and the tight layout padding can be controlled with the `pad` keyword.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 fig, axs = uplt.subplots(ncols=3, nrows=3, refwidth=1.4)
@@ -254,8 +257,9 @@ fig.colorbar(m, label="stacked colorbar", ticks=0.1, loc="b", minorticks=0.05)
 fig.colorbar(m, label="colorbar with length <1", ticks=0.1, loc="r", length=0.7)
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 fig, axs = uplt.subplots(
@@ -299,7 +303,7 @@ for ax, title in zip(axs, ("2D {} #1", "2D {} #2", "Line {} #1", "Line {} #2")):
 #   will build the required `~matplotlib.cm.ScalarMappable` on-the-fly. Lists
 #   of :class:`~matplotlib.artist.Artists`\ s are used when you use the `colorbar`
 #   keyword with :ref:`1D commands <ug_1dplots>` like :func:`~ultraplot.axes.PlotAxes.plot`.
-# * The associated :ref:`colormap normalizer <ug_norm>` can be specified with the
+# * The associated :ref:`colormap normalizer <ug_apply_norm>` can be specified with the
 #   `vmin`, `vmax`, `norm`, and `norm_kw` keywords. The `~ultraplot.colors.DiscreteNorm`
 #   levels can be specified with `values`, or UltraPlot will infer them from the
 #   :class:`~matplotlib.artist.Artist` labels (non-numeric labels will be applied to
@@ -332,8 +336,9 @@ for ax, title in zip(axs, ("2D {} #1", "2D {} #2", "Line {} #1", "Line {} #2")):
 # See :func:`~ultraplot.axes.Axes.colorbar` for details.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 fig = uplt.figure(share=False, refwidth=2)
 
@@ -427,8 +432,9 @@ fig.format(
 # (or use the `handle_kw` keyword). See `ultraplot.axes.Axes.legend` for details.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 uplt.rc.cycle = "538"
 fig, axs = uplt.subplots(ncols=2, span=False, share="labels", refwidth=2.3)
