@@ -55,9 +55,6 @@ class ExternalAxesContainer(CartesianAxes):
         # Can be customized per-axes or set globally
         self._external_shrink_factor = kwargs.pop("external_shrink_factor", 0.85)
 
-        # Store subplot spec for later
-        self._subplot_spec = kwargs.pop("_subplot_spec", None)
-
         # Pop the projection kwarg if it exists (matplotlib will add it)
         # We don't want to pass it to parent since we're using cartesian for container
         kwargs.pop("projection", None)
@@ -67,6 +64,8 @@ class ExternalAxesContainer(CartesianAxes):
         format_kwargs = {}
 
         # Extract common format parameters
+        # Include both general format params and GeoAxes-specific params
+        # to handle cases where GeoAxes might be incorrectly wrapped
         format_params = [
             "title",
             "ltitle",
@@ -89,6 +88,32 @@ class ExternalAxesContainer(CartesianAxes):
             "aspect",
             "grid",
             "gridminor",
+            # GeoAxes-specific parameters
+            "extent",
+            "map_projection",
+            "lonlim",
+            "latlim",
+            "land",
+            "ocean",
+            "coast",
+            "rivers",
+            "borders",
+            "innerborders",
+            "lakes",
+            "labels",
+            "latlines",
+            "lonlines",
+            "latlabels",
+            "lonlabels",
+            "lonlocator",
+            "latlocator",
+            "lonformatter",
+            "latformatter",
+            "lonticklen",
+            "latticklen",
+            "gridminor",
+            "round",
+            "boundinglat",
         ]
         for param in format_params:
             if param in kwargs:
@@ -97,8 +122,7 @@ class ExternalAxesContainer(CartesianAxes):
         # Initialize parent ultraplot Axes
         # Don't set projection here - the class itself is already the right projection
         # and matplotlib has already resolved it before instantiation
-        if self._subplot_spec is not None:
-            kwargs["_subplot_spec"] = self._subplot_spec
+        # Note: _subplot_spec is handled by parent Axes.__init__, no need to pop/restore it
 
         # Disable autoshare for external axes containers since they manage
         # external axes that don't participate in ultraplot's sharing system
