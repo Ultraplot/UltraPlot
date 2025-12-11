@@ -1100,7 +1100,14 @@ class Figure(mfigure.Figure):
                 name = "ultraplot_" + proj
         if name is None and isinstance(proj, str):
             # Check if the name is registered globally in Matplotlib (e.g., 'ternary', 'polar', '3d')
-            if proj in mproj.get_projection_names():
+            # But ONLY if we're not going to try geographic projections next
+            # (i.e., only if backend is specified or constructor doesn't support geographic)
+            should_try_geographic = (
+                backend is not None
+                or constructor.Projection is not object
+                or constructor.Basemap is not object
+            )
+            if not should_try_geographic and proj in mproj.get_projection_names():
                 name = proj
             # If not found anywhere, leave name as None so geographic projections can be tried
         # Helpful error message
