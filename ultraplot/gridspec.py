@@ -6,21 +6,24 @@ import inspect
 import itertools
 import re
 from collections.abc import MutableSequence
+from functools import wraps
 from numbers import Integral
+from typing import List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
 import matplotlib.transforms as mtransforms
 import numpy as np
-from typing import List, Optional, Union, Tuple
-from functools import wraps
 
 from . import axes as paxes
 from .config import rc
-from .internals import ic  # noqa: F401
-from .internals import _not_none, docstring, warnings
+from .internals import (
+    _not_none,
+    docstring,
+    ic,  # noqa: F401
+    warnings,
+)
 from .utils import _fontsize_to_pt, units
-from .internals import warnings
 
 __all__ = ["GridSpec", "SubplotGrid"]
 
@@ -1694,10 +1697,8 @@ class SubplotGrid(MutableSequence, list):
         if self:
             gridspec = self.gridspec  # compare against existing gridspec
         for item in items.flat:
-            # Accept both ultraplot axes and wrapped external axes
-            from .figure import _ExternalAxesMixin
-
-            if not isinstance(item, (paxes.Axes, _ExternalAxesMixin)):
+            # Accept ultraplot axes (including ExternalAxesContainer which inherits from paxes.Axes)
+            if not isinstance(item, paxes.Axes):
                 raise ValueError(message.format(f"the object {item!r}"))
             item = item._get_topmost_axes()
             if not isinstance(item, maxes.SubplotBase):
