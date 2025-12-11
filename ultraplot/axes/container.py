@@ -274,13 +274,12 @@ class ExternalAxesContainer(CartesianAxes):
             # Mark external axes as stale (needs drawing)
             self._external_stale = True
 
-            # Add external axes to the container's child artists
-            # This ensures matplotlib will iterate over it during rendering
-            if hasattr(self, "add_child_axes"):
-                self.add_child_axes(self._external_axes)
-            elif hasattr(self, "_children"):
-                if self._external_axes not in self._children:
-                    self._children.append(self._external_axes)
+            # Note: Do NOT add external axes as a child artist to the container.
+            # The container's draw() method explicitly handles drawing the external axes
+            # (line ~514), and adding it as a child would cause matplotlib to draw it
+            # twice - once via our explicit call and once via the parent's child iteration.
+            # This double-draw is especially visible in REPL environments where figures
+            # are displayed multiple times.
 
         except Exception as e:
             warnings._warn_ultraplot(
