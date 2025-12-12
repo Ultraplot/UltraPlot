@@ -1028,8 +1028,7 @@ def test_label_rotation(backend):
     Test label rotation parameters for both Cartopy and Basemap backends.
     Tests labelrotation, lonlabelrotation, and latlabelrotation parameters.
     """
-    fig, axs = uplt.subplots(ncols=2, proj="cyl", backend=backend,
-        share=0)
+    fig, axs = uplt.subplots(ncols=2, proj="cyl", backend=backend, share=0)
 
     # Test 1: labelrotation applies to both axes
     axs[0].format(

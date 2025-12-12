@@ -1747,9 +1747,9 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         if rotatelabels is not None:
             gl.rotate_labels = bool(rotatelabels)  # ignored in cartopy < 0.18
         if lonlabelrotation is not None:
-            gl.xlabel_style['rotation'] = lonlabelrotation
+            gl.xlabel_style["rotation"] = lonlabelrotation
         if latlabelrotation is not None:
-            gl.ylabel_style['rotation'] = latlabelrotation
+            gl.ylabel_style["rotation"] = latlabelrotation
         if latinline is not None or loninline is not None:
             lon, lat = loninline, latinline
             b = True if lon and lat else "x" if lon else "y" if lat else None
