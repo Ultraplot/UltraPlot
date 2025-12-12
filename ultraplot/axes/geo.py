@@ -24,19 +24,18 @@ import numpy as np
 
 from .. import constructor
 from .. import proj as pproj
+from .. import ticker as pticker
 from ..config import rc
-from ..internals import ic  # noqa: F401
 from ..internals import (
     _not_none,
     _pop_rc,
     _version_cartopy,
     docstring,
+    ic,  # noqa: F401
     warnings,
 )
-from .. import ticker as pticker
 from ..utils import units
-from . import plot
-from . import shared
+from . import plot, shared
 
 try:
     import cartopy.crs as ccrs
@@ -148,6 +147,15 @@ rotatelabels : bool, default: :rc:`grid.rotatelabels`
     *For cartopy axes only.*
     Whether to rotate non-inline gridline labels so that they automatically
     follow the map boundary curvature.
+labelrotation : float, optional
+    The rotation angle in degrees for both longitude and latitude tick labels.
+    Use `lonlabelrotation` and `latlabelrotation` to set them separately.
+lonlabelrotation : float, optional
+    The rotation angle in degrees for longitude tick labels.
+    Works for both cartopy and basemap backends.
+latlabelrotation : float, optional
+    The rotation angle in degrees for latitude tick labels.
+    Works for both cartopy and basemap backends.
 labelpad : unit-spec, default: :rc:`grid.labelpad`
     *For cartopy axes only.*
     The padding between non-inline gridline labels and the map boundary.
@@ -850,6 +858,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         latlabels=None,
         lonlabels=None,
         rotatelabels=None,
+        labelrotation=None,
+        lonlabelrotation=None,
+        latlabelrotation=None,
         loninline=None,
         latinline=None,
         inlinelabels=None,
@@ -996,6 +1007,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             rotatelabels = _not_none(
                 rotatelabels, rc.find("grid.rotatelabels", context=True)
             )  # noqa: E501
+            lonlabelrotation = _not_none(lonlabelrotation, labelrotation)
+            latlabelrotation = _not_none(latlabelrotation, labelrotation)
             labelpad = _not_none(labelpad, rc.find("grid.labelpad", context=True))
             dms = _not_none(dms, rc.find("grid.dmslabels", context=True))
             nsteps = _not_none(nsteps, rc.find("grid.nsteps", context=True))
@@ -1028,6 +1041,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 loninline=loninline,
                 latinline=latinline,
                 rotatelabels=rotatelabels,
+                lonlabelrotation=lonlabelrotation,
+                latlabelrotation=latlabelrotation,
                 labelpad=labelpad,
                 nsteps=nsteps,
             )
@@ -1690,6 +1705,8 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         latinline=None,
         labelpad=None,
         rotatelabels=None,
+        lonlabelrotation=None,
+        latlabelrotation=None,
         nsteps=None,
     ):
         """
@@ -1729,6 +1746,10 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             gl.y_inline = bool(latinline)
         if rotatelabels is not None:
             gl.rotate_labels = bool(rotatelabels)  # ignored in cartopy < 0.18
+        if lonlabelrotation is not None:
+            gl.xlabel_style['rotation'] = lonlabelrotation
+        if latlabelrotation is not None:
+            gl.ylabel_style['rotation'] = latlabelrotation
         if latinline is not None or loninline is not None:
             lon, lat = loninline, latinline
             b = True if lon and lat else "x" if lon else "y" if lat else None
@@ -2108,17 +2129,20 @@ class _BasemapAxes(GeoAxes):
         latgrid=None,
         lonarray=None,
         latarray=None,
+        lonlabelrotation=None,
+        latlabelrotation=None,
     ):
         """
         Apply changes to the basemap axes.
         """
         latmax = self._lataxis.get_latmax()
-        for axis, name, grid, array, method in zip(
+        for axis, name, grid, array, method, rotation in zip(
             ("x", "y"),
             ("lon", "lat"),
             (longrid, latgrid),
             (lonarray, latarray),
             ("drawmeridians", "drawparallels"),
+            (lonlabelrotation, latlabelrotation),
         ):
             # Correct lonarray and latarray label toggles by changing from lrbt to lrtb.
             # Then update the cahced toggle array. This lets us change gridline locs
@@ -2173,6 +2197,9 @@ class _BasemapAxes(GeoAxes):
             for obj in self._iter_gridlines(objs):
                 if isinstance(obj, mtext.Text):
                     obj.update(kwtext)
+                    # Apply rotation if specified
+                    if rotation is not None:
+                        obj.set_rotation(rotation)
                 else:
                     obj.update(kwlines)
 
@@ -2191,6 +2218,8 @@ class _BasemapAxes(GeoAxes):
         loninline=None,
         latinline=None,
         rotatelabels=None,
+        lonlabelrotation=None,
+        latlabelrotation=None,
         labelpad=None,
         nsteps=None,
     ):
@@ -2204,6 +2233,8 @@ class _BasemapAxes(GeoAxes):
             latgrid=latgrid,
             lonarray=lonarray,
             latarray=latarray,
+            lonlabelrotation=lonlabelrotation,
+            latlabelrotation=latlabelrotation,
         )
         sides = {}
         for side, lonon, laton in zip(
@@ -2226,6 +2257,8 @@ class _BasemapAxes(GeoAxes):
             latgrid=latgrid,
             lonarray=array,
             latarray=array,
+            lonlabelrotation=None,
+            latlabelrotation=None,
         )
         # Set isDefault_majloc, etc. to True for both axes
         # NOTE: This cannot be done inside _update_gridlines or minor gridlines
