@@ -22,6 +22,7 @@ docs/_build
 docs/_static/ultraplotrc
 docs/_static/rctable.rst
 docs/_static/*
+*.html
 
 # Development subfolders
 dev
@@ -33,6 +34,8 @@ sources
 *.pyc
 .*.pyc
 __pycache__
+*.ipynb
+
 
 # OS files
 .DS_Store
