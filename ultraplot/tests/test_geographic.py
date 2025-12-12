@@ -1,6 +1,10 @@
-import ultraplot as uplt, numpy as np, warnings
-import pytest
+import warnings
 from unittest import mock
+
+import numpy as np
+import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -1010,3 +1014,188 @@ def test_grid_indexing_formatting(rng):
     axs[-1, :].format(lonlabels=True)
     axs[:, 0].format(latlabels=True)
     return fig
+
+
+@pytest.mark.parametrize(
+    "backend",
+    [
+        "cartopy",
+        "basemap",
+    ],
+)
+def test_label_rotation(backend):
+    """
+    Test label rotation parameters for both Cartopy and Basemap backends.
+    Tests labelrotation, lonlabelrotation, and latlabelrotation parameters.
+    """
+    fig, axs = uplt.subplots(ncols=2, proj="cyl", backend=backend,
+        share=0)
+
+    # Test 1: labelrotation applies to both axes
+    axs[0].format(
+        title="Both rotated 45°",
+        lonlabels="b",
+        latlabels="l",
+        labelrotation=45,
+        lonlines=30,
+        latlines=30,
+    )
+
+    # Test 2: Different rotations for lon and lat
+    axs[1].format(
+        title="Lon: 90°, Lat: 0°",
+        lonlabels="b",
+        latlabels="l",
+        lonlabelrotation=90,
+        latlabelrotation=0,
+        lonlines=30,
+        latlines=30,
+    )
+
+    # Verify that rotation was applied based on actual backend
+    if axs[0]._name == "cartopy":
+        # For Cartopy, check gridliner xlabel_style and ylabel_style
+        gl0 = axs[0].gridlines_major
+        assert gl0.xlabel_style.get("rotation") == 45
+        assert gl0.ylabel_style.get("rotation") == 45
+
+        gl1 = axs[1].gridlines_major
+        assert gl1.xlabel_style.get("rotation") == 90
+        assert gl1.ylabel_style.get("rotation") == 0
+
+    else:  # basemap
+        # For Basemap, check Text object rotation
+        from matplotlib import text as mtext
+
+        def get_text_rotations(gridlines_dict):
+            """Extract rotation angles from Text objects in gridlines."""
+            rotations = []
+            for line_dict in gridlines_dict.values():
+                for obj_list in line_dict:
+                    for obj in obj_list:
+                        if isinstance(obj, mtext.Text):
+                            rotations.append(obj.get_rotation())
+            return rotations
+
+        # Check first axes (both 45°)
+        lonlines_0, latlines_0 = axs[0].gridlines_major
+        lon_rotations_0 = get_text_rotations(lonlines_0)
+        lat_rotations_0 = get_text_rotations(latlines_0)
+        if lon_rotations_0:  # Only check if labels exist
+            assert all(r == 45 for r in lon_rotations_0)
+        if lat_rotations_0:
+            assert all(r == 45 for r in lat_rotations_0)
+
+        # Check second axes (lon: 90°, lat: 0°)
+        lonlines_1, latlines_1 = axs[1].gridlines_major
+        lon_rotations_1 = get_text_rotations(lonlines_1)
+        lat_rotations_1 = get_text_rotations(latlines_1)
+        if lon_rotations_1:
+            assert all(r == 90 for r in lon_rotations_1)
+        if lat_rotations_1:
+            assert all(r == 0 for r in lat_rotations_1)
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_label_rotation_precedence(backend):
+    """
+    Test that specific rotation parameters take precedence over general labelrotation.
+    """
+    # Skip test if basemap backend requested but not available
+    if backend == "basemap":
+        try:
+            import mpl_toolkits.basemap
+        except ImportError:
+            pytest.skip("Basemap not installed")
+
+    basemap = backend == "basemap"
+    fig, ax = uplt.subplots(proj="cyl", basemap=basemap)
+
+    # lonlabelrotation should override labelrotation for lon axis
+    # latlabelrotation not specified, so should use labelrotation
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        labelrotation=30,
+        lonlabelrotation=60,  # This should override for lon
+        lonlines=30,
+        latlines=30,
+    )
+
+    if ax[0]._name == "cartopy":
+        gl = ax[0].gridlines_major
+        assert gl.xlabel_style.get("rotation") == 60  # Override value
+        assert gl.ylabel_style.get("rotation") == 30  # Fallback value
+    else:  # basemap
+        from matplotlib import text as mtext
+
+        def get_text_rotations(gridlines_dict):
+            rotations = []
+            for line_dict in gridlines_dict.values():
+                for obj_list in line_dict:
+                    for obj in obj_list:
+                        if isinstance(obj, mtext.Text):
+                            rotations.append(obj.get_rotation())
+            return rotations
+
+        lonlines, latlines = ax[0].gridlines_major
+        lon_rotations = get_text_rotations(lonlines)
+        lat_rotations = get_text_rotations(latlines)
+
+        if lon_rotations:
+            assert all(r == 60 for r in lon_rotations)
+        if lat_rotations:
+            assert all(r == 30 for r in lat_rotations)
+
+    uplt.close(fig)
+
+
+def test_label_rotation_backward_compatibility():
+    """
+    Test that existing code without rotation parameters still works.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+
+    # Should work without any rotation parameters
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        lonlines=30,
+        latlines=30,
+    )
+
+    # Verify no rotation was applied (should be default or None)
+    gl = ax[0]._gridlines_major
+    # If rotation key doesn't exist or is None/0, that's expected
+    lon_rotation = gl.xlabel_style.get("rotation")
+    lat_rotation = gl.ylabel_style.get("rotation")
+
+    # Default rotation should be None or 0 (no rotation)
+    assert lon_rotation is None or lon_rotation == 0
+    assert lat_rotation is None or lat_rotation == 0
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("rotation_angle", [0, 45, 90, -30, 180])
+def test_label_rotation_angles(rotation_angle):
+    """
+    Test various rotation angles to ensure they're applied correctly.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        labelrotation=rotation_angle,
+        lonlines=60,
+        latlines=30,
+    )
+
+    gl = ax[0]._gridlines_major
+    assert gl.xlabel_style.get("rotation") == rotation_angle
+    assert gl.ylabel_style.get("rotation") == rotation_angle
+
+    uplt.close(fig)
