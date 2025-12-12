@@ -78,6 +78,7 @@ jobs:
           git checkout ${{ github.event.pull_request.base.sha }}
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           pytest -W ignore \
+            --mpl-generate-path=./baseline/ \
             --mpl-generate-hash-library=./baseline/baseline_hashes.json\
             --mpl-default-style="./ultraplot.yml"\
             ultraplot/tests
