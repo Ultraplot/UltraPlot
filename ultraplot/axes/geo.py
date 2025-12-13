@@ -1592,12 +1592,18 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                     lonlim[0] = lon0 - 180
                 if lonlim[1] is None:
                     lonlim[1] = lon0 + 180
-                lonlim[0] += eps
+                # Expand limits slightly to ensure boundary labels are included
+                # NOTE: We expand symmetrically (subtract from min, add to max) rather
+                # than just shifting to avoid excluding boundary gridlines
+                lonlim[0] -= eps
+                lonlim[1] += eps
                 latlim = list(latlim)
                 if latlim[0] is None:
                     latlim[0] = -90
                 if latlim[1] is None:
                     latlim[1] = 90
+                latlim[0] -= eps
+                latlim[1] += eps
                 extent = lonlim + latlim
                 self.set_extent(extent, crs=ccrs.PlateCarree())
 
@@ -1678,9 +1684,18 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         # NOTE: This will re-apply existing gridline locations if unchanged.
         if nsteps is not None:
             gl.n_steps = nsteps
-        latmax = self._lataxis.get_latmax()
+        # Set xlim and ylim for cartopy >= 0.19 to control which labels are displayed
+        # Use the actual view intervals so that labels at the extent boundaries are shown
+        # NOTE: Expand limits slightly because cartopy uses strict inequality for filtering
+        # labels (e.g., xlim[0] < lon < xlim[1]), which would exclude boundary labels
         if _version_cartopy >= "0.19":
-            gl.ylim = (-latmax, latmax)
+            eps = 1.0  # epsilon to include boundary labels (cartopy filters strictly)
+            loninterval = self._lonaxis.get_view_interval()
+            latinterval = self._lataxis.get_view_interval()
+            if loninterval is not None:
+                gl.xlim = (loninterval[0] - eps, loninterval[1] + eps)
+            if latinterval is not None:
+                gl.ylim = (latinterval[0] - eps, latinterval[1] + eps)
         longrid = rc._get_gridline_bool(longrid, axis="x", which=which, native=False)
         if longrid is not None:
             gl.xlines = longrid
