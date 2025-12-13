@@ -460,7 +460,10 @@ def test_sharing_geo_limits():
     after_lat = ax[1]._lataxis.get_view_interval()
 
     # We are sharing y which is the latitude axis
-    assert all([np.allclose(i, j) for i, j in zip(expectation["latlim"], after_lat)])
+    # Account for small epsilon expansion in extent (0.5 degrees per side)
+    assert all(
+        [np.allclose(i, j, atol=1.0) for i, j in zip(expectation["latlim"], after_lat)]
+    )
     # We are not sharing longitude yet
     assert all(
         [
@@ -474,7 +477,10 @@ def test_sharing_geo_limits():
     after_lon = ax[1]._lonaxis.get_view_interval()
 
     assert all([not np.allclose(i, j) for i, j in zip(before_lon, after_lon)])
-    assert all([np.allclose(i, j) for i, j in zip(after_lon, expectation["lonlim"])])
+    # Account for small epsilon expansion in extent (0.5 degrees per side)
+    assert all(
+        [np.allclose(i, j, atol=1.0) for i, j in zip(after_lon, expectation["lonlim"])]
+    )
     uplt.close(fig)
 
 
@@ -949,8 +955,9 @@ def test_consistent_range():
         lonview = np.array(a._lonaxis.get_view_interval())
         latview = np.array(a._lataxis.get_view_interval())
 
-        assert np.allclose(lonview, lonlim)
-        assert np.allclose(latview, latlim)
+        # Account for small epsilon expansion in extent (0.5 degrees per side)
+        assert np.allclose(lonview, lonlim, atol=1.0)
+        assert np.allclose(latview, latlim, atol=1.0)
 
 
 @pytest.mark.mpl_image_compare
