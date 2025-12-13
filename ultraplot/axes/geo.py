@@ -1559,7 +1559,8 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         # WARNING: The set_extent method tries to set a *rectangle* between the *4*
         # (x, y) coordinate pairs (each corner), so something like (-180, 180, -90, 90)
         # will result in *line*, causing error! We correct this here.
-        eps = 1e-10  # bug with full -180, 180 range when lon_0 != 0
+        eps_small = 1e-10  # bug with full -180, 180 range when lon_0 != 0
+        eps_label = 0.5  # larger epsilon to ensure boundary labels are included
         lon0 = self._get_lon0()
         proj = type(self.projection).__name__
         north = isinstance(self.projection, self._proj_north)
@@ -1575,7 +1576,12 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             if boundinglat is not None and boundinglat != self._boundinglat:
                 lat0 = 90 if north else -90
                 lon0 = self._get_lon0()
-                extent = [lon0 - 180 + eps, lon0 + 180 - eps, boundinglat, lat0]
+                extent = [
+                    lon0 - 180 + eps_small,
+                    lon0 + 180 - eps_small,
+                    boundinglat,
+                    lat0,
+                ]
                 self.set_extent(extent, crs=ccrs.PlateCarree())
                 self._boundinglat = boundinglat
 
@@ -1595,15 +1601,15 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                 # Expand limits slightly to ensure boundary labels are included
                 # NOTE: We expand symmetrically (subtract from min, add to max) rather
                 # than just shifting to avoid excluding boundary gridlines
-                lonlim[0] -= eps
-                lonlim[1] += eps
+                lonlim[0] -= eps_label
+                lonlim[1] += eps_label
                 latlim = list(latlim)
                 if latlim[0] is None:
                     latlim[0] = -90
                 if latlim[1] is None:
                     latlim[1] = 90
-                latlim[0] -= eps
-                latlim[1] += eps
+                latlim[0] -= eps_label
+                latlim[1] += eps_label
                 extent = lonlim + latlim
                 self.set_extent(extent, crs=ccrs.PlateCarree())
 
@@ -1685,17 +1691,8 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         if nsteps is not None:
             gl.n_steps = nsteps
         # Set xlim and ylim for cartopy >= 0.19 to control which labels are displayed
-        # Use the actual view intervals so that labels at the extent boundaries are shown
-        # NOTE: Expand limits slightly because cartopy uses strict inequality for filtering
-        # labels (e.g., xlim[0] < lon < xlim[1]), which would exclude boundary labels
-        if _version_cartopy >= "0.19":
-            eps = 1.0  # epsilon to include boundary labels (cartopy filters strictly)
-            loninterval = self._lonaxis.get_view_interval()
-            latinterval = self._lataxis.get_view_interval()
-            if loninterval is not None:
-                gl.xlim = (loninterval[0] - eps, loninterval[1] + eps)
-            if latinterval is not None:
-                gl.ylim = (latinterval[0] - eps, latinterval[1] + eps)
+        # NOTE: Don't set xlim/ylim here - let cartopy determine from the axes extent
+        # The extent expansion in _update_extent should be sufficient to include boundary labels
         longrid = rc._get_gridline_bool(longrid, axis="x", which=which, native=False)
         if longrid is not None:
             gl.xlines = longrid
