@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Minimal test to verify kiwi layout basic functionality.
+Minimal test to verify UltraLayout basic functionality.
 """
 
 import os
@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 print("=" * 60)
-print("Testing Kiwi Layout Implementation")
+print("Testing UltraLayout Implementation")
 print("=" * 60)
 
 # Test 1: Import modules
@@ -23,10 +23,10 @@ except ImportError as e:
     sys.exit(1)
 
 try:
-    from ultraplot import kiwi_layout
-    print("  ✓ kiwi_layout module imported")
+    from ultraplot import ultralayout
+    print("  ✓ ultralayout module imported")
 except ImportError as e:
-    print(f"  ✗ Failed to import kiwi_layout: {e}")
+    print(f"  ✗ Failed to import ultralayout: {e}")
     sys.exit(1)
 
 try:
@@ -55,7 +55,7 @@ test_cases = [
 
 for array, expected, description in test_cases:
     array = np.array(array)
-    result = kiwi_layout.is_orthogonal_layout(array)
+    result = ultralayout.is_orthogonal_layout(array)
     if result == expected:
         print(f"  ✓ {description}: correctly detected as {'orthogonal' if result else 'non-orthogonal'}")
     else:
@@ -68,8 +68,8 @@ try:
     gs = GridSpec(2, 4, layout_array=layout)
     print(f"  ✓ GridSpec created with layout_array")
     print(f"    - Layout shape: {gs._layout_array.shape}")
-    print(f"    - Use kiwi layout: {gs._use_kiwi_layout}")
-    print(f"    - Expected: {KIWI_AVAILABLE and not kiwi_layout.is_orthogonal_layout(layout)}")
+    print(f"    - Use UltraLayout: {gs._use_ultra_layout}")
+    print(f"    - Expected: {KIWI_AVAILABLE and not ultralayout.is_orthogonal_layout(layout)}")
 except Exception as e:
     print(f"  ✗ Failed to create GridSpec: {e}")
     import traceback
@@ -77,10 +77,10 @@ except Exception as e:
 
 # Test 5: Test kiwi solver (if available)
 if KIWI_AVAILABLE:
-    print("\n[5/6] Testing kiwi solver...")
+    print("\n[5/6] Testing UltraLayout solver...")
     try:
         layout = np.array([[1, 1, 2, 2], [0, 3, 3, 0]])
-        positions = kiwi_layout.compute_kiwi_positions(
+        positions = ultralayout.compute_ultra_positions(
             layout,
             figwidth=10.0,
             figheight=6.0,
@@ -91,7 +91,7 @@ if KIWI_AVAILABLE:
             top=0.125,
             bottom=0.125
         )
-        print(f"  ✓ Kiwi solver computed positions for {len(positions)} subplots")
+        print(f"  ✓ UltraLayout solver computed positions for {len(positions)} subplots")
         for num, (left, bottom, width, height) in positions.items():
             print(f"    Subplot {num}: left={left:.3f}, bottom={bottom:.3f}, "
                   f"width={width:.3f}, height={height:.3f}")
@@ -102,11 +102,11 @@ if KIWI_AVAILABLE:
             center3 = left3 + width3 / 2
             print(f"    Subplot 3 center: {center3:.3f}")
     except Exception as e:
-        print(f"  ✗ Kiwi solver failed: {e}")
+        print(f"  ✗ UltraLayout solver failed: {e}")
         import traceback
         traceback.print_exc()
 else:
-    print("\n[5/6] Skipping kiwi solver test (kiwisolver not available)")
+    print("\n[5/6] Skipping UltraLayout solver test (kiwisolver not available)")
 
 # Test 6: Test with matplotlib if available
 print("\n[6/6] Testing with matplotlib (if available)...")
@@ -144,6 +144,6 @@ print("Testing Complete!")
 print("=" * 60)
 print("\nNext steps:")
 print("1. If kiwisolver is not installed: pip install kiwisolver")
-print("2. Run the full demo: python test_kiwi_layout_demo.py")
-print("3. Run the simple example: python example_kiwi_layout.py")
+print("2. Run the full demo: python test_ultralayout_demo.py")
+print("3. Run the simple example: python example_ultralayout.py")
 print("=" * 60)

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Simple example demonstrating kiwi layout for non-orthogonal subplot arrangements.
+Simple example demonstrating UltraLayout for non-orthogonal subplot arrangements.
 
 This example shows how subplot 3 gets centered between subplots 1 and 2 when
-using the layout: [[1, 1, 2, 2], [0, 3, 3, 0]]
+using UltraLayout with the layout: [[1, 1, 2, 2], [0, 3, 3, 0]]
 """
 
 import matplotlib.pyplot as plt
@@ -59,7 +59,7 @@ axs[2].format(xlabel='X axis', ylabel='Y axis')
 axs[2].set_facecolor('#fff0f0')
 
 # Add overall title
-fig.suptitle('Non-Orthogonal Layout with Kiwi Solver\nSubplot 3 is centered between 1 and 2',
+fig.suptitle('Non-Orthogonal Layout with UltraLayout\nSubplot 3 is centered between 1 and 2',
              fontsize=16, fontweight='bold')
 
 # Print position information
@@ -92,7 +92,7 @@ if len(axs) >= 3:
         print("  (This is expected if kiwisolver is not installed)")
 
 # Save the figure
-output_file = 'kiwi_layout_example.png'
+output_file = 'ultralayout_example.png'
 plt.savefig(output_file, dpi=150, bbox_inches='tight')
 print(f"\n✓ Saved figure to: {output_file}")
 

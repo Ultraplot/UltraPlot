@@ -1,8 +1,8 @@
-# Kiwi Layout System for Non-Orthogonal Subplot Arrangements
+# UltraLayout: Advanced Layout System for Non-Orthogonal Subplot Arrangements
 
 ## Overview
 
-UltraPlot now includes a constraint-based layout system using [kiwisolver](https://github.com/nucleic/kiwi) to handle non-orthogonal subplot arrangements. This enables aesthetically pleasing layouts where subplots don't follow a simple grid pattern.
+UltraPlot now includes **UltraLayout**, an advanced constraint-based layout system using [kiwisolver](https://github.com/nucleic/kiwi) to handle non-orthogonal subplot arrangements. This enables aesthetically pleasing layouts where subplots don't follow a simple grid pattern.
 
 ## The Problem
 
@@ -22,7 +22,7 @@ In this example, subplot 3 should ideally be centered between subplots 1 and 2, 
 
 ## The Solution
 
-The new kiwi layout system uses constraint satisfaction to compute subplot positions that:
+UltraLayout uses constraint satisfaction to compute subplot positions that:
 1. Respect spacing and ratio requirements
 2. Align edges where appropriate for orthogonal layouts
 3. Create visually balanced arrangements for non-orthogonal layouts
@@ -30,7 +30,7 @@ The new kiwi layout system uses constraint satisfaction to compute subplot posit
 
 ## Installation
 
-The kiwi layout system requires the `kiwisolver` package:
+UltraLayout requires the `kiwisolver` package:
 
 ```bash
 pip install kiwisolver
@@ -51,7 +51,7 @@ import numpy as np
 layout = [[1, 1, 2, 2],
           [0, 3, 3, 0]]
 
-# Create the subplots - kiwi layout is automatic!
+# Create the subplots - UltraLayout is automatic!
 fig, axs = uplt.subplots(array=layout, figsize=(10, 6))
 
 # Add content to your subplots
@@ -67,9 +67,9 @@ axs[2].set_title('Subplot 3 (Centered!)')
 plt.savefig('non_orthogonal_layout.png')
 ```
 
-### When Does Kiwi Layout Activate?
+### When Does UltraLayout Activate?
 
-The kiwi layout system automatically activates when:
+UltraLayout automatically activates when:
 1. You pass an `array` parameter to `subplots()`
 2. The layout is detected as non-orthogonal
 3. `kiwisolver` is installed
@@ -78,7 +78,7 @@ For orthogonal layouts, the standard grid-based system is used (it's faster and 
 
 ### Complex Layouts
 
-The kiwi layout system handles complex arrangements:
+UltraLayout handles complex arrangements:
 
 ```python
 # More complex non-orthogonal layout
@@ -96,7 +96,7 @@ fig, axs = uplt.subplots(array=layout, figsize=(12, 9))
 The system first analyzes the layout array to determine if it's orthogonal:
 
 ```python
-from ultraplot.kiwi_layout import is_orthogonal_layout
+from ultraplot.ultralayout import is_orthogonal_layout
 
 layout = [[1, 1, 2, 2], [0, 3, 3, 0]]
 is_ortho = is_orthogonal_layout(layout)  # Returns False
@@ -106,7 +106,7 @@ An orthogonal layout is one where all subplot edges align with grid cell boundar
 
 ### Constraint System
 
-For non-orthogonal layouts, kiwisolver creates variables for:
+For non-orthogonal layouts, UltraLayout creates variables for:
 - Left and right edges of each column
 - Top and bottom edges of each row
 
@@ -137,9 +137,9 @@ gs = GridSpec(2, 4, layout_array=[[1, 1, 2, 2], [0, 3, 3, 0]])
 
 This parameter is automatically set when using `subplots(array=...)`.
 
-### Kiwi Layout Module
+### UltraLayout Module
 
-The `ultraplot.kiwi_layout` module provides:
+The `ultraplot.ultralayout` module provides:
 
 #### `is_orthogonal_layout(array)`
 Check if a layout is orthogonal.
@@ -150,7 +150,7 @@ Check if a layout is orthogonal.
 **Returns:**
 - `bool`: True if orthogonal, False otherwise
 
-#### `compute_kiwi_positions(array, ...)`
+#### `compute_ultra_positions(array, ...)`
 Compute subplot positions using constraint solving.
 
 **Parameters:**
@@ -163,12 +163,12 @@ Compute subplot positions using constraint solving.
 **Returns:**
 - `dict`: Mapping from subplot number to (left, bottom, width, height) in figure coordinates
 
-#### `KiwiLayoutSolver`
+#### `UltraLayoutSolver`
 Main solver class for constraint-based layout computation.
 
 ## Customization
 
-All standard GridSpec parameters work with kiwi layouts:
+All standard GridSpec parameters work with UltraLayout:
 
 ```python
 fig, axs = uplt.subplots(
@@ -199,7 +199,7 @@ fig, axs = uplt.subplots(
 
 ## Troubleshooting
 
-### Kiwi layout not activating
+### UltraLayout not activating
 
 Check that:
 1. `kiwisolver` is installed: `pip install kiwisolver`
@@ -220,13 +220,13 @@ If the solver fails, UltraPlot automatically falls back to grid-based positionin
 ## Examples
 
 See the example scripts:
-- `example_kiwi_layout.py` - Basic demonstration
-- `test_kiwi_layout_demo.py` - Comprehensive test suite
+- `example_ultralayout.py` - Basic demonstration
+- `test_ultralayout_demo.py` - Comprehensive test suite
 
 Run them with:
 ```bash
-python example_kiwi_layout.py
-python test_kiwi_layout_demo.py
+python example_ultralayout.py
+python test_ultralayout_demo.py
 ```
 
 ## Future Enhancements
