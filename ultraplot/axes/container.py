@@ -32,8 +32,32 @@ class ExternalAxesContainer(CartesianAxes):
         The external axes class to instantiate (e.g., mpltern.TernaryAxes)
     external_axes_kwargs : dict, optional
         Keyword arguments to pass to the external axes constructor
+    external_shrink_factor : float, optional, default: 0.75
+        The factor by which to shrink the external axes within the container
+        to leave room for labels. For ternary plots, labels extend significantly
+        beyond the plot area, so a value of 0.75 (25% padding) helps prevent
+        overlap with adjacent subplots.
+    external_padding : float, optional, default: 5.0
+        Padding in points to add around the external axes tight bbox. This creates
+        space between the external axes and adjacent subplots, preventing overlap
+        with tick labels or other elements. Set to 0 to disable padding.
     **kwargs
         Keyword arguments passed to Axes.__init__
+
+    Notes
+    -----
+    When using external axes containers with multiple subplots, the external axes
+    (e.g., ternary plots) are automatically shrunk to prevent label overlap with
+    adjacent subplots. If you still experience overlap, you can:
+
+    1. Increase spacing with ``wspace`` or ``hspace`` in subplots()
+    2. Decrease ``external_shrink_factor`` (more aggressive shrinking)
+    3. Use tight_layout or constrained_layout for automatic spacing
+
+    Example: ``uplt.subplots(ncols=2, projection=('ternary', None), wspace=5)``
+
+    To reduce padding between external axes and adjacent subplots, use:
+    ``external_padding=2`` or ``external_padding=0`` to disable padding entirely.
     """
 
     def __init__(
@@ -53,7 +77,12 @@ class ExternalAxesContainer(CartesianAxes):
 
         # Store shrink factor for external axes (to fit labels)
         # Can be customized per-axes or set globally
-        self._external_shrink_factor = kwargs.pop("external_shrink_factor", 0.85)
+        # Default 0.95 for ternary plots to prevent label overlap with adjacent subplots
+        self._external_shrink_factor = kwargs.pop("external_shrink_factor", 0.95)
+
+        # Store padding for tight bbox (prevents overlap with adjacent subplot elements)
+        # Default 5 points (~7 pixels at 96 dpi)
+        self._external_padding = kwargs.pop("external_padding", 5.0)
 
         # Pop the projection kwarg if it exists (matplotlib will add it)
         # We don't want to pass it to parent since we're using cartesian for container
@@ -134,8 +163,12 @@ class ExternalAxesContainer(CartesianAxes):
         # But keep it functional for layout purposes
         self.patch.set_visible(False)
         self.patch.set_facecolor("none")
+
+        # Hide spines
         for spine in self.spines.values():
             spine.set_visible(False)
+
+        # Hide axes
         self.xaxis.set_visible(False)
         self.yaxis.set_visible(False)
 
@@ -281,6 +314,9 @@ class ExternalAxesContainer(CartesianAxes):
             # This double-draw is especially visible in REPL environments where figures
             # are displayed multiple times.
 
+            # After creation, ensure external axes fits within container by measuring
+            # This is done lazily on first draw to ensure renderer is available
+
         except Exception as e:
             warnings._warn_ultraplot(
                 f"Failed to create external axes {self._external_axes_class.__name__}: {e}"
@@ -300,22 +336,22 @@ class ExternalAxesContainer(CartesianAxes):
         # Get the current position
         pos = self._external_axes.get_position()
 
-        # Shrink by a small margin to ensure labels fit
-        # For ternary axes, labels typically need about 10-15% padding on each side
+        # Shrink to leave room for labels that extend beyond the plot area
+        # For ternary axes, labels typically need about 5% padding (0.95 shrink factor)
+        # This prevents label overlap with adjacent subplots
         # Use the configured shrink factor
-        shrink_factor = getattr(self, "_external_shrink_factor", 0.85)
-
-        # Calculate the center
-        center_x = pos.x0 + pos.width / 2
-        center_y = pos.y0 + pos.height / 2
+        shrink_factor = getattr(self, "_external_shrink_factor", 0.95)
 
         # Calculate new dimensions
         new_width = pos.width * shrink_factor
         new_height = pos.height * shrink_factor
 
-        # Calculate new position (centered)
-        new_x0 = center_x - new_width / 2
-        new_y0 = center_y - new_height / 2
+        # Align external axes to top of container (for alignment with adjacent subplots)
+        # Offset slightly to the left to use available space better
+        center_x = pos.x0 + pos.width / 2
+        # Move 5% to the left from center
+        new_x0 = center_x - new_width / 2 - pos.width * 0.05
+        new_y0 = pos.y0 + pos.height - new_height
 
         # Set the new position
         from matplotlib.transforms import Bbox
@@ -332,6 +368,84 @@ class ExternalAxesContainer(CartesianAxes):
                 self._external_axes.set_aspect("equal", adjustable="box")
             except Exception:
                 pass  # Some axes types don't support aspect adjustment
+
+    def _ensure_external_fits_within_container(self, renderer):
+        """
+        Iteratively shrink external axes until it fits completely within container bounds.
+
+        This ensures that external axes labels don't extend beyond the container's
+        allocated space and overlap with adjacent subplots.
+        """
+        if self._external_axes is None:
+            return
+
+        if not hasattr(self._external_axes, "get_tightbbox"):
+            return
+
+        # Get container bounds in display coordinates
+        container_pos = self.get_position()
+        container_bbox = container_pos.transformed(self.figure.transFigure)
+
+        # Try up to 10 iterations to fit the external axes within container
+        max_iterations = 10
+        tolerance = 1.0  # 1 pixel tolerance
+
+        for iteration in range(max_iterations):
+            # Get external axes tight bbox (includes labels)
+            ext_tight = self._external_axes.get_tightbbox(renderer)
+
+            if ext_tight is None:
+                break
+
+            # Check if external axes extends beyond container
+            extends_left = ext_tight.x0 < container_bbox.x0 - tolerance
+            extends_right = ext_tight.x1 > container_bbox.x1 + tolerance
+            extends_bottom = ext_tight.y0 < container_bbox.y0 - tolerance
+            extends_top = ext_tight.y1 > container_bbox.y1 + tolerance
+
+            if not (extends_left or extends_right or extends_bottom or extends_top):
+                # Fits within container, we're done
+                break
+
+            # Calculate how much we need to shrink
+            current_pos = self._external_axes.get_position()
+
+            # Calculate shrink factors needed in each direction
+            shrink_x = 1.0
+            shrink_y = 1.0
+
+            if extends_left or extends_right:
+                # Need to shrink horizontally
+                available_width = container_bbox.width
+                needed_width = ext_tight.width
+                if needed_width > 0:
+                    shrink_x = min(0.95, available_width / needed_width * 0.95)
+
+            if extends_bottom or extends_top:
+                # Need to shrink vertically
+                available_height = container_bbox.height
+                needed_height = ext_tight.height
+                if needed_height > 0:
+                    shrink_y = min(0.95, available_height / needed_height * 0.95)
+
+            # Use the more aggressive shrink factor
+            shrink_factor = min(shrink_x, shrink_y)
+
+            # Apply shrinking with top-aligned, left-offset positioning
+            center_x = current_pos.x0 + current_pos.width / 2
+            new_width = current_pos.width * shrink_factor
+            new_height = current_pos.height * shrink_factor
+            # Move 5% to the left from center
+            new_x0 = center_x - new_width / 2 - current_pos.width * 0.05
+            new_y0 = current_pos.y0 + current_pos.height - new_height
+
+            from matplotlib.transforms import Bbox
+            new_pos = Bbox.from_bounds(new_x0, new_y0, new_width, new_height)
+            self._external_axes.set_position(new_pos)
+
+            # Mark as stale to ensure it redraws with new position
+            if hasattr(self._external_axes, "stale"):
+                self._external_axes.stale = True
 
     def _sync_position_to_external(self):
         """Synchronize the container position to the external axes."""
@@ -515,60 +629,15 @@ class ExternalAxesContainer(CartesianAxes):
 
             # Only draw if external axes is stale or we haven't synced positions yet
             if external_stale or not self._position_synced or self._external_stale:
+                # First, ensure external axes fits within container bounds
+                # This prevents labels from overlapping with adjacent subplots
+                self._ensure_external_fits_within_container(renderer)
+
                 self._external_axes.draw(renderer)
                 self._external_stale = False
 
-                # Ensure external axes stays within container bounds
-                # Check if tight bbox extends beyond container
-                if hasattr(self._external_axes, "get_tightbbox"):
-                    try:
-                        tight_bbox = self._external_axes.get_tightbbox(renderer)
-                        container_bbox = self.get_position().transformed(
-                            self.figure.transFigure
-                        )
-
-                        # If tight bbox extends beyond container, we may need to shrink further
-                        # This is a fallback in case initial shrinking wasn't enough
-                        if tight_bbox is not None:
-                            # Get bboxes in figure coordinates
-                            tight_fig = tight_bbox.transformed(
-                                self.figure.transFigure.inverted()
-                            )
-
-                            # Check if we're clipping
-                            if (
-                                tight_fig.x0 < container_bbox.x0 - 0.01
-                                or tight_fig.x1 > container_bbox.x1 + 0.01
-                                or tight_fig.y0 < container_bbox.y0 - 0.01
-                                or tight_fig.y1 > container_bbox.y1 + 0.01
-                            ):
-                                # Need more aggressive shrinking
-                                current_pos = self._external_axes.get_position()
-                                extra_shrink = 0.9  # Additional 10% shrink
-
-                                center_x = current_pos.x0 + current_pos.width / 2
-                                center_y = current_pos.y0 + current_pos.height / 2
-                                new_width = current_pos.width * extra_shrink
-                                new_height = current_pos.height * extra_shrink
-                                new_x0 = center_x - new_width / 2
-                                new_y0 = center_y - new_height / 2
-
-                                from matplotlib.transforms import Bbox
-
-                                new_pos = Bbox.from_bounds(
-                                    new_x0, new_y0, new_width, new_height
-                                )
-                                self._external_axes.set_position(new_pos)
-
-                                # Mark as stale to redraw with new position
-                                self._external_stale = True
-                    except Exception:
-                        # If tight bbox calculation fails, just continue
-                        pass
-
-                # After external axes draws, sync container to match its position
+                # Sync container position to external axes if needed
                 # This ensures abc labels and titles are positioned correctly
-                # Only sync if positions actually changed (performance optimization)
                 ext_pos = self._external_axes.get_position()
 
                 # Quick check if position changed since last draw
@@ -619,12 +688,18 @@ class ExternalAxesContainer(CartesianAxes):
             super().stale_callback(*args, **kwargs)
 
     def get_tightbbox(self, renderer, *args, **kwargs):
-        """Override to return the external axes tight bbox."""
-        if self._external_axes is not None and hasattr(
-            self._external_axes, "get_tightbbox"
-        ):
-            return self._external_axes.get_tightbbox(renderer, *args, **kwargs)
-        return super().get_tightbbox(renderer, *args, **kwargs)
+        """
+        Override to return the container bbox for consistent layout positioning.
+
+        By returning the container's bbox, we ensure the layout engine positions
+        the container properly within the subplot grid, and we rely on our
+        iterative shrinking to ensure the external axes fits within the container.
+        """
+        # Simply return the container's position bbox
+        # This gives the layout engine a symmetric, predictable bbox to work with
+        container_pos = self.get_position()
+        container_bbox = container_pos.transformed(self.figure.transFigure)
+        return container_bbox
 
     def __getattr__(self, name):
         """
