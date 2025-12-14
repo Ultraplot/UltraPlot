@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Kiwisolver-based layout system for non-orthogonal subplot arrangements.
+UltraLayout: Advanced constraint-based layout system for non-orthogonal subplot arrangements.
 
-This module provides constraint-based layout computation for subplot grids
+This module provides UltraPlot's constraint-based layout computation for subplot grids
 that don't follow simple orthogonal patterns, such as [[1, 1, 2, 2], [0, 3, 3, 0]]
 where subplot 3 should be nicely centered between subplots 1 and 2.
 """
@@ -21,7 +21,7 @@ except ImportError:
     Constraint = None
 
 
-__all__ = ['KiwiLayoutSolver', 'compute_kiwi_positions', 'is_orthogonal_layout']
+__all__ = ['UltraLayoutSolver', 'compute_ultra_positions', 'is_orthogonal_layout']
 
 
 def is_orthogonal_layout(array: np.ndarray) -> bool:
@@ -124,12 +124,13 @@ def is_orthogonal_layout(array: np.ndarray) -> bool:
     return True
 
 
-class KiwiLayoutSolver:
+class UltraLayoutSolver:
     """
-    Constraint-based layout solver using kiwisolver for subplot positioning.
+    UltraLayout: Constraint-based layout solver using kiwisolver for subplot positioning.
 
     This solver computes aesthetically pleasing positions for subplots in
-    non-orthogonal arrangements by using constraint satisfaction.
+    non-orthogonal arrangements by using constraint satisfaction, providing
+    a superior layout experience for complex subplot arrangements.
     """
 
     def __init__(self, array: np.ndarray, figwidth: float = 10.0, figheight: float = 8.0,
@@ -138,7 +139,7 @@ class KiwiLayoutSolver:
                  top: float = 0.125, bottom: float = 0.125,
                  wratios: Optional[List[float]] = None, hratios: Optional[List[float]] = None):
         """
-        Initialize the kiwi layout solver.
+        Initialize the UltraLayout solver.
 
         Parameters
         ----------
@@ -372,14 +373,14 @@ class KiwiLayoutSolver:
         return positions
 
 
-def compute_kiwi_positions(array: np.ndarray, figwidth: float = 10.0, figheight: float = 8.0,
-                          wspace: Optional[List[float]] = None, hspace: Optional[List[float]] = None,
-                          left: float = 0.125, right: float = 0.125,
-                          top: float = 0.125, bottom: float = 0.125,
-                          wratios: Optional[List[float]] = None,
-                          hratios: Optional[List[float]] = None) -> Dict[int, Tuple[float, float, float, float]]:
+def compute_ultra_positions(array: np.ndarray, figwidth: float = 10.0, figheight: float = 8.0,
+                           wspace: Optional[List[float]] = None, hspace: Optional[List[float]] = None,
+                           left: float = 0.125, right: float = 0.125,
+                           top: float = 0.125, bottom: float = 0.125,
+                           wratios: Optional[List[float]] = None,
+                           hratios: Optional[List[float]] = None) -> Dict[int, Tuple[float, float, float, float]]:
     """
-    Compute subplot positions using kiwisolver for non-orthogonal layouts.
+    Compute subplot positions using UltraLayout for non-orthogonal layouts.
 
     Parameters
     ----------
@@ -403,29 +404,29 @@ def compute_kiwi_positions(array: np.ndarray, figwidth: float = 10.0, figheight:
     Examples
     --------
     >>> array = np.array([[1, 1, 2, 2], [0, 3, 3, 0]])
-    >>> positions = compute_kiwi_positions(array)
+    >>> positions = compute_ultra_positions(array)
     >>> positions[3]  # Position of subplot 3
     (0.25, 0.125, 0.5, 0.35)
     """
-    solver = KiwiLayoutSolver(
+    solver = UltraLayoutSolver(
         array, figwidth, figheight, wspace, hspace,
         left, right, top, bottom, wratios, hratios
     )
     return solver.solve()
 
 
-def get_grid_positions_kiwi(array: np.ndarray, figwidth: float, figheight: float,
-                            wspace: Optional[List[float]] = None,
-                            hspace: Optional[List[float]] = None,
-                            left: float = 0.125, right: float = 0.125,
-                            top: float = 0.125, bottom: float = 0.125,
-                            wratios: Optional[List[float]] = None,
-                            hratios: Optional[List[float]] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def get_grid_positions_ultra(array: np.ndarray, figwidth: float, figheight: float,
+                             wspace: Optional[List[float]] = None,
+                             hspace: Optional[List[float]] = None,
+                             left: float = 0.125, right: float = 0.125,
+                             top: float = 0.125, bottom: float = 0.125,
+                             wratios: Optional[List[float]] = None,
+                             hratios: Optional[List[float]] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
-    Get grid line positions using kiwisolver.
+    Get grid line positions using UltraLayout.
 
     This returns arrays of grid line positions similar to GridSpec.get_grid_positions(),
-    but computed using constraint satisfaction for better handling of non-orthogonal layouts.
+    but computed using UltraLayout's constraint satisfaction for better handling of non-orthogonal layouts.
 
     Parameters
     ----------
@@ -445,7 +446,7 @@ def get_grid_positions_kiwi(array: np.ndarray, figwidth: float, figheight: float
     bottoms, tops, lefts, rights : np.ndarray
         Arrays of grid line positions for each cell
     """
-    solver = KiwiLayoutSolver(
+    solver = UltraLayoutSolver(
         array, figwidth, figheight, wspace, hspace,
         left, right, top, bottom, wratios, hratios
     )

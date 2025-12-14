@@ -26,11 +26,11 @@ from .internals import (
 from .utils import _fontsize_to_pt, units
 
 try:
-    from . import kiwi_layout
-    KIWI_AVAILABLE = True
+    from . import ultralayout
+    ULTRA_AVAILABLE = True
 except ImportError:
-    kiwi_layout = None
-    KIWI_AVAILABLE = False
+    ultralayout = None
+    ULTRA_AVAILABLE = False
 
 __all__ = ["GridSpec", "SubplotGrid"]
 
@@ -236,9 +236,9 @@ class _SubplotSpec(mgridspec.SubplotSpec):
         else:
             nrows, ncols = gs.get_geometry()
 
-        # Check if we should use kiwi layout for this subplot
-        if isinstance(gs, GridSpec) and gs._use_kiwi_layout:
-            bbox = gs._get_kiwi_position(self.num1, figure)
+        # Check if we should use UltraLayout for this subplot
+        if isinstance(gs, GridSpec) and gs._use_ultra_layout:
+            bbox = gs._get_ultra_position(self.num1, figure)
             if bbox is not None:
                 if return_all:
                     rows, cols = np.unravel_index([self.num1, self.num2], (nrows, ncols))
@@ -297,7 +297,7 @@ class GridSpec(mgridspec.GridSpec):
         layout_array : array-like, optional
             2D array specifying the subplot layout, where each unique integer
             represents a subplot and 0 represents empty space. When provided,
-            enables kiwisolver-based constraint layout for non-orthogonal
+            enables UltraLayout constraint-based positioning for non-orthogonal
             arrangements (requires kiwisolver package).
 
         Other parameters
@@ -328,15 +328,15 @@ class GridSpec(mgridspec.GridSpec):
         manually and want the same geometry for multiple figures, you must create
         a copy with `GridSpec.copy` before working on the subsequent figure).
         """
-        # Layout array for non-orthogonal layouts with kiwisolver
+        # Layout array for non-orthogonal layouts with UltraLayout
         self._layout_array = np.array(layout_array) if layout_array is not None else None
-        self._kiwi_positions = None  # Cache for kiwi-computed positions
-        self._use_kiwi_layout = False  # Flag to enable kiwi layout
+        self._ultra_positions = None  # Cache for UltraLayout-computed positions
+        self._use_ultra_layout = False  # Flag to enable UltraLayout
 
-        # Check if we should use kiwi layout
-        if self._layout_array is not None and KIWI_AVAILABLE:
-            if not kiwi_layout.is_orthogonal_layout(self._layout_array):
-                self._use_kiwi_layout = True
+        # Check if we should use UltraLayout
+        if self._layout_array is not None and ULTRA_AVAILABLE:
+            if not ultralayout.is_orthogonal_layout(self._layout_array):
+                self._use_ultra_layout = True
 
         # Fundamental GridSpec properties
         self._nrows_total = nrows
@@ -400,9 +400,9 @@ class GridSpec(mgridspec.GridSpec):
         }
         self._update_params(pad=pad, **kwargs)
 
-    def _get_kiwi_position(self, subplot_num, figure):
+    def _get_ultra_position(self, subplot_num, figure):
         """
-        Get the position of a subplot using kiwisolver constraint-based layout.
+        Get the position of a subplot using UltraLayout constraint-based positioning.
 
         Parameters
         ----------
@@ -416,7 +416,7 @@ class GridSpec(mgridspec.GridSpec):
         bbox : Bbox or None
             The bounding box for the subplot, or None if kiwi layout fails
         """
-        if not self._use_kiwi_layout or self._layout_array is None:
+        if not self._use_ultra_layout or self._layout_array is None:
             return None
 
         # Ensure figure is set
@@ -425,9 +425,9 @@ class GridSpec(mgridspec.GridSpec):
         if not self.figure:
             return None
 
-        # Compute or retrieve cached kiwi positions
-        if self._kiwi_positions is None:
-            self._compute_kiwi_positions()
+        # Compute or retrieve cached UltraLayout positions
+        if self._ultra_positions is None:
+            self._compute_ultra_positions()
 
         # Find which subplot number in the layout array corresponds to this subplot_num
         # We need to map from the gridspec cell index to the layout array subplot number
@@ -447,19 +447,19 @@ class GridSpec(mgridspec.GridSpec):
         # Get the layout number at this position
         layout_num = self._layout_array[row, col]
 
-        if layout_num == 0 or layout_num not in self._kiwi_positions:
+        if layout_num == 0 or layout_num not in self._ultra_positions:
             return None
 
         # Return the cached position
-        left, bottom, width, height = self._kiwi_positions[layout_num]
+        left, bottom, width, height = self._ultra_positions[layout_num]
         bbox = mtransforms.Bbox.from_bounds(left, bottom, width, height)
         return bbox
 
-    def _compute_kiwi_positions(self):
+    def _compute_ultra_positions(self):
         """
-        Compute subplot positions using kiwisolver and cache them.
+        Compute subplot positions using UltraLayout and cache them.
         """
-        if not KIWI_AVAILABLE or self._layout_array is None:
+        if not ULTRA_AVAILABLE or self._layout_array is None:
             return
 
         # Get figure size
@@ -490,9 +490,9 @@ class GridSpec(mgridspec.GridSpec):
         top = self.top if self.top is not None else self._top_default if self._top_default is not None else 0.125 * figheight
         bottom = self.bottom if self.bottom is not None else self._bottom_default if self._bottom_default is not None else 0.125 * figheight
 
-        # Compute positions using kiwisolver
+        # Compute positions using UltraLayout
         try:
-            self._kiwi_positions = kiwi_layout.compute_kiwi_positions(
+            self._ultra_positions = ultralayout.compute_ultra_positions(
                 self._layout_array,
                 figwidth=figwidth,
                 figheight=figheight,
@@ -507,11 +507,11 @@ class GridSpec(mgridspec.GridSpec):
             )
         except Exception as e:
             warnings._warn_ultraplot(
-                f"Failed to compute kiwi layout: {e}. "
+                f"Failed to compute UltraLayout: {e}. "
                 "Falling back to default grid layout."
             )
-            self._use_kiwi_layout = False
-            self._kiwi_positions = None
+            self._use_ultra_layout = False
+            self._ultra_positions = None
 
     def __getitem__(self, key):
         """

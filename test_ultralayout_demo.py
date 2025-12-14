@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Demo script to test the kiwi layout functionality for non-orthogonal subplot arrangements.
+Demo script to test the UltraLayout functionality for non-orthogonal subplot arrangements.
 
-This script demonstrates how the new kiwisolver-based layout handles cases like:
+This script demonstrates how UltraLayout's constraint-based system handles cases like:
 [[1, 1, 2, 2],
  [0, 3, 3, 0]]
 
@@ -60,7 +60,7 @@ def test_non_orthogonal_layout():
     axs[2].set_title('Subplot 3 (Bottom Center - should be centered!)')
     axs[2].format(xlabel='X', ylabel='Y')
 
-    fig.suptitle('Non-Orthogonal Layout with Kiwi Solver')
+    fig.suptitle('Non-Orthogonal Layout with UltraLayout')
     plt.savefig('test_non_orthogonal_layout.png', dpi=150, bbox_inches='tight')
     print("Saved: test_non_orthogonal_layout.png")
     plt.close()
@@ -98,7 +98,7 @@ def test_layout_detection():
     """Test the layout detection algorithm."""
     print("\n=== Testing Layout Detection ===")
 
-    from ultraplot.kiwi_layout import is_orthogonal_layout
+    from ultraplot.ultralayout import is_orthogonal_layout
 
     # Test cases
     test_cases = [
@@ -141,7 +141,7 @@ def print_position_info(fig, axs, layout_name):
 def main():
     """Run all tests."""
     print("="*60)
-    print("Testing UltraPlot Kiwi Layout System")
+    print("Testing UltraPlot UltraLayout System")
     print("="*60)
 
     # Check if kiwisolver is available
