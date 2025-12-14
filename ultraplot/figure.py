@@ -1832,7 +1832,7 @@ class Figure(mfigure.Figure):
         # Create or update the gridspec and add subplots with subplotspecs
         # NOTE: The gridspec is added to the figure when we pass the subplotspec
         if gs is None:
-            gs = pgridspec.GridSpec(*array.shape, **gridspec_kw)
+            gs = pgridspec.GridSpec(*array.shape, layout_array=array, **gridspec_kw)
         else:
             gs.update(**gridspec_kw)
         axs = naxs * [None]  # list of axes

@@ -6,21 +6,31 @@ import inspect
 import itertools
 import re
 from collections.abc import MutableSequence
+from functools import wraps
 from numbers import Integral
+from typing import List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
 import matplotlib.transforms as mtransforms
 import numpy as np
-from typing import List, Optional, Union, Tuple
-from functools import wraps
 
 from . import axes as paxes
 from .config import rc
-from .internals import ic  # noqa: F401
-from .internals import _not_none, docstring, warnings
+from .internals import (
+    _not_none,
+    docstring,
+    ic,  # noqa: F401
+    warnings,
+)
 from .utils import _fontsize_to_pt, units
-from .internals import warnings
+
+try:
+    from . import kiwi_layout
+    KIWI_AVAILABLE = True
+except ImportError:
+    kiwi_layout = None
+    KIWI_AVAILABLE = False
 
 __all__ = ["GridSpec", "SubplotGrid"]
 
@@ -225,6 +235,18 @@ class _SubplotSpec(mgridspec.SubplotSpec):
             nrows, ncols = gs.get_total_geometry()
         else:
             nrows, ncols = gs.get_geometry()
+
+        # Check if we should use kiwi layout for this subplot
+        if isinstance(gs, GridSpec) and gs._use_kiwi_layout:
+            bbox = gs._get_kiwi_position(self.num1, figure)
+            if bbox is not None:
+                if return_all:
+                    rows, cols = np.unravel_index([self.num1, self.num2], (nrows, ncols))
+                    return bbox, rows[0], cols[0], nrows, ncols
+                else:
+                    return bbox
+
+        # Default behavior: use grid positions
         rows, cols = np.unravel_index([self.num1, self.num2], (nrows, ncols))
         bottoms, tops, lefts, rights = gs.get_grid_positions(figure)
         bottom = bottoms[rows].min()
@@ -264,7 +286,7 @@ class GridSpec(mgridspec.GridSpec):
         super().__getattribute__(attr)  # native error message
 
     @docstring._snippet_manager
-    def __init__(self, nrows=1, ncols=1, **kwargs):
+    def __init__(self, nrows=1, ncols=1, layout_array=None, **kwargs):
         """
         Parameters
         ----------
@@ -272,6 +294,11 @@ class GridSpec(mgridspec.GridSpec):
             The number of rows in the subplot grid.
         ncols : int, optional
             The number of columns in the subplot grid.
+        layout_array : array-like, optional
+            2D array specifying the subplot layout, where each unique integer
+            represents a subplot and 0 represents empty space. When provided,
+            enables kiwisolver-based constraint layout for non-orthogonal
+            arrangements (requires kiwisolver package).
 
         Other parameters
         ----------------
@@ -301,6 +328,16 @@ class GridSpec(mgridspec.GridSpec):
         manually and want the same geometry for multiple figures, you must create
         a copy with `GridSpec.copy` before working on the subsequent figure).
         """
+        # Layout array for non-orthogonal layouts with kiwisolver
+        self._layout_array = np.array(layout_array) if layout_array is not None else None
+        self._kiwi_positions = None  # Cache for kiwi-computed positions
+        self._use_kiwi_layout = False  # Flag to enable kiwi layout
+
+        # Check if we should use kiwi layout
+        if self._layout_array is not None and KIWI_AVAILABLE:
+            if not kiwi_layout.is_orthogonal_layout(self._layout_array):
+                self._use_kiwi_layout = True
+
         # Fundamental GridSpec properties
         self._nrows_total = nrows
         self._ncols_total = ncols
@@ -362,6 +399,119 @@ class GridSpec(mgridspec.GridSpec):
             "top": np.empty((0, ncols), dtype=bool),
         }
         self._update_params(pad=pad, **kwargs)
+
+    def _get_kiwi_position(self, subplot_num, figure):
+        """
+        Get the position of a subplot using kiwisolver constraint-based layout.
+
+        Parameters
+        ----------
+        subplot_num : int
+            The subplot number (in total geometry indexing)
+        figure : Figure
+            The matplotlib figure instance
+
+        Returns
+        -------
+        bbox : Bbox or None
+            The bounding box for the subplot, or None if kiwi layout fails
+        """
+        if not self._use_kiwi_layout or self._layout_array is None:
+            return None
+
+        # Ensure figure is set
+        if not self.figure:
+            self._figure = figure
+        if not self.figure:
+            return None
+
+        # Compute or retrieve cached kiwi positions
+        if self._kiwi_positions is None:
+            self._compute_kiwi_positions()
+
+        # Find which subplot number in the layout array corresponds to this subplot_num
+        # We need to map from the gridspec cell index to the layout array subplot number
+        nrows, ncols = self._layout_array.shape
+
+        # Decode the subplot_num to find which layout number it corresponds to
+        # This is a bit tricky because subplot_num is in total geometry space
+        # We need to find which unique number in the layout_array this corresponds to
+
+        # Get the cell position from subplot_num
+        row, col = divmod(subplot_num, self.ncols_total)
+
+        # Check if this is within the layout array bounds
+        if row >= nrows or col >= ncols:
+            return None
+
+        # Get the layout number at this position
+        layout_num = self._layout_array[row, col]
+
+        if layout_num == 0 or layout_num not in self._kiwi_positions:
+            return None
+
+        # Return the cached position
+        left, bottom, width, height = self._kiwi_positions[layout_num]
+        bbox = mtransforms.Bbox.from_bounds(left, bottom, width, height)
+        return bbox
+
+    def _compute_kiwi_positions(self):
+        """
+        Compute subplot positions using kiwisolver and cache them.
+        """
+        if not KIWI_AVAILABLE or self._layout_array is None:
+            return
+
+        # Get figure size
+        if not self.figure:
+            return
+
+        figwidth, figheight = self.figure.get_size_inches()
+
+        # Convert spacing to inches
+        wspace_inches = []
+        for i, ws in enumerate(self._wspace_total):
+            if ws is not None:
+                wspace_inches.append(ws)
+            else:
+                # Use default spacing
+                wspace_inches.append(0.2)  # Default spacing in inches
+
+        hspace_inches = []
+        for i, hs in enumerate(self._hspace_total):
+            if hs is not None:
+                hspace_inches.append(hs)
+            else:
+                hspace_inches.append(0.2)
+
+        # Get margins
+        left = self.left if self.left is not None else self._left_default if self._left_default is not None else 0.125 * figwidth
+        right = self.right if self.right is not None else self._right_default if self._right_default is not None else 0.125 * figwidth
+        top = self.top if self.top is not None else self._top_default if self._top_default is not None else 0.125 * figheight
+        bottom = self.bottom if self.bottom is not None else self._bottom_default if self._bottom_default is not None else 0.125 * figheight
+
+        # Compute positions using kiwisolver
+        try:
+            self._kiwi_positions = kiwi_layout.compute_kiwi_positions(
+                self._layout_array,
+                figwidth=figwidth,
+                figheight=figheight,
+                wspace=wspace_inches,
+                hspace=hspace_inches,
+                left=left,
+                right=right,
+                top=top,
+                bottom=bottom,
+                wratios=self._wratios_total,
+                hratios=self._hratios_total
+            )
+        except Exception as e:
+            warnings._warn_ultraplot(
+                f"Failed to compute kiwi layout: {e}. "
+                "Falling back to default grid layout."
+            )
+            self._use_kiwi_layout = False
+            self._kiwi_positions = None
 
     def __getitem__(self, key):
         """
