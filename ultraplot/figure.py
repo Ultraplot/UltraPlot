@@ -62,6 +62,8 @@ JOURNAL_SIZES = {
     "ams2": 4.5,
     "ams3": 5.5,
     "ams4": 6.5,
+    "cop1": "8.3cm",
+    "cop2": "12cm",
     "nat1": "89mm",
     "nat2": "183mm",
     "pnas1": "8.7cm",
@@ -162,6 +164,9 @@ journal : str, optional
     ``'ams2'``   small 2-column        ”
     ``'ams3'``   medium 2-column       ”
     ``'ams4'``   full 2-column         ”
+    ``'cop1'``   1-column              \
+`Copernicus Publications <cop_>`_ (e.g. *The Cryosphere*, *Geoscientific Model Development*)
+    ``'cop2'``   2-column              ”
     ``'nat1'``   1-column              `Nature Research <nat_>`_
     ``'nat2'``   2-column              ”
     ``'pnas1'``  1-column              \
@@ -177,6 +182,8 @@ https://www.sciencemag.org/authors/instructions-preparing-initial-manuscript
 https://www.agu.org/Publish-with-AGU/Publish/Author-Resources/Graphic-Requirements
     .. _ams: \
 https://www.ametsoc.org/ams/index.cfm/publications/authors/journal-and-bams-authors/figure-information-for-authors/
+    .. _cop: \
+https://publications.copernicus.org/for_authors/manuscript_preparation.html#figurestables
     .. _nat: \
 https://www.nature.com/nature/for-authors/formatting-guide
     .. _pnas: \
