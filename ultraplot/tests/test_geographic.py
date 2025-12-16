@@ -1537,7 +1537,11 @@ def test_boundary_labels_negative_longitude():
     fig.canvas.draw()
     # Note: Cartopy hides the boundary label at 20°N due to it being exactly at the limit
     # This is expected cartopy behavior with floating point precision at boundaries
-    _check_boundary_labels(ax[0], ["120°W", "90°W", "60°W"], ["35°N", "50°N"])
+    _check_boundary_labels(
+        ax[0],
+        ["120°W", "90°W", "60°W"],
+        ["35°N", "50°N"],
+    )
     uplt.close(fig)
 
 

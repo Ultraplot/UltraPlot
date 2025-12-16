@@ -2036,6 +2036,73 @@ class _BasemapAxes(GeoAxes):
         self._turnoff_tick_labels(self._lonlines_major)
         self._turnoff_tick_labels(self._latlines_major)
 
+    def get_tightbbox(self, renderer, *args, **kwargs):
+        """
+        Get tight bounding box, adjusting panel positions after aspect is applied.
+
+        This ensures panels are properly aligned when saving figures, as apply_aspect()
+        may be called during the rendering process.
+        """
+        # Apply aspect ratio (this may shrink the axes)
+        self.apply_aspect()
+
+        # Adjust panel positions to align with aspect-constrained map
+        self._adjust_panel_positions()
+
+        return super().get_tightbbox(renderer, *args, **kwargs)
+
+    def _adjust_panel_positions(self):
+        """
+        Adjust panel positions to align with the aspect-constrained main axes.
+        After apply_aspect() shrinks the main axes, panels should flank the actual
+        map boundaries rather than the full gridspec allocation.
+
+        This method works the same way as in _CartopyAxes since both backends
+        use matplotlib's apply_aspect() and have the same panel alignment issue.
+        """
+        if not hasattr(self, "_panel_dict"):
+            return
+
+        # Get the current position after apply_aspect()
+        main_pos = self.get_position()
+        # Get the original gridspec position before apply_aspect() modified it
+        original_pos = self.get_position(original=True)
+
+        for side, panels in self._panel_dict.items():
+            for panel in panels:
+                # Use original position to avoid accumulated adjustments
+                panel_pos = panel.get_position(original=True)
+
+                if side == "left":
+                    # Calculate original gap between panel and main axes
+                    gap = original_pos.x0 - (panel_pos.x0 + panel_pos.width)
+                    # Position panel to the left of the adjusted main axes
+                    new_x0 = main_pos.x0 - panel_pos.width - gap
+                    new_pos = [new_x0, main_pos.y0, panel_pos.width, main_pos.height]
+                elif side == "right":
+                    # Calculate original gap
+                    gap = panel_pos.x0 - (original_pos.x0 + original_pos.width)
+                    # Position panel to the right of the adjusted main axes
+                    new_x0 = main_pos.x0 + main_pos.width + gap
+                    new_pos = [new_x0, main_pos.y0, panel_pos.width, main_pos.height]
+                elif side == "top":
+                    # Calculate original gap
+                    gap = panel_pos.y0 - (original_pos.y0 + original_pos.height)
+                    # Position panel above the adjusted main axes
+                    new_y0 = main_pos.y0 + main_pos.height + gap
+                    new_pos = [main_pos.x0, new_y0, main_pos.width, panel_pos.height]
+                elif side == "bottom":
+                    # Calculate original gap
+                    gap = original_pos.y0 - (panel_pos.y0 + panel_pos.height)
+                    # Position panel below the adjusted main axes
+                    new_y0 = main_pos.y0 - panel_pos.height - gap
+                    new_pos = [main_pos.x0, new_y0, main_pos.width, panel_pos.height]
+                else:
+                    # Unknown side, skip adjustment
+                    continue
+
+                panel.set_position(new_pos)
+
     def _turnoff_tick_labels(self, locator: mticker.Formatter):
         """
         For GeoAxes with are dealing with a duality. Basemap axes behave differently than Cartopy axes and vice versa. UltraPlot abstracts away from these by providing GeoAxes. For basemap axes we need to turn off the tick labels as they will be handles by GeoAxis
