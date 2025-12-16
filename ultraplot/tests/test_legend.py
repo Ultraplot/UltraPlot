@@ -2,7 +2,11 @@
 """
 Test legends.
 """
-import numpy as np, pandas as pd, ultraplot as uplt, pytest
+import numpy as np
+import pandas as pd
+import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -219,3 +223,263 @@ def test_sync_label_dict(rng):
         0
     ]._legend_dict, "Old legend not removed from dict"
     uplt.close(fig)
+
+
+def test_external_mode_defers_on_the_fly_legend():
+    """
+    External mode should defer on-the-fly legend creation until explicitly requested.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_external(True)
+    (h,) = ax.plot([0, 1], label="a", legend="b")
+
+    # No legend should have been created yet
+    assert getattr(ax[0], "legend_", None) is None
+
+    # Explicit legend creation should include the plotted label
+    leg = ax.legend(h, loc="b")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "a" in labels
+    uplt.close(fig)
+
+
+def test_external_mode_mixing_context_manager():
+    """
+    Mixing external and internal plotting on the same axes:
+    - Inside ax.external(): on-the-fly legend is deferred
+    - Outside: UltraPlot-native plotting resumes as normal
+    - Final explicit ax.legend() consolidates both kinds of artists
+    """
+    fig, ax = uplt.subplots()
+
+    with ax.external():
+        (ext,) = ax.plot([0, 1], label="ext", legend="b")  # deferred
+
+    (intr,) = ax.line([0, 1], label="int")  # normal UL behavior
+
+    leg = ax.legend([ext, intr], loc="b")
+    labels = {t.get_text() for t in leg.get_texts()}
+    assert {"ext", "int"}.issubset(labels)
+    uplt.close(fig)
+
+
+def test_external_mode_toggle_enables_auto():
+    """
+    Toggling external mode back off should resume on-the-fly guide creation.
+    """
+    fig, ax = uplt.subplots()
+
+    ax.set_external(True)
+    (ha,) = ax.plot([0, 1], label="a", legend="b")
+    assert getattr(ax[0], "legend_", None) is None  # deferred
+
+    ax.set_external(False)
+    (hb,) = ax.plot([0, 1], label="b", legend="b")
+    # Now legend is queued for creation; verify it is registered in the outer legend dict
+    assert ("bottom", "center") in ax[0]._legend_dict
+
+    # Ensure final legend contains both entries
+    leg = ax.legend([ha, hb], loc="b")
+    labels = {t.get_text() for t in leg.get_texts()}
+    assert {"a", "b"}.issubset(labels)
+    uplt.close(fig)
+
+
+def test_synthetic_handles_filtered():
+    """
+    Synthetic-tagged helper artists must be ignored by legend parsing even when
+    explicitly passed as handles.
+    """
+    fig, ax = uplt.subplots()
+    (h1,) = ax.plot([0, 1], label="visible")
+    (h2,) = ax.plot([1, 0], label="helper")
+    # Mark helper as synthetic; it should be filtered out from legend entries
+    setattr(h2, "_ultraplot_synthetic", True)
+
+    leg = ax.legend([h1, h2], loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "visible" in labels
+    assert "helper" not in labels
+    uplt.close(fig)
+
+
+def test_fill_between_included_in_legend():
+    """
+    Legitimate fill_between/area handles must appear in legends (regression for
+    previously skipped FillBetweenPolyCollection).
+    """
+    fig, ax = uplt.subplots()
+    x = np.arange(5)
+    y1 = np.zeros(5)
+    y2 = np.ones(5)
+    ax.fill_between(x, y1, y2, label="band")
+
+    leg = ax.legend(loc="best")
+    labels = [t.get_text() for t in leg.get_texts()]
+    assert "band" in labels
+    uplt.close(fig)
+
+
+def test_legend_span_bottom():
+    """Test bottom legend with span parameter."""
+
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    axs[0, 0].plot([], [], label="test")
+
+    # Legend below row 1, spanning columns 1-2
+    leg = fig.legend(ax=axs[0, :], span=(1, 2), loc="bottom")
+
+    # Verify legend was created
+    assert leg is not None
+
+
+def test_legend_span_top():
+    """Test top legend with span parameter."""
+
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    axs[0, 0].plot([], [], label="test")
+
+    # Legend above row 2, spanning columns 2-3
+    leg = fig.legend(ax=axs[1, :], cols=(2, 3), loc="top")
+
+    assert leg is not None
+
+
+def test_legend_span_right():
+    """Test right legend with rows parameter."""
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    axs[0, 0].plot([], [], label="test")
+
+    # Legend right of column 1, spanning rows 1-2
+    leg = fig.legend(ax=axs[:, 0], rows=(1, 2), loc="right")
+
+    assert leg is not None
+
+
+def test_legend_span_left():
+    """Test left legend with rows parameter."""
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    axs[0, 0].plot([], [], label="test")
+
+    # Legend left of column 2, spanning rows 2-3
+    leg = fig.legend(ax=axs[:, 1], rows=(2, 3), loc="left")
+
+    assert leg is not None
+
+
+def test_legend_span_validation_left_with_cols_error():
+    """Test that LEFT legend raises error with cols parameter."""
+
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    axs[0, 0].plot([], [], label="test")
+
+    with pytest.raises(ValueError, match="left.*vertical.*use 'rows='.*not 'cols='"):
+        fig.legend(ax=axs[0, 0], cols=(1, 2), loc="left")
+
+
+def test_legend_span_validation_right_with_cols_error():
+    """Test that RIGHT legend raises error with cols parameter."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    axs[0, 0].plot([], [], label="test")
+
+    with pytest.raises(ValueError, match="right.*vertical.*use 'rows='.*not 'cols='"):
+        fig.legend(ax=axs[0, 0], cols=(1, 2), loc="right")
+
+
+def test_legend_span_validation_top_with_rows_error():
+    """Test that TOP legend raises error with rows parameter."""
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    axs[0, 0].plot([], [], label="test")
+
+    with pytest.raises(ValueError, match="top.*horizontal.*use 'cols='.*not 'rows='"):
+        fig.legend(ax=axs[0, 0], rows=(1, 2), loc="top")
+
+
+def test_legend_span_validation_bottom_with_rows_error():
+    """Test that BOTTOM legend raises error with rows parameter."""
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    axs[0, 0].plot([], [], label="test")
+
+    with pytest.raises(
+        ValueError, match="bottom.*horizontal.*use 'cols='.*not 'rows='"
+    ):
+        fig.legend(ax=axs[0, 0], rows=(1, 2), loc="bottom")
+
+
+def test_legend_span_validation_left_with_span_warns():
+    """Test that LEFT legend with span parameter issues warning."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    axs[0, 0].plot([], [], label="test")
+
+    with pytest.warns(match="left.*vertical.*prefer 'rows='"):
+        leg = fig.legend(ax=axs[0, 0], span=(1, 2), loc="left")
+        assert leg is not None
+
+
+def test_legend_span_validation_right_with_span_warns():
+    """Test that RIGHT legend with span parameter issues warning."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    axs[0, 0].plot([], [], label="test")
+
+    with pytest.warns(match="right.*vertical.*prefer 'rows='"):
+        leg = fig.legend(ax=axs[0, 0], span=(1, 2), loc="right")
+        assert leg is not None
+
+
+def test_legend_array_without_span():
+    """Test that legend on array without span preserves original behavior."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    axs[0, 0].plot([], [], label="test")
+
+    # Should create legend for all axes in the array
+    leg = fig.legend(ax=axs[:], loc="right")
+    assert leg is not None
+
+
+def test_legend_array_with_span():
+    """Test that legend on array with span uses first axis + span extent."""
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    axs[0, 0].plot([], [], label="test")
+
+    # Should use first axis position with span extent
+    leg = fig.legend(ax=axs[0, :], span=(1, 2), loc="bottom")
+    assert leg is not None
+
+
+def test_legend_row_without_span():
+    """Test that legend on row without span spans entire row."""
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    axs[0, 0].plot([], [], label="test")
+
+    # Should span all 3 columns
+    leg = fig.legend(ax=axs[0, :], loc="bottom")
+    assert leg is not None
+
+
+def test_legend_column_without_span():
+    """Test that legend on column without span spans entire column."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    axs[0, 0].plot([], [], label="test")
+
+    # Should span all 3 rows
+    leg = fig.legend(ax=axs[:, 0], loc="right")
+    assert leg is not None
+
+
+def test_legend_multiple_sides_with_span():
+    """Test multiple legends on different sides with span control."""
+    fig, axs = uplt.subplots(nrows=3, ncols=3)
+    axs[0, 0].plot([], [], label="test")
+
+    # Create legends on all 4 sides with different spans
+    leg_bottom = fig.legend(ax=axs[0, 0], span=(1, 2), loc="bottom")
+    leg_top = fig.legend(ax=axs[1, 0], span=(2, 3), loc="top")
+    leg_right = fig.legend(ax=axs[0, 0], rows=(1, 2), loc="right")
+    leg_left = fig.legend(ax=axs[0, 1], rows=(2, 3), loc="left")
+
+    assert leg_bottom is not None
+    assert leg_top is not None
+    assert leg_right is not None
+    assert leg_left is not None

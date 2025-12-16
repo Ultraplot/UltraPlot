@@ -8,50 +8,46 @@ import inspect
 import itertools
 import re
 import sys
+from collections.abc import Callable, Iterable
 from numbers import Integral, Number
+from typing import Any, Iterable, Optional, Union
 
-from typing import Any, Union, Iterable, Optional
-
-from collections.abc import Callable
-from collections.abc import Iterable
-
-from ..utils import units
+import matplotlib as mpl
 import matplotlib.artist as martist
 import matplotlib.axes as maxes
 import matplotlib.cbook as cbook
 import matplotlib.cm as mcm
 import matplotlib.collections as mcollections
 import matplotlib.colors as mcolors
-import matplotlib.contour as mcontour
 import matplotlib.container as mcontainer
+import matplotlib.contour as mcontour
 import matplotlib.image as mimage
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
-import matplotlib.ticker as mticker
 import matplotlib.pyplot as mplt
-import matplotlib as mpl
-from packaging import version
+import matplotlib.ticker as mticker
 import numpy as np
-from typing import Optional, Union, Any
 import numpy.ma as ma
+from packaging import version
 
 from .. import colors as pcolors
 from .. import constructor, utils
 from ..config import rc
-from ..internals import ic  # noqa: F401
 from ..internals import (
     _get_aliases,
     _not_none,
     _pop_kwargs,
     _pop_params,
     _pop_props,
+    _version_mpl,
     context,
     docstring,
     guides,
+    ic,  # noqa: F401
     inputs,
     warnings,
-    _version_mpl,
 )
+from ..utils import units
 from . import base
 
 try:
@@ -1512,25 +1508,6 @@ def _parse_vert(
     return kwargs
 
 
-def _inside_seaborn_call():
-    """
-    Try to detect `seaborn` calls to `scatter` and `bar` and then automatically
-    apply `absolute_size` and `absolute_width`.
-    """
-    frame = sys._getframe()
-    absolute_names = (
-        "seaborn.distributions",
-        "seaborn.categorical",
-        "seaborn.relational",
-        "seaborn.regression",
-    )
-    while frame is not None:
-        if frame.f_globals.get("__name__", "") in absolute_names:
-            return True
-        frame = frame.f_back
-    return False
-
-
 class PlotAxes(base.Axes):
     """
     The second lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
@@ -1566,7 +1543,7 @@ class PlotAxes(base.Axes):
         The implementation of this function is based on the `dfm_tools` repository.
         Original file: https://github.com/Deltares/dfm_tools/blob/829e76f48ebc42460aae118cc190147a595a5f26/dfm_tools/modplot.py
         """
-        from .plot_types.curved_quiver import CurvedQuiverSolver, CurvedQuiverSet
+        from .plot_types.curved_quiver import CurvedQuiverSet, CurvedQuiverSolver
 
         # Parse inputs
         arrowsize = _not_none(arrowsize, rc["curved_quiver.arrowsize"])
@@ -2087,7 +2064,7 @@ class PlotAxes(base.Axes):
         ):  # ugly kludge to check for shading
             if all(_ is None for _ in (bardata, barstds, barpctiles)):
                 barstds, barpctiles = default_barstds, default_barpctiles
-            if all(_ is None for _ in (boxdata, boxstds, boxpctile)):
+            if all(_ is None for _ in (boxdata, boxstds, boxpctiles)):
                 boxstds, boxpctiles = default_boxstds, default_boxpctiles
         showbars = any(
             _ is not None and _ is not False for _ in (barstds, barpctiles, bardata)
@@ -2237,6 +2214,7 @@ class PlotAxes(base.Axes):
         # Draw dark and light shading from distributions or explicit errdata
         eobjs = []
         fill = self.fill_between if vert else self.fill_betweenx
+
         if drawfade:
             edata, label = inputs._dist_range(
                 y,
@@ -2250,7 +2228,29 @@ class PlotAxes(base.Axes):
                 absolute=True,
             )
             if edata is not None:
-                eobj = fill(x, *edata, label=label, **fadeprops)
+                synthetic = False
+                eff_label = label
+                if self._in_external_context() and (
+                    eff_label is None or str(eff_label) in ("y", "ymin", "ymax")
+                ):
+                    eff_label = "_ultraplot_fade"
+                    synthetic = True
+
+                eobj = fill(x, *edata, label=eff_label, **fadeprops)
+                if synthetic:
+                    try:
+                        setattr(eobj, "_ultraplot_synthetic", True)
+                        if hasattr(eobj, "set_label"):
+                            eobj.set_label("_ultraplot_fade")
+                    except Exception:
+                        pass
+                    for _obj in guides._iter_iterables(eobj):
+                        try:
+                            setattr(_obj, "_ultraplot_synthetic", True)
+                            if hasattr(_obj, "set_label"):
+                                _obj.set_label("_ultraplot_fade")
+                        except Exception:
+                            pass
                 eobjs.append(eobj)
         if drawshade:
             edata, label = inputs._dist_range(
@@ -2265,7 +2265,29 @@ class PlotAxes(base.Axes):
                 absolute=True,
             )
             if edata is not None:
-                eobj = fill(x, *edata, label=label, **shadeprops)
+                synthetic = False
+                eff_label = label
+                if self._in_external_context() and (
+                    eff_label is None or str(eff_label) in ("y", "ymin", "ymax")
+                ):
+                    eff_label = "_ultraplot_shade"
+                    synthetic = True
+
+                eobj = fill(x, *edata, label=eff_label, **shadeprops)
+                if synthetic:
+                    try:
+                        setattr(eobj, "_ultraplot_synthetic", True)
+                        if hasattr(eobj, "set_label"):
+                            eobj.set_label("_ultraplot_shade")
+                    except Exception:
+                        pass
+                    for _obj in guides._iter_iterables(eobj):
+                        try:
+                            setattr(_obj, "_ultraplot_synthetic", True)
+                            if hasattr(_obj, "set_label"):
+                                _obj.set_label("_ultraplot_shade")
+                        except Exception:
+                            pass
                 eobjs.append(eobj)
 
         kwargs["distribution"] = distribution
@@ -2547,6 +2569,19 @@ class PlotAxes(base.Axes):
         colorbar_kw_labels = _not_none(
             kwargs.get("colorbar_kw", {}).pop("values", None),
         )
+        # Track whether the user explicitly provided labels/values so we can
+        # preserve them even when autolabels is disabled.
+        _user_labels_explicit = any(
+            v is not None
+            for v in (
+                label,
+                labels,
+                value,
+                values,
+                legend_kw_labels,
+                colorbar_kw_labels,
+            )
+        )
 
         labels = _not_none(
             label=label,
@@ -2586,9 +2621,9 @@ class PlotAxes(base.Axes):
 
         # Apply the labels or values
         if labels is not None:
-            if autovalues:
+            if autovalues or (value is not None or values is not None):
                 kwargs["values"] = inputs._to_numpy_array(labels)
-            elif autolabels:
+            elif autolabels or _user_labels_explicit:
                 kwargs["labels"] = inputs._to_numpy_array(labels)
 
         # Apply title for legend or colorbar that uses the labels or values
@@ -3054,7 +3089,9 @@ class PlotAxes(base.Axes):
                 resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
             case str() if cycle.lower() == "none":
                 resolved_cycle = None
-            case str() | int() | Iterable():
+            case str() | int():
+                resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
+            case _ if isinstance(cycle, Iterable):
                 resolved_cycle = constructor.Cycle(cycle, **cycle_kw)
             case _:
                 resolved_cycle = None
@@ -3626,6 +3663,9 @@ class PlotAxes(base.Axes):
         objs, xsides = [], []
         kws = kwargs.copy()
         kws.update(_pop_props(kws, "line"))
+        # Disable auto label inference when in external context
+        if self._in_external_context():
+            kws["autolabels"] = False
         kws, extents = self._inbounds_extent(**kws)
         for xs, ys, fmt in self._iter_arg_pairs(*pairs):
             xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, **kws)
@@ -3775,7 +3815,7 @@ class PlotAxes(base.Axes):
         orientation: str = "horizontal",
         n_bins: int = 50,
         **kwargs,
-    ) -> "Collection":
+    ) -> mcollections.Collection:
 
         # Parse input parameters
         ss, _ = self._parse_markersize(ss, **kwargs)
@@ -4237,7 +4277,7 @@ class PlotAxes(base.Axes):
         if s is not None:
             s = inputs._to_numpy_array(s)
             if absolute_size is None:
-                absolute_size = s.size == 1 or _inside_seaborn_call()
+                absolute_size = s.size == 1
             if not absolute_size or smin is not None or smax is not None:
                 smin = _not_none(smin, 1)
                 smax = _not_none(smax, rc["lines.markersize"] ** (1, 2)[area_size])
@@ -4362,8 +4402,45 @@ class PlotAxes(base.Axes):
         stacked=None,
         **kwargs,
     ):
-        """
-        Apply area shading.
+        """Apply area shading using `fill_between` or `fill_betweenx`.
+
+        This is the internal implementation for `fill_between`, `fill_betweenx`,
+        `area`, and `areax`.
+
+        Parameters
+        ----------
+        xs, ys1, ys2 : array-like
+            The x and y coordinates for the shaded regions.
+        where : array-like, optional
+            A boolean mask for the points that should be shaded.
+        vert : bool, optional
+            The orientation of the shading. If `True` (default), `fill_between`
+            is used. If `False`, `fill_betweenx` is used.
+        negpos : bool, optional
+            Whether to use different colors for positive and negative shades.
+        stack : bool, optional
+            Whether to stack shaded regions.
+        **kwargs
+            Additional keyword arguments passed to the matplotlib fill function.
+
+        Notes
+        -----
+        Special handling for plots from external packages (e.g., seaborn):
+
+        When this method is used in a context where plots are generated by
+        an external library like seaborn, it tags the resulting polygons
+        (e.g., confidence intervals) as "synthetic". This is done unless a
+        user explicitly provides a label.
+
+        Synthetic artists are marked with `_ultraplot_synthetic=True` and given
+        a label starting with an underscore (e.g., `_ultraplot_fill`). This
+        prevents them from being automatically included in legends, keeping the
+        legend clean and focused on user-specified elements.
+
+        Seaborn internally generates tags like "y", "ymin", and "ymax" for
+        vertical fills, and "x", "xmin", "xmax" for horizontal fills. UltraPlot
+        recognizes these and treats them as synthetic unless a different label
+        is provided.
         """
         # Parse input arguments
         kw = kwargs.copy()
@@ -4373,33 +4450,72 @@ class PlotAxes(base.Axes):
         stack = _not_none(stack=stack, stacked=stacked)
         xs, ys1, ys2, kw = self._parse_1d_args(xs, ys1, ys2, vert=vert, **kw)
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
+        guide_kw = _pop_params(kw, self._update_guide)
 
-        # Draw patches with default edge width zero
+        # External override only; no seaborn-based tagging
+
+        # Draw patches
         y0 = 0
         objs, xsides, ysides = [], [], []
-        guide_kw = _pop_params(kw, self._update_guide)
         for _, n, x, y1, y2, w, kw in self._iter_arg_cols(xs, ys1, ys2, where, **kw):
             kw = self._parse_cycle(n, **kw)
+
+            # If stacking requested, adjust y arrays
             if stack:
-                y1 = y1 + y0  # avoid in-place modification
+                y1 = y1 + y0
                 y2 = y2 + y0
-                y0 = y0 + y2 - y1  # irrelevant that we added y0 to both
-            if negpos:  # NOTE: if user passes 'where' will issue a warning
+                y0 = y0 + y2 - y1
+
+            # External override: if in external mode and no explicit label was provided,
+            # mark fill as synthetic so it is ignored by legend parsing unless explicitly labeled.
+            synthetic = False
+            if self._in_external_context() and (
+                kw.get("label", None) is None
+                or str(kw.get("label")) in ("y", "ymin", "ymax")
+            ):
+                kw["label"] = "_ultraplot_fill"
+                synthetic = True
+
+            # Draw object (negpos splits into two silent_list items)
+            if negpos:
                 obj = self._call_negpos(name, x, y1, y2, where=w, use_where=True, **kw)
             else:
                 obj = self._call_native(name, x, y1, y2, where=w, **kw)
+
+            if synthetic:
+                try:
+                    setattr(obj, "_ultraplot_synthetic", True)
+                    if hasattr(obj, "set_label"):
+                        obj.set_label("_ultraplot_fill")
+                except Exception:
+                    pass
+                for art in guides._iter_iterables(obj):
+                    try:
+                        setattr(art, "_ultraplot_synthetic", True)
+                        if hasattr(art, "set_label"):
+                            art.set_label("_ultraplot_fill")
+                    except Exception:
+                        pass
+
+            # No synthetic tagging or seaborn-based label overrides
+
+            # Patch edge fixes
             self._fix_patch_edges(obj, **edgefix_kw, **kw)
+
+            # Track sides for sticky edges
             xsides.append(x)
             for y in (y1, y2):
                 self._inbounds_xylim(extents, x, y, vert=vert)
-                if y.size == 1:  # add sticky edges if bounds are scalar
+                if y.size == 1:
                     ysides.append(y)
             objs.append(obj)
 
         # Draw guide and add sticky edges
+        # Draw guide and add sticky edges
         self._update_guide(objs, **guide_kw)
         for axis, sides in zip("xy" if vert else "yx", (xsides, ysides)):
             self._fix_sticky_edges(objs, axis, *sides)
+        return objs[0] if len(objs) == 1 else cbook.silent_list("PolyCollection", objs)
         return objs[0] if len(objs) == 1 else cbook.silent_list("PolyCollection", objs)
 
     @docstring._snippet_manager
@@ -4621,7 +4737,7 @@ class PlotAxes(base.Axes):
         xs, hs, kw = self._parse_1d_args(xs, hs, orientation=orientation, **kw)
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         if absolute_width is None:
-            absolute_width = _inside_seaborn_call()
+            absolute_width = False or self._in_external_context()
 
         # Call func after converting bar width
         b0 = 0
@@ -4705,6 +4821,7 @@ class PlotAxes(base.Axes):
         # Find the maximum extent of text + bar position
         max_extent = current_lim[1]  # Start with current upper limit
 
+        w = 0
         for label, bar in zip(bar_labels, container):
             # Get text bounding box
             bbox = label.get_window_extent(renderer=self.figure.canvas.get_renderer())
@@ -4715,21 +4832,25 @@ class PlotAxes(base.Axes):
                 bar_end = bar.get_width() + bar.get_x()
                 text_end = bar_end + bbox_data.width
                 max_extent = max(max_extent, text_end)
+                w = max(w, bar.get_height())
             else:
                 # For vertical bars, check if text extends beyond top edge
                 bar_end = bar.get_height() + bar.get_y()
                 text_end = bar_end + bbox_data.height
                 max_extent = max(max_extent, text_end)
+                w = max(w, bar.get_width())
 
         # Only adjust limits if text extends beyond current range
         if max_extent > current_lim[1]:
             padding = (max_extent - current_lim[1]) * 1.25  # Add a bit of padding
             new_lim = (current_lim[0], max_extent + padding)
             getattr(self, f"set_{which}lim")(new_lim)
+        lim = [getattr(self.dataLim, f"{other_which}{idx}") for idx in range(0, 2)]
+        lim = (lim[0] - w / 4, lim[1] + w / 4)
 
-        # Keep the other axis unchanged
-        getattr(self, f"set_{other_which}lim")(other_lim)
-
+        current_lim = getattr(self, f"get_{other_which}lim")()
+        new_lim = (min(lim[0], current_lim[0]), max(lim[1], current_lim[1]))
+        getattr(self, f"set_{other_which}lim")(new_lim)
         return bar_labels
 
     @inputs._preprocess_or_redirect("x", "height", "width", "bottom")
@@ -5252,6 +5373,11 @@ class PlotAxes(base.Axes):
             center_levels=center_levels,
             **kw,
         )
+        # Change the default behavior for weights/C to compute
+        # the total of the weights, not their average.
+        reduce_C_function = kw.get("reduce_C_function", None)
+        if reduce_C_function is None:
+            kw["reduce_C_function"] = np.sum
         norm = kw.get("norm", None)
         if norm is not None and not isinstance(norm, pcolors.DiscreteNorm):
             norm.vmin = norm.vmax = None  # remove nonsense values

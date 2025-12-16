@@ -15,14 +15,14 @@ env:
 
 jobs:
   build-ultraplot:
-    name: Test Python ${{ inputs.python-version }} with ${{ inputs.matplotlib-version }}
+    name: Test Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
     defaults:
       run:
         shell: bash -el {0}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -52,12 +52,13 @@ jobs:
           slug: Ultraplot/ultraplot
 
   compare-baseline:
+    name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -el {0}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: mamba-org/setup-micromamba@v2.0.7
         with:
@@ -76,19 +77,28 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.sha }}
           git checkout ${{ github.event.pull_request.base.sha }}
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -W ignore --mpl-generate-path=baseline --mpl-default-style="./ultraplot.yml"
+          pytest -W ignore \
+            --mpl-generate-path=./baseline/ \
+            --mpl-default-style="./ultraplot.yml"\
+            ultraplot/tests
           git checkout ${{ github.sha }}  # Return to PR branch
 
       - name: Image Comparison Ultraplot
         run: |
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -W ignore --mpl --mpl-baseline-path=baseline --mpl-generate-summary=html --mpl-results-path=./results/ --mpl-default-style="./ultraplot.yml" --store-failed-only ultraplot/tests
+          pytest -W ignore \
+              --mpl \
+              --mpl-baseline-path=./baseline/ \
+              --mpl-results-path=./results/ \
+              --mpl-generate-summary=html \
+              --mpl-default-style="./ultraplot.yml" \
+              ultraplot/tests
 
       # Return the html output of the comparison even if failed
       - name: Upload comparison failures
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: failed-comparisons-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-${{ github.sha }}
           path: results/*

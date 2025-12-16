@@ -6,12 +6,13 @@ import functools
 import inspect
 import os
 from numbers import Integral
+
 from packaging import version
 
 try:
-    from typing import List
+    from typing import List, Optional, Tuple, Union
 except ImportError:
-    from typing_extensions import List
+    from typing_extensions import List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
@@ -30,7 +31,6 @@ from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
 from .config import rc, rc_matplotlib
-from .internals import ic  # noqa: F401
 from .internals import (
     _not_none,
     _pop_params,
@@ -38,10 +38,11 @@ from .internals import (
     _translate_loc,
     context,
     docstring,
+    ic,  # noqa: F401
     labels,
     warnings,
 )
-from .utils import units, _get_subplot_layout, _Crawler
+from .utils import _Crawler, units
 
 __all__ = [
     "Figure",
@@ -1338,7 +1339,17 @@ class Figure(mfigure.Figure):
         return renderer
 
     @_clear_border_cache
-    def _add_axes_panel(self, ax, side=None, **kwargs):
+    def _add_axes_panel(
+        self,
+        ax: "paxes.Axes",
+        side: Optional[str] = None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        **kwargs,
+    ) -> "paxes.Axes":
         """
         Add an axes panel.
         """
@@ -1368,6 +1379,35 @@ class Figure(mfigure.Figure):
         if not gs:
             raise RuntimeError("The gridspec must be active.")
         kw = _pop_params(kwargs, gs._insert_panel_slot)
+
+        # Validate and determine span override from span/row/col/rows/cols parameters
+        span_override = None
+        if side in ("left", "right"):
+            # Vertical panels: should use rows parameter, not cols
+            if _not_none(cols, col) is not None and _not_none(rows, row) is None:
+                raise ValueError(
+                    f"For {side!r} panels (vertical), use 'rows=' or 'row=' "
+                    "to specify span, not 'cols=' or 'col='."
+                )
+            if span is not None and _not_none(rows, row) is None:
+                warnings._warn_ultraplot(
+                    f"For {side!r} panels (vertical), prefer 'rows=' over 'span=' "
+                    "for clarity. Using 'span' as rows."
+                )
+            span_override = _not_none(rows, row, span)
+        else:
+            # Horizontal panels: should use cols parameter, not rows
+            if _not_none(rows, row) is not None and _not_none(cols, col, span) is None:
+                raise ValueError(
+                    f"For {side!r} panels (horizontal), use 'cols=' or 'span=' "
+                    "to specify span, not 'rows=' or 'row='."
+                )
+            span_override = _not_none(cols, col, span)
+
+        # Pass span_override to gridspec if provided
+        if span_override is not None:
+            kw["span_override"] = span_override
+
         ss, share = gs._insert_panel_slot(side, ax, **kw)
         # Guard: GeoAxes with non-rectilinear projections cannot share with panels
         if isinstance(ax, paxes.GeoAxes) and not ax._is_rectilinear():
@@ -1452,8 +1492,15 @@ class Figure(mfigure.Figure):
 
     @_clear_border_cache
     def _add_figure_panel(
-        self, side=None, span=None, row=None, col=None, rows=None, cols=None, **kwargs
-    ):
+        self,
+        side: Optional[str] = None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        **kwargs,
+    ) -> "paxes.Axes":
         """
         Add a figure panel.
         """
@@ -2280,16 +2327,16 @@ class Figure(mfigure.Figure):
         self,
         mappable,
         values=None,
-        loc=None,
-        location=None,
-        row=None,
-        col=None,
-        rows=None,
-        cols=None,
-        span=None,
-        space=None,
-        pad=None,
-        width=None,
+        loc: Optional[str] = None,
+        location: Optional[str] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        space: Optional[Union[float, str]] = None,
+        pad: Optional[Union[float, str]] = None,
+        width: Optional[Union[float, str]] = None,
         **kwargs,
     ):
         """
@@ -2341,8 +2388,34 @@ class Figure(mfigure.Figure):
                 cb = super().colorbar(mappable, cax=cax, **kwargs)
         # Axes panel colorbar
         elif ax is not None:
-            cb = ax.colorbar(
-                mappable, values, space=space, pad=pad, width=width, **kwargs
+            # Check if span parameters are provided
+            has_span = _not_none(span, row, col, rows, cols) is not None
+
+            # Extract a single axes from array if span is provided
+            # Otherwise, pass the array as-is for normal colorbar behavior
+            if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
+                try:
+                    ax_single = next(iter(ax))
+
+                except (TypeError, StopIteration):
+                    ax_single = ax
+            else:
+                ax_single = ax
+
+            # Pass span parameters through to axes colorbar
+            cb = ax_single.colorbar(
+                mappable,
+                values,
+                space=space,
+                pad=pad,
+                width=width,
+                loc=loc,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
+                **kwargs,
             )
         # Figure panel colorbar
         else:
@@ -2403,8 +2476,31 @@ class Figure(mfigure.Figure):
         ax = kwargs.pop("ax", None)
         # Axes panel legend
         if ax is not None:
-            leg = ax.legend(
-                handles, labels, space=space, pad=pad, width=width, **kwargs
+            # Check if span parameters are provided
+            has_span = _not_none(span, row, col, rows, cols) is not None
+
+            # Extract a single axes from array if span is provided
+            # Otherwise, pass the array as-is for normal legend behavior
+            if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
+                try:
+                    ax_single = next(iter(ax))
+                except (TypeError, StopIteration):
+                    ax_single = ax
+            else:
+                ax_single = ax
+            leg = ax_single.legend(
+                handles,
+                labels,
+                loc=loc,
+                space=space,
+                pad=pad,
+                width=width,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
+                **kwargs,
             )
         # Figure panel legend
         else:
