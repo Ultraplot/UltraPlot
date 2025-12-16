@@ -727,6 +727,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # has to run it before aligning labels. So this is harmless no-op.
         self._apply_axis_sharing()
         super().draw(renderer, *args, **kwargs)
+        # Adjust panel positions after drawing to match aspect-constrained map
+        self._adjust_panel_positions()
 
     def _get_lonticklocs(self, which="major"):
         """
@@ -1837,6 +1839,11 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
 
         # Apply aspect
         self.apply_aspect()
+
+        # Adjust panel positions to align with aspect-constrained map
+        # When apply_aspect() shrinks the main axes, panels need to follow
+        self._adjust_panel_positions()
+
         if _version_cartopy >= "0.23":
             gridliners = [
                 a for a in self.artists if isinstance(a, cgridliner.Gridliner)
@@ -1855,6 +1862,54 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             self._gridliners = []
 
         return super().get_tightbbox(renderer, *args, **kwargs)
+
+    def _adjust_panel_positions(self):
+        """
+        Adjust panel positions to align with the aspect-constrained main axes.
+        After apply_aspect() shrinks the main axes, panels should flank the actual
+        map boundaries rather than the full gridspec allocation.
+        """
+        if not hasattr(self, "_panel_dict"):
+            return
+
+        # Get the current position after apply_aspect()
+        main_pos = self.get_position()
+        # Get the original gridspec position before apply_aspect() modified it
+        original_pos = self.get_position(original=True)
+
+        for side, panels in self._panel_dict.items():
+            for panel in panels:
+                panel_pos = panel.get_position()
+
+                if side == "left":
+                    # Calculate original gap between panel and main axes
+                    gap = original_pos.x0 - (panel_pos.x0 + panel_pos.width)
+                    # Position panel to the left of the adjusted main axes
+                    new_x0 = main_pos.x0 - panel_pos.width - gap
+                    new_pos = [new_x0, main_pos.y0, panel_pos.width, main_pos.height]
+                elif side == "right":
+                    # Calculate original gap
+                    gap = panel_pos.x0 - (original_pos.x0 + original_pos.width)
+                    # Position panel to the right of the adjusted main axes
+                    new_x0 = main_pos.x0 + main_pos.width + gap
+                    new_pos = [new_x0, main_pos.y0, panel_pos.width, main_pos.height]
+                elif side == "top":
+                    # Calculate original gap
+                    gap = panel_pos.y0 - (original_pos.y0 + original_pos.height)
+                    # Position panel above the adjusted main axes
+                    new_y0 = main_pos.y0 + main_pos.height + gap
+                    new_pos = [main_pos.x0, new_y0, main_pos.width, panel_pos.height]
+                elif side == "bottom":
+                    # Calculate original gap
+                    gap = original_pos.y0 - (panel_pos.y0 + panel_pos.height)
+                    # Position panel below the adjusted main axes
+                    new_y0 = main_pos.y0 - panel_pos.height - gap
+                    new_pos = [main_pos.x0, new_y0, main_pos.width, panel_pos.height]
+                else:
+                    # Unknown side, skip adjustment
+                    continue
+
+                panel.set_position(new_pos)
 
     def set_extent(self, extent, crs=None):
         # Fix paths, so axes tight bounding box gets correct box! From this issue:
