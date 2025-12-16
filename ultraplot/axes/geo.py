@@ -1891,7 +1891,8 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
 
         for side, panels in self._panel_dict.items():
             for panel in panels:
-                panel_pos = panel.get_position()
+                # Use original position to avoid accumulated adjustments
+                panel_pos = panel.get_position(original=True)
 
                 if side == "left":
                     # Calculate original gap between panel and main axes
