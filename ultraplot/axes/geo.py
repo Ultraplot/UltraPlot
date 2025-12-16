@@ -2068,6 +2068,18 @@ class _BasemapAxes(GeoAxes):
         # Get the original gridspec position before apply_aspect() modified it
         original_pos = self.get_position(original=True)
 
+        # Only adjust if apply_aspect() actually changed the position
+        # Use a small tolerance to avoid floating point comparison issues
+        pos_changed = (
+            abs(main_pos.x0 - original_pos.x0) > 1e-6
+            or abs(main_pos.y0 - original_pos.y0) > 1e-6
+            or abs(main_pos.width - original_pos.width) > 1e-6
+            or abs(main_pos.height - original_pos.height) > 1e-6
+        )
+
+        if not pos_changed:
+            return
+
         for side, panels in self._panel_dict.items():
             for panel in panels:
                 # Use original position to avoid accumulated adjustments
