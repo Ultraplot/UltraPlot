@@ -1830,6 +1830,14 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                 extent[:2] = [lon0 - 180, lon0 + 180]
         return extent
 
+    @override
+    def draw(self, renderer=None, *args, **kwargs):
+        """Override draw to adjust panel positions for cartopy axes."""
+        super().draw(renderer, *args, **kwargs)
+        # Adjust panel positions after drawing to match aspect-constrained map
+        # This is needed because apply_aspect() shrinks the main axes
+        self._adjust_panel_positions()
+
     def get_tightbbox(self, renderer, *args, **kwargs):
         # Perform extra post-processing steps
         # For now this just draws the gridliners
