@@ -727,8 +727,6 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # has to run it before aligning labels. So this is harmless no-op.
         self._apply_axis_sharing()
         super().draw(renderer, *args, **kwargs)
-        # Adjust panel positions after drawing to match aspect-constrained map
-        self._adjust_panel_positions()
 
     def _get_lonticklocs(self, which="major"):
         """
