@@ -729,6 +729,10 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         super().draw(renderer, *args, **kwargs)
         # Adjust panel positions after drawing to match aspect-constrained map
         self._adjust_panel_positions()
+        # Force boundary labels to be visible (for cartopy axes)
+        # Cartopy may reset visibility during draw, so we need to set it again
+        if hasattr(self, "_gridlines_major") and self._gridlines_major is not None:
+            self._force_boundary_label_visibility(self._gridlines_major)
 
     def _get_lonticklocs(self, which="major"):
         """
@@ -1692,9 +1696,8 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         # NOTE: This will re-apply existing gridline locations if unchanged.
         if nsteps is not None:
             gl.n_steps = nsteps
-        # Set xlim and ylim for cartopy >= 0.19 to control which labels are displayed
-        # NOTE: Don't set xlim/ylim here - let cartopy determine from the axes extent
-        # The extent expansion in _update_extent should be sufficient to include boundary labels
+        # NOTE: xlim/ylim will be set in get_tightbbox() right before drawing
+        # to ensure boundary labels are included based on the actual extent
         longrid = rc._get_gridline_bool(longrid, axis="x", which=which, native=False)
         if longrid is not None:
             gl.xlines = longrid
@@ -1863,17 +1866,52 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         else:
             gridliners = self._gridliners
 
+        # Set xlim/ylim right before drawing to ensure boundary labels are visible
+        # Cartopy >= 0.19 uses these to filter which labels to display
+        if _version_cartopy >= "0.19":
+            extent = self.get_extent(crs=ccrs.PlateCarree())
+            # Expand significantly beyond extent to ensure boundary labels are included
+            # The locator positions might have floating point precision issues
+            eps = 1.0  # generous epsilon to account for floating point comparisons
+            for gl in gridliners:
+                gl.xlim = (extent[0] - eps, extent[1] + eps)
+                gl.ylim = (extent[2] - eps, extent[3] + eps)
+
         for gl in gridliners:
             if _version_cartopy >= "0.18":
                 gl._draw_gridliner(renderer=renderer)
             else:
                 gl._draw_gridliner(background_patch=self.background_patch)
 
+            # Force boundary labels to be visible after drawing
+            if _version_cartopy >= "0.19":
+                self._force_boundary_label_visibility(gl)
+
         # Remove gridliners
         if _version_cartopy < "0.18":
             self._gridliners = []
 
         return super().get_tightbbox(renderer, *args, **kwargs)
+
+    def _force_boundary_label_visibility(self, gl):
+        """
+        Force boundary labels to be visible.
+
+        Cartopy may incorrectly hide labels at boundaries due to floating point
+        precision issues. We explicitly check and force visibility for labels
+        that are within the extent.
+        """
+        extent = self.get_extent(crs=ccrs.PlateCarree())
+        for label in gl.left_label_artists + gl.right_label_artists:
+            x, y = label.get_position()
+            # Check if position is within extent (with small tolerance)
+            if extent[0] <= x <= extent[1] and extent[2] <= y <= extent[3]:
+                label.set_visible(True)
+        for label in gl.bottom_label_artists + gl.top_label_artists:
+            x, y = label.get_position()
+            # Check if position is within extent (with small tolerance)
+            if extent[0] <= x <= extent[1] and extent[2] <= y <= extent[3]:
+                label.set_visible(True)
 
     def _adjust_panel_positions(self):
         """
