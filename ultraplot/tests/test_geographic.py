@@ -1540,7 +1540,7 @@ def test_boundary_labels_negative_longitude():
     _check_boundary_labels(
         ax[0],
         ["120°W", "90°W", "60°W"],
-        ["35°N", "50°N"],
+        ["20°N", "35°N", "50°N"],
     )
     uplt.close(fig)
 
