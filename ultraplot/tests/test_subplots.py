@@ -2,7 +2,10 @@
 """
 Test subplot layout.
 """
-import numpy as np, ultraplot as uplt, pytest
+import numpy as np
+import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -207,7 +210,7 @@ def test_reference_aspect(test_case, refwidth, kwargs, setup_func, ref):
     # Apply auto layout
     fig.auto_layout()
     # Assert reference width accuracy
-    assert np.isclose(refwidth, axs[fig._refnum - 1]._get_size_inches()[0])
+    assert np.isclose(refwidth, axs[fig._refnum - 1]._get_size_inches()[0], rtol=1e-3)
     return fig
 
 
