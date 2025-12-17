@@ -1653,7 +1653,7 @@ class SubplotGrid(MutableSequence, list):
                 )
             new_key.append(encoded_keyi)
         xs, ys = new_key
-        if isinstance(xs, (list, tuple, np.ndarray)) and isinstance(ys, (list, tuple, np.ndarray)):
+        if np.iterable(xs) and np.iterable(ys):
             objs = grid[np.ix_(xs, ys)]
         else:
             objs = grid[xs, ys]
