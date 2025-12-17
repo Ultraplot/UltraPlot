@@ -6,21 +6,24 @@ import inspect
 import itertools
 import re
 from collections.abc import MutableSequence
+from functools import wraps
 from numbers import Integral
+from typing import List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
 import matplotlib.transforms as mtransforms
 import numpy as np
-from typing import List, Optional, Union, Tuple
-from functools import wraps
 
 from . import axes as paxes
 from .config import rc
-from .internals import ic  # noqa: F401
-from .internals import _not_none, docstring, warnings
+from .internals import (
+    _not_none,
+    docstring,
+    ic,  # noqa: F401
+    warnings,
+)
 from .utils import _fontsize_to_pt, units
-from .internals import warnings
 
 __all__ = ["GridSpec", "SubplotGrid"]
 
@@ -1650,7 +1653,10 @@ class SubplotGrid(MutableSequence, list):
                 )
             new_key.append(encoded_keyi)
         xs, ys = new_key
-        objs = grid[np.ix_(xs, ys)]
+        if isinstance(xs, (list, tuple, np.ndarray)) and isinstance(ys, (list, tuple, np.ndarray)):
+            objs = grid[np.ix_(xs, ys)]
+        else:
+            objs = grid[xs, ys]
         if hasattr(objs, "flat"):
             objs = [obj for obj in objs.flat if obj is not None]
         elif not isinstance(objs, list):
