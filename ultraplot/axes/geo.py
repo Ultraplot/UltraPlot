@@ -1830,6 +1830,18 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                 extent[:2] = [lon0 - 180, lon0 + 180]
         return extent
 
+    @override
+    def draw(self, renderer=None, *args, **kwargs):
+        """
+        Override draw to adjust panel positions for cartopy axes.
+
+        Cartopy's apply_aspect() can shrink the main axes to enforce the projection
+        aspect ratio. Panels occupy separate gridspec slots, so we reposition them
+        after the main axes has applied its aspect but before the panel axes are drawn.
+        """
+        super().draw(renderer, *args, **kwargs)
+        self._adjust_panel_positions()
+
     def get_tightbbox(self, renderer, *args, **kwargs):
         # Perform extra post-processing steps
         # For now this just draws the gridliners
@@ -1847,8 +1859,10 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             self.outline_patch._path = clipped_path
             self.background_patch._path = clipped_path
 
-        # Apply aspect
+        # Apply aspect, then ensure panels follow the aspect-constrained box.
         self.apply_aspect()
+        self._adjust_panel_positions()
+
         if _version_cartopy >= "0.23":
             gridliners = [
                 a for a in self.artists if isinstance(a, cgridliner.Gridliner)
@@ -1867,6 +1881,131 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             self._gridliners = []
 
         return super().get_tightbbox(renderer, *args, **kwargs)
+
+    def _adjust_panel_positions(self):
+        """
+        Adjust panel positions to align with the aspect-constrained main axes.
+        After apply_aspect() shrinks the main axes, panels should flank the actual
+        map boundaries rather than the full gridspec allocation.
+        """
+        if not getattr(self, "_panel_dict", None):
+            return  # no panels to adjust
+
+        # Current (aspect-adjusted) position
+        main_pos = getattr(self, "_position", None) or self.get_position()
+
+        # Subplot-spec position before apply_aspect(). This is the true "gridspec slot"
+        # and remains well-defined even if we temporarily modify axes positions.
+        try:
+            ss = self.get_subplotspec()
+            original_pos = ss.get_position(self.figure) if ss is not None else None
+        except Exception:
+            original_pos = None
+        if original_pos is None:
+            original_pos = getattr(
+                self, "_originalPosition", None
+            ) or self.get_position(original=True)
+
+        # Only adjust if apply_aspect() actually changed the position (tolerance
+        # avoids float churn that can trigger unnecessary layout updates).
+        tol = 1e-9
+        if (
+            abs(main_pos.x0 - original_pos.x0) <= tol
+            and abs(main_pos.y0 - original_pos.y0) <= tol
+            and abs(main_pos.width - original_pos.width) <= tol
+            and abs(main_pos.height - original_pos.height) <= tol
+        ):
+            return
+
+        # Map original -> adjusted coordinates (only along the "long" axis of the
+        # panel, so span overrides across subplot rows/cols are preserved).
+        sx = main_pos.width / original_pos.width if original_pos.width else 1.0
+        sy = main_pos.height / original_pos.height if original_pos.height else 1.0
+        ox0, oy0 = original_pos.x0, original_pos.y0
+        ox1, oy1 = (
+            original_pos.x0 + original_pos.width,
+            original_pos.y0 + original_pos.height,
+        )
+        mx0, my0 = main_pos.x0, main_pos.y0
+
+        for side, panels in self._panel_dict.items():
+            for panel in panels:
+                # Use the panel subplot-spec box as the baseline (not its current
+                # original position) to avoid accumulated adjustments.
+                try:
+                    ss = panel.get_subplotspec()
+                    panel_pos = (
+                        ss.get_position(panel.figure) if ss is not None else None
+                    )
+                except Exception:
+                    panel_pos = None
+                if panel_pos is None:
+                    panel_pos = panel.get_position(original=True)
+                px0, py0 = panel_pos.x0, panel_pos.y0
+                px1, py1 = (
+                    panel_pos.x0 + panel_pos.width,
+                    panel_pos.y0 + panel_pos.height,
+                )
+
+                # Use _set_position when available to avoid layoutbox side effects
+                # from public set_position() on newer matplotlib versions.
+                setter = getattr(panel, "_set_position", panel.set_position)
+
+                if side == "left":
+                    # Calculate original gap between panel and main axes
+                    gap = original_pos.x0 - (panel_pos.x0 + panel_pos.width)
+                    # Position panel to the left of the adjusted main axes
+                    new_x0 = main_pos.x0 - panel_pos.width - gap
+                    if py0 <= oy0 + tol and py1 >= oy1 - tol:
+                        new_y0, new_h = my0, main_pos.height
+                    else:
+                        new_y0 = my0 + (panel_pos.y0 - oy0) * sy
+                        new_h = panel_pos.height * sy
+                    new_pos = [new_x0, new_y0, panel_pos.width, new_h]
+                elif side == "right":
+                    # Calculate original gap
+                    gap = panel_pos.x0 - (original_pos.x0 + original_pos.width)
+                    # Position panel to the right of the adjusted main axes
+                    new_x0 = main_pos.x0 + main_pos.width + gap
+                    if py0 <= oy0 + tol and py1 >= oy1 - tol:
+                        new_y0, new_h = my0, main_pos.height
+                    else:
+                        new_y0 = my0 + (panel_pos.y0 - oy0) * sy
+                        new_h = panel_pos.height * sy
+                    new_pos = [new_x0, new_y0, panel_pos.width, new_h]
+                elif side == "top":
+                    # Calculate original gap
+                    gap = panel_pos.y0 - (original_pos.y0 + original_pos.height)
+                    # Position panel above the adjusted main axes
+                    new_y0 = main_pos.y0 + main_pos.height + gap
+                    if px0 <= ox0 + tol and px1 >= ox1 - tol:
+                        new_x0, new_w = mx0, main_pos.width
+                    else:
+                        new_x0 = mx0 + (panel_pos.x0 - ox0) * sx
+                        new_w = panel_pos.width * sx
+                    new_pos = [new_x0, new_y0, new_w, panel_pos.height]
+                elif side == "bottom":
+                    # Calculate original gap
+                    gap = original_pos.y0 - (panel_pos.y0 + panel_pos.height)
+                    # Position panel below the adjusted main axes
+                    new_y0 = main_pos.y0 - panel_pos.height - gap
+                    if px0 <= ox0 + tol and px1 >= ox1 - tol:
+                        new_x0, new_w = mx0, main_pos.width
+                    else:
+                        new_x0 = mx0 + (panel_pos.x0 - ox0) * sx
+                        new_w = panel_pos.width * sx
+                    new_pos = [new_x0, new_y0, new_w, panel_pos.height]
+                else:
+                    # Unknown side, skip adjustment
+                    continue
+
+                # Panels typically have aspect='auto', which causes matplotlib to
+                # reset their *active* position to their *original* position inside
+                # apply_aspect()/get_position(). Update both so the change persists.
+                try:
+                    setter(new_pos, which="both")
+                except TypeError:  # older matplotlib
+                    setter(new_pos)
 
     def set_extent(self, extent, crs=None):
         # Fix paths, so axes tight bounding box gets correct box! From this issue:
@@ -1973,6 +2112,156 @@ class _BasemapAxes(GeoAxes):
 
         self._turnoff_tick_labels(self._lonlines_major)
         self._turnoff_tick_labels(self._latlines_major)
+
+    def get_tightbbox(self, renderer, *args, **kwargs):
+        """
+        Get tight bounding box, adjusting panel positions after aspect is applied.
+
+        This ensures panels are properly aligned when saving figures, as apply_aspect()
+        may be called during the rendering process.
+        """
+        # Apply aspect ratio, then ensure panels follow the aspect-constrained box.
+        self.apply_aspect()
+        self._adjust_panel_positions()
+
+        return super().get_tightbbox(renderer, *args, **kwargs)
+
+    @override
+    def draw(self, renderer=None, *args, **kwargs):
+        """
+        Override draw to adjust panel positions for basemap axes.
+
+        Basemap projections also rely on apply_aspect() and can shrink the main axes;
+        panels must be repositioned to flank the visible map boundaries.
+        """
+        super().draw(renderer, *args, **kwargs)
+        self._adjust_panel_positions()
+
+    def _adjust_panel_positions(self):
+        """
+        Adjust panel positions to align with the aspect-constrained main axes.
+        After apply_aspect() shrinks the main axes, panels should flank the actual
+        map boundaries rather than the full gridspec allocation.
+
+        This method works the same way as in _CartopyAxes since both backends
+        use matplotlib's apply_aspect() and have the same panel alignment issue.
+        """
+        if not hasattr(self, "_panel_dict"):
+            return
+
+        # Current (aspect-adjusted) position
+        main_pos = getattr(self, "_position", None) or self.get_position()
+
+        # Subplot-spec position before apply_aspect(). This is the true "gridspec slot"
+        # and remains well-defined even if we temporarily modify axes positions.
+        try:
+            ss = self.get_subplotspec()
+            original_pos = ss.get_position(self.figure) if ss is not None else None
+        except Exception:
+            original_pos = None
+        if original_pos is None:
+            original_pos = getattr(
+                self, "_originalPosition", None
+            ) or self.get_position(original=True)
+
+        # Only adjust if apply_aspect() actually changed the position
+        # Use a small tolerance to avoid floating point comparison issues
+        pos_changed = (
+            abs(main_pos.x0 - original_pos.x0) > 1e-6
+            or abs(main_pos.y0 - original_pos.y0) > 1e-6
+            or abs(main_pos.width - original_pos.width) > 1e-6
+            or abs(main_pos.height - original_pos.height) > 1e-6
+        )
+
+        if not pos_changed:
+            return
+
+        sx = main_pos.width / original_pos.width if original_pos.width else 1.0
+        sy = main_pos.height / original_pos.height if original_pos.height else 1.0
+        tol = 1e-6  # keep consistent with pos_changed tolerance
+        ox0, oy0 = original_pos.x0, original_pos.y0
+        ox1, oy1 = (
+            original_pos.x0 + original_pos.width,
+            original_pos.y0 + original_pos.height,
+        )
+        mx0, my0 = main_pos.x0, main_pos.y0
+
+        for side, panels in self._panel_dict.items():
+            for panel in panels:
+                # Use the panel subplot-spec box as the baseline (not its current
+                # original position) to avoid accumulated adjustments.
+                try:
+                    ss = panel.get_subplotspec()
+                    panel_pos = (
+                        ss.get_position(panel.figure) if ss is not None else None
+                    )
+                except Exception:
+                    panel_pos = None
+                if panel_pos is None:
+                    panel_pos = panel.get_position(original=True)
+                px0, py0 = panel_pos.x0, panel_pos.y0
+                px1, py1 = (
+                    panel_pos.x0 + panel_pos.width,
+                    panel_pos.y0 + panel_pos.height,
+                )
+
+                setter = getattr(panel, "_set_position", panel.set_position)
+
+                if side == "left":
+                    # Calculate original gap between panel and main axes
+                    gap = original_pos.x0 - (panel_pos.x0 + panel_pos.width)
+                    # Position panel to the left of the adjusted main axes
+                    new_x0 = main_pos.x0 - panel_pos.width - gap
+                    if py0 <= oy0 + tol and py1 >= oy1 - tol:
+                        new_y0, new_h = my0, main_pos.height
+                    else:
+                        new_y0 = my0 + (panel_pos.y0 - oy0) * sy
+                        new_h = panel_pos.height * sy
+                    new_pos = [new_x0, new_y0, panel_pos.width, new_h]
+                elif side == "right":
+                    # Calculate original gap
+                    gap = panel_pos.x0 - (original_pos.x0 + original_pos.width)
+                    # Position panel to the right of the adjusted main axes
+                    new_x0 = main_pos.x0 + main_pos.width + gap
+                    if py0 <= oy0 + tol and py1 >= oy1 - tol:
+                        new_y0, new_h = my0, main_pos.height
+                    else:
+                        new_y0 = my0 + (panel_pos.y0 - oy0) * sy
+                        new_h = panel_pos.height * sy
+                    new_pos = [new_x0, new_y0, panel_pos.width, new_h]
+                elif side == "top":
+                    # Calculate original gap
+                    gap = panel_pos.y0 - (original_pos.y0 + original_pos.height)
+                    # Position panel above the adjusted main axes
+                    new_y0 = main_pos.y0 + main_pos.height + gap
+                    if px0 <= ox0 + tol and px1 >= ox1 - tol:
+                        new_x0, new_w = mx0, main_pos.width
+                    else:
+                        new_x0 = mx0 + (panel_pos.x0 - ox0) * sx
+                        new_w = panel_pos.width * sx
+                    new_pos = [new_x0, new_y0, new_w, panel_pos.height]
+                elif side == "bottom":
+                    # Calculate original gap
+                    gap = original_pos.y0 - (panel_pos.y0 + panel_pos.height)
+                    # Position panel below the adjusted main axes
+                    new_y0 = main_pos.y0 - panel_pos.height - gap
+                    if px0 <= ox0 + tol and px1 >= ox1 - tol:
+                        new_x0, new_w = mx0, main_pos.width
+                    else:
+                        new_x0 = mx0 + (panel_pos.x0 - ox0) * sx
+                        new_w = panel_pos.width * sx
+                    new_pos = [new_x0, new_y0, new_w, panel_pos.height]
+                else:
+                    # Unknown side, skip adjustment
+                    continue
+
+                # Panels typically have aspect='auto', which causes matplotlib to
+                # reset their *active* position to their *original* position inside
+                # apply_aspect()/get_position(). Update both so the change persists.
+                try:
+                    setter(new_pos, which="both")
+                except TypeError:  # older matplotlib
+                    setter(new_pos)
 
     def _turnoff_tick_labels(self, locator: mticker.Formatter):
         """
