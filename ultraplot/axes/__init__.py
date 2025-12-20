@@ -7,8 +7,12 @@ import matplotlib.projections as mproj
 from ..internals import context
 from .base import Axes  # noqa: F401
 from .cartesian import CartesianAxes
-from .geo import GeoAxes  # noqa: F401
-from .geo import _BasemapAxes, _CartopyAxes
+from .container import ExternalAxesContainer  # noqa: F401
+from .geo import (
+    GeoAxes,  # noqa: F401
+    _BasemapAxes,
+    _CartopyAxes,
+)
 from .plot import PlotAxes  # noqa: F401
 from .polar import PolarAxes
 from .shared import _SharedAxes  # noqa: F401
@@ -22,6 +26,7 @@ __all__ = [
     "PolarAxes",
     "GeoAxes",
     "ThreeAxes",
+    "ExternalAxesContainer",
 ]
 
 # Register projections with package prefix to avoid conflicts
