@@ -674,6 +674,11 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     def _apply_aspect_and_adjust_panels(self, *, tol=1e-9):
         """
         Apply aspect and then align panels to the adjusted axes box.
+
+        Notes
+        -----
+        Cartopy and basemap use different tolerances when detecting whether
+        apply_aspect() actually changed the axes position.
         """
         self.apply_aspect()
         self._adjust_panel_positions(tol=tol)
@@ -1427,6 +1432,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
     _name = "cartopy"
     _name_aliases = ("geo", "geographic")  # default 'geographic' axes
     _proj_class = Projection
+    _PANEL_TOL = 1e-9
     _proj_north = (
         pproj.NorthPolarStereo,
         pproj.NorthPolarGnomonic,
@@ -1971,7 +1977,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         after the main axes has applied its aspect but before the panel axes are drawn.
         """
         super().draw(renderer, *args, **kwargs)
-        self._adjust_panel_positions()
+        self._adjust_panel_positions(tol=self._PANEL_TOL)
 
     def get_tightbbox(self, renderer, *args, **kwargs):
         # Perform extra post-processing steps
@@ -1991,7 +1997,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             self.background_patch._path = clipped_path
 
         # Apply aspect, then ensure panels follow the aspect-constrained box.
-        self._apply_aspect_and_adjust_panels()
+        self._apply_aspect_and_adjust_panels(tol=self._PANEL_TOL)
 
         if _version_cartopy >= "0.23":
             gridliners = [
@@ -2068,6 +2074,7 @@ class _BasemapAxes(GeoAxes):
         "sinu",
         "vandg",
     )
+    _PANEL_TOL = 1e-6
 
     def __init__(self, *args, map_projection=None, **kwargs):
         """
@@ -2126,7 +2133,7 @@ class _BasemapAxes(GeoAxes):
         may be called during the rendering process.
         """
         # Apply aspect ratio, then ensure panels follow the aspect-constrained box.
-        self._apply_aspect_and_adjust_panels(tol=1e-6)
+        self._apply_aspect_and_adjust_panels(tol=self._PANEL_TOL)
 
         return super().get_tightbbox(renderer, *args, **kwargs)
 
@@ -2139,7 +2146,7 @@ class _BasemapAxes(GeoAxes):
         panels must be repositioned to flank the visible map boundaries.
         """
         super().draw(renderer, *args, **kwargs)
-        self._adjust_panel_positions(tol=1e-6)
+        self._adjust_panel_positions(tol=self._PANEL_TOL)
 
     def _turnoff_tick_labels(self, locator: mticker.Formatter):
         """
