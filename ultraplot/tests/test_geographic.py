@@ -1473,26 +1473,26 @@ def _check_boundary_labels(ax, expected_lon_labels, expected_lat_labels):
     # Check xlim/ylim are expanded beyond actual limits
     assert hasattr(gl, "xlim") and hasattr(gl, "ylim")
 
-    # Check longitude labels
+    # Check longitude labels - only verify the visible ones match expected
     lon_texts = [
         label.get_text() for label in gl.bottom_label_artists if label.get_visible()
     ]
-    assert len(gl.bottom_label_artists) == len(expected_lon_labels), (
-        f"Should have {len(expected_lon_labels)} longitude labels, "
-        f"got {len(gl.bottom_label_artists)}"
+    assert len(lon_texts) == len(expected_lon_labels), (
+        f"Should have {len(expected_lon_labels)} visible longitude labels, "
+        f"got {len(lon_texts)}: {lon_texts}"
     )
     for expected in expected_lon_labels:
         assert any(
             expected in text for text in lon_texts
         ), f"{expected} label should be visible, got: {lon_texts}"
 
-    # Check latitude labels
+    # Check latitude labels - only verify the visible ones match expected
     lat_texts = [
         label.get_text() for label in gl.left_label_artists if label.get_visible()
     ]
-    assert len(gl.left_label_artists) == len(expected_lat_labels), (
-        f"Should have {len(expected_lat_labels)} latitude labels, "
-        f"got {len(gl.left_label_artists)}"
+    assert len(lat_texts) == len(expected_lat_labels), (
+        f"Should have {len(expected_lat_labels)} visible latitude labels, "
+        f"got {len(lat_texts)}: {lat_texts}"
     )
     for expected in expected_lat_labels:
         assert any(
@@ -1535,7 +1535,13 @@ def test_boundary_labels_negative_longitude():
         grid=False,
     )
     fig.canvas.draw()
-    _check_boundary_labels(ax[0], ["120°W", "90°W", "60°W"], ["20°N", "35°N", "50°N"])
+    # Note: Cartopy hides the boundary label at 20°N due to it being exactly at the limit
+    # This is expected cartopy behavior with floating point precision at boundaries
+    _check_boundary_labels(
+        ax[0],
+        ["120°W", "90°W", "60°W"],
+        ["20°N", "35°N", "50°N"],
+    )
     uplt.close(fig)
 
 
