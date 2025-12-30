@@ -3151,10 +3151,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if axes is False:
             self.figure._clear_share_label_groups([self], target=target)
             return
-        if not axes:
-            return
-        axes = list(axes)
-        if not axes:
+        if axes is None or not len(list(axes)):
             return
 
         # Convert indices to actual axes objects
