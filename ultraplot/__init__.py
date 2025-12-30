@@ -19,6 +19,7 @@ version = __version__
 
 _SETUP_DONE = False
 _SETUP_RUNNING = False
+_EAGER_DONE = False
 _EXPOSED_MODULES = set()
 _ATTR_MAP = None
 _REGISTRY_ATTRS = None
@@ -83,6 +84,18 @@ _EXTRA_ATTRS = {
 }
 
 _SETUP_SKIP = {"internals", "externals", "tests"}
+_SETUP_ATTRS = {"rc", "rc_ultraplot", "rc_matplotlib", "colormaps"}
+_SETUP_MODULES = {
+    "colors",
+    "ticker",
+    "scale",
+    "axes",
+    "gridspec",
+    "figure",
+    "constructor",
+    "ui",
+    "demos",
+}
 
 _EXTRA_PUBLIC = {
     "crs",
@@ -102,6 +115,7 @@ _EXTRA_PUBLIC = {
     "cartopy",
     "basemap",
     "legend",
+    "setup",
 }
 
 
@@ -256,6 +270,7 @@ def _get_registry_attr(name):
 
 
 def _load_all():
+    global _EAGER_DONE
     _setup()
     names = set()
     for module_name in _STAR_MODULES:
@@ -269,7 +284,45 @@ def _load_all():
     if _REGISTRY_ATTRS:
         names.update(_REGISTRY_ATTRS)
     names.update({"__version__", "version", "name"})
+    _EAGER_DONE = True
     return sorted(names)
+
+
+def _get_rc_eager():
+    try:
+        from .config import rc
+    except Exception:
+        return False
+    try:
+        return bool(rc["ultraplot.eager_import"])
+    except Exception:
+        return False
+
+
+def _maybe_eager_import():
+    if _EAGER_DONE:
+        return
+    if _get_rc_eager():
+        _load_all()
+
+
+def setup(*, eager=None):
+    """
+    Initialize ultraplot and optionally import the public API eagerly.
+    """
+    _setup()
+    if eager is None:
+        eager = _get_rc_eager()
+    if eager:
+        _load_all()
+
+
+def _needs_setup(name, module_name=None):
+    if name in _SETUP_ATTRS:
+        return True
+    if module_name in _SETUP_MODULES:
+        return True
+    return False
 
 
 def __getattr__(name):
@@ -306,26 +359,27 @@ def __getattr__(name):
         return basemap
     if name in _EXTRA_ATTRS and name in _SETUP_SKIP:
         return _resolve_extra(name)
-    _setup()
     if name in _EXTRA_ATTRS:
+        module_name, _ = _EXTRA_ATTRS[name]
+        if _needs_setup(name, module_name=module_name):
+            _setup()
+            _maybe_eager_import()
         return _resolve_extra(name)
 
     _load_attr_map()
     if _ATTR_MAP and name in _ATTR_MAP:
-        module = _expose_module(_ATTR_MAP[name])
+        module_name = _ATTR_MAP[name]
+        if _needs_setup(name, module_name=module_name):
+            _setup()
+            _maybe_eager_import()
+        module = _expose_module(module_name)
         value = getattr(module, name)
         globals()[name] = value
         return value
 
-    value = _get_registry_attr(name)
-    if value is not None:
-        globals()[name] = value
-        return value
-
-    for module_name in _STAR_MODULES:
-        module = _expose_module(module_name)
-        if hasattr(module, name):
-            value = getattr(module, name)
+    if name[:1].isupper():
+        value = _get_registry_attr(name)
+        if value is not None:
             globals()[name] = value
             return value
 
