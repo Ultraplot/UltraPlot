@@ -258,6 +258,138 @@ def test_axis_sharing(share):
     return fig
 
 
+def test_subset_share_xlabels_override():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share="labels", span=False)
+    ax[0, 0].format(xlabel="Top-left X")
+    ax[0, 1].format(xlabel="Top-right X")
+    bottom = ax[1, :]
+    bottom[0].format(xlabel="Bottom-row X", share_xlabels=list(bottom))
+
+    fig.canvas.draw()
+
+    assert not ax[0, 0].xaxis.get_label().get_visible()
+    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert bottom[0].get_xlabel().strip() == ""
+    assert bottom[1].get_xlabel().strip() == ""
+    assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
+def test_subset_share_xlabels_implicit():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share="labels", span=False)
+    ax[0, 0].format(xlabel="Top-left X")
+    ax[0, 1].format(xlabel="Top-right X")
+    bottom = ax[1, :]
+    bottom.format(xlabel="Bottom-row X")
+
+    fig.canvas.draw()
+
+    assert not ax[0, 0].xaxis.get_label().get_visible()
+    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert bottom[0].get_xlabel().strip() == ""
+    assert bottom[1].get_xlabel().strip() == ""
+    assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
+def test_subset_share_ylabels_override():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share="labels", span=False)
+    ax[0, 0].format(ylabel="Left-top Y")
+    ax[1, 0].format(ylabel="Left-bottom Y")
+    right = ax[:, 1]
+    right[0].format(ylabel="Right-column Y", share_ylabels=list(right))
+
+    fig.canvas.draw()
+
+    assert ax[0, 0].yaxis.get_label().get_visible()
+    assert ax[0, 0].get_ylabel() == "Left-top Y"
+    assert ax[1, 0].yaxis.get_label().get_visible()
+    assert ax[1, 0].get_ylabel() == "Left-bottom Y"
+    assert right[0].get_ylabel().strip() == ""
+    assert right[1].get_ylabel().strip() == ""
+    assert any(
+        lab.get_text() == "Right-column Y" for lab in fig._supylabel_dict.values()
+    )
+
+    uplt.close(fig)
+
+
+def test_subset_share_xlabels_implicit_column():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    right = ax[:, 1]
+    right.format(xlabel="Right-column X")
+
+    fig.canvas.draw()
+
+    assert ax[0, 1].get_xlabel().strip() == ""
+    assert ax[1, 1].get_xlabel().strip() == ""
+    label_axes = [
+        axi
+        for axi, lab in fig._supxlabel_dict.items()
+        if lab.get_text() == "Right-column X"
+    ]
+    assert label_axes and label_axes[0] is ax[1, 1]
+
+    uplt.close(fig)
+
+
+def test_subset_share_ylabels_implicit_row():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    top = ax[0, :]
+    top.format(ylabel="Top-row Y")
+
+    fig.canvas.draw()
+
+    assert ax[0, 0].get_ylabel().strip() == ""
+    assert ax[0, 1].get_ylabel().strip() == ""
+    label_axes = [
+        axi for axi, lab in fig._supylabel_dict.items() if lab.get_text() == "Top-row Y"
+    ]
+    assert label_axes and label_axes[0] is ax[0, 0]
+
+    uplt.close(fig)
+
+
+def test_subset_share_xlabels_implicit_column_top():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    right = ax[:, 1]
+    right.format(xlabel="Right-column X (top)", xlabelloc="top")
+
+    fig.canvas.draw()
+
+    assert ax[0, 1].get_xlabel().strip() == ""
+    assert ax[1, 1].get_xlabel().strip() == ""
+    label_axes = [
+        axi
+        for axi, lab in fig._supxlabel_dict.items()
+        if lab.get_text() == "Right-column X (top)"
+    ]
+    assert label_axes and label_axes[0] is ax[0, 1]
+
+    uplt.close(fig)
+
+
+def test_subset_share_ylabels_implicit_row_right():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    top = ax[0, :]
+    top.format(ylabel="Top-row Y (right)", ylabelloc="right")
+
+    fig.canvas.draw()
+
+    assert ax[0, 0].get_ylabel().strip() == ""
+    assert ax[0, 1].get_ylabel().strip() == ""
+    label_axes = [
+        axi
+        for axi, lab in fig._supylabel_dict.items()
+        if lab.get_text() == "Top-row Y (right)"
+    ]
+    assert label_axes and label_axes[0] is ax[0, 1]
+
+    uplt.close(fig)
+
+
 @pytest.mark.parametrize(
     "layout",
     [
