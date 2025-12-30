@@ -2,7 +2,12 @@
 """
 A succinct matplotlib wrapper for making beautiful, publication-quality graphics.
 """
-# SCM versioning
+from __future__ import annotations
+
+import ast
+from importlib import import_module
+from pathlib import Path
+
 name = "ultraplot"
 
 try:
@@ -12,106 +17,326 @@ except ImportError:
 
 version = __version__
 
-# Import dependencies early to isolate import times
-from . import internals, externals, tests  # noqa: F401
-from .internals.benchmarks import _benchmark
+_SETUP_DONE = False
+_SETUP_RUNNING = False
+_EXPOSED_MODULES = set()
+_ATTR_MAP = None
+_REGISTRY_ATTRS = None
 
-with _benchmark("pyplot"):
-    from matplotlib import pyplot  # noqa: F401
-with _benchmark("cartopy"):
+_STAR_MODULES = (
+    "config",
+    "proj",
+    "utils",
+    "colors",
+    "ticker",
+    "scale",
+    "axes",
+    "gridspec",
+    "figure",
+    "constructor",
+    "ui",
+    "demos",
+)
+
+_MODULE_SOURCES = {
+    "config": "config.py",
+    "proj": "proj.py",
+    "utils": "utils.py",
+    "colors": "colors.py",
+    "ticker": "ticker.py",
+    "scale": "scale.py",
+    "axes": "axes/__init__.py",
+    "gridspec": "gridspec.py",
+    "figure": "figure.py",
+    "constructor": "constructor.py",
+    "ui": "ui.py",
+    "demos": "demos.py",
+}
+
+_EXTRA_ATTRS = {
+    "config": ("config", None),
+    "proj": ("proj", None),
+    "utils": ("utils", None),
+    "colors": ("colors", None),
+    "ticker": ("ticker", None),
+    "scale": ("scale", None),
+    "legend": ("legend", None),
+    "axes": ("axes", None),
+    "gridspec": ("gridspec", None),
+    "figure": ("figure", None),
+    "constructor": ("constructor", None),
+    "ui": ("ui", None),
+    "demos": ("demos", None),
+    "crs": ("proj", None),
+    "colormaps": ("colors", "_cmap_database"),
+    "check_for_update": ("utils", "check_for_update"),
+    "NORMS": ("constructor", "NORMS"),
+    "LOCATORS": ("constructor", "LOCATORS"),
+    "FORMATTERS": ("constructor", "FORMATTERS"),
+    "SCALES": ("constructor", "SCALES"),
+    "PROJS": ("constructor", "PROJS"),
+    "internals": ("internals", None),
+    "externals": ("externals", None),
+    "tests": ("tests", None),
+    "rcsetup": ("internals", "rcsetup"),
+    "warnings": ("internals", "warnings"),
+}
+
+_SETUP_SKIP = {"internals", "externals", "tests"}
+
+_EXTRA_PUBLIC = {
+    "crs",
+    "colormaps",
+    "check_for_update",
+    "NORMS",
+    "LOCATORS",
+    "FORMATTERS",
+    "SCALES",
+    "PROJS",
+    "internals",
+    "externals",
+    "tests",
+    "rcsetup",
+    "warnings",
+    "pyplot",
+    "cartopy",
+    "basemap",
+    "legend",
+}
+
+
+def _import_module(module_name):
+    return import_module(f".{module_name}", __name__)
+
+
+def _parse_all(path):
     try:
-        import cartopy  # noqa: F401
-    except ImportError:
-        pass
-with _benchmark("basemap"):
-    try:
-        from mpl_toolkits import basemap  # noqa: F401
-    except ImportError:
-        pass
-
-# Import everything to top level
-with _benchmark("config"):
-    from .config import *  # noqa: F401 F403
-with _benchmark("proj"):
-    from .proj import *  # noqa: F401 F403
-with _benchmark("utils"):
-    from .utils import *  # noqa: F401 F403
-with _benchmark("colors"):
-    from .colors import *  # noqa: F401 F403
-with _benchmark("ticker"):
-    from .ticker import *  # noqa: F401 F403
-with _benchmark("scale"):
-    from .scale import *  # noqa: F401 F403
-with _benchmark("axes"):
-    from .axes import *  # noqa: F401 F403
-with _benchmark("gridspec"):
-    from .gridspec import *  # noqa: F401 F403
-with _benchmark("figure"):
-    from .figure import *  # noqa: F401 F403
-with _benchmark("constructor"):
-    from .constructor import *  # noqa: F401 F403
-with _benchmark("ui"):
-    from .ui import *  # noqa: F401 F403
-with _benchmark("demos"):
-    from .demos import *  # noqa: F401 F403
-
-# Dynamically add registered classes to top-level namespace
-from . import proj as crs  # backwards compatibility  # noqa: F401
-from .constructor import NORMS, LOCATORS, FORMATTERS, SCALES, PROJS
-
-_globals = globals()
-for _src in (NORMS, LOCATORS, FORMATTERS, SCALES, PROJS):
-    for _key, _cls in _src.items():
-        if isinstance(_cls, type):  # i.e. not a scale preset
-            _globals[_cls.__name__] = _cls  # may overwrite ultraplot names
-# Register objects
-from .config import register_cmaps, register_cycles, register_colors, register_fonts
-
-with _benchmark("cmaps"):
-    register_cmaps(default=True)
-with _benchmark("cycles"):
-    register_cycles(default=True)
-with _benchmark("colors"):
-    register_colors(default=True)
-with _benchmark("fonts"):
-    register_fonts(default=True)
-
-# Validate colormap names and propagate 'cycle' to 'axes.prop_cycle'
-# NOTE: cmap.sequential also updates siblings 'cmap' and 'image.cmap'
-from .config import rc
-from .internals import rcsetup, warnings
-
-
-rcsetup.VALIDATE_REGISTERED_CMAPS = True
-for _key in (
-    "cycle",
-    "cmap.sequential",
-    "cmap.diverging",
-    "cmap.cyclic",
-    "cmap.qualitative",
-):  # noqa: E501
-    try:
-        rc[_key] = rc[_key]
-    except ValueError as err:
-        warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
-        rc[_key] = "Greys"  # fill value
-
-# Validate color names now that colors are registered
-# NOTE: This updates all settings with 'color' in name (harmless if it's not a color)
-from .config import rc_ultraplot, rc_matplotlib
-
-rcsetup.VALIDATE_REGISTERED_COLORS = True
-for _src in (rc_ultraplot, rc_matplotlib):
-    for _key in _src:  # loop through unsynced properties
-        if "color" not in _key:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError):
+        return None
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
             continue
-        try:
-            _src[_key] = _src[_key]
-        except ValueError as err:
-            warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
-            _src[_key] = "black"  # fill value
-from .colors import _cmap_database as colormaps
-from .utils import check_for_update
+        for target in node.targets:
+            if isinstance(target, ast.Name) and target.id == "__all__":
+                try:
+                    value = ast.literal_eval(node.value)
+                except Exception:
+                    return None
+                if isinstance(value, (list, tuple)) and all(
+                    isinstance(item, str) for item in value
+                ):
+                    return list(value)
+                return None
+    return None
 
-if rc["ultraplot.check_for_latest_version"]:
-    check_for_update("ultraplot")
+
+def _load_attr_map():
+    global _ATTR_MAP
+    if _ATTR_MAP is not None:
+        return
+    attr_map = {}
+    base = Path(__file__).resolve().parent
+    for module_name in _STAR_MODULES:
+        relpath = _MODULE_SOURCES.get(module_name)
+        if not relpath:
+            continue
+        names = _parse_all(base / relpath)
+        if not names:
+            continue
+        for name in names:
+            attr_map[name] = module_name
+    _ATTR_MAP = attr_map
+
+
+def _expose_module(module_name):
+    if module_name in _EXPOSED_MODULES:
+        return _import_module(module_name)
+    module = _import_module(module_name)
+    names = getattr(module, "__all__", None)
+    if names is None:
+        names = [name for name in dir(module) if not name.startswith("_")]
+    for name in names:
+        globals()[name] = getattr(module, name)
+    _EXPOSED_MODULES.add(module_name)
+    return module
+
+
+def _setup():
+    global _SETUP_DONE, _SETUP_RUNNING
+    if _SETUP_DONE or _SETUP_RUNNING:
+        return
+    _SETUP_RUNNING = True
+    success = False
+    try:
+        from .config import (
+            rc,
+            rc_matplotlib,
+            rc_ultraplot,
+            register_cmaps,
+            register_colors,
+            register_cycles,
+            register_fonts,
+        )
+        from .internals import rcsetup, warnings
+        from .internals.benchmarks import _benchmark
+
+        with _benchmark("cmaps"):
+            register_cmaps(default=True)
+        with _benchmark("cycles"):
+            register_cycles(default=True)
+        with _benchmark("colors"):
+            register_colors(default=True)
+        with _benchmark("fonts"):
+            register_fonts(default=True)
+
+        rcsetup.VALIDATE_REGISTERED_CMAPS = True
+        for key in (
+            "cycle",
+            "cmap.sequential",
+            "cmap.diverging",
+            "cmap.cyclic",
+            "cmap.qualitative",
+        ):
+            try:
+                rc[key] = rc[key]
+            except ValueError as err:
+                warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
+                rc[key] = "Greys"
+
+        rcsetup.VALIDATE_REGISTERED_COLORS = True
+        for src in (rc_ultraplot, rc_matplotlib):
+            for key in src:
+                if "color" not in key:
+                    continue
+                try:
+                    src[key] = src[key]
+                except ValueError as err:
+                    warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
+                    src[key] = "black"
+
+        if rc["ultraplot.check_for_latest_version"]:
+            from .utils import check_for_update
+
+            check_for_update("ultraplot")
+        success = True
+    finally:
+        if success:
+            _SETUP_DONE = True
+        _SETUP_RUNNING = False
+
+
+def _resolve_extra(name):
+    module_name, attr = _EXTRA_ATTRS[name]
+    module = _import_module(module_name)
+    value = module if attr is None else getattr(module, attr)
+    globals()[name] = value
+    return value
+
+
+def _build_registry_map():
+    global _REGISTRY_ATTRS
+    if _REGISTRY_ATTRS is not None:
+        return
+    from .constructor import FORMATTERS, LOCATORS, NORMS, PROJS, SCALES
+
+    registry = {}
+    for src in (NORMS, LOCATORS, FORMATTERS, SCALES, PROJS):
+        for _, cls in src.items():
+            if isinstance(cls, type):
+                registry[cls.__name__] = cls
+    _REGISTRY_ATTRS = registry
+
+
+def _get_registry_attr(name):
+    _build_registry_map()
+    if not _REGISTRY_ATTRS:
+        return None
+    return _REGISTRY_ATTRS.get(name)
+
+
+def _load_all():
+    _setup()
+    names = set()
+    for module_name in _STAR_MODULES:
+        module = _expose_module(module_name)
+        exports = getattr(module, "__all__", None)
+        if exports is None:
+            exports = [name for name in dir(module) if not name.startswith("_")]
+        names.update(exports)
+    names.update(_EXTRA_PUBLIC)
+    _build_registry_map()
+    if _REGISTRY_ATTRS:
+        names.update(_REGISTRY_ATTRS)
+    names.update({"__version__", "version", "name"})
+    return sorted(names)
+
+
+def __getattr__(name):
+    if name == "pytest_plugins":
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    if name in {"__version__", "version", "name"}:
+        return globals()[name]
+    if name == "__all__":
+        value = _load_all()
+        globals()["__all__"] = value
+        return value
+    if name == "pyplot":
+        import matplotlib.pyplot as pyplot
+
+        globals()[name] = pyplot
+        return pyplot
+    if name == "cartopy":
+        try:
+            import cartopy
+        except ImportError as err:
+            raise AttributeError(
+                f"module {__name__!r} has no attribute {name!r}"
+            ) from err
+        globals()[name] = cartopy
+        return cartopy
+    if name == "basemap":
+        try:
+            from mpl_toolkits import basemap
+        except ImportError as err:
+            raise AttributeError(
+                f"module {__name__!r} has no attribute {name!r}"
+            ) from err
+        globals()[name] = basemap
+        return basemap
+    if name in _EXTRA_ATTRS and name in _SETUP_SKIP:
+        return _resolve_extra(name)
+    _setup()
+    if name in _EXTRA_ATTRS:
+        return _resolve_extra(name)
+
+    _load_attr_map()
+    if _ATTR_MAP and name in _ATTR_MAP:
+        module = _expose_module(_ATTR_MAP[name])
+        value = getattr(module, name)
+        globals()[name] = value
+        return value
+
+    value = _get_registry_attr(name)
+    if value is not None:
+        globals()[name] = value
+        return value
+
+    for module_name in _STAR_MODULES:
+        module = _expose_module(module_name)
+        if hasattr(module, name):
+            value = getattr(module, name)
+            globals()[name] = value
+            return value
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    names = set(globals())
+    _load_attr_map()
+    if _ATTR_MAP:
+        names.update(_ATTR_MAP)
+    names.update(_EXTRA_ATTRS)
+    names.update(_EXTRA_PUBLIC)
+    return sorted(names)
