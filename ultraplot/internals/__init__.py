@@ -14,7 +14,7 @@ try:  # print debugging (used with internal modules)
 except ImportError:  # graceful fallback if IceCream isn't installed
     ic = lambda *args: print(*args)  # noqa: E731
 
-from . import warnings as warns
+from . import warnings
 
 
 def _not_none(*args, default=None, **kwargs):
@@ -37,7 +37,7 @@ def _not_none(*args, default=None, **kwargs):
                 break
         kwargs = {name: arg for name, arg in kwargs.items() if arg is not None}
         if len(kwargs) > 1:
-            warns._warn_ultraplot(
+            warnings._warn_ultraplot(
                 f"Got conflicting or duplicate keyword arguments: {kwargs}. "
                 "Using the first keyword argument."
             )
@@ -276,7 +276,7 @@ def _pop_props(input, *categories, prefix=None, ignore=None, skip=None):
             if prop is None:
                 continue
             if any(string in key for string in ignore):
-                warns._warn_ultraplot(f"Ignoring property {key}={prop!r}.")
+                warnings._warn_ultraplot(f"Ignoring property {key}={prop!r}.")
                 continue
             if isinstance(prop, str):  # ad-hoc unit conversion
                 if key in ("fontsize",):
@@ -316,7 +316,7 @@ def _pop_rc(src, *, ignore_conflicts=True):
     kw = src.pop("rc_kw", None) or {}
     if "mode" in src:
         src["rc_mode"] = src.pop("mode")
-        warns._warn_ultraplot(
+        warnings._warn_ultraplot(
             "Keyword 'mode' was deprecated in v0.6. Please use 'rc_mode' instead."
         )
     mode = src.pop("rc_mode", None)
