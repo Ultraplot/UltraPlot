@@ -1,7 +1,10 @@
+import importlib.util
 import json
 import os
 import subprocess
 import sys
+
+import pytest
 
 
 def _run(code):
@@ -69,3 +72,71 @@ print("ok")
 """
     out = _run(code)
     assert out == "ok"
+
+
+def test_dir_populates_attr_map(monkeypatch):
+    import ultraplot as uplt
+
+    monkeypatch.setattr(uplt, "_ATTR_MAP", None, raising=False)
+    names = dir(uplt)
+    assert "close" in names
+    assert uplt._ATTR_MAP is not None
+
+
+def test_extra_and_registry_accessors(monkeypatch):
+    import ultraplot as uplt
+
+    monkeypatch.setattr(uplt, "_REGISTRY_ATTRS", None, raising=False)
+    assert hasattr(uplt.colormaps, "get_cmap")
+    assert uplt.internals.__name__.endswith("internals")
+    assert isinstance(uplt.LogNorm, type)
+
+
+def test_all_triggers_eager_load(monkeypatch):
+    import ultraplot as uplt
+
+    monkeypatch.delattr(uplt, "__all__", raising=False)
+    names = uplt.__all__
+    assert "setup" in names
+    assert "pyplot" in names
+
+
+def test_optional_module_attrs():
+    import ultraplot as uplt
+
+    if importlib.util.find_spec("cartopy") is None:
+        with pytest.raises(AttributeError):
+            _ = uplt.cartopy
+    else:
+        assert uplt.cartopy.__name__ == "cartopy"
+
+    if importlib.util.find_spec("mpl_toolkits.basemap") is None:
+        with pytest.raises(AttributeError):
+            _ = uplt.basemap
+    else:
+        assert uplt.basemap.__name__.endswith("basemap")
+
+    with pytest.raises(AttributeError):
+        getattr(uplt, "pytest_plugins")
+
+
+def test_internals_lazy_attrs():
+    from ultraplot import internals
+
+    assert internals.__name__.endswith("internals")
+    assert "rcsetup" in dir(internals)
+    assert internals.rcsetup is not None
+    assert internals.warnings is not None
+    assert str(internals._version_mpl)
+    assert issubclass(internals.UltraPlotWarning, Warning)
+    rc_matplotlib = internals._get_rc_matplotlib()
+    assert "axes.grid" in rc_matplotlib
+
+
+def test_docstring_missing_triggers_lazy_import():
+    from ultraplot.internals import docstring
+
+    with pytest.raises(KeyError):
+        docstring._snippet_manager["ticker.not_a_real_key"]
+    with pytest.raises(KeyError):
+        docstring._snippet_manager["does_not_exist.key"]
