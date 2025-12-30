@@ -41,3 +41,31 @@ print("ok")
 """
     out = _run(code)
     assert out == "ok"
+
+
+def test_setup_eager_imports_modules():
+    code = """
+import sys
+import ultraplot as uplt
+assert "ultraplot.axes" not in sys.modules
+uplt.setup(eager=True)
+assert "ultraplot.axes" in sys.modules
+print("ok")
+"""
+    out = _run(code)
+    assert out == "ok"
+
+
+def test_setup_uses_rc_eager_import():
+    code = """
+import sys
+import ultraplot as uplt
+uplt.setup(eager=False)
+assert "ultraplot.axes" not in sys.modules
+uplt.rc["ultraplot.eager_import"] = True
+uplt.setup()
+assert "ultraplot.axes" in sys.modules
+print("ok")
+"""
+    out = _run(code)
+    assert out == "ok"
