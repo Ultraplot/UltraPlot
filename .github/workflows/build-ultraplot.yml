@@ -97,7 +97,7 @@ jobs:
 
           # Generate the baseline images and hash library
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -W ignore \
+          pytest -W ignore -n auto \
             --mpl-generate-path=./baseline/ \
             --mpl-generate-hash-library=./baseline/baseline_hashes.json\
             --mpl-default-style="./ultraplot.yml"\
@@ -114,7 +114,7 @@ jobs:
 
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -W ignore \
+          pytest -W ignore -n auto\
             --mpl \
             --mpl-hash-library=./baseline/baseline_hashes.json\
             --mpl-results-path=./results/ \
