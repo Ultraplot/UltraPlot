@@ -352,6 +352,74 @@ def test_subset_share_ylabels_implicit_row():
     uplt.close(fig)
 
 
+def test_subset_share_xlabels_clear():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    bottom = ax[1, :]
+    bottom.format(xlabel="Shared")
+
+    fig.canvas.draw()
+    assert any(lab.get_text() == "Shared" for lab in fig._supxlabel_dict.values())
+
+    bottom.format(share_xlabels=False, xlabel="Unshared")
+    fig.canvas.draw()
+
+    assert not any(lab.get_text() == "Shared" for lab in fig._supxlabel_dict.values())
+    assert not any(lab.get_text() == "Unshared" for lab in fig._supxlabel_dict.values())
+    assert bottom[0].get_xlabel() == "Unshared"
+    assert bottom[1].get_xlabel() == "Unshared"
+
+    uplt.close(fig)
+
+
+def test_subset_share_labels_method_both():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    right = ax[:, 1]
+    right[0].set_xlabel("Right-column X")
+    right[0].set_ylabel("Right-column Y")
+    right.share_labels(axis="both")
+
+    fig.canvas.draw()
+
+    assert right[0].get_xlabel().strip() == ""
+    assert right[1].get_xlabel().strip() == ""
+    assert right[0].get_ylabel().strip() == ""
+    assert right[1].get_ylabel().strip() == ""
+    assert any(
+        lab.get_text() == "Right-column X" for lab in fig._supxlabel_dict.values()
+    )
+    assert any(
+        lab.get_text() == "Right-column Y" for lab in fig._supylabel_dict.values()
+    )
+
+    uplt.close(fig)
+
+
+def test_subset_share_labels_invalid_axis():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    with pytest.raises(ValueError):
+        ax[:, 1].share_labels(axis="nope")
+
+    uplt.close(fig)
+
+
+def test_subset_share_xlabels_mixed_sides():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    ax[0, :].format(xlabelloc="top", share_xlabels=False)
+    ax[1, :].format(xlabelloc="bottom", share_xlabels=False)
+    ax[0, 0].set_xlabel("Top X")
+    ax[0, 1].set_xlabel("Top X")
+    ax[1, 0].set_xlabel("Bottom X")
+    ax[1, 1].set_xlabel("Bottom X")
+    ax[0, 0].format(share_xlabels=list(ax))
+
+    fig.canvas.draw()
+
+    assert any(lab.get_text() == "Top X" for lab in fig._supxlabel_dict.values())
+    assert any(lab.get_text() == "Bottom X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
 def test_subset_share_xlabels_implicit_column_top():
     fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
     right = ax[:, 1]
