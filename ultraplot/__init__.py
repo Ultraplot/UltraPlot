@@ -272,15 +272,19 @@ def _get_registry_attr(name):
 def _load_all():
     global _EAGER_DONE
     _setup()
+    from .internals.benchmarks import _benchmark
+
     names = set()
     for module_name in _STAR_MODULES:
-        module = _expose_module(module_name)
+        with _benchmark(f"import {module_name}"):
+            module = _expose_module(module_name)
         exports = getattr(module, "__all__", None)
         if exports is None:
             exports = [name for name in dir(module) if not name.startswith("_")]
         names.update(exports)
     names.update(_EXTRA_PUBLIC)
-    _build_registry_map()
+    with _benchmark("registries"):
+        _build_registry_map()
     if _REGISTRY_ATTRS:
         names.update(_REGISTRY_ATTRS)
     names.update({"__version__", "version", "name"})
