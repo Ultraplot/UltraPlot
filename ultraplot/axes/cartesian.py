@@ -5,22 +5,27 @@ The standard Cartesian axes used for most ultraplot figures.
 import copy
 import inspect
 
+import matplotlib.axis as maxis
 import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 import numpy as np
-
 from packaging import version
 
 from .. import constructor
 from .. import scale as pscale
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import ic  # noqa: F401
-from ..internals import _not_none, _pop_rc, _version_mpl, docstring, labels, warnings
-from . import plot, shared
-import matplotlib.axis as maxis
-
+from ..internals import (
+    _not_none,
+    _pop_rc,
+    _version_mpl,
+    docstring,
+    ic,  # noqa: F401
+    labels,
+    warnings,
+)
 from ..utils import units
+from . import plot, shared
 
 __all__ = ["CartesianAxes"]
 
