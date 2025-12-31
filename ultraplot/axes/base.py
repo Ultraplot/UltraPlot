@@ -3042,7 +3042,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # Offset title away from a-b-c label
         atext, ttext = aobj.get_text(), tobj.get_text()
         awidth = twidth = 0
-        pad = (abcpad / 72) / self._get_size_inches()[0]
+        width_inches = self._get_size_inches()[0]
+        pad = (abcpad / 72) / width_inches
+        abc_pad = (self._abc_pad / 72) / width_inches
         ha = aobj.get_ha()
 
         # Get dimensions of non-empty elements
@@ -3058,6 +3060,30 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 .transformed(self.transAxes.inverted())
                 .width
             )
+
+        # Shrink the title font if both texts share a location and would overflow
+        if atext and ttext and self._abc_loc == self._title_loc and twidth > 0:
+            scale = 1
+            base_x = tobj.get_position()[0]
+            if ha == "left":
+                available = 1 - (base_x + awidth + pad)
+                if available < twidth and available > 0:
+                    scale = available / twidth
+            elif ha == "right":
+                available = base_x + abc_pad - pad - awidth
+                if available < twidth and available > 0:
+                    scale = available / twidth
+            elif ha == "center":
+                # Conservative fit for centered titles sharing the abc location
+                left_room = base_x - 0.5 * (awidth + pad)
+                right_room = 1 - (base_x + 0.5 * (awidth + pad))
+                max_room = min(left_room, right_room)
+                if max_room < twidth / 2 and max_room > 0:
+                    scale = (2 * max_room) / twidth
+
+            if scale < 1:
+                tobj.set_fontsize(tobj.get_fontsize() * scale)
+                twidth *= scale
 
         # Calculate offsets based on alignment and content
         aoffset = toffset = 0
