@@ -2986,6 +2986,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 kw["text"] = title[self.number - 1]
         else:
             raise ValueError(f"Invalid title {title!r}. Must be string(s).")
+        if any(key in kwargs for key in ("size", "fontsize")):
+            self._title_dict[loc]._ultraplot_manual_size = True
         kw.update(kwargs)
         self._title_dict[loc].update(kw)
 
@@ -3062,7 +3064,13 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             )
 
         # Shrink the title font if both texts share a location and would overflow
-        if atext and ttext and self._abc_loc == self._title_loc and twidth > 0:
+        if (
+            atext
+            and ttext
+            and self._abc_loc == self._title_loc
+            and twidth > 0
+            and not getattr(tobj, "_ultraplot_manual_size", False)
+        ):
             scale = 1
             base_x = tobj.get_position()[0]
             if ha == "left":
