@@ -4,6 +4,7 @@ Test twin, inset, and panel axes.
 """
 import numpy as np
 import pytest
+
 import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
 
@@ -128,6 +129,35 @@ def test_cartesian_format_all_units_types():
         "yticklabelsize": 10.0,
     }
     ax.format(**kwargs)
+
+
+def test_title_shrinks_when_abc_overlaps():
+    """
+    Ensure long titles shrink when they would overlap the abc label.
+    """
+    fig, ax = uplt.subplots(figsize=(2, 2))
+    ax.format(abc=True, title="X" * 200, titleloc="left", abcloc="left")
+    title_obj = ax._title_dict["left"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_manual_size_ignores_auto_shrink():
+    """
+    Ensure explicit title sizes bypass auto-scaling.
+    """
+    fig, ax = uplt.subplots(figsize=(2, 2))
+    ax.format(
+        abc=True,
+        title="X" * 200,
+        titleloc="left",
+        abcloc="left",
+        title_kw={"size": 20},
+    )
+    title_obj = ax._title_dict["left"]
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() == 20
 
 
 def test_axis_access():
