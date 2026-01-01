@@ -3116,6 +3116,44 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if ttext:
             tobj.set_x(tobj.get_position()[0] + toffset)
 
+        # Shrink title if it overlaps the abc label at a different location
+        if (
+            atext
+            and self._abc_loc != self._title_loc
+            and not getattr(
+                self._title_dict[self._title_loc], "_ultraplot_manual_size", False
+            )
+        ):
+            title_obj = self._title_dict[self._title_loc]
+            title_text = title_obj.get_text()
+            if title_text:
+                abc_bbox = aobj.get_window_extent(renderer).transformed(
+                    self.transAxes.inverted()
+                )
+                title_bbox = title_obj.get_window_extent(renderer).transformed(
+                    self.transAxes.inverted()
+                )
+                ax0, ax1 = abc_bbox.x0, abc_bbox.x1
+                tx0, tx1 = title_bbox.x0, title_bbox.x1
+                if tx0 < ax1 + pad and tx1 > ax0 - pad:
+                    base_x = title_obj.get_position()[0]
+                    ha = title_obj.get_ha()
+                    max_width = 0
+                    if ha == "left":
+                        if base_x <= ax0 - pad:
+                            max_width = (ax0 - pad) - base_x
+                    elif ha == "right":
+                        if base_x >= ax1 + pad:
+                            max_width = base_x - (ax1 + pad)
+                    elif ha == "center":
+                        if base_x >= ax1 + pad:
+                            max_width = 2 * (base_x - (ax1 + pad))
+                        elif base_x <= ax0 - pad:
+                            max_width = 2 * ((ax0 - pad) - base_x)
+                    if 0 < max_width < title_bbox.width:
+                        scale = max_width / title_bbox.width
+                        title_obj.set_fontsize(title_obj.get_fontsize() * scale)
+
     def _update_super_title(self, suptitle=None, **kwargs):
         """
         Update the figure super title.
