@@ -12,7 +12,10 @@ import pytest
 from matplotlib.transforms import Bbox
 
 import ultraplot as uplt
-from ultraplot.axes.container import ExternalAxesContainer
+from ultraplot.axes.container import (
+    ExternalAxesContainer,
+    create_external_axes_container,
+)
 
 
 class FaultyExternalAxes:
@@ -624,3 +627,139 @@ def test_container_autoshare_disabled():
     # (This is in the init code but hard to verify directly)
     # Just ensure container exists
     assert ax is not None
+
+
+def test_external_padding_with_points_to_pixels():
+    """Test external padding applied when points_to_pixels returns numeric."""
+    fig = uplt.figure()
+
+    class TightBboxAxes(MinimalExternalAxes):
+        def get_tightbbox(self, renderer):
+            bbox = self._position.transformed(self.figure.transFigure)
+            return bbox.expanded(1.5, 1.5)
+
+    ax = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=TightBboxAxes,
+        external_axes_kwargs={},
+        external_padding=10.0,
+        external_shrink_factor=1.0,
+    )
+
+    child = ax.get_external_child()
+    assert child is not None
+    initial_pos = child.get_position()
+
+    class Renderer:
+        def points_to_pixels(self, value):
+            return 2.0
+
+    ax._ensure_external_fits_within_container(Renderer())
+    new_pos = child.get_position()
+    assert new_pos.width <= initial_pos.width
+    assert new_pos.height <= initial_pos.height
+
+
+def test_external_axes_fallback_to_rect_on_typeerror():
+    """Test fallback to rect init when subplotspec is unsupported."""
+    fig = uplt.figure()
+
+    class RectOnlyAxes(MinimalExternalAxes):
+        def __init__(self, fig, rect, **kwargs):
+            from matplotlib.gridspec import SubplotSpec
+
+            if isinstance(rect, SubplotSpec):
+                raise TypeError("subplotspec not supported")
+            super().__init__(fig, rect, **kwargs)
+            self.used_rect = rect
+
+    ax = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=RectOnlyAxes,
+        external_axes_kwargs={},
+    )
+
+    child = ax.get_external_child()
+    assert child is not None
+    assert isinstance(child.used_rect, (list, tuple))
+
+
+def test_container_factory_uses_defaults_and_projection_name():
+    """Test factory container injects defaults and projection name."""
+    fig = uplt.figure()
+
+    class CapturingAxes(MinimalExternalAxes):
+        def __init__(self, fig, *args, **kwargs):
+            super().__init__(fig, *args, **kwargs)
+            self.kwargs = kwargs
+
+    Container = create_external_axes_container(CapturingAxes, projection_name="cap")
+    assert Container.name == "cap"
+
+    ax = Container(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_kwargs={"flag": True},
+    )
+
+    child = ax.get_external_child()
+    assert child is not None
+    assert child.kwargs.get("flag") is True
+
+
+def test_format_falls_back_when_external_missing_setters():
+    """Test format uses container when external axes lacks setters."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=MinimalExternalAxes,
+        external_axes_kwargs={},
+    )
+
+    ax.format(title="Local Title")
+    assert ax.get_title() == "Local Title"
+
+
+def test_get_tightbbox_returns_container_bbox():
+    """Test get_tightbbox returns the container's bbox."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=MinimalExternalAxes,
+        external_axes_kwargs={},
+    )
+
+    renderer = Mock()
+    result = ax.get_tightbbox(renderer)
+    expected = ax.get_position().transformed(fig.transFigure)
+    assert np.allclose(result.bounds, expected.bounds)
+
+
+def test_private_getattr_raises_attribute_error():
+    """Test private missing attributes raise AttributeError."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=MinimalExternalAxes,
+        external_axes_kwargs={},
+    )
+
+    with pytest.raises(AttributeError):
+        _ = ax._missing_private_attribute
