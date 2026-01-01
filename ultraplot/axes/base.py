@@ -3000,6 +3000,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # NOTE: Critical to do this every time in case padding changes or
         # we added or removed an a-b-c label in the same position as a title
         width, height = self._get_size_inches()
+        if width <= 0 or height <= 0:
+            return
         x_pad = self._title_pad / (72 * width)
         y_pad = self._title_pad / (72 * height)
         for loc, obj in self._title_dict.items():
