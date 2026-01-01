@@ -77,24 +77,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
-          # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
-          key: ${{ runner.os }}-baseline-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-${{ github.event.pull_request.base.sha }}
+          # Key is based on OS, Python/Matplotlib versions, and the PR number
+          key: ${{ runner.os }}-baseline-pr-${{ github.event.pull_request.number }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
           restore-keys: |
-            ${{ runner.os }}-baseline-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
-
-      - name: Check baseline hash library
-        id: baseline-hash
-        run: |
-          if [ -f "./ultraplot/tests/baseline/baseline_hashes.json" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
+            ${{ runner.os }}-baseline-pr-${{ github.event.pull_request.number }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
 
       # Conditional Baseline Generation (Only runs on cache miss)
       - name: Generate baseline from main
         # Skip this step if the cache was found (cache-hit is true)
-        if: steps.cache-baseline.outputs.cache-hit != 'true' || steps.baseline-hash.outputs.exists != 'true'
+        if: steps.cache-baseline.outputs.cache-hit != 'true'
         run: |
           mkdir -p ultraplot/tests/baseline
           # Checkout the base branch (e.g., 'main') to generate the official baseline
@@ -108,7 +99,6 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           pytest -x -n auto -W ignore \
             --mpl-generate-path=./ultraplot/tests/baseline/ \
-            --mpl-generate-hash-library=./ultraplot/tests/baseline/baseline_hashes.json\
             --mpl-default-style="./ultraplot.yml"\
             ultraplot/tests
 
@@ -125,7 +115,7 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           pytest -x -n auto -W ignore -n auto\
             --mpl \
-            --mpl-hash-library=./ultraplot/tests/baseline/baseline_hashes.json\
+            --mpl-baseline-path=./ultraplot/tests/baseline \
             --mpl-results-path=./results/ \
             --mpl-generate-summary=html \
             --mpl-default-style="./ultraplot.yml" \
