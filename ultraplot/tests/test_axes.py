@@ -160,6 +160,18 @@ def test_title_manual_size_ignores_auto_shrink():
     assert title_obj.get_fontsize() == 20
 
 
+def test_title_shrinks_when_abc_overlaps_different_loc():
+    """
+    Ensure long titles shrink when overlapping abc at a different location.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 200, titleloc="center", abcloc="left")
+    title_obj = axs[0]._title_dict["center"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
 def test_axis_access():
     # attempt to access the ax object 2d and linearly
     fig, ax = uplt.subplots(ncols=2, nrows=2)
