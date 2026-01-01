@@ -82,10 +82,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-baseline-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
 
+      - name: Check baseline hash library
+        id: baseline-hash
+        run: |
+          if [ -f "./ultraplot/tests/baseline/baseline_hashes.json" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # Conditional Baseline Generation (Only runs on cache miss)
       - name: Generate baseline from main
         # Skip this step if the cache was found (cache-hit is true)
-        if: steps.cache-baseline.outputs.cache-hit != 'true'
+        if: steps.cache-baseline.outputs.cache-hit != 'true' || steps.baseline-hash.outputs.exists != 'true'
         run: |
           mkdir -p ultraplot/tests/baseline
           # Checkout the base branch (e.g., 'main') to generate the official baseline
@@ -97,7 +106,7 @@ jobs:
 
           # Generate the baseline images and hash library
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -n auto -W ignore \
+          pytest -x -n auto -W ignore \
             --mpl-generate-path=./ultraplot/tests/baseline/ \
             --mpl-generate-hash-library=./ultraplot/tests/baseline/baseline_hashes.json\
             --mpl-default-style="./ultraplot.yml"\
@@ -114,7 +123,7 @@ jobs:
 
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -n auto -W ignore -n auto\
+          pytest -x -n auto -W ignore -n auto\
             --mpl \
             --mpl-hash-library=./ultraplot/tests/baseline/baseline_hashes.json\
             --mpl-results-path=./results/ \
