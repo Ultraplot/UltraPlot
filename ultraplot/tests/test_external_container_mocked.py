@@ -295,9 +295,9 @@ def test_shrink_factor_default():
         fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
     )
 
-    # Default shrink factor should be 0.85
+    # Default shrink factor should be 0.95
     assert hasattr(ax, "_external_shrink_factor")
-    assert ax._external_shrink_factor == 0.85
+    assert ax._external_shrink_factor == 0.95
 
 
 def test_shrink_factor_custom():
