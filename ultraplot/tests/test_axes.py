@@ -135,9 +135,9 @@ def test_title_shrinks_when_abc_overlaps():
     """
     Ensure long titles shrink when they would overlap the abc label.
     """
-    fig, ax = uplt.subplots(figsize=(2, 2))
-    ax.format(abc=True, title="X" * 200, titleloc="left", abcloc="left")
-    title_obj = ax._title_dict["left"]
+    fig, axs = uplt.subplots(figsize=(2, 2))
+    axs.format(abc=True, title="X" * 200, titleloc="left", abcloc="left")
+    title_obj = axs[0]._title_dict["left"]
     original_size = title_obj.get_fontsize()
     fig.canvas.draw()
     assert title_obj.get_fontsize() < original_size
@@ -147,15 +147,15 @@ def test_title_manual_size_ignores_auto_shrink():
     """
     Ensure explicit title sizes bypass auto-scaling.
     """
-    fig, ax = uplt.subplots(figsize=(2, 2))
-    ax.format(
+    fig, axs = uplt.subplots(figsize=(2, 2))
+    axs.format(
         abc=True,
         title="X" * 200,
         titleloc="left",
         abcloc="left",
         title_kw={"size": 20},
     )
-    title_obj = ax._title_dict["left"]
+    title_obj = axs[0]._title_dict["left"]
     fig.canvas.draw()
     assert title_obj.get_fontsize() == 20
 
