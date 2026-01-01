@@ -1653,7 +1653,10 @@ class SubplotGrid(MutableSequence, list):
                 )
             new_key.append(encoded_keyi)
         xs, ys = new_key
-        objs = grid[xs, ys]
+        if np.iterable(xs) and np.iterable(ys):
+            objs = grid[np.ix_(xs, ys)]
+        else:
+            objs = grid[xs, ys]
         if hasattr(objs, "flat"):
             objs = [obj for obj in objs.flat if obj is not None]
         elif not isinstance(objs, list):
