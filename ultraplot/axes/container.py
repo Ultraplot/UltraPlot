@@ -32,11 +32,11 @@ class ExternalAxesContainer(CartesianAxes):
         The external axes class to instantiate (e.g., mpltern.TernaryAxes)
     external_axes_kwargs : dict, optional
         Keyword arguments to pass to the external axes constructor
-    external_shrink_factor : float, optional, default: 0.75
+    external_shrink_factor : float, optional, default: 0.95
         The factor by which to shrink the external axes within the container
         to leave room for labels. For ternary plots, labels extend significantly
-        beyond the plot area, so a value of 0.75 (25% padding) helps prevent
-        overlap with adjacent subplots.
+        beyond the plot area, so a value of 0.95 (5% padding) helps prevent
+        overlap with adjacent subplots while keeping the axes large.
     external_padding : float, optional, default: 5.0
         Padding in points to add around the external axes tight bbox. This creates
         space between the external axes and adjacent subplots, preventing overlap
@@ -297,10 +297,6 @@ class ExternalAxesContainer(CartesianAxes):
             ):
                 self._external_axes.set_subplotspec(subplotspec)
 
-            # Shrink external axes slightly to leave room for labels
-            # This prevents labels from being cut off at figure edges
-            self._shrink_external_for_labels()
-
             # Set up position synchronization
             self._sync_position_to_external()
 
@@ -323,7 +319,7 @@ class ExternalAxesContainer(CartesianAxes):
             )
             self._external_axes = None
 
-    def _shrink_external_for_labels(self):
+    def _shrink_external_for_labels(self, base_pos=None):
         """
         Shrink the external axes to leave room for labels that extend beyond the plot area.
 
@@ -333,8 +329,8 @@ class ExternalAxesContainer(CartesianAxes):
         if self._external_axes is None:
             return
 
-        # Get the current position
-        pos = self._external_axes.get_position()
+        # Get the base position to shrink from
+        pos = base_pos if base_pos is not None else self._external_axes.get_position()
 
         # Shrink to leave room for labels that extend beyond the plot area
         # For ternary axes, labels typically need about 5% padding (0.95 shrink factor)
@@ -351,6 +347,10 @@ class ExternalAxesContainer(CartesianAxes):
         center_x = pos.x0 + pos.width / 2
         # Move 5% to the left from center
         new_x0 = center_x - new_width / 2 - pos.width * 0.05
+        left_bound = pos.x0
+        right_bound = pos.x0 + pos.width - new_width
+        if right_bound >= left_bound:
+            new_x0 = min(max(new_x0, left_bound), right_bound)
         new_y0 = pos.y0 + pos.height - new_height
 
         # Set the new position
@@ -385,6 +385,28 @@ class ExternalAxesContainer(CartesianAxes):
         # Get container bounds in display coordinates
         container_pos = self.get_position()
         container_bbox = container_pos.transformed(self.figure.transFigure)
+        padding = getattr(self, "_external_padding", 0.0) or 0.0
+        ptp = getattr(renderer, "points_to_pixels", None)
+        if padding > 0 and callable(ptp):
+            try:
+                pad_px = ptp(padding)
+                if not isinstance(pad_px, (int, float)):
+                    raise TypeError("points_to_pixels returned non-numeric value")
+                if (
+                    pad_px * 2 < container_bbox.width
+                    and pad_px * 2 < container_bbox.height
+                ):
+                    from matplotlib.transforms import Bbox
+
+                    container_bbox = Bbox.from_bounds(
+                        container_bbox.x0 + pad_px,
+                        container_bbox.y0 + pad_px,
+                        container_bbox.width - 2 * pad_px,
+                        container_bbox.height - 2 * pad_px,
+                    )
+            except Exception:
+                # If renderer can't convert points to pixels, skip padding.
+                pass
 
         # Try up to 10 iterations to fit the external axes within container
         max_iterations = 10
@@ -437,9 +459,14 @@ class ExternalAxesContainer(CartesianAxes):
             new_height = current_pos.height * shrink_factor
             # Move 5% to the left from center
             new_x0 = center_x - new_width / 2 - current_pos.width * 0.05
+            left_bound = current_pos.x0
+            right_bound = current_pos.x0 + current_pos.width - new_width
+            if right_bound >= left_bound:
+                new_x0 = min(max(new_x0, left_bound), right_bound)
             new_y0 = current_pos.y0 + current_pos.height - new_height
 
             from matplotlib.transforms import Bbox
+
             new_pos = Bbox.from_bounds(new_x0, new_y0, new_width, new_height)
             self._external_axes.set_position(new_pos)
 
@@ -452,10 +479,11 @@ class ExternalAxesContainer(CartesianAxes):
         if self._external_axes is None:
             return
 
-        # Copy position from container to external axes
+        # Copy position from container to external axes and apply shrink
         pos = self.get_position()
         if hasattr(self._external_axes, "set_position"):
             self._external_axes.set_position(pos)
+            self._shrink_external_for_labels(base_pos=pos)
 
     def set_position(self, pos, which="both"):
         """Override to sync position changes to external axes."""
