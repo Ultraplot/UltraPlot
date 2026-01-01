@@ -205,6 +205,8 @@ def test_position_change_during_draw():
     # Verify child's draw was called
     # The position change happens during draw, which we just verified doesn't crash
     assert child._draw_count >= 1, f"Expected draw_count >= 1, got {child._draw_count}"
+    # Container should sync its position to the external axes after draw
+    assert np.allclose(ax.get_position().bounds, child.get_position().bounds)
 
 
 def test_no_tightbbox_method():
@@ -713,6 +715,78 @@ def test_container_factory_uses_defaults_and_projection_name():
     child = ax.get_external_child()
     assert child is not None
     assert child.kwargs.get("flag") is True
+
+
+def test_container_factory_can_override_external_class():
+    """Test factory container honors external_axes_class override."""
+    fig = uplt.figure()
+
+    class FirstAxes(MinimalExternalAxes):
+        pass
+
+    class SecondAxes(MinimalExternalAxes):
+        pass
+
+    Container = create_external_axes_container(FirstAxes)
+    ax = Container(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=SecondAxes,
+        external_axes_kwargs={},
+    )
+
+    child = ax.get_external_child()
+    assert child is not None
+    assert isinstance(child, SecondAxes)
+
+
+def test_clear_marks_external_stale():
+    """Test clear sets external stale flag."""
+    fig = uplt.figure()
+
+    class ClearableAxes(MinimalExternalAxes):
+        def clear(self):
+            pass
+
+    ax = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=ClearableAxes,
+        external_axes_kwargs={},
+    )
+
+    child = ax.get_external_child()
+    assert child is not None
+    ax._external_stale = False
+    ax.clear()
+    assert ax._external_stale is True
+
+
+def test_set_position_shrinks_external_axes():
+    """Test set_position triggers shrink on external axes."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=MinimalExternalAxes,
+        external_axes_kwargs={},
+        external_shrink_factor=0.8,
+    )
+
+    child = ax.get_external_child()
+    assert child is not None
+    new_pos = Bbox.from_bounds(0.1, 0.1, 0.8, 0.8)
+    ax.set_position(new_pos)
+
+    child_pos = child.get_position()
+    assert child_pos.width < new_pos.width
+    assert child_pos.height < new_pos.height
 
 
 def test_format_falls_back_when_external_missing_setters():
