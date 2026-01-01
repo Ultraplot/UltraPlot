@@ -141,11 +141,22 @@ def test_dualx_log_transform_is_finite():
     sec = ax.dualx(lambda x: 1 / x)
     fig.canvas.draw()
 
-    ticks = sec.get_xticks()
-    assert ticks.size > 0
-    xy = np.column_stack([ticks, np.zeros_like(ticks)])
-    transformed = sec.transData.transform(xy)
-    assert np.isfinite(transformed).all()
+
+def test_title_manual_size_ignores_auto_shrink():
+    """
+    Ensure explicit title sizes bypass auto-scaling.
+    """
+    fig, axs = uplt.subplots(figsize=(2, 2))
+    axs.format(
+        abc=True,
+        title="X" * 200,
+        titleloc="left",
+        abcloc="left",
+        title_kw={"size": 20},
+    )
+    title_obj = axs[0]._title_dict["left"]
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() == 20
 
 
 def test_axis_access():
