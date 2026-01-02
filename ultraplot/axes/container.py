@@ -10,6 +10,7 @@ import matplotlib.axes as maxes
 import matplotlib.transforms as mtransforms
 from matplotlib import cbook, container
 
+from ..config import rc
 from ..internals import _pop_rc, warnings
 from .cartesian import CartesianAxes
 
@@ -32,10 +33,10 @@ class ExternalAxesContainer(CartesianAxes):
         The external axes class to instantiate (e.g., mpltern.TernaryAxes)
     external_axes_kwargs : dict, optional
         Keyword arguments to pass to the external axes constructor
-    external_shrink_factor : float, optional, default: 0.95
+    external_shrink_factor : float, optional, default: :rc:`external.shrink`
         The factor by which to shrink the external axes within the container
         to leave room for labels. For ternary plots, labels extend significantly
-        beyond the plot area, so a value of 0.95 (5% padding) helps prevent
+        beyond the plot area, so a value of 0.90 (10% padding) helps prevent
         overlap with adjacent subplots while keeping the axes large.
     external_padding : float, optional, default: 5.0
         Padding in points to add around the external axes tight bbox. This creates
@@ -77,8 +78,9 @@ class ExternalAxesContainer(CartesianAxes):
 
         # Store shrink factor for external axes (to fit labels)
         # Can be customized per-axes or set globally
-        # Default 0.95 for ternary plots to prevent label overlap with adjacent subplots
-        self._external_shrink_factor = kwargs.pop("external_shrink_factor", 0.95)
+        self._external_shrink_factor = kwargs.pop(
+            "external_shrink_factor", rc["external.shrink"]
+        )
 
         # Store padding for tight bbox (prevents overlap with adjacent subplot elements)
         # Default 5 points (~7 pixels at 96 dpi)
@@ -333,25 +335,16 @@ class ExternalAxesContainer(CartesianAxes):
         pos = base_pos if base_pos is not None else self._external_axes.get_position()
 
         # Shrink to leave room for labels that extend beyond the plot area
-        # For ternary axes, labels typically need about 5% padding (0.95 shrink factor)
+        # For ternary axes, labels typically need about 10% padding (0.90 shrink factor)
         # This prevents label overlap with adjacent subplots
         # Use the configured shrink factor
-        shrink_factor = getattr(self, "_external_shrink_factor", 0.95)
+        shrink_factor = getattr(self, "_external_shrink_factor", rc["external.shrink"])
 
-        # Calculate new dimensions
+        # Center the external axes within the container to add uniform margins.
         new_width = pos.width * shrink_factor
         new_height = pos.height * shrink_factor
-
-        # Align external axes to top of container (for alignment with adjacent subplots)
-        # Offset slightly to the left to use available space better
-        center_x = pos.x0 + pos.width / 2
-        # Move 5% to the left from center
-        new_x0 = center_x - new_width / 2 - pos.width * 0.05
-        left_bound = pos.x0
-        right_bound = pos.x0 + pos.width - new_width
-        if right_bound >= left_bound:
-            new_x0 = min(max(new_x0, left_bound), right_bound)
-        new_y0 = pos.y0 + pos.height - new_height
+        new_x0 = pos.x0 + (pos.width - new_width) / 2
+        new_y0 = pos.y0 + (pos.height - new_height) / 2
 
         # Set the new position
         from matplotlib.transforms import Bbox
@@ -385,6 +378,28 @@ class ExternalAxesContainer(CartesianAxes):
         # Get container bounds in display coordinates
         container_pos = self.get_position()
         container_bbox = container_pos.transformed(self.figure.transFigure)
+        # Reserve vertical space for titles/abc labels.
+        title_pad_px = 0.0
+        for obj in self._title_dict.values():
+            if not obj.get_visible():
+                continue
+            if not obj.get_text():
+                continue
+            try:
+                bbox = obj.get_window_extent(renderer)
+            except Exception:
+                continue
+            if bbox.height > title_pad_px:
+                title_pad_px = bbox.height
+        if title_pad_px > 0 and title_pad_px < container_bbox.height:
+            from matplotlib.transforms import Bbox
+
+            container_bbox = Bbox.from_bounds(
+                container_bbox.x0,
+                container_bbox.y0,
+                container_bbox.width,
+                container_bbox.height - title_pad_px,
+            )
         padding = getattr(self, "_external_padding", 0.0) or 0.0
         ptp = getattr(renderer, "points_to_pixels", None)
         if padding > 0 and callable(ptp):
@@ -488,13 +503,39 @@ class ExternalAxesContainer(CartesianAxes):
     def set_position(self, pos, which="both"):
         """Override to sync position changes to external axes."""
         super().set_position(pos, which=which)
-        # Only sync to external if not already syncing from external
         if not getattr(self, "_syncing_position", False):
             self._sync_position_to_external()
-            # Invalidate position cache when manually setting position
             self._last_external_position = None
             self._position_synced = False
-            self._external_stale = True  # Position change may affect drawing
+            self._external_stale = True
+
+    def _reposition_subplot(self):
+        super()._reposition_subplot()
+        if not getattr(self, "_syncing_position", False):
+            self._sync_position_to_external()
+            self._last_external_position = None
+            self._position_synced = False
+            self._external_stale = True
+
+    def _update_title_position(self, renderer):
+        super()._update_title_position(renderer)
+        if self._external_axes is None:
+            return
+        if not self._external_axes.__class__.__module__.startswith("mpltern"):
+            return
+        fig = self.figure
+        if fig is None:
+            return
+        container_bbox = self.get_position().transformed(fig.transFigure)
+        if container_bbox.height <= 0:
+            return
+        for obj in self._title_dict.values():
+            bbox = obj.get_window_extent(renderer)
+            overflow = bbox.y1 - container_bbox.y1
+            if overflow > 0:
+                x, y = obj.get_position()
+                y -= overflow / container_bbox.height
+                obj.set_position((x, y))
 
     def _iter_axes(self, hidden=True, children=True, panels=True):
         """
@@ -624,12 +665,23 @@ class ExternalAxesContainer(CartesianAxes):
         # Separate kwargs into container and external
         external_kwargs = {}
         container_kwargs = {}
+        shrink = kwargs.pop("external_shrink_factor", None)
+        if shrink is not None:
+            self._external_shrink_factor = shrink
+            self._sync_position_to_external()
 
         # Parameters that can be delegated to external axes
         delegatable = ["title", "xlabel", "ylabel", "xlim", "ylim"]
+        is_mpltern = (
+            self._external_axes is not None
+            and self._external_axes.__class__.__module__.startswith("mpltern")
+        )
 
         for key, value in kwargs.items():
             if key in delegatable and self._external_axes is not None:
+                if key == "title" and is_mpltern:
+                    container_kwargs[key] = value
+                    continue
                 # Check if external axes has the method
                 method_name = f"set_{key}"
                 if hasattr(self._external_axes, method_name):
@@ -654,6 +706,7 @@ class ExternalAxesContainer(CartesianAxes):
             # Check if external axes is stale (needs redrawing)
             # This avoids redundant draws on external axes that haven't changed
             external_stale = getattr(self._external_axes, "stale", True)
+            is_mpltern = self._external_axes.__class__.__module__.startswith("mpltern")
 
             # Only draw if external axes is stale or we haven't synced positions yet
             if external_stale or not self._position_synced or self._external_stale:
@@ -685,23 +738,28 @@ class ExternalAxesContainer(CartesianAxes):
 
                 # Only update if position actually changed
                 if position_changed:
-                    container_pos = self.get_position()
+                    if is_mpltern:
+                        # Keep container position for mpltern to avoid shifting titles/abc.
+                        self._last_external_position = ext_pos
+                        self._position_synced = True
+                    else:
+                        container_pos = self.get_position()
 
-                    # Check if container needs updating
-                    if (
-                        abs(container_pos.x0 - ext_pos.x0) > 0.001
-                        or abs(container_pos.y0 - ext_pos.y0) > 0.001
-                        or abs(container_pos.width - ext_pos.width) > 0.001
-                        or abs(container_pos.height - ext_pos.height) > 0.001
-                    ):
-                        # Temporarily disable position sync to avoid recursion
-                        self._syncing_position = True
-                        self.set_position(ext_pos)
-                        self._syncing_position = False
+                        # Check if container needs updating
+                        if (
+                            abs(container_pos.x0 - ext_pos.x0) > 0.001
+                            or abs(container_pos.y0 - ext_pos.y0) > 0.001
+                            or abs(container_pos.width - ext_pos.width) > 0.001
+                            or abs(container_pos.height - ext_pos.height) > 0.001
+                        ):
+                            # Temporarily disable position sync to avoid recursion
+                            self._syncing_position = True
+                            self.set_position(ext_pos)
+                            self._syncing_position = False
 
-                    # Cache the current external position
-                    self._last_external_position = ext_pos
-                    self._position_synced = True
+                        # Cache the current external position
+                        self._last_external_position = ext_pos
+                        self._position_synced = True
 
         # Draw the container (with abc labels, titles, etc.)
         super().draw(renderer)
