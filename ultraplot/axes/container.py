@@ -78,9 +78,13 @@ class ExternalAxesContainer(CartesianAxes):
 
         # Store shrink factor for external axes (to fit labels)
         # Can be customized per-axes or set globally
-        self._external_shrink_factor = kwargs.pop(
-            "external_shrink_factor", rc["external.shrink"]
-        )
+        shrink = kwargs.pop("external_shrink_factor", None)
+        if shrink is None and external_axes_class is not None:
+            if external_axes_class.__module__.startswith("mpltern"):
+                shrink = 0.68
+        if shrink is None:
+            shrink = rc["external.shrink"]
+        self._external_shrink_factor = shrink
 
         # Store padding for tight bbox (prevents overlap with adjacent subplot elements)
         # Default 5 points (~7 pixels at 96 dpi)
@@ -370,6 +374,12 @@ class ExternalAxesContainer(CartesianAxes):
         allocated space and overlap with adjacent subplots.
         """
         if self._external_axes is None:
+            return
+
+        if (
+            self._external_axes.__class__.__module__.startswith("mpltern")
+            and self._external_shrink_factor < 1
+        ):
             return
 
         if not hasattr(self._external_axes, "get_tightbbox"):
