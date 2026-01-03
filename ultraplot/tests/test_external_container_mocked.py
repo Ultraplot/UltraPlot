@@ -218,6 +218,20 @@ class MockExternalAxes:
         return self._position.transformed(self.figure.transFigure)
 
 
+class MockMplternAxes(MockExternalAxes):
+    """Mock external axes that mimics mpltern module behavior."""
+
+    __module__ = "mpltern.mock"
+
+    def __init__(self, fig, *args, **kwargs):
+        super().__init__(fig, *args, **kwargs)
+        self.tightbbox_calls = 0
+
+    def get_tightbbox(self, renderer):
+        self.tightbbox_calls += 1
+        return super().get_tightbbox(renderer)
+
+
 # Tests
 
 
@@ -298,6 +312,30 @@ def test_shrink_factor_default():
     # Default shrink factor should match rc
     assert hasattr(ax, "_external_shrink_factor")
     assert ax._external_shrink_factor == uplt.rc["external.shrink"]
+
+
+def test_shrink_factor_default_mpltern():
+    """Test mpltern default shrink factor override."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockMplternAxes, external_axes_kwargs={}
+    )
+    assert ax._external_shrink_factor == 0.68
+
+
+def test_mpltern_skip_tightbbox_when_shrunk():
+    """Test mpltern tightbbox fitting is skipped when shrink < 1."""
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+    fig = uplt.figure()
+    FigureCanvasAgg(fig)  # ensure renderer exists
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockMplternAxes, external_axes_kwargs={}
+    )
+    renderer = fig.canvas.get_renderer()
+    ax._ensure_external_fits_within_container(renderer)
+    child = ax.get_external_child()
+    assert child.tightbbox_calls == 0
 
 
 def test_shrink_factor_custom():
