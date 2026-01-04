@@ -2704,10 +2704,17 @@ class Figure(mfigure.Figure):
         if ax is not None:
             # Check if span parameters are provided
             has_span = _not_none(span, row, col, rows, cols) is not None
-
             # Extract a single axes from array if span is provided
             # Otherwise, pass the array as-is for normal legend behavior
+            # Automatically collect handles and labels from spanned axes if not provided
             if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
+                # Auto-collect handles and labels if not explicitly provided
+                if handles is None and labels is None:
+                    handles, labels = [], []
+                    for axi in ax:
+                        h, l = axi.get_legend_handles_labels()
+                        handles.extend(h)
+                        labels.extend(l)
                 try:
                     ax_single = next(iter(ax))
                 except (TypeError, StopIteration):
