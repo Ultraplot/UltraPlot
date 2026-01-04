@@ -483,3 +483,49 @@ def test_legend_multiple_sides_with_span():
     assert leg_top is not None
     assert leg_right is not None
     assert leg_left is not None
+
+
+def test_legend_auto_collect_handles_labels_with_span():
+    """Test automatic collection of handles and labels from multiple axes with span parameters."""
+
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+
+    # Create different plots in each subplot with labels
+    axs[0, 0].plot([0, 1], [0, 1], label="line1")
+    axs[0, 1].plot([0, 1], [1, 0], label="line2")
+    axs[1, 0].scatter([0.5], [0.5], label="point1")
+    axs[1, 1].scatter([0.5], [0.5], label="point2")
+
+    # Test automatic collection with span parameter (no explicit handles/labels)
+    leg = fig.legend(ax=axs[0, :], span=(1, 2), loc="bottom")
+
+    # Verify legend was created and contains all handles/labels from both axes
+    assert leg is not None
+    assert len(leg.get_texts()) == 2  # Should have 2 labels (line1, line2)
+
+    # Test with rows parameter
+    leg2 = fig.legend(ax=axs[:, 0], rows=(1, 2), loc="right")
+    assert leg2 is not None
+    assert len(leg2.get_texts()) == 2  # Should have 2 labels (line1, point1)
+
+
+def test_legend_explicit_handles_labels_override_auto_collection():
+    """Test that explicit handles/labels override auto-collection."""
+
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+
+    # Create plots with labels
+    (h1,) = axs[0].plot([0, 1], [0, 1], label="auto_label1")
+    (h2,) = axs[1].plot([0, 1], [1, 0], label="auto_label2")
+
+    # Test with explicit handles/labels (should override auto-collection)
+    custom_handles = [h1]
+    custom_labels = ["custom_label"]
+    leg = fig.legend(
+        ax=axs, span=(1, 2), loc="bottom", handles=custom_handles, labels=custom_labels
+    )
+
+    # Verify legend uses explicit handles/labels, not auto-collected ones
+    assert leg is not None
+    assert len(leg.get_texts()) == 1
+    assert leg.get_texts()[0].get_text() == "custom_label"
