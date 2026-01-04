@@ -171,6 +171,79 @@ def test_title_shrinks_when_abc_overlaps_different_loc():
     assert title_obj.get_fontsize() < original_size
 
 
+def test_title_shrinks_right_aligned_same_location():
+    """
+    Test that right-aligned titles shrink when they would overflow with abc label.
+    """
+    fig, axs = uplt.subplots(figsize=(2, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="right", abcloc="right")
+    title_obj = axs[0]._title_dict["right"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_shrinks_centered_same_location():
+    """
+    Test that centered titles shrink when they would overflow with abc label.
+    """
+    fig, axs = uplt.subplots(figsize=(2, 2))
+    axs.format(abc=True, title="X" * 150, titleloc="center", abcloc="center")
+    title_obj = axs[0]._title_dict["center"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_shrinks_right_aligned_different_location():
+    """
+    Test that right-aligned titles shrink when overlapping abc at different location.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="right", abcloc="left")
+    title_obj = axs[0]._title_dict["right"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_shrinks_left_aligned_different_location():
+    """
+    Test that left-aligned titles shrink when overlapping abc at different location.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="left", abcloc="right")
+    title_obj = axs[0]._title_dict["left"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_no_shrink_when_no_overlap():
+    """
+    Test that titles don't shrink when there's no overlap with abc label.
+    """
+    fig, axs = uplt.subplots(figsize=(4, 2))
+    axs.format(abc=True, title="Short Title", titleloc="left", abcloc="right")
+    title_obj = axs[0]._title_dict["left"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() == original_size
+
+
+def test_title_shrinks_centered_left_of_abc():
+    """
+    Test that centered titles shrink when they are to the left of abc label.
+    This covers the specific case where base_x <= ax0 - pad for centered titles.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="center", abcloc="right")
+    title_obj = axs[0]._title_dict["center"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
 def test_axis_access():
     # attempt to access the ax object 2d and linearly
     fig, ax = uplt.subplots(ncols=2, nrows=2)
