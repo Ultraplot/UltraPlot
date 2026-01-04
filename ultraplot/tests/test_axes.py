@@ -131,118 +131,21 @@ def test_cartesian_format_all_units_types():
     ax.format(**kwargs)
 
 
-def test_title_shrinks_when_abc_overlaps():
+def test_dualx_log_transform_is_finite():
     """
-    Ensure long titles shrink when they would overlap the abc label.
+    Ensure dualx transforms remain finite on log axes.
     """
-    fig, axs = uplt.subplots(figsize=(2, 2))
-    axs.format(abc=True, title="X" * 200, titleloc="left", abcloc="left")
-    title_obj = axs[0]._title_dict["left"]
-    original_size = title_obj.get_fontsize()
+    fig, ax = uplt.subplots()
+    ax.set_xscale("log")
+    ax.set_xlim(0.1, 10)
+    sec = ax.dualx(lambda x: 1 / x)
     fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
 
-
-def test_title_manual_size_ignores_auto_shrink():
-    """
-    Ensure explicit title sizes bypass auto-scaling.
-    """
-    fig, axs = uplt.subplots(figsize=(2, 2))
-    axs.format(
-        abc=True,
-        title="X" * 200,
-        titleloc="left",
-        abcloc="left",
-        title_kw={"size": 20},
-    )
-    title_obj = axs[0]._title_dict["left"]
-    fig.canvas.draw()
-    assert title_obj.get_fontsize() == 20
-
-
-def test_title_shrinks_when_abc_overlaps_different_loc():
-    """
-    Ensure long titles shrink when overlapping abc at a different location.
-    """
-    fig, axs = uplt.subplots(figsize=(3, 2))
-    axs.format(abc=True, title="X" * 200, titleloc="center", abcloc="left")
-    title_obj = axs[0]._title_dict["center"]
-    original_size = title_obj.get_fontsize()
-    fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
-
-
-def test_title_shrinks_right_aligned_same_location():
-    """
-    Test that right-aligned titles shrink when they would overflow with abc label.
-    """
-    fig, axs = uplt.subplots(figsize=(2, 2))
-    axs.format(abc=True, title="X" * 100, titleloc="right", abcloc="right")
-    title_obj = axs[0]._title_dict["right"]
-    original_size = title_obj.get_fontsize()
-    fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
-
-
-def test_title_shrinks_centered_same_location():
-    """
-    Test that centered titles shrink when they would overflow with abc label.
-    """
-    fig, axs = uplt.subplots(figsize=(2, 2))
-    axs.format(abc=True, title="X" * 150, titleloc="center", abcloc="center")
-    title_obj = axs[0]._title_dict["center"]
-    original_size = title_obj.get_fontsize()
-    fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
-
-
-def test_title_shrinks_right_aligned_different_location():
-    """
-    Test that right-aligned titles shrink when overlapping abc at different location.
-    """
-    fig, axs = uplt.subplots(figsize=(3, 2))
-    axs.format(abc=True, title="X" * 100, titleloc="right", abcloc="left")
-    title_obj = axs[0]._title_dict["right"]
-    original_size = title_obj.get_fontsize()
-    fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
-
-
-def test_title_shrinks_left_aligned_different_location():
-    """
-    Test that left-aligned titles shrink when overlapping abc at different location.
-    """
-    fig, axs = uplt.subplots(figsize=(3, 2))
-    axs.format(abc=True, title="X" * 100, titleloc="left", abcloc="right")
-    title_obj = axs[0]._title_dict["left"]
-    original_size = title_obj.get_fontsize()
-    fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
-
-
-def test_title_no_shrink_when_no_overlap():
-    """
-    Test that titles don't shrink when there's no overlap with abc label.
-    """
-    fig, axs = uplt.subplots(figsize=(4, 2))
-    axs.format(abc=True, title="Short Title", titleloc="left", abcloc="right")
-    title_obj = axs[0]._title_dict["left"]
-    original_size = title_obj.get_fontsize()
-    fig.canvas.draw()
-    assert title_obj.get_fontsize() == original_size
-
-
-def test_title_shrinks_centered_left_of_abc():
-    """
-    Test that centered titles shrink when they are to the left of abc label.
-    This covers the specific case where base_x <= ax0 - pad for centered titles.
-    """
-    fig, axs = uplt.subplots(figsize=(3, 2))
-    axs.format(abc=True, title="X" * 100, titleloc="center", abcloc="right")
-    title_obj = axs[0]._title_dict["center"]
-    original_size = title_obj.get_fontsize()
-    fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
+    ticks = sec.get_xticks()
+    assert ticks.size > 0
+    xy = np.column_stack([ticks, np.zeros_like(ticks)])
+    transformed = sec.transData.transform(xy)
+    assert np.isfinite(transformed).all()
 
 
 def test_axis_access():

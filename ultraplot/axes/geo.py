@@ -32,6 +32,7 @@ from ..internals import (
     _version_cartopy,
     docstring,
     ic,  # noqa: F401
+    labels,
     warnings,
 )
 from ..utils import units
@@ -660,6 +661,24 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 or to the *right* of the leftmost panel. But the sharing level used for
                 the leftmost and bottommost is the *figure* sharing level.
         """
+
+        # Share axis labels
+        if self._sharex and self.figure._sharex >= 1:
+            if self.figure._is_share_label_group_member(self, "x"):
+                pass
+            elif self.figure._is_share_label_group_member(self._sharex, "x"):
+                self.xaxis.label.set_visible(False)
+            else:
+                labels._transfer_label(self.xaxis.label, self._sharex.xaxis.label)
+                self.xaxis.label.set_visible(False)
+        if self._sharey and self.figure._sharey >= 1:
+            if self.figure._is_share_label_group_member(self, "y"):
+                pass
+            elif self.figure._is_share_label_group_member(self._sharey, "y"):
+                self.yaxis.label.set_visible(False)
+            else:
+                labels._transfer_label(self.yaxis.label, self._sharey.yaxis.label)
+                self.yaxis.label.set_visible(False)
 
         # Share interval x
         if self._sharex and self.figure._sharex >= 2:
