@@ -407,6 +407,45 @@ def test_geo_panel_share_flag_controls_membership():
     assert ax2[0]._panel_sharex_group is False
 
 
+def test_geo_subset_share_xlabels_override():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share="labels", span=False)
+    # GeoAxes.format does not accept xlabel/ylabel; set labels directly.
+    ax[0, 0].set_xlabel("Top-left X")
+    ax[0, 1].set_xlabel("Top-right X")
+    bottom = ax[1, :]
+    bottom[0].set_xlabel("Bottom-row X")
+    bottom.format(share_xlabels=list(bottom))
+
+    fig.canvas.draw()
+
+    assert not ax[0, 0].xaxis.get_label().get_visible()
+    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert bottom[0].get_xlabel().strip() == ""
+    assert bottom[1].get_xlabel().strip() == ""
+    assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
+def test_geo_subset_share_xlabels_implicit():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share="labels", span=False)
+    ax[0, 0].set_xlabel("Top-left X")
+    ax[0, 1].set_xlabel("Top-right X")
+    bottom = ax[1, :]
+    bottom[0].set_xlabel("Bottom-row X")
+    bottom.share_labels(axis="x")
+
+    fig.canvas.draw()
+
+    assert not ax[0, 0].xaxis.get_label().get_visible()
+    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert bottom[0].get_xlabel().strip() == ""
+    assert bottom[1].get_xlabel().strip() == ""
+    assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
 def test_geo_non_rectilinear_right_panel_forces_no_share_and_warns():
     """
     Non-rectilinear Geo projections should not allow panel sharing; adding a right panel

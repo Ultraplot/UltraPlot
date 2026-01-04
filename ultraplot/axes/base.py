@@ -3148,12 +3148,39 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         target : {'x', 'y'}, optional
                 Which axis labels to share ('x' for x-axis, 'y' for     y-axis)
         """
-        if not axes:
+        if axes is False:
+            self.figure._clear_share_label_groups([self], target=target)
+            return
+        if axes is None or not len(list(axes)):
             return
 
         # Convert indices to actual axes objects
         if isinstance(axes[0], int):
             axes = [self.figure.axes[i] for i in axes]
+        axes = [
+            ax._get_topmost_axes() if hasattr(ax, "_get_topmost_axes") else ax
+            for ax in axes
+            if ax is not None
+        ]
+        if len(axes) < 2:
+            return
+        # Preserve order while de-duplicating
+        seen = set()
+        unique = []
+        for ax in axes:
+            ax_id = id(ax)
+            if ax_id in seen:
+                continue
+            seen.add(ax_id)
+            unique.append(ax)
+        axes = unique
+        if len(axes) < 2:
+            return
+
+        # Prefer figure-managed spanning labels when possible
+        if all(isinstance(ax, maxes.SubplotBase) for ax in axes):
+            self.figure._register_share_label_group(axes, target=target, source=self)
+            return
 
         # Get the center position of the axes group
         if box := self.get_center_of_axes(axes):
