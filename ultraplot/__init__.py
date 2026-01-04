@@ -64,7 +64,10 @@ _EXTRA_ATTRS = {
     "legend": ("legend", None),
     "axes": ("axes", None),
     "gridspec": ("gridspec", None),
-    "figure": ("figure", None),
+    "figure": (
+        "figure",
+        "Figure",
+    ),  # have to rename to keep the api  backwards compatible
     "constructor": ("constructor", None),
     "ui": ("ui", None),
     "demos": ("demos", None),
