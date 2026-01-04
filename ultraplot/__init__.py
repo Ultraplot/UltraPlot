@@ -4,9 +4,10 @@ A succinct matplotlib wrapper for making beautiful, publication-quality graphics
 """
 from __future__ import annotations
 
-import ast
-from importlib import import_module
+import sys
 from pathlib import Path
+
+from ._lazy import LazyLoader, install_module_proxy
 
 name = "ultraplot"
 
@@ -46,41 +47,6 @@ _LAZY_LOADING_EXCEPTIONS = {
     "Cycle": ("constructor", "Cycle"),
     "Norm": ("constructor", "Norm"),
 }
-
-
-def _import_module(module_name):
-    return import_module(f".{module_name}", __name__)
-
-
-def _parse_all(path):
-    try:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-    except (OSError, SyntaxError):
-        return None
-    for node in tree.body:
-        if not isinstance(node, ast.Assign):
-            continue
-        for target in node.targets:
-            if isinstance(target, ast.Name) and target.id == "__all__":
-                try:
-                    value = ast.literal_eval(node.value)
-                except Exception:
-                    return None
-                if isinstance(value, (list, tuple)) and all(
-                    isinstance(item, str) for item in value
-                ):
-                    return list(value)
-                return None
-    return None
-
-
-def _resolve_extra(name):
-    module_name, attr = _LAZY_LOADING_EXCEPTIONS[name]
-    module = _import_module(module_name)
-    value = module if attr is None else getattr(module, attr)
-    # This binds the resolved object (The Class) to the global name
-    globals()[name] = value
-    return value
 
 
 def _setup():
@@ -142,79 +108,15 @@ def _get_registry_attr(name):
     return _REGISTRY_ATTRS.get(name) if _REGISTRY_ATTRS else None
 
 
-def _load_all():
-    global _EAGER_DONE
-    if _EAGER_DONE:
-        return sorted(globals().get("__all__", []))
-    _EAGER_DONE = True
-    _setup()
-    _discover_modules()
-    names = set(_ATTR_MAP.keys())
-    for name in names:
-        try:
-            __getattr__(name)
-        except AttributeError:
-            pass
-    names.update(_LAZY_LOADING_EXCEPTIONS.keys())
-    _build_registry_map()
-    if _REGISTRY_ATTRS:
-        names.update(_REGISTRY_ATTRS)
-    names.update(
-        {"__version__", "version", "name", "setup", "pyplot", "cartopy", "basemap"}
-    )
-    return sorted(names)
-
-
-def _discover_modules():
-    global _ATTR_MAP
-    if _ATTR_MAP is not None:
-        return
-
-    attr_map = {}
-    base = Path(__file__).resolve().parent
-
-    # PROTECT 'figure' from auto-discovery
-    # We must explicitly ignore the file 'figure.py' so it doesn't
-    # populate the attribute map as a module.
-    protected = set(_LAZY_LOADING_EXCEPTIONS.keys())
-    protected.add("figure")
-
-    for path in base.glob("*.py"):
-        if path.name.startswith("_") or path.name == "setup.py":
-            continue
-        module_name = path.stem
-
-        # If the filename is 'figure', don't let it be an attribute
-        if module_name in protected:
-            continue
-
-        names = _parse_all(path)
-        if names:
-            for name in names:
-                if name not in protected:
-                    attr_map[name] = (module_name, name)
-
-        if module_name not in attr_map:
-            attr_map[module_name] = (module_name, None)
-
-    for path in base.iterdir():
-        if not path.is_dir() or path.name.startswith("_") or path.name == "tests":
-            continue
-        module_name = path.name
-        if module_name in protected:
-            continue
-
-        if (path / "__init__.py").is_file():
-            names = _parse_all(path / "__init__.py")
-            if names:
-                for name in names:
-                    if name not in protected:
-                        attr_map[name] = (module_name, name)
-            attr_map[module_name] = (module_name, None)
-
-    # Hard force-remove figure from discovery map
-    attr_map.pop("figure", None)
-    _ATTR_MAP = attr_map
+_LOADER: LazyLoader = LazyLoader(
+    package=__name__,
+    package_path=Path(__file__).resolve().parent,
+    exceptions=_LAZY_LOADING_EXCEPTIONS,
+    setup_callback=_setup,
+    registry_attr_callback=_get_registry_attr,
+    registry_build_callback=_build_registry_map,
+    registry_names_callback=lambda: _REGISTRY_ATTRS,
+)
 
 
 def __getattr__(name):
@@ -226,15 +128,10 @@ def __getattr__(name):
     if name == "pytest_plugins":
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
-    # Priority 1: Check Explicit Exceptions FIRST (This catches 'figure')
-    if name in _LAZY_LOADING_EXCEPTIONS:
-        _setup()
-        return _resolve_extra(name)
-
     # Priority 2: Core metadata
     if name in {"__version__", "version", "name", "__all__"}:
         if name == "__all__":
-            val = _load_all()
+            val = _LOADER.load_all(globals())
             globals()["__all__"] = val
             return val
         return globals().get(name)
@@ -246,48 +143,12 @@ def __getattr__(name):
         globals()[name] = plt
         return plt
 
-    # Priority 4: Automated discovery
-    _discover_modules()
-    if _ATTR_MAP and name in _ATTR_MAP:
-        module_name, attr_name = _ATTR_MAP[name]
-        _setup()
-        module = _import_module(module_name)
-        value = getattr(module, attr_name) if attr_name else module
-        globals()[name] = value
-        return value
-
-    # Priority 5: Registry (Capital names)
-    if name[:1].isupper():
-        value = _get_registry_attr(name)
-        if value is not None:
-            globals()[name] = value
-            return value
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    return _LOADER.get_attr(name, globals())
 
 
 def __dir__():
-    _discover_modules()
-    names = set(globals())
-    if _ATTR_MAP:
-        names.update(_ATTR_MAP)
-    names.update(_LAZY_LOADING_EXCEPTIONS)
-    return sorted(names)
+    return _LOADER.iter_dir_names(globals())
 
 
 # Prevent "import ultraplot.figure" from clobbering the top-level callable.
-import sys
-import types
-
-
-class _UltraPlotModule(types.ModuleType):
-    def __setattr__(self, name, value):
-        if name == "figure" and isinstance(value, types.ModuleType):
-            super().__setattr__("_figure_module", value)
-            return
-        super().__setattr__(name, value)
-
-
-_module = sys.modules.get(__name__)
-if _module is not None and not isinstance(_module, _UltraPlotModule):
-    _module.__class__ = _UltraPlotModule
+install_module_proxy(sys.modules.get(__name__))
