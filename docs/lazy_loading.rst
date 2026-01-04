@@ -6,30 +6,49 @@ Lazy Loading and Adding New Modules
 
 UltraPlot uses a lazy loading mechanism to improve import times. This means that
 submodules are not imported until they are actually used. This is controlled by the
-`__getattr__` function in `ultraplot/__init__.py`.
+:py:func:`__getattr__` function in `ultraplot/__init__.py`.
 
-When adding a new submodule, you need to make sure it's compatible with the lazy
-loader. Here's how to do it:
+The lazy loading system is mostly automated. It works by scanning the `ultraplot`
+directory for modules and exposing them based on conventions.
 
-1.  **Add the submodule to `_STAR_MODULES`:** In `ultraplot/__init__.py`, add the
-    name of your new submodule to the `_STAR_MODULES` tuple. This will make it
-    discoverable by the lazy loader.
+**Convention-Based Loading**
 
-2.  **Add the submodule to `_MODULE_SOURCES`:** Also in `ultraplot/__init__.py`,
-    add an entry to the `_MODULE_SOURCES` dictionary that maps the name of your
-    submodule to its source file.
+The automated system follows these rules:
 
-3.  **Exposing Callables:** If you want to expose a function or class from your
-    submodule as a top-level attribute of the `ultraplot` package (e.g.,
-    `uplt.my_function`), you need to add an entry to the `_EXTRA_ATTRS`
-    dictionary.
+1.  **Single-Class Modules:** If a module `my_module.py` has an `__all__`
+    variable with a single class or function `MyCallable`, it will be exposed
+    at the top level as `uplt.my_module`. For example, since
+    `ultraplot/figure.py` has `__all__ = ['Figure']`, you can access the `Figure`
+    class with `uplt.figure`.
 
-    *   To expose a function or class `MyFunction` from `my_module.py` as
-        `uplt.my_function`, add the following to `_EXTRA_ATTRS`:
-        `"my_function": ("my_module", "MyFunction")`.
-    *   If you want to expose the entire submodule as a top-level attribute
-        (e.g., `uplt.my_module`), you can add:
-        `"my_module": ("my_module", None)`.
+2.  **Multi-Content Modules:** If a module has multiple items in `__all__` or no
+    `__all__`, the module itself will be exposed. For example, you can access
+    the `utils` module with :py:mod:`uplt.utils`.
 
-By following these steps, you can ensure that your new module is correctly
-integrated into the lazy loading system.
+**Adding New Modules**
+
+When adding a new submodule, you usually don't need to modify `ultraplot/__init__.py`.
+Simply follow these conventions:
+
+*   If you want to expose a single class or function from your module as a
+    top-level attribute, set the `__all__` variable in your module to a list
+    containing just that callable's name.
+
+*   If you want to expose the entire module, you can either use an `__all__` with
+    multiple items, or no `__all__` at all.
+
+**Handling Exceptions**
+
+For cases that don't fit the conventions, there is an exception-based
+configuration. The `_LAZY_LOADING_EXCEPTIONS` dictionary in
+`ultraplot/__init__.py` is used to manually map top-level attributes to
+modules and their contents.
+
+You should only need to edit this dictionary if you are:
+
+*   Creating an alias for a module (e.g., `crs` for `proj`).
+*   Exposing an internal variable (e.g., `colormaps` for `_cmap_database`).
+*   Exposing a submodule that doesn't follow the file/directory structure.
+
+By following these guidelines, your new module will be correctly integrated into
+the lazy loading system.
