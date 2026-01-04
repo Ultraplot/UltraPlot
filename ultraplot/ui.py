@@ -7,8 +7,14 @@ import matplotlib.pyplot as plt
 from . import axes as paxes
 from . import figure as pfigure
 from . import gridspec as pgridspec
-from .internals import ic  # noqa: F401
-from .internals import _not_none, _pop_params, _pop_props, _pop_rc, docstring
+from .internals import (
+    _not_none,
+    _pop_params,
+    _pop_props,
+    _pop_rc,
+    docstring,
+    ic,  # noqa: F401
+)
 
 __all__ = [
     "figure",
@@ -141,7 +147,7 @@ def figure(**kwargs):
     matplotlib.figure.Figure
     """
     _parse_figsize(kwargs)
-    return plt.figure(FigureClass=pfigure.Figure, **kwargs)
+    return plt.figure(FigureClass=pfigure, **kwargs)
 
 
 @docstring._snippet_manager
@@ -175,7 +181,7 @@ def subplot(**kwargs):
     _parse_figsize(kwargs)
     rc_kw, rc_mode = _pop_rc(kwargs)
     kwsub = _pop_props(kwargs, "patch")  # e.g. 'color'
-    kwsub.update(_pop_params(kwargs, pfigure.Figure._parse_proj))
+    kwsub.update(_pop_params(kwargs, pfigure._parse_proj))
     for sig in paxes.Axes._format_signatures.values():
         kwsub.update(_pop_params(kwargs, sig))
     kwargs["aspect"] = kwsub.pop("aspect", None)  # keyword conflict
@@ -220,7 +226,7 @@ def subplots(*args, **kwargs):
     _parse_figsize(kwargs)
     rc_kw, rc_mode = _pop_rc(kwargs)
     kwsubs = _pop_props(kwargs, "patch")  # e.g. 'color'
-    kwsubs.update(_pop_params(kwargs, pfigure.Figure._add_subplots))
+    kwsubs.update(_pop_params(kwargs, pfigure._add_subplots))
     kwsubs.update(_pop_params(kwargs, pgridspec.GridSpec._update_params))
     for sig in paxes.Axes._format_signatures.values():
         kwsubs.update(_pop_params(kwargs, sig))
