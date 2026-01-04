@@ -361,6 +361,33 @@ def test_setting_log_with_rc():
     uplt.close(fig)
 
 
+def test_format_log_scale_preserves_log_formatter():
+    """
+    Test that setting a log scale preserves the log formatter when enabled.
+    """
+    x = np.linspace(1, 1e6, 10)
+    log_formatter = uplt.constructor.Formatter("log")
+    log_formatter_type = type(log_formatter)
+
+    with uplt.rc.context({"formatter.log": True}):
+        fig, ax = uplt.subplots()
+        ax.plot(x, x)
+        ax.format(yscale="log")
+        assert isinstance(ax.yaxis.get_major_formatter(), log_formatter_type)
+        ax.set_yscale("log")
+        assert isinstance(ax.yaxis.get_major_formatter(), log_formatter_type)
+
+    with uplt.rc.context({"formatter.log": False}):
+        fig, ax = uplt.subplots()
+        ax.plot(x, x)
+        ax.format(yscale="log")
+        assert not isinstance(ax.yaxis.get_major_formatter(), log_formatter_type)
+        ax.set_yscale("log")
+        assert not isinstance(ax.yaxis.get_major_formatter(), log_formatter_type)
+
+    uplt.close(fig)
+
+
 def test_shading_pcolor(rng):
     """
     Pcolormesh by default adjusts the plot by
