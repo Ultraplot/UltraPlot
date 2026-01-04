@@ -26,6 +26,7 @@ _REGISTRY_ATTRS = None
 
 # Exceptions to the automated lazy loading
 _LAZY_LOADING_EXCEPTIONS = {
+    "constructor": ("constructor", None),
     "crs": ("proj", None),
     "colormaps": ("colors", "_cmap_database"),
     "check_for_update": ("utils", "check_for_update"),
@@ -39,7 +40,7 @@ _LAZY_LOADING_EXCEPTIONS = {
     "tests": ("tests", None),
     "rcsetup": ("internals", "rcsetup"),
     "warnings": ("internals", "warnings"),
-    "figure": ("figure", "Figure"),
+    "Figure": ("figure", "Figure"),
 }
 
 
@@ -212,6 +213,12 @@ def _get_registry_attr(name):
 
 def _load_all():
     global _EAGER_DONE
+    if _EAGER_DONE:
+        try:
+            return sorted(globals()["__all__"])
+        except KeyError:
+            pass
+    _EAGER_DONE = True
     _setup()
     from .internals.benchmarks import _benchmark
 
@@ -229,7 +236,9 @@ def _load_all():
         _build_registry_map()
     if _REGISTRY_ATTRS:
         names.update(_REGISTRY_ATTRS)
-    names.update({"__version__", "version", "name"})
+    names.update(
+        {"__version__", "version", "name", "setup", "pyplot", "cartopy", "basemap"}
+    )
     _EAGER_DONE = True
     return sorted(names)
 
@@ -264,7 +273,9 @@ def setup(*, eager=None):
 
 
 def __getattr__(name):
-    if name in {"pytest_plugins", "__version__", "version", "name", "__all__"}:
+    if name == "pytest_plugins":
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    if name in {"__version__", "version", "name", "__all__"}:
         if name == "__all__":
             value = _load_all()
             globals()["__all__"] = value
