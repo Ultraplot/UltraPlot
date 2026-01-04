@@ -4,6 +4,7 @@ Test twin, inset, and panel axes.
 """
 import numpy as np
 import pytest
+
 import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
 
@@ -128,6 +129,23 @@ def test_cartesian_format_all_units_types():
         "yticklabelsize": 10.0,
     }
     ax.format(**kwargs)
+
+
+def test_dualx_log_transform_is_finite():
+    """
+    Ensure dualx transforms remain finite on log axes.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_xscale("log")
+    ax.set_xlim(0.1, 10)
+    sec = ax.dualx(lambda x: 1 / x)
+    fig.canvas.draw()
+
+    ticks = sec.get_xticks()
+    assert ticks.size > 0
+    xy = np.column_stack([ticks, np.zeros_like(ticks)])
+    transformed = sec.transData.transform(xy)
+    assert np.isfinite(transformed).all()
 
 
 def test_axis_access():
