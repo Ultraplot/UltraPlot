@@ -5,22 +5,27 @@ The standard Cartesian axes used for most ultraplot figures.
 import copy
 import inspect
 
+import matplotlib.axis as maxis
 import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 import numpy as np
-
 from packaging import version
 
 from .. import constructor
 from .. import scale as pscale
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import ic  # noqa: F401
-from ..internals import _not_none, _pop_rc, _version_mpl, docstring, labels, warnings
-from . import plot, shared
-import matplotlib.axis as maxis
-
+from ..internals import (
+    _not_none,
+    _pop_rc,
+    _version_mpl,
+    docstring,
+    ic,  # noqa: F401
+    labels,
+    warnings,
+)
 from ..utils import units
+from . import plot, shared
 
 __all__ = ["CartesianAxes"]
 
@@ -432,9 +437,14 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         # Handle axis label sharing (level > 0)
         if level > 0:
-            shared_axis_obj = getattr(shared_axis, f"{axis_name}axis")
-            labels._transfer_label(axis.label, shared_axis_obj.label)
-            axis.label.set_visible(False)
+            if self.figure._is_share_label_group_member(self, axis_name):
+                pass
+            elif self.figure._is_share_label_group_member(shared_axis, axis_name):
+                axis.label.set_visible(False)
+            else:
+                shared_axis_obj = getattr(shared_axis, f"{axis_name}axis")
+                labels._transfer_label(axis.label, shared_axis_obj.label)
+                axis.label.set_visible(False)
 
         # Handle tick label sharing (level > 2)
         if level > 2:
