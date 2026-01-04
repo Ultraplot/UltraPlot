@@ -24,53 +24,8 @@ _EXPOSED_MODULES = set()
 _ATTR_MAP = None
 _REGISTRY_ATTRS = None
 
-_STAR_MODULES = (
-    "config",
-    "proj",
-    "utils",
-    "colors",
-    "ticker",
-    "scale",
-    "axes",
-    "gridspec",
-    "figure",
-    "constructor",
-    "ui",
-    "demos",
-)
-
-_MODULE_SOURCES = {
-    "config": "config.py",
-    "proj": "proj.py",
-    "utils": "utils.py",
-    "colors": "colors.py",
-    "ticker": "ticker.py",
-    "scale": "scale.py",
-    "axes": "axes/__init__.py",
-    "gridspec": "gridspec.py",
-    "figure": "figure.py",
-    "constructor": "constructor.py",
-    "ui": "ui.py",
-    "demos": "demos.py",
-}
-
-_EXTRA_ATTRS = {
-    "config": ("config", None),
-    "proj": ("proj", None),
-    "utils": ("utils", None),
-    "colors": ("colors", None),
-    "ticker": ("ticker", None),
-    "scale": ("scale", None),
-    "legend": ("legend", None),
-    "axes": ("axes", None),
-    "gridspec": ("gridspec", None),
-    "figure": (
-        "figure",
-        "Figure",
-    ),  # have to rename to keep the api  backwards compatible
-    "constructor": ("constructor", None),
-    "ui": ("ui", None),
-    "demos": ("demos", None),
+# Exceptions to the automated lazy loading
+_LAZY_LOADING_EXCEPTIONS = {
     "crs": ("proj", None),
     "colormaps": ("colors", "_cmap_database"),
     "check_for_update": ("utils", "check_for_update"),
@@ -84,41 +39,7 @@ _EXTRA_ATTRS = {
     "tests": ("tests", None),
     "rcsetup": ("internals", "rcsetup"),
     "warnings": ("internals", "warnings"),
-}
-
-_SETUP_SKIP = {"internals", "externals", "tests"}
-_SETUP_ATTRS = {"rc", "rc_ultraplot", "rc_matplotlib", "colormaps"}
-_SETUP_MODULES = {
-    "colors",
-    "ticker",
-    "scale",
-    "axes",
-    "gridspec",
-    "figure",
-    "constructor",
-    "ui",
-    "demos",
-}
-
-_EXTRA_PUBLIC = {
-    "crs",
-    "colormaps",
-    "check_for_update",
-    "NORMS",
-    "LOCATORS",
-    "FORMATTERS",
-    "SCALES",
-    "PROJS",
-    "internals",
-    "externals",
-    "tests",
-    "rcsetup",
-    "warnings",
-    "pyplot",
-    "cartopy",
-    "basemap",
-    "legend",
-    "setup",
+    "figure": ("figure", "Figure"),
 }
 
 
@@ -148,21 +69,38 @@ def _parse_all(path):
     return None
 
 
-def _load_attr_map():
+def _discover_modules():
     global _ATTR_MAP
     if _ATTR_MAP is not None:
         return
+
     attr_map = {}
     base = Path(__file__).resolve().parent
-    for module_name in _STAR_MODULES:
-        relpath = _MODULE_SOURCES.get(module_name)
-        if not relpath:
+
+    for path in base.glob("*.py"):
+        if path.name.startswith("_") or path.name == "setup.py":
             continue
-        names = _parse_all(base / relpath)
-        if not names:
+        module_name = path.stem
+        names = _parse_all(path)
+        if names:
+            if len(names) == 1:
+                attr_map[module_name] = (module_name, names[0])
+            else:
+                for name in names:
+                    attr_map[name] = (module_name, name)
+
+    for path in base.iterdir():
+        if not path.is_dir() or path.name.startswith("_") or path.name == "tests":
             continue
-        for name in names:
-            attr_map[name] = module_name
+        if (path / "__init__.py").is_file():
+            module_name = path.name
+            names = _parse_all(path / "__init__.py")
+            if names:
+                for name in names:
+                    attr_map[name] = (module_name, name)
+
+            attr_map[module_name] = (module_name, None)
+
     _ATTR_MAP = attr_map
 
 
@@ -244,7 +182,7 @@ def _setup():
 
 
 def _resolve_extra(name):
-    module_name, attr = _EXTRA_ATTRS[name]
+    module_name, attr = _LAZY_LOADING_EXCEPTIONS[name]
     module = _import_module(module_name)
     value = module if attr is None else getattr(module, attr)
     globals()[name] = value
@@ -277,15 +215,16 @@ def _load_all():
     _setup()
     from .internals.benchmarks import _benchmark
 
-    names = set()
-    for module_name in _STAR_MODULES:
-        with _benchmark(f"import {module_name}"):
-            module = _expose_module(module_name)
-        exports = getattr(module, "__all__", None)
-        if exports is None:
-            exports = [name for name in dir(module) if not name.startswith("_")]
-        names.update(exports)
-    names.update(_EXTRA_PUBLIC)
+    _discover_modules()
+    names = set(_ATTR_MAP.keys())
+
+    for name in names:
+        try:
+            __getattr__(name)
+        except AttributeError:
+            pass
+
+    names.update(_LAZY_LOADING_EXCEPTIONS.keys())
     with _benchmark("registries"):
         _build_registry_map()
     if _REGISTRY_ATTRS:
@@ -324,23 +263,14 @@ def setup(*, eager=None):
         _load_all()
 
 
-def _needs_setup(name, module_name=None):
-    if name in _SETUP_ATTRS:
-        return True
-    if module_name in _SETUP_MODULES:
-        return True
-    return False
-
-
 def __getattr__(name):
-    if name == "pytest_plugins":
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    if name in {"__version__", "version", "name"}:
+    if name in {"pytest_plugins", "__version__", "version", "name", "__all__"}:
+        if name == "__all__":
+            value = _load_all()
+            globals()["__all__"] = value
+            return value
         return globals()[name]
-    if name == "__all__":
-        value = _load_all()
-        globals()["__all__"] = value
-        return value
+
     if name == "pyplot":
         import matplotlib.pyplot as pyplot
 
@@ -364,23 +294,20 @@ def __getattr__(name):
             ) from err
         globals()[name] = basemap
         return basemap
-    if name in _EXTRA_ATTRS and name in _SETUP_SKIP:
-        return _resolve_extra(name)
-    if name in _EXTRA_ATTRS:
-        module_name, _ = _EXTRA_ATTRS[name]
-        if _needs_setup(name, module_name=module_name):
-            _setup()
-            _maybe_eager_import()
+
+    if name in _LAZY_LOADING_EXCEPTIONS:
+        _setup()
+        _maybe_eager_import()
         return _resolve_extra(name)
 
-    _load_attr_map()
+    _discover_modules()
     if _ATTR_MAP and name in _ATTR_MAP:
-        module_name = _ATTR_MAP[name]
-        if _needs_setup(name, module_name=module_name):
-            _setup()
-            _maybe_eager_import()
-        module = _expose_module(module_name)
-        value = getattr(module, name)
+        module_name, attr_name = _ATTR_MAP[name]
+        _setup()
+        _maybe_eager_import()
+
+        module = _import_module(module_name)
+        value = getattr(module, attr_name) if attr_name else module
         globals()[name] = value
         return value
 
@@ -394,10 +321,9 @@ def __getattr__(name):
 
 
 def __dir__():
+    _discover_modules()
     names = set(globals())
-    _load_attr_map()
     if _ATTR_MAP:
         names.update(_ATTR_MAP)
-    names.update(_EXTRA_ATTRS)
-    names.update(_EXTRA_PUBLIC)
+    names.update(_LAZY_LOADING_EXCEPTIONS)
     return sorted(names)
