@@ -2986,6 +2986,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 kw["text"] = title[self.number - 1]
         else:
             raise ValueError(f"Invalid title {title!r}. Must be string(s).")
+        if any(key in kwargs for key in ("size", "fontsize")):
+            self._title_dict[loc]._ultraplot_manual_size = True
         kw.update(kwargs)
         self._title_dict[loc].update(kw)
 
@@ -2998,6 +3000,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # NOTE: Critical to do this every time in case padding changes or
         # we added or removed an a-b-c label in the same position as a title
         width, height = self._get_size_inches()
+        if width <= 0 or height <= 0:
+            return
         x_pad = self._title_pad / (72 * width)
         y_pad = self._title_pad / (72 * height)
         for loc, obj in self._title_dict.items():
@@ -3042,7 +3046,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # Offset title away from a-b-c label
         atext, ttext = aobj.get_text(), tobj.get_text()
         awidth = twidth = 0
-        pad = (abcpad / 72) / self._get_size_inches()[0]
+        width_inches = self._get_size_inches()[0]
+        pad = (abcpad / 72) / width_inches
+        abc_pad = (self._abc_pad / 72) / width_inches
         ha = aobj.get_ha()
 
         # Get dimensions of non-empty elements
@@ -3058,6 +3064,36 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 .transformed(self.transAxes.inverted())
                 .width
             )
+
+        # Shrink the title font if both texts share a location and would overflow
+        if (
+            atext
+            and ttext
+            and self._abc_loc == self._title_loc
+            and twidth > 0
+            and not getattr(tobj, "_ultraplot_manual_size", False)
+        ):
+            scale = 1
+            base_x = tobj.get_position()[0]
+            if ha == "left":
+                available = 1 - (base_x + awidth + pad)
+                if available < twidth and available > 0:
+                    scale = available / twidth
+            elif ha == "right":
+                available = base_x + abc_pad - pad - awidth
+                if available < twidth and available > 0:
+                    scale = available / twidth
+            elif ha == "center":
+                # Conservative fit for centered titles sharing the abc location
+                left_room = base_x - 0.5 * (awidth + pad)
+                right_room = 1 - (base_x + 0.5 * (awidth + pad))
+                max_room = min(left_room, right_room)
+                if max_room < twidth / 2 and max_room > 0:
+                    scale = (2 * max_room) / twidth
+
+            if scale < 1:
+                tobj.set_fontsize(tobj.get_fontsize() * scale)
+                twidth *= scale
 
         # Calculate offsets based on alignment and content
         aoffset = toffset = 0
@@ -3079,6 +3115,44 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             )
         if ttext:
             tobj.set_x(tobj.get_position()[0] + toffset)
+
+        # Shrink title if it overlaps the abc label at a different location
+        if (
+            atext
+            and self._abc_loc != self._title_loc
+            and not getattr(
+                self._title_dict[self._title_loc], "_ultraplot_manual_size", False
+            )
+        ):
+            title_obj = self._title_dict[self._title_loc]
+            title_text = title_obj.get_text()
+            if title_text:
+                abc_bbox = aobj.get_window_extent(renderer).transformed(
+                    self.transAxes.inverted()
+                )
+                title_bbox = title_obj.get_window_extent(renderer).transformed(
+                    self.transAxes.inverted()
+                )
+                ax0, ax1 = abc_bbox.x0, abc_bbox.x1
+                tx0, tx1 = title_bbox.x0, title_bbox.x1
+                if tx0 < ax1 + pad and tx1 > ax0 - pad:
+                    base_x = title_obj.get_position()[0]
+                    ha = title_obj.get_ha()
+                    max_width = 0
+                    if ha == "left":
+                        if base_x <= ax0 - pad:
+                            max_width = (ax0 - pad) - base_x
+                    elif ha == "right":
+                        if base_x >= ax1 + pad:
+                            max_width = base_x - (ax1 + pad)
+                    elif ha == "center":
+                        if base_x >= ax1 + pad:
+                            max_width = 2 * (base_x - (ax1 + pad))
+                        elif base_x <= ax0 - pad:
+                            max_width = 2 * ((ax0 - pad) - base_x)
+                    if 0 < max_width < title_bbox.width:
+                        scale = max_width / title_bbox.width
+                        title_obj.set_fontsize(title_obj.get_fontsize() * scale)
 
     def _update_super_title(self, suptitle=None, **kwargs):
         """
