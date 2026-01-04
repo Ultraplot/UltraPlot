@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Optional
 
 from ._lazy import LazyLoader, install_module_proxy
 
@@ -89,6 +90,19 @@ def _setup():
         _SETUP_RUNNING = False
 
 
+def setup(eager: Optional[bool] = None) -> None:
+    """
+    Initialize registries and optionally import the public API eagerly.
+    """
+    _setup()
+    if eager is None:
+        from .config import rc
+
+        eager = bool(rc["ultraplot.eager_import"])
+    if eager:
+        _LOADER.load_all(globals())
+
+
 def _build_registry_map():
     global _REGISTRY_ATTRS
     if _REGISTRY_ATTRS is not None:
@@ -142,6 +156,24 @@ def __getattr__(name):
 
         globals()[name] = plt
         return plt
+    if name == "cartopy":
+        try:
+            import cartopy as ctp
+        except ImportError as exc:
+            raise AttributeError(
+                f"module {__name__!r} has no attribute {name!r}"
+            ) from exc
+        globals()[name] = ctp
+        return ctp
+    if name == "basemap":
+        try:
+            import mpl_toolkits.basemap as basemap
+        except ImportError as exc:
+            raise AttributeError(
+                f"module {__name__!r} has no attribute {name!r}"
+            ) from exc
+        globals()[name] = basemap
+        return basemap
 
     return _LOADER.get_attr(name, globals())
 

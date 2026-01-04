@@ -5,6 +5,7 @@ Helpers for lazy attribute loading in :mod:`ultraplot`.
 from __future__ import annotations
 
 import ast
+import importlib.util
 import types
 from importlib import import_module
 from pathlib import Path
@@ -152,9 +153,11 @@ class LazyLoader:
         registry_names = self._registry_names()
         if registry_names:
             names.update(registry_names)
-        names.update(
-            {"__version__", "version", "name", "setup", "pyplot", "cartopy", "basemap"}
-        )
+        names.update({"__version__", "version", "name", "setup", "pyplot"})
+        if importlib.util.find_spec("cartopy") is not None:
+            names.add("cartopy")
+        if importlib.util.find_spec("mpl_toolkits.basemap") is not None:
+            names.add("basemap")
         return sorted(names)
 
     def get_attr(self, name: str, module_globals: MutableMapping[str, Any]) -> Any:
@@ -193,8 +196,10 @@ class LazyLoader:
 class _UltraPlotModule(types.ModuleType):
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "figure" and isinstance(value, types.ModuleType):
-            super().__setattr__("_figure_module", value)
-            return
+            existing = self.__dict__.get("figure")
+            if callable(existing) and not isinstance(existing, types.ModuleType):
+                value.__class__ = _CallableModule
+                value._callable = existing
         super().__setattr__(name, value)
 
 
