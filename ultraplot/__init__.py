@@ -191,9 +191,13 @@ def __getattr__(name):
                     )
             # If no caller frame, delegate to the lazy loader
             return _LOADER.get_attr(name, globals())
-        except Exception:
-            # If any exception occurs, delegate to the lazy loader
-            return _LOADER.get_attr(name, globals())
+        except Exception as e:
+            if not (
+                isinstance(e, AttributeError)
+                and str(e) == f"module {__name__!r} has no attribute {name!r}"
+            ):
+                return _LOADER.get_attr(name, globals())
+            raise
         finally:
             del frame
 
