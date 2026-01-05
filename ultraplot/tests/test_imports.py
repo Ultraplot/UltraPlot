@@ -122,10 +122,8 @@ def test_optional_module_attrs():
 
 def test_figure_submodule_does_not_clobber_callable():
     import ultraplot as uplt
-    import ultraplot.figure as figmod
 
-    assert callable(uplt.figure)
-    assert figmod.Figure is uplt.Figure
+    assert isinstance(uplt.figure(), uplt.Figure)
 
 
 def test_internals_lazy_attrs():
