@@ -150,7 +150,54 @@ def __getattr__(name):
             return val
         return globals().get(name)
 
-    # Priority 3: External dependencies
+    # Priority 3: Special handling for figure
+    if name == "figure":
+        # Special handling for figure to allow module imports
+        import inspect
+        import sys
+
+        # Check if this is a module import by looking at the call stack
+        frame = inspect.currentframe()
+        try:
+            caller_frame = frame.f_back
+            if caller_frame:
+                # Check if the caller is likely the import system
+                caller_code = caller_frame.f_code
+                # Check if this is a module import
+                is_import = (
+                    "importlib" in caller_code.co_filename
+                    or caller_code.co_name
+                    in ("_handle_fromlist", "_find_and_load", "_load_unlocked")
+                    or "_bootstrap" in caller_code.co_filename
+                )
+
+                # Also check if the caller is a module-level import statement
+                if not is_import and caller_code.co_name == "<module>":
+                    try:
+                        source_lines = inspect.getframeinfo(caller_frame).code_context
+                        if source_lines and any(
+                            "import" in line and "figure" in line
+                            for line in source_lines
+                        ):
+                            is_import = True
+                    except Exception:
+                        pass
+
+                if is_import:
+                    # This is likely a module import, let Python handle it
+                    # Return early to avoid delegating to the lazy loader
+                    raise AttributeError(
+                        f"module {__name__!r} has no attribute {name!r}"
+                    )
+            # If no caller frame, delegate to the lazy loader
+            return _LOADER.get_attr(name, globals())
+        except Exception:
+            # If any exception occurs, delegate to the lazy loader
+            return _LOADER.get_attr(name, globals())
+        finally:
+            del frame
+
+    # Priority 4: External dependencies
     if name == "pyplot":
         import matplotlib.pyplot as plt
 

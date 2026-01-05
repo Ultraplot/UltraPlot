@@ -133,10 +133,17 @@ class LazyLoader:
         module_name, attr = self._exceptions[name]
         module = self._import_module(module_name)
         value = module if attr is None else getattr(module, attr)
-        module_globals[name] = value
+        # Special handling for figure - don't set it as an attribute to allow module imports
+        if name != "figure":
+            module_globals[name] = value
         return value
 
     def load_all(self, module_globals: MutableMapping[str, Any]) -> list[str]:
+        # If eager loading has been done but __all__ is not in globals, re-run the discovery
+        if self._get_eager_done(module_globals) and "__all__" not in module_globals:
+            # Reset eager loading to force re-discovery
+            self._set_eager_done(module_globals, False)
+
         if self._get_eager_done(module_globals):
             return sorted(module_globals.get("__all__", []))
         self._set_eager_done(module_globals, True)
@@ -172,7 +179,9 @@ class LazyLoader:
             self._setup()
             module = self._import_module(module_name)
             value = getattr(module, attr_name) if attr_name else module
-            module_globals[name] = value
+            # Special handling for figure - don't set it as an attribute to allow module imports
+            if name != "figure":
+                module_globals[name] = value
             return value
 
         if name[:1].isupper():
@@ -195,11 +204,17 @@ class LazyLoader:
 
 class _UltraPlotModule(types.ModuleType):
     def __setattr__(self, name: str, value: Any) -> None:
-        if name == "figure" and isinstance(value, types.ModuleType):
-            existing = self.__dict__.get("figure")
-            if callable(existing) and not isinstance(existing, types.ModuleType):
-                value.__class__ = _CallableModule
-                value._callable = existing
+        if name == "figure":
+            if isinstance(value, types.ModuleType):
+                # Store the figure module separately to avoid clobbering the callable
+                super().__setattr__("_figure_module", value)
+                return
+            elif callable(value) and not isinstance(value, types.ModuleType):
+                # Check if the figure module has already been imported
+                if "_figure_module" in self.__dict__:
+                    # The figure module has been imported, so don't set the function
+                    # This allows import ultraplot.figure to work
+                    return
         super().__setattr__(name, value)
 
 
