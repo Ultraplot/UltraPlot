@@ -828,3 +828,341 @@ def test_multiple_containers_independent():
     # External children should not be in figure
     assert ax1.get_external_child() not in fig.axes
     assert ax2.get_external_child() not in fig.axes
+
+
+def test_container_factory_function():
+    """Test the create_external_axes_container factory function."""
+    from ultraplot.axes.container import create_external_axes_container
+
+    # Create a container class for our mock external axes
+    ContainerClass = create_external_axes_container(MockExternalAxes, "mock")
+
+    # Verify it's a subclass of ExternalAxesContainer
+    assert issubclass(ContainerClass, ExternalAxesContainer)
+    assert ContainerClass.__name__ == "MockExternalAxesContainer"
+
+    # Test instantiation
+    fig = uplt.figure()
+    ax = ContainerClass(fig, 1, 1, 1)
+
+    assert ax is not None
+    assert ax.has_external_child()
+    assert isinstance(ax.get_external_child(), MockExternalAxes)
+
+
+def test_container_factory_with_custom_kwargs():
+    """Test factory function with custom external axes kwargs."""
+    from ultraplot.axes.container import create_external_axes_container
+
+    ContainerClass = create_external_axes_container(MockExternalAxes, "mock")
+
+    fig = uplt.figure()
+    ax = ContainerClass(fig, 1, 1, 1, external_axes_kwargs={"projection": "test"})
+
+    assert ax is not None
+    assert ax.has_external_child()
+
+
+def test_container_error_handling_invalid_external_class():
+    """Test container handles invalid external axes class."""
+
+    class InvalidExternalAxes:
+        def __init__(self, *args, **kwargs):
+            raise ValueError("Invalid axes class")
+
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=InvalidExternalAxes, external_axes_kwargs={}
+    )
+
+    # Should not have external child due to error
+    assert not ax.has_external_child()
+
+
+def test_container_position_edge_cases():
+    """Test position synchronization with edge cases."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Test with very small position
+    small_pos = Bbox.from_bounds(0.1, 0.1, 0.01, 0.01)
+    ax.set_position(small_pos)
+
+    # Should not crash
+    assert ax.get_position() is not None
+
+
+def test_container_fitting_with_no_renderer():
+    """Test fitting logic when renderer is not available."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Mock renderer that doesn't support points_to_pixels
+    mock_renderer = Mock()
+    mock_renderer.points_to_pixels = None
+
+    # Should not crash
+    ax._ensure_external_fits_within_container(mock_renderer)
+
+
+def test_container_attribute_delegation_edge_cases():
+    """Test attribute delegation with edge cases."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Test accessing non-existent attribute
+    with pytest.raises(AttributeError):
+        _ = ax.nonexistent_attribute
+
+    # Test accessing private attribute (should not delegate)
+    with pytest.raises(AttributeError):
+        _ = ax._private_attr
+
+
+def test_container_dir_with_no_external_axes():
+    """Test dir() when no external axes exists."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(fig, 1, 1, 1)  # No external axes class
+
+    # Should not crash and should return container attributes
+    attrs = dir(ax)
+    assert "get_external_axes" in attrs
+    assert "has_external_child" in attrs
+
+
+def test_container_format_with_mixed_params():
+    """Test format method with mix of delegatable and non-delegatable params."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Mix of params - some should go to external, some to container
+    ax.format(title="Test", xlabel="X", ylabel="Y", abc="A", abcloc="upper left")
+
+    # Should not crash
+    # Note: title might be handled by external axes for some container types
+    ext_axes = ax.get_external_child()
+    assert ext_axes.get_xlabel() == "X"  # External handles xlabel
+    assert ext_axes.get_ylabel() == "Y"  # External handles ylabel
+    # Just verify format doesn't crash and params are processed
+    assert True
+
+
+def test_container_shrink_factor_edge_cases():
+    """Test shrink factor with edge case values."""
+    fig = uplt.figure()
+
+    # Test with very small shrink factor
+    ax1 = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=MockExternalAxes,
+        external_axes_kwargs={},
+        external_shrink_factor=0.1,
+    )
+
+    # Test with very large shrink factor (use different figure)
+    fig2 = uplt.figure()
+    ax2 = ExternalAxesContainer(
+        fig2,
+        1,
+        1,
+        1,
+        external_axes_class=MockExternalAxes,
+        external_axes_kwargs={},
+        external_shrink_factor=1.5,
+    )
+
+    # Should not crash
+    assert ax1.has_external_child()
+    assert ax2.has_external_child()
+
+
+def test_container_padding_edge_cases():
+    """Test padding with edge case values."""
+    fig = uplt.figure()
+
+    # Test with zero padding
+    ax1 = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=MockExternalAxes,
+        external_axes_kwargs={},
+        external_padding=0.0,
+    )
+
+    # Test with very large padding (use different figure)
+    fig2 = uplt.figure()
+    ax2 = ExternalAxesContainer(
+        fig2,
+        1,
+        1,
+        1,
+        external_axes_class=MockExternalAxes,
+        external_axes_kwargs={},
+        external_padding=100.0,
+    )
+
+    # Should not crash
+    assert ax1.has_external_child()
+    assert ax2.has_external_child()
+
+
+def test_container_reposition_subplot():
+    """Test _reposition_subplot method."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Should not crash when called
+    ax._reposition_subplot()
+
+    # Position should be set
+    assert ax.get_position() is not None
+
+
+def test_container_update_title_position():
+    """Test _update_title_position method."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Mock renderer
+    mock_renderer = Mock()
+
+    # Should not crash
+    ax._update_title_position(mock_renderer)
+
+
+def test_container_stale_flag_management():
+    """Test stale flag management in various scenarios."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Initially should be stale
+    assert ax._external_stale
+
+    # After drawing, should not be stale
+    mock_renderer = Mock()
+    ax.draw(mock_renderer)
+    assert not ax._external_stale
+
+    # After plotting, should be stale again
+    ax.plot([0, 1], [0, 1])
+    assert ax._external_stale
+
+
+def test_container_with_mpltern_module_detection():
+    """Test mpltern module detection logic."""
+
+    # Create a mock axes that pretends to be from mpltern
+    class MockMplternAxes(MockExternalAxes):
+        __module__ = "mpltern.ternary"
+
+    fig = uplt.figure()
+
+    # Test with mpltern-like axes
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockMplternAxes, external_axes_kwargs={}
+    )
+
+    # Should have default shrink factor for mpltern
+    assert ax._external_shrink_factor == 0.68
+
+
+def test_container_without_mpltern_module():
+    """Test non-mpltern axes get default shrink factor."""
+    fig = uplt.figure()
+
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Should have default shrink factor (not mpltern-specific)
+    from ultraplot.config import rc
+
+    assert ax._external_shrink_factor == rc["external.shrink"]
+
+
+def test_container_zorder_management():
+    """Test zorder management between container and external axes."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    container_zorder = ax.get_zorder()
+    ext_axes = ax.get_external_child()
+    ext_zorder = ext_axes.get_zorder()
+
+    # External axes should have higher zorder
+    assert ext_zorder > container_zorder
+    assert ext_zorder == container_zorder + 1
+
+
+def test_container_clear_preserves_state():
+    """Test that clear method preserves container state."""
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig, 1, 1, 1, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Set some state
+    ax.set_title("Test Title")
+    ax.format(abc="A")
+
+    # Clear should not crash
+    ax.clear()
+
+    # Container should still be functional
+    assert ax.get_position() is not None
+    assert ax.has_external_child()
+
+
+def test_container_with_subplotspec():
+    """Test container creation with subplotspec."""
+    fig = uplt.figure()
+
+    # Create a gridspec
+    gs = fig.add_gridspec(2, 2)
+    subplotspec = gs[0, 0]
+
+    ax = ExternalAxesContainer(
+        fig, subplotspec, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Should work with subplotspec
+    assert ax.has_external_child()
+    assert ax.get_subplotspec() == subplotspec
+
+
+def test_container_with_rect_position():
+    """Test container creation with rect position."""
+    fig = uplt.figure()
+
+    rect = [0.1, 0.2, 0.3, 0.4]
+
+    ax = ExternalAxesContainer(
+        fig, rect, external_axes_class=MockExternalAxes, external_axes_kwargs={}
+    )
+
+    # Should work with rect
+    assert ax.has_external_child()
+    pos = ax.get_position()
+    assert abs(pos.x0 - rect[0]) < 0.01
+    assert abs(pos.y0 - rect[1]) < 0.01
