@@ -5484,11 +5484,19 @@ class PlotAxes(base.Axes):
         spacing = max_height * (1 + overlap)
 
         artists = []
+        # Base zorder for ridgelines - use a high value to ensure they're on top
+        base_zorder = kwargs.pop("zorder", 2)
+
         for i, (x, y) in enumerate(ridges):
             # Normalize and offset
             y_normalized = y / max_height
             offset = i * spacing
             y_plot = y_normalized + offset
+
+            # Each ridge gets its own zorder, with fill and outline properly layered
+            # Ridge i: fill at base + i*2, outline at base + i*2 + 1
+            fill_zorder = base_zorder + i * 2
+            outline_zorder = fill_zorder + 1
 
             if vert:
                 # Traditional horizontal ridges
@@ -5502,7 +5510,7 @@ class PlotAxes(base.Axes):
                         alpha=alpha,
                         edgecolor="none",
                         label=labels[i],
-                        **kwargs,
+                        zorder=fill_zorder,
                     )
                     # Draw outline on top (excluding baseline)
                     self.plot(
@@ -5510,7 +5518,7 @@ class PlotAxes(base.Axes):
                         y_plot,
                         color=edgecolor,
                         linewidth=linewidth,
-                        zorder=poly.get_zorder() + 0.1,
+                        zorder=outline_zorder,
                     )
                 else:
                     poly = self.plot(
@@ -5519,7 +5527,7 @@ class PlotAxes(base.Axes):
                         color=colors[i],
                         linewidth=linewidth,
                         label=labels[i],
-                        **kwargs,
+                        zorder=outline_zorder,
                     )[0]
             else:
                 # Vertical ridges
@@ -5533,7 +5541,7 @@ class PlotAxes(base.Axes):
                         alpha=alpha,
                         edgecolor="none",
                         label=labels[i],
-                        **kwargs,
+                        zorder=fill_zorder,
                     )
                     # Draw outline on top (excluding baseline)
                     self.plot(
@@ -5541,7 +5549,7 @@ class PlotAxes(base.Axes):
                         x,
                         color=edgecolor,
                         linewidth=linewidth,
-                        zorder=poly.get_zorder() + 0.1,
+                        zorder=outline_zorder,
                     )
                 else:
                     poly = self.plot(
@@ -5550,7 +5558,7 @@ class PlotAxes(base.Axes):
                         color=colors[i],
                         linewidth=linewidth,
                         label=labels[i],
-                        **kwargs,
+                        zorder=outline_zorder,
                     )[0]
 
             artists.append(poly)
