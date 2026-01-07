@@ -5486,6 +5486,7 @@ class PlotAxes(base.Axes):
         artists = []
         # Base zorder for ridgelines - use a high value to ensure they're on top
         base_zorder = kwargs.pop("zorder", 2)
+        n_ridges = len(ridges)
 
         for i, (x, y) in enumerate(ridges):
             # Normalize and offset
@@ -5494,8 +5495,9 @@ class PlotAxes(base.Axes):
             y_plot = y_normalized + offset
 
             # Each ridge gets its own zorder, with fill and outline properly layered
-            # Ridge i: fill at base + i*2, outline at base + i*2 + 1
-            fill_zorder = base_zorder + i * 2
+            # Lower ridges (smaller i, visually in front) get higher z-order
+            # Ridge i: fill at base + (n-i-1)*2, outline at base + (n-i-1)*2 + 1
+            fill_zorder = base_zorder + (n_ridges - i - 1) * 2
             outline_zorder = fill_zorder + 1
 
             if vert:
