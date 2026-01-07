@@ -1109,6 +1109,82 @@ docstring._snippet_manager["plot.violinploth"] = _violinplot_docstring.format(
 )
 
 
+# Ridgeline plot docstrings
+_ridgeline_docstring = """
+Create a {orientation} ridgeline plot (also known as a joyplot).
+
+Ridgeline plots visualize distributions of multiple datasets as stacked,
+overlapping density curves. They are useful for comparing distributions
+across categories or over time.
+
+Parameters
+----------
+data : list of array-like
+    List of distributions to plot. Each element should be an array-like
+    object containing the data points for one distribution.
+labels : list of str, optional
+    Labels for each distribution. If not provided, generates default labels.
+overlap : float, default: 0.5
+    Amount of overlap between ridges, from 0 (no overlap) to 1 (full overlap).
+    Higher values create more dramatic visual overlapping.
+bandwidth : float, optional
+    Bandwidth parameter for kernel density estimation. If None (default),
+    uses automatic bandwidth selection via Scott's rule. Only used when hist=False.
+hist : bool, default: False
+    If True, uses histograms instead of kernel density estimation.
+bins : int or sequence or str, default: 'auto'
+    Bin specification for histograms. Can be an integer (number of bins),
+    a sequence defining bin edges, or a string method ('auto', 'sturges', etc.).
+    Only used when hist=True.
+fill : bool, default: True
+    Whether to fill the area under each density curve.
+alpha : float, default: 0.7
+    Transparency level for filled areas (0=transparent, 1=opaque).
+linewidth : float, default: 1.5
+    Width of the outline for each ridge.
+edgecolor : color, default: 'black'
+    Color of the ridge outlines.
+facecolor : color or list of colors, optional
+    Fill color(s) for the ridges. If a single color, applies to all ridges.
+    If a list, must match the number of distributions. If None, uses the
+    current color cycle or colormap.
+cmap : str or Colormap, optional
+    Colormap name or object to use for coloring ridges. Overridden by facecolor.
+
+Returns
+-------
+list
+    List of artist objects for each ridge (PolyCollection or Line2D).
+
+Examples
+--------
+>>> import ultraplot as uplt
+>>> import numpy as np
+>>> fig, ax = uplt.subplots()
+>>> data = [np.random.normal(i, 1, 1000) for i in range(5)]
+>>> ax.ridgeline(data, labels=[f'Group {{i+1}}' for i in range(5)])
+
+>>> # With colormap
+>>> fig, ax = uplt.subplots()
+>>> ax.ridgeline(data, cmap='viridis', overlap=0.7)
+
+>>> # With histograms instead of KDE
+>>> fig, ax = uplt.subplots()
+>>> ax.ridgeline(data, hist=True, bins=20)
+
+See Also
+--------
+violinplot : Violin plots for distribution visualization
+hist : Histogram for single distribution
+"""
+docstring._snippet_manager["plot.ridgeline"] = _ridgeline_docstring.format(
+    orientation="vertical"
+)
+docstring._snippet_manager["plot.ridgelineh"] = _ridgeline_docstring.format(
+    orientation="horizontal"
+)
+
+
 # 1D histogram docstrings
 _hist_docstring = """
 Plot {orientation} histograms.
@@ -5261,6 +5337,237 @@ class PlotAxes(base.Axes):
         """
         kwargs = _parse_vert(default_vert=False, **kwargs)
         return self._apply_violinplot(*args, **kwargs)
+
+    def _apply_ridgeline(
+        self,
+        data,
+        labels=None,
+        overlap=0.5,
+        bandwidth=None,
+        hist=False,
+        bins="auto",
+        fill=True,
+        alpha=0.7,
+        linewidth=1.5,
+        edgecolor="black",
+        facecolor=None,
+        cmap=None,
+        vert=True,
+        **kwargs,
+    ):
+        """
+        Apply ridgeline plot (joyplot).
+
+        Parameters
+        ----------
+        data : list of array-like
+            List of distributions to plot as ridges.
+        labels : list of str, optional
+            Labels for each distribution.
+        overlap : float, default: 0.5
+            Amount of overlap between ridges (0-1). Higher values create more overlap.
+        bandwidth : float, optional
+            Bandwidth for kernel density estimation. If None, uses automatic selection.
+            Only used when hist=False.
+        hist : bool, default: False
+            If True, use histograms instead of kernel density estimation.
+        bins : int or sequence or str, default: 'auto'
+            Bin specification for histograms. Passed to numpy.histogram.
+            Only used when hist=True.
+        fill : bool, default: True
+            Whether to fill the area under each curve.
+        alpha : float, default: 0.7
+            Transparency of filled areas.
+        linewidth : float, default: 1.5
+            Width of the ridge lines.
+        edgecolor : color, default: 'black'
+            Color of the ridge lines.
+        facecolor : color or list of colors, optional
+            Fill color(s). If None, uses current color cycle or colormap.
+        cmap : str or Colormap, optional
+            Colormap to use for coloring ridges.
+        vert : bool, default: True
+            If True, ridges are horizontal (traditional ridgeline plot).
+            If False, ridges are vertical.
+        **kwargs
+            Additional keyword arguments passed to fill_between or fill_betweenx.
+
+        Returns
+        -------
+        list
+            List of PolyCollection objects for each ridge.
+        """
+        from scipy.stats import gaussian_kde
+
+        # Validate input
+        if not isinstance(data, (list, tuple)):
+            data = [data]
+
+        n_ridges = len(data)
+        if labels is None:
+            labels = [f"Ridge {i+1}" for i in range(n_ridges)]
+        elif len(labels) != n_ridges:
+            raise ValueError(
+                f"Number of labels ({len(labels)}) must match number of data series ({n_ridges})"
+            )
+
+        # Determine colors
+        if facecolor is None:
+            if cmap is not None:
+                # Use colormap
+                if isinstance(cmap, str):
+                    cmap = mcm.get_cmap(cmap)
+                colors = [cmap(i / (n_ridges - 1)) for i in range(n_ridges)]
+            else:
+                # Use color cycle
+                parser = self._get_patches_for_fill
+                colors = [parser.get_next_color() for _ in range(n_ridges)]
+        elif isinstance(facecolor, (list, tuple)):
+            colors = list(facecolor)
+        else:
+            colors = [facecolor] * n_ridges
+
+        # Ensure we have enough colors
+        if len(colors) < n_ridges:
+            colors = colors * (n_ridges // len(colors) + 1)
+        colors = colors[:n_ridges]
+
+        # Calculate KDE or histogram for each distribution
+        ridges = []
+        for i, dist in enumerate(data):
+            dist = np.asarray(dist).ravel()
+            dist = dist[~np.isnan(dist)]  # Remove NaNs
+
+            if len(dist) < 2:
+                warnings._warn_ultraplot(
+                    f"Distribution {i} has less than 2 points, skipping"
+                )
+                continue
+
+            if hist:
+                # Use histogram
+                try:
+                    counts, bin_edges = np.histogram(dist, bins=bins)
+                    # Create x values as bin centers
+                    x = (bin_edges[:-1] + bin_edges[1:]) / 2
+                    # Extend to bin edges for proper fill
+                    x_extended = np.concatenate([[bin_edges[0]], x, [bin_edges[-1]]])
+                    y_extended = np.concatenate([[0], counts, [0]])
+                    ridges.append((x_extended, y_extended))
+                except Exception as e:
+                    warnings._warn_ultraplot(
+                        f"Histogram failed for distribution {i}: {e}, skipping"
+                    )
+                    continue
+            else:
+                # Perform KDE
+                try:
+                    kde = gaussian_kde(dist, bw_method=bandwidth)
+                    # Create smooth x values
+                    x_min, x_max = dist.min(), dist.max()
+                    x_range = x_max - x_min
+                    x_margin = x_range * 0.1  # 10% margin
+                    x = np.linspace(x_min - x_margin, x_max + x_margin, 200)
+                    y = kde(x)
+                    ridges.append((x, y))
+                except Exception as e:
+                    warnings._warn_ultraplot(
+                        f"KDE failed for distribution {i}: {e}, skipping"
+                    )
+                    continue
+
+        if not ridges:
+            raise ValueError("No valid distributions to plot")
+
+        # Normalize heights and add vertical offsets
+        max_height = max(y.max() for x, y in ridges)
+        spacing = max_height * (1 + overlap)
+
+        artists = []
+        for i, (x, y) in enumerate(ridges):
+            # Normalize and offset
+            y_normalized = y / max_height
+            offset = i * spacing
+            y_plot = y_normalized + offset
+
+            if vert:
+                # Traditional horizontal ridges
+                if fill:
+                    poly = self.fill_between(
+                        x,
+                        offset,
+                        y_plot,
+                        facecolor=colors[i],
+                        alpha=alpha,
+                        edgecolor=edgecolor,
+                        linewidth=linewidth,
+                        label=labels[i],
+                        **kwargs,
+                    )
+                else:
+                    poly = self.plot(
+                        x,
+                        y_plot,
+                        color=colors[i],
+                        linewidth=linewidth,
+                        label=labels[i],
+                        **kwargs,
+                    )[0]
+            else:
+                # Vertical ridges
+                if fill:
+                    poly = self.fill_betweenx(
+                        x,
+                        offset,
+                        y_plot,
+                        facecolor=colors[i],
+                        alpha=alpha,
+                        edgecolor=edgecolor,
+                        linewidth=linewidth,
+                        label=labels[i],
+                        **kwargs,
+                    )
+                else:
+                    poly = self.plot(
+                        y_plot,
+                        x,
+                        color=colors[i],
+                        linewidth=linewidth,
+                        label=labels[i],
+                        **kwargs,
+                    )[0]
+
+            artists.append(poly)
+
+        # Set appropriate labels and limits
+        if vert:
+            self.set_yticks(np.arange(n_ridges) * spacing)
+            self.set_yticklabels(labels[: len(ridges)])
+            self.set_ylabel("")
+        else:
+            self.set_xticks(np.arange(n_ridges) * spacing)
+            self.set_xticklabels(labels[: len(ridges)])
+            self.set_xlabel("")
+
+        return artists
+
+    @inputs._preprocess_or_redirect("data")
+    @docstring._snippet_manager
+    def ridgeline(self, data, **kwargs):
+        """
+        %(plot.ridgeline)s
+        """
+        kwargs = _parse_vert(default_vert=True, **kwargs)
+        return self._apply_ridgeline(data, **kwargs)
+
+    @inputs._preprocess_or_redirect("data")
+    @docstring._snippet_manager
+    def ridgelineh(self, data, **kwargs):
+        """
+        %(plot.ridgelineh)s
+        """
+        kwargs = _parse_vert(default_vert=False, **kwargs)
+        return self._apply_ridgeline(data, **kwargs)
 
     def _apply_hist(
         self,

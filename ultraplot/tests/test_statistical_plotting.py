@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # import ultraplot as uplt
-import numpy as np, pandas as pd, ultraplot as uplt
+import numpy as np
+import pandas as pd
 import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -92,4 +95,214 @@ def test_input_violin_box_options():
 
     axes[3].bar(data, median=True, boxstds=True, bars=False)
     axes[3].format(title="boxstds")
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_basic(rng):
+    """
+    Test basic ridgeline plot functionality.
+    """
+    # Generate test data with different means
+    data = [rng.normal(i, 1, 500) for i in range(5)]
+    labels = [f"Group {i+1}" for i in range(5)]
+
+    fig, ax = uplt.subplots(figsize=(8, 6))
+    ax.ridgeline(data, labels=labels, overlap=0.5, alpha=0.7)
+    ax.format(
+        title="Basic Ridgeline Plot",
+        xlabel="Value",
+        grid=False,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_colormap(rng):
+    """
+    Test ridgeline plot with colormap.
+    """
+    # Generate test data
+    data = [rng.normal(i * 0.5, 1, 300) for i in range(6)]
+    labels = [f"Distribution {i+1}" for i in range(6)]
+
+    fig, ax = uplt.subplots(figsize=(8, 6))
+    ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.7,
+        cmap="viridis",
+        alpha=0.8,
+        linewidth=2,
+    )
+    ax.format(
+        title="Ridgeline Plot with Colormap",
+        xlabel="Value",
+        grid=False,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_horizontal(rng):
+    """
+    Test horizontal ridgeline plot (vertical orientation).
+    """
+    # Generate test data
+    data = [rng.normal(i, 0.8, 400) for i in range(4)]
+    labels = ["Alpha", "Beta", "Gamma", "Delta"]
+
+    fig, ax = uplt.subplots(figsize=(6, 8))
+    ax.ridgelineh(
+        data,
+        labels=labels,
+        overlap=0.6,
+        facecolor="skyblue",
+        alpha=0.6,
+    )
+    ax.format(
+        title="Horizontal Ridgeline Plot",
+        ylabel="Value",
+        grid=False,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_custom_colors(rng):
+    """
+    Test ridgeline plot with custom colors.
+    """
+    # Generate test data
+    data = [rng.normal(i * 2, 1.5, 350) for i in range(4)]
+    labels = ["Red", "Green", "Blue", "Yellow"]
+    colors = ["red", "green", "blue", "yellow"]
+
+    fig, ax = uplt.subplots(figsize=(8, 6))
+    ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        facecolor=colors,
+        alpha=0.7,
+        edgecolor="black",
+        linewidth=1.5,
+    )
+    ax.format(
+        title="Ridgeline Plot with Custom Colors",
+        xlabel="Value",
+        grid=False,
+    )
+    return fig
+
+
+def test_ridgeline_empty_data():
+    """
+    Test that ridgeline plot raises error with empty data.
+    """
+    fig, ax = uplt.subplots()
+    with pytest.raises(ValueError, match="No valid distributions to plot"):
+        ax.ridgeline([[], []])
+
+
+def test_ridgeline_label_mismatch():
+    """
+    Test that ridgeline plot raises error when labels don't match data length.
+    """
+    data = [np.random.normal(0, 1, 100) for _ in range(3)]
+    labels = ["A", "B"]  # Only 2 labels for 3 distributions
+
+    fig, ax = uplt.subplots()
+    with pytest.raises(ValueError, match="Number of labels.*must match"):
+        ax.ridgeline(data, labels=labels)
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_histogram(rng):
+    """
+    Test ridgeline plot with histograms instead of KDE.
+    """
+    # Generate test data with different means
+    data = [rng.normal(i * 1.5, 1, 500) for i in range(5)]
+    labels = [f"Group {i+1}" for i in range(5)]
+
+    fig, ax = uplt.subplots(figsize=(8, 6))
+    ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        alpha=0.7,
+        hist=True,
+        bins=20,
+    )
+    ax.format(
+        title="Ridgeline Plot with Histograms",
+        xlabel="Value",
+        grid=False,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_histogram_colormap(rng):
+    """
+    Test ridgeline histogram plot with colormap.
+    """
+    # Generate test data
+    data = [rng.normal(i * 0.8, 1.2, 400) for i in range(6)]
+    labels = [f"Dist {i+1}" for i in range(6)]
+
+    fig, ax = uplt.subplots(figsize=(8, 6))
+    ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.6,
+        cmap="plasma",
+        alpha=0.75,
+        hist=True,
+        bins=25,
+        linewidth=1.5,
+    )
+    ax.format(
+        title="Histogram Ridgeline with Plasma Colormap",
+        xlabel="Value",
+        grid=False,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_comparison_kde_vs_hist(rng):
+    """
+    Test comparison of KDE vs histogram ridgeline plots.
+    """
+    # Generate test data
+    data = [rng.normal(i, 0.8, 300) for i in range(4)]
+    labels = ["A", "B", "C", "D"]
+
+    fig, axs = uplt.subplots(ncols=2, figsize=(12, 5))
+
+    # KDE version
+    axs[0].ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        cmap="viridis",
+        alpha=0.7,
+    )
+    axs[0].format(title="KDE Ridgeline", xlabel="Value", grid=False)
+
+    # Histogram version
+    axs[1].ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        cmap="viridis",
+        alpha=0.7,
+        hist=True,
+        bins=15,
+    )
+    axs[1].format(title="Histogram Ridgeline", xlabel="Value", grid=False)
+
+    fig.format(suptitle="KDE vs Histogram Ridgeline Comparison")
     return fig
