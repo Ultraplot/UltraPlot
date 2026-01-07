@@ -5493,16 +5493,24 @@ class PlotAxes(base.Axes):
             if vert:
                 # Traditional horizontal ridges
                 if fill:
+                    # Fill without edge
                     poly = self.fill_between(
                         x,
                         offset,
                         y_plot,
                         facecolor=colors[i],
                         alpha=alpha,
-                        edgecolor=edgecolor,
-                        linewidth=linewidth,
+                        edgecolor="none",
                         label=labels[i],
                         **kwargs,
+                    )
+                    # Draw outline on top (excluding baseline)
+                    self.plot(
+                        x,
+                        y_plot,
+                        color=edgecolor,
+                        linewidth=linewidth,
+                        zorder=poly.get_zorder() + 0.1,
                     )
                 else:
                     poly = self.plot(
@@ -5516,16 +5524,24 @@ class PlotAxes(base.Axes):
             else:
                 # Vertical ridges
                 if fill:
+                    # Fill without edge
                     poly = self.fill_betweenx(
                         x,
                         offset,
                         y_plot,
                         facecolor=colors[i],
                         alpha=alpha,
-                        edgecolor=edgecolor,
-                        linewidth=linewidth,
+                        edgecolor="none",
                         label=labels[i],
                         **kwargs,
+                    )
+                    # Draw outline on top (excluding baseline)
+                    self.plot(
+                        y_plot,
+                        x,
+                        color=edgecolor,
+                        linewidth=linewidth,
+                        zorder=poly.get_zorder() + 0.1,
                     )
                 else:
                     poly = self.plot(
