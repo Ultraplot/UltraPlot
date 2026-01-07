@@ -1127,9 +1127,16 @@ labels : list of str, optional
 overlap : float, default: 0.5
     Amount of overlap between ridges, from 0 (no overlap) to 1 (full overlap).
     Higher values create more dramatic visual overlapping.
-bandwidth : float, optional
-    Bandwidth parameter for kernel density estimation. If None (default),
-    uses automatic bandwidth selection via Scott's rule. Only used when hist=False.
+kde_kw : dict, optional
+    Keyword arguments passed to `scipy.stats.gaussian_kde`. Common parameters include:
+
+    * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
+    * ``weights`` : Array of weights for each data point
+
+    Only used when hist=False.
+points : int, default: 200
+    Number of evaluation points for KDE curves. Higher values create smoother
+    curves but take longer to compute. Only used when hist=False.
 hist : bool, default: False
     If True, uses histograms instead of kernel density estimation.
 bins : int or sequence or str, default: 'auto'
@@ -5343,7 +5350,8 @@ class PlotAxes(base.Axes):
         data,
         labels=None,
         overlap=0.5,
-        bandwidth=None,
+        kde_kw=None,
+        points=200,
         hist=False,
         bins="auto",
         fill=True,
@@ -5366,9 +5374,16 @@ class PlotAxes(base.Axes):
             Labels for each distribution.
         overlap : float, default: 0.5
             Amount of overlap between ridges (0-1). Higher values create more overlap.
-        bandwidth : float, optional
-            Bandwidth for kernel density estimation. If None, uses automatic selection.
+        kde_kw : dict, optional
+            Keyword arguments passed to `scipy.stats.gaussian_kde`. Common parameters:
+
+            * ``bw_method`` : Bandwidth selection method
+            * ``weights`` : Array of weights for each data point
+
             Only used when hist=False.
+        points : int, default: 200
+            Number of points to evaluate the KDE at. Higher values create smoother curves
+            but take longer to compute. Only used when hist=False.
         hist : bool, default: False
             If True, use histograms instead of kernel density estimation.
         bins : int or sequence or str, default: 'auto'
@@ -5432,6 +5447,10 @@ class PlotAxes(base.Axes):
             colors = colors * (n_ridges // len(colors) + 1)
         colors = colors[:n_ridges]
 
+        # Prepare KDE kwargs
+        if kde_kw is None:
+            kde_kw = {}
+
         # Calculate KDE or histogram for each distribution
         ridges = []
         for i, dist in enumerate(data):
@@ -5462,12 +5481,12 @@ class PlotAxes(base.Axes):
             else:
                 # Perform KDE
                 try:
-                    kde = gaussian_kde(dist, bw_method=bandwidth)
+                    kde = gaussian_kde(dist, **kde_kw)
                     # Create smooth x values
                     x_min, x_max = dist.min(), dist.max()
                     x_range = x_max - x_min
                     x_margin = x_range * 0.1  # 10% margin
-                    x = np.linspace(x_min - x_margin, x_max + x_margin, 200)
+                    x = np.linspace(x_min - x_margin, x_max + x_margin, points)
                     y = kde(x)
                     ridges.append((x, y))
                 except Exception as e:

@@ -306,3 +306,65 @@ def test_ridgeline_comparison_kde_vs_hist(rng):
 
     fig.format(suptitle="KDE vs Histogram Ridgeline Comparison")
     return fig
+
+
+def test_ridgeline_kde_kw(rng):
+    """
+    Test that kde_kw parameter passes arguments to gaussian_kde correctly.
+    """
+    data = [rng.normal(i, 1, 300) for i in range(3)]
+    labels = ["A", "B", "C"]
+
+    # Test with custom bandwidth
+    fig, ax = uplt.subplots()
+    artists = ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        kde_kw={"bw_method": 0.5},
+    )
+    assert len(artists) == 3
+    uplt.close(fig)
+
+    # Test with weights
+    fig, ax = uplt.subplots()
+    weights = np.ones(300) * 2  # Uniform weights
+    artists = ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        kde_kw={"weights": weights},
+    )
+    assert len(artists) == 3
+    uplt.close(fig)
+
+    # Test with silverman bandwidth
+    fig, ax = uplt.subplots()
+    artists = ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        kde_kw={"bw_method": "silverman"},
+    )
+    assert len(artists) == 3
+    uplt.close(fig)
+
+
+def test_ridgeline_points(rng):
+    """
+    Test that points parameter controls KDE evaluation points.
+    """
+    data = [rng.normal(i, 1, 300) for i in range(3)]
+    labels = ["A", "B", "C"]
+
+    # Test with different point counts
+    for points in [50, 200, 500]:
+        fig, ax = uplt.subplots()
+        artists = ax.ridgeline(
+            data,
+            labels=labels,
+            overlap=0.5,
+            points=points,
+        )
+        assert len(artists) == 3
+        uplt.close(fig)
