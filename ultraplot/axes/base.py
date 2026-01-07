@@ -354,7 +354,9 @@ abcbbox, titlebbox : bool, default: :rc:`abc.bbox` and :rc:`title.bbox`
     inside the axes. This can help them stand out on top of artists plotted
     inside the axes.
 abcpad : float or unit-spec, default: :rc:`abc.pad`
-    The padding for the inner and outer titles and a-b-c labels.
+    Horizontal offset to shift the a-b-c label position. Positive values move
+    the label right, negative values move it left. This is separate from
+    `abctitlepad`, which controls spacing between abc and title when co-located.
     %(units.pt)s
 abc_kw, title_kw : dict-like, optional
     Additional settings used to update the a-b-c label and title
@@ -846,8 +848,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         self._auto_format = None  # manipulated by wrapper functions
         self._abc_border_kwargs = {}
         self._abc_loc = None
-        self._abc_pad = 0
-        self._abc_title_pad = rc["abc.titlepad"]
+        self._abc_pad = 0  # User's horizontal offset for abc label (in points)
+        self._abc_title_pad = rc[
+            "abc.titlepad"
+        ]  # Spacing between abc and title when co-located
         self._title_above = rc["title.above"]
         self._title_border_kwargs = {}  # title border properties
         self._title_loc = None
@@ -3014,7 +3018,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # This is known matplotlib problem but especially annoying with top panels.
         # NOTE: See axis.get_ticks_position for inspiration
         pad = self._title_pad
-        abcpad = self._abc_title_pad
+        # Horizontal separation between abc label and title when co-located (in points)
+        abc_title_sep_pts = self._abc_title_pad
         if self.xaxis.get_visible() and any(
             tick.tick2line.get_visible() and not tick.label2.get_visible()
             for tick in self.xaxis.majorTicks
@@ -3042,13 +3047,19 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         # Offset title away from a-b-c label
         # NOTE: Title texts all use axes transform in x-direction
-
-        # Offset title away from a-b-c label
+        # We need to convert padding values from points to axes coordinates (0-1 normalized)
         atext, ttext = aobj.get_text(), tobj.get_text()
         awidth = twidth = 0
         width_inches = self._get_size_inches()[0]
-        pad = (abcpad / 72) / width_inches
-        abc_pad = (self._abc_pad / 72) / width_inches
+
+        # Convert abc-title separation from points to axes coordinates
+        # This is the spacing BETWEEN abc and title when they share the same location
+        abc_title_sep = (abc_title_sep_pts / 72) / width_inches
+
+        # Convert user's horizontal offset from points to axes coordinates
+        # This is the user-specified shift for the abc label position (via abcpad parameter)
+        abc_offset = (self._abc_pad / 72) / width_inches
+
         ha = aobj.get_ha()
 
         # Get dimensions of non-empty elements
@@ -3076,17 +3087,17 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             scale = 1
             base_x = tobj.get_position()[0]
             if ha == "left":
-                available = 1 - (base_x + awidth + pad)
+                available = 1 - (base_x + awidth + abc_title_sep)
                 if available < twidth and available > 0:
                     scale = available / twidth
             elif ha == "right":
-                available = base_x + abc_pad - pad - awidth
+                available = base_x + abc_offset - abc_title_sep - awidth
                 if available < twidth and available > 0:
                     scale = available / twidth
             elif ha == "center":
                 # Conservative fit for centered titles sharing the abc location
-                left_room = base_x - 0.5 * (awidth + pad)
-                right_room = 1 - (base_x + 0.5 * (awidth + pad))
+                left_room = base_x - 0.5 * (awidth + abc_title_sep)
+                right_room = 1 - (base_x + 0.5 * (awidth + abc_title_sep))
                 max_room = min(left_room, right_room)
                 if max_room < twidth / 2 and max_room > 0:
                     scale = (2 * max_room) / twidth
@@ -3099,19 +3110,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         aoffset = toffset = 0
         if atext and ttext:
             if ha == "left":
-                toffset = awidth + pad
+                toffset = awidth + abc_title_sep
             elif ha == "right":
-                aoffset = -(twidth + pad)
+                aoffset = -(twidth + abc_title_sep)
             elif ha == "center":
-                toffset = 0.5 * (awidth + pad)
-                aoffset = -0.5 * (twidth + pad)
+                toffset = 0.5 * (awidth + abc_title_sep)
+                aoffset = -0.5 * (twidth + abc_title_sep)
 
         # Apply positioning adjustments
+        # For abc label: apply offset from co-located title + user's horizontal offset
         if atext:
             aobj.set_x(
                 aobj.get_position()[0]
                 + aoffset
-                + (self._abc_pad / 72) / (self._get_size_inches()[0])
+                + abc_offset  # User's horizontal shift (from abcpad parameter)
             )
         if ttext:
             tobj.set_x(tobj.get_position()[0] + toffset)
@@ -3135,21 +3147,21 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 )
                 ax0, ax1 = abc_bbox.x0, abc_bbox.x1
                 tx0, tx1 = title_bbox.x0, title_bbox.x1
-                if tx0 < ax1 + pad and tx1 > ax0 - pad:
+                if tx0 < ax1 + abc_title_sep and tx1 > ax0 - abc_title_sep:
                     base_x = title_obj.get_position()[0]
                     ha = title_obj.get_ha()
                     max_width = 0
                     if ha == "left":
-                        if base_x <= ax0 - pad:
-                            max_width = (ax0 - pad) - base_x
+                        if base_x <= ax0 - abc_title_sep:
+                            max_width = (ax0 - abc_title_sep) - base_x
                     elif ha == "right":
-                        if base_x >= ax1 + pad:
-                            max_width = base_x - (ax1 + pad)
+                        if base_x >= ax1 + abc_title_sep:
+                            max_width = base_x - (ax1 + abc_title_sep)
                     elif ha == "center":
-                        if base_x >= ax1 + pad:
-                            max_width = 2 * (base_x - (ax1 + pad))
-                        elif base_x <= ax0 - pad:
-                            max_width = 2 * ((ax0 - pad) - base_x)
+                        if base_x >= ax1 + abc_title_sep:
+                            max_width = 2 * (base_x - (ax1 + abc_title_sep))
+                        elif base_x <= ax0 - abc_title_sep:
+                            max_width = 2 * ((ax0 - abc_title_sep) - base_x)
                     if 0 < max_width < title_bbox.width:
                         scale = max_width / title_bbox.width
                         title_obj.set_fontsize(title_obj.get_fontsize() * scale)
