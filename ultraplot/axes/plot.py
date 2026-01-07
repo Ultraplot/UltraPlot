@@ -5455,8 +5455,7 @@ class PlotAxes(base.Axes):
         if facecolor is None:
             if cmap is not None:
                 # Use colormap
-                if isinstance(cmap, str):
-                    cmap = mcm.get_cmap(cmap)
+                cmap = constructor.Colormap(cmap)
                 colors = [cmap(i / (n_ridges - 1)) for i in range(n_ridges)]
             else:
                 # Use color cycle
