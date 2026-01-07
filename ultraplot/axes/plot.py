@@ -1124,9 +1124,20 @@ data : list of array-like
     object containing the data points for one distribution.
 labels : list of str, optional
     Labels for each distribution. If not provided, generates default labels.
+positions : array-like, optional
+    Y-coordinates for positioning each ridge. If provided, enables continuous
+    (coordinate-based) positioning mode where ridges are anchored to specific
+    numerical coordinates along the Y-axis. If None (default), uses categorical
+    positioning with evenly-spaced ridges.
+height : float or array-like, optional
+    Height of each ridge in Y-axis units. Only used in continuous positioning mode
+    (when positions is provided). Can be a single value applied to all ridges or
+    an array of values (one per ridge). If None, defaults to the minimum spacing
+    between positions divided by 2.
 overlap : float, default: 0.5
     Amount of overlap between ridges, from 0 (no overlap) to 1 (full overlap).
-    Higher values create more dramatic visual overlapping.
+    Higher values create more dramatic visual overlapping. Only used in categorical
+    positioning mode (when positions is None).
 kde_kw : dict, optional
     Keyword arguments passed to `scipy.stats.gaussian_kde`. Common parameters include:
 
@@ -1178,6 +1189,12 @@ Examples
 >>> # With histograms instead of KDE
 >>> fig, ax = uplt.subplots()
 >>> ax.ridgeline(data, hist=True, bins=20)
+
+>>> # Continuous positioning (e.g., at specific depths)
+>>> fig, ax = uplt.subplots()
+>>> depths = [0, 10, 25, 50, 100]  # meters
+>>> ax.ridgeline(data, positions=depths, height=8, labels=['Surface', '10m', '25m', '50m', '100m'])
+>>> ax.format(ylabel='Depth (m)', xlabel='Temperature (°C)')
 
 See Also
 --------
@@ -5349,6 +5366,8 @@ class PlotAxes(base.Axes):
         self,
         data,
         labels=None,
+        positions=None,
+        height=None,
         overlap=0.5,
         kde_kw=None,
         points=200,
@@ -5372,8 +5391,14 @@ class PlotAxes(base.Axes):
             List of distributions to plot as ridges.
         labels : list of str, optional
             Labels for each distribution.
+        positions : array-like, optional
+            Y-coordinates for continuous positioning mode. If provided, ridges are
+            anchored to these coordinates along the Y-axis.
+        height : float or array-like, optional
+            Height of each ridge in Y-axis units (continuous mode only).
         overlap : float, default: 0.5
             Amount of overlap between ridges (0-1). Higher values create more overlap.
+            Only used in categorical mode.
         kde_kw : dict, optional
             Keyword arguments passed to `scipy.stats.gaussian_kde`. Common parameters:
 
@@ -5498,9 +5523,41 @@ class PlotAxes(base.Axes):
         if not ridges:
             raise ValueError("No valid distributions to plot")
 
-        # Normalize heights and add vertical offsets
-        max_height = max(y.max() for x, y in ridges)
-        spacing = max_height * (1 + overlap)
+        # Determine positioning mode
+        continuous_mode = positions is not None
+        n_ridges = len(ridges)
+
+        if continuous_mode:
+            # Continuous (coordinate-based) positioning mode
+            positions = np.asarray(positions)
+            if len(positions) != len(data):
+                raise ValueError(
+                    f"Number of positions ({len(positions)}) must match "
+                    f"number of data series ({len(data)})"
+                )
+
+            # Handle height parameter
+            if height is None:
+                # Auto-determine height from position spacing
+                if len(positions) > 1:
+                    min_spacing = np.min(np.diff(np.sort(positions)))
+                    height = min_spacing / 2
+                else:
+                    height = 1.0
+
+            if np.isscalar(height):
+                heights = np.full(n_ridges, height)
+            else:
+                heights = np.asarray(height)
+                if len(heights) != n_ridges:
+                    raise ValueError(
+                        f"Number of heights ({len(heights)}) must match "
+                        f"number of ridges ({n_ridges})"
+                    )
+        else:
+            # Categorical (evenly-spaced) positioning mode
+            max_height = max(y.max() for x, y in ridges)
+            spacing = max_height * (1 + overlap)
 
         artists = []
         # Base zorder for ridgelines - use a high value to ensure they're on top
@@ -5508,10 +5565,20 @@ class PlotAxes(base.Axes):
         n_ridges = len(ridges)
 
         for i, (x, y) in enumerate(ridges):
-            # Normalize and offset
-            y_normalized = y / max_height
-            offset = i * spacing
-            y_plot = y_normalized + offset
+            if continuous_mode:
+                # Continuous mode: scale to specified height and position at coordinate
+                y_max = y.max()
+                if y_max > 0:
+                    y_scaled = (y / y_max) * heights[i]
+                else:
+                    y_scaled = y
+                offset = positions[i]
+                y_plot = y_scaled + offset
+            else:
+                # Categorical mode: normalize and space evenly
+                y_normalized = y / max_height
+                offset = i * spacing
+                y_plot = y_normalized + offset
 
             # Each ridge gets its own zorder, with fill and outline properly layered
             # Lower ridges (smaller i, visually in front) get higher z-order
@@ -5585,14 +5652,27 @@ class PlotAxes(base.Axes):
             artists.append(poly)
 
         # Set appropriate labels and limits
-        if vert:
-            self.set_yticks(np.arange(n_ridges) * spacing)
-            self.set_yticklabels(labels[: len(ridges)])
-            self.set_ylabel("")
+        if continuous_mode:
+            # In continuous mode, positions are actual coordinates
+            if vert:
+                # Optionally set ticks at positions
+                if labels and all(labels[: len(ridges)]):
+                    self.set_yticks(positions[: len(ridges)])
+                    self.set_yticklabels(labels[: len(ridges)])
+            else:
+                if labels and all(labels[: len(ridges)]):
+                    self.set_xticks(positions[: len(ridges)])
+                    self.set_xticklabels(labels[: len(ridges)])
         else:
-            self.set_xticks(np.arange(n_ridges) * spacing)
-            self.set_xticklabels(labels[: len(ridges)])
-            self.set_xlabel("")
+            # Categorical mode: set ticks at evenly-spaced positions
+            if vert:
+                self.set_yticks(np.arange(n_ridges) * spacing)
+                self.set_yticklabels(labels[: len(ridges)])
+                self.set_ylabel("")
+            else:
+                self.set_xticks(np.arange(n_ridges) * spacing)
+                self.set_xticklabels(labels[: len(ridges)])
+                self.set_xlabel("")
 
         return artists
 

@@ -368,3 +368,97 @@ def test_ridgeline_points(rng):
         )
         assert len(artists) == 3
         uplt.close(fig)
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_continuous_positioning(rng):
+    """
+    Test continuous (coordinate-based) positioning mode.
+    """
+    # Simulate temperature data at different depths
+    depths = [0, 10, 25, 50, 100]
+    mean_temps = [25, 22, 18, 12, 8]
+    data = [rng.normal(temp, 2, 400) for temp in mean_temps]
+    labels = ["Surface", "10m", "25m", "50m", "100m"]
+
+    fig, ax = uplt.subplots(figsize=(8, 7))
+    ax.ridgeline(
+        data,
+        labels=labels,
+        positions=depths,
+        height=8,
+        cmap="coolwarm",
+        alpha=0.75,
+    )
+    ax.format(
+        title="Ocean Temperature by Depth (Continuous)",
+        xlabel="Temperature (°C)",
+        ylabel="Depth (m)",
+        grid=True,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ridgeline_continuous_vs_categorical(rng):
+    """
+    Test comparison of continuous vs categorical positioning.
+    """
+    data = [rng.normal(i * 2, 1.5, 300) for i in range(4)]
+    labels = ["A", "B", "C", "D"]
+
+    fig, axs = uplt.subplots(ncols=2, figsize=(12, 5))
+
+    # Categorical mode
+    axs[0].ridgeline(data, labels=labels, overlap=0.6, cmap="viridis", alpha=0.7)
+    axs[0].format(title="Categorical Positioning", xlabel="Value", grid=False)
+
+    # Continuous mode
+    positions = [0, 5, 15, 30]
+    axs[1].ridgeline(
+        data, labels=labels, positions=positions, height=4, cmap="viridis", alpha=0.7
+    )
+    axs[1].format(
+        title="Continuous Positioning", xlabel="Value", ylabel="Coordinate", grid=True
+    )
+
+    return fig
+
+
+def test_ridgeline_continuous_errors(rng):
+    """
+    Test error handling in continuous positioning mode.
+    """
+    data = [rng.normal(i, 1, 300) for i in range(3)]
+
+    # Test position length mismatch
+    fig, ax = uplt.subplots()
+    with pytest.raises(ValueError, match="Number of positions.*must match"):
+        ax.ridgeline(data, positions=[0, 10])
+    uplt.close(fig)
+
+    # Test height length mismatch
+    fig, ax = uplt.subplots()
+    with pytest.raises(ValueError, match="Number of heights.*must match"):
+        ax.ridgeline(data, positions=[0, 10, 20], height=[5, 10])
+    uplt.close(fig)
+
+
+def test_ridgeline_continuous_auto_height(rng):
+    """
+    Test automatic height determination in continuous mode.
+    """
+    data = [rng.normal(i, 1, 300) for i in range(3)]
+    positions = [0, 10, 25]
+
+    # Test auto height (should work without error)
+    fig, ax = uplt.subplots()
+    artists = ax.ridgeline(data, positions=positions)
+    assert len(artists) == 3
+    uplt.close(fig)
+
+    # Test with single position
+    fig, ax = uplt.subplots()
+    artists = ax.ridgeline([data[0]], positions=[0])
+    assert len(artists) == 1
+    uplt.close(fig)
