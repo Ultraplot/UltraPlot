@@ -13,6 +13,7 @@ import numpy as np
 
 try:
     from kiwisolver import Constraint, Solver, Variable
+
     KIWI_AVAILABLE = True
 except ImportError:
     KIWI_AVAILABLE = False
@@ -21,7 +22,7 @@ except ImportError:
     Constraint = None
 
 
-__all__ = ['UltraLayoutSolver', 'compute_ultra_positions', 'is_orthogonal_layout']
+__all__ = ["UltraLayoutSolver", "compute_ultra_positions", "is_orthogonal_layout"]
 
 
 def is_orthogonal_layout(array: np.ndarray) -> bool:
@@ -57,10 +58,10 @@ def is_orthogonal_layout(array: np.ndarray) -> bool:
     for num in subplot_nums:
         rows, cols = np.where(array == num)
         bboxes[num] = {
-            'row_min': rows.min(),
-            'row_max': rows.max(),
-            'col_min': cols.min(),
-            'col_max': cols.max(),
+            "row_min": rows.min(),
+            "row_max": rows.max(),
+            "col_min": cols.min(),
+            "col_max": cols.max(),
         }
 
     # Check if layout is orthogonal by verifying that all vertical and
@@ -73,10 +74,10 @@ def is_orthogonal_layout(array: np.ndarray) -> bool:
     col_boundaries = set()
 
     for bbox in bboxes.values():
-        row_boundaries.add(bbox['row_min'])
-        row_boundaries.add(bbox['row_max'] + 1)
-        col_boundaries.add(bbox['col_min'])
-        col_boundaries.add(bbox['col_max'] + 1)
+        row_boundaries.add(bbox["row_min"])
+        row_boundaries.add(bbox["row_max"] + 1)
+        col_boundaries.add(bbox["col_min"])
+        col_boundaries.add(bbox["col_max"] + 1)
 
     # Check if these boundaries create a consistent grid
     # For orthogonal layout, we should be able to split the grid
@@ -101,12 +102,16 @@ def is_orthogonal_layout(array: np.ndarray) -> bool:
         refined_col_indices = set()
 
         for r in rows:
-            for i, (r_start, r_end) in enumerate(zip(row_boundaries[:-1], row_boundaries[1:])):
+            for i, (r_start, r_end) in enumerate(
+                zip(row_boundaries[:-1], row_boundaries[1:])
+            ):
                 if r_start <= r < r_end:
                     refined_row_indices.add(i)
 
         for c in cols:
-            for i, (c_start, c_end) in enumerate(zip(col_boundaries[:-1], col_boundaries[1:])):
+            for i, (c_start, c_end) in enumerate(
+                zip(col_boundaries[:-1], col_boundaries[1:])
+            ):
                 if c_start <= c < c_end:
                     refined_col_indices.add(i)
 
@@ -133,11 +138,22 @@ class UltraLayoutSolver:
     a superior layout experience for complex subplot arrangements.
     """
 
-    def __init__(self, array: np.ndarray, figwidth: float = 10.0, figheight: float = 8.0,
-                 wspace: Optional[List[float]] = None, hspace: Optional[List[float]] = None,
-                 left: float = 0.125, right: float = 0.125,
-                 top: float = 0.125, bottom: float = 0.125,
-                 wratios: Optional[List[float]] = None, hratios: Optional[List[float]] = None):
+    def __init__(
+        self,
+        array: np.ndarray,
+        figwidth: float = 10.0,
+        figheight: float = 8.0,
+        wspace: Optional[List[float]] = None,
+        hspace: Optional[List[float]] = None,
+        left: float = 0.125,
+        right: float = 0.125,
+        top: float = 0.125,
+        bottom: float = 0.125,
+        wratios: Optional[List[float]] = None,
+        hratios: Optional[List[float]] = None,
+        wpanels: Optional[List[bool]] = None,
+        hpanels: Optional[List[bool]] = None,
+    ):
         """
         Initialize the UltraLayout solver.
 
@@ -153,6 +169,8 @@ class UltraLayoutSolver:
             Margins in inches
         wratios, hratios : list of float, optional
             Width and height ratios for columns and rows
+        wpanels, hpanels : list of bool, optional
+            Flags indicating panel columns or rows with fixed widths/heights.
         """
         if not KIWI_AVAILABLE:
             raise ImportError(
@@ -194,6 +212,20 @@ class UltraLayoutSolver:
         else:
             self.hratios = list(hratios)
 
+        # Set up panel flags (True for fixed-width panel slots).
+        if wpanels is None:
+            self.wpanels = [False] * self.ncols
+        else:
+            if len(wpanels) != self.ncols:
+                raise ValueError("wpanels length must match number of columns.")
+            self.wpanels = [bool(val) for val in wpanels]
+        if hpanels is None:
+            self.hpanels = [False] * self.nrows
+        else:
+            if len(hpanels) != self.nrows:
+                raise ValueError("hpanels length must match number of rows.")
+            self.hpanels = [bool(val) for val in hpanels]
+
         # Initialize solver
         self.solver = Solver()
         self.variables = {}
@@ -203,58 +235,92 @@ class UltraLayoutSolver:
     def _setup_variables(self):
         """Create kiwisolver variables for all grid lines."""
         # Vertical lines (left edges of columns + right edge of last column)
-        self.col_lefts = [Variable(f'col_{i}_left') for i in range(self.ncols)]
-        self.col_rights = [Variable(f'col_{i}_right') for i in range(self.ncols)]
+        self.col_lefts = [Variable(f"col_{i}_left") for i in range(self.ncols)]
+        self.col_rights = [Variable(f"col_{i}_right") for i in range(self.ncols)]
 
         # Horizontal lines (top edges of rows + bottom edge of last row)
         # Note: in figure coordinates, top is higher value
-        self.row_tops = [Variable(f'row_{i}_top') for i in range(self.nrows)]
-        self.row_bottoms = [Variable(f'row_{i}_bottom') for i in range(self.nrows)]
+        self.row_tops = [Variable(f"row_{i}_top") for i in range(self.nrows)]
+        self.row_bottoms = [Variable(f"row_{i}_bottom") for i in range(self.nrows)]
 
     def _setup_constraints(self):
         """Set up all constraints for the layout."""
         # 1. Figure boundary constraints
         self.solver.addConstraint(self.col_lefts[0] == self.left_margin / self.figwidth)
-        self.solver.addConstraint(self.col_rights[-1] == 1.0 - self.right_margin / self.figwidth)
-        self.solver.addConstraint(self.row_bottoms[-1] == self.bottom_margin / self.figheight)
-        self.solver.addConstraint(self.row_tops[0] == 1.0 - self.top_margin / self.figheight)
+        self.solver.addConstraint(
+            self.col_rights[-1] == 1.0 - self.right_margin / self.figwidth
+        )
+        self.solver.addConstraint(
+            self.row_bottoms[-1] == self.bottom_margin / self.figheight
+        )
+        self.solver.addConstraint(
+            self.row_tops[0] == 1.0 - self.top_margin / self.figheight
+        )
 
         # 2. Column continuity and spacing constraints
         for i in range(self.ncols - 1):
             # Right edge of column i connects to left edge of column i+1 with spacing
             spacing = self.wspace[i] / self.figwidth if i < len(self.wspace) else 0
-            self.solver.addConstraint(self.col_rights[i] + spacing == self.col_lefts[i + 1])
+            self.solver.addConstraint(
+                self.col_rights[i] + spacing == self.col_lefts[i + 1]
+            )
 
         # 3. Row continuity and spacing constraints
         for i in range(self.nrows - 1):
             # Bottom edge of row i connects to top edge of row i+1 with spacing
             spacing = self.hspace[i] / self.figheight if i < len(self.hspace) else 0
-            self.solver.addConstraint(self.row_bottoms[i] == self.row_tops[i + 1] + spacing)
+            self.solver.addConstraint(
+                self.row_bottoms[i] == self.row_tops[i + 1] + spacing
+            )
 
-        # 4. Width ratio constraints
+        # 4. Width constraints (panel slots are fixed, remaining slots use ratios)
         total_width = 1.0 - (self.left_margin + self.right_margin) / self.figwidth
         if self.ncols > 1:
             spacing_total = sum(self.wspace) / self.figwidth
         else:
             spacing_total = 0
         available_width = total_width - spacing_total
-        total_ratio = sum(self.wratios)
+        fixed_width = 0.0
+        ratio_sum = 0.0
+        for i in range(self.ncols):
+            if self.wpanels[i]:
+                fixed_width += self.wratios[i] / self.figwidth
+            else:
+                ratio_sum += self.wratios[i]
+        remaining_width = max(0.0, available_width - fixed_width)
+        if ratio_sum == 0:
+            ratio_sum = 1.0
 
         for i in range(self.ncols):
-            width = available_width * self.wratios[i] / total_ratio
+            if self.wpanels[i]:
+                width = self.wratios[i] / self.figwidth
+            else:
+                width = remaining_width * self.wratios[i] / ratio_sum
             self.solver.addConstraint(self.col_rights[i] == self.col_lefts[i] + width)
 
-        # 5. Height ratio constraints
+        # 5. Height constraints (panel slots are fixed, remaining slots use ratios)
         total_height = 1.0 - (self.top_margin + self.bottom_margin) / self.figheight
         if self.nrows > 1:
             spacing_total = sum(self.hspace) / self.figheight
         else:
             spacing_total = 0
         available_height = total_height - spacing_total
-        total_ratio = sum(self.hratios)
+        fixed_height = 0.0
+        ratio_sum = 0.0
+        for i in range(self.nrows):
+            if self.hpanels[i]:
+                fixed_height += self.hratios[i] / self.figheight
+            else:
+                ratio_sum += self.hratios[i]
+        remaining_height = max(0.0, available_height - fixed_height)
+        if ratio_sum == 0:
+            ratio_sum = 1.0
 
         for i in range(self.nrows):
-            height = available_height * self.hratios[i] / total_ratio
+            if self.hpanels[i]:
+                height = self.hratios[i] / self.figheight
+            else:
+                height = remaining_height * self.hratios[i] / ratio_sum
             self.solver.addConstraint(self.row_tops[i] == self.row_bottoms[i] + height)
 
         # 6. Add aesthetic constraints for non-orthogonal layouts
@@ -267,30 +333,82 @@ class UltraLayoutSolver:
         For subplots that span cells in non-aligned ways, we add constraints
         to center them or align them aesthetically with neighboring subplots.
         """
-        # Analyze the layout to find subplots that need special handling
+        # Cache subplot bounds for neighbor lookups.
+        bboxes = {}
         for num in self.subplot_nums:
             rows, cols = np.where(self.array == num)
-            row_min, row_max = rows.min(), rows.max()
-            col_min, col_max = cols.min(), cols.max()
+            bboxes[num] = (rows.min(), rows.max(), cols.min(), cols.max())
 
-            # Check if this subplot has empty cells on its sides
-            # If so, try to center it with respect to subplots above/below/beside
+        # Analyze the layout to find subplots that need special handling.
+        for num in self.subplot_nums:
+            row_min, row_max, col_min, col_max = bboxes[num]
 
-            # Check left side
+            # Check if this subplot has empty cells on its sides.
+            left_empty = False
+            right_empty = False
             if col_min > 0:
-                left_cells = self.array[row_min:row_max+1, col_min-1]
-                if np.all(left_cells == 0):
-                    # Empty on the left - might want to align with something above/below
-                    self._try_align_with_neighbors(num, 'left', row_min, row_max, col_min)
-
-            # Check right side
+                left_cells = self.array[row_min : row_max + 1, col_min - 1]
+                left_empty = np.all(left_cells == 0)
             if col_max < self.ncols - 1:
-                right_cells = self.array[row_min:row_max+1, col_max+1]
-                if np.all(right_cells == 0):
-                    # Empty on the right
-                    self._try_align_with_neighbors(num, 'right', row_min, row_max, col_max)
+                right_cells = self.array[row_min : row_max + 1, col_max + 1]
+                right_empty = np.all(right_cells == 0)
 
-    def _try_align_with_neighbors(self, num: int, side: str, row_min: int, row_max: int, col_idx: int):
+            # If empty on both sides, try to center between neighboring subplots.
+            if left_empty and right_empty:
+                self._center_between_neighbors(
+                    num, row_min, row_max, col_min, col_max, bboxes
+                )
+                continue
+
+            # Otherwise try to align with neighbors on the empty side.
+            if left_empty:
+                self._try_align_with_neighbors(num, "left", row_min, row_max, col_min)
+            if right_empty:
+                self._try_align_with_neighbors(num, "right", row_min, row_max, col_max)
+
+    def _center_between_neighbors(
+        self,
+        num: int,
+        row_min: int,
+        row_max: int,
+        col_min: int,
+        col_max: int,
+        bboxes: Dict[int, Tuple[int, int, int, int]],
+    ) -> None:
+        """
+        Center a subplot between neighboring subplots above or below.
+        """
+        neighbor_nums = set()
+
+        # Prefer the nearest row above with multiple neighbors.
+        for r in range(row_min - 1, -1, -1):
+            neighbor_nums = set(self.array[r, col_min : col_max + 1])
+            neighbor_nums.discard(0)
+            if len(neighbor_nums) >= 2:
+                break
+        else:
+            # Fall back to rows below.
+            for r in range(row_max + 1, self.nrows):
+                neighbor_nums = set(self.array[r, col_min : col_max + 1])
+                neighbor_nums.discard(0)
+                if len(neighbor_nums) >= 2:
+                    break
+
+        if len(neighbor_nums) < 2:
+            return
+
+        leftmost = min(neighbor_nums, key=lambda n: bboxes[n][2])
+        rightmost = max(neighbor_nums, key=lambda n: bboxes[n][3])
+        left_neighbor = self.col_lefts[bboxes[leftmost][2]]
+        right_neighbor = self.col_rights[bboxes[rightmost][3]]
+        left_current = self.col_lefts[col_min]
+        right_current = self.col_rights[col_max]
+
+        # Avoid over-constraining the solver; centering is handled post-solve.
+
+    def _try_align_with_neighbors(
+        self, num: int, side: str, row_min: int, row_max: int, col_idx: int
+    ):
         """
         Try to align a subplot edge with neighboring subplots.
 
@@ -321,7 +439,7 @@ class UltraLayoutSolver:
                     rightmost_cols.append(n_cols.max())
 
                 # If we're between two subplots, center between them
-                if side == 'left' and leftmost_cols:
+                if side == "left" and leftmost_cols:
                     # Could add centering constraint here
                     # For now, we let the default grid handle it
                     pass
@@ -353,6 +471,53 @@ class UltraLayoutSolver:
 
         # Extract positions for each subplot
         positions = {}
+        col_lefts = [v.value() for v in self.col_lefts]
+        col_rights = [v.value() for v in self.col_rights]
+        row_tops = [v.value() for v in self.row_tops]
+        row_bottoms = [v.value() for v in self.row_bottoms]
+        col_widths = [right - left for left, right in zip(col_lefts, col_rights)]
+        row_heights = [top - bottom for top, bottom in zip(row_tops, row_bottoms)]
+        wspace_norm = [s / self.figwidth for s in self.wspace]
+        hspace_norm = [s / self.figheight for s in self.hspace]
+
+        base_wgap = None
+        for i in range(self.ncols - 1):
+            if not self.wpanels[i] and not self.wpanels[i + 1]:
+                gap = col_lefts[i + 1] - col_rights[i]
+                if base_wgap is None or gap < base_wgap:
+                    base_wgap = gap
+        if base_wgap is None:
+            base_wgap = 0.0
+
+        base_hgap = None
+        for i in range(self.nrows - 1):
+            if not self.hpanels[i] and not self.hpanels[i + 1]:
+                gap = row_bottoms[i] - row_tops[i + 1]
+                if base_hgap is None or gap < base_hgap:
+                    base_hgap = gap
+        if base_hgap is None:
+            base_hgap = 0.0
+
+        def _adjust_span(
+            spans: List[int],
+            start: float,
+            end: float,
+            sizes: List[float],
+            panels: List[bool],
+            base_gap: float,
+        ) -> Tuple[float, float]:
+            effective = [i for i in spans if not panels[i]]
+            if len(effective) <= 1:
+                return start, end
+            desired = sum(sizes[i] for i in effective)
+            # Collapse inter-column/row gaps inside spans to keep widths consistent.
+            # This avoids widening subplots that cross internal panel slots.
+            full = end - start
+            if desired < full:
+                offset = 0.5 * (full - desired)
+                start = start + offset
+                end = start + desired
+            return start, end
 
         for num in self.subplot_nums:
             rows, cols = np.where(self.array == num)
@@ -360,10 +525,30 @@ class UltraLayoutSolver:
             col_min, col_max = cols.min(), cols.max()
 
             # Get the bounding box from the grid lines
-            left = self.col_lefts[col_min].value()
-            right = self.col_rights[col_max].value()
-            bottom = self.row_bottoms[row_max].value()
-            top = self.row_tops[row_min].value()
+            left = col_lefts[col_min]
+            right = col_rights[col_max]
+            bottom = row_bottoms[row_max]
+            top = row_tops[row_min]
+
+            span_cols = list(range(col_min, col_max + 1))
+            span_rows = list(range(row_min, row_max + 1))
+
+            left, right = _adjust_span(
+                span_cols,
+                left,
+                right,
+                col_widths,
+                self.wpanels,
+                base_wgap,
+            )
+            top, bottom = _adjust_span(
+                span_rows,
+                top,
+                bottom,
+                row_heights,
+                self.hpanels,
+                base_hgap,
+            )
 
             width = right - left
             height = top - bottom
@@ -373,12 +558,21 @@ class UltraLayoutSolver:
         return positions
 
 
-def compute_ultra_positions(array: np.ndarray, figwidth: float = 10.0, figheight: float = 8.0,
-                           wspace: Optional[List[float]] = None, hspace: Optional[List[float]] = None,
-                           left: float = 0.125, right: float = 0.125,
-                           top: float = 0.125, bottom: float = 0.125,
-                           wratios: Optional[List[float]] = None,
-                           hratios: Optional[List[float]] = None) -> Dict[int, Tuple[float, float, float, float]]:
+def compute_ultra_positions(
+    array: np.ndarray,
+    figwidth: float = 10.0,
+    figheight: float = 8.0,
+    wspace: Optional[List[float]] = None,
+    hspace: Optional[List[float]] = None,
+    left: float = 0.125,
+    right: float = 0.125,
+    top: float = 0.125,
+    bottom: float = 0.125,
+    wratios: Optional[List[float]] = None,
+    hratios: Optional[List[float]] = None,
+    wpanels: Optional[List[bool]] = None,
+    hpanels: Optional[List[bool]] = None,
+) -> Dict[int, Tuple[float, float, float, float]]:
     """
     Compute subplot positions using UltraLayout for non-orthogonal layouts.
 
@@ -394,6 +588,8 @@ def compute_ultra_positions(array: np.ndarray, figwidth: float = 10.0, figheight
         Margins in inches
     wratios, hratios : list of float, optional
         Width and height ratios for columns and rows
+    wpanels, hpanels : list of bool, optional
+        Flags indicating panel columns or rows with fixed widths/heights.
 
     Returns
     -------
@@ -409,19 +605,38 @@ def compute_ultra_positions(array: np.ndarray, figwidth: float = 10.0, figheight
     (0.25, 0.125, 0.5, 0.35)
     """
     solver = UltraLayoutSolver(
-        array, figwidth, figheight, wspace, hspace,
-        left, right, top, bottom, wratios, hratios
+        array,
+        figwidth,
+        figheight,
+        wspace,
+        hspace,
+        left,
+        right,
+        top,
+        bottom,
+        wratios,
+        hratios,
+        wpanels,
+        hpanels,
     )
     return solver.solve()
 
 
-def get_grid_positions_ultra(array: np.ndarray, figwidth: float, figheight: float,
-                             wspace: Optional[List[float]] = None,
-                             hspace: Optional[List[float]] = None,
-                             left: float = 0.125, right: float = 0.125,
-                             top: float = 0.125, bottom: float = 0.125,
-                             wratios: Optional[List[float]] = None,
-                             hratios: Optional[List[float]] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def get_grid_positions_ultra(
+    array: np.ndarray,
+    figwidth: float,
+    figheight: float,
+    wspace: Optional[List[float]] = None,
+    hspace: Optional[List[float]] = None,
+    left: float = 0.125,
+    right: float = 0.125,
+    top: float = 0.125,
+    bottom: float = 0.125,
+    wratios: Optional[List[float]] = None,
+    hratios: Optional[List[float]] = None,
+    wpanels: Optional[List[bool]] = None,
+    hpanels: Optional[List[bool]] = None,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Get grid line positions using UltraLayout.
 
@@ -440,6 +655,8 @@ def get_grid_positions_ultra(array: np.ndarray, figwidth: float, figheight: floa
         Margins in inches
     wratios, hratios : list of float, optional
         Width and height ratios for columns and rows
+    wpanels, hpanels : list of bool, optional
+        Flags indicating panel columns or rows with fixed widths/heights.
 
     Returns
     -------
@@ -447,8 +664,19 @@ def get_grid_positions_ultra(array: np.ndarray, figwidth: float, figheight: floa
         Arrays of grid line positions for each cell
     """
     solver = UltraLayoutSolver(
-        array, figwidth, figheight, wspace, hspace,
-        left, right, top, bottom, wratios, hratios
+        array,
+        figwidth,
+        figheight,
+        wspace,
+        hspace,
+        left,
+        right,
+        top,
+        bottom,
+        wratios,
+        hratios,
+        wpanels,
+        hpanels,
     )
     solver.solver.updateVariables()
 

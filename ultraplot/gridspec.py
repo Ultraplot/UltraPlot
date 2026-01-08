@@ -452,6 +452,8 @@ class GridSpec(mgridspec.GridSpec):
         # Compute or retrieve cached UltraLayout positions
         if self._ultra_positions is None:
             self._compute_ultra_positions()
+        if self._ultra_positions is None:
+            return None
         layout_array = self._get_ultra_layout_array()
         if layout_array is None:
             return None
@@ -502,59 +504,15 @@ class GridSpec(mgridspec.GridSpec):
 
         figwidth, figheight = self.figure.get_size_inches()
 
-        # Convert spacing to inches
-        wspace_inches = []
-        for i, ws in enumerate(self._wspace_total):
-            if ws is not None:
-                wspace_inches.append(ws)
-            else:
-                # Use default spacing
-                wspace_inches.append(0.2)  # Default spacing in inches
-
-        hspace_inches = []
-        for i, hs in enumerate(self._hspace_total):
-            if hs is not None:
-                hspace_inches.append(hs)
-            else:
-                hspace_inches.append(0.2)
+        # Convert spacing to inches (including default ticklabel sizes).
+        wspace_inches = list(self.wspace_total)
+        hspace_inches = list(self.hspace_total)
 
         # Get margins
-        left = (
-            self.left
-            if self.left is not None
-            else (
-                self._left_default
-                if self._left_default is not None
-                else 0.125 * figwidth
-            )
-        )
-        right = (
-            self.right
-            if self.right is not None
-            else (
-                self._right_default
-                if self._right_default is not None
-                else 0.125 * figwidth
-            )
-        )
-        top = (
-            self.top
-            if self.top is not None
-            else (
-                self._top_default
-                if self._top_default is not None
-                else 0.125 * figheight
-            )
-        )
-        bottom = (
-            self.bottom
-            if self.bottom is not None
-            else (
-                self._bottom_default
-                if self._bottom_default is not None
-                else 0.125 * figheight
-            )
-        )
+        left = self.left
+        right = self.right
+        top = self.top
+        bottom = self.bottom
 
         # Compute positions using UltraLayout
         try:
@@ -570,6 +528,8 @@ class GridSpec(mgridspec.GridSpec):
                 bottom=bottom,
                 wratios=self._wratios_total,
                 hratios=self._hratios_total,
+                wpanels=[bool(val) for val in self._wpanels],
+                hpanels=[bool(val) for val in self._hpanels],
             )
         except Exception as e:
             warnings._warn_ultraplot(
@@ -743,6 +703,9 @@ class GridSpec(mgridspec.GridSpec):
         """
         Update the axes subplot specs by inserting rows and columns as specified.
         """
+        if self._use_ultra_layout:
+            self._ultra_positions = None
+            self._ultra_layout_array = None
         fig = self.figure
         ncols = self._ncols_total - int(newcol is not None)  # previous columns
         inserts = (newrow, newrow, newcol, newcol)

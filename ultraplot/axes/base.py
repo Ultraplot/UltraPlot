@@ -2788,6 +2788,80 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self.update_params()
             setter(self.figbox)  # equivalent to above
 
+        # In UltraLayout, place panels relative to their parent axes, not the grid.
+        if (
+            self._panel_parent
+            and self._panel_side
+            and self.figure.gridspec._use_ultra_layout
+        ):
+            gs = self.get_subplotspec().get_gridspec()
+            figwidth, figheight = self.figure.get_size_inches()
+            parent_bbox = self._panel_parent.get_position()
+            ss = self.get_subplotspec().get_topmost_subplotspec()
+            row1, row2, col1, col2 = ss._get_rows_columns(ncols=gs.ncols_total)
+            side = self._panel_side
+            anchor_bbox = parent_bbox
+            if self._panel_hidden:
+                panels = [
+                    pax
+                    for pax in self._panel_parent._panel_dict[side]
+                    if not pax._panel_hidden
+                ]
+                if panels:
+                    anchor_bbox = panels[-1].get_position()
+
+            if side in ("right", "left"):
+                width = sum(gs._wratios_total[col1 : col2 + 1]) / figwidth
+                if side == "right":
+                    parent_ss = (
+                        self._panel_parent.get_subplotspec().get_topmost_subplotspec()
+                    )
+                    _, _, parent_col1, parent_col2 = parent_ss._get_rows_columns(
+                        ncols=gs.ncols_total
+                    )
+                    boundary = min(parent_col2, gs.ncols_total - 2)
+                    pad = gs.wspace_total[boundary] / figwidth
+                    x0 = anchor_bbox.x1 + pad
+                else:
+                    parent_ss = (
+                        self._panel_parent.get_subplotspec().get_topmost_subplotspec()
+                    )
+                    _, _, parent_col1, parent_col2 = parent_ss._get_rows_columns(
+                        ncols=gs.ncols_total
+                    )
+                    boundary = max(parent_col1 - 1, 0)
+                    pad = gs.wspace_total[boundary] / figwidth
+                    x0 = anchor_bbox.x0 - pad - width
+                bbox = mtransforms.Bbox.from_bounds(
+                    x0, parent_bbox.y0, width, parent_bbox.height
+                )
+            else:
+                height = sum(gs._hratios_total[row1 : row2 + 1]) / figheight
+                if side == "top":
+                    parent_ss = (
+                        self._panel_parent.get_subplotspec().get_topmost_subplotspec()
+                    )
+                    parent_row1, parent_row2, _, _ = parent_ss._get_rows_columns(
+                        ncols=gs.ncols_total
+                    )
+                    boundary = max(parent_row1 - 1, 0)
+                    pad = gs.hspace_total[boundary] / figheight
+                    y0 = anchor_bbox.y1 + pad
+                else:
+                    parent_ss = (
+                        self._panel_parent.get_subplotspec().get_topmost_subplotspec()
+                    )
+                    parent_row1, parent_row2, _, _ = parent_ss._get_rows_columns(
+                        ncols=gs.ncols_total
+                    )
+                    boundary = min(parent_row2, gs.nrows_total - 2)
+                    pad = gs.hspace_total[boundary] / figheight
+                    y0 = anchor_bbox.y0 - pad - height
+                bbox = mtransforms.Bbox.from_bounds(
+                    parent_bbox.x0, y0, parent_bbox.width, height
+                )
+            setter(bbox)
+
     def _update_abc(self, **kwargs):
         """
         Update the a-b-c label.
