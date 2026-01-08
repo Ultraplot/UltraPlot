@@ -27,6 +27,7 @@ from .utils import _fontsize_to_pt, units
 
 try:
     from . import ultralayout
+
     ULTRA_AVAILABLE = True
 except ImportError:
     ultralayout = None
@@ -241,7 +242,9 @@ class _SubplotSpec(mgridspec.SubplotSpec):
             bbox = gs._get_ultra_position(self.num1, figure)
             if bbox is not None:
                 if return_all:
-                    rows, cols = np.unravel_index([self.num1, self.num2], (nrows, ncols))
+                    rows, cols = np.unravel_index(
+                        [self.num1, self.num2], (nrows, ncols)
+                    )
                     return bbox, rows[0], cols[0], nrows, ncols
                 else:
                     return bbox
@@ -286,7 +289,14 @@ class GridSpec(mgridspec.GridSpec):
         super().__getattribute__(attr)  # native error message
 
     @docstring._snippet_manager
-    def __init__(self, nrows=1, ncols=1, layout_array=None, **kwargs):
+    def __init__(
+        self,
+        nrows=1,
+        ncols=1,
+        layout_array=None,
+        ultra_layout: Optional[bool] = None,
+        **kwargs,
+    ):
         """
         Parameters
         ----------
@@ -297,8 +307,11 @@ class GridSpec(mgridspec.GridSpec):
         layout_array : array-like, optional
             2D array specifying the subplot layout, where each unique integer
             represents a subplot and 0 represents empty space. When provided,
-            enables UltraLayout constraint-based positioning for non-orthogonal
-            arrangements (requires kiwisolver package).
+            enables UltraLayout constraint-based positioning (requires
+            kiwisolver package).
+        ultra_layout : bool, optional
+            Whether to use the UltraLayout constraint solver. Defaults to True
+            when kiwisolver is available. Set to False to use the legacy solver.
 
         Other parameters
         ----------------
@@ -328,15 +341,26 @@ class GridSpec(mgridspec.GridSpec):
         manually and want the same geometry for multiple figures, you must create
         a copy with `GridSpec.copy` before working on the subsequent figure).
         """
-        # Layout array for non-orthogonal layouts with UltraLayout
-        self._layout_array = np.array(layout_array) if layout_array is not None else None
+        # Layout array for UltraLayout
+        self._layout_array = (
+            np.array(layout_array) if layout_array is not None else None
+        )
         self._ultra_positions = None  # Cache for UltraLayout-computed positions
+        self._ultra_layout_array = None  # Cache for expanded UltraLayout array
         self._use_ultra_layout = False  # Flag to enable UltraLayout
 
         # Check if we should use UltraLayout
-        if self._layout_array is not None and ULTRA_AVAILABLE:
-            if not ultralayout.is_orthogonal_layout(self._layout_array):
-                self._use_ultra_layout = True
+        if ultra_layout is not None:
+            self._use_ultra_layout = bool(ultra_layout) and ULTRA_AVAILABLE
+        elif ULTRA_AVAILABLE:
+            self._use_ultra_layout = True
+        if ultra_layout and not ULTRA_AVAILABLE:
+            warnings._warn_ultraplot(
+                "ultra_layout=True requested but kiwisolver is not available. "
+                "Falling back to the legacy layout solver."
+            )
+        if self._use_ultra_layout and self._layout_array is None:
+            self._layout_array = np.arange(1, nrows * ncols + 1).reshape(nrows, ncols)
 
         # Fundamental GridSpec properties
         self._nrows_total = nrows
@@ -428,24 +452,31 @@ class GridSpec(mgridspec.GridSpec):
         # Compute or retrieve cached UltraLayout positions
         if self._ultra_positions is None:
             self._compute_ultra_positions()
+        layout_array = self._get_ultra_layout_array()
+        if layout_array is None:
+            return None
 
         # Find which subplot number in the layout array corresponds to this subplot_num
         # We need to map from the gridspec cell index to the layout array subplot number
-        nrows, ncols = self._layout_array.shape
+        nrows, ncols = layout_array.shape
 
         # Decode the subplot_num to find which layout number it corresponds to
         # This is a bit tricky because subplot_num is in total geometry space
         # We need to find which unique number in the layout_array this corresponds to
 
         # Get the cell position from subplot_num
-        row, col = divmod(subplot_num, self.ncols_total)
+        if (nrows, ncols) == self.get_total_geometry():
+            row, col = divmod(subplot_num, self.ncols_total)
+        else:
+            decoded = self._decode_indices(subplot_num)
+            row, col = divmod(decoded, ncols)
 
         # Check if this is within the layout array bounds
         if row >= nrows or col >= ncols:
             return None
 
         # Get the layout number at this position
-        layout_num = self._layout_array[row, col]
+        layout_num = layout_array[row, col]
 
         if layout_num == 0 or layout_num not in self._ultra_positions:
             return None
@@ -460,6 +491,9 @@ class GridSpec(mgridspec.GridSpec):
         Compute subplot positions using UltraLayout and cache them.
         """
         if not ULTRA_AVAILABLE or self._layout_array is None:
+            return
+        layout_array = self._get_ultra_layout_array()
+        if layout_array is None:
             return
 
         # Get figure size
@@ -485,15 +519,47 @@ class GridSpec(mgridspec.GridSpec):
                 hspace_inches.append(0.2)
 
         # Get margins
-        left = self.left if self.left is not None else self._left_default if self._left_default is not None else 0.125 * figwidth
-        right = self.right if self.right is not None else self._right_default if self._right_default is not None else 0.125 * figwidth
-        top = self.top if self.top is not None else self._top_default if self._top_default is not None else 0.125 * figheight
-        bottom = self.bottom if self.bottom is not None else self._bottom_default if self._bottom_default is not None else 0.125 * figheight
+        left = (
+            self.left
+            if self.left is not None
+            else (
+                self._left_default
+                if self._left_default is not None
+                else 0.125 * figwidth
+            )
+        )
+        right = (
+            self.right
+            if self.right is not None
+            else (
+                self._right_default
+                if self._right_default is not None
+                else 0.125 * figwidth
+            )
+        )
+        top = (
+            self.top
+            if self.top is not None
+            else (
+                self._top_default
+                if self._top_default is not None
+                else 0.125 * figheight
+            )
+        )
+        bottom = (
+            self.bottom
+            if self.bottom is not None
+            else (
+                self._bottom_default
+                if self._bottom_default is not None
+                else 0.125 * figheight
+            )
+        )
 
         # Compute positions using UltraLayout
         try:
             self._ultra_positions = ultralayout.compute_ultra_positions(
-                self._layout_array,
+                layout_array,
                 figwidth=figwidth,
                 figheight=figheight,
                 wspace=wspace_inches,
@@ -503,7 +569,7 @@ class GridSpec(mgridspec.GridSpec):
                 top=top,
                 bottom=bottom,
                 wratios=self._wratios_total,
-                hratios=self._hratios_total
+                hratios=self._hratios_total,
             )
         except Exception as e:
             warnings._warn_ultraplot(
@@ -512,6 +578,47 @@ class GridSpec(mgridspec.GridSpec):
             )
             self._use_ultra_layout = False
             self._ultra_positions = None
+
+    def _get_ultra_layout_array(self):
+        """
+        Return the layout array expanded to total geometry to include panels.
+        """
+        if self._layout_array is None:
+            return None
+        if self._ultra_layout_array is not None:
+            return self._ultra_layout_array
+
+        nrows_total, ncols_total = self.get_total_geometry()
+        layout = self._layout_array
+        if layout.shape == (nrows_total, ncols_total):
+            self._ultra_layout_array = layout
+            return layout
+
+        nrows, ncols = self.get_geometry()
+        if layout.shape != (nrows, ncols):
+            warnings._warn_ultraplot(
+                "Layout array shape does not match gridspec geometry; "
+                "using the original layout array for UltraLayout."
+            )
+            self._ultra_layout_array = layout
+            return layout
+
+        row_idxs = self._get_indices("h", panel=False)
+        col_idxs = self._get_indices("w", panel=False)
+        if len(row_idxs) != nrows or len(col_idxs) != ncols:
+            warnings._warn_ultraplot(
+                "Layout array shape does not match non-panel gridspec geometry; "
+                "using the original layout array for UltraLayout."
+            )
+            self._ultra_layout_array = layout
+            return layout
+
+        expanded = np.zeros((nrows_total, ncols_total), dtype=layout.dtype)
+        for i, row_idx in enumerate(row_idxs):
+            for j, col_idx in enumerate(col_idxs):
+                expanded[row_idx, col_idx] = layout[i, j]
+        self._ultra_layout_array = expanded
+        return expanded
 
     def __getitem__(self, key):
         """
@@ -1247,6 +1354,7 @@ class GridSpec(mgridspec.GridSpec):
     def _update_params(
         self,
         *,
+        ultra_layout=None,
         left=None,
         bottom=None,
         right=None,
@@ -1274,6 +1382,20 @@ class GridSpec(mgridspec.GridSpec):
         """
         Update the user-specified properties.
         """
+        if ultra_layout is not None:
+            self._use_ultra_layout = bool(ultra_layout) and ULTRA_AVAILABLE
+            if ultra_layout and not ULTRA_AVAILABLE:
+                warnings._warn_ultraplot(
+                    "ultra_layout=True requested but kiwisolver is not available. "
+                    "Falling back to the legacy layout solver."
+                )
+            if self._use_ultra_layout and self._layout_array is None:
+                nrows, ncols = self.get_geometry()
+                self._layout_array = np.arange(1, nrows * ncols + 1).reshape(
+                    nrows, ncols
+                )
+            self._ultra_positions = None
+            self._ultra_layout_array = None
 
         # Assign scalar args
         # WARNING: The key signature here is critical! Used in ui.py to
@@ -1366,7 +1488,12 @@ class GridSpec(mgridspec.GridSpec):
         # WARNING: For some reason copy.copy() fails. Updating e.g. wpanels
         # and hpanels on the copy also updates this object. No idea why.
         nrows, ncols = self.get_geometry()
-        gs = GridSpec(nrows, ncols)
+        gs = GridSpec(
+            nrows,
+            ncols,
+            layout_array=self._layout_array,
+            ultra_layout=self._use_ultra_layout,
+        )
         hidxs = self._get_indices("h")
         widxs = self._get_indices("w")
         gs._hratios_total = [self._hratios_total[i] for i in hidxs]
@@ -1531,6 +1658,9 @@ class GridSpec(mgridspec.GridSpec):
         # Apply positions to all axes
         # NOTE: This uses the current figure size to fix panel widths
         # and determine physical grid spacing.
+        if self._use_ultra_layout:
+            self._ultra_positions = None
+            self._ultra_layout_array = None
         self._update_params(**kwargs)
         fig = self.figure
         if fig is None:

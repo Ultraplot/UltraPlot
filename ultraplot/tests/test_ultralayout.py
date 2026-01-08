@@ -40,12 +40,13 @@ def test_is_orthogonal_layout_empty():
 
 
 def test_gridspec_with_orthogonal_layout():
-    """Test that GridSpec doesn't activate UltraLayout for orthogonal layouts."""
+    """Test that GridSpec activates UltraLayout for orthogonal layouts."""
+    pytest.importorskip("kiwisolver")
     layout = np.array([[1, 2], [3, 4]])
     gs = GridSpec(2, 2, layout_array=layout)
     assert gs._layout_array is not None
-    # Should not use UltraLayout for orthogonal layouts
-    assert gs._use_ultra_layout is False
+    # Should use UltraLayout for orthogonal layouts
+    assert gs._use_ultra_layout is True
 
 
 def test_gridspec_with_non_orthogonal_layout():
@@ -62,6 +63,7 @@ def test_gridspec_without_kiwisolver(monkeypatch):
     """Test graceful fallback when kiwisolver is not available."""
     # Mock the ULTRA_AVAILABLE flag
     import ultraplot.gridspec as gs_module
+
     monkeypatch.setattr(gs_module, "ULTRA_AVAILABLE", False)
 
     layout = np.array([[1, 1, 2, 2], [0, 3, 3, 0]])
@@ -70,15 +72,28 @@ def test_gridspec_without_kiwisolver(monkeypatch):
     assert gs._use_ultra_layout is False
 
 
+def test_gridspec_ultralayout_opt_out():
+    """Test that UltraLayout can be disabled explicitly."""
+    pytest.importorskip("kiwisolver")
+    layout = np.array([[1, 2], [3, 4]])
+    gs = GridSpec(2, 2, layout_array=layout, ultra_layout=False)
+    assert gs._use_ultra_layout is False
+
+
+def test_gridspec_default_layout_array_with_ultralayout():
+    """Test that UltraLayout initializes a default layout array."""
+    pytest.importorskip("kiwisolver")
+    gs = GridSpec(2, 3)
+    assert gs._layout_array is not None
+    assert gs._layout_array.shape == (2, 3)
+    assert gs._use_ultra_layout is True
+
+
 def test_ultralayout_solver_initialization():
     """Test UltraLayoutSolver can be initialized."""
     pytest.importorskip("kiwisolver")
     layout = np.array([[1, 1, 2, 2], [0, 3, 3, 0]])
-    solver = ultralayout.UltraLayoutSolver(
-        layout,
-        figwidth=10.0,
-        figheight=6.0
-    )
+    solver = ultralayout.UltraLayoutSolver(layout, figwidth=10.0, figheight=6.0)
     assert solver.array is not None
     assert solver.nrows == 2
     assert solver.ncols == 4
@@ -154,12 +169,10 @@ def test_ultralayout_respects_spacing():
 
     # Compute with different spacing
     positions1 = ultralayout.compute_ultra_positions(
-        layout, figwidth=10.0, figheight=6.0,
-        wspace=[0.1, 0.1, 0.1], hspace=[0.1]
+        layout, figwidth=10.0, figheight=6.0, wspace=[0.1, 0.1, 0.1], hspace=[0.1]
     )
     positions2 = ultralayout.compute_ultra_positions(
-        layout, figwidth=10.0, figheight=6.0,
-        wspace=[0.5, 0.5, 0.5], hspace=[0.5]
+        layout, figwidth=10.0, figheight=6.0, wspace=[0.5, 0.5, 0.5], hspace=[0.5]
     )
 
     # Subplots should be smaller with more spacing
@@ -177,14 +190,12 @@ def test_ultralayout_respects_ratios():
 
     # Equal ratios
     positions1 = ultralayout.compute_ultra_positions(
-        layout, figwidth=10.0, figheight=6.0,
-        wratios=[1, 1], hratios=[1, 1]
+        layout, figwidth=10.0, figheight=6.0, wratios=[1, 1], hratios=[1, 1]
     )
 
     # Unequal ratios
     positions2 = ultralayout.compute_ultra_positions(
-        layout, figwidth=10.0, figheight=6.0,
-        wratios=[1, 2], hratios=[1, 1]
+        layout, figwidth=10.0, figheight=6.0, wratios=[1, 2], hratios=[1, 1]
     )
 
     # Subplot 2 should be wider than subplot 1 with unequal ratios
@@ -197,6 +208,30 @@ def test_ultralayout_respects_ratios():
     assert abs(width1_1 - width1_2) < 0.01
     # With 1:2 ratio, second should be roughly twice as wide
     assert width2_2 > width2_1
+
+
+def test_ultralayout_with_panels_uses_total_geometry():
+    """Test UltraLayout accounts for panel slots in total geometry."""
+    pytest.importorskip("kiwisolver")
+    layout = [[1, 1, 2, 2], [0, 3, 3, 0]]
+    fig, axs = uplt.subplots(array=layout, figsize=(8, 6))
+
+    # Add a colorbar to introduce panel slots
+    mappable = axs[0].imshow([[0, 1], [2, 3]])
+    fig.colorbar(mappable, loc="r")
+
+    gs = fig.gridspec
+    gs._compute_ultra_positions()
+    assert gs._ultra_layout_array.shape == gs.get_total_geometry()
+
+    row_idxs = gs._get_indices("h", panel=False)
+    col_idxs = gs._get_indices("w", panel=False)
+    for i, row_idx in enumerate(row_idxs):
+        for j, col_idx in enumerate(col_idxs):
+            assert gs._ultra_layout_array[row_idx, col_idx] == gs._layout_array[i, j]
+
+    ss = axs[0].get_subplotspec()
+    assert gs._get_ultra_position(ss.num1, fig) is not None
 
 
 def test_ultralayout_cached_positions():
@@ -228,14 +263,12 @@ def test_ultralayout_with_margins():
 
     # Small margins
     positions1 = ultralayout.compute_ultra_positions(
-        layout, figwidth=10.0, figheight=6.0,
-        left=0.1, right=0.1, top=0.1, bottom=0.1
+        layout, figwidth=10.0, figheight=6.0, left=0.1, right=0.1, top=0.1, bottom=0.1
     )
 
     # Large margins
     positions2 = ultralayout.compute_ultra_positions(
-        layout, figwidth=10.0, figheight=6.0,
-        left=1.0, right=1.0, top=1.0, bottom=1.0
+        layout, figwidth=10.0, figheight=6.0, left=1.0, right=1.0, top=1.0, bottom=1.0
     )
 
     # With larger margins, subplots should be smaller
@@ -249,13 +282,11 @@ def test_ultralayout_with_margins():
 def test_complex_non_orthogonal_layout():
     """Test a more complex non-orthogonal layout."""
     pytest.importorskip("kiwisolver")
-    layout = np.array([
-        [1, 1, 1, 2],
-        [3, 3, 0, 2],
-        [4, 5, 5, 5]
-    ])
+    layout = np.array([[1, 1, 1, 2], [3, 3, 0, 2], [4, 5, 5, 5]])
 
-    positions = ultralayout.compute_ultra_positions(layout, figwidth=12.0, figheight=9.0)
+    positions = ultralayout.compute_ultra_positions(
+        layout, figwidth=12.0, figheight=9.0
+    )
 
     # Should have 5 subplots
     assert len(positions) == 5
@@ -272,10 +303,10 @@ def test_complex_non_orthogonal_layout():
 
 def test_ultralayout_module_exports():
     """Test that ultralayout module exports expected symbols."""
-    assert hasattr(ultralayout, 'UltraLayoutSolver')
-    assert hasattr(ultralayout, 'compute_ultra_positions')
-    assert hasattr(ultralayout, 'is_orthogonal_layout')
-    assert hasattr(ultralayout, 'get_grid_positions_ultra')
+    assert hasattr(ultralayout, "UltraLayoutSolver")
+    assert hasattr(ultralayout, "compute_ultra_positions")
+    assert hasattr(ultralayout, "is_orthogonal_layout")
+    assert hasattr(ultralayout, "get_grid_positions_ultra")
 
 
 def test_gridspec_copy_preserves_layout_array():
