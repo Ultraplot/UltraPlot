@@ -3063,13 +3063,13 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         ha = aobj.get_ha()
 
         # Get dimensions of non-empty elements
-        if atext and aobj.get_figure(root=True) is not None:
+        if atext and aobj.get_figure() is not None:
             awidth = (
                 aobj.get_window_extent(renderer)
                 .transformed(self.transAxes.inverted())
                 .width
             )
-        if ttext and tobj.get_figure(root=True) is not None:
+        if ttext and tobj.get_figure() is not None:
             twidth = (
                 tobj.get_window_extent(renderer)
                 .transformed(self.transAxes.inverted())
