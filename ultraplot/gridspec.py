@@ -24,7 +24,6 @@ from .internals import (
     warnings,
 )
 from .utils import _fontsize_to_pt, units
-<<<<<<< HEAD
 
 try:
     from . import ultralayout
@@ -33,8 +32,6 @@ try:
 except ImportError:
     ultralayout = None
     ULTRA_AVAILABLE = False
-=======
->>>>>>> main
 
 __all__ = ["GridSpec", "SubplotGrid"]
 
