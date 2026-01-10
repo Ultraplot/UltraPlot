@@ -407,6 +407,45 @@ def test_geo_panel_share_flag_controls_membership():
     assert ax2[0]._panel_sharex_group is False
 
 
+def test_geo_subset_share_xlabels_override():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share="labels", span=False)
+    # GeoAxes.format does not accept xlabel/ylabel; set labels directly.
+    ax[0, 0].set_xlabel("Top-left X")
+    ax[0, 1].set_xlabel("Top-right X")
+    bottom = ax[1, :]
+    bottom[0].set_xlabel("Bottom-row X")
+    bottom.format(share_xlabels=list(bottom))
+
+    fig.canvas.draw()
+
+    assert not ax[0, 0].xaxis.get_label().get_visible()
+    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert bottom[0].get_xlabel().strip() == ""
+    assert bottom[1].get_xlabel().strip() == ""
+    assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
+def test_geo_subset_share_xlabels_implicit():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share="labels", span=False)
+    ax[0, 0].set_xlabel("Top-left X")
+    ax[0, 1].set_xlabel("Top-right X")
+    bottom = ax[1, :]
+    bottom[0].set_xlabel("Bottom-row X")
+    bottom.share_labels(axis="x")
+
+    fig.canvas.draw()
+
+    assert not ax[0, 0].xaxis.get_label().get_visible()
+    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert bottom[0].get_xlabel().strip() == ""
+    assert bottom[1].get_xlabel().strip() == ""
+    assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
 def test_geo_non_rectilinear_right_panel_forces_no_share_and_warns():
     """
     Non-rectilinear Geo projections should not allow panel sharing; adding a right panel
@@ -460,7 +499,10 @@ def test_sharing_geo_limits():
     after_lat = ax[1]._lataxis.get_view_interval()
 
     # We are sharing y which is the latitude axis
-    assert all([np.allclose(i, j) for i, j in zip(expectation["latlim"], after_lat)])
+    # Account for small epsilon expansion in extent (0.5 degrees per side)
+    assert all(
+        [np.allclose(i, j, atol=1.0) for i, j in zip(expectation["latlim"], after_lat)]
+    )
     # We are not sharing longitude yet
     assert all(
         [
@@ -474,7 +516,10 @@ def test_sharing_geo_limits():
     after_lon = ax[1]._lonaxis.get_view_interval()
 
     assert all([not np.allclose(i, j) for i, j in zip(before_lon, after_lon)])
-    assert all([np.allclose(i, j) for i, j in zip(after_lon, expectation["lonlim"])])
+    # Account for small epsilon expansion in extent (0.5 degrees per side)
+    assert all(
+        [np.allclose(i, j, atol=1.0) for i, j in zip(after_lon, expectation["lonlim"])]
+    )
     uplt.close(fig)
 
 
@@ -949,8 +994,9 @@ def test_consistent_range():
         lonview = np.array(a._lonaxis.get_view_interval())
         latview = np.array(a._lataxis.get_view_interval())
 
-        assert np.allclose(lonview, lonlim)
-        assert np.allclose(latview, latlim)
+        # Account for small epsilon expansion in extent (0.5 degrees per side)
+        assert np.allclose(lonview, lonlim, atol=1.0)
+        assert np.allclose(latview, latlim, atol=1.0)
 
 
 @pytest.mark.mpl_image_compare
@@ -1455,4 +1501,97 @@ def test_label_rotation_negative_angles():
         assert gl.xlabel_style.get("rotation") == angle
         assert gl.ylabel_style.get("rotation") == angle
 
+    uplt.close(fig)
+
+
+def _check_boundary_labels(ax, expected_lon_labels, expected_lat_labels):
+    """Helper to check that boundary labels are created and visible."""
+    gl = ax._gridlines_major
+    assert gl is not None, "Gridliner should exist"
+
+    # Check xlim/ylim are expanded beyond actual limits
+    assert hasattr(gl, "xlim") and hasattr(gl, "ylim")
+
+    # Check longitude labels - only verify the visible ones match expected
+    lon_texts = [
+        label.get_text() for label in gl.bottom_label_artists if label.get_visible()
+    ]
+    assert len(lon_texts) == len(expected_lon_labels), (
+        f"Should have {len(expected_lon_labels)} visible longitude labels, "
+        f"got {len(lon_texts)}: {lon_texts}"
+    )
+    for expected in expected_lon_labels:
+        assert any(
+            expected in text for text in lon_texts
+        ), f"{expected} label should be visible, got: {lon_texts}"
+
+    # Check latitude labels - only verify the visible ones match expected
+    lat_texts = [
+        label.get_text() for label in gl.left_label_artists if label.get_visible()
+    ]
+    assert len(lat_texts) == len(expected_lat_labels), (
+        f"Should have {len(expected_lat_labels)} visible latitude labels, "
+        f"got {len(lat_texts)}: {lat_texts}"
+    )
+    for expected in expected_lat_labels:
+        assert any(
+            expected in text for text in lat_texts
+        ), f"{expected} label should be visible, got: {lat_texts}"
+
+
+def test_boundary_labels_positive_longitude():
+    """
+    Test that boundary labels are visible with positive longitude limits.
+
+    This tests the fix for the issue where setting lonlim/latlim would hide
+    the outermost labels because cartopy's gridliner was filtering them out.
+    """
+    fig, ax = uplt.subplots(proj="pcarree")
+    ax.format(
+        lonlim=(120, 130),
+        latlim=(10, 20),
+        lonlocator=[120, 125, 130],
+        latlocator=[10, 15, 20],
+        labels=True,
+        grid=False,
+    )
+    fig.canvas.draw()
+    _check_boundary_labels(ax[0], ["120°E", "125°E", "130°E"], ["10°N", "15°N", "20°N"])
+    uplt.close(fig)
+
+
+def test_boundary_labels_negative_longitude():
+    """
+    Test that boundary labels are visible with negative longitude limits.
+    """
+    fig, ax = uplt.subplots(proj="pcarree")
+    ax.format(
+        lonlim=(-120, -60),
+        latlim=(20, 50),
+        lonlocator=[-120, -90, -60],
+        latlocator=[20, 35, 50],
+        labels=True,
+        grid=False,
+    )
+    fig.canvas.draw()
+    # Note: Cartopy hides the boundary label at 20°N due to it being exactly at the limit
+    # This is expected cartopy behavior with floating point precision at boundaries
+    _check_boundary_labels(
+        ax[0],
+        ["120°W", "90°W", "60°W"],
+        ["20°N", "35°N", "50°N"],
+    )
+    uplt.close(fig)
+
+
+def test_boundary_labels_view_intervals():
+    """
+    Test that view intervals match requested limits after setting lonlim/latlim.
+    """
+    fig, ax = uplt.subplots(proj="pcarree")
+    ax.format(lonlim=(0, 60), latlim=(-20, 40), lonlines=30, latlines=20, labels=True)
+    loninterval = ax[0]._lonaxis.get_view_interval()
+    latinterval = ax[0]._lataxis.get_view_interval()
+    assert abs(loninterval[0] - 0) < 1 and abs(loninterval[1] - 60) < 1
+    assert abs(latinterval[0] - (-20)) < 1 and abs(latinterval[1] - 40) < 1
     uplt.close(fig)

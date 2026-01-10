@@ -11,8 +11,12 @@ import numpy as np
 import numpy.ma as ma
 
 from . import ticker as pticker
-from .internals import ic  # noqa: F401
-from .internals import _not_none, _version_mpl, warnings
+from .internals import (
+    _not_none,
+    _version_mpl,
+    ic,  # noqa: F401
+    warnings,
+)
 
 __all__ = [
     "CutoffScale",
@@ -370,7 +374,9 @@ class FuncScale(_Scale, mscale.ScaleBase):
             kwsym["linthresh"] = inverse(kwsym["linthresh"])
             parent_scale = SymmetricalLogScale(**kwsym)
         self.functions = (forward, inverse)
-        self._transform = parent_scale.get_transform() + FuncTransform(forward, inverse)
+        # Apply the function in data space, then parent scale (e.g., log).
+        # This ensures dual axes behave correctly when the parent is non-linear.
+        self._transform = FuncTransform(forward, inverse) + parent_scale.get_transform()
 
         # Apply default locators and formatters
         # NOTE: We pass these through contructor functions
