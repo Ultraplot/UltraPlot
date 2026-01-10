@@ -354,7 +354,9 @@ abcbbox, titlebbox : bool, default: :rc:`abc.bbox` and :rc:`title.bbox`
     inside the axes. This can help them stand out on top of artists plotted
     inside the axes.
 abcpad : float or unit-spec, default: :rc:`abc.pad`
-    The padding for the inner and outer titles and a-b-c labels.
+    Horizontal offset to shift the a-b-c label position. Positive values move
+    the label right, negative values move it left. This is separate from
+    `abctitlepad`, which controls spacing between abc and title when co-located.
     %(units.pt)s
 abc_kw, title_kw : dict-like, optional
     Additional settings used to update the a-b-c label and title
@@ -846,8 +848,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         self._auto_format = None  # manipulated by wrapper functions
         self._abc_border_kwargs = {}
         self._abc_loc = None
-        self._abc_pad = 0
-        self._abc_title_pad = rc["abc.titlepad"]
+        self._abc_pad = 0  # User's horizontal offset for abc label (in points)
+        self._abc_title_pad = rc[
+            "abc.titlepad"
+        ]  # Spacing between abc and title when co-located
         self._title_above = rc["title.above"]
         self._title_border_kwargs = {}  # title border properties
         self._title_loc = None
@@ -3060,6 +3064,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 kw["text"] = title[self.number - 1]
         else:
             raise ValueError(f"Invalid title {title!r}. Must be string(s).")
+        if any(key in kwargs for key in ("size", "fontsize")):
+            self._title_dict[loc]._ultraplot_manual_size = True
         kw.update(kwargs)
         self._title_dict[loc].update(kw)
 
@@ -3072,6 +3078,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # NOTE: Critical to do this every time in case padding changes or
         # we added or removed an a-b-c label in the same position as a title
         width, height = self._get_size_inches()
+        if width <= 0 or height <= 0:
+            return
         x_pad = self._title_pad / (72 * width)
         y_pad = self._title_pad / (72 * height)
         for loc, obj in self._title_dict.items():
@@ -3084,7 +3092,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # This is known matplotlib problem but especially annoying with top panels.
         # NOTE: See axis.get_ticks_position for inspiration
         pad = self._title_pad
-        abcpad = self._abc_title_pad
+        # Horizontal separation between abc label and title when co-located (in points)
+        abc_title_sep_pts = self._abc_title_pad
         if self.xaxis.get_visible() and any(
             tick.tick2line.get_visible() and not tick.label2.get_visible()
             for tick in self.xaxis.majorTicks
@@ -3112,47 +3121,124 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         # Offset title away from a-b-c label
         # NOTE: Title texts all use axes transform in x-direction
-
-        # Offset title away from a-b-c label
+        # We need to convert padding values from points to axes coordinates (0-1 normalized)
         atext, ttext = aobj.get_text(), tobj.get_text()
         awidth = twidth = 0
-        pad = (abcpad / 72) / self._get_size_inches()[0]
+        width_inches = self._get_size_inches()[0]
+
+        # Convert abc-title separation from points to axes coordinates
+        # This is the spacing BETWEEN abc and title when they share the same location
+        abc_title_sep = (abc_title_sep_pts / 72) / width_inches
+
+        # Convert user's horizontal offset from points to axes coordinates
+        # This is the user-specified shift for the abc label position (via abcpad parameter)
+        abc_offset = (self._abc_pad / 72) / width_inches
+
         ha = aobj.get_ha()
 
         # Get dimensions of non-empty elements
-        if atext:
+        if atext and aobj.get_figure() is not None:
             awidth = (
                 aobj.get_window_extent(renderer)
                 .transformed(self.transAxes.inverted())
                 .width
             )
-        if ttext:
+        if ttext and tobj.get_figure() is not None:
             twidth = (
                 tobj.get_window_extent(renderer)
                 .transformed(self.transAxes.inverted())
                 .width
             )
 
+        # Shrink the title font if both texts share a location and would overflow
+        if (
+            atext
+            and ttext
+            and self._abc_loc == self._title_loc
+            and twidth > 0
+            and not getattr(tobj, "_ultraplot_manual_size", False)
+        ):
+            scale = 1
+            base_x = tobj.get_position()[0]
+            if ha == "left":
+                available = 1 - (base_x + awidth + abc_title_sep)
+                if available < twidth and available > 0:
+                    scale = available / twidth
+            elif ha == "right":
+                available = base_x + abc_offset - abc_title_sep - awidth
+                if available < twidth and available > 0:
+                    scale = available / twidth
+            elif ha == "center":
+                # Conservative fit for centered titles sharing the abc location
+                left_room = base_x - 0.5 * (awidth + abc_title_sep)
+                right_room = 1 - (base_x + 0.5 * (awidth + abc_title_sep))
+                max_room = min(left_room, right_room)
+                if max_room < twidth / 2 and max_room > 0:
+                    scale = (2 * max_room) / twidth
+
+            if scale < 1:
+                tobj.set_fontsize(tobj.get_fontsize() * scale)
+                twidth *= scale
+
         # Calculate offsets based on alignment and content
         aoffset = toffset = 0
         if atext and ttext:
             if ha == "left":
-                toffset = awidth + pad
+                toffset = awidth + abc_title_sep
             elif ha == "right":
-                aoffset = -(twidth + pad)
+                aoffset = -(twidth + abc_title_sep)
             elif ha == "center":
-                toffset = 0.5 * (awidth + pad)
-                aoffset = -0.5 * (twidth + pad)
+                toffset = 0.5 * (awidth + abc_title_sep)
+                aoffset = -0.5 * (twidth + abc_title_sep)
 
         # Apply positioning adjustments
+        # For abc label: apply offset from co-located title + user's horizontal offset
         if atext:
             aobj.set_x(
                 aobj.get_position()[0]
                 + aoffset
-                + (self._abc_pad / 72) / (self._get_size_inches()[0])
+                + abc_offset  # User's horizontal shift (from abcpad parameter)
             )
         if ttext:
             tobj.set_x(tobj.get_position()[0] + toffset)
+
+        # Shrink title if it overlaps the abc label at a different location
+        if (
+            atext
+            and self._abc_loc != self._title_loc
+            and not getattr(
+                self._title_dict[self._title_loc], "_ultraplot_manual_size", False
+            )
+        ):
+            title_obj = self._title_dict[self._title_loc]
+            title_text = title_obj.get_text()
+            if title_text:
+                abc_bbox = aobj.get_window_extent(renderer).transformed(
+                    self.transAxes.inverted()
+                )
+                title_bbox = title_obj.get_window_extent(renderer).transformed(
+                    self.transAxes.inverted()
+                )
+                ax0, ax1 = abc_bbox.x0, abc_bbox.x1
+                tx0, tx1 = title_bbox.x0, title_bbox.x1
+                if tx0 < ax1 + abc_title_sep and tx1 > ax0 - abc_title_sep:
+                    base_x = title_obj.get_position()[0]
+                    ha = title_obj.get_ha()
+                    max_width = 0
+                    if ha == "left":
+                        if base_x <= ax0 - abc_title_sep:
+                            max_width = (ax0 - abc_title_sep) - base_x
+                    elif ha == "right":
+                        if base_x >= ax1 + abc_title_sep:
+                            max_width = base_x - (ax1 + abc_title_sep)
+                    elif ha == "center":
+                        if base_x >= ax1 + abc_title_sep:
+                            max_width = 2 * (base_x - (ax1 + abc_title_sep))
+                        elif base_x <= ax0 - abc_title_sep:
+                            max_width = 2 * ((ax0 - abc_title_sep) - base_x)
+                    if 0 < max_width < title_bbox.width:
+                        scale = max_width / title_bbox.width
+                        title_obj.set_fontsize(title_obj.get_fontsize() * scale)
 
     def _update_super_title(self, suptitle=None, **kwargs):
         """
@@ -3222,12 +3308,39 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         target : {'x', 'y'}, optional
                 Which axis labels to share ('x' for x-axis, 'y' for     y-axis)
         """
-        if not axes:
+        if axes is False:
+            self.figure._clear_share_label_groups([self], target=target)
+            return
+        if axes is None or not len(list(axes)):
             return
 
         # Convert indices to actual axes objects
         if isinstance(axes[0], int):
             axes = [self.figure.axes[i] for i in axes]
+        axes = [
+            ax._get_topmost_axes() if hasattr(ax, "_get_topmost_axes") else ax
+            for ax in axes
+            if ax is not None
+        ]
+        if len(axes) < 2:
+            return
+        # Preserve order while de-duplicating
+        seen = set()
+        unique = []
+        for ax in axes:
+            ax_id = id(ax)
+            if ax_id in seen:
+                continue
+            seen.add(ax_id)
+            unique.append(ax)
+        axes = unique
+        if len(axes) < 2:
+            return
+
+        # Prefer figure-managed spanning labels when possible
+        if all(isinstance(ax, maxes.SubplotBase) for ax in axes):
+            self.figure._register_share_label_group(axes, target=target, source=self)
+            return
 
         # Get the center position of the axes group
         if box := self.get_center_of_axes(axes):
