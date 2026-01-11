@@ -49,8 +49,6 @@ def is_orthogonal_layout(array: np.ndarray) -> bool:
     if array.size == 0:
         return True
 
-    nrows, ncols = array.shape
-
     # Get unique subplot numbers (excluding 0)
     subplot_nums = np.unique(array[array != 0])
 
