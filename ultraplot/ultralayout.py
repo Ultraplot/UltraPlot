@@ -12,17 +12,21 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 try:
-    from kiwisolver import Constraint, Solver, Variable
+    from kiwisolver import Solver, Variable
 
     KIWI_AVAILABLE = True
 except ImportError:
     KIWI_AVAILABLE = False
     Variable = None
     Solver = None
-    Constraint = None
 
 
-__all__ = ["UltraLayoutSolver", "compute_ultra_positions", "is_orthogonal_layout"]
+__all__ = [
+    "UltraLayoutSolver",
+    "compute_ultra_positions",
+    "get_grid_positions_ultra",
+    "is_orthogonal_layout",
+]
 
 
 def is_orthogonal_layout(array: np.ndarray) -> bool:
@@ -228,7 +232,6 @@ class UltraLayoutSolver:
 
         # Initialize solver
         self.solver = Solver()
-        self.variables = {}
         self._setup_variables()
         self._setup_constraints()
 
@@ -377,34 +380,9 @@ class UltraLayoutSolver:
     ) -> None:
         """
         Center a subplot between neighboring subplots above or below.
+        Currently a no-op to avoid over-constraining; spacing is handled post-solve.
         """
-        neighbor_nums = set()
-
-        # Prefer the nearest row above with multiple neighbors.
-        for r in range(row_min - 1, -1, -1):
-            neighbor_nums = set(self.array[r, col_min : col_max + 1])
-            neighbor_nums.discard(0)
-            if len(neighbor_nums) >= 2:
-                break
-        else:
-            # Fall back to rows below.
-            for r in range(row_max + 1, self.nrows):
-                neighbor_nums = set(self.array[r, col_min : col_max + 1])
-                neighbor_nums.discard(0)
-                if len(neighbor_nums) >= 2:
-                    break
-
-        if len(neighbor_nums) < 2:
-            return
-
-        leftmost = min(neighbor_nums, key=lambda n: bboxes[n][2])
-        rightmost = max(neighbor_nums, key=lambda n: bboxes[n][3])
-        left_neighbor = self.col_lefts[bboxes[leftmost][2]]
-        right_neighbor = self.col_rights[bboxes[rightmost][3]]
-        left_current = self.col_lefts[col_min]
-        right_current = self.col_rights[col_max]
-
-        # Avoid over-constraining the solver; centering is handled post-solve.
+        return
 
     def _try_align_with_neighbors(
         self, num: int, side: str, row_min: int, row_max: int, col_idx: int
@@ -415,46 +393,8 @@ class UltraLayoutSolver:
         For example, if subplot 3 is in row 1 between subplots 1 and 2 in row 0,
         we want to center it between them.
         """
-        # Find subplots in adjacent rows that overlap with this subplot's column range
-        rows, cols = np.where(self.array == num)
-        col_min, col_max = cols.min(), cols.max()
-
-        # Look in rows above
-        if row_min > 0:
-            above_nums = set()
-            for r in range(row_min):
-                for c in range(col_min, col_max + 1):
-                    if self.array[r, c] != 0:
-                        above_nums.add(self.array[r, c])
-
-            if len(above_nums) >= 2:
-                # Multiple subplots above - try to center between them
-                above_nums = sorted(above_nums)
-                # Find the leftmost and rightmost subplots above
-                leftmost_cols = []
-                rightmost_cols = []
-                for n in above_nums:
-                    n_cols = np.where(self.array == n)[1]
-                    leftmost_cols.append(n_cols.min())
-                    rightmost_cols.append(n_cols.max())
-
-                # If we're between two subplots, center between them
-                if side == "left" and leftmost_cols:
-                    # Could add centering constraint here
-                    # For now, we let the default grid handle it
-                    pass
-
-        # Look in rows below
-        if row_max < self.nrows - 1:
-            below_nums = set()
-            for r in range(row_max + 1, self.nrows):
-                for c in range(col_min, col_max + 1):
-                    if self.array[r, c] != 0:
-                        below_nums.add(self.array[r, c])
-
-            if len(below_nums) >= 2:
-                # Similar logic for below
-                pass
+        # Placeholder: alignment tweaks could be added here if needed.
+        return
 
     def solve(self) -> Dict[int, Tuple[float, float, float, float]]:
         """
@@ -477,8 +417,6 @@ class UltraLayoutSolver:
         row_bottoms = [v.value() for v in self.row_bottoms]
         col_widths = [right - left for left, right in zip(col_lefts, col_rights)]
         row_heights = [top - bottom for top, bottom in zip(row_tops, row_bottoms)]
-        wspace_norm = [s / self.figwidth for s in self.wspace]
-        hspace_norm = [s / self.figheight for s in self.hspace]
 
         base_wgap = None
         for i in range(self.ncols - 1):
@@ -679,8 +617,6 @@ def get_grid_positions_ultra(
         hpanels,
     )
     solver.solver.updateVariables()
-
-    nrows, ncols = array.shape
 
     # Extract grid line positions
     lefts = np.array([v.value() for v in solver.col_lefts])
