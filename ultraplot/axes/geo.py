@@ -241,7 +241,7 @@ if cgridliner is not None and hasattr(cgridliner, "Label"):  # only recent versi
 
     class _CartopyGridliner(cgridliner.Gridliner):
         """
-        Gridliner subclass to localize cartopy quirks without monkey patching.
+        Gridliner subclass to localize cartopy quirks in one place.
         """
 
         LabelClass = _CartopyLabel
