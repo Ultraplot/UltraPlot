@@ -661,7 +661,9 @@ class Figure(mfigure.Figure):
             )
         self._refnum = refnum
         self._refaspect = refaspect
-        self._refaspect_default = 1  # updated for imshow and geographic plots
+        # Default to a square reference aspect; auto_layout will update this when an
+        # explicit aspect is detected (e.g., imshow, geographic plots).
+        self._refaspect_default = 1
         self._refwidth = units(refwidth, "in")
         self._refheight = units(refheight, "in")
         self._figwidth = figwidth = units(figwidth, "in")
@@ -2398,6 +2400,16 @@ class Figure(mfigure.Figure):
         if tight:
             gs._auto_layout_tight(renderer)
         _align_content()
+
+        # Finalize figure size using the latest spaces. If the size changes, update
+        # layout one more time to minimize surrounding whitespace with the new bounds.
+        figsize = gs._update_figsize()
+        eps = 0.01
+        if self._refwidth is not None or self._refheight is not None:
+            eps = 0
+        if not self._is_same_size(figsize, eps=eps):
+            # Use zero tolerance so sub-inch adjustments apply when ref sizes are set.
+            self.set_size_inches(figsize, internal=True, eps=0)
 
     @warnings._rename_kwargs(
         "0.10.0", mathtext_fallback="uplt.rc.mathtext_fallback = {}"

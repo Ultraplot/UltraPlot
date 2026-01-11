@@ -2800,66 +2800,65 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         ):
             gs = self.get_subplotspec().get_gridspec()
             figwidth, figheight = self.figure.get_size_inches()
-            parent_bbox = self._panel_parent.get_position()
             ss = self.get_subplotspec().get_topmost_subplotspec()
             row1, row2, col1, col2 = ss._get_rows_columns(ncols=gs.ncols_total)
             side = self._panel_side
-            anchor_bbox = parent_bbox
-            if self._panel_hidden:
-                panels = [
-                    pax
-                    for pax in self._panel_parent._panel_dict[side]
-                    if not pax._panel_hidden
-                ]
-                if panels:
-                    anchor_bbox = panels[-1].get_position()
+            parent_bbox = self._panel_parent.get_position()
+            panels = list(self._panel_parent._panel_dict.get(side, ()))
+            anchor_ax = self._panel_parent
+            if self in panels:
+                idx = panels.index(self)
+                if idx > 0:
+                    anchor_ax = panels[idx - 1]
+            elif panels:
+                anchor_ax = panels[-1]
+            anchor_bbox = anchor_ax.get_position()
+            anchor_ss = anchor_ax.get_subplotspec().get_topmost_subplotspec()
+            a_row1, a_row2, a_col1, a_col2 = anchor_ss._get_rows_columns(
+                ncols=gs.ncols_total
+            )
 
             if side in ("right", "left"):
+                boundary = None
                 width = sum(gs._wratios_total[col1 : col2 + 1]) / figwidth
+                if a_col2 < col1:
+                    boundary = a_col2
+                elif col2 < a_col1:
+                    boundary = col2
+                # Fall back to an interface adjacent to this panel
+                boundary = min(
+                    max(
+                        _not_none(boundary, a_col2 if side == "right" else col2),
+                        0,
+                    ),
+                    len(gs.wspace_total) - 1,
+                )
+                pad = gs.wspace_total[boundary] / figwidth
                 if side == "right":
-                    parent_ss = (
-                        self._panel_parent.get_subplotspec().get_topmost_subplotspec()
-                    )
-                    _, _, parent_col1, parent_col2 = parent_ss._get_rows_columns(
-                        ncols=gs.ncols_total
-                    )
-                    boundary = min(parent_col2, gs.ncols_total - 2)
-                    pad = gs.wspace_total[boundary] / figwidth
                     x0 = anchor_bbox.x1 + pad
                 else:
-                    parent_ss = (
-                        self._panel_parent.get_subplotspec().get_topmost_subplotspec()
-                    )
-                    _, _, parent_col1, parent_col2 = parent_ss._get_rows_columns(
-                        ncols=gs.ncols_total
-                    )
-                    boundary = max(parent_col1 - 1, 0)
-                    pad = gs.wspace_total[boundary] / figwidth
                     x0 = anchor_bbox.x0 - pad - width
                 bbox = mtransforms.Bbox.from_bounds(
                     x0, parent_bbox.y0, width, parent_bbox.height
                 )
             else:
+                boundary = None
                 height = sum(gs._hratios_total[row1 : row2 + 1]) / figheight
+                if a_row2 < row1:
+                    boundary = a_row2
+                elif row2 < a_row1:
+                    boundary = row2
+                boundary = min(
+                    max(
+                        _not_none(boundary, a_row2 if side == "top" else row2),
+                        0,
+                    ),
+                    len(gs.hspace_total) - 1,
+                )
+                pad = gs.hspace_total[boundary] / figheight
                 if side == "top":
-                    parent_ss = (
-                        self._panel_parent.get_subplotspec().get_topmost_subplotspec()
-                    )
-                    parent_row1, parent_row2, _, _ = parent_ss._get_rows_columns(
-                        ncols=gs.ncols_total
-                    )
-                    boundary = max(parent_row1 - 1, 0)
-                    pad = gs.hspace_total[boundary] / figheight
                     y0 = anchor_bbox.y1 + pad
                 else:
-                    parent_ss = (
-                        self._panel_parent.get_subplotspec().get_topmost_subplotspec()
-                    )
-                    parent_row1, parent_row2, _, _ = parent_ss._get_rows_columns(
-                        ncols=gs.ncols_total
-                    )
-                    boundary = min(parent_row2, gs.nrows_total - 2)
-                    pad = gs.hspace_total[boundary] / figheight
                     y0 = anchor_bbox.y0 - pad - height
                 bbox = mtransforms.Bbox.from_bounds(
                     parent_bbox.x0, y0, parent_bbox.width, height
