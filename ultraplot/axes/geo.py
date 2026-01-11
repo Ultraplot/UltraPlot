@@ -528,7 +528,7 @@ class _CartopyGridlinerAdapter(_GridlinerAdapter):
         for dir, side in zip(
             "bottom top left right".split(), [bottom, top, left, right]
         ):
-            if side != True:
+            if side is not True:
                 continue
             sides[dir] = getattr(gl, f"{dir}_label_artists")
         return sides
