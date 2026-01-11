@@ -234,10 +234,53 @@ class _GeoLabel(object):
             return False
 
 
-# Add monkey patch to gridliner module
 if cgridliner is not None and hasattr(cgridliner, "Label"):  # only recent versions
-    _cls = type("Label", (_GeoLabel, cgridliner.Label), {})
-    cgridliner.Label = _cls
+
+    class _CartopyLabel(_GeoLabel, cgridliner.Label):
+        """Label class with configurable overlap checks."""
+
+    class _CartopyGridliner(cgridliner.Gridliner):
+        """
+        Gridliner subclass to localize cartopy quirks without monkey patching.
+        """
+
+        LabelClass = _CartopyLabel
+
+        def _generate_labels(self) -> Iterator[_CartopyLabel]:
+            """Yield label objects, reusing cached instances when possible."""
+            for label in self._all_labels:
+                yield label
+
+            while True:
+                new_artist = mtext.Text()
+                new_artist.set_figure(self.axes.figure)
+                new_artist.axes = self.axes
+
+                new_label = self.LabelClass(new_artist, None, None, None)
+                self._all_labels.append(new_label)
+
+                yield new_label
+
+        def _axes_domain(self, *args: Any, **kwargs: Any) -> tuple[Any, Any]:
+            x_range, y_range = super()._axes_domain(*args, **kwargs)
+            if _version_cartopy < "0.18":
+                lon_0 = self.axes.projection.proj4_params.get("lon_0", 0)
+                x_range = np.asarray(x_range) + lon_0
+            return x_range, y_range
+
+        def _draw_gridliner(self, *args: Any, **kwargs: Any) -> Any:  # noqa: E306
+            result = super()._draw_gridliner(*args, **kwargs)
+            if _version_cartopy >= "0.18":
+                lon_lim, _ = self._axes_domain()
+                if abs(np.diff(lon_lim)) == abs(np.diff(self.crs.x_limits)):
+                    for collection in self.xline_artists:
+                        if not getattr(collection, "_cartopy_fix", False):
+                            collection.get_paths().pop(-1)
+                            collection._cartopy_fix = True
+            return result
+
+else:
+    _CartopyGridliner = None
 
 
 class _GeoAxis(object):
@@ -435,6 +478,9 @@ class _CartopyGridlinerProtocol(Protocol):
     bottom_label_artists: list[mtext.Text]
     top_label_artists: list[mtext.Text]
     xline_artists: list[Any]
+
+    def _axes_domain(self, *args: Any, **kwargs: Any) -> tuple[Any, Any]: ...
+    def _draw_gridliner(self, *args: Any, **kwargs: Any) -> Any: ...
 
 
 class _CartopyGridlinerAdapter(_GridlinerAdapter):
@@ -2021,53 +2067,72 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         """
         return self.projection.proj4_params.get("lon_0", 0)
 
-    @staticmethod
-    def _gridliner_axes_domain_patch(
-        gl: _CartopyGridlinerProtocol,
-    ) -> Any:
+    def gridlines(
+        self,
+        crs: Any = None,
+        draw_labels: bool | str | None = False,
+        xlocs: mticker.Locator | Sequence[float] | None = None,
+        ylocs: mticker.Locator | Sequence[float] | None = None,
+        dms: bool = False,
+        x_inline: bool | None = None,
+        y_inline: bool | None = None,
+        auto_inline: bool = True,
+        xformatter: Any = None,
+        yformatter: Any = None,
+        xlim: Sequence[float] | None = None,
+        ylim: Sequence[float] | None = None,
+        rotate_labels: bool | float | None = None,
+        xlabel_style: MutableMapping[str, Any] | None = None,
+        ylabel_style: MutableMapping[str, Any] | None = None,
+        labels_bbox_style: MutableMapping[str, Any] | None = None,
+        xpadding: float | None = 5,
+        ypadding: float | None = 5,
+        offset_angle: float = 25,
+        auto_update: bool | None = None,
+        formatter_kwargs: MutableMapping[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> _CartopyGridlinerProtocol:
         """
-        Return a patched _axes_domain method accounting for cartopy < 0.18.
+        Override cartopy gridlines to use a local Gridliner subclass.
         """
-
-        def _axes_domain(self, *args: Any, **kwargs: Any) -> tuple[Any, Any]:
-            x_range, y_range = type(self)._axes_domain(self, *args, **kwargs)
-            if _version_cartopy < "0.18":
-                lon_0 = self.axes.projection.proj4_params.get("lon_0", 0)
-                x_range = np.asarray(x_range) + lon_0
-            return x_range, y_range
-
-        return _axes_domain.__get__(gl)
-
-    @staticmethod
-    def _gridliner_draw_patch(
-        gl: _CartopyGridlinerProtocol,
-    ) -> Any:
-        """
-        Return a patched _draw_gridliner method to avoid duplicate dateline lines.
-        """
-
-        def _draw_gridliner(self, *args: Any, **kwargs: Any) -> Any:  # noqa: E306
-            result = type(self)._draw_gridliner(self, *args, **kwargs)
-            if _version_cartopy >= "0.18":
-                lon_lim, _ = self._axes_domain()
-                if abs(np.diff(lon_lim)) == abs(np.diff(self.crs.x_limits)):
-                    for collection in self.xline_artists:
-                        if not getattr(collection, "_cartopy_fix", False):
-                            collection.get_paths().pop(-1)
-                            collection._cartopy_fix = True
-            return result
-
-        return _draw_gridliner.__get__(gl)
+        if crs is None:
+            crs = ccrs.PlateCarree(globe=self.projection.globe)
+        gridliner_cls = _CartopyGridliner or cgridliner.Gridliner
+        gl = gridliner_cls(
+            self,
+            crs=crs,
+            draw_labels=draw_labels,
+            xlocator=xlocs,
+            ylocator=ylocs,
+            collection_kwargs=kwargs,
+            dms=dms,
+            x_inline=x_inline,
+            y_inline=y_inline,
+            auto_inline=auto_inline,
+            xformatter=xformatter,
+            yformatter=yformatter,
+            xlim=xlim,
+            ylim=ylim,
+            rotate_labels=rotate_labels,
+            xlabel_style=xlabel_style,
+            ylabel_style=ylabel_style,
+            labels_bbox_style=labels_bbox_style,
+            xpadding=xpadding,
+            ypadding=ypadding,
+            offset_angle=offset_angle,
+            auto_update=auto_update,
+            formatter_kwargs=formatter_kwargs,
+        )
+        self.add_artist(gl)
+        return gl
 
     def _init_gridlines(self) -> _CartopyGridlinerProtocol:
         """
-        Create monkey patched "major" and "minor" gridliners managed by ultraplot.
+        Create "major" and "minor" gridliners managed by ultraplot.
         """
 
-        # Return the gridliner with monkey patch
+        # Return gridliner using our subclass to isolate cartopy quirks.
         gl = self.gridlines(crs=ccrs.PlateCarree())
-        gl._axes_domain = self._gridliner_axes_domain_patch(gl)
-        gl._draw_gridliner = self._gridliner_draw_patch(gl)
         gl.xlines = gl.ylines = False
         return gl
 
