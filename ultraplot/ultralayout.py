@@ -369,33 +369,6 @@ class UltraLayoutSolver:
             if right_empty:
                 self._try_align_with_neighbors(num, "right", row_min, row_max, col_max)
 
-    def _center_between_neighbors(
-        self,
-        num: int,
-        row_min: int,
-        row_max: int,
-        col_min: int,
-        col_max: int,
-        bboxes: Dict[int, Tuple[int, int, int, int]],
-    ) -> None:
-        """
-        Center a subplot between neighboring subplots above or below.
-        Currently a no-op to avoid over-constraining; spacing is handled post-solve.
-        """
-        return
-
-    def _try_align_with_neighbors(
-        self, num: int, side: str, row_min: int, row_max: int, col_idx: int
-    ):
-        """
-        Try to align a subplot edge with neighboring subplots.
-
-        For example, if subplot 3 is in row 1 between subplots 1 and 2 in row 0,
-        we want to center it between them.
-        """
-        # Placeholder: alignment tweaks could be added here if needed.
-        return
-
     def solve(self) -> Dict[int, Tuple[float, float, float, float]]:
         """
         Solve the constraint system and return subplot positions.
