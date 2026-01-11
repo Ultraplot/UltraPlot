@@ -733,9 +733,8 @@ class _BasemapGridlinerAdapter(_GridlinerAdapter):
                         label.set_rotation(labelrotation)
 
     def tick_positions(
-        self, axis: str, *, lonaxis: _GeoAxis, lataxis: _GeoAxis
+        self, axis: str, *, _lonaxis: _GeoAxis, _lataxis: _GeoAxis
     ) -> np.ndarray:
-        lonaxis, lataxis  # unused; tick positions are stored in dict keys
         if axis == "x":
             locator = self.lonlines
         elif axis == "y":
