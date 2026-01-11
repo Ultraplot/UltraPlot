@@ -64,6 +64,8 @@ _MINOR_TICK_SCALE = 0.6  # relative to major tick length
 _BASEMAP_LABEL_SIZE_SCALE = 0.5  # empirical scaling for label offset
 _BASEMAP_LABEL_Y_SCALE = 0.65  # empirical spacing to mimic cartopy
 _BASEMAP_LABEL_X_SCALE = 0.25  # empirical spacing to mimic cartopy
+_CARTOPY_LABEL_SIDES = ("labelleft", "labelright", "labelbottom", "labeltop", "geo")
+_BASEMAP_LABEL_SIDES = ("labelleft", "labelright", "labeltop", "labelbottom", "geo")
 
 
 # Format docstring
@@ -450,6 +452,10 @@ class _GridlinerAdapter(Protocol):
         linewidth: float | None = None,
     ) -> None: ...
 
+    def tick_positions(
+        self, axis: str, *, lonaxis: "_GeoAxis", lataxis: "_GeoAxis"
+    ) -> np.ndarray: ...
+
     def is_label_on(self, side: str) -> bool: ...
 
 
@@ -584,6 +590,24 @@ class _CartopyGridlinerAdapter(_GridlinerAdapter):
             if pad is not None and hasattr(gl, "ypadding"):
                 gl.ypadding = pad
 
+    def tick_positions(
+        self, axis: str, *, lonaxis: _GeoAxis, lataxis: _GeoAxis
+    ) -> np.ndarray:
+        gl = self.gridliner
+        if gl is None:
+            return np.asarray([])
+        if axis == "x":
+            locator = gl.xlocator
+            if locator is None:
+                return np.asarray([])
+            return lonaxis._get_ticklocs(locator)
+        if axis == "y":
+            locator = gl.ylocator
+            if locator is None:
+                return np.asarray([])
+            return lataxis._get_ticklocs(locator)
+        raise ValueError(f"Invalid axis: {axis!r}")
+
     def is_label_on(self, side: str) -> bool:
         gl = self.gridliner
         if gl is None:
@@ -707,6 +731,20 @@ class _BasemapGridlinerAdapter(_GridlinerAdapter):
                         label.set_fontsize(labelsize)
                     if labelrotation is not None:
                         label.set_rotation(labelrotation)
+
+    def tick_positions(
+        self, axis: str, *, lonaxis: _GeoAxis, lataxis: _GeoAxis
+    ) -> np.ndarray:
+        lonaxis, lataxis  # unused; tick positions are stored in dict keys
+        if axis == "x":
+            locator = self.lonlines
+        elif axis == "y":
+            locator = self.latlines
+        else:
+            raise ValueError(f"Invalid axis: {axis!r}")
+        if not locator:
+            return np.asarray([])
+        return np.asarray(list(locator.keys()))
 
     def is_label_on(self, side: str) -> bool:
         def group_labels(
@@ -878,6 +916,50 @@ class _LatAxis(_GeoAxis):
 
     def set_latmax(self, latmax: float) -> None:
         self._latmax = latmax
+
+
+def _gridliner_sides_from_arrays(
+    lonarray: Sequence[bool | None] | None,
+    latarray: Sequence[bool | None] | None,
+    *,
+    order: Sequence[str],
+    allow_xy: bool,
+    include_false: bool,
+) -> dict[str, bool | str]:
+    """
+    Map lon/lat label arrays to gridliner toggle flags.
+
+    Parameters
+    ----------
+    allow_xy
+        Use "x"/"y" to preserve axis-specific toggles when only one of lon/lat
+        is enabled for a given side (cartopy behavior).
+    include_false
+        Include explicit False entries to actively hide existing labels instead
+        of leaving previous state untouched (backend-dependent behavior).
+    """
+    if lonarray is None or latarray is None:
+        return {}
+    sides: dict[str, bool | str] = {}
+    for side, lon, lat in zip(order, lonarray, latarray):
+        value: bool | str | None = None
+        if allow_xy:
+            if lon and lat:
+                value = True
+            elif lon:
+                value = "x"
+            elif lat:
+                value = "y"
+            elif include_false and (lon is not None or lat is not None):
+                value = False
+        else:
+            if lon or lat:
+                value = True
+            elif include_false and (lon is not None or lat is not None):
+                value = False
+        if value is not None:
+            sides[side] = value
+    return sides
 
 
 class GeoAxes(shared._SharedAxes, plot.PlotAxes):
@@ -1078,31 +1160,33 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 self._set_gridliner_adapter(which, adapter)
         return adapter
 
+    def _iter_gridliner_adapters(self, which: str) -> Iterator[_GridlinerAdapter]:
+        """
+        Yield available gridliner adapters for the requested tick selection.
+        """
+        if which in ("major", "both"):
+            adapter = self._gridliner_adapter("major")
+            if adapter is not None:
+                yield adapter
+        if which in ("minor", "both"):
+            adapter = self._gridliner_adapter("minor")
+            if adapter is not None:
+                yield adapter
+
     def _gridliner_tick_positions(
         self, axis: str, *, which: str = "major"
     ) -> np.ndarray:
         """
         Return tick positions from the backend gridliner for a given axis.
         """
-        # Basemap stores line collections keyed by tick location; cartopy uses locators.
         if axis not in ("x", "y"):
             raise ValueError(f"Invalid axis: {axis!r}")
         adapter = self._gridliner_adapter(which)
-        if isinstance(adapter, _BasemapGridlinerAdapter):
-            # Basemap uses dicts keyed by numeric locations rather than locator objects.
-            locator = adapter.lonlines if axis == "x" else adapter.latlines
-            if not locator:
-                return np.asarray([])
-            return np.asarray(list(locator.keys()))
-
-        gl = getattr(self, f"_gridlines_{which}", None)
-        if gl is None:
+        if adapter is None:
             return np.asarray([])
-        if axis == "x":
-            locator = gl.xlocator
-            return self._lonaxis._get_ticklocs(locator)
-        locator = gl.ylocator
-        return self._lataxis._get_ticklocs(locator)
+        return adapter.tick_positions(
+            axis, lonaxis=self._lonaxis, lataxis=self._lataxis
+        )
 
     @override
     def tick_params(self, *args: Any, **kwargs: Any) -> Any:
@@ -1123,16 +1207,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         linecolor = kwargs.get("colors", kwargs.get("color", None))
         linewidth = kwargs.get("width", kwargs.get("linewidth", None))
 
-        adapters = []
-        if which in ("major", "both"):
-            adapter = self._gridliner_adapter("major")
-            if adapter is not None:
-                adapters.append(adapter)
-        if which in ("minor", "both"):
-            adapter = self._gridliner_adapter("minor")
-            if adapter is not None:
-                adapters.append(adapter)
-
+        adapters = tuple(self._iter_gridliner_adapters(which))
         if not adapters:
             return result
 
@@ -1499,6 +1574,326 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             raise ValueError(f"Invalid {which}label spec: {arg}.")
         return array
 
+    def _format_init_basemap_boundary(self) -> None:
+        """
+        Initialize basemap boundaries before format triggers gridline work.
+
+        Basemap can create a hidden boundary when gridlines are drawn before the
+        map boundary is initialized, so we force initialization here.
+        """
+        if self._name != "basemap" or self._map_boundary is not None:
+            return
+        if self.projection.projection in self._proj_non_rectangular:
+            patch = self.projection.drawmapboundary(ax=self)
+            self._map_boundary = patch
+        else:
+            self.projection.set_axes_limits(self)  # initialize aspect ratio
+            self._map_boundary = object()  # sentinel
+
+    def _format_rc_context(
+        self,
+        kwargs: MutableMapping[str, Any],
+        *,
+        ticklen: Any,
+        labelcolor: Any,
+        labelsize: Any,
+        labelweight: Any,
+    ) -> tuple[dict[str, Any], int, Any]:
+        """
+        Pop rc overrides and prepare context settings for format().
+        """
+        rc_kw, rc_mode = _pop_rc(kwargs)
+        ticklen = _not_none(ticklen, rc_kw.get("tick.len", None))
+        labelcolor = _not_none(labelcolor, kwargs.get("color", None))
+        if labelcolor is not None:
+            rc_kw["grid.labelcolor"] = labelcolor
+        if labelsize is not None:
+            rc_kw["grid.labelsize"] = labelsize
+        if labelweight is not None:
+            rc_kw["grid.labelweight"] = labelweight
+        return rc_kw, rc_mode, ticklen
+
+    def _format_normalize_label_inputs(
+        self,
+        *,
+        labels: Any,
+        lonlabels: Any,
+        latlabels: Any,
+        loninline: bool | None,
+        latinline: bool | None,
+        inlinelabels: bool | None,
+    ) -> tuple[Any, Any]:
+        """
+        Normalize label inputs before rc context is applied.
+        """
+        lonlabels = _not_none(lonlabels, labels)
+        latlabels = _not_none(latlabels, labels)
+        if "0.18" <= _version_cartopy < "0.20":
+            lonlabels = _not_none(lonlabels, loninline, inlinelabels)
+            latlabels = _not_none(latlabels, latinline, inlinelabels)
+        return lonlabels, latlabels
+
+    def _format_resolve_label_arrays(
+        self, *, labels: Any, lonlabels: Any, latlabels: Any
+    ) -> tuple[Any, Any, list[bool | None], list[bool | None]]:
+        """
+        Resolve label toggles and return label arrays for gridliners.
+        """
+        if lonlabels is None and latlabels is None:
+            labels = _not_none(labels, rc.find("grid.labels", context=True))
+            lonlabels = labels
+            latlabels = labels
+        else:
+            lonlabels = _not_none(lonlabels, labels)
+            latlabels = _not_none(latlabels, labels)
+
+        self._toggle_ticks(lonlabels, "x")
+        self._toggle_ticks(latlabels, "y")
+        lonarray = self._to_label_array(lonlabels, lon=True)
+        latarray = self._to_label_array(latlabels, lon=False)
+        return lonlabels, latlabels, lonarray, latarray
+
+    def _format_update_latmax(self, latmax: float | None) -> None:
+        """
+        Update the latitude gridline cutoff.
+        """
+        latmax = _not_none(latmax, rc.find("grid.latmax", context=True))
+        if latmax is not None:
+            self._lataxis.set_latmax(latmax)
+
+    def _format_update_major_locators(
+        self,
+        *,
+        lonlocator: Any,
+        lonlines: Any,
+        latlocator: Any,
+        latlines: Any,
+        lonlocator_kw: MutableMapping | None,
+        lonlines_kw: MutableMapping | None,
+        latlocator_kw: MutableMapping | None,
+        latlines_kw: MutableMapping | None,
+    ) -> None:
+        """
+        Update major longitude/latitude locators.
+        """
+        lonlocator = _not_none(lonlocator=lonlocator, lonlines=lonlines)
+        latlocator = _not_none(latlocator=latlocator, latlines=latlines)
+        if lonlocator is not None:
+            lonlocator_kw = _not_none(
+                lonlocator_kw=lonlocator_kw,
+                lonlines_kw=lonlines_kw,
+                default={},
+            )
+            locator = constructor.Locator(lonlocator, **lonlocator_kw)
+            self._lonaxis.set_major_locator(locator)
+        if latlocator is not None:
+            latlocator_kw = _not_none(
+                latlocator_kw=latlocator_kw,
+                latlines_kw=latlines_kw,
+                default={},
+            )
+            locator = constructor.Locator(latlocator, **latlocator_kw)
+            self._lataxis.set_major_locator(locator)
+
+    def _format_update_minor_locators(
+        self,
+        *,
+        lonminorlocator: Any,
+        lonminorlines: Any,
+        latminorlocator: Any,
+        latminorlines: Any,
+        lonminorlocator_kw: MutableMapping | None,
+        lonminorlines_kw: MutableMapping | None,
+        latminorlocator_kw: MutableMapping | None,
+        latminorlines_kw: MutableMapping | None,
+    ) -> None:
+        """
+        Update minor longitude/latitude locators.
+        """
+        lonminorlocator = _not_none(
+            lonminorlocator=lonminorlocator, lonminorlines=lonminorlines
+        )
+        latminorlocator = _not_none(
+            latminorlocator=latminorlocator, latminorlines=latminorlines
+        )
+        if lonminorlocator is not None:
+            lonminorlocator_kw = _not_none(
+                lonminorlocator_kw=lonminorlocator_kw,
+                lonminorlines_kw=lonminorlines_kw,
+                default={},
+            )
+            locator = constructor.Locator(lonminorlocator, **lonminorlocator_kw)
+            self._lonaxis.set_minor_locator(locator)
+        if latminorlocator is not None:
+            latminorlocator_kw = _not_none(
+                latminorlocator_kw=latminorlocator_kw,
+                latminorlines_kw=latminorlines_kw,
+                default={},
+            )
+            locator = constructor.Locator(latminorlocator, **latminorlocator_kw)
+            self._lataxis.set_minor_locator(locator)
+
+    def _format_resolve_gridline_params(
+        self,
+        *,
+        loninline: bool | None,
+        latinline: bool | None,
+        inlinelabels: bool | None,
+        rotatelabels: bool | None,
+        labelrotation: float | None,
+        lonlabelrotation: float | None,
+        latlabelrotation: float | None,
+        labelpad: Any,
+        dms: bool | None,
+        nsteps: int | None,
+    ) -> tuple[
+        bool | None,
+        bool | None,
+        bool | None,
+        float | None,
+        float | None,
+        Any,
+        bool | None,
+        int | None,
+    ]:
+        """
+        Resolve gridline-related parameters with rc defaults.
+        """
+        loninline = _not_none(
+            loninline, inlinelabels, rc.find("grid.inlinelabels", context=True)
+        )
+        latinline = _not_none(
+            latinline, inlinelabels, rc.find("grid.inlinelabels", context=True)
+        )
+        rotatelabels = _not_none(
+            rotatelabels, rc.find("grid.rotatelabels", context=True)
+        )
+        lonlabelrotation = _not_none(lonlabelrotation, labelrotation)
+        latlabelrotation = _not_none(latlabelrotation, labelrotation)
+        labelpad = _not_none(labelpad, rc.find("grid.labelpad", context=True))
+        dms = _not_none(dms, rc.find("grid.dmslabels", context=True))
+        nsteps = _not_none(nsteps, rc.find("grid.nsteps", context=True))
+        return (
+            loninline,
+            latinline,
+            rotatelabels,
+            lonlabelrotation,
+            latlabelrotation,
+            labelpad,
+            dms,
+            nsteps,
+        )
+
+    def _format_update_formatters(
+        self,
+        *,
+        lonformatter: Any,
+        latformatter: Any,
+        lonformatter_kw: MutableMapping | None,
+        latformatter_kw: MutableMapping | None,
+        dms: bool | None,
+    ) -> None:
+        """
+        Update longitude/latitude formatters and DMS flags.
+        """
+        if lonformatter is not None:
+            lonformatter_kw = lonformatter_kw or {}
+            formatter = constructor.Formatter(lonformatter, **lonformatter_kw)
+            self._lonaxis.set_major_formatter(formatter)
+        if latformatter is not None:
+            latformatter_kw = latformatter_kw or {}
+            formatter = constructor.Formatter(latformatter, **latformatter_kw)
+            self._lataxis.set_major_formatter(formatter)
+        if dms is not None:  # harmless if these are not GeoLocators
+            self._lonaxis.get_major_formatter()._dms = dms
+            self._lataxis.get_major_formatter()._dms = dms
+            self._lonaxis.get_major_locator()._dms = dms
+            self._lataxis.get_major_locator()._dms = dms
+
+    def _format_apply_grid_updates(
+        self,
+        *,
+        lonlim: tuple[float | None, float | None] | None,
+        latlim: tuple[float | None, float | None] | None,
+        boundinglat: float | None,
+        longrid: bool | None,
+        latgrid: bool | None,
+        longridminor: bool | None,
+        latgridminor: bool | None,
+        lonarray: Sequence[bool | None],
+        latarray: Sequence[bool | None],
+        loninline: bool | None,
+        latinline: bool | None,
+        rotatelabels: bool | None,
+        lonlabelrotation: float | None,
+        latlabelrotation: float | None,
+        labelpad: Any,
+        nsteps: int | None,
+    ) -> tuple[tuple[float | None, float | None], tuple[float | None, float | None]]:
+        """
+        Apply extent, features, and gridline updates for format().
+        """
+        lonlim = _not_none(lonlim, default=(None, None))
+        latlim = _not_none(latlim, default=(None, None))
+        self._update_extent(lonlim=lonlim, latlim=latlim, boundinglat=boundinglat)
+        self._update_features()
+        self._update_major_gridlines(
+            longrid=longrid,
+            latgrid=latgrid,  # gridline toggles
+            lonarray=lonarray,
+            latarray=latarray,  # label toggles
+            loninline=loninline,
+            latinline=latinline,
+            rotatelabels=rotatelabels,
+            lonlabelrotation=lonlabelrotation,
+            latlabelrotation=latlabelrotation,
+            labelpad=labelpad,
+            nsteps=nsteps,
+        )
+        self._update_minor_gridlines(
+            longrid=longridminor,
+            latgrid=latgridminor,
+            nsteps=nsteps,
+        )
+        return lonlim, latlim
+
+    def _format_apply_ticklen(
+        self,
+        *,
+        lonlim: tuple[float | None, float | None],
+        latlim: tuple[float | None, float | None],
+        boundinglat: float | None,
+        ticklen: Any,
+        lonticklen: Any,
+        latticklen: Any,
+    ) -> None:
+        """
+        Apply tick length updates, including any extent refresh for geoticks.
+        """
+        lonticklen = _not_none(lonticklen, ticklen)
+        latticklen = _not_none(latticklen, ticklen)
+
+        if lonticklen or latticklen:
+            # Only add warning when ticks are given
+            if _is_rectilinear_projection(self):
+                self._add_geoticks("x", lonticklen, ticklen)
+                self._add_geoticks("y", latticklen, ticklen)
+                # If latlim is set to None it resets
+                # the view; this affects the visible range
+                # we need to force this to prevent
+                # side effects
+                if latlim == (None, None):
+                    latlim = self._lataxis.get_view_interval()
+                if lonlim == (None, None):
+                    lonlim = self._lonaxis.get_view_interval()
+                self._update_extent(
+                    lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
+                )
+            else:
+                warnings._warn_ultraplot(
+                    f"Projection is not rectilinear. Ignoring {lonticklen=} and {latticklen=} settings."
+                )
+
     @docstring._snippet_manager
     def format(
         self,
@@ -1573,38 +1968,22 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         ultraplot.axes.Axes.format
         ultraplot.config.Configurator.context
         """
-        # Initialize map boundary
-        # WARNING: Normal workflow is Axes.format() does 'universal' tasks including
-        # updating the map boundary (in the future may also handle gridlines). However
-        # drawing gridlines before basemap map boundary will call set_axes_limits()
-        # which initializes a boundary hidden from external access. So we must call
-        # it here. Must do this between mpl.Axes.__init__() and base.Axes.format().
-        #
-        if self._name == "basemap" and self._map_boundary is None:
-            if self.projection.projection in self._proj_non_rectangular:
-                patch = self.projection.drawmapboundary(ax=self)
-                self._map_boundary = patch
-            else:
-                self.projection.set_axes_limits(self)  # initialize aspect ratio
-                self._map_boundary = object()  # sentinel
-
-        # Initiate context block
-        rc_kw, rc_mode = _pop_rc(kwargs)
-        ticklen = _not_none(
-            ticklen, rc_kw.get("tick.len", None)
-        )  # Don't pop this as it will only plot on a singular axis
-        lonlabels = _not_none(lonlabels, labels)
-        latlabels = _not_none(latlabels, labels)
-        if "0.18" <= _version_cartopy < "0.20":
-            lonlabels = _not_none(lonlabels, loninline, inlinelabels)
-            latlabels = _not_none(latlabels, latinline, inlinelabels)
-        labelcolor = _not_none(labelcolor, kwargs.get("color", None))
-        if labelcolor is not None:
-            rc_kw["grid.labelcolor"] = labelcolor
-        if labelsize is not None:
-            rc_kw["grid.labelsize"] = labelsize
-        if labelweight is not None:
-            rc_kw["grid.labelweight"] = labelweight
+        self._format_init_basemap_boundary()
+        lonlabels, latlabels = self._format_normalize_label_inputs(
+            labels=labels,
+            lonlabels=lonlabels,
+            latlabels=latlabels,
+            loninline=loninline,
+            latinline=latinline,
+            inlinelabels=inlinelabels,
+        )
+        rc_kw, rc_mode, ticklen = self._format_rc_context(
+            kwargs,
+            ticklen=ticklen,
+            labelcolor=labelcolor,
+            labelsize=labelsize,
+            labelweight=labelweight,
+        )
         with rc.context(rc_kw, mode=rc_mode):
             # Apply extent mode first
             # NOTE: We deprecate autoextent on _CartopyAxes with _rename_kwargs which
@@ -1618,109 +1997,72 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             # NOTE: Cartopy 0.18 and 0.19 inline labels require any of
             # top, bottom, left, or right to be toggled then ignores them.
             # Later versions of cartopy permit both or neither labels.
-            if lonlabels is None and latlabels is None:
-                labels = _not_none(labels, rc.find("grid.labels", context=True))
-                lonlabels = labels
-                latlabels = labels
-            else:
-                lonlabels = _not_none(lonlabels, labels)
-                latlabels = _not_none(latlabels, labels)
-            # Set the ticks
-            self._toggle_ticks(lonlabels, "x")
-            self._toggle_ticks(latlabels, "y")
-            lonarray = self._to_label_array(lonlabels, lon=True)
-            latarray = self._to_label_array(latlabels, lon=False)
-
-            # Update max latitude
-            latmax = _not_none(latmax, rc.find("grid.latmax", context=True))
-            if latmax is not None:
-                self._lataxis.set_latmax(latmax)
-
-            # Update major locators
-            lonlocator = _not_none(lonlocator=lonlocator, lonlines=lonlines)
-            latlocator = _not_none(latlocator=latlocator, latlines=latlines)
-            if lonlocator is not None:
-                lonlocator_kw = _not_none(
-                    lonlocator_kw=lonlocator_kw,
-                    lonlines_kw=lonlines_kw,
-                    default={},
+            lonlabels, latlabels, lonarray, latarray = (
+                self._format_resolve_label_arrays(
+                    labels=labels,
+                    lonlabels=lonlabels,
+                    latlabels=latlabels,
                 )
-                locator = constructor.Locator(lonlocator, **lonlocator_kw)
-                self._lonaxis.set_major_locator(locator)
-            if latlocator is not None:
-                latlocator_kw = _not_none(
-                    latlocator_kw=latlocator_kw,
-                    latlines_kw=latlines_kw,
-                    default={},
-                )
-                locator = constructor.Locator(latlocator, **latlocator_kw)
-                self._lataxis.set_major_locator(locator)
-
-            # Update minor locators
-            lonminorlocator = _not_none(
-                lonminorlocator=lonminorlocator, lonminorlines=lonminorlines
             )
-            latminorlocator = _not_none(
-                latminorlocator=latminorlocator, latminorlines=latminorlines
+            self._format_update_latmax(latmax)
+            self._format_update_major_locators(
+                lonlocator=lonlocator,
+                lonlines=lonlines,
+                latlocator=latlocator,
+                latlines=latlines,
+                lonlocator_kw=lonlocator_kw,
+                lonlines_kw=lonlines_kw,
+                latlocator_kw=latlocator_kw,
+                latlines_kw=latlines_kw,
             )
-            if lonminorlocator is not None:
-                lonminorlocator_kw = _not_none(
-                    lonminorlocator_kw=lonminorlocator_kw,
-                    lonminorlines_kw=lonminorlines_kw,
-                    default={},
-                )
-                locator = constructor.Locator(lonminorlocator, **lonminorlocator_kw)
-                self._lonaxis.set_minor_locator(locator)
-            if latminorlocator is not None:
-                latminorlocator_kw = _not_none(
-                    latminorlocator_kw=latminorlocator_kw,
-                    latminorlines_kw=latminorlines_kw,
-                    default={},
-                )
-                locator = constructor.Locator(latminorlocator, **latminorlocator_kw)
-                self._lataxis.set_minor_locator(locator)
-
-            # Update formatters
-            loninline = _not_none(
-                loninline, inlinelabels, rc.find("grid.inlinelabels", context=True)
-            )  # noqa: E501
-            latinline = _not_none(
-                latinline, inlinelabels, rc.find("grid.inlinelabels", context=True)
-            )  # noqa: E501
-            rotatelabels = _not_none(
-                rotatelabels, rc.find("grid.rotatelabels", context=True)
-            )  # noqa: E501
-            lonlabelrotation = _not_none(lonlabelrotation, labelrotation)
-            latlabelrotation = _not_none(latlabelrotation, labelrotation)
-            labelpad = _not_none(labelpad, rc.find("grid.labelpad", context=True))
-            dms = _not_none(dms, rc.find("grid.dmslabels", context=True))
-            nsteps = _not_none(nsteps, rc.find("grid.nsteps", context=True))
-            lon0 = self._get_lon0()
-
-            if lonformatter is not None:
-                lonformatter_kw = lonformatter_kw or {}
-                formatter = constructor.Formatter(lonformatter, **lonformatter_kw)
-                self._lonaxis.set_major_formatter(formatter)
-            if latformatter is not None:
-                latformatter_kw = latformatter_kw or {}
-                formatter = constructor.Formatter(latformatter, **latformatter_kw)
-                self._lataxis.set_major_formatter(formatter)
-            if dms is not None:  # harmless if these are not GeoLocators
-                self._lonaxis.get_major_formatter()._dms = dms
-                self._lataxis.get_major_formatter()._dms = dms
-                self._lonaxis.get_major_locator()._dms = dms
-                self._lataxis.get_major_locator()._dms = dms
-
-            # Apply worker extent, feature, and gridline functions
-            lonlim = _not_none(lonlim, default=(None, None))
-            latlim = _not_none(latlim, default=(None, None))
-            self._update_extent(lonlim=lonlim, latlim=latlim, boundinglat=boundinglat)
-            self._update_features()
-            self._update_major_gridlines(
+            self._format_update_minor_locators(
+                lonminorlocator=lonminorlocator,
+                lonminorlines=lonminorlines,
+                latminorlocator=latminorlocator,
+                latminorlines=latminorlines,
+                lonminorlocator_kw=lonminorlocator_kw,
+                lonminorlines_kw=lonminorlines_kw,
+                latminorlocator_kw=latminorlocator_kw,
+                latminorlines_kw=latminorlines_kw,
+            )
+            (
+                loninline,
+                latinline,
+                rotatelabels,
+                lonlabelrotation,
+                latlabelrotation,
+                labelpad,
+                dms,
+                nsteps,
+            ) = self._format_resolve_gridline_params(
+                loninline=loninline,
+                latinline=latinline,
+                inlinelabels=inlinelabels,
+                rotatelabels=rotatelabels,
+                labelrotation=labelrotation,
+                lonlabelrotation=lonlabelrotation,
+                latlabelrotation=latlabelrotation,
+                labelpad=labelpad,
+                dms=dms,
+                nsteps=nsteps,
+            )
+            self._format_update_formatters(
+                lonformatter=lonformatter,
+                latformatter=latformatter,
+                lonformatter_kw=lonformatter_kw,
+                latformatter_kw=latformatter_kw,
+                dms=dms,
+            )
+            lonlim, latlim = self._format_apply_grid_updates(
+                lonlim=lonlim,
+                latlim=latlim,
+                boundinglat=boundinglat,
                 longrid=longrid,
-                latgrid=latgrid,  # gridline toggles
+                latgrid=latgrid,
+                longridminor=longridminor,
+                latgridminor=latgridminor,
                 lonarray=lonarray,
-                latarray=latarray,  # label toggles
+                latarray=latarray,
                 loninline=loninline,
                 latinline=latinline,
                 rotatelabels=rotatelabels,
@@ -1729,35 +2071,14 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 labelpad=labelpad,
                 nsteps=nsteps,
             )
-            self._update_minor_gridlines(
-                longrid=longridminor,
-                latgrid=latgridminor,
-                nsteps=nsteps,
-            )
-        # Set tick lengths for flat projections
-        lonticklen = _not_none(lonticklen, ticklen)
-        latticklen = _not_none(latticklen, ticklen)
-
-        if lonticklen or latticklen:
-            # Only add warning when ticks are given
-            if _is_rectilinear_projection(self):
-                self._add_geoticks("x", lonticklen, ticklen)
-                self._add_geoticks("y", latticklen, ticklen)
-                # If latlim is set to None it resets
-                # the view; this affects the visible range
-                # we need to force this to prevent
-                # side effects
-                if latlim == (None, None):
-                    latlim = self._lataxis.get_view_interval()
-                if lonlim == (None, None):
-                    lonlim = self._lonaxis.get_view_interval()
-                self._update_extent(
-                    lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
-                )
-            else:
-                warnings._warn_ultraplot(
-                    f"Projection is not rectilinear. Ignoring {lonticklen=} and {latticklen=} settings."
-                )
+        self._format_apply_ticklen(
+            lonlim=lonlim,
+            latlim=latlim,
+            boundinglat=boundinglat,
+            ticklen=ticklen,
+            lonticklen=lonticklen,
+            latticklen=latticklen,
+        )
 
         # Parent format method
         super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
@@ -2454,20 +2775,14 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                     f"{type(self.projection).__name__} projection."
                 )
                 lonarray = [False] * 5
-        sides = dict()
-        # The ordering of these sides are important. The arrays are ordered lrbtg
-        for side, lon, lat in zip(
-            "labelleft labelright labelbottom labeltop geo".split(), lonarray, latarray
-        ):
-            sides[side] = None
-            if lon and lat:
-                sides[side] = True
-            elif lon:
-                sides[side] = "x"
-            elif lat:
-                sides[side] = "y"
-            elif lon is not None or lat is not None:
-                sides[side] = False
+        # The ordering of these sides are important. The arrays are ordered lrbtg.
+        sides = _gridliner_sides_from_arrays(
+            lonarray,
+            latarray,
+            order=_CARTOPY_LABEL_SIDES,
+            allow_xy=True,
+            include_false=True,
+        )
         if sides:
             self._toggle_gridliner_labels(**sides)
         self._set_gridliner_adapter("major", self._build_gridliner_adapter("major"))
@@ -2944,13 +3259,15 @@ class _BasemapAxes(GeoAxes):
             lonlabelrotation=lonlabelrotation,
             latlabelrotation=latlabelrotation,
         )
-        sides = {}
-        for side, lonon, laton in zip(
-            "labelleft labelright labeltop labelbottom geo".split(), lonarray, latarray
-        ):
-            if lonon or laton:
-                sides[side] = True
-        self._toggle_gridliner_labels(**sides)
+        sides = _gridliner_sides_from_arrays(
+            lonarray,
+            latarray,
+            order=_BASEMAP_LABEL_SIDES,
+            allow_xy=False,
+            include_false=False,
+        )
+        if sides:
+            self._toggle_gridliner_labels(**sides)
         self._set_gridliner_adapter("major", self._build_gridliner_adapter("major"))
 
     def _update_minor_gridlines(
