@@ -1698,8 +1698,30 @@ class GridSpec(mgridspec.GridSpec):
     get_height_ratios = _disable_method("get_height_ratios")
     set_width_ratios = _disable_method("set_width_ratios")
     set_height_ratios = _disable_method("set_height_ratios")
-    get_subplot_params = _disable_method("get_subplot_params")
-    locally_modified_subplot_params = _disable_method("locally_modified_subplot_params")
+
+    # Compat: some backends (e.g., Positron) call these for read-only checks.
+    # We return current margins/spaces without permitting mutation.
+    def get_subplot_params(self, figure=None):
+        from matplotlib.figure import SubplotParams
+
+        fig = figure or self.figure
+        if fig is None:
+            raise RuntimeError("Figure must be assigned to gridspec.")
+        # Convert absolute margins to figure-relative floats
+        width, height = fig.get_size_inches()
+        left = self.left / width
+        right = 1 - self.right / width
+        bottom = self.bottom / height
+        top = 1 - self.top / height
+        wspace = sum(self.wspace_total) / width
+        hspace = sum(self.hspace_total) / height
+        return SubplotParams(
+            left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace
+        )
+
+    def locally_modified_subplot_params(self):
+        # Backend probe: report False/None semantics (no local mods to MPL params).
+        return False
 
     # Immutable helper properties used to calculate figure size and subplot positions
     # NOTE: The spaces are auto-filled with defaults wherever user left them unset
