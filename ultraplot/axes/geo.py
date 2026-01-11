@@ -2,6 +2,8 @@
 """
 Axes filled with cartographic projections.
 """
+from __future__ import annotations
+
 import copy
 import inspect
 from functools import partial
@@ -12,8 +14,8 @@ try:
 except ImportError:
     # From Python 3.5
     from typing_extensions import override
-
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping, Sequence
+from typing import Any, Optional, Protocol
 
 import matplotlib.axis as maxis
 import matplotlib.path as mpath
@@ -217,7 +219,7 @@ class _GeoLabel(object):
     Optionally omit overlapping check if an rc setting is disabled.
     """
 
-    def check_overlapping(self, *args, **kwargs):
+    def check_overlapping(self, *args: Any, **kwargs: Any) -> bool:
         if rc["grid.checkoverlap"]:
             return super().check_overlapping(*args, **kwargs)
         else:
@@ -240,7 +242,7 @@ class _GeoAxis(object):
     # NOTE: Due to cartopy bug (https://github.com/SciTools/cartopy/issues/1564)
     # we store presistent longitude and latitude locators on axes, then *call*
     # them whenever set_extent is called and apply *fixed* locators.
-    def __init__(self, axes):
+    def __init__(self, axes: "GeoAxes") -> None:
         self.axes = axes
         self.major = maxis.Ticker()
         self.minor = maxis.Ticker()
@@ -256,7 +258,7 @@ class _GeoAxis(object):
             and _version_cartopy >= "0.18"
         )
 
-    def _get_extent(self):
+    def _get_extent(self) -> tuple[float, float, float, float]:
         # Try to get extent but bail out for projections where this is
         # impossible. So far just transverse Mercator
         try:
@@ -266,7 +268,7 @@ class _GeoAxis(object):
             return (-180 + lon0, 180 + lon0, -90, 90)
 
     @staticmethod
-    def _pad_ticks(ticks, vmin, vmax):
+    def _pad_ticks(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndarray:
         # Wrap up to the longitude/latitude range to avoid
         # giant lists of 10,000 gridline locations.
         if len(ticks) == 0:
@@ -282,50 +284,56 @@ class _GeoAxis(object):
         ticks = np.concatenate((ticks_lo, ticks, ticks_hi))
         return ticks
 
-    def get_scale(self):
+    def get_scale(self) -> str:
         return "linear"
 
-    def get_tick_space(self):
+    def get_tick_space(self) -> int:
         return 9  # longstanding default of nbins=9
 
-    def get_major_formatter(self):
+    def get_major_formatter(self) -> mticker.Formatter | None:
         return self.major.formatter
 
-    def get_major_locator(self):
+    def get_major_locator(self) -> mticker.Locator | None:
         return self.major.locator
 
-    def get_minor_locator(self):
+    def get_minor_locator(self) -> mticker.Locator | None:
         return self.minor.locator
 
-    def get_majorticklocs(self):
+    def get_majorticklocs(self) -> np.ndarray:
         return self._get_ticklocs(self.major.locator)
 
-    def get_minorticklocs(self):
+    def get_minorticklocs(self) -> np.ndarray:
         return self._get_ticklocs(self.minor.locator)
 
-    def set_major_formatter(self, formatter, default=False):
+    def set_major_formatter(
+        self, formatter: mticker.Formatter, default: bool = False
+    ) -> None:
         # NOTE: Cartopy formatters check Formatter.axis.axes.projection
         # in order to implement special projection-dependent behavior.
         self.major.formatter = formatter
         formatter.set_axis(self)
         self.isDefault_majfmt = default
 
-    def set_major_locator(self, locator, default=False):
+    def set_major_locator(
+        self, locator: mticker.Locator, default: bool = False
+    ) -> None:
         self.major.locator = locator
         if self.major.formatter:
             self.major.formatter._set_locator(locator)
         locator.set_axis(self)
         self.isDefault_majloc = default
 
-    def set_minor_locator(self, locator, default=False):
+    def set_minor_locator(
+        self, locator: mticker.Locator, default: bool = False
+    ) -> None:
         self.minor.locator = locator
         locator.set_axis(self)
         self.isDefault_majfmt = default
 
-    def set_view_interval(self, vmin, vmax):
+    def set_view_interval(self, vmin: float, vmax: float) -> None:
         self._interval = (vmin, vmax)
 
-    def _copy_locator_properties(self, other: "_GeoAxis"):
+    def _copy_locator_properties(self, other: "_GeoAxis") -> None:
         """
         This function copies the locator properties. It is
         used when the @self is sharing with @other.
@@ -353,6 +361,343 @@ class _GeoAxis(object):
                 setattr(other, prop, this_prop)
 
 
+class _GridlinerAdapter(Protocol):
+    """
+    Lightweight facade used to normalize cartopy and basemap gridliner behavior.
+    These adapters let GeoAxes apply gridline label toggles and styles without
+    backend-specific branching.
+    """
+
+    def labels_for_sides(
+        self,
+        *,
+        bottom: bool | str | None = None,
+        top: bool | str | None = None,
+        left: bool | str | None = None,
+        right: bool | str | None = None,
+    ) -> dict[str, list[mtext.Text]]: ...
+
+    def toggle_labels(
+        self,
+        *,
+        labelleft: bool | str | None = None,
+        labelright: bool | str | None = None,
+        labelbottom: bool | str | None = None,
+        labeltop: bool | str | None = None,
+        geo: bool | str | None = None,
+    ) -> None: ...
+
+    def apply_style(
+        self,
+        *,
+        axis: str = "both",
+        pad: float | None = None,
+        labelsize: float | str | None = None,
+        labelcolor: Any = None,
+        labelrotation: float | None = None,
+        linecolor: Any = None,
+        linewidth: float | None = None,
+    ) -> None: ...
+
+    def is_label_on(self, side: str) -> bool: ...
+
+
+class _CartopyGridlinerProtocol(Protocol):
+    """
+    Structural protocol for the subset of cartopy Gridliner attributes we use.
+    This keeps type hints tight without importing cartopy at runtime.
+    """
+
+    collection_kwargs: dict[str, Any]
+    xlabel_style: dict[str, Any]
+    ylabel_style: dict[str, Any]
+    xlocator: mticker.Locator
+    ylocator: mticker.Locator
+    xpadding: float | None
+    ypadding: float | None
+    xlines: bool
+    ylines: bool
+    x_inline: bool | None
+    y_inline: bool | None
+    rotate_labels: bool | None
+    inline_labels: bool | str | None
+    geo_labels: bool | str | None
+    left_label_artists: list[mtext.Text]
+    right_label_artists: list[mtext.Text]
+    bottom_label_artists: list[mtext.Text]
+    top_label_artists: list[mtext.Text]
+    xline_artists: list[Any]
+
+
+class _CartopyGridlinerAdapter(_GridlinerAdapter):
+    """
+    Adapter for cartopy's Gridliner, translating common label/style operations
+    into the Gridliner API while hiding cartopy version differences.
+    """
+
+    def __init__(self, gridliner: Optional[_CartopyGridlinerProtocol]) -> None:
+        self.gridliner = gridliner
+
+    @staticmethod
+    def _side_labels() -> tuple[str, str, str, str]:
+        # Cartopy label attribute names vary by version.
+        if _version_cartopy >= "0.18":
+            left_labels = "left_labels"
+            right_labels = "right_labels"
+            bottom_labels = "bottom_labels"
+            top_labels = "top_labels"
+        else:  # cartopy < 0.18
+            left_labels = "ylabels_left"
+            right_labels = "ylabels_right"
+            bottom_labels = "xlabels_bottom"
+            top_labels = "xlabels_top"
+        return (left_labels, right_labels, bottom_labels, top_labels)
+
+    def labels_for_sides(
+        self,
+        *,
+        bottom: bool | str | None = None,
+        top: bool | str | None = None,
+        left: bool | str | None = None,
+        right: bool | str | None = None,
+    ) -> dict[str, list[mtext.Text]]:
+        sides = {}
+        gl = self.gridliner
+        if gl is None:
+            return sides
+        for dir, side in zip(
+            "bottom top left right".split(), [bottom, top, left, right]
+        ):
+            if side != True:
+                continue
+            sides[dir] = getattr(gl, f"{dir}_label_artists")
+        return sides
+
+    def toggle_labels(
+        self,
+        *,
+        labelleft: bool | str | None = None,
+        labelright: bool | str | None = None,
+        labelbottom: bool | str | None = None,
+        labeltop: bool | str | None = None,
+        geo: bool | str | None = None,
+    ) -> None:
+        gl = self.gridliner
+        if gl is None:
+            return
+        side_labels = self._side_labels()
+        togglers = (labelleft, labelright, labelbottom, labeltop)
+        for toggle, side in zip(togglers, side_labels):
+            if toggle is not None:
+                setattr(gl, side, toggle)
+        if geo is not None:  # only cartopy 0.20 supported but harmless
+            setattr(gl, "geo_labels", geo)
+
+    def apply_style(
+        self,
+        *,
+        axis: str = "both",
+        pad: float | None = None,
+        labelsize: float | str | None = None,
+        labelcolor: Any = None,
+        labelrotation: float | None = None,
+        linecolor: Any = None,
+        linewidth: float | None = None,
+    ) -> None:
+        gl = self.gridliner
+        if gl is None:
+            return
+
+        def _apply_label_style(style: dict[str, Any]) -> None:
+            if labelcolor is not None:
+                style["color"] = labelcolor
+            if labelsize is not None:
+                style["fontsize"] = labelsize
+            if labelrotation is not None:
+                style["rotation"] = labelrotation
+
+        # Cartopy line styling is stored in the collection kwargs.
+        if linecolor is not None:
+            gl.collection_kwargs["color"] = linecolor
+        if linewidth is not None:
+            gl.collection_kwargs["linewidth"] = linewidth
+        if axis in ("x", "both"):
+            _apply_label_style(gl.xlabel_style)
+            if pad is not None and hasattr(gl, "xpadding"):
+                gl.xpadding = pad
+        if axis in ("y", "both"):
+            _apply_label_style(gl.ylabel_style)
+            if pad is not None and hasattr(gl, "ypadding"):
+                gl.ypadding = pad
+
+    def is_label_on(self, side: str) -> bool:
+        gl = self.gridliner
+        if gl is None:
+            return False
+        left_labels, right_labels, bottom_labels, top_labels = self._side_labels()
+        if side == "labelleft":
+            return getattr(gl, left_labels)
+        elif side == "labelright":
+            return getattr(gl, right_labels)
+        elif side == "labelbottom":
+            return getattr(gl, bottom_labels)
+        elif side == "labeltop":
+            return getattr(gl, top_labels)
+        else:
+            raise ValueError(f"Invalid side: {side}")
+
+
+class _BasemapGridlinerAdapter(_GridlinerAdapter):
+    """
+    Adapter for basemap meridian/parallel dictionaries, emulating the subset
+    of cartopy Gridliner behavior needed by GeoAxes (labels, toggles, styling).
+    """
+
+    def __init__(
+        self,
+        lonlines: MutableMapping | None,
+        latlines: MutableMapping | None,
+    ) -> None:
+        self.lonlines = lonlines
+        self.latlines = latlines
+
+    def labels_for_sides(
+        self,
+        *,
+        bottom: bool | str | None = None,
+        top: bool | str | None = None,
+        left: bool | str | None = None,
+        right: bool | str | None = None,
+    ) -> dict[str, list[mtext.Text]]:
+        directions = "left right top bottom".split()
+        bools = [left, right, top, bottom]
+        sides = {}
+        for direction, is_on in zip(directions, bools):
+            if is_on is None:
+                continue
+            gl = self.lonlines
+            if direction in ["left", "right"]:
+                gl = self.latlines
+            for loc, (lines, labels) in (gl or {}).items():
+                for label in labels:
+                    # Determine side by label position (Basemap clusters by location).
+                    position = label.get_position()
+                    match direction:
+                        case "top" if position[1] > 0:
+                            add = True
+                        case "bottom" if position[1] < 0:
+                            add = True
+                        case "left" if position[0] < 0:
+                            add = True
+                        case "right" if position[0] > 0:
+                            add = True
+                        case _:
+                            add = False
+                    if add:
+                        sides.setdefault(direction, []).append(label)
+        return sides
+
+    def toggle_labels(
+        self,
+        *,
+        labelleft: bool | str | None = None,
+        labelright: bool | str | None = None,
+        labelbottom: bool | str | None = None,
+        labeltop: bool | str | None = None,
+        geo: bool | str | None = None,
+    ) -> None:
+        labels = self.labels_for_sides(
+            bottom=labelbottom, top=labeltop, left=labelleft, right=labelright
+        )
+        toggles = {
+            "bottom": labelbottom,
+            "top": labeltop,
+            "left": labelleft,
+            "right": labelright,
+        }
+        for direction, toggle in toggles.items():
+            if toggle is None:
+                continue
+            for label in labels.get(direction, []):
+                label.set_visible(bool(toggle) or toggle in ("x", "y"))
+
+    def apply_style(
+        self,
+        *,
+        axis: str = "both",
+        pad: float | None = None,
+        labelsize: float | str | None = None,
+        labelcolor: Any = None,
+        labelrotation: float | None = None,
+        linecolor: Any = None,
+        linewidth: float | None = None,
+    ) -> None:
+        pad  # unused for basemap gridlines
+        targets = []
+        if axis in ("x", "both"):
+            targets.append(self.lonlines)
+        if axis in ("y", "both"):
+            targets.append(self.latlines)
+        for gl in targets:
+            for loc, (lines, labels) in (gl or {}).items():
+                # Basemap stores line artists and label text separately.
+                for line in lines:
+                    if linecolor is not None and hasattr(line, "set_color"):
+                        line.set_color(linecolor)
+                    if linewidth is not None and hasattr(line, "set_linewidth"):
+                        line.set_linewidth(linewidth)
+                for label in labels:
+                    if labelcolor is not None:
+                        label.set_color(labelcolor)
+                    if labelsize is not None:
+                        label.set_fontsize(labelsize)
+                    if labelrotation is not None:
+                        label.set_rotation(labelrotation)
+
+    def is_label_on(self, side: str) -> bool:
+        def group_labels(
+            labels: list[mtext.Text],
+            which: str,
+            labelbottom: bool | str | None = None,
+            labeltop: bool | str | None = None,
+            labelleft: bool | str | None = None,
+            labelright: bool | str | None = None,
+        ) -> dict[str, list[mtext.Text]]:
+            group = {}
+            for label in labels:
+                position = label.get_position()
+                target = None
+                if which == "x":
+                    if labelbottom is not None and position[1] < 0:
+                        target = "labelbottom"
+                    elif labeltop is not None and position[1] >= 0:
+                        target = "labeltop"
+                else:
+                    if labelleft is not None and position[0] < 0:
+                        target = "labelleft"
+                    elif labelright is not None and position[0] >= 0:
+                        target = "labelright"
+                if target is not None:
+                    group[target] = group.get(target, []) + [label]
+            return group
+
+        gl = self.lonlines
+        which = "x"
+        if side in ["labelleft", "labelright"]:
+            gl = self.latlines
+            which = "y"
+        for loc, (line, labels) in (gl or {}).items():
+            grouped = group_labels(
+                labels=labels,
+                which=which,
+                **{side: True},
+            )
+            for label in grouped.get(side, []):
+                if label.get_visible():
+                    return True
+        return False
+
+
 class _LonAxis(_GeoAxis):
     """
     Axis with default longitude locator.
@@ -363,7 +708,7 @@ class _LonAxis(_GeoAxis):
     # NOTE: Basemap accepts tick formatters with drawmeridians(fmt=Formatter())
     # Try to use cartopy formatter if cartopy installed. Otherwise use
     # default builtin basemap formatting.
-    def __init__(self, axes):
+    def __init__(self, axes: "GeoAxes") -> None:
         super().__init__(axes)
         if self._use_dms:
             locator = formatter = "dmslon"
@@ -376,7 +721,7 @@ class _LonAxis(_GeoAxis):
         self.set_major_locator(constructor.Locator(locator), default=True)
         self.set_minor_locator(mticker.AutoMinorLocator(), default=True)
 
-    def _get_ticklocs(self, locator):
+    def _get_ticklocs(self, locator: mticker.Locator) -> np.ndarray:
         # Prevent ticks from looping around
         # NOTE: Cartopy 0.17 formats numbers offset by eps with the cardinal indicator
         # (e.g. 0 degrees for map centered on 180 degrees). So skip in that case.
@@ -413,7 +758,7 @@ class _LonAxis(_GeoAxis):
 
         return ticks
 
-    def get_view_interval(self):
+    def get_view_interval(self) -> tuple[float, float]:
         # NOTE: ultraplot tries to set its *own* view intervals to avoid dateline
         # weirdness, but if rc['geo.extent'] is 'auto' the interval will be unset.
         # In this case we use _get_extent() as a backup.
@@ -431,7 +776,7 @@ class _LatAxis(_GeoAxis):
 
     axis_name = "lat"
 
-    def __init__(self, axes, latmax=90):
+    def __init__(self, axes: "GeoAxes", latmax: float = 90) -> None:
         # NOTE: Need to pass projection because lataxis/lonaxis are
         # initialized before geoaxes is initialized, because format() needs
         # the axes and format() is called by ultraplot.axes.Axes.__init__()
@@ -445,7 +790,7 @@ class _LatAxis(_GeoAxis):
         self.set_major_locator(constructor.Locator(locator), default=True)
         self.set_minor_locator(mticker.AutoMinorLocator(), default=True)
 
-    def _get_ticklocs(self, locator):
+    def _get_ticklocs(self, locator: mticker.Locator) -> np.ndarray:
         # Adjust latitude ticks to fix bug in some projections. Harmless for basemap.
         # NOTE: Maybe this was fixed by cartopy 0.18?
         eps = 1e-10
@@ -467,17 +812,17 @@ class _LatAxis(_GeoAxis):
 
         return ticks
 
-    def get_latmax(self):
+    def get_latmax(self) -> float:
         return self._latmax
 
-    def get_view_interval(self):
+    def get_view_interval(self) -> tuple[float, float]:
         interval = self._interval
         if interval is None:
             extent = self._get_extent()
             interval = extent[2:]  # latitudes
         return interval
 
-    def set_latmax(self, latmax):
+    def set_latmax(self, latmax: float) -> None:
         self._latmax = latmax
 
 
@@ -509,7 +854,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     """
 
     @docstring._snippet_manager
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
         Parameters
         ----------
@@ -535,17 +880,19 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         ultraplot.figure.Figure.subplot
         ultraplot.figure.Figure.add_subplot
         """
+        # Cache of backend-specific gridliner adapters (major/minor).
+        self._gridliner_adapters: dict[str, _GridlinerAdapter] = {}
         super().__init__(*args, **kwargs)
 
     @override
-    def _sharey_limits(self, sharey: "GeoAxes"):
+    def _sharey_limits(self, sharey: "GeoAxes") -> None:
         return self._share_limits_with(sharey, which="y")
 
     @override
-    def _sharex_limits(self, sharex: "GeoAxes"):
+    def _sharex_limits(self, sharex: "GeoAxes") -> None:
         return self._share_limits_with(sharex, which="x")
 
-    def _share_limits_with(self, other: "GeoAxes", which: str):
+    def _share_limits_with(self, other: "GeoAxes", which: str) -> None:
         """
         Safely share limits and tickers without resetting things.
         """
@@ -563,7 +910,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         getattr(self, f"share{which}")(other)
         this_ax._copy_locator_properties(other_ax)
 
-    def _is_rectilinear(self):
+    def _is_rectilinear(self) -> bool:
         return _is_rectilinear_projection(self)
 
     def __share_axis_setup(
@@ -573,7 +920,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         which: str,
         labels: bool,
         limits: bool,
-    ):
+    ) -> None:
         level = getattr(self.figure, f"_share{which}")
         if getattr(self, f"_panel_share{which}_group") and self._is_panel_group_member(
             other
@@ -595,7 +942,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._share_limits_with(other, which=which)
 
     @override
-    def _sharey_setup(self, sharey, *, labels=True, limits=True):
+    def _sharey_setup(
+        self, sharey: "GeoAxes", *, labels: bool = True, limits: bool = True
+    ) -> None:
         """
         Configure shared axes accounting for panels. The input is the
         'parent' axes, from which this one will draw its properties.
@@ -604,12 +953,14 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         return self.__share_axis_setup(sharey, which="y", labels=labels, limits=limits)
 
     @override
-    def _sharex_setup(self, sharex, *, labels=True, limits=True):
+    def _sharex_setup(
+        self, sharex: "GeoAxes", *, labels: bool = True, limits: bool = True
+    ) -> None:
         # Share panels across *different* subplots
         super()._sharex_setup(sharex, labels=labels, limits=limits)
         return self.__share_axis_setup(sharex, which="x", labels=labels, limits=limits)
 
-    def _toggle_ticks(self, label: "str | None", which: str):
+    def _toggle_ticks(self, label: str | None, which: str) -> None:
         """
         Ticks are controlled by matplotlib independent of the backend. We can toggle ticks on and of depending on the desired position.
         """
@@ -647,7 +998,120 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     f"Not toggling {label=}. Input was not understood. Valid values are ['left', 'right', 'top', 'bottom', 'all', 'both']"
                 )
 
-    def _apply_axis_sharing(self):
+    def _set_gridliner_adapter(
+        self, which: str, adapter: Optional[_GridlinerAdapter]
+    ) -> None:
+        if adapter is None:
+            self._gridliner_adapters.pop(which, None)
+        else:
+            self._gridliner_adapters[which] = adapter
+
+    def _get_gridliner_adapter(self, which: str) -> Optional[_GridlinerAdapter]:
+        return self._gridliner_adapters.get(which)
+
+    def _gridliner_adapter(
+        self, which: str, *, create: bool = True
+    ) -> Optional[_GridlinerAdapter]:
+        """
+        Return a cached gridliner adapter, optionally creating it via the backend
+        builder when missing.
+        """
+        adapter = self._get_gridliner_adapter(which)
+        if adapter is None and create:
+            builder = getattr(self, "_build_gridliner_adapter", None)
+            if builder is not None:
+                adapter = builder(which)
+                self._set_gridliner_adapter(which, adapter)
+        return adapter
+
+    def _gridliner_tick_positions(
+        self, axis: str, *, which: str = "major"
+    ) -> np.ndarray:
+        """
+        Return tick positions from the backend gridliner for a given axis.
+        """
+        # Basemap stores line collections keyed by tick location; cartopy uses locators.
+        if axis not in ("x", "y"):
+            raise ValueError(f"Invalid axis: {axis!r}")
+        adapter = self._gridliner_adapter(which)
+        if isinstance(adapter, _BasemapGridlinerAdapter):
+            # Basemap uses dicts keyed by numeric locations rather than locator objects.
+            locator = adapter.lonlines if axis == "x" else adapter.latlines
+            if not locator:
+                return np.asarray([])
+            return np.asarray(list(locator.keys()))
+
+        gl = getattr(self, f"_gridlines_{which}", None)
+        if gl is None:
+            return np.asarray([])
+        if axis == "x":
+            locator = gl.xlocator
+            return self._lonaxis._get_ticklocs(locator)
+        locator = gl.ylocator
+        return self._lataxis._get_ticklocs(locator)
+
+    @override
+    def tick_params(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        Apply tick parameters and mirror a subset of settings onto the backend
+        gridliner artists so gridline labels respond to common tick tweaks.
+        """
+        result = super().tick_params(*args, **kwargs)
+
+        axis = kwargs.get("axis", "both")
+        which = kwargs.get("which", "major")
+        pad = kwargs.get("pad", None)
+        labelsize = kwargs.get("labelsize", None)
+        labelcolor = kwargs.get(
+            "labelcolor", kwargs.get("colors", kwargs.get("color", None))
+        )
+        labelrotation = kwargs.get("labelrotation", None)
+        linecolor = kwargs.get("colors", kwargs.get("color", None))
+        linewidth = kwargs.get("width", kwargs.get("linewidth", None))
+
+        adapters = []
+        if which in ("major", "both"):
+            adapter = self._gridliner_adapter("major")
+            if adapter is not None:
+                adapters.append(adapter)
+        if which in ("minor", "both"):
+            adapter = self._gridliner_adapter("minor")
+            if adapter is not None:
+                adapters.append(adapter)
+
+        if not adapters:
+            return result
+
+        for adapter in adapters:
+            adapter.apply_style(
+                axis=axis,
+                pad=pad,
+                labelsize=labelsize,
+                labelcolor=labelcolor,
+                labelrotation=labelrotation,
+                linecolor=linecolor,
+                linewidth=linewidth,
+            )
+
+        # Toggle label visibility for major gridliners when requested.
+        if which in ("major", "both"):
+            adapter = self._gridliner_adapter("major")
+            toggles = {}
+            if axis in ("x", "both"):
+                for key in ("labelbottom", "labeltop"):
+                    if key in kwargs:
+                        toggles[key] = kwargs[key]
+            if axis in ("y", "both"):
+                for key in ("labelleft", "labelright"):
+                    if key in kwargs:
+                        toggles[key] = kwargs[key]
+            if toggles and adapter is not None:
+                adapter.toggle_labels(**toggles)
+
+        self.stale = True
+        return result
+
+    def _apply_axis_sharing(self) -> None:
         """
         Enforce the "shared" axis labels and axis tick labels. If this is not
         called at drawtime, "shared" labels can be inadvertantly turned off.
@@ -690,7 +1154,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._lataxis.set_view_interval(*self._sharey._lataxis.get_view_interval())
             self._lataxis.set_minor_locator(self._sharey._lataxis.get_minor_locator())
 
-    def _apply_aspect_and_adjust_panels(self, *, tol=1e-9):
+    def _apply_aspect_and_adjust_panels(self, *, tol: float = 1e-9) -> None:
         """
         Apply aspect and then align panels to the adjusted axes box.
 
@@ -702,7 +1166,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self.apply_aspect()
         self._adjust_panel_positions(tol=tol)
 
-    def _adjust_panel_positions(self, *, tol=1e-9):
+    def _adjust_panel_positions(self, *, tol: float = 1e-9) -> None:
         """
         Adjust panel positions to align with the aspect-constrained main axes.
         After apply_aspect() shrinks the main axes, panels should flank the actual
@@ -828,23 +1292,32 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
     def _get_gridliner_labels(
         self,
-        bottom=None,
-        top=None,
-        left=None,
-        right=None,
-    ):
-        raise NotImplementedError("Should be implemented by Cartopy or Basemap Axes")
+        bottom: bool | str | None = None,
+        top: bool | str | None = None,
+        left: bool | str | None = None,
+        right: bool | str | None = None,
+    ) -> dict[str, list[mtext.Text]]:
+        adapter = self._gridliner_adapter("major")
+        if adapter is None:
+            return {}
+        return adapter.labels_for_sides(
+            bottom=bottom,
+            top=top,
+            left=left,
+            right=right,
+        )
 
     def _toggle_gridliner_labels(
         self,
-        labeltop=None,
-        labelbottom=None,
-        labelleft=None,
-        labelright=None,
-        geo=None,
-    ):
+        labeltop: bool | str | None = None,
+        labelbottom: bool | str | None = None,
+        labelleft: bool | str | None = None,
+        labelright: bool | str | None = None,
+        geo: bool | str | None = None,
+    ) -> None:
         """
-        Toggle visibility of gridliner labels for each direction.
+        Toggle visibility of gridliner labels for each direction via the backend
+        adapter.
 
         Parameters
         ----------
@@ -853,29 +1326,29 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         geo : optional
             Not used in this method.
         """
-        # Ensure gridlines_major is fully initialized
-        if any(i is None for i in self.gridlines_major):
+        adapter = self._gridliner_adapter("major")
+        if adapter is None:
             return
-
-        gridlabels = self._get_gridliner_labels(
-            bottom=labelbottom, top=labeltop, left=labelleft, right=labelright
+        adapter.toggle_labels(
+            labelleft=labelleft,
+            labelright=labelright,
+            labelbottom=labelbottom,
+            labeltop=labeltop,
+            geo=geo,
         )
 
-        toggles = {
-            "bottom": labelbottom,
-            "top": labeltop,
-            "left": labelleft,
-            "right": labelright,
-        }
-
-        for direction, toggle in toggles.items():
-            if toggle is None:
-                continue
-            for label in gridlabels.get(direction, []):
-                label.set_visible(bool(toggle) or toggle in ("x", "y"))
+    @override
+    def _is_ticklabel_on(self, side: str) -> bool:
+        """
+        Check if tick labels are visible on the requested side via the backend adapter.
+        """
+        adapter = self._gridliner_adapter("major")
+        if adapter is None:
+            return False
+        return adapter.is_label_on(side)
 
     @override
-    def draw(self, renderer=None, *args, **kwargs):
+    def draw(self, renderer: Any = None, *args: Any, **kwargs: Any) -> None:
         # Perform extra post-processing steps
         # NOTE: In *principle* axis sharing application step goes here. But should
         # already be complete because auto_layout() (called by figure pre-processor)
@@ -883,7 +1356,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self._apply_axis_sharing()
         super().draw(renderer, *args, **kwargs)
 
-    def _get_lonticklocs(self, which="major"):
+    def _get_lonticklocs(self, which: str = "major") -> np.ndarray:
         """
         Retrieve longitude tick locations.
         """
@@ -898,7 +1371,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             lines = axis.get_minorticklocs()
         return lines
 
-    def _get_latticklocs(self, which="major"):
+    def _get_latticklocs(self, which: str = "major") -> np.ndarray:
         """
         Retrieve latitude tick locations.
         """
@@ -909,7 +1382,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             lines = axis.get_minorticklocs()
         return lines
 
-    def _set_view_intervals(self, extent):
+    def _set_view_intervals(self, extent: Sequence[float]) -> None:
         """
         Update view intervals for lon and lat axis.
         """
@@ -917,7 +1390,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self._lataxis.set_view_interval(*extent[2:])
 
     @staticmethod
-    def _to_label_array(arg, lon=True):
+    def _to_label_array(arg: Any, lon: bool = True) -> list[bool | None]:
         """
         Convert labels argument to length-5 boolean array.
         """
@@ -952,6 +1425,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 for char in string:
                     array["lrbtg".index(char)] = True
                 if rc["grid.geolabels"] and any(array):
+                    # Geo labels only apply if any edge labels are enabled.
                     array[4] = True  # possibly toggle geo spine labels
         elif not any(isinstance(_, str) for _ in array):
             if len(array) == 1:
@@ -975,57 +1449,57 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     def format(
         self,
         *,
-        extent=None,
-        round=None,
-        lonlim=None,
-        latlim=None,
-        boundinglat=None,
-        longrid=None,
-        latgrid=None,
-        longridminor=None,
-        latgridminor=None,
-        ticklen=None,
-        lonticklen=None,
-        latticklen=None,
-        latmax=None,
-        nsteps=None,
-        lonlocator=None,
-        lonlines=None,
-        latlocator=None,
-        latlines=None,
-        lonminorlocator=None,
-        lonminorlines=None,
-        latminorlocator=None,
-        latminorlines=None,
-        lonlocator_kw=None,
-        lonlines_kw=None,
-        latlocator_kw=None,
-        latlines_kw=None,
-        lonminorlocator_kw=None,
-        lonminorlines_kw=None,
-        latminorlocator_kw=None,
-        latminorlines_kw=None,
-        lonformatter=None,
-        latformatter=None,
-        lonformatter_kw=None,
-        latformatter_kw=None,
-        labels=None,
-        latlabels=None,
-        lonlabels=None,
-        rotatelabels=None,
-        labelrotation=None,
-        lonlabelrotation=None,
-        latlabelrotation=None,
-        loninline=None,
-        latinline=None,
-        inlinelabels=None,
-        dms=None,
-        labelpad=None,
-        labelcolor=None,
-        labelsize=None,
-        labelweight=None,
-        **kwargs,
-    ):
+        extent: str | None = None,
+        round: bool | None = None,
+        lonlim: tuple[float | None, float | None] | None = None,
+        latlim: tuple[float | None, float | None] | None = None,
+        boundinglat: float | None = None,
+        longrid: bool | None = None,
+        latgrid: bool | None = None,
+        longridminor: bool | None = None,
+        latgridminor: bool | None = None,
+        ticklen: Any = None,
+        lonticklen: Any = None,
+        latticklen: Any = None,
+        latmax: float | None = None,
+        nsteps: int | None = None,
+        lonlocator: Any = None,
+        lonlines: Any = None,
+        latlocator: Any = None,
+        latlines: Any = None,
+        lonminorlocator: Any = None,
+        lonminorlines: Any = None,
+        latminorlocator: Any = None,
+        latminorlines: Any = None,
+        lonlocator_kw: MutableMapping | None = None,
+        lonlines_kw: MutableMapping | None = None,
+        latlocator_kw: MutableMapping | None = None,
+        latlines_kw: MutableMapping | None = None,
+        lonminorlocator_kw: MutableMapping | None = None,
+        lonminorlines_kw: MutableMapping | None = None,
+        latminorlocator_kw: MutableMapping | None = None,
+        latminorlines_kw: MutableMapping | None = None,
+        lonformatter: Any = None,
+        latformatter: Any = None,
+        lonformatter_kw: MutableMapping | None = None,
+        latformatter_kw: MutableMapping | None = None,
+        labels: Any = None,
+        latlabels: Any = None,
+        lonlabels: Any = None,
+        rotatelabels: bool | None = None,
+        labelrotation: float | None = None,
+        lonlabelrotation: float | None = None,
+        latlabelrotation: float | None = None,
+        loninline: bool | None = None,
+        latinline: bool | None = None,
+        inlinelabels: bool | None = None,
+        dms: bool | None = None,
+        labelpad: Any = None,
+        labelcolor: Any = None,
+        labelsize: Any = None,
+        labelweight: Any = None,
+        **kwargs: Any,
+    ) -> None:
         """
         Modify map limits, longitude and latitude
         gridlines, geographic features, and more.
@@ -1234,7 +1708,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # Parent format method
         super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
 
-    def _add_geoticks(self, x_or_y, itick, ticklen):
+    def _add_geoticks(self, x_or_y: str, itick: Any, ticklen: Any) -> None:
         """
         Add tick marks to the geographic axes.
 
@@ -1257,31 +1731,18 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # Skip if no tick size specified
         if size is None:
             return
+        # Convert unit spec to points and apply rc scaling factor.
         size = units(size) * rc["tick.len"]
 
         ax = getattr(self, f"{x_or_y}axis")
 
-        # Get the tick positions based on the locator
-        gl = self.gridlines_major
-        # Note: set_xticks points to a different method than self.[x/y]axis.set_ticks
-        # from the mpl backend. For basemap we are adding the ticks to the mpl backend
-        # and for cartopy we are simple using their functions by showing the axis.
-        if isinstance(gl, tuple):
-            locator = gl[0] if x_or_y == "x" else gl[1]
-            tick_positions = np.asarray(list(locator.keys()))
-            # Turn off the ticks otherwise they are double for
-            # basemap (different from cartopy)
+        # Get the tick positions based on the backend gridliner (adapter-aware).
+        adapter = self._gridliner_adapter("major")
+        is_basemap = self._name == "basemap"
+        tick_positions = self._gridliner_tick_positions(x_or_y, which="major")
+        if is_basemap:
+            # Turn off the ticks otherwise they are double for basemap.
             ax.set_major_formatter(mticker.NullFormatter())
-
-        else:
-            if x_or_y == "x":
-                lim = self._lonaxis.get_view_interval()
-                locator = gl.xlocator
-                tick_positions = self._lonaxis._get_ticklocs(locator)
-            else:
-                lim = self._lataxis.get_view_interval()
-                locator = gl.ylocator
-                tick_positions = self._lataxis._get_ticklocs(locator)
 
         # Always show the ticks
         ax.set_ticks(tick_positions)
@@ -1290,6 +1751,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # Note: set grid_alpha to 0 as it is controlled through the gridlines_major
         # object (which is not the same ticker)
         params = ax.get_tick_params()
+        # Minor ticks are shortened relative to major ticks.
         sizes = [size, 0.6 * size if isinstance(size, (int, float)) else size]
         for size, which in zip(sizes, ["major", "minor"]):
             params.update({"length": size})
@@ -1302,16 +1764,24 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             )
         # Apply tick parameters
         # Move the labels outwards if specified
-        if hasattr(gl, f"{x_or_y}padding"):
+        gl = getattr(self, "_gridlines_major", None)
+        if gl is not None and hasattr(gl, f"{x_or_y}padding"):
+            # Cartopy gridliner padding is in points; 2x matches tick size visually.
             setattr(gl, f"{x_or_y}padding", 2 * size)
-        elif isinstance(gl, tuple):
-            # For basemap backends, emulate the label placement
-            # like how cartopy does this
-            self._add_gridline_labels(ax, gl, padding=size)
+        elif is_basemap and isinstance(adapter, _BasemapGridlinerAdapter):
+            # For basemap backends, emulate the label placement like cartopy.
+            self._add_gridline_labels(
+                ax, (adapter.lonlines, adapter.latlines), padding=size
+            )
 
         self.stale = True
 
-    def _add_gridline_labels(self, ax, gl, padding=8):
+    def _add_gridline_labels(
+        self,
+        ax: maxis.Axis,
+        gl: tuple[MutableMapping, MutableMapping],
+        padding: float | int = 8,
+    ) -> None:
         """
         This function is intended for the Basemap backend
         and mirrors the label placement behavior of Cartopy.
@@ -1345,7 +1815,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     which_line = 1 if shift_scale == 1 else 2
                     tickline = getattr(tick, f"tick{which_line}line")
                     position = np.array(label.get_position())
-                    # Magic numbers are judged by eye (not great)
+                    # Convert points to display units using DPI (72 points per inch).
                     size = (
                         0.5
                         * (tick._size + label.get_fontsize() + padding)
@@ -1359,6 +1829,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
                     if which == "x":
                         # Move y position
+                        # Empirical scaling to mimic cartopy label spacing.
                         position[1] = offset[1] + shift_scale * size * 0.65
                         ha = "center"
                         va = "top" if shift_scale == 1 else "bottom"
@@ -1369,6 +1840,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
                     else:
                         # Move x position
+                        # Empirical scaling to mimic cartopy label spacing.
                         position[0] = offset[0] + shift_scale * size * 0.25
                         ha = "left" if shift_scale == 1 else "right"
                         va = "center"
@@ -1394,7 +1866,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     label.set_visible(False)
 
     @property
-    def gridlines_major(self):
+    def gridlines_major(self) -> Any:
         """
         The cartopy `~cartopy.mpl.gridliner.Gridliner`
         used for major gridlines or a 2-tuple containing the
@@ -1403,13 +1875,17 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         and :func:`~mpl_toolkits.basemap.Basemap.drawparallels`.
         This can be used for customization and debugging.
         """
+        # Refresh adapters so external access sees up-to-date gridliner state.
+        builder = getattr(self, "_build_gridliner_adapter", None)
+        if builder is not None:
+            self._set_gridliner_adapter("major", builder("major"))
         if self._name == "basemap":
             return (self._lonlines_major, self._latlines_major)
         else:
             return self._gridlines_major
 
     @property
-    def gridlines_minor(self):
+    def gridlines_minor(self) -> Any:
         """
         The cartopy `~cartopy.mpl.gridliner.Gridliner`
         used for minor gridlines or a 2-tuple containing the
@@ -1418,13 +1894,17 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         and :func:`~mpl_toolkits.basemap.Basemap.drawparallels`.
         This can be used for customization and debugging.
         """
+        # Refresh adapters so external access sees up-to-date gridliner state.
+        builder = getattr(self, "_build_gridliner_adapter", None)
+        if builder is not None:
+            self._set_gridliner_adapter("minor", builder("minor"))
         if self._name == "basemap":
             return (self._lonlines_minor, self._latlines_minor)
         else:
             return self._gridlines_minor
 
     @property
-    def projection(self):
+    def projection(self) -> Any:
         """
         The cartopy `~cartopy.crs.Projection` or basemap `~mpl_toolkits.basemap.Basemap`
         instance associated with this axes.
@@ -1432,7 +1912,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         return self._map_projection
 
     @projection.setter
-    def projection(self, map_projection):
+    def projection(self, map_projection: Any) -> None:
         cls = self._proj_class
         if not isinstance(map_projection, cls):
             raise ValueError(f"Projection must be a {cls} instance.")
@@ -1469,7 +1949,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
     # NOTE: The rename argument wrapper belongs here instead of format() because
     # these arguments were previously only accepted during initialization.
     @warnings._rename_kwargs("0.10", circular="round", autoextent="extent")
-    def __init__(self, *args, map_projection=None, **kwargs):
+    def __init__(self, *args: Any, map_projection: Any = None, **kwargs: Any) -> None:
         """
         Parameters
         ----------
@@ -1501,7 +1981,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             axis.set_tick_params(which="both", size=0)  # prevent extra label offset
 
     @staticmethod
-    def _get_circle_path(N=100):
+    def _get_circle_path(N: int = 100) -> mpath.Path:
         """
         Return a circle `~matplotlib.path.Path` used as the outline for polar
         stereographic, azimuthal equidistant, Lambert conformal, and gnomonic
@@ -1513,26 +1993,26 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         verts = np.vstack([np.sin(theta), np.cos(theta)]).T
         return mpath.Path(verts * radius + center)
 
-    def _get_global_extent(self):
+    def _get_global_extent(self) -> list[float]:
         """
         Return the global extent with meridian properly shifted.
         """
         lon0 = self._get_lon0()
         return [-180 + lon0, 180 + lon0, -90, 90]
 
-    def _get_lon0(self):
+    def _get_lon0(self) -> float:
         """
         Get the central longitude. Default is ``0``.
         """
         return self.projection.proj4_params.get("lon_0", 0)
 
-    def _init_gridlines(self):
+    def _init_gridlines(self) -> _CartopyGridlinerProtocol:
         """
         Create monkey patched "major" and "minor" gridliners managed by ultraplot.
         """
 
         # Cartopy < 0.18 monkey patch. Helps filter valid coordates to lon_0 +/- 180
-        def _axes_domain(self, *args, **kwargs):
+        def _axes_domain(self, *args: Any, **kwargs: Any) -> tuple[Any, Any]:
             x_range, y_range = type(self)._axes_domain(self, *args, **kwargs)
             if _version_cartopy < "0.18":
                 lon_0 = self.axes.projection.proj4_params.get("lon_0", 0)
@@ -1541,7 +2021,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
 
         # Cartopy >= 0.18 monkey patch. Fixes issue where cartopy draws an overlapping
         # dateline gridline (e.g. polar maps). See the nx -= 1 line in _draw_gridliner
-        def _draw_gridliner(self, *args, **kwargs):  # noqa: E306
+        def _draw_gridliner(self, *args: Any, **kwargs: Any) -> Any:  # noqa: E306
             result = type(self)._draw_gridliner(self, *args, **kwargs)
             if _version_cartopy >= "0.18":
                 lon_lim, _ = self._axes_domain()
@@ -1559,85 +2039,15 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         gl.xlines = gl.ylines = False
         return gl
 
-    @override
-    def _get_gridliner_labels(
-        self,
-        bottom=None,
-        top=None,
-        left=None,
-        right=None,
-    ) -> dict[str, list[mtext.Text]]:
-        sides = {}
-        for dir, side in zip(
-            "bottom top left right".split(), [bottom, top, left, right]
-        ):
-            if side != True:
-                continue
-            if self.gridlines_major is None:
-                continue
-            sides[dir] = getattr(self.gridlines_major, f"{dir}_label_artists")
-        return sides
+    def _build_gridliner_adapter(
+        self, which: str = "major"
+    ) -> Optional[_GridlinerAdapter]:
+        gl = getattr(self, f"_gridlines_{which}", None)
+        if gl is None:
+            return None
+        return _CartopyGridlinerAdapter(gl)
 
-    @staticmethod
-    def _get_side_labels() -> tuple:
-        if _version_cartopy >= "0.18":
-            left_labels = "left_labels"
-            right_labels = "right_labels"
-            bottom_labels = "bottom_labels"
-            top_labels = "top_labels"
-        else:  # cartopy < 0.18
-            left_labels = "ylabels_left"
-            right_labels = "ylabels_right"
-            bottom_labels = "xlabels_bottom"
-            top_labels = "xlabels_top"
-        return (left_labels, right_labels, bottom_labels, top_labels)
-
-    @override
-    def _is_ticklabel_on(self, side: str) -> bool:
-        """
-        Helper function to check if tick labels are on for a given side.
-        """
-        # Deal with different cartopy versions
-        left_labels, right_labels, bottom_labels, top_labels = self._get_side_labels()
-
-        if self.gridlines_major is None:
-            return False
-        elif side == "labelleft":
-            return getattr(self.gridlines_major, left_labels)
-        elif side == "labelright":
-            return getattr(self.gridlines_major, right_labels)
-        elif side == "labelbottom":
-            return getattr(self.gridlines_major, bottom_labels)
-        elif side == "labeltop":
-            return getattr(self.gridlines_major, top_labels)
-        else:
-            raise ValueError(f"Invalid side: {side}")
-
-    @override
-    def _toggle_gridliner_labels(
-        self,
-        labelleft=None,
-        labelright=None,
-        labelbottom=None,
-        labeltop=None,
-        geo=None,
-    ):
-        """
-        Toggle gridliner labels across different cartopy versions.
-        """
-        # Retrieve the property name depending
-        # on cartopy version.
-        side_labels = _CartopyAxes._get_side_labels()
-        togglers = (labelleft, labelright, labelbottom, labeltop)
-        gl = self.gridlines_major
-
-        for toggle, side in zip(togglers, side_labels):
-            if toggle is not None:
-                setattr(gl, side, toggle)
-        if geo is not None:  # only cartopy 0.20 supported but harmless
-            setattr(gl, "geo_labels", geo)
-
-    def _update_background(self, **kwargs):
+    def _update_background(self, **kwargs: Any) -> None:
         """
         Update the map background patches. This is called in `Axes.format`.
         """
@@ -1656,7 +2066,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             self.background_patch.update(kw_face)
             self.outline_patch.update(kw_edge)
 
-    def _update_boundary(self, round=None):
+    def _update_boundary(self, round: bool | None = None) -> None:
         """
         Update the map boundary path.
         """
@@ -1672,7 +2082,9 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             else:
                 warnings._warn_ultraplot("Failed to reset round map boundary.")
 
-    def _update_extent_mode(self, extent=None, boundinglat=None):
+    def _update_extent_mode(
+        self, extent: str | None = None, boundinglat: float | None = None
+    ) -> None:
         """
         Update the extent mode.
         """
@@ -1706,7 +2118,12 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             self.set_autoscalex_on(True)
             self.set_autoscaley_on(True)
 
-    def _update_extent(self, lonlim=None, latlim=None, boundinglat=None):
+    def _update_extent(
+        self,
+        lonlim: tuple[float | None, float | None] | None = None,
+        latlim: tuple[float | None, float | None] | None = None,
+        boundinglat: float | None = None,
+    ) -> None:
         """
         Set the projection extent.
         """
@@ -1769,7 +2186,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                 extent = lonlim + latlim
                 self.set_extent(extent, crs=ccrs.PlateCarree())
 
-    def _update_features(self):
+    def _update_features(self) -> None:
         """
         Update geographic features.
         """
@@ -1824,12 +2241,12 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
 
     def _update_gridlines(
         self,
-        gl,
-        which="major",
-        longrid=None,
-        latgrid=None,
-        nsteps=None,
-    ):
+        gl: _CartopyGridlinerProtocol,
+        which: str = "major",
+        longrid: bool | None = None,
+        latgrid: bool | None = None,
+        nsteps: int | None = None,
+    ) -> None:
         """
         Update gridliner object with axis locators, and toggle gridlines on and off.
         """
@@ -1865,18 +2282,18 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
 
     def _update_major_gridlines(
         self,
-        longrid=None,
-        latgrid=None,
-        lonarray=None,
-        latarray=None,
-        loninline=None,
-        latinline=None,
-        labelpad=None,
-        rotatelabels=None,
-        lonlabelrotation=None,
-        latlabelrotation=None,
-        nsteps=None,
-    ):
+        longrid: bool | None = None,
+        latgrid: bool | None = None,
+        lonarray: Sequence[bool | None] | None = None,
+        latarray: Sequence[bool | None] | None = None,
+        loninline: bool | None = None,
+        latinline: bool | None = None,
+        labelpad: Any = None,
+        rotatelabels: bool | None = None,
+        lonlabelrotation: float | None = None,
+        latlabelrotation: float | None = None,
+        nsteps: int | None = None,
+    ) -> None:
         """
         Update major gridlines.
         """
@@ -1956,8 +2373,14 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                 sides[side] = False
         if sides:
             self._toggle_gridliner_labels(**sides)
+        self._set_gridliner_adapter("major", self._build_gridliner_adapter("major"))
 
-    def _update_minor_gridlines(self, longrid=None, latgrid=None, nsteps=None):
+    def _update_minor_gridlines(
+        self,
+        longrid: bool | None = None,
+        latgrid: bool | None = None,
+        nsteps: int | None = None,
+    ) -> None:
         """
         Update minor gridlines.
         """
@@ -1971,8 +2394,9 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             latgrid=latgrid,
             nsteps=nsteps,
         )
+        self._set_gridliner_adapter("minor", self._build_gridliner_adapter("minor"))
 
-    def get_extent(self, crs=None):
+    def get_extent(self, crs: Any = None) -> Sequence[float]:
         # Get extent and try to repair longitude bounds.
         if crs is None:
             crs = ccrs.PlateCarree()
@@ -1987,7 +2411,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         return extent
 
     @override
-    def draw(self, renderer=None, *args, **kwargs):
+    def draw(self, renderer: Any = None, *args: Any, **kwargs: Any) -> None:
         """
         Override draw to adjust panel positions for cartopy axes.
 
@@ -1998,7 +2422,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         super().draw(renderer, *args, **kwargs)
         self._adjust_panel_positions(tol=self._PANEL_TOL)
 
-    def get_tightbbox(self, renderer, *args, **kwargs):
+    def get_tightbbox(self, renderer: Any, *args: Any, **kwargs: Any) -> Any:
         # Perform extra post-processing steps
         # For now this just draws the gridliners
         self._apply_axis_sharing()
@@ -2037,7 +2461,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
 
         return super().get_tightbbox(renderer, *args, **kwargs)
 
-    def set_extent(self, extent, crs=None):
+    def set_extent(self, extent: Sequence[float], crs: Any = None) -> Any:
         # Fix paths, so axes tight bounding box gets correct box! From this issue:
         # https://github.com/SciTools/cartopy/issues/1207#issuecomment-439975083
         # Also record the requested longitude latitude extent so we can use these
@@ -2063,7 +2487,7 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                 self.background_patch._path = clipped_path
         return super().set_extent(extent, crs=crs)
 
-    def set_global(self):
+    def set_global(self) -> Any:
         # Set up "global" extent and update _LatAxis and _LonAxis view intervals
         result = super().set_global()
         self._set_view_intervals(self._get_global_extent())
@@ -2095,7 +2519,7 @@ class _BasemapAxes(GeoAxes):
     )
     _PANEL_TOL = 1e-6
 
-    def __init__(self, *args, map_projection=None, **kwargs):
+    def __init__(self, *args: Any, map_projection: Any = None, **kwargs: Any) -> None:
         """
         Parameters
         ----------
@@ -2144,7 +2568,7 @@ class _BasemapAxes(GeoAxes):
         self._turnoff_tick_labels(self._lonlines_major)
         self._turnoff_tick_labels(self._latlines_major)
 
-    def get_tightbbox(self, renderer, *args, **kwargs):
+    def get_tightbbox(self, renderer: Any, *args: Any, **kwargs: Any) -> Any:
         """
         Get tight bounding box, adjusting panel positions after aspect is applied.
 
@@ -2157,7 +2581,7 @@ class _BasemapAxes(GeoAxes):
         return super().get_tightbbox(renderer, *args, **kwargs)
 
     @override
-    def draw(self, renderer=None, *args, **kwargs):
+    def draw(self, renderer: Any = None, *args: Any, **kwargs: Any) -> None:
         """
         Override draw to adjust panel positions for basemap axes.
 
@@ -2167,7 +2591,7 @@ class _BasemapAxes(GeoAxes):
         super().draw(renderer, *args, **kwargs)
         self._adjust_panel_positions(tol=self._PANEL_TOL)
 
-    def _turnoff_tick_labels(self, locator: mticker.Formatter):
+    def _turnoff_tick_labels(self, locator: MutableMapping) -> None:
         """
         For GeoAxes with are dealing with a duality. Basemap axes behave differently than Cartopy axes and vice versa. UltraPlot abstracts away from these by providing GeoAxes. For basemap axes we need to turn off the tick labels as they will be handles by GeoAxis
         """
@@ -2179,48 +2603,14 @@ class _BasemapAxes(GeoAxes):
                 if isinstance(object, mtext.Text):
                     object.set_visible(False)
 
-    def _get_gridliner_labels(
-        self,
-        bottom=None,
-        top=None,
-        left=None,
-        right=None,
-    ):
-        directions = "left right top bottom".split()
-        bools = [left, right, top, bottom]
-        sides = {}
-        for direction, is_on in zip(directions, bools):
-            if is_on is None:
-                continue
-            gl = self.gridlines_major[0]
-            if direction in ["left", "right"]:
-                gl = self.gridlines_major[1]
-            for loc, (lines, labels) in gl.items():
-                for label in labels:
-                    position = label.get_position()
-                    match direction:
-                        case "top" if position[1] > 0:
-                            add = True
-                        case "bottom" if position[1] < 0:
-                            add = True
-                        case "left" if position[0] < 0:
-                            add = True
-                        case "right" if position[0] > 0:
-                            add = True
-                        case _:
-                            add = False
-                    if add:
-                        sides.setdefault(direction, []).append(label)
-        return sides
-
-    def _get_lon0(self):
+    def _get_lon0(self) -> float:
         """
         Get the central longitude.
         """
         return getattr(self.projection, "projparams", {}).get("lon_0", 0)
 
     @staticmethod
-    def _iter_gridlines(dict_):
+    def _iter_gridlines(dict_: MutableMapping) -> Iterator[Any]:
         """
         Iterate over longitude latitude lines.
         """
@@ -2230,7 +2620,16 @@ class _BasemapAxes(GeoAxes):
                 for obj in pj:
                     yield obj
 
-    def _update_background(self, **kwargs):
+    def _build_gridliner_adapter(
+        self, which: str = "major"
+    ) -> Optional[_GridlinerAdapter]:
+        lonlines = getattr(self, f"_lonlines_{which}", None)
+        latlines = getattr(self, f"_latlines_{which}", None)
+        if lonlines is None or latlines is None:
+            return None
+        return _BasemapGridlinerAdapter(lonlines, latlines)
+
+    def _update_background(self, **kwargs: Any) -> None:
         """
         Update the map boundary patches. This is called in `Axes.format`.
         """
@@ -2249,7 +2648,7 @@ class _BasemapAxes(GeoAxes):
             for spine in self.spines.values():
                 spine.update(kw_edge)
 
-    def _update_boundary(self, round=None):
+    def _update_boundary(self, round: bool | None = None) -> None:
         """
         No-op. Boundary mode cannot be changed in basemap.
         """
@@ -2263,7 +2662,9 @@ class _BasemapAxes(GeoAxes):
                 "instead (e.g. using the uplt.subplots() dictionary keyword 'proj_kw')."
             )
 
-    def _update_extent_mode(self, extent=None, boundinglat=None):  # noqa: U100
+    def _update_extent_mode(
+        self, extent: str | None = None, boundinglat: float | None = None
+    ) -> None:  # noqa: U100
         """
         No-op. Extent mode cannot be changed in basemap.
         """
@@ -2280,7 +2681,12 @@ class _BasemapAxes(GeoAxes):
                 "in basemap projections. Please consider switching to cartopy."
             )
 
-    def _update_extent(self, lonlim=None, latlim=None, boundinglat=None):
+    def _update_extent(
+        self,
+        lonlim: tuple[float | None, float | None] | None = None,
+        latlim: tuple[float | None, float | None] | None = None,
+        boundinglat: float | None = None,
+    ) -> None:
         """
         No-op. Map bounds cannot be changed in basemap.
         """
@@ -2297,7 +2703,7 @@ class _BasemapAxes(GeoAxes):
                 "'width', or 'height'."
             )
 
-    def _update_features(self):
+    def _update_features(self) -> None:
         """
         Update geographic features.
         """
@@ -2329,14 +2735,14 @@ class _BasemapAxes(GeoAxes):
 
     def _update_gridlines(
         self,
-        which="major",
-        longrid=None,
-        latgrid=None,
-        lonarray=None,
-        latarray=None,
-        lonlabelrotation=None,
-        latlabelrotation=None,
-    ):
+        which: str = "major",
+        longrid: bool | None = None,
+        latgrid: bool | None = None,
+        lonarray: Sequence[bool | None] | None = None,
+        latarray: Sequence[bool | None] | None = None,
+        lonlabelrotation: float | None = None,
+        latlabelrotation: float | None = None,
+    ) -> None:
         """
         Apply changes to the basemap axes.
         """
@@ -2416,18 +2822,18 @@ class _BasemapAxes(GeoAxes):
 
     def _update_major_gridlines(
         self,
-        longrid=None,
-        latgrid=None,
-        lonarray=None,
-        latarray=None,
-        loninline=None,
-        latinline=None,
-        rotatelabels=None,
-        lonlabelrotation=None,
-        latlabelrotation=None,
-        labelpad=None,
-        nsteps=None,
-    ):
+        longrid: bool | None = None,
+        latgrid: bool | None = None,
+        lonarray: Sequence[bool | None] | None = None,
+        latarray: Sequence[bool | None] | None = None,
+        loninline: bool | None = None,
+        latinline: bool | None = None,
+        rotatelabels: bool | None = None,
+        lonlabelrotation: float | None = None,
+        latlabelrotation: float | None = None,
+        labelpad: Any = None,
+        nsteps: int | None = None,
+    ) -> None:
         """
         Update major gridlines.
         """
@@ -2448,8 +2854,14 @@ class _BasemapAxes(GeoAxes):
             if lonon or laton:
                 sides[side] = True
         self._toggle_gridliner_labels(**sides)
+        self._set_gridliner_adapter("major", self._build_gridliner_adapter("major"))
 
-    def _update_minor_gridlines(self, longrid=None, latgrid=None, nsteps=None):
+    def _update_minor_gridlines(
+        self,
+        longrid: bool | None = None,
+        latgrid: bool | None = None,
+        nsteps: int | None = None,
+    ) -> None:
         """
         Update minor gridlines.
         """
@@ -2465,6 +2877,7 @@ class _BasemapAxes(GeoAxes):
             lonlabelrotation=None,
             latlabelrotation=None,
         )
+        self._set_gridliner_adapter("minor", self._build_gridliner_adapter("minor"))
         # Set isDefault_majloc, etc. to True for both axes
         # NOTE: This cannot be done inside _update_gridlines or minor gridlines
         # will not update to reflect new major gridline locations.
@@ -2473,70 +2886,13 @@ class _BasemapAxes(GeoAxes):
             axis.isDefault_majloc = True
             axis.isDefault_minloc = True
 
-    @override
-    def _is_ticklabel_on(self, side: str) -> bool:
-        # For basemap object, the text is organized
-        # as a dictionary. The keys are the numerical
-        # location values, and the values are a list
-        # where the version item is the tick and the
-        # the rest are mtext.Text objects. The labels
-        # are clustereed on the location per axis.
-        # This means that top and bottom labels are assigned
-        # to the same numerical loc.
-        # We therefore create a mapping per direction to make
-        # it more semantically logical.
-        def group_labels(
-            labels: list[mtext.Text],
-            which: str,
-            labelbottom=None,
-            labeltop=None,
-            labelleft=None,
-            labelright=None,
-        ) -> dict[str, list[mtext.Text]]:
-            group = {}
-            # We take zero here as a baseline
-            for label in labels:
-                position = label.get_position()
-                target = None
-                if which == "x":
-                    if labelbottom is not None and position[1] < 0:
-                        target = "labelbottom"
-                    elif labeltop is not None and position[1] >= 0:
-                        target = "labeltop"
-                else:
-                    if labelleft is not None and position[0] < 0:
-                        target = "labelleft"
-                    elif labelright is not None and position[0] >= 0:
-                        target = "labelright"
-                if target is not None:
-                    group[target] = group.get(target, []) + [label]
-            return group
-
-        gl = self.gridlines_major[0]
-        which = "x"
-        if side in ["labelleft", "labelright"]:
-            gl = self.gridlines_major[1]
-            which = "y"
-        # Group the text object based on their location
-        grouped = {}
-        for loc, (line, labels) in gl.items():
-            labels = group_labels(
-                labels=labels,
-                which=which,
-                **{side: True},
-            )
-            for label in labels.get(side, []):
-                if label.get_visible():
-                    return True
-        return False
-
 
 # Apply signature obfuscation after storing previous signature
 GeoAxes._format_signatures[GeoAxes] = inspect.signature(GeoAxes.format)
 GeoAxes.format = docstring._obfuscate_kwargs(GeoAxes.format)
 
 
-def _is_rectilinear_projection(ax):
+def _is_rectilinear_projection(ax: Any) -> bool:
     """Check if the axis has a flat projection (works with Cartopy)."""
     # Determine what the projection function is
     # Create a square and determine if the lengths are preserved
