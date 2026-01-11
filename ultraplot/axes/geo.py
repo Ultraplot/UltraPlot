@@ -2788,6 +2788,9 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             allow_xy=True,
             include_false=True,
         )
+        if not sides and lonarray is not None and latarray is not None:
+            # Preserve legacy behavior by calling the toggle even for no-op arrays.
+            sides = {side: None for side in _CARTOPY_LABEL_SIDES}
         if sides:
             self._toggle_gridliner_labels(**sides)
         self._set_gridliner_adapter("major", self._build_gridliner_adapter("major"))
