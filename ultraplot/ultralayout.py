@@ -324,49 +324,6 @@ class UltraLayoutSolver:
                 height = remaining_height * self.hratios[i] / ratio_sum
             self.solver.addConstraint(self.row_tops[i] == self.row_bottoms[i] + height)
 
-        # 6. Add aesthetic constraints for non-orthogonal layouts
-        self._add_aesthetic_constraints()
-
-    def _add_aesthetic_constraints(self):
-        """
-        Add constraints to make non-orthogonal layouts look nice.
-
-        For subplots that span cells in non-aligned ways, we add constraints
-        to center them or align them aesthetically with neighboring subplots.
-        """
-        # Cache subplot bounds for neighbor lookups.
-        bboxes = {}
-        for num in self.subplot_nums:
-            rows, cols = np.where(self.array == num)
-            bboxes[num] = (rows.min(), rows.max(), cols.min(), cols.max())
-
-        # Analyze the layout to find subplots that need special handling.
-        for num in self.subplot_nums:
-            row_min, row_max, col_min, col_max = bboxes[num]
-
-            # Check if this subplot has empty cells on its sides.
-            left_empty = False
-            right_empty = False
-            if col_min > 0:
-                left_cells = self.array[row_min : row_max + 1, col_min - 1]
-                left_empty = np.all(left_cells == 0)
-            if col_max < self.ncols - 1:
-                right_cells = self.array[row_min : row_max + 1, col_max + 1]
-                right_empty = np.all(right_cells == 0)
-
-            # If empty on both sides, try to center between neighboring subplots.
-            if left_empty and right_empty:
-                self._center_between_neighbors(
-                    num, row_min, row_max, col_min, col_max, bboxes
-                )
-                continue
-
-            # Otherwise try to align with neighbors on the empty side.
-            if left_empty:
-                self._try_align_with_neighbors(num, "left", row_min, row_max, col_min)
-            if right_empty:
-                self._try_align_with_neighbors(num, "right", row_min, row_max, col_max)
-
     def solve(self) -> Dict[int, Tuple[float, float, float, float]]:
         """
         Solve the constraint system and return subplot positions.
