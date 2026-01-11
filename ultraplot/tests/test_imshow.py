@@ -1,7 +1,8 @@
+import numpy as np
 import pytest
-
-import ultraplot as plt, numpy as np
 from matplotlib.testing import setup
+
+import ultraplot as plt
 
 
 @pytest.fixture()

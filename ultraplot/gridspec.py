@@ -1181,8 +1181,11 @@ class GridSpec(mgridspec.GridSpec):
 
         # Update the layout
         figsize = self._update_figsize()
-        if not fig._is_same_size(figsize):
-            fig.set_size_inches(figsize, internal=True)
+        eps = 0.01
+        if fig._refwidth is not None or fig._refheight is not None:
+            eps = 0
+        if not fig._is_same_size(figsize, eps=eps):
+            fig.set_size_inches(figsize, internal=True, eps=0)
 
     def _auto_layout_tight(self, renderer):
         """
@@ -1240,8 +1243,11 @@ class GridSpec(mgridspec.GridSpec):
         # spaces (necessary since native position coordinates are figure-relative)
         # and to enforce fixed panel ratios. So only self.update() if we skip resize.
         figsize = self._update_figsize()
-        if not fig._is_same_size(figsize):
-            fig.set_size_inches(figsize, internal=True)
+        eps = 0.01
+        if fig._refwidth is not None or fig._refheight is not None:
+            eps = 0  # force resize when explicit reference sizing is requested
+        if not fig._is_same_size(figsize, eps=eps):
+            fig.set_size_inches(figsize, internal=True, eps=0)
         else:
             self.update()
 
@@ -1258,14 +1264,14 @@ class GridSpec(mgridspec.GridSpec):
             return
         ss = ax.get_subplotspec().get_topmost_subplotspec()
         y1, y2, x1, x2 = ss._get_rows_columns()
-        refhspace = sum(self.hspace_total[y1:y2])
-        refwspace = sum(self.wspace_total[x1:x2])
-        refhpanel = sum(
-            self.hratios_total[i] for i in range(y1, y2 + 1) if self._hpanels[i]
-        )  # noqa: E501
-        refwpanel = sum(
-            self.wratios_total[i] for i in range(x1, x2 + 1) if self._wpanels[i]
-        )  # noqa: E501
+        # NOTE: Reference width/height should correspond to the span of the *axes*
+        # themselves. Spaces between rows/columns and adjacent panel slots should
+        # not reduce the target size; those are accounted for separately when the
+        # full figure size is rebuilt below.
+        refhspace = 0
+        refwspace = 0
+        refhpanel = 0
+        refwpanel = 0
         refhsubplot = sum(
             self.hratios_total[i] for i in range(y1, y2 + 1) if not self._hpanels[i]
         )  # noqa: E501
@@ -1277,6 +1283,10 @@ class GridSpec(mgridspec.GridSpec):
         # NOTE: The sizing arguments should have been normalized already
         figwidth, figheight = fig._figwidth, fig._figheight
         refwidth, refheight = fig._refwidth, fig._refheight
+        if refwidth is not None:
+            figwidth = None  # prefer explicit reference sizing over preset fig size
+        if refheight is not None:
+            figheight = None
         refaspect = _not_none(fig._refaspect, fig._refaspect_default)
         if refheight is None and figheight is None:
             if figwidth is not None:
@@ -1306,6 +1316,15 @@ class GridSpec(mgridspec.GridSpec):
             refwidth -= refwspace + refwpanel
             gridwidth = refwidth * self.gridwidth / refwsubplot
             figwidth = gridwidth + self.spacewidth + self.panelwidth
+
+        # Snap explicit reference-driven sizes to the pixel grid to avoid
+        # rounding the axes width below the requested reference size.
+        if fig and (fig._refwidth is not None or fig._refheight is not None):
+            dpi = _not_none(getattr(fig, "dpi", None), 72)
+            if figwidth is not None:
+                figwidth = round(figwidth * dpi) / dpi
+            if figheight is not None:
+                figheight = round(figheight * dpi) / dpi
 
         # Return the figure size
         figsize = (figwidth, figheight)
