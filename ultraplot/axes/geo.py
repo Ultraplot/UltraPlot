@@ -57,6 +57,14 @@ except ModuleNotFoundError:
 
 __all__ = ["GeoAxes"]
 
+# Basemap gridlines are dicts keyed by location containing (lines, labels).
+GridlineDict = MutableMapping[float, tuple[list[Any], list[mtext.Text]]]
+_GRIDLINER_PAD_SCALE = 2.0  # points; matches tick size visually
+_MINOR_TICK_SCALE = 0.6  # relative to major tick length
+_BASEMAP_LABEL_SIZE_SCALE = 0.5  # empirical scaling for label offset
+_BASEMAP_LABEL_Y_SCALE = 0.65  # empirical spacing to mimic cartopy
+_BASEMAP_LABEL_X_SCALE = 0.25  # empirical spacing to mimic cartopy
+
 
 # Format docstring
 _format_docstring = """
@@ -555,8 +563,8 @@ class _BasemapGridlinerAdapter(_GridlinerAdapter):
 
     def __init__(
         self,
-        lonlines: MutableMapping | None,
-        latlines: MutableMapping | None,
+        lonlines: GridlineDict | None,
+        latlines: GridlineDict | None,
     ) -> None:
         self.lonlines = lonlines
         self.latlines = latlines
@@ -1752,7 +1760,10 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # object (which is not the same ticker)
         params = ax.get_tick_params()
         # Minor ticks are shortened relative to major ticks.
-        sizes = [size, 0.6 * size if isinstance(size, (int, float)) else size]
+        sizes = [
+            size,
+            _MINOR_TICK_SCALE * size if isinstance(size, (int, float)) else size,
+        ]
         for size, which in zip(sizes, ["major", "minor"]):
             params.update({"length": size})
             params.pop("grid_alpha", None)
@@ -1766,8 +1777,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # Move the labels outwards if specified
         gl = getattr(self, "_gridlines_major", None)
         if gl is not None and hasattr(gl, f"{x_or_y}padding"):
-            # Cartopy gridliner padding is in points; 2x matches tick size visually.
-            setattr(gl, f"{x_or_y}padding", 2 * size)
+            # Cartopy gridliner padding is in points; scale matches tick size visually.
+            setattr(gl, f"{x_or_y}padding", _GRIDLINER_PAD_SCALE * size)
         elif is_basemap and isinstance(adapter, _BasemapGridlinerAdapter):
             # For basemap backends, emulate the label placement like cartopy.
             self._add_gridline_labels(
@@ -1779,7 +1790,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     def _add_gridline_labels(
         self,
         ax: maxis.Axis,
-        gl: tuple[MutableMapping, MutableMapping],
+        gl: tuple[GridlineDict, GridlineDict],
         padding: float | int = 8,
     ) -> None:
         """
@@ -1817,7 +1828,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     position = np.array(label.get_position())
                     # Convert points to display units using DPI (72 points per inch).
                     size = (
-                        0.5
+                        _BASEMAP_LABEL_SIZE_SCALE
                         * (tick._size + label.get_fontsize() + padding)
                         * self.figure.dpi
                         / 72
@@ -1830,7 +1841,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     if which == "x":
                         # Move y position
                         # Empirical scaling to mimic cartopy label spacing.
-                        position[1] = offset[1] + shift_scale * size * 0.65
+                        position[1] = (
+                            offset[1] + shift_scale * size * _BASEMAP_LABEL_Y_SCALE
+                        )
                         ha = "center"
                         va = "top" if shift_scale == 1 else "bottom"
                         if shift_scale == 1:
@@ -1841,7 +1854,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     else:
                         # Move x position
                         # Empirical scaling to mimic cartopy label spacing.
-                        position[0] = offset[0] + shift_scale * size * 0.25
+                        position[0] = (
+                            offset[0] + shift_scale * size * _BASEMAP_LABEL_X_SCALE
+                        )
                         ha = "left" if shift_scale == 1 else "right"
                         va = "center"
                         if shift_scale == 1:
@@ -2006,12 +2021,14 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         """
         return self.projection.proj4_params.get("lon_0", 0)
 
-    def _init_gridlines(self) -> _CartopyGridlinerProtocol:
+    @staticmethod
+    def _gridliner_axes_domain_patch(
+        gl: _CartopyGridlinerProtocol,
+    ) -> Any:
         """
-        Create monkey patched "major" and "minor" gridliners managed by ultraplot.
+        Return a patched _axes_domain method accounting for cartopy < 0.18.
         """
 
-        # Cartopy < 0.18 monkey patch. Helps filter valid coordates to lon_0 +/- 180
         def _axes_domain(self, *args: Any, **kwargs: Any) -> tuple[Any, Any]:
             x_range, y_range = type(self)._axes_domain(self, *args, **kwargs)
             if _version_cartopy < "0.18":
@@ -2019,8 +2036,16 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                 x_range = np.asarray(x_range) + lon_0
             return x_range, y_range
 
-        # Cartopy >= 0.18 monkey patch. Fixes issue where cartopy draws an overlapping
-        # dateline gridline (e.g. polar maps). See the nx -= 1 line in _draw_gridliner
+        return _axes_domain.__get__(gl)
+
+    @staticmethod
+    def _gridliner_draw_patch(
+        gl: _CartopyGridlinerProtocol,
+    ) -> Any:
+        """
+        Return a patched _draw_gridliner method to avoid duplicate dateline lines.
+        """
+
         def _draw_gridliner(self, *args: Any, **kwargs: Any) -> Any:  # noqa: E306
             result = type(self)._draw_gridliner(self, *args, **kwargs)
             if _version_cartopy >= "0.18":
@@ -2032,10 +2057,17 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                             collection._cartopy_fix = True
             return result
 
+        return _draw_gridliner.__get__(gl)
+
+    def _init_gridlines(self) -> _CartopyGridlinerProtocol:
+        """
+        Create monkey patched "major" and "minor" gridliners managed by ultraplot.
+        """
+
         # Return the gridliner with monkey patch
         gl = self.gridlines(crs=ccrs.PlateCarree())
-        gl._axes_domain = _axes_domain.__get__(gl)
-        gl._draw_gridliner = _draw_gridliner.__get__(gl)
+        gl._axes_domain = self._gridliner_axes_domain_patch(gl)
+        gl._draw_gridliner = self._gridliner_draw_patch(gl)
         gl.xlines = gl.ylines = False
         return gl
 
@@ -2591,7 +2623,7 @@ class _BasemapAxes(GeoAxes):
         super().draw(renderer, *args, **kwargs)
         self._adjust_panel_positions(tol=self._PANEL_TOL)
 
-    def _turnoff_tick_labels(self, locator: MutableMapping) -> None:
+    def _turnoff_tick_labels(self, locator: GridlineDict) -> None:
         """
         For GeoAxes with are dealing with a duality. Basemap axes behave differently than Cartopy axes and vice versa. UltraPlot abstracts away from these by providing GeoAxes. For basemap axes we need to turn off the tick labels as they will be handles by GeoAxis
         """
@@ -2610,7 +2642,7 @@ class _BasemapAxes(GeoAxes):
         return getattr(self.projection, "projparams", {}).get("lon_0", 0)
 
     @staticmethod
-    def _iter_gridlines(dict_: MutableMapping) -> Iterator[Any]:
+    def _iter_gridlines(dict_: GridlineDict | None) -> Iterator[Any]:
         """
         Iterate over longitude latitude lines.
         """
