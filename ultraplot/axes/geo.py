@@ -1894,6 +1894,11 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     f"Projection is not rectilinear. Ignoring {lonticklen=} and {latticklen=} settings."
                 )
 
+    # Format flow:
+    # 1) init basemap boundary
+    # 2) enter rc context and resolve label/locator/formatter inputs
+    # 3) apply extent, features, and gridlines
+    # 4) apply tick lengths and defer to parent format
     @docstring._snippet_manager
     def format(
         self,
