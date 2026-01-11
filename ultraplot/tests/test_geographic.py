@@ -627,6 +627,29 @@ def test_get_gridliner_labels_basemap():
     uplt.close(fig)
 
 
+def test_toggle_gridliner_labels_basemap():
+    fig, ax = uplt.subplots(proj="cyl", backend="basemap")
+    ax[0].format(labels="both", lonlines=30, latlines=30)
+    fig.canvas.draw()
+
+    ax[0]._toggle_gridliner_labels(
+        labelbottom=False,
+        labeltop=True,
+        labelleft=True,
+        labelright=True,
+    )
+    labels = ax[0]._get_gridliner_labels(bottom=True, top=True, left=True, right=True)
+    assert labels.get("bottom")
+    assert labels.get("top")
+    assert labels.get("left")
+    assert labels.get("right")
+    assert all(not label.get_visible() for label in labels["bottom"])
+    assert any(label.get_visible() for label in labels["top"])
+    assert any(label.get_visible() for label in labels["left"])
+    assert any(label.get_visible() for label in labels["right"])
+    uplt.close(fig)
+
+
 @pytest.mark.parametrize("backend", ["cartopy", "basemap"])
 def test_tick_params_updates_gridliner(backend):
     fig, ax = uplt.subplots(proj="cyl", backend=backend)
@@ -689,6 +712,19 @@ def test_tick_params_updates_gridliner(backend):
         assert line_colors and all(c == expected_line_color for c in line_colors)
         assert line_widths and all(np.isclose(w, 1.5) for w in line_widths)
 
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_gridliner_adapter_refresh(backend):
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    ax[0].format(lonlines=30, latlines=30, labels=True)
+    assert ax[0]._gridliner_adapter("major", create=False) is not None
+
+    ax[0]._gridliner_adapters.pop("major", None)
+    assert ax[0]._gridliner_adapter("major", create=False) is None
+    _ = ax[0].gridlines_major
+    assert ax[0]._gridliner_adapter("major", create=False) is not None
     uplt.close(fig)
 
 
