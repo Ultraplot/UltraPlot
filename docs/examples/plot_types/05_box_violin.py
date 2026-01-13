@@ -31,7 +31,7 @@ axs[0].boxplot(data, lw=1.5, fillcolor="gray4", medianlw=2)
 axs[0].format(title="Box plot", xlabel="Distribution", ylabel="Value")
 
 # Violin plot
-axs[1].violinplot(data, lw=1, fillcolor="gray6", fillalpha=0.5)
+axs[1].violinplot(data, lw=1, fillcolor="gray6")
 axs[1].format(title="Violin plot", xlabel="Distribution", ylabel="Value")
 
 axs.format(suptitle="Statistical distributions")

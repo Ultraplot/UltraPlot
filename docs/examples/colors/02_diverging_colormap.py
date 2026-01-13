@@ -32,13 +32,19 @@ fig, axs = uplt.subplots(ncols=2, refwidth=3)
 
 # 1. Automatic diverging
 # UltraPlot detects Z spans -1 to +1 and uses the default diverging map
-m1 = axs[0].pcolormesh(X, Y, Z, cmap="Div", colorbar="b")
+m1 = axs[0].pcolormesh(X, Y, Z, cmap="Div", colorbar="b", center_levels=True)
 axs[0].format(title="Automatic diverging", xlabel="x", ylabel="y")
 
 # 2. Manual control
 # Use a specific diverging map and center it at a custom value
 m2 = axs[1].pcolormesh(
-    X, Y, Z + 0.5, cmap="ColdHot", diverging=True, vcenter=0.5, colorbar="b"
+    X,
+    Y,
+    Z + 0.5,
+    cmap="ColdHot",
+    diverging=True,
+    colorbar="b",
+    center_levels=True,
 )
 axs[1].format(title="Manual center at 0.5", xlabel="x", ylabel="y")
 

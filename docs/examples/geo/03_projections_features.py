@@ -20,7 +20,7 @@ See also
 import ultraplot as uplt
 
 # Projections to compare
-projs = ["mollweide", "ortho", "kav7"]
+projs = ["moll", "ortho", "kav7"]
 
 fig, axs = uplt.subplots(ncols=3, proj=projs, refwidth=3)
 
