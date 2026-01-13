@@ -425,6 +425,12 @@ class GridSpec(mgridspec.GridSpec):
         nums = []
         idxs = self._get_indices(which=which, panel=panel)
         for arg in args:
+            if isinstance(arg, (list, np.ndarray)):
+                try:
+                    nums.append([idxs[int(i)] for i in arg])
+                except (IndexError, TypeError):
+                    raise ValueError(f"Invalid gridspec index {arg}.")
+                continue
             try:
                 nums.append(idxs[arg])
             except (IndexError, TypeError):
@@ -595,6 +601,7 @@ class GridSpec(mgridspec.GridSpec):
         side: str,
         ax: "paxes.Axes",
         span_override: Optional[Union[int, Tuple[int, int]]],
+        pos_override: Optional[Union[int, Tuple[int, int]]] = None,
     ) -> Tuple[str, int, slice]:
         """
         Parse panel arg with span override. Uses ax for position, span for extent.
@@ -607,6 +614,8 @@ class GridSpec(mgridspec.GridSpec):
             The axes to position the panel relative to
         span_override : int or tuple
             The span extent (1-indexed like subplot numbers)
+        pos_override : int or tuple, optional
+            The row or column index (1-indexed like subplot numbers)
 
         Returns
         -------
@@ -620,6 +629,20 @@ class GridSpec(mgridspec.GridSpec):
         # Get the axes position
         ss = ax.get_subplotspec().get_topmost_subplotspec()
         row1, row2, col1, col2 = ss._get_rows_columns()
+
+        # Override axes position if requested
+        if pos_override is not None:
+            if isinstance(pos_override, Integral):
+                pos1, pos2 = pos_override - 1, pos_override - 1
+            else:
+                pos_override = np.atleast_1d(pos_override)
+                pos1, pos2 = pos_override[0] - 1, pos_override[-1] - 1
+
+            # NOTE: We only need the relevant coordinate (row or col)
+            if side in ("left", "right"):
+                col1, col2 = pos1, pos2
+            else:
+                row1, row2 = pos1, pos2
 
         # Determine slot and index based on side
         slot = side[0]
@@ -663,6 +686,7 @@ class GridSpec(mgridspec.GridSpec):
         pad: Optional[Union[float, str]] = None,
         filled: bool = False,
         span_override: Optional[Union[int, Tuple[int, int]]] = None,
+        pos_override: Optional[Union[int, Tuple[int, int]]] = None,
     ):
         """
         Insert a panel slot into the existing gridspec. The `side` is the panel side
@@ -676,7 +700,9 @@ class GridSpec(mgridspec.GridSpec):
             raise ValueError(f"Invalid side {side}.")
         # Use span override if provided
         if span_override is not None:
-            slot, idx, span = self._parse_panel_arg_with_span(side, arg, span_override)
+            slot, idx, span = self._parse_panel_arg_with_span(
+                side, arg, span_override, pos_override=pos_override
+            )
         else:
             slot, idx, span = self._parse_panel_arg(side, arg)
         pad = units(pad, "em", "in")
@@ -1612,10 +1638,13 @@ class SubplotGrid(MutableSequence, list):
         >>> axs[:, 0]  # a SubplotGrid containing the subplots in the first column
         """
         # Allow 1D list-like indexing
-        if isinstance(key, int):
+        if isinstance(key, (Integral, np.integer)):
             return list.__getitem__(self, key)
         elif isinstance(key, slice):
             return SubplotGrid(list.__getitem__(self, key))
+        elif isinstance(key, (list, np.ndarray)):
+            # NOTE: list.__getitem__ does not support numpy integers
+            return SubplotGrid([list.__getitem__(self, int(i)) for i in key])
 
         # Allow 2D array-like indexing
         # NOTE: We assume this is a 2D array of subplots, because this is

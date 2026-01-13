@@ -1417,6 +1417,18 @@ class Figure(mfigure.Figure):
         if span_override is not None:
             kw["span_override"] = span_override
 
+        # Check for position override (row for horizontal panels, col for vertical panels)
+        pos_override = None
+        if side in ("left", "right"):
+            if _not_none(cols, col) is not None:
+                pos_override = _not_none(cols, col)
+        else:
+            if _not_none(rows, row) is not None:
+                pos_override = _not_none(rows, row)
+
+        if pos_override is not None:
+            kw["pos_override"] = pos_override
+
         ss, share = gs._insert_panel_slot(side, ax, **kw)
         # Guard: GeoAxes with non-rectilinear projections cannot share with panels
         if isinstance(ax, paxes.GeoAxes) and not ax._is_rectilinear():
