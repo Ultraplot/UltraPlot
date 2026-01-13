@@ -2,8 +2,11 @@
 Dynamically build what's new page based on github releases
 """
 
-import requests, re
+import re
 from pathlib import Path
+
+import requests
+from m2r2 import convert
 
 GITHUB_REPO = "ultraplot/ultraplot"
 OUTPUT_RST = Path("whats_new.rst")
@@ -14,21 +17,10 @@ GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 
 def format_release_body(text):
     """Formats GitHub release notes for better RST readability."""
-    lines = text.strip().split("\n")
-    formatted = []
-
-    for line in lines:
-        line = line.strip()
-
-        # Convert Markdown ## Headers to RST H2
-        if line.startswith("## "):
-            title = line[3:].strip()  # Remove "## " from start
-            formatted.append(f"{title}\n{'~' * len(title)}\n")  # RST H2 Format
-        else:
-            formatted.append(line)
+    # Convert Markdown to RST using m2r2
+    formatted_text = convert(text)
 
     # Convert PR references (remove "by @user in ..." but keep the link)
-    formatted_text = "\n".join(formatted)
     formatted_text = re.sub(
         r" by @\w+ in (https://github.com/[^\s]+)", r" (\1)", formatted_text
     )
