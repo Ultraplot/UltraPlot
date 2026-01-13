@@ -38,7 +38,7 @@ axs[0].format(title="Automatic diverging", xlabel="x", ylabel="y")
 # 2. Manual control
 # Use a specific diverging map and center it at a custom value
 m2 = axs[1].pcolormesh(
-    X, Y, Z + 0.5, cmap="ColdHot", div=True, vcenter=0.5, colorbar="b"
+    X, Y, Z + 0.5, cmap="ColdHot", diverging=True, vcenter=0.5, colorbar="b"
 )
 axs[1].format(title="Manual center at 0.5", xlabel="x", ylabel="y")
 
