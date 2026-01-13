@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 import requests
+from m2r2 import convert
 
 GITHUB_REPO = "ultraplot/ultraplot"
 OUTPUT_RST = Path("whats_new.rst")
@@ -16,114 +17,8 @@ GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 
 def format_release_body(text):
     """Formats GitHub release notes for better RST readability."""
-    lines = text.split("\n")
-    formatted = []
-    in_code_block = False
-    indent_string = "    "
-    current_indent = 0
-
-    for line in lines:
-        # Preserve original line for code blocks, but strip for processing directives
-        stripped_line = line.strip()
-
-        # Detect Dropdown Start
-        # <details> <summary> snippet </summary>
-        match_details = re.search(
-            r"<details>\s*<summary>(.*?)</summary>", stripped_line, re.IGNORECASE
-        )
-        if match_details:
-            summary = match_details.group(1).strip()
-            formatted.append(
-                f"{indent_string * current_indent}.. dropdown:: {summary}\n"
-            )
-            current_indent += 1
-            continue
-
-        # Detect Dropdown End
-        if stripped_line == "</details>":
-            if current_indent > 0:
-                current_indent -= 1
-            continue
-
-        # Code Block Start/End
-        if stripped_line.startswith("```"):
-            if in_code_block:
-                in_code_block = False
-                formatted.append("")
-            else:
-                in_code_block = True
-                lang = stripped_line.strip("`").strip()
-                formatted.append(
-                    f"{indent_string * current_indent}.. code-block:: {lang if lang else 'text'}\n"
-                )
-            continue
-
-        if in_code_block:
-            # Code lines need 1 extra indent relative to current context
-            formatted.append(f"{indent_string * (current_indent + 1)}{line}")
-            continue
-
-        # Normal lines
-        if not stripped_line:
-            formatted.append("")
-            continue
-
-        # Images
-        # <img ... src="..." ... />
-        match_img = re.search(
-            r'<img\s+.*?src=["\']([^"\']+)["\'].*?>', stripped_line, re.IGNORECASE
-        )
-        if match_img:
-            src = match_img.group(1)
-            formatted.append(f"{indent_string * current_indent}.. image:: {src}\n")
-            continue
-
-        # Markdown Images
-        # ![alt](url)
-        match_md_img = re.search(r"!\[([^\]]*)\]\(([^)]+)\)", stripped_line)
-        if match_md_img:
-            alt = match_md_img.group(1)
-            src = match_md_img.group(2)
-            formatted.append(f"{indent_string * current_indent}.. image:: {src}")
-            if alt:
-                formatted.append(f"{indent_string * current_indent}   :alt: {alt}")
-            formatted.append("")
-            continue
-
-        # Headers
-        # Note: Previous implementation used ~ for H2 (##).
-        # But H1 is =, H2 is -.
-        # So ## should be H3 (~), ### H4 (^), #### H5 (")
-        if stripped_line.startswith("## "):
-            title = stripped_line[3:].strip()
-            formatted.append(
-                f"{indent_string * current_indent}{title}\n{indent_string * current_indent}{'~' * len(title)}\n"
-            )
-            continue
-        elif stripped_line.startswith("### "):
-            title = stripped_line[4:].strip()
-            formatted.append(
-                f"{indent_string * current_indent}{title}\n{indent_string * current_indent}{'^' * len(title)}\n"
-            )
-            continue
-        elif stripped_line.startswith("#### "):
-            title = stripped_line[5:].strip()
-            formatted.append(
-                f"{indent_string * current_indent}{title}\n{indent_string * current_indent}{'"' * len(title)}\n"
-            )
-            continue
-
-        # Links
-        stripped_line = re.sub(
-            r"(?<!\!)\[([^\]]+)\]\(([^)]+)\)", r"`\1 <\2>`_", stripped_line
-        )
-
-        # Italics using _text_
-        stripped_line = re.sub(r"(?<!\w)_([^_]+)_(?!\w)", r"*\1*", stripped_line)
-
-        formatted.append(f"{indent_string * current_indent}{stripped_line}")
-
-    formatted_text = "\n".join(formatted)
+    # Convert Markdown to RST using m2r2
+    formatted_text = convert(text)
 
     # Convert PR references (remove "by @user in ..." but keep the link)
     formatted_text = re.sub(
