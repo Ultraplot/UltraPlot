@@ -529,3 +529,43 @@ def test_legend_explicit_handles_labels_override_auto_collection():
     assert leg is not None
     assert len(leg.get_texts()) == 1
     assert leg.get_texts()[0].get_text() == "custom_label"
+
+
+import numpy as np
+
+import ultraplot as uplt
+
+
+def test_legend_ref_argument():
+    """Test using 'ref' to decouple legend location from content axes."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    axs[0, 0].plot([], [], label="line1")  # Row 0
+    axs[1, 0].plot([], [], label="line2")  # Row 1
+
+    # Place legend below Row 0 (axs[0, :]) using content from Row 1 (axs[1, :])
+    leg = fig.legend(ax=axs[1, :], ref=axs[0, :], loc="bottom")
+
+    assert leg is not None
+
+    # Should be a single legend because span is inferred from ref
+    assert not isinstance(leg, tuple)
+
+    texts = [t.get_text() for t in leg.get_texts()]
+    assert "line2" in texts
+    assert "line1" not in texts
+
+
+def test_legend_ref_argument_no_ax():
+    """Test using 'ref' where 'ax' is implied to be 'ref'."""
+    fig, axs = uplt.subplots(nrows=1, ncols=1)
+    axs[0].plot([], [], label="line1")
+
+    # ref provided, ax=None. Should behave like ax=ref.
+    leg = fig.legend(ref=axs[0], loc="bottom")
+    assert leg is not None
+
+    # Should be a single legend
+    assert not isinstance(leg, tuple)
+
+    texts = [t.get_text() for t in leg.get_texts()]
+    assert "line1" in texts

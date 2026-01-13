@@ -1417,18 +1417,6 @@ class Figure(mfigure.Figure):
         if span_override is not None:
             kw["span_override"] = span_override
 
-        # Check for position override (row for horizontal panels, col for vertical panels)
-        pos_override = None
-        if side in ("left", "right"):
-            if _not_none(cols, col) is not None:
-                pos_override = _not_none(cols, col)
-        else:
-            if _not_none(rows, row) is not None:
-                pos_override = _not_none(rows, row)
-
-        if pos_override is not None:
-            kw["pos_override"] = pos_override
-
         ss, share = gs._insert_panel_slot(side, ax, **kw)
         # Guard: GeoAxes with non-rectilinear projections cannot share with panels
         if isinstance(ax, paxes.GeoAxes) and not ax._is_rectilinear():
@@ -2712,27 +2700,125 @@ class Figure(mfigure.Figure):
         matplotlib.axes.Axes.legend
         """
         ax = kwargs.pop("ax", None)
+        ref = kwargs.pop("ref", None)
+        loc_ax = ref if ref is not None else ax
+
         # Axes panel legend
-        if ax is not None:
+        if loc_ax is not None:
+            content_ax = ax if ax is not None else loc_ax
             # Check if span parameters are provided
             has_span = _not_none(span, row, col, rows, cols) is not None
-            # Extract a single axes from array if span is provided
-            # Otherwise, pass the array as-is for normal legend behavior
-            # Automatically collect handles and labels from spanned axes if not provided
-            if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
-                # Auto-collect handles and labels if not explicitly provided
-                if handles is None and labels is None:
-                    handles, labels = [], []
-                    for axi in ax:
+
+            # Automatically collect handles and labels from content axes if not provided
+            # Case 1: content_ax is a list (we must auto-collect)
+            # Case 2: content_ax != loc_ax (we must auto-collect because loc_ax.legend won't find content_ax handles)
+            must_collect = (
+                np.iterable(content_ax)
+                and not isinstance(content_ax, (str, maxes.Axes))
+            ) or (content_ax is not loc_ax)
+
+            if must_collect and handles is None and labels is None:
+                handles, labels = [], []
+                # Handle list of axes
+                if np.iterable(content_ax) and not isinstance(
+                    content_ax, (str, maxes.Axes)
+                ):
+                    for axi in content_ax:
                         h, l = axi.get_legend_handles_labels()
                         handles.extend(h)
                         labels.extend(l)
-                try:
-                    ax_single = next(iter(ax))
-                except (TypeError, StopIteration):
-                    ax_single = ax
+                # Handle single axis
+                else:
+                    handles, labels = content_ax.get_legend_handles_labels()
+
+            # Infer span from loc_ax if it is a list and no span provided
+            if (
+                not has_span
+                and np.iterable(loc_ax)
+                and not isinstance(loc_ax, (str, maxes.Axes))
+            ):
+                loc_trans = _translate_loc(loc, "legend", default=rc["legend.loc"])
+                side = (
+                    loc_trans
+                    if loc_trans in ("left", "right", "top", "bottom")
+                    else None
+                )
+
+                if side:
+                    r_min, r_max = float("inf"), float("-inf")
+                    c_min, c_max = float("inf"), float("-inf")
+                    valid_ax = False
+                    for axi in loc_ax:
+                        if not hasattr(axi, "get_subplotspec"):
+                            continue
+                        ss = axi.get_subplotspec().get_topmost_subplotspec()
+                        r1, r2, c1, c2 = ss._get_rows_columns()
+                        r_min = min(r_min, r1)
+                        r_max = max(r_max, r2)
+                        c_min = min(c_min, c1)
+                        c_max = max(c_max, c2)
+                        valid_ax = True
+
+                    if valid_ax:
+                        if side in ("left", "right"):
+                            rows = (r_min + 1, r_max + 1)
+                        else:
+                            cols = (c_min + 1, c_max + 1)
+                        has_span = True
+
+            # Extract a single axes from array if span is provided (or if ref is a list)
+            # Otherwise, pass the array as-is for normal legend behavior (only if loc_ax is list)
+            if (
+                has_span
+                and np.iterable(loc_ax)
+                and not isinstance(loc_ax, (str, maxes.Axes))
+            ):
+                # Pick the best axis to anchor to based on the legend side
+                loc_trans = _translate_loc(loc, "legend", default=rc["legend.loc"])
+                side = (
+                    loc_trans
+                    if loc_trans in ("left", "right", "top", "bottom")
+                    else None
+                )
+
+                best_ax = None
+                best_coord = float("-inf")
+
+                # If side is determined, search for the edge axis
+                if side:
+                    for axi in loc_ax:
+                        if not hasattr(axi, "get_subplotspec"):
+                            continue
+                        ss = axi.get_subplotspec().get_topmost_subplotspec()
+                        r1, r2, c1, c2 = ss._get_rows_columns()
+
+                        if side == "right":
+                            val = c2  # Maximize column index
+                        elif side == "left":
+                            val = -c1  # Minimize column index
+                        elif side == "bottom":
+                            val = r2  # Maximize row index
+                        elif side == "top":
+                            val = -r1  # Minimize row index
+                        else:
+                            val = 0
+
+                        if val > best_coord:
+                            best_coord = val
+                            best_ax = axi
+
+                # Fallback to first axis if no best axis found (or side is None)
+                if best_ax is None:
+                    try:
+                        ax_single = next(iter(loc_ax))
+                    except (TypeError, StopIteration):
+                        ax_single = loc_ax
+                else:
+                    ax_single = best_ax
+
             else:
-                ax_single = ax
+                ax_single = loc_ax
+
             leg = ax_single.legend(
                 handles,
                 labels,
