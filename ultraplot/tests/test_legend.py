@@ -564,10 +564,6 @@ def test_legend_ref_argument_no_ax():
 
     texts = [t.get_text() for t in leg.get_texts()]
     assert "line1" in texts
-import matplotlib.pyplot as plt
-import pytest
-
-import ultraplot as uplt
 
 
 def test_ref_with_explicit_handles():
