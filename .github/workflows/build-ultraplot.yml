@@ -113,7 +113,7 @@ jobs:
 
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -x  -W ignore -n auto\
+          pytest -x -W ignore -n auto\
             --mpl \
             --mpl-baseline-path=./ultraplot/tests/baseline \
             --mpl-results-path=./results/ \
