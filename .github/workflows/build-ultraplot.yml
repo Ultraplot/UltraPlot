@@ -43,7 +43,7 @@ jobs:
 
       - name: Test Ultraplot
         run: |
-          pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
+          pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -71,29 +71,55 @@ jobs:
           cache-environment: true
           cache-downloads: false
 
+      # Cache Baseline Figures (Restore step)
+      - name: Cache Baseline Figures
+        id: cache-baseline
+        uses: actions/cache@v4
+        with:
+          path: ./ultraplot/tests/baseline # The directory to cache
+          # Key is based on OS, Python/Matplotlib versions, and the PR number
+          key: ${{ runner.os }}-baseline-pr-${{ github.event.pull_request.number }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
+          restore-keys: |
+            ${{ runner.os }}-baseline-pr-${{ github.event.pull_request.number }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
+
+      # Conditional Baseline Generation (Only runs on cache miss)
       - name: Generate baseline from main
+        # Skip this step if the cache was found (cache-hit is true)
+        if: steps.cache-baseline.outputs.cache-hit != 'true'
         run: |
-          mkdir -p baseline
+          mkdir -p ultraplot/tests/baseline
+          # Checkout the base branch (e.g., 'main') to generate the official baseline
           git fetch origin ${{ github.event.pull_request.base.sha }}
           git checkout ${{ github.event.pull_request.base.sha }}
+
+          # Install the Ultraplot version from the base branch's code
+          pip install --no-build-isolation --no-deps .
+
+          # Generate the baseline images and hash library
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -W ignore \
-            --mpl-generate-path=./baseline/ \
+          pytest -x -n auto -W ignore \
+            --mpl-generate-path=./ultraplot/tests/baseline/ \
             --mpl-default-style="./ultraplot.yml"\
             ultraplot/tests
-          git checkout ${{ github.sha }}  # Return to PR branch
 
+          # Return to the PR branch for the rest of the job
+          git checkout ${{ github.sha }}
+
+      # Image Comparison (Uses cached or newly generated baseline)
       - name: Image Comparison Ultraplot
         run: |
+          # Re-install the Ultraplot version from the current PR branch
+          pip install --no-build-isolation --no-deps .
+
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -W ignore \
-              --mpl \
-              --mpl-baseline-path=./baseline/ \
-              --mpl-results-path=./results/ \
-              --mpl-generate-summary=html \
-              --mpl-default-style="./ultraplot.yml" \
-              ultraplot/tests
+          pytest -x -n auto -W ignore -n auto\
+            --mpl \
+            --mpl-baseline-path=./ultraplot/tests/baseline \
+            --mpl-results-path=./results/ \
+            --mpl-generate-summary=html \
+            --mpl-default-style="./ultraplot.yml" \
+            ultraplot/tests
 
       # Return the html output of the comparison even if failed
       - name: Upload comparison failures
