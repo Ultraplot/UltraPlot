@@ -28,9 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const tocList = toc.querySelector(".right-toc-list");
   const tocContent = toc.querySelector(".right-toc-content");
-  const tocToggleBtn = toc.querySelector(
-    ".right-toc-toggle-btn",
-  );
+  const tocToggleBtn = toc.querySelector(".right-toc-toggle-btn");
 
   // Set up the toggle button
   tocToggleBtn.addEventListener("click", function () {
@@ -118,8 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     link.textContent = headerText.trim();
     link.className =
-      "right-toc-link right-toc-level-" +
-      header.tagName.toLowerCase();
+      "right-toc-link right-toc-level-" + header.tagName.toLowerCase();
 
     item.appendChild(link);
     tocList.appendChild(item);
@@ -141,9 +138,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let smallestDistanceFromTop = Infinity;
 
         headerElements.forEach((header) => {
-          const distance = Math.abs(
-            header.getBoundingClientRect().top,
-          );
+          const distance = Math.abs(header.getBoundingClientRect().top);
           if (distance < smallestDistanceFromTop) {
             smallestDistanceFromTop = distance;
             currentSection = header.id;
@@ -152,15 +147,156 @@ document.addEventListener("DOMContentLoaded", function () {
 
         tocLinks.forEach((link) => {
           link.classList.remove("active");
-          if (
-            link.getAttribute("href") === `#${currentSection}`
-          ) {
+          if (link.getAttribute("href") === `#${currentSection}`) {
             link.classList.add("active");
           }
         });
       }, 100),
     );
   }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const galleryRoot = document.querySelector("#ultraplot-gallery");
+  if (galleryRoot) {
+    const gallerySections = [
+      "layouts",
+      "legends-and-colorbars",
+      "geoaxes",
+      "plot-types",
+      "colors-and-cycles",
+    ];
+    gallerySections.forEach((sectionId) => {
+      const heading = document.querySelector(
+        `section#${sectionId} > h1, section#${sectionId} > h2`,
+      );
+      if (heading) {
+        heading.classList.add("no-toc");
+      }
+    });
+  }
+
+  const thumbContainers = Array.from(
+    document.querySelectorAll(".sphx-glr-thumbcontainer"),
+  );
+  if (thumbContainers.length < 6) {
+    return;
+  }
+
+  const topicMap = {
+    layouts: { label: "Layouts", slug: "layouts" },
+    "legends and colorbars": {
+      label: "Legends & Colorbars",
+      slug: "legends-colorbars",
+    },
+    geoaxes: { label: "GeoAxes", slug: "geoaxes" },
+    "plot types": { label: "Plot Types", slug: "plot-types" },
+    "colors and cycles": { label: "Colors", slug: "colors" },
+  };
+
+  const topics = [];
+  const topicOrder = new Set();
+  const originalSections = new Set();
+
+  function normalize(text) {
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  thumbContainers.forEach((thumb) => {
+    const section = thumb.closest("section");
+    const heading = section ? section.querySelector("h1, h2") : null;
+    const key = heading ? normalize(heading.textContent || "") : "";
+    const info = topicMap[key] || { label: "Other", slug: "other" };
+    thumb.dataset.topic = info.slug;
+    if (section) {
+      originalSections.add(section);
+    }
+    if (!topicOrder.has(info.slug) && info.slug !== "other") {
+      topicOrder.add(info.slug);
+      topics.push(info);
+    }
+  });
+
+  if (topics.length === 0) {
+    return;
+  }
+
+  const firstSection = thumbContainers[0].closest("section");
+  const parent =
+    (firstSection && firstSection.parentNode) ||
+    document.querySelector(".rst-content");
+  if (!parent) {
+    return;
+  }
+
+  const controls = document.createElement("div");
+  controls.className = "gallery-filter-controls";
+
+  const filterBar = document.createElement("div");
+  filterBar.className = "gallery-filter-bar";
+
+  function makeButton(label, slug) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "gallery-filter-button";
+    button.textContent = label;
+    button.dataset.topic = slug;
+    return button;
+  }
+
+  const buttons = [
+    makeButton("All", "all"),
+    ...topics.map((topic) => makeButton(topic.label, topic.slug)),
+  ];
+
+  const counts = {};
+  thumbContainers.forEach((thumb) => {
+    const topic = thumb.dataset.topic || "other";
+    counts[topic] = (counts[topic] || 0) + 1;
+  });
+  counts.all = thumbContainers.length;
+
+  buttons.forEach((button) => {
+    const topic = button.dataset.topic;
+    const count = counts[topic] || 0;
+    button.textContent = `${button.textContent} (${count})`;
+    filterBar.appendChild(button);
+  });
+
+  const unified = document.createElement("div");
+  unified.className = "sphx-glr-thumbnails gallery-unified";
+  thumbContainers.forEach((thumb) => unified.appendChild(thumb));
+
+  controls.appendChild(filterBar);
+  controls.appendChild(unified);
+  parent.insertBefore(controls, firstSection);
+
+  originalSections.forEach((section) => {
+    section.classList.add("gallery-section-hidden");
+  });
+  document.body.classList.add("gallery-filter-active");
+
+  function setFilter(slug) {
+    buttons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.topic === slug);
+    });
+    thumbContainers.forEach((thumb) => {
+      const matches = slug === "all" || thumb.dataset.topic === slug;
+      thumb.style.display = matches ? "" : "none";
+    });
+  }
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setFilter(button.dataset.topic);
+    });
+  });
+
+  setFilter("all");
 });
 
 // Debounce function to limit scroll event firing

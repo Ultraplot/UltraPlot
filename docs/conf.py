@@ -12,14 +12,14 @@
 # -- Imports and paths --------------------------------------------------------------
 
 # Import statements
-import os
-import sys
 import datetime
+import os
 import subprocess
-from pathlib import Path
+import sys
 
 # Surpress warnings from cartopy when downloading data inside docs env
 import warnings
+from pathlib import Path
 
 try:
     from cartopy.io import DownloadWarning
@@ -38,6 +38,7 @@ try:
     if not hasattr(sphinx.util, "console"):
         # Create a compatibility layer
         import sys
+
         import sphinx.util
         from sphinx.util import logging
 
@@ -62,6 +63,18 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # Print available system fonts
 from matplotlib.font_manager import fontManager
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
+
+
+def _reset_ultraplot(gallery_conf, fname):
+    """
+    Reset UltraPlot rc state between gallery examples.
+    """
+    try:
+        import ultraplot as uplt
+    except Exception:
+        return
+    uplt.rc.reset()
 
 
 # -- Project information -------------------------------------------------------
@@ -144,6 +157,7 @@ extensions = [
     "sphinx_copybutton",  # add copy button to code
     "_ext.notoc",
     "nbsphinx",  # parse rst books
+    "sphinx_gallery.gen_gallery",
 ]
 
 
@@ -165,6 +179,11 @@ exclude_patterns = [
     "_templates",
     "_themes",
     "*.ipynb",
+    "gallery/**/*.codeobj.json",
+    "gallery/**/*.ipynb",
+    "gallery/**/*.md5",
+    "gallery/**/*.py",
+    "gallery/**/*.zip",
     "**.ipynb_checkpoints" ".DS_Store",
     "trash",
     "tmp",
@@ -290,6 +309,28 @@ nbsphinx_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
 
 nbsphinx_execute = "auto"
 
+# Sphinx gallery configuration
+sphinx_gallery_conf = {
+    "doc_module": ("ultraplot",),
+    "examples_dirs": ["examples"],
+    "gallery_dirs": ["gallery"],
+    "filename_pattern": r"^((?!sgskip).)*$",
+    "min_reported_time": 1,
+    "plot_gallery": "True",
+    "reset_modules": ("matplotlib", "seaborn", _reset_ultraplot),
+    "subsection_order": ExplicitOrder(
+        [
+            "examples/layouts",
+            "examples/legends_colorbars",
+            "examples/geo",
+            "examples/plot_types",
+            "examples/colors",
+        ]
+    ),
+    "within_subsection_order": FileNameSortKey,
+    "nested_sections": False,
+}
+
 # The name of the Pygments (syntax highlighting) style to use.
 # The light-dark theme toggler overloads this, but set default anyway
 pygments_style = "none"
@@ -309,13 +350,11 @@ html_theme = "sphinx_rtd_light_dark"
 # html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "logo_only": True,
-    "display_version": False,
     "collapse_navigation": True,
     "navigation_depth": 4,
     "prev_next_buttons_location": "bottom",  # top and bottom
     "includehidden": True,
     "titles_only": True,
-    "display_toc": True,
     "sticky_navigation": True,
 }
 
@@ -330,7 +369,9 @@ html_static_path = ["_static"]
 # defined by theme itself.  Builtin themes are using these templates by
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
-# html_sidebars = {}
+html_sidebars = {
+    "gallery/index": ["globaltoc.html", "searchbox.html"],
+}
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

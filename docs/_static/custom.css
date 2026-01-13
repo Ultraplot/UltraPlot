@@ -200,6 +200,64 @@
     max-height: calc(100vh - 150px);
 }
 
+.gallery-filter-controls {
+    margin: 1rem 0 2rem;
+    padding: 1rem 1.2rem;
+    border-radius: 16px;
+    background: linear-gradient(
+        135deg,
+        rgba(41, 128, 185, 0.08),
+        rgba(41, 128, 185, 0.02)
+    );
+    box-shadow:
+        0 10px 24px rgba(41, 128, 185, 0.18),
+        0 2px 6px rgba(41, 128, 185, 0.08);
+}
+
+.gallery-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.gallery-filter-button {
+    border: 1px solid #c5c5c5;
+    background-color: #ffffff;
+    color: #333333;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.gallery-filter-button.is-active {
+    background-color: #2980b9;
+    border-color: #2980b9;
+    color: #ffffff;
+}
+
+.gallery-section-hidden {
+    display: none;
+}
+
+section#layouts > h1,
+section#layouts > p,
+section#legends-and-colorbars > h1,
+section#legends-and-colorbars > p,
+section#geoaxes > h1,
+section#geoaxes > p,
+section#plot-types > h1,
+section#plot-types > p,
+section#colors-and-cycles > h1,
+section#colors-and-cycles > p {
+    display: none;
+}
+
 /* Responsive adjustments */
 @media screen and (max-width: 1200px) {
     .right-toc {

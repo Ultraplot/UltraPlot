@@ -5,6 +5,11 @@
 **UltraPlot** is a succinct wrapper around `matplotlib <https://matplotlib.org/>`__
 for creating **beautiful, publication-quality graphics** with ease.
 
+**Gallery**
+############
+See UltraPlot in action with curated, publication-style examples.
+:doc:`Browse the gallery <gallery/index>`
+
 🚀 **Key Features** | Create More, Code Less
 ###################
 ✔ **Simplified Subplot Management** – Create multi-panel plots effortlessly.
@@ -13,7 +18,7 @@ for creating **beautiful, publication-quality graphics** with ease.
 
 📊 **Versatile Plot Types** – Cartesian plots, insets, colormaps, and more.
 
-📌 **Get Started** → :doc:`Installation guide <install>` |  :doc:`Why UltraPlot? <why>` | :doc:`Usage <usage>`
+📌 **Get Started** → :doc:`Installation guide <install>` | :doc:`Why UltraPlot? <why>` | :doc:`Usage <usage>` | :doc:`Gallery <gallery/index>`
 
 --------------------------------------
 
@@ -121,6 +126,7 @@ For more details, check the full :doc:`User guide <usage>` and :doc:`API Referen
    install
    why
    usage
+   gallery/index
 
 .. toctree::
    :maxdepth: 1
@@ -142,6 +148,13 @@ For more details, check the full :doc:`User guide <usage>` and :doc:`API Referen
    colors
    fonts
    configuration
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Gallery
+   :hidden:
+
+   gallery/index
 
 .. toctree::
    :maxdepth: 1
