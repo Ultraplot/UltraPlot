@@ -80,6 +80,10 @@ release = ""
 parallel_read_safe = True
 parallel_write_safe = True
 
+# Enable caching for Sphinx builds
+# This will cache the doctrees and avoid rebuilding unchanged content
+sphinx.use.smartquotes = False  # Disable smart quotes for better caching
+
 # -- Create files --------------------------------------------------------------
 
 # Create RST table and sample ultraplotrc file

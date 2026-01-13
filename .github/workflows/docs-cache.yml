@@ -1,0 +1,145 @@
+name: Documentation Cache
+
+on:
+  push:
+    branches: [main, devel]
+    paths:
+      - "docs/**"
+      - "environment.yml"
+      - ".readthedocs.yml"
+      - ".github/workflows/docs-cache.yml"
+  pull_request:
+    branches: [main, devel]
+    paths:
+      - "docs/**"
+      - "environment.yml"
+      - ".readthedocs.yml"
+      - ".github/workflows/docs-cache.yml"
+  workflow_dispatch:
+
+env:
+  LC_ALL: en_US.UTF-8
+  LANG: en_US.UTF-8
+
+jobs:
+  cache-documentation:
+    name: Cache Documentation Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: ./environment.yml
+          init-shell: bash
+          create-args: >-
+            --verbose
+            python=3.11
+          cache-environment: true
+          cache-downloads: true
+
+      - name: Install UltraPlot
+        run: |
+          pip install --no-build-isolation --no-deps .
+
+      - name: Test cache system
+        run: |
+          cd docs
+          python test_github_actions.py
+
+      - name: Cache Documentation
+        id: cache-docs
+        uses: actions/cache@v4
+        with:
+          path: |
+            docs/.doc_cache
+            docs/_build/doctrees
+          key: docs-cache-${{ hashFiles('docs/**', 'environment.yml', '.readthedocs.yml') }}
+          restore-keys: |
+            docs-cache-
+
+      - name: Check if rebuild needed
+        id: check-rebuild
+        run: |
+          cd docs
+          if python cache_docs.py check; then
+            echo "rebuild_needed=false" >> $GITHUB_OUTPUT
+            echo "No documentation rebuild needed."
+          else
+            echo "rebuild_needed=true" >> $GITHUB_OUTPUT
+            echo "Documentation rebuild needed."
+          fi
+
+      - name: Build Documentation (if needed)
+        if: steps.check-rebuild.outputs.rebuild_needed == 'true'
+        run: |
+          cd docs
+          ./build_docs_cached.sh
+
+      - name: Cache build results
+        if: steps.check-rebuild.outputs.rebuild_needed == 'true'
+        run: |
+          cd docs
+          python cache_docs.py cache_doctrees _build/doctrees
+
+      - name: Upload documentation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-html
+          path: docs/_build/html/
+          retention-days: 7
+
+  verify-cache:
+    name: Verify Cache Functionality
+    runs-on: ubuntu-latest
+    needs: cache-documentation
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: ./environment.yml
+          init-shell: bash
+          cache-environment: true
+
+      - name: Download cached documentation
+        uses: actions/cache@v4
+        with:
+          path: |
+            docs/.doc_cache
+            docs/_build/doctrees
+          key: docs-cache-${{ hashFiles('docs/**', 'environment.yml', '.readthedocs.yml') }}
+
+      - name: Verify cache contents
+        run: |
+          cd docs
+          if [ -d ".doc_cache" ]; then
+            echo "✓ Cache directory exists"
+            ls -la .doc_cache/
+          else
+            echo "✗ Cache directory not found"
+            exit 1
+          fi
+
+          if [ -d "_build/doctrees" ]; then
+            echo "✓ Doctree cache exists"
+            ls -la _build/doctrees/ | head -10
+          else
+            echo "✗ Doctree cache not found"
+            exit 1
+          fi
+
+      - name: Test cache manager
+        run: |
+          cd docs
+          python cache_docs.py info

@@ -19,6 +19,7 @@ dependencies:
   - sphinx
   - nbsphinx
   - jupytext
+  - jcache
   - sphinx-copybutton
   - sphinx-autoapi
   - sphinx-automodapi
