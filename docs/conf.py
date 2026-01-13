@@ -76,6 +76,7 @@ def _reset_ultraplot(gallery_conf, fname):
         return
     uplt.rc.reset()
 
+
 # -- Project information -------------------------------------------------------
 # The basic info
 project = "UltraPlot"
