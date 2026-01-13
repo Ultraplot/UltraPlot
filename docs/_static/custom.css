@@ -261,6 +261,7 @@
     display: none;
 }
 
+<<<<<<< HEAD
 body.gallery-filter-active .sphx-glr-thumbnails:not(.gallery-unified) {
     display: none;
 }
@@ -364,6 +365,8 @@ body.wy-body-for-nav
     margin: 1.5em 0;
 }
 
+=======
+>>>>>>> 0f95f74c (Add gallery infrastructure and examples)
 section#layouts > h1,
 section#layouts > p,
 section#legends-and-colorbars > h1,
@@ -377,6 +380,7 @@ section#colors-and-cycles > p {
     display: none;
 }
 
+<<<<<<< HEAD
 /* Style for gallery section headers */
 .gallery-section-header {
     font-size: 1.5em;
@@ -393,6 +397,8 @@ section#colors-and-cycles > p {
     color: #555;
 }
 
+=======
+>>>>>>> 0f95f74c (Add gallery infrastructure and examples)
 /* Responsive adjustments */
 @media screen and (max-width: 1200px) {
     .right-toc {
