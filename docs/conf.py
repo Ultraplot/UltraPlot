@@ -55,7 +55,7 @@ except Exception:
 # Build what's news page from github releases
 from subprocess import run
 
-run("python _scripts/fetch_releases.py".split(), check=False)
+run([sys.executable, "_scripts/fetch_releases.py"], check=False)
 
 # Update path for sphinx-automodapi and sphinxext extension
 sys.path.append(os.path.abspath("."))
@@ -75,7 +75,6 @@ def _reset_ultraplot(gallery_conf, fname):
     except Exception:
         return
     uplt.rc.reset()
-
 
 # -- Project information -------------------------------------------------------
 # The basic info
