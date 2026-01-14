@@ -32,6 +32,6 @@ dependencies:
   - pyarrow
   - cftime
   - m2r2
-  - lxml_html_clean
+  - lxml-html-clean
   - pip:
       - git+https://github.com/ultraplot/UltraTheme.git
