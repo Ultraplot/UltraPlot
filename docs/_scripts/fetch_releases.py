@@ -20,12 +20,43 @@ def format_release_body(text):
     # Convert Markdown to RST using m2r2
     formatted_text = convert(text)
 
+    formatted_text = _downgrade_headings(formatted_text)
+
     # Convert PR references (remove "by @user in ..." but keep the link)
     formatted_text = re.sub(
         r" by @\w+ in (https://github.com/[^\s]+)", r" (\1)", formatted_text
     )
 
     return formatted_text.strip()
+
+
+def _downgrade_headings(text):
+    """
+    Downgrade all heading levels by one to avoid H1/H2 collisions in the TOC.
+    """
+    adornment_map = {
+        "=": "-",
+        "-": "~",
+        "~": "^",
+        "^": '"',
+        '"': "'",
+        "'": "`",
+    }
+    lines = text.splitlines()
+    for idx in range(len(lines) - 1):
+        title = lines[idx]
+        underline = lines[idx + 1]
+        if not title.strip():
+            continue
+        if not underline:
+            continue
+        char = underline[0]
+        if char not in adornment_map:
+            continue
+        if underline.strip(char):
+            continue
+        lines[idx + 1] = adornment_map[char] * len(underline)
+    return "\n".join(lines)
 
 
 def fetch_all_releases():
