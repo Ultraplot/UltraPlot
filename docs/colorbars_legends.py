@@ -469,3 +469,44 @@ ax.legend(hs1, loc="b", ncols=3, title="row major", order="C", facecolor="gray2"
 ax = axs[1]
 ax.legend(hs2, loc="b", ncols=3, center=True, title="centered rows")
 axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
+# %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_guides_decouple:
+#
+# Decoupling legend content and location
+# --------------------------------------
+#
+# Sometimes you may want to generate a legend using handles from specific axes
+# but place it relative to other axes. In UltraPlot, you can achieve this by passing
+# both the `ax` and `ref` keywords to :func:`~ultraplot.figure.Figure.legend`
+# (or :func:`~ultraplot.figure.Figure.colorbar`). The `ax` keyword specifies the
+# axes used to generate the legend handles, while the `ref` keyword specifies the
+# reference axes used to determine the legend location.
+#
+# For example, to draw a legend based on the handles in the second row of subplots
+# but place it below the first row of subplots, you can use
+# ``fig.legend(ax=axs[1, :], ref=axs[0, :], loc='bottom')``. If ``ref`` is a list
+# of axes, UltraPlot intelligently infers the span (width or height) and anchors
+# the legend to the appropriate outer edge (e.g., the bottom-most axis for ``loc='bottom'``
+# or the right-most axis for ``loc='right'``).
+
+# %%
+import numpy as np
+
+import ultraplot as uplt
+
+fig, axs = uplt.subplots(nrows=2, ncols=2, refwidth=2, share=False)
+axs.format(abc="A.", suptitle="Decoupled legend location demo")
+
+# Plot data on all axes
+state = np.random.RandomState(51423)
+data = (state.rand(20, 4) - 0.5).cumsum(axis=0)
+for ax in axs:
+    ax.plot(data, cycle="mplotcolors", labels=list("abcd"))
+
+# Legend 1: Content from Row 2 (ax=axs[1, :]), Location below Row 1 (ref=axs[0, :])
+# This places a legend describing the bottom row data underneath the top row.
+fig.legend(ax=axs[1, :], ref=axs[0, :], loc="bottom", title="Data from Row 2")
+
+# Legend 2: Content from Row 1 (ax=axs[0, :]), Location below Row 2 (ref=axs[1, :])
+# This places a legend describing the top row data underneath the bottom row.
+fig.legend(ax=axs[0, :], ref=axs[1, :], loc="bottom", title="Data from Row 1")

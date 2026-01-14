@@ -529,3 +529,91 @@ def test_legend_explicit_handles_labels_override_auto_collection():
     assert leg is not None
     assert len(leg.get_texts()) == 1
     assert leg.get_texts()[0].get_text() == "custom_label"
+
+
+def test_legend_ref_argument():
+    """Test using 'ref' to decouple legend location from content axes."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    axs[0, 0].plot([], [], label="line1")  # Row 0
+    axs[1, 0].plot([], [], label="line2")  # Row 1
+
+    # Place legend below Row 0 (axs[0, :]) using content from Row 1 (axs[1, :])
+    leg = fig.legend(ax=axs[1, :], ref=axs[0, :], loc="bottom")
+
+    assert leg is not None
+
+    # Should be a single legend because span is inferred from ref
+    assert not isinstance(leg, tuple)
+
+    texts = [t.get_text() for t in leg.get_texts()]
+    assert "line2" in texts
+    assert "line1" not in texts
+
+
+def test_legend_ref_argument_no_ax():
+    """Test using 'ref' where 'ax' is implied to be 'ref'."""
+    fig, axs = uplt.subplots(nrows=1, ncols=1)
+    axs[0].plot([], [], label="line1")
+
+    # ref provided, ax=None. Should behave like ax=ref.
+    leg = fig.legend(ref=axs[0], loc="bottom")
+    assert leg is not None
+
+    # Should be a single legend
+    assert not isinstance(leg, tuple)
+
+    texts = [t.get_text() for t in leg.get_texts()]
+    assert "line1" in texts
+
+
+def test_ref_with_explicit_handles():
+    """Test using ref with explicit handles and labels."""
+    fig, axs = uplt.subplots(ncols=2)
+    h = axs[0].plot([0, 1], [0, 1], label="line")
+
+    # Place legend below both axes (ref=axs) using explicit handle
+    leg = fig.legend(handles=h, labels=["explicit"], ref=axs, loc="bottom")
+
+    assert leg is not None
+    texts = [t.get_text() for t in leg.get_texts()]
+    assert texts == ["explicit"]
+
+
+def test_ref_with_non_edge_location():
+    """Test using ref with an inset location (should not infer span)."""
+    fig, axs = uplt.subplots(ncols=2)
+    axs[0].plot([0, 1], label="test")
+
+    # ref=axs (list of 2).
+    # 'upper left' is inset. Should fallback to first axis.
+    leg = fig.legend(ref=axs, loc="upper left")
+
+    assert leg is not None
+    if isinstance(leg, tuple):
+        leg = leg[0]
+    # Should be associated with axs[0] (or a panel of it? Inset is child of axes)
+    # leg.axes is the axes containing the legend. For inset, it's the parent axes?
+    # No, legend itself is an artist. leg.axes should be axs[0].
+    assert leg.axes is axs[0]
+
+
+def test_ref_with_single_axis():
+    """Test using ref with a single axis object."""
+    fig, axs = uplt.subplots(ncols=2)
+    axs[0].plot([0, 1], label="line")
+
+    # ref=axs[1]. loc='bottom'.
+    leg = fig.legend(ref=axs[1], ax=axs[0], loc="bottom")
+    assert leg is not None
+
+
+def test_ref_with_manual_axes_no_subplotspec():
+    """Test using ref with axes that don't have subplotspec."""
+    fig = uplt.figure()
+    ax1 = fig.add_axes([0.1, 0.1, 0.4, 0.4])
+    ax2 = fig.add_axes([0.5, 0.1, 0.4, 0.4])
+    ax1.plot([0, 1], [0, 1], label="line")
+
+    # ref=[ax1, ax2]. loc='upper right' (inset).
+    leg = fig.legend(ref=[ax1, ax2], loc="upper right")
+    assert leg is not None
