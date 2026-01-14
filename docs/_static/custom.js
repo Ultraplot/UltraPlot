@@ -8,9 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (!content) return;
 
   const isWhatsNew = document.body.classList.contains("whats_new");
-  const headerSelector = isWhatsNew
-    ? "h2, h3"
-    : "h1:not(.document-title), h2, h3";
+  const headerSelector = isWhatsNew ? "h2" : "h1:not(.document-title), h2, h3";
 
   // Find all headers in the main content
   const headers = Array.from(content.querySelectorAll(headerSelector)).filter(
@@ -124,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
         link.href = "#" + header.id;
 
         link.textContent = cleanText;
-        link.className = "right-toc-link right-toc-level-h2";
+        link.className = "right-toc-link right-toc-level-h1";
         item.appendChild(link);
         tocList.appendChild(item);
       }
