@@ -4,10 +4,32 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
+  const isWhatsNewPage =
+    document.body.classList.contains("whats_new") ||
+    window.location.pathname.endsWith("/whats_new.html") ||
+    window.location.pathname.endsWith("/whats_new/");
+
+  if (isWhatsNewPage) {
+    const nav = document.querySelector(".wy-menu-vertical");
+    if (nav) {
+      nav.querySelectorAll('li[class*="toctree-l"]').forEach((item) => {
+        if (!item.className.match(/toctree-l1/)) {
+          item.remove();
+        }
+      });
+      nav.querySelectorAll('a[href*="#"]').forEach((link) => {
+        const li = link.closest("li");
+        if (li && !li.className.match(/toctree-l1/)) {
+          li.remove();
+        }
+      });
+    }
+  }
+
   const content = document.querySelector(".rst-content");
   if (!content) return;
 
-  const isWhatsNew = document.body.classList.contains("whats_new");
+  const isWhatsNew = isWhatsNewPage;
   const headerSelector = isWhatsNew ? "h2" : "h1:not(.document-title), h2, h3";
 
   // Find all headers in the main content

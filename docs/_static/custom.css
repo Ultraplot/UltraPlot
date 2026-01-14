@@ -270,6 +270,24 @@ body.gallery-filter-active .gallery-section-description {
     display: none;
 }
 
+body.whats_new .wy-menu-vertical li.toctree-l1.current > ul {
+    display: none;
+}
+
+body.whats_new .wy-menu-vertical li.toctree-l2,
+body.whats_new .wy-menu-vertical li.toctree-l3,
+body.whats_new .wy-menu-vertical li.toctree-l4 {
+    display: none;
+}
+
+body.whats_new .wy-menu-vertical a[href^="#"] {
+    display: none;
+}
+
+body.whats_new .wy-menu-vertical li:has(> a[href^="#"]) {
+    display: none;
+}
+
 /* Hide gallery subsections from left TOC - more specific selector */
 body.wy-body-for-nav .wy-menu-vertical .wy-menu-vertical-2 a[href="#layouts"],
 body.wy-body-for-nav
