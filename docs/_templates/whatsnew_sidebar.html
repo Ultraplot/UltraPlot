@@ -1,0 +1,15 @@
+<div class="wy-side-nav-search">
+    <form
+        id="rtd-search-form"
+        class="wy-form"
+        action="{{ pathto('search') }}"
+        method="get"
+    >
+        <input type="text" name="q" placeholder="Search docs" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation">
+    {{ toctree(maxdepth=1, collapse=True, includehidden=True) }}
+</div>

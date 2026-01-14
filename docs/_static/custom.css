@@ -136,6 +136,22 @@
     color: #606060;
 }
 
+.right-toc-subtoggle {
+    background: none;
+    border: none;
+    color: #2980b9;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-right: 0.3em;
+    padding: 0;
+}
+
+.right-toc-sublist {
+    list-style-type: none;
+    margin: 0.2em 0 0.4em 0;
+    padding-left: 1.2em;
+}
+
 /* Active TOC item highlighting */
 .right-toc-link.active {
     background-color: rgba(41, 128, 185, 0.15);
@@ -245,6 +261,91 @@
     display: none;
 }
 
+body.gallery-filter-active .sphx-glr-thumbnails:not(.gallery-unified) {
+    display: none;
+}
+
+body.gallery-filter-active .gallery-section-header,
+body.gallery-filter-active .gallery-section-description {
+    display: none;
+}
+
+/* Hide gallery subsections from left TOC - more specific selector */
+body.wy-body-for-nav .wy-menu-vertical .wy-menu-vertical-2 a[href="#layouts"],
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a[href="#legends-and-colorbars"],
+body.wy-body-for-nav .wy-menu-vertical .wy-menu-vertical-2 a[href="#geoaxes"],
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a[href="#plot-types"],
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a[href="#colors-and-cycles"] {
+    display: none !important;
+}
+
+/* Also hide the nested lists under these sections - more specific selector */
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a[href="#layouts"]
+    + ul,
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a[href="#legends-and-colorbars"]
+    + ul,
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a[href="#geoaxes"]
+    + ul,
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a[href="#plot-types"]
+    + ul,
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a[href="#colors-and-cycles"]
+    + ul {
+    display: none !important;
+}
+
+/* Hide the parent list items as well */
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    li[class*="toctree-l1"]:has(a[href="#layouts"]),
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    li[class*="toctree-l1"]:has(a[href="#legends-and-colorbars"]),
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    li[class*="toctree-l1"]:has(a[href="#geoaxes"]),
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    li[class*="toctree-l1"]:has(a[href="#plot-types"]),
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    li[class*="toctree-l1"]:has(a[href="#colors-and-cycles"]) {
+    display: none !important;
+}
+
+/* Hide the section containers themselves */
+.gallery-section {
+    margin: 1.5em 0;
+}
+
 section#layouts > h1,
 section#layouts > p,
 section#legends-and-colorbars > h1,
@@ -256,6 +357,22 @@ section#plot-types > p,
 section#colors-and-cycles > h1,
 section#colors-and-cycles > p {
     display: none;
+}
+
+/* Style for gallery section headers */
+.gallery-section-header {
+    font-size: 1.5em;
+    font-weight: bold;
+    display: block;
+    margin: 1.5em 0 0.5em 0;
+    border-bottom: 2px solid #2980b9;
+    padding-bottom: 0.3em;
+    color: #2980b9;
+}
+
+.gallery-section-description {
+    margin: 0 0 1em 0;
+    color: #555;
 }
 
 /* Responsive adjustments */

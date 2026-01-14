@@ -7,10 +7,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const content = document.querySelector(".rst-content");
   if (!content) return;
 
+  const isWhatsNew = document.body.classList.contains("whats_new");
+  const headerSelector = isWhatsNew
+    ? "h2, h3"
+    : "h1:not(.document-title), h2, h3";
+
   // Find all headers in the main content
-  const headers = Array.from(
-    content.querySelectorAll("h1:not(.document-title), h2, h3"),
-  ).filter((header) => !header.classList.contains("no-toc"));
+  const headers = Array.from(content.querySelectorAll(headerSelector)).filter(
+    (header) => !header.classList.contains("no-toc"),
+  );
 
   // Only create TOC if there are headers
   if (headers.length === 0) return;
@@ -62,8 +67,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Generate unique IDs for headers that need them
   headers.forEach((header, index) => {
-    // If header already has a unique ID, use that
-    if (header.id && !usedIds.has(header.id)) {
+    // If header already has an ID, keep it
+    if (header.id) {
       usedIds.add(header.id);
       return;
     }
@@ -102,25 +107,49 @@ document.addEventListener("DOMContentLoaded", function () {
     usedIds.add(uniqueId);
   });
 
-  // Add entries for each header
-  headers.forEach((header) => {
-    const item = document.createElement("li");
-    const link = document.createElement("a");
+  if (isWhatsNew) {
+    headers.forEach((header) => {
+      const tag = header.tagName.toLowerCase();
+      const rawText = header.textContent || "";
+      const cleanText = rawText
+        .replace(/\s*\uf0c1\s*$/, "")
+        .replace(/\s*[¶§#†‡]\s*$/, "")
+        .trim();
+      const isReleaseHeading = tag === "h2" && /^v\d/i.test(cleanText || "");
 
-    link.href = "#" + header.id;
+      if (isReleaseHeading) {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
 
-    // Get clean text without icons
-    let headerText = header.textContent || "";
-    headerText = headerText.replace(/\s*\uf0c1\s*$/, "");
-    headerText = headerText.replace(/\s*[¶§#†‡]\s*$/, "");
+        link.href = "#" + header.id;
 
-    link.textContent = headerText.trim();
-    link.className =
-      "right-toc-link right-toc-level-" + header.tagName.toLowerCase();
+        link.textContent = cleanText;
+        link.className = "right-toc-link right-toc-level-h2";
+        item.appendChild(link);
+        tocList.appendChild(item);
+      }
+    });
+  } else {
+    // Add entries for each header
+    headers.forEach((header) => {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
 
-    item.appendChild(link);
-    tocList.appendChild(item);
-  });
+      link.href = "#" + header.id;
+
+      // Get clean text without icons
+      let headerText = header.textContent || "";
+      headerText = headerText.replace(/\s*\uf0c1\s*$/, "");
+      headerText = headerText.replace(/\s*[¶§#†‡]\s*$/, "");
+
+      link.textContent = headerText.trim();
+      link.className =
+        "right-toc-link right-toc-level-" + header.tagName.toLowerCase();
+
+      item.appendChild(link);
+      tocList.appendChild(item);
+    });
+  }
 
   // Add TOC to page
   document.body.appendChild(toc);
@@ -157,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  const galleryRoot = document.querySelector("#ultraplot-gallery");
+  const galleryRoot = document.querySelector(".sphx-glr-thumbcontainer");
   if (galleryRoot) {
     const gallerySections = [
       "layouts",
@@ -168,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ];
     gallerySections.forEach((sectionId) => {
       const heading = document.querySelector(
-        `section#${sectionId} > h1, section#${sectionId} > h2`,
+        `section#${sectionId} .gallery-section-header`,
       );
       if (heading) {
         heading.classList.add("no-toc");
@@ -183,51 +212,54 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  const topicMap = {
-    layouts: { label: "Layouts", slug: "layouts" },
-    "legends and colorbars": {
+  const topicList = [
+    { id: "layouts", label: "Layouts", slug: "layouts" },
+    {
+      id: "legends_colorbars",
       label: "Legends & Colorbars",
       slug: "legends-colorbars",
     },
-    geoaxes: { label: "GeoAxes", slug: "geoaxes" },
-    "plot types": { label: "Plot Types", slug: "plot-types" },
-    "colors and cycles": { label: "Colors", slug: "colors" },
-  };
+    { id: "geo", label: "GeoAxes", slug: "geoaxes" },
+    { id: "plot_types", label: "Plot Types", slug: "plot-types" },
+    { id: "colors", label: "Colors", slug: "colors" },
+  ];
+  const topicMap = Object.fromEntries(
+    topicList.map((topic) => [topic.id, topic]),
+  );
+  const originalThumbnails = new Set();
 
-  const topics = [];
-  const topicOrder = new Set();
-  const originalSections = new Set();
-
-  function normalize(text) {
-    return text
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
+  function getTopicInfo(thumb) {
+    const link = thumb.querySelector("a.reference.internal");
+    if (!link) {
+      return { label: "Other", slug: "other" };
+    }
+    const href = link.getAttribute("href") || "";
+    const path = new URL(href, window.location.href).pathname;
+    const match = path.match(/\/gallery\/([^/]+)\//);
+    const key = match ? match[1] : "";
+    return topicMap[key] || { label: "Other", slug: "other" };
   }
 
   thumbContainers.forEach((thumb) => {
-    const section = thumb.closest("section");
-    const heading = section ? section.querySelector("h1, h2") : null;
-    const key = heading ? normalize(heading.textContent || "") : "";
-    const info = topicMap[key] || { label: "Other", slug: "other" };
+    const info = getTopicInfo(thumb);
     thumb.dataset.topic = info.slug;
-    if (section) {
-      originalSections.add(section);
-    }
-    if (!topicOrder.has(info.slug) && info.slug !== "other") {
-      topicOrder.add(info.slug);
-      topics.push(info);
+    const group = thumb.closest(".sphx-glr-thumbnails");
+    if (group) {
+      originalThumbnails.add(group);
     }
   });
+
+  const topics = topicList.filter((topic) =>
+    thumbContainers.some((thumb) => thumb.dataset.topic === topic.slug),
+  );
 
   if (topics.length === 0) {
     return;
   }
 
-  const firstSection = thumbContainers[0].closest("section");
+  const firstGroup = thumbContainers[0].closest(".sphx-glr-thumbnails");
   const parent =
-    (firstSection && firstSection.parentNode) ||
+    (firstGroup && firstGroup.parentNode) ||
     document.querySelector(".rst-content");
   if (!parent) {
     return;
@@ -273,11 +305,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   controls.appendChild(filterBar);
   controls.appendChild(unified);
-  parent.insertBefore(controls, firstSection);
+  parent.insertBefore(controls, firstGroup);
 
-  originalSections.forEach((section) => {
-    section.classList.add("gallery-section-hidden");
+  originalThumbnails.forEach((group) => {
+    group.classList.add("gallery-section-hidden");
   });
+  document
+    .querySelectorAll(".gallery-section-header, .gallery-section-description")
+    .forEach((node) => {
+      node.classList.add("gallery-section-hidden");
+    });
   document.body.classList.add("gallery-filter-active");
 
   function setFilter(slug) {
