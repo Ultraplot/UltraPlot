@@ -46,17 +46,25 @@ m = ax.curved_quiver(
     arrowsize=1.4,
     density=20,
     grains=20,
-    cmap="sciviscoloreven",
+    cmap="viko",
 )
+m.lines.set_clim(0.0, 1.0)
 values = m.lines.get_array()
 if values is not None and len(values) > 0:
-    colors = m.lines.get_cmap()(m.lines.norm(values))
-    alpha = (values - values.min()) / (values.max() - values.min() + 1e-12)
-    colors[:, -1] = 0.15 + 0.85 * alpha
+    normed = np.clip(m.lines.norm(values), 0.05, 0.95)
+    colors = m.lines.get_cmap()(normed)
+    colors[:, -1] = 0.15 + 0.85 * normed
     m.lines.set_color(colors)
     m.arrows.set_alpha(0.6)
 theta = np.linspace(0, 2 * np.pi, 200)
-ax.plot(a * np.cos(theta), a * np.sin(theta), color="black", lw=2)
+facecolor = ax.get_facecolor()
+ax.fill(
+    a * np.cos(theta),
+    a * np.sin(theta),
+    color=facecolor,
+    zorder=5,
+)
+ax.plot(a * np.cos(theta), a * np.sin(theta), color="black", lw=2, zorder=6)
 ax.format(
     title="Flow around a cylinder",
     xlabel="x",
@@ -66,3 +74,4 @@ ax.format(
 fig.colorbar(m.lines, ax=ax, label="Speed")
 
 fig.show()
+uplt.show(block=1)
