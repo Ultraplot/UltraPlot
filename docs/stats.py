@@ -79,8 +79,9 @@ fadedata = np.percentile(data, (5, 95), axis=0)  # light shading
 shadedata = np.percentile(data, (25, 75), axis=0)  # dark shading
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Loop through "vertical" and "horizontal" versions
 varray = [[1], [2], [3]]
@@ -164,9 +165,10 @@ for orientation, array in zip(("vertical", "horizontal"), (varray, harray)):
 # with the same keywords used for :ref:`on-the-fly error bars <ug_errorbars>`.
 
 # %%
-import ultraplot as uplt
 import numpy as np
 import pandas as pd
+
+import ultraplot as uplt
 
 # Sample data
 N = 500
@@ -221,8 +223,9 @@ ax.format(title="Multiple colors", ymargin=0.15)
 # will use the same algorithm for kernel density estimation as the `kde` commands.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 M, N = 300, 3
@@ -244,8 +247,9 @@ res = ax.hist(
 )
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 N = 500
@@ -284,3 +288,171 @@ for ax, which, color, title in zip(axs, "lr", colors, titles):
     px = ax.panel("t", space=0)
     px.hist(x, bins, color=color, fill=True, ec="k")
     px.format(grid=False, ylocator=[], title=title, titleloc="l")
+
+
+# %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_ridgeline:
+#
+# Ridgeline plots
+# ---------------
+#
+# Ridgeline plots (also known as joyplots) visualize distributions of multiple
+# datasets as stacked, overlapping density curves. They are useful for comparing
+# distributions across categories or over time. UltraPlot provides
+# :func:`~ultraplot.axes.PlotAxes.ridgeline` and :func:`~ultraplot.axes.PlotAxes.ridgelineh`
+# for creating vertical and horizontal ridgeline plots.
+#
+# Ridgeline plots support two display modes: smooth kernel density estimation (KDE)
+# by default, or histograms with the `hist` keyword. They also support two positioning
+# modes: categorical positioning with evenly-spaced ridges (traditional joyplots),
+# or continuous positioning where ridges are anchored to specific physical coordinates
+# (useful for scientific plots like depth profiles or time series).
+
+# %%
+import numpy as np
+
+import ultraplot as uplt
+
+# Sample data with different distributions
+state = np.random.RandomState(51423)
+data = [state.normal(i, 1, 500) for i in range(5)]
+labels = [f"Distribution {i+1}" for i in range(5)]
+
+# Create figure with two subplots
+fig, axs = uplt.subplots(ncols=2, figsize=(10, 5))
+axs.format(
+    abc="A.", abcloc="ul", grid=False, suptitle="Ridgeline plots: KDE vs Histogram"
+)
+
+# KDE ridgeline (default)
+axs[0].ridgeline(
+    data, labels=labels, overlap=0.6, cmap="viridis", alpha=0.7, linewidth=1.5
+)
+axs[0].format(title="Kernel Density Estimation", xlabel="Value")
+
+# Histogram ridgeline
+axs[1].ridgeline(
+    data,
+    labels=labels,
+    overlap=0.6,
+    cmap="plasma",
+    alpha=0.7,
+    hist=True,
+    bins=20,
+    linewidth=1.5,
+)
+axs[1].format(title="Histogram", xlabel="Value")
+
+# %%
+import numpy as np
+
+import ultraplot as uplt
+
+# Sample data
+state = np.random.RandomState(51423)
+data1 = [state.normal(i * 0.5, 1, 400) for i in range(6)]
+data2 = [state.normal(i, 0.8, 400) for i in range(4)]
+labels1 = [f"Group {i+1}" for i in range(6)]
+labels2 = ["Alpha", "Beta", "Gamma", "Delta"]
+
+# Create figure with vertical and horizontal orientations
+fig, axs = uplt.subplots(ncols=2, figsize=(10, 5))
+axs.format(abc="A.", abcloc="ul", grid=False, suptitle="Ridgeline plot orientations")
+
+# Vertical ridgeline (default - ridges are horizontal)
+axs[0].ridgeline(
+    data1, labels=labels1, overlap=0.7, cmap="coolwarm", alpha=0.8, linewidth=2
+)
+axs[0].format(title="Vertical (ridgeline)", xlabel="Value")
+
+# Horizontal ridgeline (ridges are vertical)
+axs[1].ridgelineh(
+    data2, labels=labels2, overlap=0.6, facecolor="skyblue", alpha=0.7, linewidth=1.5
+)
+axs[1].format(title="Horizontal (ridgelineh)", ylabel="Value")
+
+
+# %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_ridgeline_continuous:
+#
+# Continuous positioning
+# ^^^^^^^^^^^^^^^^^^^^^^
+#
+# For scientific applications, ridgeline plots can use continuous (coordinate-based)
+# positioning where each ridge is anchored to a specific numerical coordinate along
+# the axis. This is useful for visualizing how distributions change with physical
+# variables like depth, time, altitude, or redshift. Use the `positions` parameter
+# to specify coordinates, and optionally the `height` parameter to control ridge height
+# in axis units.
+
+# %%
+import numpy as np
+
+import ultraplot as uplt
+
+# Simulate ocean temperature data at different depths
+state = np.random.RandomState(51423)
+depths = [0, 10, 25, 50, 100]  # meters
+mean_temps = [25, 22, 18, 12, 8]  # decreasing with depth
+data = [state.normal(temp, 2, 400) for temp in mean_temps]
+labels = ["Surface", "10m", "25m", "50m", "100m"]
+
+fig, ax = uplt.subplots(figsize=(8, 6))
+ax.ridgeline(
+    data,
+    labels=labels,
+    positions=depths,
+    height=8,  # height in axis units
+    cmap="coolwarm",
+    alpha=0.75,
+    linewidth=2,
+)
+ax.format(
+    title="Ocean Temperature Distribution by Depth",
+    xlabel="Temperature (°C)",
+    ylabel="Depth (m)",
+    yreverse=True,  # depth increases downward
+    grid=True,
+    gridcolor="gray5",
+    gridalpha=0.3,
+)
+
+# %%
+import numpy as np
+
+import ultraplot as uplt
+
+# Simulate climate data over time
+state = np.random.RandomState(51423)
+years = [1950, 1970, 1990, 2010, 2030]
+mean_temps = [14.0, 14.2, 14.5, 15.0, 15.5]  # warming trend
+data = [state.normal(temp, 0.8, 500) for temp in mean_temps]
+
+fig, axs = uplt.subplots(ncols=2, figsize=(11, 5))
+axs.format(abc="A.", abcloc="ul", suptitle="Categorical vs Continuous positioning")
+
+# Categorical positioning (default)
+axs[0].ridgeline(
+    data, labels=[str(y) for y in years], overlap=0.6, cmap="fire", alpha=0.7
+)
+axs[0].format(
+    title="Categorical (traditional joyplot)", xlabel="Temperature (°C)", grid=False
+)
+
+# Continuous positioning
+axs[1].ridgeline(
+    data,
+    labels=[str(y) for y in years],
+    positions=years,
+    height=15,  # height in year units
+    cmap="fire",
+    alpha=0.7,
+)
+axs[1].format(
+    title="Continuous (scientific)",
+    xlabel="Temperature (°C)",
+    ylabel="Year",
+    grid=True,
+    gridcolor="gray5",
+    gridalpha=0.3,
+)
