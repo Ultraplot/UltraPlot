@@ -45,13 +45,12 @@ Write tests
 ===========
 
 Most modern python packages have ``test_*.py`` scripts that are run by `pytest`
-via continuous integration services like `Travis <https://travis-ci.com>`__
-whenever commits are pushed to the repository. Currently, UltraPlot's continuous
-integration includes only the examples that appear on the website User Guide (see
-`.travis.yml`), and `Casper van Elteren <https://github.com/cvanelteren>` runs additional tests
-manually. This approach leaves out many use cases and leaves the project more
-vulnerable to bugs. Improving ultraplot's continuous integration using `pytest`
-and `pytest-mpl` is a *critical* item on our to-do list.
+via continuous integration whenever commits are pushed to the repository.
+Currently, UltraPlot's automated checks focus on the examples that appear on the
+website User Guide, and `Casper van Elteren <https://github.com/cvanelteren>` runs
+additional tests manually. This approach leaves out many use cases and leaves the
+project more vulnerable to bugs. Improving ultraplot's continuous integration using
+`pytest` and `pytest-mpl` is a *critical* item on our to-do list.
 
 If you can think of a useful test for ultraplot, feel free to submit a pull request.
 Your test will be used in the future.
@@ -103,33 +102,29 @@ Lazy Loading and Adding New Modules
 
 UltraPlot uses a lazy loading mechanism to improve import times. This means that
 submodules are not imported until they are actually used. This is controlled by the
-`__getattr__` function in `ultraplot/__init__.py`.
+`__getattr__` function in `ultraplot/__init__.py` and the `LazyLoader` helper in
+`ultraplot/_lazy.py`.
 
-When adding a new submodule, you need to make sure it's compatible with the lazy
-loader. Here's how to do it:
+When adding a new submodule, make sure it is compatible with the lazy loader:
 
-1.  **Add the submodule to `_STAR_MODULES`:** In `ultraplot/__init__.py`, add the
-    name of your new submodule to the `_STAR_MODULES` tuple. This will make it
-    discoverable by the lazy loader.
+1.  **Add the module file or package:** Place your new module in `ultraplot/` as
+    `my_module.py`, or as a package directory with an `__init__.py`.
 
-2.  **Add the submodule to `_MODULE_SOURCES`:** Also in `ultraplot/__init__.py`,
-    add an entry to the `_MODULE_SOURCES` dictionary that maps the name of your
-    submodule to its source file.
+2.  **Expose public names via `__all__` (optional):** The lazy loader inspects
+    `__all__` in modules and packages to know which attributes to expose at the
+    top level. If you want `uplt.MyClass` or `uplt.my_function` to resolve
+    directly, include them in `__all__` in your module. If `__all__` is not
+    present, the lazy loader will still expose the module itself as
+    `uplt.my_module`.
 
-3.  **Exposing Callables:** If you want to expose a function or class from your
-    submodule as a top-level attribute of the `ultraplot` package (e.g.,
-    `uplt.my_function`), you need to add an entry to the `_EXTRA_ATTRS`
-    dictionary.
+3.  **Add explicit exceptions when needed:** If a top-level name should map to a
+    different module or attribute (or needs special handling), add it to
+    `_LAZY_LOADING_EXCEPTIONS` in `ultraplot/__init__.py`. This mapping controls
+    explicit name-to-module lookups that should override the default discovery
+    behavior.
 
-    *   To expose a function or class `MyFunction` from `my_module.py` as
-        `uplt.my_function`, add the following to `_EXTRA_ATTRS`:
-        `"my_function": ("my_module", "MyFunction")`.
-    *   If you want to expose the entire submodule as a top-level attribute
-        (e.g., `uplt.my_module`), you can add:
-        `"my_module": ("my_module", None)`.
-
-By following these steps, you can ensure that your new module is correctly
-integrated into the lazy loading system.
+By following these steps, your module will integrate cleanly with the lazy loading
+system without requiring manual registry updates.
 
 
 .. _contrib_pr:
