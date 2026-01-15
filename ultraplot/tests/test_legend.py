@@ -661,3 +661,46 @@ def test_legend_span_inference_with_multi_panels(
     panel_ax = anchor._panel_dict[side_map[second_loc]][-1]
     span = _decode_panel_span(panel_ax, span_axis)
     assert span == (0, 2)
+
+
+def test_legend_best_axis_selection_right_left():
+    fig, axs = uplt.subplots(nrows=1, ncols=3)
+    axs.plot([0, 1], [0, 1], label="line")
+    ref = [axs[0, 0], axs[0, 2]]
+
+    fig.legend(ref=ref, loc="r", rows=1)
+    assert len(axs[0, 2]._panel_dict["right"]) == 1
+    assert len(axs[0, 0]._panel_dict["right"]) == 0
+
+    fig.legend(ref=ref, loc="l", rows=1)
+    assert len(axs[0, 0]._panel_dict["left"]) == 1
+    assert len(axs[0, 2]._panel_dict["left"]) == 0
+
+
+def test_legend_best_axis_selection_top_bottom():
+    fig, axs = uplt.subplots(nrows=2, ncols=1)
+    axs.plot([0, 1], [0, 1], label="line")
+    ref = [axs[0, 0], axs[1, 0]]
+
+    fig.legend(ref=ref, loc="t", cols=1)
+    assert len(axs[0, 0]._panel_dict["top"]) == 1
+    assert len(axs[1, 0]._panel_dict["top"]) == 0
+
+    fig.legend(ref=ref, loc="b", cols=1)
+    assert len(axs[1, 0]._panel_dict["bottom"]) == 1
+    assert len(axs[0, 0]._panel_dict["bottom"]) == 0
+
+
+def test_legend_span_decode_fallback(monkeypatch):
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    axs.plot([0, 1], [0, 1], label="line")
+    ref = axs[:, 0]
+
+    gs = axs[0, 0].get_subplotspec().get_topmost_subplotspec().get_gridspec()
+
+    def _raise_decode(*args, **kwargs):
+        raise ValueError("forced")
+
+    monkeypatch.setattr(gs, "_decode_indices", _raise_decode)
+    leg = fig.legend(ref=ref, loc="r")
+    assert leg is not None
