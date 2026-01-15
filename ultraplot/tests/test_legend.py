@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 import ultraplot as uplt
@@ -469,8 +470,11 @@ def test_legend_multiple_sides_with_span():
     fig, axs = uplt.subplots(nrows=3, ncols=3)
     axs.plot([0, 1], [0, 1], label="line")
 
-    fig.legend(ref=first_ref(axs), loc=first_loc)
-    fig.legend(ref=second_ref(axs), loc=second_loc)
+    # Create legends on all 4 sides with different spans
+    leg_bottom = fig.legend(ref=axs[0, 0], span=(1, 2), loc="bottom")
+    leg_top = fig.legend(ref=axs[1, 0], span=(2, 3), loc="top")
+    leg_right = fig.legend(ref=axs[0, 0], rows=(1, 2), loc="right")
+    leg_left = fig.legend(ref=axs[0, 1], rows=(2, 3), loc="left")
 
     assert leg_bottom is not None
     assert leg_top is not None
