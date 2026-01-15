@@ -22,7 +22,7 @@ import ultraplot as uplt
 # Projections to compare
 projs = ["moll", "ortho", "kav7"]
 
-fig, axs = uplt.subplots(ncols=3, proj=projs, refwidth=3)
+fig, axs = uplt.subplots(ncols=3, proj=projs, refwidth=3, share = 0)
 
 # Format all axes with features
 # land=True, coast=True, etc. are shortcuts for adding cartopy features
