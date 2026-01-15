@@ -335,6 +335,41 @@ def test_subset_share_xlabels_implicit_column():
     uplt.close(fig)
 
 
+def test_subset_share_xlabels_overridden_by_global_format():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    bottom = ax[1, :]
+    bottom.format(xlabel="Bottom-row X")
+    ax[0, 0].format(xlabel="Top-left X")
+    ax.format(xlabel="Global X")
+
+    fig.canvas.draw()
+
+    assert ax[0, 0].get_xlabel() == "Global X"
+    assert ax[0, 1].get_xlabel() == "Global X"
+    assert not any(
+        lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values()
+    )
+
+    uplt.close(fig)
+
+
+def test_full_grid_clears_share_label_groups():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
+    bottom = ax[1, :]
+    bottom.format(xlabel="Bottom-row X")
+    ax.format(xlabel="Global X")
+
+    fig.canvas.draw()
+
+    assert not fig._has_share_label_groups("x")
+    assert not any(
+        lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values()
+    )
+    assert all(axi.get_xlabel() == "Global X" for axi in ax)
+
+    uplt.close(fig)
+
+
 def test_subset_share_ylabels_implicit_row():
     fig, ax = uplt.subplots(ncols=2, nrows=2, share=0, span=False)
     top = ax[0, :]

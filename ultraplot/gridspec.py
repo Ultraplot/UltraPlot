@@ -1767,6 +1767,10 @@ class SubplotGrid(MutableSequence, list):
         all_axes = set(self.figure._subplot_dict.values())
         is_subset = bool(axes) and all_axes and set(axes) != all_axes
         if len(self) > 1:
+            if not is_subset and share_xlabels is None and xlabel is not None:
+                self.figure._clear_share_label_groups(target="x")
+            if not is_subset and share_ylabels is None and ylabel is not None:
+                self.figure._clear_share_label_groups(target="y")
             if share_xlabels is False:
                 self.figure._clear_share_label_groups(self, target="x")
             if share_ylabels is False:
