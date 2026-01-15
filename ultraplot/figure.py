@@ -1877,6 +1877,10 @@ class Figure(mfigure.Figure):
             if ax in seen or pos not in ("bottom", "left"):
                 continue  # already aligned or cannot align
             axs = ax._get_span_axes(pos, panels=False)  # returns panel or main axes
+            if self._has_share_label_groups(x) and any(
+                self._is_share_label_group_member(axi, x) for axi in axs
+            ):
+                continue  # explicit label groups override default spanning
             if any(getattr(ax, "_share" + x) for ax in axs):
                 continue  # nothing to align or axes have parents
             seen.update(axs)
@@ -2523,6 +2527,18 @@ class Figure(mfigure.Figure):
             for cls, sig in paxes.Axes._format_signatures.items()
         }
         classes = set()  # track used dictionaries
+
+        def _axis_has_share_label_text(ax, axis):
+            groups = self._share_label_groups.get(axis, {})
+            for group in groups.values():
+                if ax in group["axes"] and str(group.get("text", "")).strip():
+                    return True
+            return False
+
+        def _axis_has_label_text(ax, axis):
+            text = ax.get_xlabel() if axis == "x" else ax.get_ylabel()
+            return bool(text and text.strip())
+
         for number, ax in enumerate(axs):
             number = number + 1  # number from 1
             store_old_number = ax.number
@@ -2534,6 +2550,12 @@ class Figure(mfigure.Figure):
                 for key, value in kw.items()
                 if isinstance(ax, cls) and not classes.add(cls)
             }
+            if kw.get("xlabel") is not None and self._has_share_label_groups("x"):
+                if _axis_has_share_label_text(ax, "x") or _axis_has_label_text(ax, "x"):
+                    kw.pop("xlabel", None)
+            if kw.get("ylabel") is not None and self._has_share_label_groups("y"):
+                if _axis_has_share_label_text(ax, "y") or _axis_has_label_text(ax, "y"):
+                    kw.pop("ylabel", None)
             ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
             ax.number = store_old_number
         # Warn unused keyword argument(s)
