@@ -704,3 +704,47 @@ def test_legend_span_decode_fallback(monkeypatch):
     monkeypatch.setattr(gs, "_decode_indices", _raise_decode)
     leg = fig.legend(ref=ref, loc="r")
     assert leg is not None
+
+
+def test_legend_span_inference_skips_invalid_ref_axes():
+    class DummyNoSpec:
+        pass
+
+    class DummyNullSpec:
+        def get_subplotspec(self):
+            return None
+
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    axs[0].plot([0, 1], [0, 1], label="line")
+    ref = [DummyNoSpec(), DummyNullSpec(), axs[0]]
+
+    leg = fig.legend(ax=axs[0], ref=ref, loc="r")
+    assert leg is not None
+    assert len(axs[0]._panel_dict["right"]) == 1
+
+
+def test_legend_best_axis_fallback_with_inset_loc():
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    axs.plot([0, 1], [0, 1], label="line")
+
+    leg = fig.legend(ref=axs, loc="upper left", rows=1)
+    assert leg is not None
+
+
+def test_legend_best_axis_fallback_empty_iterable_ref():
+    class LegendProxy:
+        def __init__(self, ax):
+            self._ax = ax
+
+        def __iter__(self):
+            return iter(())
+
+        def legend(self, *args, **kwargs):
+            return self._ax.legend(*args, **kwargs)
+
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1], [0, 1], label="line")
+    proxy = LegendProxy(ax)
+
+    leg = fig.legend(ref=proxy, loc="upper left", rows=1)
+    assert leg is not None
