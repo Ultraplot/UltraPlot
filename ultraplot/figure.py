@@ -313,7 +313,7 @@ number : int, optional
     The axes number used for a-b-c labeling. See `~ultraplot.axes.Axes.format` for
     details. By default this is incremented automatically based on the other subplots
     in the figure. Use e.g. ``number=None`` or ``number=False`` to ensure the subplot
-    has no a-b-c label. Note the number corresponding to ``a`` is ``1``, not ``0``.
+    has no a-b-c label. Note the number corresponding to `a` is ``1``, not ``0``.
 autoshare : bool, default: True
     Whether to automatically share the *x* and *y* axes with subplots spanning the
     same rows and columns based on the figure-wide `sharex` and `sharey` settings.
@@ -1958,6 +1958,10 @@ class Figure(mfigure.Figure):
             if ax in seen or pos not in ("bottom", "left"):
                 continue  # already aligned or cannot align
             axs = ax._get_span_axes(pos, panels=False)  # returns panel or main axes
+            if self._has_share_label_groups(x) and any(
+                self._is_share_label_group_member(axi, x) for axi in axs
+            ):
+                continue  # explicit label groups override default spanning
             if any(getattr(ax, "_share" + x) for ax in axs):
                 continue  # nothing to align or axes have parents
             seen.update(axs)
@@ -2604,6 +2608,18 @@ class Figure(mfigure.Figure):
             for cls, sig in paxes.Axes._format_signatures.items()
         }
         classes = set()  # track used dictionaries
+
+        def _axis_has_share_label_text(ax, axis):
+            groups = self._share_label_groups.get(axis, {})
+            for group in groups.values():
+                if ax in group["axes"] and str(group.get("text", "")).strip():
+                    return True
+            return False
+
+        def _axis_has_label_text(ax, axis):
+            text = ax.get_xlabel() if axis == "x" else ax.get_ylabel()
+            return bool(text and text.strip())
+
         for number, ax in enumerate(axs):
             number = number + 1  # number from 1
             store_old_number = ax.number
@@ -2615,6 +2631,12 @@ class Figure(mfigure.Figure):
                 for key, value in kw.items()
                 if isinstance(ax, cls) and not classes.add(cls)
             }
+            if kw.get("xlabel") is not None and self._has_share_label_groups("x"):
+                if _axis_has_share_label_text(ax, "x") or _axis_has_label_text(ax, "x"):
+                    kw.pop("xlabel", None)
+            if kw.get("ylabel") is not None and self._has_share_label_groups("y"):
+                if _axis_has_share_label_text(ax, "y") or _axis_has_label_text(ax, "y"):
+                    kw.pop("ylabel", None)
             ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
             ax.number = store_old_number
         # Warn unused keyword argument(s)
@@ -2675,6 +2697,8 @@ class Figure(mfigure.Figure):
         """
         # Backwards compatibility
         ax = kwargs.pop("ax", None)
+        ref = kwargs.pop("ref", None)
+        loc_ax = ref if ref is not None else ax
         cax = kwargs.pop("cax", None)
         if isinstance(values, maxes.Axes):
             cax = _not_none(cax_positional=values, cax=cax)
@@ -2694,20 +2718,118 @@ class Figure(mfigure.Figure):
             with context._state_context(cax, _internal_call=True):  # do not wrap pcolor
                 cb = super().colorbar(mappable, cax=cax, **kwargs)
         # Axes panel colorbar
-        elif ax is not None:
+        elif loc_ax is not None:
             # Check if span parameters are provided
             has_span = _not_none(span, row, col, rows, cols) is not None
 
+            # Infer span from loc_ax if it is a list and no span provided
+            if (
+                not has_span
+                and np.iterable(loc_ax)
+                and not isinstance(loc_ax, (str, maxes.Axes))
+            ):
+                loc_trans = _translate_loc(loc, "colorbar", default=rc["colorbar.loc"])
+                side = (
+                    loc_trans
+                    if loc_trans in ("left", "right", "top", "bottom")
+                    else None
+                )
+
+                if side:
+                    r_min, r_max = float("inf"), float("-inf")
+                    c_min, c_max = float("inf"), float("-inf")
+                    valid_ax = False
+                    for axi in loc_ax:
+                        if not hasattr(axi, "get_subplotspec"):
+                            continue
+                        ss = axi.get_subplotspec()
+                        if ss is None:
+                            continue
+                        ss = ss.get_topmost_subplotspec()
+                        r1, r2, c1, c2 = ss._get_rows_columns()
+                        gs = ss.get_gridspec()
+                        if gs is not None:
+                            try:
+                                r1, r2 = gs._decode_indices(r1, r2, which="h")
+                                c1, c2 = gs._decode_indices(c1, c2, which="w")
+                            except ValueError:
+                                # Non-panel decode can fail for panel or nested specs.
+                                pass
+                        r_min = min(r_min, r1)
+                        r_max = max(r_max, r2)
+                        c_min = min(c_min, c1)
+                        c_max = max(c_max, c2)
+                        valid_ax = True
+
+                    if valid_ax:
+                        if side in ("left", "right"):
+                            rows = (r_min + 1, r_max + 1)
+                        else:
+                            cols = (c_min + 1, c_max + 1)
+                        has_span = True
+
             # Extract a single axes from array if span is provided
             # Otherwise, pass the array as-is for normal colorbar behavior
-            if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
-                try:
-                    ax_single = next(iter(ax))
+            if (
+                has_span
+                and np.iterable(loc_ax)
+                and not isinstance(loc_ax, (str, maxes.Axes))
+            ):
+                # Pick the best axis to anchor to based on the colorbar side
+                loc_trans = _translate_loc(loc, "colorbar", default=rc["colorbar.loc"])
+                side = (
+                    loc_trans
+                    if loc_trans in ("left", "right", "top", "bottom")
+                    else None
+                )
 
-                except (TypeError, StopIteration):
-                    ax_single = ax
+                best_ax = None
+                best_coord = float("-inf")
+
+                # If side is determined, search for the edge axis
+                if side:
+                    for axi in loc_ax:
+                        if not hasattr(axi, "get_subplotspec"):
+                            continue
+                        ss = axi.get_subplotspec()
+                        if ss is None:
+                            continue
+                        ss = ss.get_topmost_subplotspec()
+                        r1, r2, c1, c2 = ss._get_rows_columns()
+                        gs = ss.get_gridspec()
+                        if gs is not None:
+                            try:
+                                r1, r2 = gs._decode_indices(r1, r2, which="h")
+                                c1, c2 = gs._decode_indices(c1, c2, which="w")
+                            except ValueError:
+                                # Non-panel decode can fail for panel or nested specs.
+                                pass
+
+                        if side == "right":
+                            val = c2  # Maximize column index
+                        elif side == "left":
+                            val = -c1  # Minimize column index
+                        elif side == "bottom":
+                            val = r2  # Maximize row index
+                        elif side == "top":
+                            val = -r1  # Minimize row index
+                        else:
+                            val = 0
+
+                        if val > best_coord:
+                            best_coord = val
+                            best_ax = axi
+
+                # Fallback to first axis
+                if best_ax is None:
+                    try:
+                        ax_single = next(iter(loc_ax))
+                    except (TypeError, StopIteration):
+                        ax_single = loc_ax
+                else:
+                    ax_single = best_ax
             else:
-                ax_single = ax
+                ax_single = loc_ax
 
             # Pass span parameters through to axes colorbar
             cb = ax_single.colorbar(
@@ -2781,27 +2903,150 @@ class Figure(mfigure.Figure):
         matplotlib.axes.Axes.legend
         """
         ax = kwargs.pop("ax", None)
+        ref = kwargs.pop("ref", None)
+        loc_ax = ref if ref is not None else ax
+
         # Axes panel legend
-        if ax is not None:
+        if loc_ax is not None:
+            content_ax = ax if ax is not None else loc_ax
             # Check if span parameters are provided
             has_span = _not_none(span, row, col, rows, cols) is not None
-            # Extract a single axes from array if span is provided
-            # Otherwise, pass the array as-is for normal legend behavior
-            # Automatically collect handles and labels from spanned axes if not provided
-            if has_span and np.iterable(ax) and not isinstance(ax, (str, maxes.Axes)):
-                # Auto-collect handles and labels if not explicitly provided
-                if handles is None and labels is None:
-                    handles, labels = [], []
-                    for axi in ax:
+
+            # Automatically collect handles and labels from content axes if not provided
+            # Case 1: content_ax is a list (we must auto-collect)
+            # Case 2: content_ax != loc_ax (we must auto-collect because loc_ax.legend won't find content_ax handles)
+            must_collect = (
+                np.iterable(content_ax)
+                and not isinstance(content_ax, (str, maxes.Axes))
+            ) or (content_ax is not loc_ax)
+
+            if must_collect and handles is None and labels is None:
+                handles, labels = [], []
+                # Handle list of axes
+                if np.iterable(content_ax) and not isinstance(
+                    content_ax, (str, maxes.Axes)
+                ):
+                    for axi in content_ax:
                         h, l = axi.get_legend_handles_labels()
                         handles.extend(h)
                         labels.extend(l)
-                try:
-                    ax_single = next(iter(ax))
-                except (TypeError, StopIteration):
-                    ax_single = ax
+                # Handle single axis
+                else:
+                    handles, labels = content_ax.get_legend_handles_labels()
+
+            # Infer span from loc_ax if it is a list and no span provided
+            if (
+                not has_span
+                and np.iterable(loc_ax)
+                and not isinstance(loc_ax, (str, maxes.Axes))
+            ):
+                loc_trans = _translate_loc(loc, "legend", default=rc["legend.loc"])
+                side = (
+                    loc_trans
+                    if loc_trans in ("left", "right", "top", "bottom")
+                    else None
+                )
+
+                if side:
+                    r_min, r_max = float("inf"), float("-inf")
+                    c_min, c_max = float("inf"), float("-inf")
+                    valid_ax = False
+                    for axi in loc_ax:
+                        if not hasattr(axi, "get_subplotspec"):
+                            continue
+                        ss = axi.get_subplotspec()
+                        if ss is None:
+                            continue
+                        ss = ss.get_topmost_subplotspec()
+                        r1, r2, c1, c2 = ss._get_rows_columns()
+                        gs = ss.get_gridspec()
+                        if gs is not None:
+                            try:
+                                r1, r2 = gs._decode_indices(r1, r2, which="h")
+                                c1, c2 = gs._decode_indices(c1, c2, which="w")
+                            except ValueError:
+                                pass
+                        r_min = min(r_min, r1)
+                        r_max = max(r_max, r2)
+                        c_min = min(c_min, c1)
+                        c_max = max(c_max, c2)
+                        valid_ax = True
+
+                    if valid_ax:
+                        if side in ("left", "right"):
+                            rows = (r_min + 1, r_max + 1)
+                        else:
+                            cols = (c_min + 1, c_max + 1)
+                        has_span = True
+
+            # Extract a single axes from array if span is provided (or if ref is a list)
+            # Otherwise, pass the array as-is for normal legend behavior (only if loc_ax is list)
+            if (
+                has_span
+                and np.iterable(loc_ax)
+                and not isinstance(loc_ax, (str, maxes.Axes))
+            ):
+                # Pick the best axis to anchor to based on the legend side
+                loc_trans = _translate_loc(loc, "legend", default=rc["legend.loc"])
+                side = (
+                    loc_trans
+                    if loc_trans in ("left", "right", "top", "bottom")
+                    else None
+                )
+
+                best_ax = None
+                best_coord = float("-inf")
+
+                # If side is determined, search for the edge axis
+                if side:
+                    for axi in loc_ax:
+                        if not hasattr(axi, "get_subplotspec"):
+                            continue
+                        ss = axi.get_subplotspec()
+                        if ss is None:
+                            continue
+                        ss = ss.get_topmost_subplotspec()
+                        r1, r2, c1, c2 = ss._get_rows_columns()
+                        gs = ss.get_gridspec()
+                        if gs is not None:
+                            try:
+                                r1, r2 = gs._decode_indices(r1, r2, which="h")
+                                c1, c2 = gs._decode_indices(c1, c2, which="w")
+                            except ValueError:
+                                pass
+
+                        if side == "right":
+                            val = c2  # Maximize column index
+                        elif side == "left":
+                            val = -c1  # Minimize column index
+                        elif side == "bottom":
+                            val = r2  # Maximize row index
+                        elif side == "top":
+                            val = -r1  # Minimize row index
+                        else:
+                            val = 0
+
+                        if val > best_coord:
+                            best_coord = val
+                            best_ax = axi
+
+                # Fallback to first axis if no best axis found (or side is None)
+                if best_ax is None:
+                    try:
+                        ax_single = next(iter(loc_ax))
+                    except (TypeError, StopIteration):
+                        ax_single = loc_ax
+                else:
+                    ax_single = best_ax
+
             else:
-                ax_single = ax
+                ax_single = loc_ax
+                if isinstance(ax_single, list):
+                    try:
+                        ax_single = pgridspec.SubplotGrid(ax_single)
+                    except ValueError:
+                        ax_single = ax_single[0]
+
             leg = ax_single.legend(
                 handles,
                 labels,

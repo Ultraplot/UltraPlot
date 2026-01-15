@@ -23,8 +23,8 @@ from collections.abc import MutableMapping
 from numbers import Integral, Number
 from xml.etree import ElementTree
 
-import matplotlib.cm as mcm
 import matplotlib as mpl
+import matplotlib.cm as mcm
 import matplotlib.colors as mcolors
 import numpy as np
 import numpy.ma as ma
@@ -44,12 +44,12 @@ def _cycle_handler(value):
 
 rc.register_handler("cycle", _cycle_handler)
 
-from .internals import ic  # noqa: F401
 from .internals import (
     _kwargs_to_args,
     _not_none,
     _pop_props,
     docstring,
+    ic,  # noqa: F401
     inputs,
     warnings,
 )
@@ -584,7 +584,7 @@ def _make_lookup_table(N, data, gamma=1.0, inverse=False):
             y = y_{1,i} + w_i^{\gamma_i}*(y_{0,i+1} - y_{1,i})
 
         where `\gamma_i` corresponds to `gamma` and the weight `w_i` ranges from
-        0 to 1 between rows ``i`` and ``i+1``. If `gamma` is float, it applies
+        0 to 1 between rows `i` and ``i+1``. If `gamma` is float, it applies
         to every transition. Otherwise, its length must equal ``data.shape[0]-1``.
 
         This is similar to the `matplotlib.colors.makeMappingArray` `gamma` except
@@ -910,11 +910,12 @@ class _Colormap(object):
             # NOTE: This appears to be biggest import time bottleneck! Increases
             # time from 0.05s to 0.2s, with numpy loadtxt or with this regex thing.
             delim = re.compile(r"[,\s]+")
-            data = [
-                delim.split(line.strip())
-                for line in open(path)
-                if line.strip() and line.strip()[0] != "#"
-            ]
+            with open(path) as f:
+                data = [
+                    delim.split(line.strip())
+                    for line in f
+                    if line.strip() and line.strip()[0] != "#"
+                ]
             try:
                 data = [[float(num) for num in line] for line in data]
             except ValueError:
@@ -966,7 +967,8 @@ class _Colormap(object):
         # Read hex strings
         elif ext == "hex":
             # Read arbitrary format
-            string = open(path).read()  # into single string
+            with open(path) as f:
+                string = f.read()  # into single string
             data = REGEX_HEX_MULTI.findall(string)
             if len(data) < 2:
                 return _warn_or_raise("Failed to find 6-digit or 8-digit HEX strings.")
@@ -3057,7 +3059,7 @@ class ColorDatabase(MutableMapping, dict):
           The number is the color list index.
 
         This works everywhere that colors are used in matplotlib, for
-        example as `color`, `edgecolor', or `facecolor` keyword arguments
+        example as `color`, `edgecolor`, or `facecolor` keyword arguments
         passed to :class:`~ultraplot.axes.PlotAxes` commands.
         """
         key = self._parse_key(key)

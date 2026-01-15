@@ -425,6 +425,12 @@ class GridSpec(mgridspec.GridSpec):
         nums = []
         idxs = self._get_indices(which=which, panel=panel)
         for arg in args:
+            if isinstance(arg, (list, np.ndarray)):
+                try:
+                    nums.append([idxs[int(i)] for i in arg])
+                except (IndexError, TypeError):
+                    raise ValueError(f"Invalid gridspec index {arg}.")
+                continue
             try:
                 nums.append(idxs[arg])
             except (IndexError, TypeError):
@@ -1612,10 +1618,13 @@ class SubplotGrid(MutableSequence, list):
         >>> axs[:, 0]  # a SubplotGrid containing the subplots in the first column
         """
         # Allow 1D list-like indexing
-        if isinstance(key, int):
+        if isinstance(key, (Integral, np.integer)):
             return list.__getitem__(self, key)
         elif isinstance(key, slice):
             return SubplotGrid(list.__getitem__(self, key))
+        elif isinstance(key, (list, np.ndarray)):
+            # NOTE: list.__getitem__ does not support numpy integers
+            return SubplotGrid([list.__getitem__(self, int(i)) for i in key])
 
         # Allow 2D array-like indexing
         # NOTE: We assume this is a 2D array of subplots, because this is
@@ -1759,6 +1768,10 @@ class SubplotGrid(MutableSequence, list):
         all_axes = set(self.figure._subplot_dict.values())
         is_subset = bool(axes) and all_axes and set(axes) != all_axes
         if len(self) > 1:
+            if not is_subset and share_xlabels is None and xlabel is not None:
+                self.figure._clear_share_label_groups(target="x")
+            if not is_subset and share_ylabels is None and ylabel is not None:
+                self.figure._clear_share_label_groups(target="y")
             if share_xlabels is False:
                 self.figure._clear_share_label_groups(self, target="x")
             if share_ylabels is False:

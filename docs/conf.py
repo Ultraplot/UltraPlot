@@ -12,14 +12,14 @@
 # -- Imports and paths --------------------------------------------------------------
 
 # Import statements
-import os
-import sys
 import datetime
+import os
 import subprocess
-from pathlib import Path
+import sys
 
 # Surpress warnings from cartopy when downloading data inside docs env
 import warnings
+from pathlib import Path
 
 try:
     from cartopy.io import DownloadWarning
@@ -38,6 +38,7 @@ try:
     if not hasattr(sphinx.util, "console"):
         # Create a compatibility layer
         import sys
+
         import sphinx.util
         from sphinx.util import logging
 
@@ -54,7 +55,7 @@ except Exception:
 # Build what's news page from github releases
 from subprocess import run
 
-run("python _scripts/fetch_releases.py".split(), check=False)
+run([sys.executable, "_scripts/fetch_releases.py"], check=False)
 
 # Update path for sphinx-automodapi and sphinxext extension
 sys.path.append(os.path.abspath("."))
@@ -62,7 +63,6 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # Print available system fonts
 from matplotlib.font_manager import fontManager
-
 
 # -- Project information -------------------------------------------------------
 # The basic info
@@ -296,6 +296,11 @@ pygments_style = "none"
 
 
 # -- Options for HTML output -------------------------------------------------
+
+# Meta
+html_meta = {
+    "google-site-verification": "jrFbkSQGBUPSYP5LERld7DDSm1UtbMY9O5o3CdzHJzU",
+}
 
 # Logo
 html_logo = str(Path("_static") / "logo_square.png")
