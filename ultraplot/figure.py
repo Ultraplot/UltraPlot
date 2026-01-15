@@ -2644,6 +2644,14 @@ class Figure(mfigure.Figure):
                             continue
                         ss = ss.get_topmost_subplotspec()
                         r1, r2, c1, c2 = ss._get_rows_columns()
+                        gs = ss.get_gridspec()
+                        if gs is not None:
+                            try:
+                                r1, r2 = gs._decode_indices(r1, r2, which="h")
+                                c1, c2 = gs._decode_indices(c1, c2, which="w")
+                            except ValueError:
+                                # Non-panel decode can fail for panel or nested specs.
+                                pass
                         r_min = min(r_min, r1)
                         r_max = max(r_max, r2)
                         c_min = min(c_min, c1)
@@ -2685,6 +2693,14 @@ class Figure(mfigure.Figure):
                             continue
                         ss = ss.get_topmost_subplotspec()
                         r1, r2, c1, c2 = ss._get_rows_columns()
+                        gs = ss.get_gridspec()
+                        if gs is not None:
+                            try:
+                                r1, r2 = gs._decode_indices(r1, r2, which="h")
+                                c1, c2 = gs._decode_indices(c1, c2, which="w")
+                            except ValueError:
+                                # Non-panel decode can fail for panel or nested specs.
+                                pass
 
                         if side == "right":
                             val = c2  # Maximize column index
@@ -2840,6 +2856,13 @@ class Figure(mfigure.Figure):
                             continue
                         ss = ss.get_topmost_subplotspec()
                         r1, r2, c1, c2 = ss._get_rows_columns()
+                        gs = ss.get_gridspec()
+                        if gs is not None:
+                            try:
+                                r1, r2 = gs._decode_indices(r1, r2, which="h")
+                                c1, c2 = gs._decode_indices(c1, c2, which="w")
+                            except ValueError:
+                                pass
                         r_min = min(r_min, r1)
                         r_max = max(r_max, r2)
                         c_min = min(c_min, c1)
@@ -2881,6 +2904,13 @@ class Figure(mfigure.Figure):
                             continue
                         ss = ss.get_topmost_subplotspec()
                         r1, r2, c1, c2 = ss._get_rows_columns()
+                        gs = ss.get_gridspec()
+                        if gs is not None:
+                            try:
+                                r1, r2 = gs._decode_indices(r1, r2, which="h")
+                                c1, c2 = gs._decode_indices(c1, c2, which="w")
+                            except ValueError:
+                                pass
 
                         if side == "right":
                             val = c2  # Maximize column index
