@@ -23,7 +23,7 @@ import numpy as np
 import ultraplot as uplt
 
 rng = np.random.default_rng(7)
-layout = [[1, 1, 2, 2], [0, 3, 3, 0], [4, 4, 5, 5]]
+layout = [[1, 1, 2, 2], [3, 3, 3, 4]]
 fig, axs = uplt.subplots(layout, share=0, refwidth=1.4)
 
 # Panel A: time series with inset zoom.
@@ -61,3 +61,5 @@ axs[3].format(title="Relationship", xlabel="Predictor", ylabel="Response")
 axs.format(abc=True, abcloc="ul", suptitle="Complex layout with insets and mixed plots")
 
 fig.show()
+
+uplt.show(block=1)
