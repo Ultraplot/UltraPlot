@@ -338,6 +338,11 @@ pygments_style = "none"
 
 # -- Options for HTML output -------------------------------------------------
 
+# Meta
+html_meta = {
+    "google-site-verification": "jrFbkSQGBUPSYP5LERld7DDSm1UtbMY9O5o3CdzHJzU",
+}
+
 # Logo
 html_logo = str(Path("_static") / "logo_square.png")
 
