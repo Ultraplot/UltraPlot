@@ -951,7 +951,7 @@ edgecolors, markeredgecolor, markeredgecolors \
 **kwargs
     Passed to `~matplotlib.axes.Axes.scatter`.
 
-See for more info on the grouping behavior :func:`~ultraplot.PlotAxes.bar`, and for formatting :func:~ultraplot.PlotAxes.scatter`.
+See for more info on the grouping behavior :func:`~ultraplot.PlotAxes.bar`, and for formatting :func:`~ultraplot.PlotAxes.scatter`.
 Returns
 -------
 List of ~matplotlib.collections.PatchCollection, and a ~matplotlib.collections.LineCollection
@@ -1282,8 +1282,8 @@ Plot a networkx graph with flexible node, edge, and label options.
 Parameters
 ----------
 g : networkx.Graph
-    The graph object to be plotted. Can be any subclass of :class:`networkx.Graph`, such as
-    :class:`networkx.DiGraph` or :class:`networkx.MultiGraph`.
+    The graph object to be plotted. Can be any subclass of :class:`~networkx.Graph`, such as
+    :class:`~networkx.DiGraph` or :class:`~networkx.MultiGraph`.
 layout : callable or dict, optional
     A layout function or a precomputed dict mapping nodes to 2D positions. If a function
     is given, it is called as ``layout(g, **layout_kw)`` to compute positions. See :func:`networkx.drawing.nx_pylab.draw` for more information.

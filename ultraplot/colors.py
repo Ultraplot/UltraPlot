@@ -584,7 +584,7 @@ def _make_lookup_table(N, data, gamma=1.0, inverse=False):
             y = y_{1,i} + w_i^{\gamma_i}*(y_{0,i+1} - y_{1,i})
 
         where `\gamma_i` corresponds to `gamma` and the weight `w_i` ranges from
-        0 to 1 between rows ``i`` and ``i+1``. If `gamma` is float, it applies
+        0 to 1 between rows `i` and ``i+1``. If `gamma` is float, it applies
         to every transition. Otherwise, its length must equal ``data.shape[0]-1``.
 
         This is similar to the `matplotlib.colors.makeMappingArray` `gamma` except
@@ -3057,7 +3057,7 @@ class ColorDatabase(MutableMapping, dict):
           The number is the color list index.
 
         This works everywhere that colors are used in matplotlib, for
-        example as `color`, `edgecolor', or `facecolor` keyword arguments
+        example as `color`, `edgecolor`, or `facecolor` keyword arguments
         passed to :class:`~ultraplot.axes.PlotAxes` commands.
         """
         key = self._parse_key(key)
