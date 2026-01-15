@@ -4,17 +4,17 @@ Internal utilities.
 """
 # Import statements
 import inspect
+from importlib import import_module
 from numbers import Integral, Real
 
 import numpy as np
-from matplotlib import rcParams as rc_matplotlib
 
 try:  # print debugging (used with internal modules)
     from icecream import ic
 except ImportError:  # graceful fallback if IceCream isn't installed
     ic = lambda *args: print(*args)  # noqa: E731
 
-from . import warnings as warns
+from . import warnings
 
 
 def _not_none(*args, default=None, **kwargs):
@@ -44,22 +44,10 @@ def _not_none(*args, default=None, **kwargs):
     return first
 
 
-# Internal import statements
-# WARNING: Must come after _not_none because this is leveraged inside other funcs
-from . import (  # noqa: F401
-    benchmarks,
-    context,
-    docstring,
-    fonts,
-    guides,
-    inputs,
-    labels,
-    rcsetup,
-    versions,
-    warnings,
-)
-from .versions import _version_mpl, _version_cartopy  # noqa: F401
-from .warnings import UltraPlotWarning  # noqa: F401
+def _get_rc_matplotlib():
+    from matplotlib import rcParams as rc_matplotlib
+
+    return rc_matplotlib
 
 
 # Style aliases. We use this rather than matplotlib's normalize_kwargs and _alias_maps.
@@ -166,103 +154,21 @@ _alias_maps = {
     },
 }
 
-
-# Unit docstrings
-# NOTE: Try to fit this into a single line. Cannot break up with newline as that will
-# mess up docstring indentation since this is placed in indented param lines.
-_units_docstring = "If float, units are {units}. If string, interpreted by `~ultraplot.utils.units`."  # noqa: E501
-docstring._snippet_manager["units.pt"] = _units_docstring.format(units="points")
-docstring._snippet_manager["units.in"] = _units_docstring.format(units="inches")
-docstring._snippet_manager["units.em"] = _units_docstring.format(units="em-widths")
-
-
-# Style docstrings
-# NOTE: These are needed in a few different places
-_line_docstring = """
-lw, linewidth, linewidths : unit-spec, default: :rc:`lines.linewidth`
-    The width of the line(s).
-    %(units.pt)s
-ls, linestyle, linestyles : str, default: :rc:`lines.linestyle`
-    The style of the line(s).
-c, color, colors : color-spec, optional
-    The color of the line(s). The property `cycle` is used by default.
-a, alpha, alphas : float, optional
-    The opacity of the line(s). Inferred from `color` by default.
-"""
-_patch_docstring = """
-lw, linewidth, linewidths : unit-spec, default: :rc:`patch.linewidth`
-    The edge width of the patch(es).
-    %(units.pt)s
-ls, linestyle, linestyles : str, default: '-'
-    The edge style of the patch(es).
-ec, edgecolor, edgecolors : color-spec, default: '{edgecolor}'
-    The edge color of the patch(es).
-fc, facecolor, facecolors, fillcolor, fillcolors : color-spec, optional
-    The face color of the patch(es). The property `cycle` is used by default.
-a, alpha, alphas : float, optional
-    The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default.
-"""
-_pcolor_collection_docstring = """
-lw, linewidth, linewidths : unit-spec, default: 0.3
-    The width of lines between grid boxes.
-    %(units.pt)s
-ls, linestyle, linestyles : str, default: '-'
-    The style of lines between grid boxes.
-ec, edgecolor, edgecolors : color-spec, default: 'k'
-    The color of lines between grid boxes.
-a, alpha, alphas : float, optional
-    The opacity of the grid boxes. Inferred from `cmap` by default.
-"""
-_contour_collection_docstring = """
-lw, linewidth, linewidths : unit-spec, default: 0.3 or :rc:`lines.linewidth`
-    The width of the line contours. Default is ``0.3`` when adding to filled contours
-    or :rc:`lines.linewidth` otherwise. %(units.pt)s
-ls, linestyle, linestyles : str, default: '-' or :rc:`contour.negative_linestyle`
-    The style of the line contours. Default is ``'-'`` for positive contours and
-    :rcraw:`contour.negative_linestyle` for negative contours.
-ec, edgecolor, edgecolors : color-spec, default: 'k' or inferred
-    The color of the line contours. Default is ``'k'`` when adding to filled contours
-    or inferred from `color` or `cmap` otherwise.
-a, alpha, alpha : float, optional
-    The opacity of the contours. Inferred from `edgecolor` by default.
-"""
-_text_docstring = """
-name, fontname, family, fontfamily : str, optional
-    The font typeface name (e.g., ``'Fira Math'``) or font family name (e.g.,
-    ``'serif'``). Matplotlib falls back to the system default if not found.
-size, fontsize : unit-spec or str, optional
-    The font size. %(units.pt)s
-    This can also be a string indicating some scaling relative to
-    :rcraw:`font.size`. The sizes and scalings are shown below. The
-    scalings ``'med'``, ``'med-small'``, and ``'med-large'`` are
-    added by ultraplot while the rest are native matplotlib sizes.
-
-    .. _font_table:
-
-    ==========================  =====
-    Size                        Scale
-    ==========================  =====
-    ``'xx-small'``              0.579
-    ``'x-small'``               0.694
-    ``'small'``, ``'smaller'``  0.833
-    ``'med-small'``             0.9
-    ``'med'``, ``'medium'``     1.0
-    ``'med-large'``             1.1
-    ``'large'``, ``'larger'``   1.2
-    ``'x-large'``               1.440
-    ``'xx-large'``              1.728
-    ``'larger'``                1.2
-    ==========================  =====
-
-"""
-docstring._snippet_manager["artist.line"] = _line_docstring
-docstring._snippet_manager["artist.text"] = _text_docstring
-docstring._snippet_manager["artist.patch"] = _patch_docstring.format(edgecolor="none")
-docstring._snippet_manager["artist.patch_black"] = _patch_docstring.format(
-    edgecolor="black"
-)  # noqa: E501
-docstring._snippet_manager["artist.collection_pcolor"] = _pcolor_collection_docstring
-docstring._snippet_manager["artist.collection_contour"] = _contour_collection_docstring
+_LAZY_ATTRS = {
+    "benchmarks": ("benchmarks", None),
+    "context": ("context", None),
+    "docstring": ("docstring", None),
+    "fonts": ("fonts", None),
+    "guides": ("guides", None),
+    "inputs": ("inputs", None),
+    "labels": ("labels", None),
+    "rcsetup": ("rcsetup", None),
+    "versions": ("versions", None),
+    "warnings": ("warnings", None),
+    "_version_mpl": ("versions", "_version_mpl"),
+    "_version_cartopy": ("versions", "_version_cartopy"),
+    "UltraPlotWarning": ("warnings", "UltraPlotWarning"),
+}
 
 
 def _get_aliases(category, *keys):
@@ -389,6 +295,8 @@ def _pop_rc(src, *, ignore_conflicts=True):
     """
     Pop the rc setting names and mode for a `~Configurator.context` block.
     """
+    from . import rcsetup
+
     # NOTE: Must ignore deprected or conflicting rc params
     # NOTE: rc_mode == 2 applies only the updated params. A power user
     # could use ax.format(rc_mode=0) to re-apply all the current settings
@@ -428,6 +336,8 @@ def _translate_loc(loc, mode, *, default=None, **kwargs):
     must be a string for which there is a :rcraw:`mode.loc` setting. Additional
     options can be added with keyword arguments.
     """
+    from . import rcsetup
+
     # Create specific options dictionary
     # NOTE: This is not inside validators.py because it is also used to
     # validate various user-input locations.
@@ -481,6 +391,7 @@ def _translate_grid(b, key):
     Translate an instruction to turn either major or minor gridlines on or off into a
     boolean and string applied to :rcraw:`axes.grid` and :rcraw:`axes.grid.which`.
     """
+    rc_matplotlib = _get_rc_matplotlib()
     ob = rc_matplotlib["axes.grid"]
     owhich = rc_matplotlib["axes.grid.which"]
 
@@ -527,3 +438,23 @@ def _translate_grid(b, key):
             which = owhich
 
     return b, which
+
+
+def _resolve_lazy(name):
+    module_name, attr = _LAZY_ATTRS[name]
+    module = import_module(f".{module_name}", __name__)
+    value = module if attr is None else getattr(module, attr)
+    globals()[name] = value
+    return value
+
+
+def __getattr__(name):
+    if name in _LAZY_ATTRS:
+        return _resolve_lazy(name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    names = set(globals())
+    names.update(_LAZY_ATTRS)
+    return sorted(names)

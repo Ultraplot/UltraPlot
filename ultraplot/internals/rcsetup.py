@@ -3,10 +3,11 @@
 Utilities for global configuration.
 """
 import functools
-import re, matplotlib as mpl
+import re
 from collections.abc import MutableMapping
 from numbers import Integral, Real
 
+import matplotlib as mpl
 import matplotlib.rcsetup as msetup
 import numpy as np
 from cycler import Cycler
@@ -20,8 +21,10 @@ if hasattr(mpl, "_fontconfig_pattern"):
 else:
     from matplotlib.fontconfig_pattern import parse_fontconfig_pattern
 
-from . import ic  # noqa: F401
-from . import warnings
+from . import (
+    ic,  # noqa: F401
+    warnings,
+)
 from .versions import _version_mpl
 
 # Regex for "probable" unregistered named colors. Try to retain warning message for
@@ -1957,6 +1960,11 @@ _rc_ultraplot_table = {
         False,
         _validate_bool,
         "Whether to check for the latest version of UltraPlot on PyPI when importing",
+    ),
+    "ultraplot.eager_import": (
+        False,
+        _validate_bool,
+        "Whether to import the full public API during setup instead of lazily.",
     ),
 }
 
