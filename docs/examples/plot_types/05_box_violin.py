@@ -22,17 +22,18 @@ import numpy as np
 import ultraplot as uplt
 
 # Generate sample data
-data = [np.random.normal(0, std, 100) for std in range(1, 6)]
+data = np.array([np.random.normal(0, std, 100) for std in range(1, 6)])
 
 fig, axs = uplt.subplots(ncols=2, refwidth=3)
 
 # Box plot
-axs[0].boxplot(data, lw=1.5, fillcolor="gray4", medianlw=2)
+axs[0].boxplot(data.T, lw=1.5, cycle="qual1", medianlw=2)
 axs[0].format(title="Box plot", xlabel="Distribution", ylabel="Value")
 
 # Violin plot
-axs[1].violinplot(data, lw=1, fillcolor="gray6")
+axs[1].violinplot(data.T, lw=1, cycle="flatui")
 axs[1].format(title="Violin plot", xlabel="Distribution", ylabel="Value")
 
 axs.format(suptitle="Statistical distributions")
+uplt.show(block=1)
 fig.show()
