@@ -943,8 +943,8 @@ _rc_ultraplot_table = {
         False,
         _validate_abc,
         "If ``False`` then a-b-c labels are disabled. If ``True`` the default label "
-        "style ``a`` is used. If string this indicates the style and must contain the "
-        "character ``a`` or ``A``, for example ``'a.'`` or ``'(A)'``.",
+        "style `a` is used. If string this indicates the style and must contain the "
+        "character `a` or ``A``, for example ``'a.'`` or ``'(A)'``.",
     ),
     "abc.border": (
         True,
