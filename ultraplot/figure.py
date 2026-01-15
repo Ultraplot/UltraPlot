@@ -2650,6 +2650,7 @@ class Figure(mfigure.Figure):
                                 r1, r2 = gs._decode_indices(r1, r2, which="h")
                                 c1, c2 = gs._decode_indices(c1, c2, which="w")
                             except ValueError:
+                                # Non-panel decode can fail for panel or nested specs.
                                 pass
                         r_min = min(r_min, r1)
                         r_max = max(r_max, r2)
@@ -2698,6 +2699,7 @@ class Figure(mfigure.Figure):
                                 r1, r2 = gs._decode_indices(r1, r2, which="h")
                                 c1, c2 = gs._decode_indices(c1, c2, which="w")
                             except ValueError:
+                                # Non-panel decode can fail for panel or nested specs.
                                 pass
 
                         if side == "right":
