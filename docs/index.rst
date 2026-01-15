@@ -126,7 +126,6 @@ For more details, check the full :doc:`User guide <usage>` and :doc:`API Referen
    install
    why
    usage
-   gallery/index
 
 .. toctree::
    :maxdepth: 1
