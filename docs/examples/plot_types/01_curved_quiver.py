@@ -42,8 +42,9 @@ m = ax.curved_quiver(
     V,
     color=speed,
     arrow_at_end=True,
-    scale=100,
-    arrowsize=1.4,
+    scale=30,
+    arrowsize=0.7,
+    linewidth=0.4,
     density=20,
     grains=20,
     cmap="viko",
@@ -74,4 +75,3 @@ ax.format(
 fig.colorbar(m.lines, ax=ax, label="Speed")
 
 fig.show()
-uplt.show(block=1)
