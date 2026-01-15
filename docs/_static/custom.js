@@ -206,6 +206,21 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
+  const navLinks = document.querySelectorAll(
+    ".wy-menu-vertical a.reference.internal",
+  );
+  navLinks.forEach((link) => {
+    const href = link.getAttribute("href") || "";
+    const isGalleryLink = href.includes("gallery/");
+    const isGalleryIndex = href.includes("gallery/index");
+    if (isGalleryLink && !isGalleryIndex) {
+      const item = link.closest("li");
+      if (item) {
+        item.remove();
+      }
+    }
+  });
+
   const galleryRoot = document.querySelector(".sphx-glr-thumbcontainer");
   if (galleryRoot) {
     const gallerySections = [
