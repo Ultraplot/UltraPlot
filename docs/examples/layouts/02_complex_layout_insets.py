@@ -61,5 +61,3 @@ axs[3].format(title="Relationship", xlabel="Predictor", ylabel="Response")
 axs.format(abc=True, abcloc="ul", suptitle="Complex layout with insets and mixed plots")
 
 fig.show()
-
-uplt.show(block=1)
