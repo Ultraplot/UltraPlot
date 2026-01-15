@@ -313,7 +313,7 @@ number : int, optional
     The axes number used for a-b-c labeling. See `~ultraplot.axes.Axes.format` for
     details. By default this is incremented automatically based on the other subplots
     in the figure. Use e.g. ``number=None`` or ``number=False`` to ensure the subplot
-    has no a-b-c label. Note the number corresponding to ``a`` is ``1``, not ``0``.
+    has no a-b-c label. Note the number corresponding to `a` is ``1``, not ``0``.
 autoshare : bool, default: True
     Whether to automatically share the *x* and *y* axes with subplots spanning the
     same rows and columns based on the figure-wide `sharex` and `sharey` settings.
