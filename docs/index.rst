@@ -155,6 +155,7 @@ For more details, check the full :doc:`User guide <usage>` and :doc:`API Referen
    :hidden:
 
    api
+   lazy_loading
    external-links
    whats_new
    contributing
