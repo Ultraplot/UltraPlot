@@ -151,13 +151,6 @@ For more details, check the full :doc:`User guide <usage>` and :doc:`API Referen
 
 .. toctree::
    :maxdepth: 1
-   :caption: Gallery
-   :hidden:
-
-   gallery/index
-
-.. toctree::
-   :maxdepth: 1
    :caption: Reference
    :hidden:
 
