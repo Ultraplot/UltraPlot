@@ -10,11 +10,7 @@ UltraPlot shares limits and labels across a grid with a single ``share``/``span`
 configuration, and adds panel letters automatically. This keeps complex layouts
 consistent without the manual axis management required in base Matplotlib.
 
-<<<<<<< HEAD
 Key functions: :py:func:`ultraplot.ui.subplots`, :py:meth:`ultraplot.gridspec.SubplotGrid.format`.
-=======
-Key functions: :py:func:`ultraplot.subplots`, :py:meth:`ultraplot.gridspec.SubplotGrid.format`.
->>>>>>> 0f95f74c (Add gallery infrastructure and examples)
 
 See also
 --------
