@@ -38,21 +38,6 @@
     height: 100%;
 }
 
-/* .right-toc {
-    position: fixed;
-    top: 90px;
-    right: 20px;
-    width: 280px;
-    font-size: 0.9em;
-    max-height: calc(100vh - 150px);
-    background-color: #f8f9fa;
-    z-index: 100;
-    border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    border-left: 3px solid #2980b9;
-} */
-
 .right-toc-header {
     display: flex;
     justify-content: space-between;
@@ -136,6 +121,22 @@
     color: #606060;
 }
 
+.right-toc-subtoggle {
+    background: none;
+    border: none;
+    color: #2980b9;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-right: 0.3em;
+    padding: 0;
+}
+
+.right-toc-sublist {
+    list-style-type: none;
+    margin: 0.2em 0 0.4em 0;
+    padding-left: 1.2em;
+}
+
 /* Active TOC item highlighting */
 .right-toc-link.active {
     background-color: rgba(41, 128, 185, 0.15);
@@ -198,6 +199,147 @@
     border-left: 3px solid #2980b9;
     transition: all 0.3s ease;
     max-height: calc(100vh - 150px);
+}
+
+.gallery-filter-controls {
+    margin: 1rem 0 2rem;
+    padding: 1rem 1.2rem;
+    border-radius: 16px;
+    background: linear-gradient(
+        135deg,
+        rgba(41, 128, 185, 0.08),
+        rgba(41, 128, 185, 0.02)
+    );
+    box-shadow:
+        0 10px 24px rgba(41, 128, 185, 0.18),
+        0 2px 6px rgba(41, 128, 185, 0.08);
+}
+
+.gallery-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.gallery-filter-button {
+    border: 1px solid #c5c5c5;
+    background-color: #ffffff;
+    color: #333333;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.gallery-filter-button.is-active {
+    background-color: #2980b9;
+    border-color: #2980b9;
+    color: #ffffff;
+}
+
+.gallery-section-hidden {
+    display: none;
+}
+
+body.gallery-filter-active .sphx-glr-thumbnails:not(.gallery-unified) {
+    display: none;
+}
+
+body.gallery-filter-active .gallery-section-header,
+body.gallery-filter-active .gallery-section-description {
+    display: none;
+}
+
+body.whats_new .wy-menu-vertical li.toctree-l1.current > ul {
+    display: none;
+}
+
+body.whats_new .wy-menu-vertical li.toctree-l2,
+body.whats_new .wy-menu-vertical li.toctree-l3,
+body.whats_new .wy-menu-vertical li.toctree-l4 {
+    display: none;
+}
+
+body.whats_new .wy-menu-vertical a[href^="#"] {
+    display: none;
+}
+
+body.whats_new .wy-menu-vertical li:has(> a[href^="#"]) {
+    display: none;
+}
+
+/* Hide gallery subsections from left TOC */
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a:is(
+        [href="#layouts"],
+        [href="#legends-and-colorbars"],
+        [href="#geoaxes"],
+        [href="#plot-types"],
+        [href="#colors-and-cycles"]
+    ),
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    a:is(
+        [href="#layouts"],
+        [href="#legends-and-colorbars"],
+        [href="#geoaxes"],
+        [href="#plot-types"],
+        [href="#colors-and-cycles"]
+    )
+    + ul,
+body.wy-body-for-nav
+    .wy-menu-vertical
+    .wy-menu-vertical-2
+    li[class*="toctree-l1"]:has(
+        :is(
+            a[href="#layouts"],
+            a[href="#legends-and-colorbars"],
+            a[href="#geoaxes"],
+            a[href="#plot-types"],
+            a[href="#colors-and-cycles"]
+        )
+    ) {
+    display: none !important;
+}
+
+/* Hide the section containers themselves */
+.gallery-section {
+    margin: 1.5em 0;
+}
+
+:is(
+        section#layouts,
+        section#legends-and-colorbars,
+        section#geoaxes,
+        section#plot-types,
+        section#colors-and-cycles
+    )
+    > :is(h1, p) {
+    display: none;
+}
+
+/* Style for gallery section headers */
+.gallery-section-header {
+    font-size: 1.5em;
+    font-weight: bold;
+    display: block;
+    margin: 1.5em 0 0.5em 0;
+    border-bottom: 2px solid #2980b9;
+    padding-bottom: 0.3em;
+    color: #2980b9;
+}
+
+.gallery-section-description {
+    margin: 0 0 1em 0;
+    color: #555;
 }
 
 /* Responsive adjustments */
