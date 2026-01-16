@@ -317,9 +317,9 @@ title : str or sequence, optional
     The axes title. Can optionally be a sequence strings, in which case
     the title will be selected from the sequence according to `~Axes.number`.
 abc : bool or str or sequence, default: :rc:`abc`
-    The "a-b-c" subplot label style. Must contain the character `a` or `A`,
+    The "a-b-c" subplot label style. Must contain the character ``a`` or ``A``,
     for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
-    ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
+    ``'a'`` is used. The ``a`` or ``A`` is replaced with the alphabetic character
     matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
     characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
     Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
@@ -341,8 +341,8 @@ abcloc, titleloc : str, default: :rc:`abc.loc`, :rc:`title.loc`
     upper left inside axes    ``'upper left'``, ``'ul'``
     lower left inside axes    ``'lower left'``, ``'ll'``
     lower right inside axes   ``'lower right'``, ``'lr'``
-    left of y axis            ``'outer left'``, ``'ol'``
-    right of y axis           ``'outer right'``, ``'or'``
+    left of y axis            ```'outer left'``, ``'ol'``
+    right of y axis           ```'outer right'``, ``'or'``
     ========================  ============================
 
 abcborder, titleborder : bool, default: :rc:`abc.border` and :rc:`title.border`
@@ -370,15 +370,16 @@ titleabove : bool, default: :rc:`title.above`
 abctitlepad : float, default: :rc:`abc.titlepad`
     The horizontal padding between a-b-c labels and titles in the same location.
     %(units.pt)s
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional \\
+ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle \\
+: str or sequence, optional
     Shorthands for the below keywords.
-    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
+lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle, \\
 lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
     Additional titles in specific positions (see `title` for details). This works as
     an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
     permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    :rc:`axes.alpha` (default: 1.0), :rc:`axes.facecolor` (default: white), :rc:`axes.edgecolor` (default: black), :rc:`axes.linewidth` (default: 0.6), -
+a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default: \\
+:rc:`axes.alpha`, :rc:`axes.facecolor`, :rc:`axes.edgecolor`, :rc:`axes.linewidth`, '-'
     Additional settings applied to the background patch, and their
     shorthands. Their defaults values are the ``'axes'`` properties.
 """
@@ -563,7 +564,7 @@ lw, linewidth, c, color : optional
     Controls the line width and edge color for both the colorbar
     outline and the level dividers.
 %(axes.edgefix)s
-rasterize : bool, default: :rc:`colorbar.rasterized`
+rasterize : bool, default: :rc:`colorbar.rasterize`
     Whether to rasterize the colorbar solids. The matplotlib default was ``True``
     but ultraplot changes this to ``False`` since rasterization can cause misalignment
     between the color patches and the colorbar outline.
@@ -2791,6 +2792,79 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self.update_params()
             setter(self.figbox)  # equivalent to above
 
+        # In UltraLayout, place panels relative to their parent axes, not the grid.
+        if (
+            self._panel_parent
+            and self._panel_side
+            and self.figure.gridspec._use_ultra_layout
+        ):
+            gs = self.get_subplotspec().get_gridspec()
+            figwidth, figheight = self.figure.get_size_inches()
+            ss = self.get_subplotspec().get_topmost_subplotspec()
+            row1, row2, col1, col2 = ss._get_rows_columns(ncols=gs.ncols_total)
+            side = self._panel_side
+            parent_bbox = self._panel_parent.get_position()
+            panels = list(self._panel_parent._panel_dict.get(side, ()))
+            anchor_ax = self._panel_parent
+            if self in panels:
+                idx = panels.index(self)
+                if idx > 0:
+                    anchor_ax = panels[idx - 1]
+            elif panels:
+                anchor_ax = panels[-1]
+            anchor_bbox = anchor_ax.get_position()
+            anchor_ss = anchor_ax.get_subplotspec().get_topmost_subplotspec()
+            a_row1, a_row2, a_col1, a_col2 = anchor_ss._get_rows_columns(
+                ncols=gs.ncols_total
+            )
+
+            if side in ("right", "left"):
+                boundary = None
+                width = sum(gs._wratios_total[col1 : col2 + 1]) / figwidth
+                if a_col2 < col1:
+                    boundary = a_col2
+                elif col2 < a_col1:
+                    boundary = col2
+                # Fall back to an interface adjacent to this panel
+                boundary = min(
+                    max(
+                        _not_none(boundary, a_col2 if side == "right" else col2),
+                        0,
+                    ),
+                    len(gs.wspace_total) - 1,
+                )
+                pad = gs.wspace_total[boundary] / figwidth
+                if side == "right":
+                    x0 = anchor_bbox.x1 + pad
+                else:
+                    x0 = anchor_bbox.x0 - pad - width
+                bbox = mtransforms.Bbox.from_bounds(
+                    x0, parent_bbox.y0, width, parent_bbox.height
+                )
+            else:
+                boundary = None
+                height = sum(gs._hratios_total[row1 : row2 + 1]) / figheight
+                if a_row2 < row1:
+                    boundary = a_row2
+                elif row2 < a_row1:
+                    boundary = row2
+                boundary = min(
+                    max(
+                        _not_none(boundary, a_row2 if side == "top" else row2),
+                        0,
+                    ),
+                    len(gs.hspace_total) - 1,
+                )
+                pad = gs.hspace_total[boundary] / figheight
+                if side == "top":
+                    y0 = anchor_bbox.y1 + pad
+                else:
+                    y0 = anchor_bbox.y0 - pad - height
+                bbox = mtransforms.Bbox.from_bounds(
+                    parent_bbox.x0, y0, parent_bbox.width, height
+                )
+            setter(bbox)
+
     def _update_abc(self, **kwargs):
         """
         Update the a-b-c label.
@@ -3645,7 +3719,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             width or height (default is :rcraw:`colorbar.length`). For inset
             colorbars, floats interpreted as em-widths and strings interpreted
             by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
-        width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth`
+        width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth
             The colorbar width. For outer colorbars, floats are interpreted as inches
             (default is :rcraw:`colorbar.width`). For inset colorbars, floats are
             interpreted as em-widths (default is :rcraw:`colorbar.insetwidth`).
