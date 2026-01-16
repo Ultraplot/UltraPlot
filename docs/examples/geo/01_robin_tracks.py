@@ -32,6 +32,6 @@ ax.plot(lon, lat_b, transform=ccrs.PlateCarree(), lw=2, label="Track B")
 ax.scatter([-140, -40, 60, 150], [10, -20, 30, -5], transform=ccrs.PlateCarree())
 
 ax.format(title="Global trajectories", lonlines=60, latlines=30)
-ax.legend(loc="lower left", frame=False)
+ax.legend(loc="bottom", frame=False)
 
 fig.show()

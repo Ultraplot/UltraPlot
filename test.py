@@ -23,7 +23,6 @@ axs[:2].format(
 axs[1, :2].format(xlabel="Time 2 (days)")
 axs[[-1]].format(xlabel="Time 3 (days)")
 axs.format(
-    xlabel="Time (days)",
     ylabel="Normalized response",
     abc=True,
     abcloc="ul",
@@ -31,7 +30,6 @@ axs.format(
     grid=False,
 )
 axs.format(abc=1, abcloc="ol")
-axs.format(xlabel="test")
 fig.save("test.png")
 
 fig.show()
