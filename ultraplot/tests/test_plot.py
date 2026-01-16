@@ -736,7 +736,7 @@ def test_sankey_basic():
     )
     assert getattr(diagram, "patch", None) is not None
     assert getattr(diagram, "flows", None) is not None
-    uplt.close(fig)
+    return fig
 
 
 @pytest.mark.mpl_image_compare
@@ -754,7 +754,7 @@ def test_sankey_layered_nodes_flows():
     diagram = ax.sankey(nodes=nodes, flows=flows)
     assert len(diagram.nodes) == len(nodes)
     assert len(diagram.flows) == len(flows)
-    uplt.close(fig)
+    return fig
 
 
 @pytest.mark.mpl_image_compare
@@ -779,7 +779,97 @@ def test_sankey_layered_labels_and_style():
     )
     flow_label_keys = [key for key in diagram.labels if isinstance(key, tuple)]
     assert flow_label_keys
+    return fig
+
+
+def test_sankey_invalid_flows():
+    """Validate error handling for malformed flow inputs."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    with pytest.raises(ValueError):
+        sankey_mod._normalize_flows(None)
+    with pytest.raises(ValueError):
+        sankey_mod._normalize_flows([("A", "B", -1)])
+    with pytest.raises(ValueError):
+        sankey_mod._normalize_flows([("A", "B", 0)])
+
+
+def test_sankey_cycle_layers_error():
+    """Cycles in the graph should raise a clear error."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0},
+        {"source": "B", "target": "A", "value": 1.0},
+    ]
+    with pytest.raises(ValueError):
+        sankey_mod._assign_layers(flows, ["A", "B"], None)
+
+
+def test_sankey_flow_label_frac_alternates():
+    """Label fractions should alternate around the midpoint."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    base = 0.5
+    assert sankey_mod._flow_label_frac(0, 2, base) == 0.25
+    assert sankey_mod._flow_label_frac(1, 2, base) == 0.75
+    frac0 = sankey_mod._flow_label_frac(0, 3, base)
+    frac1 = sankey_mod._flow_label_frac(1, 3, base)
+    frac2 = sankey_mod._flow_label_frac(2, 3, base)
+    assert 0.05 <= frac0 <= 0.95
+    assert 0.05 <= frac1 <= 0.95
+    assert 0.05 <= frac2 <= 0.95
+    assert frac0 < base < frac1
+
+
+def test_sankey_node_labels_outside_auto():
+    """Auto outside labels should flip to the left/right on edge layers."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        nodes=["A", "B", "C"],
+        flows=[("A", "B", 2.0), ("B", "C", 2.0)],
+        node_labels=True,
+        flow_labels=False,
+    )
+    label_a = diagram.labels["A"]
+    label_c = diagram.labels["C"]
+    node_a = diagram.nodes["A"]
+    node_c = diagram.nodes["C"]
+    ax_a, _ = label_a.get_position()
+    ax_c, _ = label_c.get_position()
+    assert ax_a < node_a.get_x()
+    assert ax_c > node_c.get_x() + node_c.get_width()
     uplt.close(fig)
+
+
+def test_sankey_flow_other_creates_other_node():
+    """Small flows should be aggregated into an 'Other' node when requested."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[("A", "X", 0.2), ("A", "Y", 2.0)],
+        flow_other=0.5,
+        other_label="Other",
+        node_labels=True,
+    )
+    assert "Other" in diagram.nodes
+    assert "Other" in diagram.labels
+    uplt.close(fig)
+
+
+def test_sankey_unknown_style_error():
+    """Unknown style presets should raise."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    with pytest.raises(ValueError):
+        sankey_mod._apply_style(
+            "nope",
+            flow_cycle=["C0"],
+            node_facecolor="0.7",
+            flow_alpha=0.8,
+            flow_curvature=0.5,
+            node_label_box=False,
+            node_label_kw={},
+        )
 
 
 def test_histogram_norms():
