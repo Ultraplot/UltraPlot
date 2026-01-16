@@ -317,9 +317,9 @@ title : str or sequence, optional
     The axes title. Can optionally be a sequence strings, in which case
     the title will be selected from the sequence according to `~Axes.number`.
 abc : bool or str or sequence, default: :rc:`abc`
-    The "a-b-c" subplot label style. Must contain the character ``a`` or ``A``,
+    The "a-b-c" subplot label style. Must contain the character `a` or `A`,
     for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
-    ``'a'`` is used. The ``a`` or ``A`` is replaced with the alphabetic character
+    ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
     matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
     characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
     Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
@@ -341,8 +341,8 @@ abcloc, titleloc : str, default: :rc:`abc.loc`, :rc:`title.loc`
     upper left inside axes    ``'upper left'``, ``'ul'``
     lower left inside axes    ``'lower left'``, ``'ll'``
     lower right inside axes   ``'lower right'``, ``'lr'``
-    left of y axis            ```'outer left'``, ``'ol'``
-    right of y axis           ```'outer right'``, ``'or'``
+    left of y axis            ``'outer left'``, ``'ol'``
+    right of y axis           ``'outer right'``, ``'or'``
     ========================  ============================
 
 abcborder, titleborder : bool, default: :rc:`abc.border` and :rc:`title.border`
@@ -370,16 +370,15 @@ titleabove : bool, default: :rc:`title.above`
 abctitlepad : float, default: :rc:`abc.titlepad`
     The horizontal padding between a-b-c labels and titles in the same location.
     %(units.pt)s
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle \\
-: str or sequence, optional
+ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional \\
     Shorthands for the below keywords.
-lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle, \\
+    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
 lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
     Additional titles in specific positions (see `title` for details). This works as
     an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
     permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default: \\
-:rc:`axes.alpha`, :rc:`axes.facecolor`, :rc:`axes.edgecolor`, :rc:`axes.linewidth`, '-'
+a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
+    :rc:`axes.alpha` (default: 1.0), :rc:`axes.facecolor` (default: white), :rc:`axes.edgecolor` (default: black), :rc:`axes.linewidth` (default: 0.6), -
     Additional settings applied to the background patch, and their
     shorthands. Their defaults values are the ``'axes'`` properties.
 """
@@ -564,7 +563,7 @@ lw, linewidth, c, color : optional
     Controls the line width and edge color for both the colorbar
     outline and the level dividers.
 %(axes.edgefix)s
-rasterize : bool, default: :rc:`colorbar.rasterize`
+rasterize : bool, default: :rc:`colorbar.rasterized`
     Whether to rasterize the colorbar solids. The matplotlib default was ``True``
     but ultraplot changes this to ``False`` since rasterization can cause misalignment
     between the color patches and the colorbar outline.
@@ -3721,7 +3720,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             width or height (default is :rcraw:`colorbar.length`). For inset
             colorbars, floats interpreted as em-widths and strings interpreted
             by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
-        width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth
+        width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth`
             The colorbar width. For outer colorbars, floats are interpreted as inches
             (default is :rcraw:`colorbar.width`). For inset colorbars, floats are
             interpreted as em-widths (default is :rcraw:`colorbar.insetwidth`).
