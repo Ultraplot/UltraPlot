@@ -347,6 +347,8 @@ ax.pcolormesh(data, cmap="magma", norm="log", colorbar="b")
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_apply_norm:
+#
 # .. _ug_norm:
 #
 # Special normalizers

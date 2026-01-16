@@ -77,6 +77,7 @@ dictionary. UltraPlot makes this dictionary available in the top-level namespace
 :obj:`~ultraplot.config.rc`. Details on the matplotlib settings can be found on
 `this page <ug_rcmpl_>`_.
 
+.. _rc_UltraPlot:
 .. _ug_rcUltraPlot:
 
 UltraPlot settings

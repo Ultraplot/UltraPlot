@@ -5374,7 +5374,7 @@ class PlotAxes(base.Axes):
         hist=False,
         bins="auto",
         fill=True,
-        alpha=0.7,
+        alpha=1.0,
         linewidth=1.5,
         edgecolor="black",
         facecolor=None,
@@ -5416,7 +5416,7 @@ class PlotAxes(base.Axes):
             Only used when hist=True.
         fill : bool, default: True
             Whether to fill the area under each curve.
-        alpha : float, default: 0.7
+        alpha : float, default: 1.0
             Transparency of filled areas.
         linewidth : float, default: 1.5
             Width of the ridge lines.

@@ -1214,7 +1214,7 @@ class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
         ----------
         cut : float, optional
             The proportion to cut from the center of the colormap. For example,
-            ``cut=0.1`` cuts the central 10%, or ``cut=-0.1`` fills the ctranl 10%
+            ``cut=0.1`` cuts the central 10%%, or ``cut=-0.1`` fills the central 10%%
             of the colormap with the current central color (usually white).
         name : str, default: '_name_copy'
             The new colormap name.

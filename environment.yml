@@ -17,6 +17,7 @@ dependencies:
   - pip
   - pint
   - sphinx
+  - sphinx-gallery
   - nbsphinx
   - jupytext
   - sphinx-copybutton
