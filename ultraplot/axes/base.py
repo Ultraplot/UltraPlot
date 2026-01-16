@@ -563,7 +563,7 @@ lw, linewidth, c, color : optional
     Controls the line width and edge color for both the colorbar
     outline and the level dividers.
 %(axes.edgefix)s
-rasterize : bool, default: :rc:`colorbar.rasterize`
+rasterize : bool, default: :rc:`colorbar.rasterized`
     Whether to rasterize the colorbar solids. The matplotlib default was ``True``
     but ultraplot changes this to ``False`` since rasterization can cause misalignment
     between the color patches and the colorbar outline.
