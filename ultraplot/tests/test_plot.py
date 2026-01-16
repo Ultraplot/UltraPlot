@@ -734,10 +734,8 @@ def test_sankey_basic():
         orientations=[0, 1, -1],
         trunklength=1.1,
     )
-    from matplotlib.sankey import Sankey
-
-    assert isinstance(diagram, Sankey)
     assert getattr(diagram, "patch", None) is not None
+    assert getattr(diagram, "flows", None) is not None
     uplt.close(fig)
 
 
