@@ -722,6 +722,7 @@ def test_curved_quiver_color_and_cmap(rng, cmap):
     return fig
 
 
+@pytest.mark.mpl_image_compare
 def test_sankey_basic():
     """
     Basic sanity check for Sankey diagrams.
@@ -740,6 +741,7 @@ def test_sankey_basic():
     uplt.close(fig)
 
 
+@pytest.mark.mpl_image_compare
 def test_sankey_layered_nodes_flows():
     """
     Check that layered sankey accepts nodes and flows.
@@ -757,6 +759,7 @@ def test_sankey_layered_nodes_flows():
     uplt.close(fig)
 
 
+@pytest.mark.mpl_image_compare
 def test_sankey_layered_labels_and_style():
     """
     Check that style presets and label boxes are accepted.
