@@ -5,11 +5,6 @@
 **UltraPlot** is a succinct wrapper around `matplotlib <https://matplotlib.org/>`__
 for creating **beautiful, publication-quality graphics** with ease.
 
-**Gallery**
-############
-See UltraPlot in action with curated, publication-style examples.
-:doc:`Browse the gallery <gallery/index>`
-
 🚀 **Key Features** | Create More, Code Less
 ###################
 ✔ **Simplified Subplot Management** – Create multi-panel plots effortlessly.
