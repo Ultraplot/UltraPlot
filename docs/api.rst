@@ -39,7 +39,6 @@ Grid classes
 
 .. automodsumm:: ultraplot.gridspec
    :toctree: api
-   :skip: SubplotsContainer
 
 
 Axes classes
