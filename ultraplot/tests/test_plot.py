@@ -722,6 +722,130 @@ def test_curved_quiver_color_and_cmap(rng, cmap):
     return fig
 
 
+@pytest.mark.mpl_image_compare
+def test_sankey_basic():
+    """
+    Basic sanity check for Sankey diagrams.
+    """
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -0.6, -0.4],
+        labels=["in", "out_a", "out_b"],
+        orientations=[0, 1, -1],
+        trunklength=1.1,
+    )
+    from matplotlib.sankey import Sankey
+
+    assert isinstance(diagram, Sankey)
+    assert getattr(diagram, "patch", None) is not None
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_sankey_layered_nodes_flows():
+    """
+    Check that layered sankey accepts nodes and flows.
+    """
+    fig, ax = uplt.subplots()
+    nodes = ["Budget", "Ops", "R&D", "Marketing"]
+    flows = [
+        ("Budget", "Ops", 5),
+        ("Budget", "R&D", 3),
+        ("Budget", "Marketing", 2),
+    ]
+    diagram = ax.sankey(nodes=nodes, flows=flows)
+    assert len(diagram.nodes) == len(nodes)
+    assert len(diagram.flows) == len(flows)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_sankey_layered_labels_and_style():
+    """
+    Check that style presets and label boxes are accepted.
+    """
+    fig, ax = uplt.subplots()
+    nodes = ["Budget", "Ops", "R&D", "Marketing"]
+    flows = [
+        ("Budget", "Ops", 5),
+        ("Budget", "R&D", 3),
+        ("Budget", "Marketing", 2),
+    ]
+    diagram = ax.sankey(
+        nodes=nodes,
+        flows=flows,
+        style="budget",
+        flow_labels=True,
+        value_format="{:.1f}",
+        node_label_box=True,
+    )
+    flow_label_keys = [key for key in diagram.labels if isinstance(key, tuple)]
+    assert flow_label_keys
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_sankey_basic():
+    """
+    Basic sanity check for Sankey diagrams.
+    """
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -0.6, -0.4],
+        labels=["in", "out_a", "out_b"],
+        orientations=[0, 1, -1],
+        trunklength=1.1,
+    )
+    from matplotlib.sankey import Sankey
+
+    assert isinstance(diagram, Sankey)
+    assert getattr(diagram, "patch", None) is not None
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_sankey_layered_nodes_flows():
+    """
+    Check that layered sankey accepts nodes and flows.
+    """
+    fig, ax = uplt.subplots()
+    nodes = ["Budget", "Ops", "R&D", "Marketing"]
+    flows = [
+        ("Budget", "Ops", 5),
+        ("Budget", "R&D", 3),
+        ("Budget", "Marketing", 2),
+    ]
+    diagram = ax.sankey(nodes=nodes, flows=flows)
+    assert len(diagram.nodes) == len(nodes)
+    assert len(diagram.flows) == len(flows)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_sankey_layered_labels_and_style():
+    """
+    Check that style presets and label boxes are accepted.
+    """
+    fig, ax = uplt.subplots()
+    nodes = ["Budget", "Ops", "R&D", "Marketing"]
+    flows = [
+        ("Budget", "Ops", 5),
+        ("Budget", "R&D", 3),
+        ("Budget", "Marketing", 2),
+    ]
+    diagram = ax.sankey(
+        nodes=nodes,
+        flows=flows,
+        style="budget",
+        flow_labels=True,
+        value_format="{:.1f}",
+        node_label_box=True,
+    )
+    flow_label_keys = [key for key in diagram.labels if isinstance(key, tuple)]
+    assert flow_label_keys
+    return fig
+
+
 def test_histogram_norms():
     """
     Check that all histograms-like plotting functions

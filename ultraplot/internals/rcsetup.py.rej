@@ -1,0 +1,39 @@
+diff a/ultraplot/internals/rcsetup.py b/ultraplot/internals/rcsetup.py	(rejected hunks)
+@@ -932,6 +932,37 @@ _rc_ultraplot_table = {
+         _validate_bool,
+         "Whether to draw arrows at the end of curved quiver lines by default.",
+     ),
++    # Sankey settings
++    "sankey.nodepad": (
++        0.02,
++        _validate_float,
++        "Vertical padding between nodes in layered sankey diagrams.",
++    ),
++    "sankey.nodewidth": (
++        0.03,
++        _validate_float,
++        "Node width for layered sankey diagrams (axes-relative units).",
++    ),
++    "sankey.margin": (
++        0.05,
++        _validate_float,
++        "Margin around layered sankey diagrams (axes-relative units).",
++    ),
++    "sankey.flow.alpha": (
++        0.75,
++        _validate_float,
++        "Flow transparency for layered sankey diagrams.",
++    ),
++    "sankey.flow.curvature": (
++        0.5,
++        _validate_float,
++        "Flow curvature for layered sankey diagrams.",
++    ),
++    "sankey.node.facecolor": (
++        "0.75",
++        _validate_color,
++        "Default node facecolor for layered sankey diagrams.",
++    ),
+     # Stylesheet
+     "style": (
+         None,

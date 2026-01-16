@@ -1,0 +1,8 @@
+# Project Environment Instructions
+
+1. ENVIRONMENT: We are using `micromamba` with the environment `ultraplot-dev`.
+   - ALWAYS assume `micromamba run -n ultraplot-dev` for any shell commands.
+   - Do NOT suggest pip or conda unless explicitly asked.
+
+2. LIBRARIES:
+   - Use `ultraplot` for plotting (not standard matplotlib).
