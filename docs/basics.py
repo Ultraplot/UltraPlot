@@ -77,6 +77,7 @@
 # %%
 # Simple subplot
 import numpy as np
+
 import ultraplot as uplt
 
 state = np.random.RandomState(51423)
@@ -145,6 +146,7 @@ ax.plot(data, lw=2)
 # %%
 # Simple subplot grid
 import numpy as np
+
 import ultraplot as uplt
 
 state = np.random.RandomState(51423)
@@ -163,6 +165,7 @@ fig.format(
 # %%
 # Complex grid
 import numpy as np
+
 import ultraplot as uplt
 
 state = np.random.RandomState(51423)
@@ -188,6 +191,7 @@ axs[2].plot(data, lw=2)
 # %%
 # Really complex grid
 import numpy as np
+
 import ultraplot as uplt
 
 state = np.random.RandomState(51423)
@@ -210,6 +214,7 @@ fig.show()
 # %%
 # Using a GridSpec
 import numpy as np
+
 import ultraplot as uplt
 
 state = np.random.RandomState(51423)
@@ -269,8 +274,9 @@ fig.format(
 #    all-at-once, the subplots in the grid are sorted by :func:`~ultraplot.axes.Axes.number`.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 
@@ -306,7 +312,7 @@ axs[0].plot((state.rand(50, 10) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
 # Matplotlib includes `two different interfaces
 # <https://matplotlib.org/stable/api/index.html>`__ for plotting stuff:
 # a python-style object-oriented interface with axes-level commands
-# like :method:`matplotlib.axes.Axes.plot`, and a MATLAB-style :mod:`~matplotlib.pyplot` interface
+# like :meth:`matplotlib.axes.Axes.plot`, and a MATLAB-style :mod:`~matplotlib.pyplot` interface
 # with global commands like :func:`matplotlib.pyplot.plot` that track the "current" axes.
 # UltraPlot builds upon the python-style interface using the `~ultraplot.axes.PlotAxes`
 # class. Since every axes used by UltraPlot is a child of :class:`~ultraplot.axes.PlotAxes`, we
@@ -330,8 +336,9 @@ axs[0].plot((state.rand(50, 10) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
 
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 N = 20
@@ -428,8 +435,9 @@ fig.colorbar(m, loc="b", label="label")
 # used to succinctly and efficiently customize plots.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 fig, axs = uplt.subplots(ncols=2, nrows=2, refwidth=2, share=False)
 state = np.random.RandomState(51423)
@@ -493,8 +501,9 @@ axs.format(
 
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Update global settings in several different ways
 uplt.rc.metacolor = "gray6"
@@ -537,8 +546,9 @@ uplt.rc.reset()
 
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # uplt.rc.style = 'style'  # set the style everywhere
 

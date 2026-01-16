@@ -500,8 +500,8 @@ axs.format(abc="A.", suptitle="Decoupled legend location demo")
 # Plot data on all axes
 state = np.random.RandomState(51423)
 data = (state.rand(20, 4) - 0.5).cumsum(axis=0)
-for ax in axs:
-    ax.plot(data, cycle="mplotcolors", labels=list("abcd"))
+axs[0, :].plot(data, cycle="538", labels=list("abcd"))
+axs[1, :].plot(data, cycle="accent", labels=list("abcd"))
 
 # Legend 1: Content from Row 2 (ax=axs[1, :]), Location below Row 1 (ref=axs[0, :])
 # This places a legend describing the bottom row data underneath the top row.

@@ -14,6 +14,7 @@
 # Import statements
 import datetime
 import os
+import re
 import subprocess
 import sys
 
@@ -61,8 +62,49 @@ run([sys.executable, "_scripts/fetch_releases.py"], check=False)
 sys.path.append(os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(".."))
 
+# Ensure whats_new exists during local builds without GitHub fetch.
+whats_new_path = Path(__file__).parent / "whats_new.rst"
+if not whats_new_path.exists() or not whats_new_path.read_text().strip():
+    whats_new_path.write_text(
+        ".. _whats_new:\n\nWhat's New\n==========\n\n"
+        "Release notes are generated during the docs build.\n"
+    )
+
+# Avoid concatenating matplotlib docstrings to reduce docutils parsing issues.
+try:
+    import matplotlib as mpl
+
+    mpl.rcParams["docstring.hardcopy"] = True
+except Exception:
+    pass
+
+# Suppress deprecated rc key warnings from local configs during docs builds.
+try:
+    from ultraplot.internals.warnings import UltraPlotWarning
+
+    warnings.filterwarnings(
+        "ignore",
+        message=r"The rc setting 'colorbar.rasterize' was deprecated.*",
+        category=UltraPlotWarning,
+    )
+except Exception:
+    pass
+
 # Print available system fonts
 from matplotlib.font_manager import fontManager
+from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
+
+
+def _reset_ultraplot(gallery_conf, fname):
+    """
+    Reset UltraPlot rc state between gallery examples.
+    """
+    try:
+        import ultraplot as uplt
+    except Exception:
+        return
+    uplt.rc.reset()
+
 
 # -- Project information -------------------------------------------------------
 # The basic info
@@ -144,8 +186,10 @@ extensions = [
     "sphinx_copybutton",  # add copy button to code
     "_ext.notoc",
     "nbsphinx",  # parse rst books
+    "sphinx_gallery.gen_gallery",
 ]
 
+autosectionlabel_prefix_document = True
 
 # The master toctree document.
 master_doc = "index"
@@ -165,9 +209,23 @@ exclude_patterns = [
     "_templates",
     "_themes",
     "*.ipynb",
+    "gallery/**/*.codeobj.json",
+    "gallery/**/*.ipynb",
+    "gallery/**/*.md5",
+    "gallery/**/*.py",
+    "gallery/**/*.zip",
     "**.ipynb_checkpoints" ".DS_Store",
     "trash",
     "tmp",
+]
+
+suppress_warnings = [
+    "docutils",
+    "nbsphinx.notebooktitle",
+    "toc.not_included",
+    "toc.not_readable",
+    "autosectionlabel.*",
+    "autosectionlabel",
 ]
 
 autodoc_default_options = {
@@ -290,6 +348,28 @@ nbsphinx_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
 
 nbsphinx_execute = "auto"
 
+# Sphinx gallery configuration
+sphinx_gallery_conf = {
+    "doc_module": ("ultraplot",),
+    "examples_dirs": ["examples"],
+    "gallery_dirs": ["gallery"],
+    "filename_pattern": r"^((?!sgskip).)*$",
+    "min_reported_time": 1,
+    "plot_gallery": "True",
+    "reset_modules": ("matplotlib", "seaborn", _reset_ultraplot),
+    "subsection_order": ExplicitOrder(
+        [
+            "examples/layouts",
+            "examples/legends_colorbars",
+            "examples/geo",
+            "examples/plot_types",
+            "examples/colors",
+        ]
+    ),
+    "within_subsection_order": FileNameSortKey,
+    "nested_sections": False,
+}
+
 # The name of the Pygments (syntax highlighting) style to use.
 # The light-dark theme toggler overloads this, but set default anyway
 pygments_style = "none"
@@ -314,13 +394,11 @@ html_theme = "sphinx_rtd_light_dark"
 # html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "logo_only": True,
-    "display_version": False,
     "collapse_navigation": True,
     "navigation_depth": 4,
     "prev_next_buttons_location": "bottom",  # top and bottom
     "includehidden": True,
     "titles_only": True,
-    "display_toc": True,
     "sticky_navigation": True,
 }
 
@@ -335,7 +413,9 @@ html_static_path = ["_static"]
 # defined by theme itself.  Builtin themes are using these templates by
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
-# html_sidebars = {}
+html_sidebars = {
+    "gallery/index": ["globaltoc.html", "searchbox.html"],
+}
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -417,7 +497,19 @@ def process_docstring(app, what, name, obj, options, lines):
         try:
             # Create a proper format string
             doc = "\n".join(lines)
-            expanded = doc % _snippet_manager  # Use dict directly
+            doc = re.sub(r"\\\\\n\\s*", " ", doc)
+            doc = re.sub(r"\\*\\*kwargs\\b", "``**kwargs``", doc)
+            doc = re.sub(r"\\*args\\b", "``*args``", doc)
+            snippet_pattern = re.compile(r"%\\(([^)]+)\\)s")
+
+            def _replace_snippet(match):
+                key = match.group(1)
+                try:
+                    return str(_snippet_manager[key])
+                except KeyError:
+                    return match.group(0)
+
+            expanded = snippet_pattern.sub(_replace_snippet, doc)
             lines[:] = expanded.split("\n")
         except Exception as e:
             print(f"Warning: Could not expand docstring for {name}: {e}")

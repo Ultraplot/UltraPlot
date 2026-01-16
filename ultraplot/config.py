@@ -405,10 +405,10 @@ def config_inline_backend(fmt=None):
 
     .. code-block:: ipython
 
-        %config InlineBackend.figure_formats = rc['inlineformat']
-        %config InlineBackend.rc = {}  # never override rc settings
-        %config InlineBackend.close_figures = True  # cells start with no active figures
-        %config InlineBackend.print_figure_kwargs = {'bbox_inches': None}
+        %%config InlineBackend.figure_formats = rc['inlineformat']
+        %%config InlineBackend.rc = {}  # never override rc settings
+        %%config InlineBackend.close_figures = True  # cells start with no active figures
+        %%config InlineBackend.print_figure_kwargs = {'bbox_inches': None}
 
     When the inline backend is inactive or unavailable, this has no effect.
     This function is called when you modify the :rcraw:`inlineformat` property.

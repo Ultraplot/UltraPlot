@@ -20,6 +20,7 @@ Checkout our examples
 =====================
 
 Below is a gallery showing random examples of what UltraPlot can do, for more examples checkout our extensive `docs <https://ultraplot.readthedocs.io>`_.
+View the full gallery here: `Gallery <https://ultraplot.readthedocs.io/en/latest/gallery/index.html>`_.
 
 .. list-table::
    :widths: 33 33 33

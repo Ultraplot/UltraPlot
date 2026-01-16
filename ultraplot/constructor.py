@@ -29,12 +29,12 @@ from . import proj as pproj
 from . import scale as pscale
 from . import ticker as pticker
 from .config import rc
-from .internals import ic  # noqa: F401
 from .internals import (
     _not_none,
     _pop_props,
     _version_cartopy,
     _version_mpl,
+    ic,  # noqa: F401
     warnings,
 )
 from .utils import get_colors, to_hex, to_rgba
@@ -1173,11 +1173,11 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         * If a string containing ``{x}`` or ``{x:...}``, ticks will be
           formatted by calling ``string.format(x=number)``. Returns
           a `~matplotlib.ticker.StrMethodFormatter`.
-        * If a string containing ``'%'`` and `date` is ``False``, ticks
-          will be formatted using the C-style ``string % number`` method. See
+        * If a string containing ``'%%'`` and `date` is ``False``, ticks
+          will be formatted using the C-style ``string %% number`` method. See
           `this page <https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting>`__
           for a review. Returns a `~matplotlib.ticker.FormatStrFormatter`.
-        * If a string containing ``'%'`` and `date` is ``True``, ticks
+        * If a string containing ``'%%'`` and `date` is ``True``, ticks
           will be formatted using `~datetime.datetime.strfrtime`. See
           `this page <https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes>`__
           for a review. Returns a `~matplotlib.dates.DateFormatter`.
@@ -1205,10 +1205,10 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         ``'frac'``              `~ultraplot.ticker.FracFormatter`                 Rational fractions
         ``'date'``              `~matplotlib.dates.AutoDateFormatter`           Default tick labels for datetime axes
         ``'concise'``           `~matplotlib.dates.ConciseDateFormatter`        More concise date labels introduced in matplotlib 3.1
-        ``'datestr'``           `~matplotlib.dates.DateFormatter`               Date formatting with C-style ``string % format`` notation
+        ``'datestr'``           `~matplotlib.dates.DateFormatter`               Date formatting with C-style ``string %% format`` notation
         ``'eng'``               `~matplotlib.ticker.EngFormatter`               Engineering notation
         ``'fixed'``             `~matplotlib.ticker.FixedFormatter`             List of strings
-        ``'formatstr'``         `~matplotlib.ticker.FormatStrFormatter`         From C-style ``string % format`` notation
+        ``'formatstr'``         `~matplotlib.ticker.FormatStrFormatter`         From C-style ``string %% format`` notation
         ``'func'``              `~matplotlib.ticker.FuncFormatter`              Use an arbitrary function
         ``'index'``             :class:`~ultraplot.ticker.IndexFormatter`                List of strings corresponding to non-negative integer positions
         ``'log'``               `~matplotlib.ticker.LogFormatterSciNotation`    For log-scale axes with scientific notation
@@ -1231,7 +1231,7 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         ======================  ==============================================  =================================================================
 
     date : bool, optional
-        Toggles the behavior when `formatter` contains a ``'%'`` sign
+        Toggles the behavior when `formatter` contains a ``'%%'`` sign
         (see above).
     index : bool, optional
         Controls the behavior when `formatter` is a sequence of strings
