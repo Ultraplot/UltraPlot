@@ -722,6 +722,7 @@ def test_curved_quiver_color_and_cmap(rng, cmap):
     return fig
 
 
+@pytest.mark.mpl_image_compare
 def test_sankey_basic():
     """
     Basic sanity check for Sankey diagrams.
@@ -737,9 +738,10 @@ def test_sankey_basic():
 
     assert isinstance(diagram, Sankey)
     assert getattr(diagram, "patch", None) is not None
-    uplt.close(fig)
+    return fig
 
 
+@pytest.mark.mpl_image_compare
 def test_sankey_layered_nodes_flows():
     """
     Check that layered sankey accepts nodes and flows.
@@ -754,9 +756,10 @@ def test_sankey_layered_nodes_flows():
     diagram = ax.sankey(nodes=nodes, flows=flows)
     assert len(diagram.nodes) == len(nodes)
     assert len(diagram.flows) == len(flows)
-    uplt.close(fig)
+    return fig
 
 
+@pytest.mark.mpl_image_compare
 def test_sankey_layered_labels_and_style():
     """
     Check that style presets and label boxes are accepted.
@@ -778,7 +781,7 @@ def test_sankey_layered_labels_and_style():
     )
     flow_label_keys = [key for key in diagram.labels if isinstance(key, tuple)]
     assert flow_label_keys
-    uplt.close(fig)
+    return fig
 
 
 def test_histogram_norms():
