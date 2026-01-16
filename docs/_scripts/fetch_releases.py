@@ -21,6 +21,8 @@ def format_release_body(text):
     formatted_text = convert(text)
 
     formatted_text = _downgrade_headings(formatted_text)
+    formatted_text = formatted_text.replace("→", "->")
+    formatted_text = re.sub(r"^\\s*`\\s*$", "", formatted_text, flags=re.MULTILINE)
 
     # Convert PR references (remove "by @user in ..." but keep the link)
     formatted_text = re.sub(
