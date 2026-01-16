@@ -16,7 +16,7 @@ Using UltraPlot
 
 This page offers a condensed overview of UltraPlot's features. It is populated
 with links to the :ref:`API reference` and :ref:`User Guide <ug_basics>`.
-For a more in-depth discussion, see :ref:`Why UltraPlot?`.
+For a more in-depth discussion, see :ref:`why`.
 
 .. _usage_background:
 
