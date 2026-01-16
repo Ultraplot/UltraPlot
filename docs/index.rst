@@ -13,7 +13,7 @@ for creating **beautiful, publication-quality graphics** with ease.
 
 📊 **Versatile Plot Types** – Cartesian plots, insets, colormaps, and more.
 
-📌 **Get Started** → :doc:`Installation guide <install>` |  :doc:`Why UltraPlot? <why>` | :doc:`Usage <usage>`
+📌 **Get Started** → :doc:`Installation guide <install>` | :doc:`Why UltraPlot? <why>` | :doc:`Usage <usage>` | :doc:`Gallery <gallery/index>`
 
 --------------------------------------
 
@@ -121,6 +121,7 @@ For more details, check the full :doc:`User guide <usage>` and :doc:`API Referen
    install
    why
    usage
+   gallery/index
 
 .. toctree::
    :maxdepth: 1
