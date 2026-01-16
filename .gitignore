@@ -35,6 +35,7 @@ sources
 *.pyc
 .*.pyc
 __pycache__
+test.py
 
 # OS files
 .DS_Store
