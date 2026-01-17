@@ -640,7 +640,10 @@ class GridSpec(mgridspec.GridSpec):
         idxs = self._get_indices(which=which, panel=panel)
         for arg in args:
             try:
-                nums.append(idxs[arg])
+                if isinstance(arg, (list, np.ndarray)):
+                    nums.append([idxs[i] for i in list(arg)])
+                else:
+                    nums.append(idxs[arg])
             except (IndexError, TypeError):
                 raise ValueError(f"Invalid gridspec index {arg}.")
         return nums[0] if len(nums) == 1 else nums
@@ -1322,9 +1325,9 @@ class GridSpec(mgridspec.GridSpec):
         if fig and (fig._refwidth is not None or fig._refheight is not None):
             dpi = _not_none(getattr(fig, "dpi", None), 72)
             if figwidth is not None:
-                figwidth = round(figwidth * dpi) / dpi
+                figwidth = np.ceil(figwidth * dpi) / dpi
             if figheight is not None:
-                figheight = round(figheight * dpi) / dpi
+                figheight = np.ceil(figheight * dpi) / dpi
 
         # Return the figure size
         figsize = (figwidth, figheight)
@@ -1897,6 +1900,9 @@ class SubplotGrid(MutableSequence, list):
             return list.__getitem__(self, key)
         elif isinstance(key, slice):
             return SubplotGrid(list.__getitem__(self, key))
+        elif isinstance(key, (list, np.ndarray)):
+            objs = [list.__getitem__(self, idx) for idx in list(key)]
+            return SubplotGrid(objs)
 
         # Allow 2D array-like indexing
         # NOTE: We assume this is a 2D array of subplots, because this is
@@ -2042,6 +2048,10 @@ class SubplotGrid(MutableSequence, list):
             if share_xlabels is False:
                 self.figure._clear_share_label_groups(self, target="x")
             if share_ylabels is False:
+                self.figure._clear_share_label_groups(self, target="y")
+            if not is_subset and share_xlabels is None and xlabel is not None:
+                self.figure._clear_share_label_groups(self, target="x")
+            if not is_subset and share_ylabels is None and ylabel is not None:
                 self.figure._clear_share_label_groups(self, target="y")
             if is_subset and share_xlabels is None and xlabel is not None:
                 self.figure._register_share_label_group(self, target="x")
