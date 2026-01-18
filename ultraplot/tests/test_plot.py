@@ -1158,8 +1158,12 @@ def test_circos_bed_smoke(tmp_path):
     bed_path = tmp_path / "mini.bed"
     bed_path.write_text("chr1\t0\t100\nchr2\t0\t120\n", encoding="utf-8")
 
+<<<<<<< HEAD
     fig, axs = uplt.subplots(proj="polar")
     ax = axs[0]
+=======
+    fig, ax = uplt.subplots(proj="polar")
+>>>>>>> eaef636a (test: add pycirclize wrapper smoke tests)
     circos = ax.circos_bed(bed_path, plot=False)
     assert len(circos.sectors) == 2
     circos.plotfig(ax=ax)
@@ -1175,14 +1179,19 @@ def test_circos_builder_smoke():
     except ImportError:
         pytest.skip("pycirclize is not available")
 
+<<<<<<< HEAD
     fig, axs = uplt.subplots(proj="polar")
     ax = axs[0]
+=======
+    fig, ax = uplt.subplots(proj="polar")
+>>>>>>> eaef636a (test: add pycirclize wrapper smoke tests)
     circos = ax.circos({"A": 10, "B": 12}, plot=False)
     assert len(circos.sectors) == 2
     circos.plotfig(ax=ax)
     uplt.close(fig)
 
 
+<<<<<<< HEAD
 def test_circos_unshares_axes():
     """Circos wrappers should unshare axes if they were shared."""
     try:
@@ -1221,6 +1230,8 @@ def test_circos_delegation_subplots():
     uplt.close(fig)
 
 
+=======
+>>>>>>> eaef636a (test: add pycirclize wrapper smoke tests)
 def test_histogram_norms():
     """
     Check that all histograms-like plotting functions
