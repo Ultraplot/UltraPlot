@@ -22,6 +22,7 @@ except ImportError:
 
 
 __all__ = [
+    "ColorbarLayoutSolver",
     "UltraLayoutSolver",
     "compute_ultra_positions",
     "get_grid_positions_ultra",
@@ -428,6 +429,78 @@ class UltraLayoutSolver:
             positions[num] = (left, bottom, width, height)
 
         return positions
+
+
+class ColorbarLayoutSolver:
+    """
+    Constraint-based solver for inset colorbar frame alignment.
+    """
+
+    def __init__(
+        self,
+        loc: str,
+        cb_width: float,
+        cb_height: float,
+        pad_left: float,
+        pad_right: float,
+        pad_bottom: float,
+        pad_top: float,
+    ):
+        if not KIWI_AVAILABLE:
+            raise ImportError(
+                "kiwisolver is required for constraint-based colorbar layout. "
+                "Install it with: pip install kiwisolver"
+            )
+        self.loc = loc
+        self.cb_width = cb_width
+        self.cb_height = cb_height
+        self.pad_left = pad_left
+        self.pad_right = pad_right
+        self.pad_bottom = pad_bottom
+        self.pad_top = pad_top
+        self.frame_width = pad_left + cb_width + pad_right
+        self.frame_height = pad_bottom + cb_height + pad_top
+
+        self.solver = Solver()
+        self.xframe = Variable("cb_frame_x")
+        self.yframe = Variable("cb_frame_y")
+        self.cb_x = Variable("cb_x")
+        self.cb_y = Variable("cb_y")
+        self._setup_constraints()
+
+    def _setup_constraints(self):
+        self.solver.addConstraint(self.cb_x == self.xframe + self.pad_left)
+        self.solver.addConstraint(self.cb_y == self.yframe + self.pad_bottom)
+        self.solver.addConstraint(self.xframe >= 0)
+        self.solver.addConstraint(self.yframe >= 0)
+        self.solver.addConstraint(self.xframe + self.frame_width <= 1)
+        self.solver.addConstraint(self.yframe + self.frame_height <= 1)
+
+        loc = self.loc or "lower right"
+        if loc not in ("upper right", "upper left", "lower left", "lower right"):
+            loc = "lower right"
+        if "left" in loc:
+            self.solver.addConstraint(self.xframe == 0)
+        elif "right" in loc:
+            self.solver.addConstraint(self.xframe + self.frame_width == 1)
+        if "upper" in loc:
+            self.solver.addConstraint(self.yframe + self.frame_height == 1)
+        elif "lower" in loc:
+            self.solver.addConstraint(self.yframe == 0)
+
+    def solve(self) -> Dict[str, Tuple[float, float, float, float]]:
+        """
+        Solve the constraint system and return inset and frame bounds.
+        """
+        self.solver.updateVariables()
+        xframe = self.xframe.value()
+        yframe = self.yframe.value()
+        cb_x = self.cb_x.value()
+        cb_y = self.cb_y.value()
+        return {
+            "frame": (xframe, yframe, self.frame_width, self.frame_height),
+            "inset": (cb_x, cb_y, self.cb_width, self.cb_height),
+        }
 
 
 def compute_ultra_positions(
