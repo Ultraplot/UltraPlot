@@ -46,7 +46,14 @@ def test_explicit_legend_with_handles_under_external_mode():
     assert "LegendLabel" in labels
 
 
-def test_inset_colorbar_frame_wraps_label(rng):
+@pytest.mark.parametrize(
+    "orientation, labelloc",
+    [
+        ("horizontal", "top"),
+        ("vertical", "left"),
+    ],
+)
+def test_inset_colorbar_frame_wraps_label(rng, orientation, labelloc):
     """
     Ensure inset colorbar frame expands to include label after resize.
     """
@@ -55,7 +62,14 @@ def test_inset_colorbar_frame_wraps_label(rng):
     fig, ax = uplt.subplots()
     data = rng.random((10, 10))
     m = ax.imshow(data)
-    cb = ax.colorbar(m, loc="ur", label="test", frameon=True)
+    cb = ax.colorbar(
+        m,
+        loc="ur",
+        label="test",
+        frameon=True,
+        orientation=orientation,
+        labelloc=labelloc,
+    )
     fig.canvas.draw()
     fig.set_size_inches(7, 4.5)
     fig.canvas.draw()
