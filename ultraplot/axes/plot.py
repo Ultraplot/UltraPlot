@@ -3287,9 +3287,9 @@ class PlotAxes(base.Axes):
         for z in zs:
             if z is None:  # e.g. empty scatter color
                 continue
+            z = inputs._to_numpy_array(z)
             if z.ndim > 2:  # e.g. imshow data
                 continue
-            z = inputs._to_numpy_array(z)
             if inbounds and x is not None and y is not None:  # ignore if None coords
                 z = self._inbounds_vlim(x, y, z, to_centers=to_centers)
             imin, imax = inputs._safe_range(z, pmin, pmax)
