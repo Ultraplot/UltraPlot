@@ -872,6 +872,211 @@ def test_sankey_unknown_style_error():
         )
 
 
+def test_sankey_links_parameter_uses_layered():
+    """Links should force layered sankey even with numeric flows input."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -1.0],
+        links=[("A", "B", 1.0)],
+        node_labels=False,
+        flow_labels=False,
+    )
+    assert "A" in diagram.nodes
+    assert "B" in diagram.nodes
+    assert diagram.layout["scale"] > 0
+    uplt.close(fig)
+
+
+def test_sankey_tuple_flows_use_layered():
+    """Tuple flows without nodes should trigger layered sankey."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(flows=[("A", "B", 1.0)])
+    assert "A" in diagram.nodes
+    assert "B" in diagram.nodes
+    uplt.close(fig)
+
+
+def test_sankey_dict_flows_use_layered():
+    """Dict flows should trigger layered sankey."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(flows=[{"source": "A", "target": "B", "value": 1.0}])
+    assert "A" in diagram.nodes
+    assert "B" in diagram.nodes
+    assert "nodes" in diagram.layout
+    uplt.close(fig)
+
+
+def test_sankey_mixed_flow_formats_layered():
+    """Mixed dict/tuple flows should still render in layered mode."""
+    fig, ax = uplt.subplots()
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0},
+        ("B", "C", 2.0),
+    ]
+    diagram = ax.sankey(flows=flows)
+    assert set(diagram.nodes.keys()) == {"A", "B", "C"}
+    assert len(diagram.flows) == 2
+    uplt.close(fig)
+
+
+def test_sankey_numpy_flows_use_matplotlib():
+    """1D numeric flows should use Matplotlib Sankey."""
+    import numpy as np
+
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(flows=np.array([1.0, -1.0]))
+    assert hasattr(diagram, "patch")
+    assert not hasattr(diagram, "layout")
+    uplt.close(fig)
+
+
+def test_sankey_matplotlib_kwargs_passthrough():
+    """Matplotlib sankey should pass patch kwargs through."""
+    from matplotlib.colors import to_rgba
+
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -1.0],
+        orientations=[0, 0],
+        facecolor="red",
+        edgecolor="blue",
+        linewidth=1.5,
+    )
+    assert np.allclose(diagram.patch.get_facecolor(), to_rgba("red"))
+    assert np.allclose(diagram.patch.get_edgecolor(), to_rgba("blue"))
+    assert diagram.patch.get_linewidth() == 1.5
+    uplt.close(fig)
+
+
+def test_sankey_matplotlib_connect_none():
+    """Matplotlib sankey should allow connect=None."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -1.0],
+        orientations=[0, 0],
+        connect=None,
+    )
+    assert hasattr(diagram, "patch")
+    uplt.close(fig)
+
+
+def test_sankey_normalize_nodes_dict_order_and_labels():
+    """Node dict inputs should preserve order and resolve labels."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    nodes = {"A": {"label": "Alpha"}, "B": {"label": "Beta"}}
+    flows = [{"source": "A", "target": "B", "value": 1.0}]
+    node_map, order = sankey_mod._normalize_nodes(nodes, flows)
+    assert order == ["A", "B"]
+    assert node_map["A"]["label"] == "Alpha"
+    assert node_map["B"]["label"] == "Beta"
+
+
+def test_sankey_layer_order_missing_raises():
+    """layer_order must include every layer."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0},
+        {"source": "B", "target": "C", "value": 1.0},
+    ]
+    with pytest.raises(ValueError):
+        sankey_mod._validate_layer_order([0], flows, ["A", "B", "C"], None)
+
+
+def test_sankey_label_box_dict_copy():
+    """Label box dicts should be copied so callers can reuse input."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    box = {"boxstyle": "round", "facecolor": "white"}
+    resolved = sankey_mod._label_box(box)
+    assert resolved == box
+    assert resolved is not box
+
+
+def test_sankey_label_box_default():
+    """node_label_box=True should create a default box style."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    resolved = sankey_mod._label_box(True)
+    assert resolved["boxstyle"].startswith("round")
+    assert resolved["facecolor"] == "white"
+
+
+def test_sankey_assign_flow_colors_group_cycle():
+    """Group cycle should be used for flow colors."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0, "group": "g1", "color": None},
+        {"source": "A", "target": "C", "value": 1.0, "group": "g2", "color": None},
+    ]
+    color_map = sankey_mod._assign_flow_colors(
+        flows, flow_cycle=None, group_cycle=["C0", "C1"]
+    )
+    assert color_map["g1"] == "C0"
+    assert color_map["g2"] == "C1"
+    assert flows[0]["color"] == "C0"
+    assert flows[1]["color"] == "C1"
+
+
+def test_sankey_assign_flow_colors_preserves_explicit():
+    """Explicit flow colors should be preserved."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0, "group": "g1", "color": "red"}
+    ]
+    color_map = sankey_mod._assign_flow_colors(flows, flow_cycle=None, group_cycle=None)
+    assert flows[0]["color"] == "red"
+    assert color_map == {}
+
+
+def test_sankey_node_dict_missing_id_raises():
+    """Node dicts must include id or name."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [{"source": "A", "target": "B", "value": 1.0}]
+    with pytest.raises(ValueError):
+        sankey_mod._normalize_nodes([{"label": "missing"}], flows)
+
+
+def test_sankey_node_order_missing_nodes_raises():
+    """node_order must include all flow endpoints."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [{"source": "A", "target": "B", "value": 1.0}]
+    with pytest.raises(ValueError):
+        sankey_mod._ensure_nodes(["A"], flows, node_order=["A"])
+
+
+def test_sankey_flow_other_multiple_sources():
+    """flow_other should aggregate per source."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "X", "value": 0.2, "label": None, "color": None},
+        {"source": "A", "target": "Y", "value": 0.1, "label": None, "color": None},
+        {"source": "B", "target": "Z", "value": 0.3, "label": None, "color": None},
+        {"source": "B", "target": "W", "value": 2.0, "label": None, "color": None},
+    ]
+    result = sankey_mod._apply_flow_other(flows, 0.5, "Other")
+    others = [flow for flow in result if flow["target"] == "Other"]
+    assert len(others) == 2
+    sums = {flow["source"]: flow["value"] for flow in others}
+    assert np.isclose(sums["A"], 0.3)
+    assert np.isclose(sums["B"], 0.3)
+
+
+def test_sankey_flow_label_text_callable():
+    """Callable value_format should be used for flow labels."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flow = {"value": 1.234, "label": None}
+    text = sankey_mod._flow_label_text(flow, lambda v: f"{v:.1f}")
+    assert text == "1.2"
+
+
 def test_histogram_norms():
     """
     Check that all histograms-like plotting functions
