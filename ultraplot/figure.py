@@ -1226,9 +1226,11 @@ class Figure(mfigure.Figure):
             xspan = xright - xleft + 1
             yspan = yright - yleft + 1
             number = axi.number
-            axis_type = type(axi)
-            if isinstance(axi, (paxes.GeoAxes)):
-                axis_type = axi.projection
+            axis_type = getattr(axi, "_ultraplot_axis_type", None)
+            if axis_type is None:
+                axis_type = type(axi)
+                if isinstance(axi, (paxes.GeoAxes)):
+                    axis_type = axi.projection
             if axis_type not in seen_axis_type:
                 seen_axis_type[axis_type] = len(seen_axis_type)
             type_number = seen_axis_type[axis_type]
