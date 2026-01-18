@@ -46,6 +46,42 @@ def test_explicit_legend_with_handles_under_external_mode():
     assert "LegendLabel" in labels
 
 
+def test_inset_colorbar_frame_wraps_label(rng):
+    """
+    Ensure inset colorbar frame expands to include label after resize.
+    """
+    from ultraplot.axes.base import _get_axis_for, _reflow_inset_colorbar_frame
+
+    fig, ax = uplt.subplots()
+    data = rng.random((10, 10))
+    m = ax.imshow(data)
+    cb = ax.colorbar(m, loc="ur", label="test", frameon=True)
+    fig.canvas.draw()
+    fig.set_size_inches(7, 4.5)
+    fig.canvas.draw()
+
+    labelloc = cb.ax._inset_colorbar_labelloc
+    ticklen = cb.ax._inset_colorbar_ticklen
+    _reflow_inset_colorbar_frame(cb, labelloc=labelloc, ticklen=ticklen)
+    fig.canvas.draw()
+
+    frame = cb.ax._inset_colorbar_frame
+    assert frame is not None
+    renderer = fig.canvas.get_renderer()
+    frame_bbox = frame.get_window_extent(renderer)
+    layout = cb.ax._inset_colorbar_layout
+    labelloc_layout = labelloc if isinstance(labelloc, str) else layout["ticklocation"]
+    label_axis = _get_axis_for(
+        labelloc_layout, layout["loc"], orientation=layout["orientation"], ax=cb
+    )
+    label_bbox = label_axis.label.get_window_extent(renderer)
+    tol = 1.0
+    assert frame_bbox.x0 <= label_bbox.x0 + tol
+    assert frame_bbox.x1 >= label_bbox.x1 - tol
+    assert frame_bbox.y0 <= label_bbox.y0 + tol
+    assert frame_bbox.y1 >= label_bbox.y1 - tol
+
+
 from itertools import product
 
 
