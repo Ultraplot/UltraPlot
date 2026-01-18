@@ -79,7 +79,7 @@ def test_parse_level_lim_accepts_list_input():
     Ensure list inputs are converted before checking ndim in _parse_level_lim.
     """
     fig, ax = uplt.subplots()
-    vmin, vmax, _ = ax._parse_level_lim([[1, 2], [3, 4]])
+    vmin, vmax, _ = ax[0]._parse_level_lim([[1, 2], [3, 4]])
     assert vmin == 1
     assert vmax == 4
     uplt.close(fig)
