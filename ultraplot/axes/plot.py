@@ -206,7 +206,6 @@ CurvedQuiverSet
 
 docstring._snippet_manager["plot.curved_quiver"] = _curved_quiver_docstring
 
-<<<<<<< HEAD
 _sankey_docstring = """
 Draw a Sankey diagram.
 
@@ -300,7 +299,6 @@ matplotlib.sankey.Sankey or list or SankeyDiagram
 """
 
 docstring._snippet_manager["plot.sankey"] = _sankey_docstring
-=======
 _chord_docstring = """
 Draw a chord diagram using pyCirclize.
 
@@ -480,7 +478,6 @@ pycirclize.Circos
 """
 
 docstring._snippet_manager["plot.circos_bed"] = _circos_bed_docstring
->>>>>>> 0e5e317b (feat: add pycirclize plot wrappers)
 # Auto colorbar and legend docstring
 _guide_docstring = """
 colorbar : bool, int, or str, optional
@@ -2524,7 +2521,227 @@ class PlotAxes(base.Axes):
         Alias for `~PlotAxes.radar_chart`.
         """
         return self.radar_chart(*args, **kwargs)
+<<<<<<< HEAD
 >>>>>>> 0e5e317b (feat: add pycirclize plot wrappers)
+=======
+
+    def circos(
+        self,
+        sectors: Mapping[str, Any],
+        *,
+        start: float = 0,
+        end: float = 360,
+        space: float | Sequence[float] = 0,
+        endspace: bool = True,
+        sector2clockwise: Mapping[str, bool] | None = None,
+        show_axis_for_debug: bool = False,
+        plot: bool = False,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.circos)s
+        """
+        from .plot_types.circlize import circos
+
+        return circos(
+            self,
+            sectors,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            sector2clockwise=sector2clockwise,
+            show_axis_for_debug=show_axis_for_debug,
+            plot=plot,
+            tooltip=tooltip,
+        )
+
+    @docstring._snippet_manager
+    def phylogeny(
+        self,
+        tree_data: Any,
+        *,
+        start: float = 0,
+        end: float = 360,
+        r_lim: tuple[float, float] = (50, 100),
+        format: str = "newick",
+        outer: bool = True,
+        align_leaf_label: bool = True,
+        ignore_branch_length: bool = False,
+        leaf_label_size: float | None = None,
+        leaf_label_rmargin: float = 2.0,
+        reverse: bool = False,
+        ladderize: bool = False,
+        line_kws: Mapping[str, Any] | None = None,
+        label_formatter: Callable[[str], str] | None = None,
+        align_line_kws: Mapping[str, Any] | None = None,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.phylogeny)s
+        """
+        from .plot_types.circlize import phylogeny
+
+        return phylogeny(
+            self,
+            tree_data,
+            start=start,
+            end=end,
+            r_lim=r_lim,
+            format=format,
+            outer=outer,
+            align_leaf_label=align_leaf_label,
+            ignore_branch_length=ignore_branch_length,
+            leaf_label_size=leaf_label_size,
+            leaf_label_rmargin=leaf_label_rmargin,
+            reverse=reverse,
+            ladderize=ladderize,
+            line_kws=line_kws,
+            label_formatter=label_formatter,
+            align_line_kws=align_line_kws,
+            tooltip=tooltip,
+        )
+
+    @docstring._snippet_manager
+    def circos_bed(
+        self,
+        bed_file: Any,
+        *,
+        start: float = 0,
+        end: float = 360,
+        space: float | Sequence[float] = 0,
+        endspace: bool = True,
+        sector2clockwise: Mapping[str, bool] | None = None,
+        plot: bool = False,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.circos_bed)s
+        """
+        from .plot_types.circlize import circos_bed
+
+        return circos_bed(
+            self,
+            bed_file,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            sector2clockwise=sector2clockwise,
+            plot=plot,
+            tooltip=tooltip,
+        )
+
+    def bed(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.circos_bed`.
+        """
+        return self.circos_bed(*args, **kwargs)
+
+    @docstring._snippet_manager
+    def chord_diagram(
+        self,
+        matrix: Any,
+        *,
+        start: float = 0,
+        end: float = 360,
+        space: float | Sequence[float] = 0,
+        endspace: bool = True,
+        r_lim: tuple[float, float] = (97, 100),
+        cmap: Any = None,
+        link_cmap: list[tuple[str, str, str]] | None = None,
+        ticks_interval: int | None = None,
+        order: str | list[str] | None = None,
+        label_kws: Mapping[str, Any] | None = None,
+        ticks_kws: Mapping[str, Any] | None = None,
+        link_kws: Mapping[str, Any] | None = None,
+        link_kws_handler: Callable[[str, str], Mapping[str, Any] | None] | None = None,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.chord_diagram)s
+        """
+        from .plot_types.circlize import chord_diagram
+
+        return chord_diagram(
+            self,
+            matrix,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            r_lim=r_lim,
+            cmap=cmap,
+            link_cmap=link_cmap,
+            ticks_interval=ticks_interval,
+            order=order,
+            label_kws=label_kws,
+            ticks_kws=ticks_kws,
+            link_kws=link_kws,
+            link_kws_handler=link_kws_handler,
+            tooltip=tooltip,
+        )
+
+    def chord(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.chord_diagram`.
+        """
+        return self.chord_diagram(*args, **kwargs)
+
+    @docstring._snippet_manager
+    def radar_chart(
+        self,
+        table: Any,
+        *,
+        r_lim: tuple[float, float] = (0, 100),
+        vmin: float = 0,
+        vmax: float = 100,
+        fill: bool = True,
+        marker_size: int = 0,
+        bg_color: str | None = "#eeeeee80",
+        circular: bool = False,
+        cmap: Any = None,
+        show_grid_label: bool = True,
+        grid_interval_ratio: float | None = 0.2,
+        grid_line_kws: Mapping[str, Any] | None = None,
+        grid_label_kws: Mapping[str, Any] | None = None,
+        grid_label_formatter: Callable[[float], str] | None = None,
+        label_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
+        line_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
+        marker_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
+    ):
+        """
+        %(plot.radar_chart)s
+        """
+        from .plot_types.circlize import radar_chart
+
+        return radar_chart(
+            self,
+            table,
+            r_lim=r_lim,
+            vmin=vmin,
+            vmax=vmax,
+            fill=fill,
+            marker_size=marker_size,
+            bg_color=bg_color,
+            circular=circular,
+            cmap=cmap,
+            show_grid_label=show_grid_label,
+            grid_interval_ratio=grid_interval_ratio,
+            grid_line_kws=grid_line_kws,
+            grid_label_kws=grid_label_kws,
+            grid_label_formatter=grid_label_formatter,
+            label_kws_handler=label_kws_handler,
+            line_kws_handler=line_kws_handler,
+            marker_kws_handler=marker_kws_handler,
+        )
+
+    def radar(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.radar_chart`.
+        """
+        return self.radar_chart(*args, **kwargs)
+>>>>>>> 390ce66c (feat: add pycirclize plot wrappers)
 
     def _call_native(self, name, *args, **kwargs):
         """

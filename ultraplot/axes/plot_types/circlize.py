@@ -39,6 +39,7 @@ def _import_pycirclize():
     return pycirclize
 
 
+<<<<<<< HEAD
 def _unwrap_axes(ax, label: str):
     if ax.__class__.__name__ == "SubplotGrid":
         if len(ax) != 1:
@@ -57,6 +58,11 @@ def _ensure_polar(ax, label: str):
         ax._unshare(which="y")
     ax._ultraplot_axis_type = ("circos", type(ax))
     return ax
+=======
+def _ensure_polar(ax, label: str) -> None:
+    if not isinstance(ax, MplPolarAxes):
+        raise ValueError(f"{label} requires a polar axes (proj='polar').")
+>>>>>>> e25e709f (feat: add pycirclize plot wrappers)
 
 
 def _cycle_colors(n: int) -> list[str]:
@@ -115,7 +121,11 @@ def circos(
     """
     Create a pyCirclize Circos instance (optionally plot immediately).
     """
+<<<<<<< HEAD
     ax = _ensure_polar(ax, "circos")
+=======
+    _ensure_polar(ax, "circos")
+>>>>>>> e25e709f (feat: add pycirclize plot wrappers)
     pycirclize = _import_pycirclize()
     circos_obj = pycirclize.Circos(
         sectors,
@@ -153,7 +163,11 @@ def chord_diagram(
     """
     Render a chord diagram using pyCirclize on the provided polar axes.
     """
+<<<<<<< HEAD
     ax = _ensure_polar(ax, "chord_diagram")
+=======
+    _ensure_polar(ax, "chord_diagram")
+>>>>>>> e25e709f (feat: add pycirclize plot wrappers)
 
     pycirclize, matrix_obj, cmap = _resolve_chord_defaults(matrix, cmap)
     label_kws = {} if label_kws is None else dict(label_kws)
@@ -214,7 +228,11 @@ def radar_chart(
     """
     Render a radar chart using pyCirclize on the provided polar axes.
     """
+<<<<<<< HEAD
     ax = _ensure_polar(ax, "radar_chart")
+=======
+    _ensure_polar(ax, "radar_chart")
+>>>>>>> e25e709f (feat: add pycirclize plot wrappers)
 
     pycirclize, table_obj, cmap = _resolve_radar_defaults(table, cmap)
     grid_line_kws = {} if grid_line_kws is None else dict(grid_line_kws)
@@ -270,7 +288,11 @@ def phylogeny(
     """
     Render a phylogenetic tree using pyCirclize on the provided polar axes.
     """
+<<<<<<< HEAD
     ax = _ensure_polar(ax, "phylogeny")
+=======
+    _ensure_polar(ax, "phylogeny")
+>>>>>>> e25e709f (feat: add pycirclize plot wrappers)
     pycirclize = _import_pycirclize()
     if leaf_label_size is None:
         leaf_label_size = rc["font.size"]
@@ -310,7 +332,11 @@ def circos_bed(
     """
     Create a Circos instance from a BED file (optionally plot immediately).
     """
+<<<<<<< HEAD
     ax = _ensure_polar(ax, "circos_bed")
+=======
+    _ensure_polar(ax, "circos_bed")
+>>>>>>> e25e709f (feat: add pycirclize plot wrappers)
     pycirclize = _import_pycirclize()
     circos_obj = pycirclize.Circos.initialize_from_bed(
         bed_file,
