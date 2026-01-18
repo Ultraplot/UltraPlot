@@ -756,7 +756,8 @@ def test_chord_diagram_smoke():
         index=["A", "B", "C"],
         columns=["A", "B", "C"],
     )
-    fig, ax = uplt.subplots(proj="polar")
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
     circos = ax.chord_diagram(df, ticks_interval=None)
     assert hasattr(circos, "plotfig")
     uplt.close(fig)
@@ -771,7 +772,8 @@ def test_phylogeny_smoke():
     except ImportError:
         pytest.skip("pycirclize is not available")
 
-    fig, ax = uplt.subplots(proj="polar")
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
     circos, treeviz = ax.phylogeny("((A,B),C);", leaf_label_size=8)
     assert hasattr(circos, "plotfig")
     assert treeviz is not None
@@ -790,7 +792,8 @@ def test_circos_bed_smoke(tmp_path):
     bed_path = tmp_path / "mini.bed"
     bed_path.write_text("chr1\t0\t100\nchr2\t0\t120\n", encoding="utf-8")
 
-    fig, ax = uplt.subplots(proj="polar")
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
     circos = ax.circos_bed(bed_path, plot=False)
     assert len(circos.sectors) == 2
     circos.plotfig(ax=ax)
@@ -806,10 +809,49 @@ def test_circos_builder_smoke():
     except ImportError:
         pytest.skip("pycirclize is not available")
 
-    fig, ax = uplt.subplots(proj="polar")
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
     circos = ax.circos({"A": 10, "B": 12}, plot=False)
     assert len(circos.sectors) == 2
     circos.plotfig(ax=ax)
+    uplt.close(fig)
+
+
+def test_circos_unshares_axes():
+    """Circos wrappers should unshare axes if they were shared."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(ncols=2, proj="polar", share="all")
+    ax = axs[0]
+    x_siblings = list(ax._shared_axes["x"].get_siblings(ax))
+    y_siblings = list(ax._shared_axes["y"].get_siblings(ax))
+    if len(x_siblings) == 1 and len(y_siblings) == 1:
+        pytest.skip("polar axes are not shared in this configuration")
+    ax.circos({"A": 10, "B": 12}, plot=False)
+    x_siblings = list(ax._shared_axes["x"].get_siblings(ax))
+    y_siblings = list(ax._shared_axes["y"].get_siblings(ax))
+    assert len(x_siblings) == 1
+    assert len(y_siblings) == 1
+    uplt.close(fig)
+
+
+def test_circos_delegation_subplots():
+    """SubplotGrid should delegate circos calls for singleton grids."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(proj="polar")
+    circos = axs.circos({"A": 10, "B": 12}, plot=False)
+    assert len(circos.sectors) == 2
     uplt.close(fig)
 
 
