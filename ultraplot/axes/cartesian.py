@@ -1370,45 +1370,46 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         config_kwargs = {}
         for field in _AxisFormatConfig.__dataclass_fields__:
             val = None
-            if field == "min_":
-                val = p.get(f"{axis}min")
-            elif field == "max_":
-                val = p.get(f"{axis}max")
-            elif field == "color":
-                val = axis_color
-            elif field == "tickcolor":
-                val = tickcolor
-            elif field == "ticklabelcolor":
-                val = ticklabelcolor
-            elif field == "labelcolor":
-                val = labelcolor
-            elif field == "margin":
-                val = margin
-            elif field == "tickdir":
-                val = tickdir
-            elif field == "locator":
-                val = locator
-            elif field == "minorlocator":
-                val = minorlocator
-            elif field == "formatter":
-                val = formatter
-            elif field == "tickminor":
-                val = tickminor
-            elif field == "ticklabeldir":
-                val = axis_ticklabeldir
-            elif field == "spineloc":
-                val = spineloc
-            elif field == "tickloc":
-                val = tickloc
-            elif field == "ticklabelloc":
-                val = ticklabelloc
-            elif field == "labelloc":
-                val = labelloc
-            elif field == "offsetloc":
-                val = offsetloc
-            else:
-                # Direct mapping (e.g. xlinewidth -> linewidth)
-                val = get(field)
+            match field:
+                case "min_":
+                    val = p.get(f"{axis}min")
+                case "max_":
+                    val = p.get(f"{axis}max")
+                case "color":
+                    val = axis_color
+                case "tickcolor":
+                    val = tickcolor
+                case "ticklabelcolor":
+                    val = ticklabelcolor
+                case "labelcolor":
+                    val = labelcolor
+                case "margin":
+                    val = margin
+                case "tickdir":
+                    val = tickdir
+                case "locator":
+                    val = locator
+                case "minorlocator":
+                    val = minorlocator
+                case "formatter":
+                    val = formatter
+                case "tickminor":
+                    val = tickminor
+                case "ticklabeldir":
+                    val = axis_ticklabeldir
+                case "spineloc":
+                    val = spineloc
+                case "tickloc":
+                    val = tickloc
+                case "ticklabelloc":
+                    val = ticklabelloc
+                case "labelloc":
+                    val = labelloc
+                case "offsetloc":
+                    val = offsetloc
+                case _:
+                    # Direct mapping (e.g. xlinewidth -> linewidth)
+                    val = get(field)
 
             if val is not None:
                 config_kwargs[field] = val
