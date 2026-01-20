@@ -1129,6 +1129,7 @@ class GridSpec(mgridspec.GridSpec):
         wratios=None,
         width_ratios=None,
         height_ratios=None,
+        layout_array=None,
     ):
         """
         Update the user-specified properties.

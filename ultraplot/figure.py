@@ -483,7 +483,9 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         ctx2 = fig._context_authorized()  # skip backend set_constrained_layout()
         ctx3 = rc.context(fig._render_context)  # draw with figure-specific setting
         with ctx1, ctx2, ctx3:
-            fig.auto_layout()
+            if fig._layout_dirty:
+                fig.auto_layout()
+                fig._layout_dirty = False
             return func(self, *args, **kwargs)
 
     # Add preprocessor
@@ -799,6 +801,9 @@ class Figure(mfigure.Figure):
         self._is_authorized = False
         self._includepanels = None
         self._render_context = {}
+        self._layout_dirty = True
+        self._ultra_layout_scheduled = False
+        self._ultra_layout_in_progress = False
         rc_kw, rc_mode = _pop_rc(kwargs)
         kw_format = _pop_params(kwargs, self._format_signature)
         if figwidth is not None and figheight is not None:
@@ -1497,6 +1502,7 @@ class Figure(mfigure.Figure):
                 pax.yaxis.set_tick_params(**{pax._label_key("labelright"): on})
                 ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
 
+        self._layout_dirty = True
         return pax
 
     @_clear_border_cache
@@ -1539,6 +1545,7 @@ class Figure(mfigure.Figure):
         pax._panel_side = side
         pax._panel_share = False
         pax._panel_parent = None
+        self._layout_dirty = True
         return pax
 
     @_clear_border_cache
@@ -2308,6 +2315,7 @@ class Figure(mfigure.Figure):
         %(figure.axes)s
         """
         kwargs = self._parse_proj(**kwargs)
+        self._layout_dirty = True
         return super().add_axes(rect, **kwargs)
 
     @docstring._concatenate_inherited
@@ -2316,7 +2324,9 @@ class Figure(mfigure.Figure):
         """
         %(figure.subplot)s
         """
-        return self._add_subplot(*args, **kwargs)
+        ax = self._add_subplot(*args, **kwargs)
+        self._layout_dirty = True
+        return ax
 
     @docstring._snippet_manager
     def subplot(self, *args, **kwargs):  # shorthand
@@ -2330,7 +2340,9 @@ class Figure(mfigure.Figure):
         """
         %(figure.subplots)s
         """
-        return self._add_subplots(*args, **kwargs)
+        axs = self._add_subplots(*args, **kwargs)
+        self._layout_dirty = True
+        return axs
 
     @docstring._snippet_manager
     def subplots(self, *args, **kwargs):
@@ -2780,6 +2792,7 @@ class Figure(mfigure.Figure):
                 pad=pad,
             )
             cb = ax.colorbar(mappable, values, loc="fill", **kwargs)
+        self._layout_dirty = True
         return cb
 
     @docstring._concatenate_inherited
@@ -2995,6 +3008,7 @@ class Figure(mfigure.Figure):
                 pad=pad,
             )
             leg = ax.legend(handles, labels, loc="fill", **kwargs)
+        self._layout_dirty = True
         return leg
 
     @docstring._snippet_manager
