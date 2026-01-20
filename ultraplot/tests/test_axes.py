@@ -616,3 +616,46 @@ def test_alt_axes_x_shared():
         assert alt.get_ylabel() == ""
         axi.set_xlabel("X")
     return fig
+
+
+def test_inset_format_scope():
+    """
+    Test that calling format() on an inset axes does not affect the
+    parent figure's properties like suptitle or super labels.
+    """
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    # Inset axes are instances of the same class as the parent
+    ix = ax.inset_axes([0.5, 0.5, 0.4, 0.4])
+    assert ix._inset_parent is ax, "Inset parent should be the main axes"
+
+    # Test that suptitle is not set
+    ix.format(suptitle="This should not appear")
+    assert (
+        fig._suptitle is None or fig._suptitle.get_text() == ""
+    ), "Inset format should not set the figure's suptitle."
+
+    # Test that leftlabels are not set
+    # Create a copy to ensure we're not comparing against a modified list
+    original_left_labels = list(fig._suplabel_dict["left"])
+    ix.format(leftlabels=["a", "b"])
+    assert (
+        list(fig._suplabel_dict["left"]) == original_left_labels
+    ), "Inset format should not set the figure's leftlabels."
+
+
+def test_panel_format_scope():
+    """
+    Test that calling format() on a panel axes does not affect the
+    parent figure's properties like suptitle.
+    """
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    pax = ax.panel_axes("right")
+    assert pax._panel_parent is ax, "Panel parent should be the main axes"
+
+    # Test that suptitle is not set
+    pax.format(suptitle="This should not appear")
+    assert (
+        fig._suptitle is None or fig._suptitle.get_text() == ""
+    ), "Panel format should not set the figure's suptitle."
