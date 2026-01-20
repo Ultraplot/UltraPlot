@@ -3429,6 +3429,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             return
         if rc_mode == 1:  # avoid resetting
             return
+        if self._inset_parent is not None or self._panel_parent is not None:
+            return
         self.figure.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_axes=True, **params)
 
     def draw(self, renderer=None, *args, **kwargs):
