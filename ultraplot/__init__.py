@@ -48,6 +48,8 @@ _LAZY_LOADING_EXCEPTIONS = {
     "Cycle": ("constructor", "Cycle"),
     "Norm": ("constructor", "Norm"),
     "Locator": ("constructor", "Locator"),
+    "Scale": ("constructor","Scale"),
+    "Formatter": ("constructor", "Formatter"),
 }
 
 
