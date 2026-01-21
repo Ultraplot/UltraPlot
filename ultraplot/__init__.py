@@ -47,6 +47,9 @@ _LAZY_LOADING_EXCEPTIONS = {
     "Colormap": ("constructor", "Colormap"),
     "Cycle": ("constructor", "Cycle"),
     "Norm": ("constructor", "Norm"),
+    "Locator": ("constructor", "Locator"),
+    "Scale": ("constructor", "Scale"),
+    "Formatter": ("constructor", "Formatter"),
 }
 
 
