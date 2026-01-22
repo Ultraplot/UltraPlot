@@ -5,6 +5,7 @@ A succinct matplotlib wrapper for making beautiful, publication-quality graphics
 from __future__ import annotations
 
 import sys
+from functools import wraps
 from pathlib import Path
 from typing import Optional
 
@@ -83,6 +84,7 @@ def _setup():
             from .utils import check_for_update
 
             check_for_update("ultraplot")
+        _patch_funcanimation_draw_idle()
         success = True
     finally:
         if success:
@@ -101,6 +103,78 @@ def setup(eager: Optional[bool] = None) -> None:
         eager = bool(rc["ultraplot.eager_import"])
     if eager:
         _LOADER.load_all(globals())
+
+
+def _patch_funcanimation_draw_idle():
+    try:
+        import matplotlib.animation as mpl_animation
+    except Exception:
+        return
+
+    if getattr(mpl_animation.FuncAnimation, "_ultra_draw_idle_patched", False):
+        return
+
+    orig_init = mpl_animation.FuncAnimation.__init__
+    orig_stop = getattr(mpl_animation.FuncAnimation, "_stop", None)
+
+    def _install_draw_idle(self, fig):
+        if fig is None or not hasattr(fig, "_layout_dirty"):
+            return
+        canvas = getattr(fig, "canvas", None)
+        if canvas is None or not hasattr(canvas, "draw_idle"):
+            return
+
+        count = getattr(canvas, "_ultra_draw_idle_count", 0)
+        if count == 0:
+            canvas._ultra_draw_idle_orig = canvas.draw_idle
+
+            def draw_idle(*args, **kwargs):
+                return canvas.draw(*args, **kwargs)
+
+            canvas.draw_idle = draw_idle
+        canvas._ultra_draw_idle_count = count + 1
+
+        import weakref
+
+        canvas_ref = weakref.ref(canvas)
+
+        def restore():
+            canvas = canvas_ref()
+            if canvas is None:
+                return
+            count = getattr(canvas, "_ultra_draw_idle_count", 0)
+            if count <= 1:
+                orig = getattr(canvas, "_ultra_draw_idle_orig", None)
+                if orig is not None:
+                    canvas.draw_idle = orig
+                    delattr(canvas, "_ultra_draw_idle_orig")
+                canvas._ultra_draw_idle_count = 0
+            else:
+                canvas._ultra_draw_idle_count = count - 1
+
+        self._ultra_restore_draw_idle = restore
+        self._ultra_draw_idle_finalizer = weakref.finalize(self, restore)
+
+    @wraps(orig_init)
+    def __init__(self, fig, *args, **kwargs):
+        orig_init(self, fig, *args, **kwargs)
+        _install_draw_idle(self, fig)
+
+    mpl_animation.FuncAnimation.__init__ = __init__
+
+    if orig_stop is not None:
+
+        @wraps(orig_stop)
+        def _stop(self, *args, **kwargs):
+            restore = getattr(self, "_ultra_restore_draw_idle", None)
+            if restore is not None:
+                restore()
+                self._ultra_restore_draw_idle = None
+            return orig_stop(self, *args, **kwargs)
+
+        mpl_animation.FuncAnimation._stop = _stop
+
+    mpl_animation.FuncAnimation._ultra_draw_idle_patched = True
 
 
 def _build_registry_map():

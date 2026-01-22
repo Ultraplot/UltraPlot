@@ -485,7 +485,6 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         with ctx1, ctx2, ctx3:
             if fig._layout_dirty:
                 fig.auto_layout()
-                fig._layout_dirty = False
             return func(self, *args, **kwargs)
 
     # Add preprocessor
@@ -2375,14 +2374,13 @@ class Figure(mfigure.Figure):
             to `~Figure.subplots`, `~Figure.set_size_inches` was called manually,
             or the figure was resized manually with an interactive backend.
         """
+
         # *Impossible* to get notebook backend to work with auto resizing so we
         # just do the tight layout adjustments and skip resizing.
         gs = self.gridspec
         renderer = self._get_renderer()
-        if aspect is None:
-            aspect = True
-        if tight is None:
-            tight = self._tight_active
+        layout_aspect = True if aspect is None else aspect
+        layout_tight = self._tight_active if tight is None else tight
         if resize is False:  # fix the size
             self._figwidth, self._figheight = self.get_size_inches()
             self._refwidth = self._refheight = None  # critical!
@@ -2402,18 +2400,46 @@ class Figure(mfigure.Figure):
                 self._align_super_labels(side, renderer)
             self._align_super_title(renderer)
 
+        before = self._layout_signature()
+
         # Update the layout
         # WARNING: Tried to avoid two figure resizes but made
         # subsequent tight layout really weird. Have to resize twice.
         _draw_content()
         if not gs:
+            self._layout_dirty = False
             return
-        if aspect:
+        if layout_aspect:
             gs._auto_layout_aspect()
         _align_content()
-        if tight:
+        if layout_tight:
             gs._auto_layout_tight(renderer)
         _align_content()
+
+        after = self._layout_signature()
+        self._layout_dirty = before != after
+        if self._layout_dirty and getattr(self, "canvas", None):
+            # Only schedule when an interactive manager exists to avoid recursion.
+            if getattr(self.canvas, "manager", None) is not None:
+                if not getattr(self.canvas, "_is_idle_drawing", False):
+                    self.canvas.draw_idle()
+
+    def _layout_signature(self):
+        """
+        Snapshot layout-defining state to detect convergence across draws.
+        """
+        gs = self.gridspec
+        if not gs:
+            return None
+        return (
+            tuple(self.get_size_inches()),
+            gs._left_default,
+            gs._right_default,
+            gs._bottom_default,
+            gs._top_default,
+            tuple(gs._hspace_total_default),
+            tuple(gs._wspace_total_default),
+        )
 
     @warnings._rename_kwargs(
         "0.10.0", mathtext_fallback="uplt.rc.mathtext_fallback = {}"
