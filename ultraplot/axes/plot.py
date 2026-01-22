@@ -1994,6 +1994,7 @@ class PlotAxes(base.Axes):
         """
         %(plot.sankey)s
         """
+        # Parameter parsing
         pathlengths = _not_none(pathlengths, rc["sankey.pathlengths"])
         trunklength = _not_none(trunklength, rc["sankey.trunklength"])
         patchlabel = _not_none(patchlabel, rc["sankey.pathlabel"])
@@ -2011,6 +2012,9 @@ class PlotAxes(base.Axes):
         rotation = _not_none(rotation, rc["sankey.rotation"])
 
         def _looks_like_links(values):
+            """
+            Helper function to parse links
+            """
             if values is None:
                 return False
             if isinstance(values, np.ndarray) and values.ndim == 1:
@@ -2034,11 +2038,11 @@ class PlotAxes(base.Axes):
             label_kw = label_kw or {}
             if links is None:
                 links = flows
-
             cycle = rc["axes.prop_cycle"].by_key().get("color", [])
             if not cycle:
                 cycle = [self._get_lines.get_next_color()]
 
+            # Real logic is here
             return sankey_diagram(
                 self,
                 nodes=nodes,
