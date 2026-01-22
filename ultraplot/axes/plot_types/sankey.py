@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable, Mapping, Optional, Sequence, Union
 
 from matplotlib import colors as mcolors
 from matplotlib import patches as mpatches
 from matplotlib import path as mpath
+
+from ...config import rc
+from ...internals import _not_none
 
 
 @dataclass
@@ -782,38 +785,53 @@ def _draw_nodes(
 def sankey_diagram(
     ax,
     *,
-    nodes=None,
-    flows=None,
-    layers=None,
-    flow_cycle=None,
-    group_cycle=None,
-    node_order=None,
-    layer_order=None,
-    style=None,
-    flow_other=None,
-    other_label="Other",
-    value_format=None,
-    node_pad=0.02,
-    node_width=0.03,
-    node_kw=None,
-    flow_kw=None,
-    label_kw=None,
-    node_label_kw=None,
-    flow_label_kw=None,
-    node_label_box=None,
-    node_labels=True,
-    flow_labels=False,
-    flow_sort=True,
-    flow_label_pos=0.5,
-    node_label_outside="auto",
-    node_label_offset=0.01,
-    align="center",
-    margin=0.05,
-    flow_alpha=0.75,
-    flow_curvature=0.5,
-    node_facecolor="0.75",
+    nodes: Any = None,
+    flows: Any = None,
+    layers: Optional[Mapping[Any, int]] = None,
+    flow_cycle: Optional[Sequence[Any]] = None,
+    group_cycle: Optional[Sequence[Any]] = None,
+    node_order: Optional[Sequence[Any]] = None,
+    layer_order: Optional[Sequence[int]] = None,
+    style: Optional[str] = None,
+    flow_other: Optional[float] = None,
+    other_label: Optional[str] = None,
+    value_format: Optional[Union[str, Callable[[float], str]]] = None,
+    node_pad: Optional[float] = None,
+    node_width: Optional[float] = None,
+    node_kw: Optional[Mapping[str, Any]] = None,
+    flow_kw: Optional[Mapping[str, Any]] = None,
+    label_kw: Optional[Mapping[str, Any]] = None,
+    node_label_kw: Optional[Mapping[str, Any]] = None,
+    flow_label_kw: Optional[Mapping[str, Any]] = None,
+    node_label_box: Optional[Union[bool, Mapping[str, Any]]] = None,
+    node_labels: Optional[bool] = None,
+    flow_labels: Optional[bool] = None,
+    flow_sort: Optional[bool] = None,
+    flow_label_pos: Optional[float] = None,
+    node_label_outside: Optional[Union[bool, str]] = None,
+    node_label_offset: Optional[float] = None,
+    align: Optional[str] = None,
+    margin: Optional[float] = None,
+    flow_alpha: Optional[float] = None,
+    flow_curvature: Optional[float] = None,
+    node_facecolor: Optional[Any] = None,
 ) -> SankeyDiagram:
     """Render a layered Sankey diagram with optional labels."""
+    other_label = _not_none(other_label, rc["sankey.other_label"])
+    node_pad = _not_none(node_pad, rc["sankey.nodepad"])
+    node_width = _not_none(node_width, rc["sankey.nodewidth"])
+    margin = _not_none(margin, rc["sankey.margin"])
+    flow_alpha = _not_none(flow_alpha, rc["sankey.flow.alpha"])
+    flow_curvature = _not_none(flow_curvature, rc["sankey.flow.curvature"])
+    node_facecolor = _not_none(node_facecolor, rc["sankey.node.facecolor"])
+    flow_sort = _not_none(flow_sort, rc["sankey.flow_sort"])
+    flow_label_pos = _not_none(flow_label_pos, rc["sankey.flow_label_pos"])
+    node_label_offset = _not_none(node_label_offset, rc["sankey.node_label_offset"])
+    node_labels = _not_none(node_labels, rc["sankey.node_labels"])
+    flow_labels = _not_none(flow_labels, rc["sankey.flow_labels"])
+    align = _not_none(align, rc["sankey.align"])
+    node_label_outside = _not_none(node_label_outside, rc["sankey.node_label_outside"])
+
     node_kw = node_kw or {}
     flow_kw = flow_kw or {}
     label_kw = label_kw or {}
