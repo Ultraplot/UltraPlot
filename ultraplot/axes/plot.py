@@ -10,7 +10,7 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from numbers import Integral, Number
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
 import matplotlib as mpl
 import matplotlib.artist as martist
@@ -205,6 +205,100 @@ CurvedQuiverSet
 """
 
 docstring._snippet_manager["plot.curved_quiver"] = _curved_quiver_docstring
+
+_sankey_docstring = """
+Draw a Sankey diagram.
+
+Parameters
+----------
+flows : sequence of float or flow tuples
+    If a numeric sequence, use Matplotlib's Sankey implementation.
+    Otherwise, expect flow tuples or dicts describing (source, target, value).
+nodes : sequence or dict, optional
+    Node identifiers or dicts with ``id``/``label``/``color`` keys. If omitted,
+    nodes are inferred from flow sources/targets.
+labels : sequence of str, optional
+    Labels for each flow in Matplotlib's Sankey mode.
+orientations : sequence of int, optional
+    Flow orientations (-1: down, 0: right, 1: up) for Matplotlib's Sankey.
+pathlengths : float or sequence of float, optional
+    Path lengths for each flow in Matplotlib's Sankey. Defaults to
+    :rc:`sankey.pathlengths` when omitted.
+trunklength : float, optional
+    Length of the trunk between the input and output flows. Defaults to
+    :rc:`sankey.trunklength` when omitted.
+patchlabel : str, optional
+    Label for the main patch in Matplotlib's Sankey mode. Defaults to
+    :rc:`sankey.pathlabel` when omitted.
+scale, unit, format, gap, radius, shoulder, offset, head_angle, margin, tolerance : optional
+    Passed to `matplotlib.sankey.Sankey`.
+prior : int, optional
+    Index of a prior diagram to connect to.
+connect : (int, int), optional
+    Flow indices for the prior and current diagram connection. Defaults to
+    :rc:`sankey.connect` when omitted.
+rotation : float, optional
+    Rotation angle in degrees. Defaults to :rc:`sankey.rotation` when omitted.
+node_kw, flow_kw, label_kw : dict-like, optional
+    Style dictionaries for the layered Sankey renderer.
+node_label_kw, flow_label_kw : dict-like, optional
+    Label style dictionaries for node and flow labels in layered mode.
+node_label_box : bool or dict-like, optional
+    If ``True``, draw a rounded box behind node labels. If dict-like, used as
+    the ``bbox`` argument for node label styling.
+style : {'budget', 'pastel', 'mono'}, optional
+    Built-in styling presets for layered mode.
+node_order : sequence, optional
+    Explicit node ordering for layered mode.
+layer_order : sequence, optional
+    Explicit layer ordering for layered mode.
+group_cycle : sequence, optional
+    Cycle for flow group colors (defaults to flow cycle).
+flow_other : float, optional
+    Aggregate flows below this threshold into a single ``other_label``.
+other_label : str, optional
+    Label for the aggregated flow target. Defaults to :rc:`sankey.other_label`
+    when omitted.
+value_format : str or callable, optional
+    Formatter for flow labels when not explicitly provided.
+node_label_outside : {'auto', True, False}, optional
+    Place node labels outside narrow nodes. Defaults to
+    :rc:`sankey.node_label_outside` when omitted.
+node_label_offset : float, optional
+    Offset for outside node labels (axes-relative units). Defaults to
+    :rc:`sankey.node_label_offset` when omitted.
+flow_sort : bool, optional
+    Whether to sort flows by target position to reduce crossings. Defaults to
+    :rc:`sankey.flow_sort` when omitted.
+flow_label_pos : float, optional
+    Horizontal placement for single flow labels (0 to 1 along the ribbon).
+    Defaults to :rc:`sankey.flow_label_pos` when omitted.
+    When flow labels overlap, positions are redistributed between 0.25 and 0.75.
+node_labels, flow_labels : bool, optional
+    Whether to draw node or flow labels in layered mode. Defaults to
+    :rc:`sankey.node_labels` and :rc:`sankey.flow_labels` when omitted.
+align : {'center', 'top', 'bottom'}, optional
+    Vertical alignment for nodes within each layer in layered mode. Defaults to
+    :rc:`sankey.align` when omitted.
+layers : dict-like, optional
+    Manual layer assignments for nodes in layered mode.
+**kwargs
+    Patch properties passed to `matplotlib.sankey.Sankey.add` in Matplotlib mode.
+
+Layered defaults
+----------------
+Layered mode uses :rc:`sankey.nodepad`, :rc:`sankey.nodewidth`,
+:rc:`sankey.margin`, :rc:`sankey.flow.alpha`, :rc:`sankey.flow.curvature`,
+and :rc:`sankey.node.facecolor` when not set explicitly.
+
+Returns
+-------
+matplotlib.sankey.Sankey or list or SankeyDiagram
+    The Sankey diagram instance, or a list for multi-diagram usage. For layered
+    mode, returns a `~ultraplot.axes.plot_types.sankey.SankeyDiagram`.
+"""
+
+docstring._snippet_manager["plot.sankey"] = _sankey_docstring
 # Auto colorbar and legend docstring
 _guide_docstring = """
 colorbar : bool, int, or str, optional
@@ -1849,6 +1943,188 @@ class PlotAxes(base.Axes):
         stream_container = CurvedQuiverSet(lc, ac)
         return stream_container
 
+    @docstring._snippet_manager
+    def sankey(
+        self,
+        flows: Any,
+        labels: Optional[Sequence[str]] = None,
+        orientations: Optional[Sequence[int]] = None,
+        pathlengths: Optional[Union[float, Sequence[float]]] = None,
+        trunklength: Optional[float] = None,
+        patchlabel: Optional[str] = None,
+        *,
+        nodes: Any = None,
+        links: Any = None,
+        node_kw: Optional[Mapping[str, Any]] = None,
+        flow_kw: Optional[Mapping[str, Any]] = None,
+        label_kw: Optional[Mapping[str, Any]] = None,
+        node_label_kw: Optional[Mapping[str, Any]] = None,
+        flow_label_kw: Optional[Mapping[str, Any]] = None,
+        node_label_box: Optional[Union[bool, Mapping[str, Any]]] = None,
+        style: Optional[str] = None,
+        node_order: Optional[Sequence[Any]] = None,
+        layer_order: Optional[Sequence[int]] = None,
+        group_cycle: Optional[Sequence[Any]] = None,
+        flow_other: Optional[float] = None,
+        other_label: Optional[str] = None,
+        value_format: Optional[Union[str, Callable[[float], str]]] = None,
+        node_label_outside: Optional[Union[bool, str]] = None,
+        node_label_offset: Optional[float] = None,
+        flow_sort: Optional[bool] = None,
+        flow_label_pos: Optional[float] = None,
+        node_labels: Optional[bool] = None,
+        flow_labels: Optional[bool] = None,
+        align: Optional[str] = None,
+        layers: Optional[Mapping[Any, int]] = None,
+        scale: Optional[float] = None,
+        unit: Optional[str] = None,
+        format: Optional[str] = None,
+        gap: Optional[float] = None,
+        radius: Optional[float] = None,
+        shoulder: Optional[float] = None,
+        offset: Optional[float] = None,
+        head_angle: Optional[float] = None,
+        margin: Optional[float] = None,
+        tolerance: Optional[float] = None,
+        prior: Optional[int] = None,
+        connect: Optional[tuple[int, int]] = None,
+        rotation: Optional[float] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        %(plot.sankey)s
+        """
+        # Parameter parsing
+        pathlengths = _not_none(pathlengths, rc["sankey.pathlengths"])
+        trunklength = _not_none(trunklength, rc["sankey.trunklength"])
+        patchlabel = _not_none(patchlabel, rc["sankey.pathlabel"])
+        other_label = _not_none(other_label, rc["sankey.other_label"])
+        node_label_outside = _not_none(
+            node_label_outside, rc["sankey.node_label_outside"]
+        )
+        node_label_offset = _not_none(node_label_offset, rc["sankey.node_label_offset"])
+        flow_sort = _not_none(flow_sort, rc["sankey.flow_sort"])
+        flow_label_pos = _not_none(flow_label_pos, rc["sankey.flow_label_pos"])
+        node_labels = _not_none(node_labels, rc["sankey.node_labels"])
+        flow_labels = _not_none(flow_labels, rc["sankey.flow_labels"])
+        align = _not_none(align, rc["sankey.align"])
+        connect = _not_none(connect, rc["sankey.connect"])
+        rotation = _not_none(rotation, rc["sankey.rotation"])
+
+        def _looks_like_links(values):
+            """
+            Helper function to parse links
+            """
+            if values is None:
+                return False
+            if isinstance(values, np.ndarray) and values.ndim == 1:
+                return False
+            if isinstance(values, dict):
+                return True
+            if isinstance(values, (list, tuple)) and values:
+                first = values[0]
+                if isinstance(first, dict):
+                    return True
+                if isinstance(first, (list, tuple)) and len(first) >= 3:
+                    return True
+            return False
+
+        use_layered = nodes is not None or links is not None or _looks_like_links(flows)
+        if use_layered:
+            from .plot_types.sankey import sankey_diagram
+
+            node_kw = node_kw or {}
+            flow_kw = flow_kw or {}
+            label_kw = label_kw or {}
+            if links is None:
+                links = flows
+            cycle = rc["axes.prop_cycle"].by_key().get("color", [])
+            if not cycle:
+                cycle = [self._get_lines.get_next_color()]
+
+            # Real logic is here
+            return sankey_diagram(
+                self,
+                nodes=nodes,
+                flows=links,
+                layers=layers,
+                flow_cycle=cycle,
+                group_cycle=group_cycle,
+                node_order=node_order,
+                layer_order=layer_order,
+                style=style,
+                flow_other=flow_other,
+                other_label=other_label,
+                value_format=value_format,
+                node_kw=node_kw,
+                flow_kw=flow_kw,
+                label_kw=label_kw,
+                node_label_kw=node_label_kw,
+                flow_label_kw=flow_label_kw,
+                node_label_box=node_label_box,
+                node_label_outside=node_label_outside,
+                node_label_offset=node_label_offset,
+                flow_sort=flow_sort,
+                flow_label_pos=flow_label_pos,
+                node_labels=node_labels,
+                flow_labels=flow_labels,
+                align=align,
+                node_pad=rc["sankey.nodepad"],
+                node_width=rc["sankey.nodewidth"],
+                margin=rc["sankey.margin"],
+                flow_alpha=rc["sankey.flow.alpha"],
+                flow_curvature=rc["sankey.flow.curvature"],
+                node_facecolor=rc["sankey.node.facecolor"],
+            )
+
+        from matplotlib.sankey import Sankey
+
+        sankey_kw = {}
+        if scale is not None:
+            sankey_kw["scale"] = scale
+        if unit is not None:
+            sankey_kw["unit"] = unit
+        if format is not None:
+            sankey_kw["format"] = format
+        if gap is not None:
+            sankey_kw["gap"] = gap
+        if radius is not None:
+            sankey_kw["radius"] = radius
+        if shoulder is not None:
+            sankey_kw["shoulder"] = shoulder
+        if offset is not None:
+            sankey_kw["offset"] = offset
+        if head_angle is not None:
+            sankey_kw["head_angle"] = head_angle
+        if margin is not None:
+            sankey_kw["margin"] = margin
+        if tolerance is not None:
+            sankey_kw["tolerance"] = tolerance
+
+        if "facecolor" not in kwargs and "color" not in kwargs:
+            kwargs["facecolor"] = self._get_lines.get_next_color()
+
+        sankey = Sankey(ax=self, **sankey_kw)
+        add_kw = {
+            "flows": flows,
+            "trunklength": trunklength,
+            "patchlabel": patchlabel,
+            "rotation": rotation,
+            "pathlengths": pathlengths,
+        }
+        if labels is not None:
+            add_kw["labels"] = labels
+        if orientations is not None:
+            add_kw["orientations"] = orientations
+        if prior is not None:
+            add_kw["prior"] = prior
+        if connect is not None:
+            add_kw["connect"] = (0, 0)
+
+        sankey.add(**add_kw, **kwargs)
+        diagrams = sankey.finish()
+        return diagrams[0] if len(diagrams) == 1 else diagrams
+
     def _call_native(self, name, *args, **kwargs):
         """
         Call the plotting method and redirect internal calls to native methods.
@@ -3287,9 +3563,9 @@ class PlotAxes(base.Axes):
         for z in zs:
             if z is None:  # e.g. empty scatter color
                 continue
+            z = inputs._to_numpy_array(z)
             if z.ndim > 2:  # e.g. imshow data
                 continue
-            z = inputs._to_numpy_array(z)
             if inbounds and x is not None and y is not None:  # ignore if None coords
                 z = self._inbounds_vlim(x, y, z, to_centers=to_centers)
             imin, imax = inputs._safe_range(z, pmin, pmax)
