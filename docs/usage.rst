@@ -158,6 +158,48 @@ plotting packages.
 Since these features are optional,
 UltraPlot can be used without installing any of these packages.
 
+External axes containers (mpltern, others)
+------------------------------------------
+
+UltraPlot can wrap third-party Matplotlib projections (e.g., ``mpltern``'s
+``"ternary"`` projection) in a lightweight container. The container keeps
+UltraPlot's figure/labeling behaviors while delegating plotting calls to the
+external axes.
+
+Basic usage mirrors standard subplots:
+
+.. code-block:: python
+
+   import mpltern
+   import ultraplot as uplt
+
+   fig, axs = uplt.subplots(ncols=2, projection="ternary")
+   axs.format(title="Ternary example", abc=True, abcloc="left")
+   axs[0].plot([0.1, 0.7, 0.2], [0.2, 0.2, 0.6], [0.7, 0.1, 0.2])
+   axs[1].scatter([0.2, 0.3], [0.5, 0.4], [0.3, 0.3])
+
+Controlling the external content size
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use ``external_shrink_factor`` (or the rc setting ``external.shrink``) to
+shrink the *external* axes inside the container, creating margin space for
+titles and annotations without resizing the subplot itself:
+
+.. code-block:: python
+
+   uplt.rc["external.shrink"] = 0.8
+   fig, axs = uplt.subplots(projection="ternary")
+   axs.format(external_shrink_factor=0.7)
+
+Notes and performance
+~~~~~~~~~~~~~~~~~~~~~
+
+* Titles and a-b-c labels are rendered by the container, not the external axes,
+  so they behave like normal UltraPlot subplots.
+* For mpltern with ``external_shrink_factor < 1``, UltraPlot skips the costly
+  tight-bbox fitting pass and relies on the shrink factor for layout. This
+  keeps rendering fast and stable.
+
 .. _usage_features:
 
 Additional features

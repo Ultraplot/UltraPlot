@@ -948,6 +948,11 @@ _rc_ultraplot_table = {
         _validate_bool,
         "Whether to draw arrows at the end of curved quiver lines by default.",
     ),
+    "external.shrink": (
+        0.9,
+        _validate_float,
+        "Default shrink factor for external axes containers.",
+    ),
     # Sankey settings
     "sankey.nodepad": (
         0.02,

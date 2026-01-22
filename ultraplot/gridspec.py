@@ -1987,6 +1987,7 @@ class SubplotGrid(MutableSequence, list):
         if self:
             gridspec = self.gridspec  # compare against existing gridspec
         for item in items.flat:
+            # Accept ultraplot axes (including ExternalAxesContainer which inherits from paxes.Axes)
             if not isinstance(item, paxes.Axes):
                 raise ValueError(message.format(f"the object {item!r}"))
             item = item._get_topmost_axes()
