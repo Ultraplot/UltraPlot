@@ -952,6 +952,7 @@ _rc_ultraplot_table = {
         0.9,
         _validate_float,
         "Default shrink factor for external axes containers.",
+    ),
     # Sankey settings
     "sankey.nodepad": (
         0.02,
