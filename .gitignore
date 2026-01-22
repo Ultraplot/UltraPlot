@@ -23,6 +23,9 @@ docs/_static/ultraplotrc
 docs/_static/rctable.rst
 docs/_static/*
 *.html
+docs/gallery/
+docs/sg_execution_times.rst
+docs/whats_new.rst
 
 # Development subfolders
 dev
