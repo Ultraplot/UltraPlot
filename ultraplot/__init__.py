@@ -137,6 +137,8 @@ def _patch_funcanimation_draw_idle():
         if count == 0:
             canvas._ultra_draw_idle_orig = canvas.draw_idle
 
+            # TODO: Replace this monkeypatch with a backend-level fix once
+            # draw_idle artifacts are resolved upstream.
             def draw_idle(*args, **kwargs):
                 return canvas.draw(*args, **kwargs)
 
