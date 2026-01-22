@@ -51,7 +51,9 @@ include-package-data = true
 write_to = "ultraplot/_version.py"
 write_to_template = "__version__ = '{version}'\n"
 
+
+[tool.ruff]
+ignore = ["I001", "I002", "I003", "I004"]
+
 [tool.basedpyright]
-exclude = [
-    "**/*.ipynb"
-]
+exclude = ["**/*.ipynb"]

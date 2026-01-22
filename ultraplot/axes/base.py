@@ -967,7 +967,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         zoom = ax._inset_zoom = _not_none(zoom, zoom_default)
         if zoom:
             zoom_kw = zoom_kw or {}
-            ax.indicate_inset_zoom(**zoom_kw)
+            # Check if the inset axes is an Ultraplot axes class.
+            # Ultraplot axes have a custom indicate_inset_zoom that can be
+            # called on the inset itself (uses self._inset_parent internally).
+            # Non-Ultraplot axes (e.g., raw matplotlib/cartopy) require calling
+            # matplotlib's indicate_inset_zoom on the parent with the inset as first argument.
+            if isinstance(ax, Axes):
+                # Ultraplot axes: call on inset (uses self._inset_parent internally)
+                ax.indicate_inset_zoom(**zoom_kw)
+            else:
+                # Non-Ultraplot axes: call matplotlib's parent class method
+                # with inset as first argument (matplotlib API)
+                maxes.Axes.indicate_inset_zoom(self, ax, **zoom_kw)
         return ax
 
     def _add_queued_guides(self):
@@ -2588,7 +2599,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if not isinstance(self, maxes.SubplotBase):
             raise RuntimeError("Axes must be a subplot.")
         ss = self.get_subplotspec().get_topmost_subplotspec()
-        row1, row2, col1, col2 = ss._get_rows_columns()
+
+        # Check if this is an ultraplot SubplotSpec with _get_rows_columns method
+        if not hasattr(ss, "_get_rows_columns"):
+            # Fall back to standard matplotlib SubplotSpec attributes
+            # This can happen when axes are created directly without ultraplot's gridspec
+            if hasattr(ss, "rowspan") and hasattr(ss, "colspan"):
+                row1, row2 = ss.rowspan.start, ss.rowspan.stop - 1
+                col1, col2 = ss.colspan.start, ss.colspan.stop - 1
+            else:
+                # Unable to determine range, return default
+                row1, row2, col1, col2 = 0, 0, 0, 0
+        else:
+            row1, row2, col1, col2 = ss._get_rows_columns()
+
         if s == "x":
             return (col1, col2)
         else:
