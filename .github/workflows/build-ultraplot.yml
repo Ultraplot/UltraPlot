@@ -54,6 +54,8 @@ jobs:
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
+    env:
+      IS_PR: ${{ github.event.pull_request }}
     defaults:
       run:
         shell: bash -el {0}
@@ -75,22 +77,25 @@ jobs:
       - name: Cache Baseline Figures
         id: cache-baseline
         uses: actions/cache@v4
+        if: ${{ env.IS_PR }}
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
-          # Key is based on OS, Python/Matplotlib versions, and the PR number
-          key: ${{ runner.os }}-baseline-pr-${{ github.event.pull_request.number }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
+          # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
+          key: ${{ runner.os }}-baseline-base-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
           restore-keys: |
-            ${{ runner.os }}-baseline-pr-${{ github.event.pull_request.number }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
+            ${{ runner.os }}-baseline-base-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
 
       # Conditional Baseline Generation (Only runs on cache miss)
       - name: Generate baseline from main
         # Skip this step if the cache was found (cache-hit is true)
-        if: steps.cache-baseline.outputs.cache-hit != 'true'
+        if: steps.cache-baseline.outputs.cache-hit != 'true' || !env.IS_PR
         run: |
           mkdir -p ultraplot/tests/baseline
-          # Checkout the base branch (e.g., 'main') to generate the official baseline
-          git fetch origin ${{ github.event.pull_request.base.sha }}
-          git checkout ${{ github.event.pull_request.base.sha }}
+          # Checkout the base commit for PRs; otherwise regenerate from current ref
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            git fetch origin ${{ github.event.pull_request.base.sha }}
+            git checkout ${{ github.event.pull_request.base.sha }}
+          fi
 
           # Install the Ultraplot version from the base branch's code
           pip install --no-build-isolation --no-deps .
@@ -103,7 +108,9 @@ jobs:
             ultraplot/tests
 
           # Return to the PR branch for the rest of the job
-          git checkout ${{ github.sha }}
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            git checkout ${{ github.sha }}
+          fi
 
       # Image Comparison (Uses cached or newly generated baseline)
       - name: Image Comparison Ultraplot
