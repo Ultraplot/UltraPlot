@@ -941,6 +941,12 @@ _rc_ultraplot_table = {
         "name. If ``None``, a custom ultraplot style is used. "
         "If ``'default'``, the default matplotlib style is used.",
     ),
+    "animation.force_draw_idle": (
+        True,
+        _validate_bool,
+        "Whether to force `draw_idle` to call `draw` during animations for "
+        "ultraplot figures to avoid backend redraw artifacts.",
+    ),
     # A-b-c labels
     "abc": (
         False,

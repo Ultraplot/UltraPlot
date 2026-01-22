@@ -111,6 +111,13 @@ def _patch_funcanimation_draw_idle():
     except Exception:
         return
 
+    try:
+        from .config import rc
+    except Exception:
+        return
+    if not rc.get("animation.force_draw_idle", True):
+        return
+
     if getattr(mpl_animation.FuncAnimation, "_ultra_draw_idle_patched", False):
         return
 
@@ -122,6 +129,8 @@ def _patch_funcanimation_draw_idle():
             return
         canvas = getattr(fig, "canvas", None)
         if canvas is None or not hasattr(canvas, "draw_idle"):
+            return
+        if getattr(canvas, "manager", None) is None:
             return
 
         count = getattr(canvas, "_ultra_draw_idle_count", 0)
