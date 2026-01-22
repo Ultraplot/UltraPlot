@@ -1,3 +1,3 @@
-from . import curved_quiver, sankey
+from . import curved_quiver
 
-__all__ = ["curved_quiver", "sankey"]
+__all__ = ["curved_quiver"]
