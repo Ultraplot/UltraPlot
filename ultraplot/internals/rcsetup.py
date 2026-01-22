@@ -360,6 +360,14 @@ def _validate_bool_or_iterable(value):
     raise ValueError(f"{value!r} is not a valid bool or iterable of node labels.")
 
 
+def _validate_bool_or_string(value):
+    if isinstance(value, bool):
+        return _validate_bool(value)
+    if isinstance(value, str):
+        return _validate_string(value)
+    raise ValueError(f"{value!r} is not a valid bool or string.")
+
+
 def _validate_fontprops(s):
     """
     Parse font property with support for ``'regular'`` placeholder.
@@ -478,6 +486,14 @@ def _validate_float_or_auto(value):
         return float(value)
     except (ValueError, TypeError):
         raise ValueError(f"Value must be a float or 'auto', got {value!r}")
+
+
+def _validate_tuple_int_2(value):
+    if isinstance(value, np.ndarray):
+        value = value.tolist()
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return tuple(_validate_int(item) for item in value)
+    raise ValueError(f"Value must be a tuple/list of 2 ints, got {value!r}")
 
 
 def _rst_table():
@@ -936,6 +952,36 @@ _rc_ultraplot_table = {
         0.9,
         _validate_float,
         "Default shrink factor for external axes containers.",
+    # Sankey settings
+    "sankey.nodepad": (
+        0.02,
+        _validate_float,
+        "Vertical padding between nodes in layered sankey diagrams.",
+    ),
+    "sankey.nodewidth": (
+        0.03,
+        _validate_float,
+        "Node width for layered sankey diagrams (axes-relative units).",
+    ),
+    "sankey.margin": (
+        0.05,
+        _validate_float,
+        "Margin around layered sankey diagrams (axes-relative units).",
+    ),
+    "sankey.flow.alpha": (
+        0.75,
+        _validate_float,
+        "Flow transparency for layered sankey diagrams.",
+    ),
+    "sankey.flow.curvature": (
+        0.5,
+        _validate_float,
+        "Flow curvature for layered sankey diagrams.",
+    ),
+    "sankey.node.facecolor": (
+        "0.75",
+        _validate_color,
+        "Default node facecolor for layered sankey diagrams.",
     ),
     # Stylesheet
     "style": (
@@ -1752,6 +1798,72 @@ _rc_ultraplot_table = {
         False,
         _validate_bool,
         "Toggles rasterization on or off for rivers feature for GeoAxes.",
+    ),
+    # Sankey diagrams
+    "sankey.align": (
+        "center",
+        _validate_belongs("center", "left", "right", "justify"),
+        "Horizontal alignment of nodes.",
+    ),
+    "sankey.connect": (
+        (0, 0),
+        _validate_tuple_int_2,
+        "Connection path for Sankey diagram.",
+    ),
+    "sankey.flow_labels": (
+        False,
+        _validate_bool,
+        "Whether to draw flow labels.",
+    ),
+    "sankey.flow_label_pos": (
+        0.5,
+        _validate_float,
+        "Position of flow labels along the flow.",
+    ),
+    "sankey.flow_sort": (
+        True,
+        _validate_bool,
+        "Whether to sort flows.",
+    ),
+    "sankey.node_labels": (
+        True,
+        _validate_bool,
+        "Whether to draw node labels.",
+    ),
+    "sankey.node_label_offset": (
+        0.01,
+        _validate_float,
+        "Offset for node labels.",
+    ),
+    "sankey.node_label_outside": (
+        "auto",
+        _validate_bool_or_string,
+        "Position of node labels relative to the node.",
+    ),
+    "sankey.other_label": (
+        "Other",
+        _validate_string,
+        "Label for 'other' category in Sankey diagram.",
+    ),
+    "sankey.pathlabel": (
+        "",
+        _validate_string,
+        "Label for the patch.",
+    ),
+    "sankey.pathlengths": (
+        0.25,
+        _validate_float,
+        "Path lengths for Sankey diagram.",
+    ),
+    "sankey.rotation": (
+        0.0,
+        _validate_float,
+        "Rotation of the Sankey diagram.",
+    ),
+    "sankey.trunklength": (
+        1.0,
+        _validate_float,
+        "Trunk length for Sankey diagram.",
     ),
     # Subplots settings
     "subplots.align": (

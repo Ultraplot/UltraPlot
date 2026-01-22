@@ -1,5 +1,8 @@
-import ultraplot as uplt, pytest
 import importlib
+
+import pytest
+
+import ultraplot as uplt
 
 
 def test_wrong_keyword_reset():
@@ -34,9 +37,22 @@ def test_cycle_in_rc_file(tmp_path):
     assert uplt.rc["cycle"] == "colorblind"
 
 
+def test_sankey_rc_defaults():
+    """
+    Sanity check the new sankey defaults in rc.
+    """
+    assert uplt.rc["sankey.nodepad"] == 0.02
+    assert uplt.rc["sankey.nodewidth"] == 0.03
+    assert uplt.rc["sankey.margin"] == 0.05
+    assert uplt.rc["sankey.flow.alpha"] == 0.75
+    assert uplt.rc["sankey.flow.curvature"] == 0.5
+    assert uplt.rc["sankey.node.facecolor"] == "0.75"
+
+
 import io
-from unittest.mock import patch, MagicMock
 from importlib.metadata import PackageNotFoundError
+from unittest.mock import MagicMock, patch
+
 from ultraplot.utils import check_for_update
 
 
