@@ -2889,10 +2889,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             # Get the size of tick labels if they exist
             has_labels = True if axis.get_ticklabels() else False
             # Estimate label size; note it uses the raw text representation which can be misleading due to the latex processing
-            if has_labels:
+            if has_labels and axis.get_ticklabels():
                 _offset = max(
                     [
-                        len(l.get_text()) + l.get_fontsize()
+                        len(l.get_text()) * l.get_fontsize() * 0.6
                         for l in axis.get_ticklabels()
                     ]
                 )
@@ -3428,6 +3428,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if skip_figure:  # avoid recursion
             return
         if rc_mode == 1:  # avoid resetting
+            return
+        if self._inset_parent is not None or self._panel_parent is not None:
             return
         self.figure.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_axes=True, **params)
 
