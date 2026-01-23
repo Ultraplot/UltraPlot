@@ -67,6 +67,9 @@ def _setup():
             register_cycles,
             register_fonts,
         )
+        from .internals import (
+            fonts as _fonts,  # noqa: F401 - ensure mathtext override is active
+        )
         from .internals import rcsetup, warnings
         from .internals.benchmarks import _benchmark
 
