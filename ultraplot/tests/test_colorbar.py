@@ -104,36 +104,41 @@ def test_outer_align():
     """
     Test various align options.
     """
-    fig, ax = uplt.subplots()
-    ax.plot(np.empty((0, 4)), labels=list("abcd"))
-    ax.legend(loc="bottom", align="right", ncol=2)
-    ax.legend(loc="left", align="bottom", ncol=1)
-    ax.colorbar(
-        "magma",
-        loc="top",
-        ticklen=0,
-        tickloc="bottom",
-        align="left",
-        shrink=0.5,
-        label="Title",
-        extend="both",
-        labelloc="top",
-        labelweight="bold",
-    )
-    ax.colorbar(
-        "magma",
-        loc="r",
-        align="top",
-        shrink=0.5,
-        label="label",
-        extend="both",
-        labelrotation=90,
-    )
-    ax.colorbar(
-        "magma", loc="right", extend="both", label="test extensions", labelrotation=90
-    )
-    fig.suptitle("Align demo", va="bottom")
-    return fig
+    with uplt.rc.context({"font.family": ["DejaVu Sans", "sans-serif"]}):
+        fig, ax = uplt.subplots(figsize=(4, 4), dpi=100)
+        ax.plot(np.empty((0, 4)), labels=list("abcd"))
+        ax.legend(loc="bottom", align="right", ncol=2)
+        ax.legend(loc="left", align="bottom", ncol=1)
+        ax.colorbar(
+            "magma",
+            loc="top",
+            ticklen=0,
+            tickloc="bottom",
+            align="left",
+            shrink=0.5,
+            label="Title",
+            extend="both",
+            labelloc="top",
+            labelweight="bold",
+        )
+        ax.colorbar(
+            "magma",
+            loc="r",
+            align="top",
+            shrink=0.5,
+            label="label",
+            extend="both",
+            labelrotation=90,
+        )
+        ax.colorbar(
+            "magma",
+            loc="right",
+            extend="both",
+            label="test extensions",
+            labelrotation=90,
+        )
+        fig.suptitle("Align demo", va="bottom")
+        return fig
 
 
 @pytest.mark.mpl_image_compare
