@@ -1886,14 +1886,16 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Return the width and height of the axes in inches.
         """
         width, height = self.figure.get_size_inches()
-        bbox = self.get_position()
+        bbox = self.get_position(original=True)
         width = width * abs(bbox.width)
         height = height * abs(bbox.height)
-        dpi = getattr(self.figure, "dpi", None)
+        fig = self.figure
+        dpi = getattr(fig, "_original_dpi", None)
+        if dpi is None:
+            dpi = getattr(fig, "dpi", None)
         if dpi:
             width = round(width * dpi) / dpi
             height = round(height * dpi) / dpi
-        fig = self.figure
         if fig is not None and getattr(fig, "_refnum", None) == self.number:
             if getattr(fig, "_refwidth", None) is not None:
                 width = fig._refwidth
