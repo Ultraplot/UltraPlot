@@ -56,6 +56,7 @@ from ..internals import (
     rcsetup,
     warnings,
 )
+from ..ultralayout import KIWI_AVAILABLE, ColorbarLayoutSolver
 from ..utils import _fontsize_to_pt, edges, units
 
 try:
@@ -966,7 +967,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         zoom = ax._inset_zoom = _not_none(zoom, zoom_default)
         if zoom:
             zoom_kw = zoom_kw or {}
-            ax.indicate_inset_zoom(**zoom_kw)
+            # Check if the inset axes is an Ultraplot axes class.
+            # Ultraplot axes have a custom indicate_inset_zoom that can be
+            # called on the inset itself (uses self._inset_parent internally).
+            # Non-Ultraplot axes (e.g., raw matplotlib/cartopy) require calling
+            # matplotlib's indicate_inset_zoom on the parent with the inset as first argument.
+            if isinstance(ax, Axes):
+                # Ultraplot axes: call on inset (uses self._inset_parent internally)
+                ax.indicate_inset_zoom(**zoom_kw)
+            else:
+                # Non-Ultraplot axes: call matplotlib's parent class method
+                # with inset as first argument (matplotlib API)
+                maxes.Axes.indicate_inset_zoom(self, ax, **zoom_kw)
         return ax
 
     def _add_queued_guides(self):
@@ -1231,6 +1243,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 loc=loc,
                 labelloc=labelloc,
                 labelrotation=labelrotation,
+                labelsize=labelsize,
                 pad=pad,
                 **kwargs,
             )  # noqa: E501
@@ -1417,6 +1430,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             longaxis = obj.long_axis
         for label in longaxis.get_ticklabels():
             label.update(kw_ticklabels)
+        if KIWI_AVAILABLE and getattr(cax, "_inset_colorbar_layout", None):
+            _reflow_inset_colorbar_frame(obj, labelloc=labelloc, ticklen=ticklen)
+            cax._inset_colorbar_obj = obj
+            cax._inset_colorbar_labelloc = labelloc
+            cax._inset_colorbar_ticklen = ticklen
+            _register_inset_colorbar_reflow(self.figure)
         kw_outline = {"edgecolor": color, "linewidth": linewidth}
         if obj.outline is not None:
             obj.outline.update(kw_outline)
@@ -1870,6 +1889,16 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         bbox = self.get_position()
         width = width * abs(bbox.width)
         height = height * abs(bbox.height)
+        dpi = getattr(self.figure, "dpi", None)
+        if dpi:
+            width = round(width * dpi) / dpi
+            height = round(height * dpi) / dpi
+        fig = self.figure
+        if fig is not None and getattr(fig, "_refnum", None) == self.number:
+            if getattr(fig, "_refwidth", None) is not None:
+                width = fig._refwidth
+            if getattr(fig, "_refheight", None) is not None:
+                height = fig._refheight
         return np.array([width, height])
 
     def _get_topmost_axes(self):
@@ -2193,6 +2222,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         frame=None,
         frameon=None,
         label=None,
+        labelsize=None,
         pad=None,
         tickloc=None,
         ticklocation=None,
@@ -2211,6 +2241,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         )  # noqa: E501
         width = _not_none(width, rc["colorbar.insetwidth"])
         pad = _not_none(pad, rc["colorbar.insetpad"])
+        length_raw = length
+        width_raw = width
+        pad_raw = pad
         orientation = _not_none(orientation, "horizontal")
         ticklocation = _not_none(
             tickloc, ticklocation, "bottom" if orientation == "horizontal" else "right"
@@ -2220,158 +2253,43 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         xpad = units(pad, "em", "ax", axes=self, width=True)
         ypad = units(pad, "em", "ax", axes=self, width=False)
 
-        # Calculate space requirements for labels and ticks
-        labspace = rc["xtick.major.size"] / 72
-        fontsize = rc["xtick.labelsize"]
-        fontsize = _fontsize_to_pt(fontsize)
-        scale = 1.2
-        if orientation == "vertical" and labelloc in ("left", "right"):
-            scale = 2  # we need a little more room
-        if label is not None:
-            labspace += 2 * scale * fontsize / 72
+        tick_fontsize = _fontsize_to_pt(rc["xtick.labelsize"])
+        label_fontsize = _fontsize_to_pt(_not_none(labelsize, rc["axes.labelsize"]))
+        bounds_inset = None
+        bounds_frame = None
+
+        if KIWI_AVAILABLE:
+            bounds_inset, bounds_frame = _solve_inset_colorbar_bounds(
+                axes=self,
+                loc=loc,
+                orientation=orientation,
+                length=length,
+                width=width,
+                xpad=xpad,
+                ypad=ypad,
+                ticklocation=ticklocation,
+                labelloc=labelloc,
+                label=label,
+                labelrotation=labelrotation,
+                tick_fontsize=tick_fontsize,
+                label_fontsize=label_fontsize,
+            )
         else:
-            labspace += scale * fontsize / 72
-
-        # Convert to axes-relative coordinates
-        if orientation == "horizontal":
-            labspace /= self._get_size_inches()[1]
-        else:
-            labspace /= self._get_size_inches()[0]
-
-        # Initial frame dimensions (will be adjusted based on label position)
-        if orientation == "horizontal":
-            frame_width = 2 * xpad + length
-            frame_height = 2 * ypad + width + labspace
-        else:  # vertical
-            frame_width = 2 * xpad + width + labspace
-            frame_height = 2 * ypad + length
-
-        # Initialize frame position and colorbar position
-        xframe = yframe = 0  # frame lower left corner
-        if loc == "upper right":
-            xframe = 1 - frame_width
-            yframe = 1 - frame_height
-            cb_x = xframe + xpad
-            cb_y = yframe + ypad
-        elif loc == "upper left":
-            yframe = 1 - frame_height
-            cb_x = xpad
-            cb_y = yframe + ypad
-        elif loc == "lower left":
-            cb_x = xpad
-            cb_y = ypad
-        else:  # lower right
-            xframe = 1 - frame_width
-            cb_x = xframe + xpad
-            cb_y = ypad
-
-        # Adjust frame and colorbar position based on label location
-        label_offset = 0.5 * labspace
-
-        # Account for label rotation if specified
-        labelrotation = _not_none(labelrotation, 0)  # default to 0 degrees
-        if labelrotation != 0 and label is not None:
-            # Estimate label text dimensions
-            import math
-
-            # Rough estimate of text width (characters * font size * 0.6)
-            estimated_text_width = len(str(label)) * fontsize * 0.6 / 72
-            text_height = fontsize / 72
-
-            # Convert rotation to radians
-            angle_rad = math.radians(abs(labelrotation))
-
-            # Calculate rotated dimensions
-            rotated_width = estimated_text_width * math.cos(
-                angle_rad
-            ) + text_height * math.sin(angle_rad)
-            rotated_height = estimated_text_width * math.sin(
-                angle_rad
-            ) + text_height * math.cos(angle_rad)
-
-            # Convert back to axes-relative coordinates
-            if orientation == "horizontal":
-                # For horizontal colorbars, rotation affects vertical space
-                rotation_offset = rotated_height / self._get_size_inches()[1]
-            else:
-                # For vertical colorbars, rotation affects horizontal space
-                rotation_offset = rotated_width / self._get_size_inches()[0]
-
-            # Use the larger of the original offset or rotation-adjusted offset
-            label_offset = max(label_offset, rotation_offset)
-
-        if orientation == "vertical":
-            if labelloc == "left":
-                # Move colorbar right to make room for left labels
-                cb_x += label_offset
-
-            elif labelloc == "top":
-                # Center colorbar horizontally and extend frame for top labels
-                cb_x += label_offset
-                if "upper" in loc:
-                    # Upper positions: extend frame downward
-                    cb_y -= label_offset
-                    yframe -= label_offset
-                    frame_height += label_offset
-                    frame_width += label_offset
-                    if "right" in loc:
-                        xframe -= label_offset
-                        cb_x -= label_offset
-                elif "lower" in loc:
-                    # Lower positions: extend frame upward
-                    frame_height += label_offset
-                    frame_width += label_offset
-                    if "right" in loc:
-                        xframe -= label_offset
-                        cb_x -= label_offset
-
-            elif labelloc == "bottom":
-                # Extend frame for bottom labels
-                if "left" in loc:
-                    cb_x += label_offset
-                    frame_width += label_offset
-                else:  # right
-                    xframe -= label_offset
-                    frame_width += label_offset
-
-                if "lower" in loc:
-                    cb_y += label_offset
-                    frame_height += label_offset
-                elif "upper" in loc:
-                    yframe -= label_offset
-                    frame_height += label_offset
-
-        elif orientation == "horizontal":
-            # Base vertical adjustment for horizontal colorbars
-            cb_y += 2 * label_offset
-
-            if labelloc == "bottom":
-                if "upper" in loc:
-                    yframe -= label_offset
-                    frame_height += label_offset
-                elif "lower" in loc:
-                    frame_height += label_offset
-                    cb_y += 0.5 * label_offset
-
-            elif labelloc == "top":
-                if "upper" in loc:
-                    cb_y -= 1.5 * label_offset
-                    yframe -= label_offset
-                    frame_height += label_offset
-                elif "lower" in loc:
-                    frame_height += label_offset
-                    cb_y -= 0.5 * label_offset
-
-        # Set final bounds
-        bounds_inset = [cb_x, cb_y]
-        bounds_frame = [xframe, yframe]
-
-        if orientation == "horizontal":
-            bounds_inset.extend((length, width))
-        else:  # vertical
-            bounds_inset.extend((width, length))
-
-        bounds_frame.extend((frame_width, frame_height))
+            bounds_inset, bounds_frame = _legacy_inset_colorbar_bounds(
+                axes=self,
+                loc=loc,
+                orientation=orientation,
+                length=length,
+                width=width,
+                xpad=xpad,
+                ypad=ypad,
+                ticklocation=ticklocation,
+                labelloc=labelloc,
+                label=label,
+                labelrotation=labelrotation,
+                tick_fontsize=tick_fontsize,
+                label_fontsize=label_fontsize,
+            )
 
         # Create axes and frame
         cls = mproj.get_projection_class("ultraplot_cartesian")
@@ -2382,7 +2300,23 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         self.add_child_axes(ax)
         kw_frame, kwargs = self._parse_frame("colorbar", **kwargs)
         if frame:
-            frame = self._add_guide_frame(*bounds_frame, fontsize=fontsize, **kw_frame)
+            frame = self._add_guide_frame(
+                *bounds_frame, fontsize=tick_fontsize, **kw_frame
+            )
+        ax._inset_colorbar_layout = {
+            "loc": loc,
+            "orientation": orientation,
+            "length": length,
+            "width": width,
+            "xpad": xpad,
+            "ypad": ypad,
+            "ticklocation": ticklocation,
+            "length_raw": length_raw,
+            "width_raw": width_raw,
+            "pad_raw": pad_raw,
+        }
+        ax._inset_colorbar_parent = self
+        ax._inset_colorbar_frame = frame
 
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
         return ax, kwargs
@@ -2665,7 +2599,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if not isinstance(self, maxes.SubplotBase):
             raise RuntimeError("Axes must be a subplot.")
         ss = self.get_subplotspec().get_topmost_subplotspec()
-        row1, row2, col1, col2 = ss._get_rows_columns()
+
+        # Check if this is an ultraplot SubplotSpec with _get_rows_columns method
+        if not hasattr(ss, "_get_rows_columns"):
+            # Fall back to standard matplotlib SubplotSpec attributes
+            # This can happen when axes are created directly without ultraplot's gridspec
+            if hasattr(ss, "rowspan") and hasattr(ss, "colspan"):
+                row1, row2 = ss.rowspan.start, ss.rowspan.stop - 1
+                col1, col2 = ss.colspan.start, ss.colspan.stop - 1
+            else:
+                # Unable to determine range, return default
+                row1, row2, col1, col2 = 0, 0, 0, 0
+        else:
+            row1, row2, col1, col2 = ss._get_rows_columns()
+
         if s == "x":
             return (col1, col2)
         else:
@@ -2791,6 +2738,79 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self.update_params()
             setter(self.figbox)  # equivalent to above
 
+        # In UltraLayout, place panels relative to their parent axes, not the grid.
+        if (
+            self._panel_parent
+            and self._panel_side
+            and self.figure.gridspec._use_ultra_layout
+        ):
+            gs = self.get_subplotspec().get_gridspec()
+            figwidth, figheight = self.figure.get_size_inches()
+            ss = self.get_subplotspec().get_topmost_subplotspec()
+            row1, row2, col1, col2 = ss._get_rows_columns(ncols=gs.ncols_total)
+            side = self._panel_side
+            parent_bbox = self._panel_parent.get_position()
+            panels = list(self._panel_parent._panel_dict.get(side, ()))
+            anchor_ax = self._panel_parent
+            if self in panels:
+                idx = panels.index(self)
+                if idx > 0:
+                    anchor_ax = panels[idx - 1]
+            elif panels:
+                anchor_ax = panels[-1]
+            anchor_bbox = anchor_ax.get_position()
+            anchor_ss = anchor_ax.get_subplotspec().get_topmost_subplotspec()
+            a_row1, a_row2, a_col1, a_col2 = anchor_ss._get_rows_columns(
+                ncols=gs.ncols_total
+            )
+
+            if side in ("right", "left"):
+                boundary = None
+                width = sum(gs._wratios_total[col1 : col2 + 1]) / figwidth
+                if a_col2 < col1:
+                    boundary = a_col2
+                elif col2 < a_col1:
+                    boundary = col2
+                # Fall back to an interface adjacent to this panel
+                boundary = min(
+                    max(
+                        _not_none(boundary, a_col2 if side == "right" else col2),
+                        0,
+                    ),
+                    len(gs.wspace_total) - 1,
+                )
+                pad = gs.wspace_total[boundary] / figwidth
+                if side == "right":
+                    x0 = anchor_bbox.x1 + pad
+                else:
+                    x0 = anchor_bbox.x0 - pad - width
+                bbox = mtransforms.Bbox.from_bounds(
+                    x0, parent_bbox.y0, width, parent_bbox.height
+                )
+            else:
+                boundary = None
+                height = sum(gs._hratios_total[row1 : row2 + 1]) / figheight
+                if a_row2 < row1:
+                    boundary = a_row2
+                elif row2 < a_row1:
+                    boundary = row2
+                boundary = min(
+                    max(
+                        _not_none(boundary, a_row2 if side == "top" else row2),
+                        0,
+                    ),
+                    len(gs.hspace_total) - 1,
+                )
+                pad = gs.hspace_total[boundary] / figheight
+                if side == "top":
+                    y0 = anchor_bbox.y1 + pad
+                else:
+                    y0 = anchor_bbox.y0 - pad - height
+                bbox = mtransforms.Bbox.from_bounds(
+                    parent_bbox.x0, y0, parent_bbox.width, height
+                )
+            setter(bbox)
+
     def _update_abc(self, **kwargs):
         """
         Update the a-b-c label.
@@ -2889,10 +2909,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             # Get the size of tick labels if they exist
             has_labels = True if axis.get_ticklabels() else False
             # Estimate label size; note it uses the raw text representation which can be misleading due to the latex processing
-            if has_labels:
+            if has_labels and axis.get_ticklabels():
                 _offset = max(
                     [
-                        len(l.get_text()) + l.get_fontsize()
+                        len(l.get_text()) * l.get_fontsize() * 0.6
                         for l in axis.get_ticklabels()
                     ]
                 )
@@ -3429,6 +3449,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             return
         if rc_mode == 1:  # avoid resetting
             return
+        if self._inset_parent is not None or self._panel_parent is not None:
+            return
         self.figure.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_axes=True, **params)
 
     def draw(self, renderer=None, *args, **kwargs):
@@ -3443,6 +3465,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if self._inset_parent is not None and self._inset_zoom:
             self.indicate_inset_zoom()
         super().draw(renderer, *args, **kwargs)
+        if getattr(self, "_inset_colorbar_obj", None) and getattr(
+            self, "_inset_colorbar_needs_reflow", False
+        ):
+            self._inset_colorbar_needs_reflow = False
+            _reflow_inset_colorbar_frame(
+                self._inset_colorbar_obj,
+                labelloc=getattr(self, "_inset_colorbar_labelloc", None),
+                ticklen=getattr(
+                    self, "_inset_colorbar_ticklen", units(rc["tick.len"], "pt")
+                ),
+            )
+            self.figure.canvas.draw_idle()
 
     def get_tightbbox(self, renderer, *args, **kwargs):
         # Perform extra post-processing steps
@@ -4072,3 +4106,525 @@ def _determine_label_rotation(
             f"Label rotation must be a number or 'auto', got {labelrotation!r}."
         )
     kw_label.update({"rotation": labelrotation})
+
+
+def _resolve_label_rotation(
+    labelrotation: str | Number,
+    *,
+    labelloc: str,
+    orientation: str,
+) -> float:
+    layout_rotation = _not_none(labelrotation, 0)
+    if layout_rotation == "auto":
+        kw_label = {}
+        _determine_label_rotation(
+            "auto",
+            labelloc=labelloc,
+            orientation=orientation,
+            kw_label=kw_label,
+        )
+        layout_rotation = kw_label.get("rotation", 0)
+    if not isinstance(layout_rotation, (int, float)):
+        return 0.0
+    return float(layout_rotation)
+
+
+def _measure_label_points(
+    label: str,
+    rotation: float,
+    fontsize: float,
+    figure,
+) -> Optional[Tuple[float, float]]:
+    try:
+        renderer = figure._get_renderer()
+        text = mtext.Text(0, 0, label, rotation=rotation, fontsize=fontsize)
+        text.set_figure(figure)
+        bbox = text.get_window_extent(renderer=renderer)
+    except Exception:
+        return None
+    dpi = figure.dpi
+    return (bbox.width * 72 / dpi, bbox.height * 72 / dpi)
+
+
+def _measure_text_artist_points(
+    text: mtext.Text, figure
+) -> Optional[Tuple[float, float]]:
+    try:
+        renderer = figure._get_renderer()
+        bbox = text.get_window_extent(renderer=renderer)
+    except Exception:
+        return None
+    dpi = figure.dpi
+    return (bbox.width * 72 / dpi, bbox.height * 72 / dpi)
+
+
+def _measure_ticklabel_extent_points(axis, figure) -> Optional[Tuple[float, float]]:
+    try:
+        renderer = figure._get_renderer()
+        labels = axis.get_ticklabels()
+    except Exception:
+        return None
+    max_width = 0.0
+    max_height = 0.0
+    for label in labels:
+        if not label.get_visible() or not label.get_text():
+            continue
+        extent = _measure_text_artist_points(label, figure)
+        if extent is None:
+            continue
+        width_pt, height_pt = extent
+        max_width = max(max_width, width_pt)
+        max_height = max(max_height, height_pt)
+    if max_width == 0.0 and max_height == 0.0:
+        return None
+    return (max_width, max_height)
+
+
+def _measure_text_overhang_axes(
+    text: mtext.Text, axes
+) -> Optional[Tuple[float, float, float, float]]:
+    try:
+        renderer = axes.figure._get_renderer()
+        bbox = text.get_window_extent(renderer=renderer)
+        inv = axes.transAxes.inverted()
+        (x0, y0) = inv.transform((bbox.x0, bbox.y0))
+        (x1, y1) = inv.transform((bbox.x1, bbox.y1))
+    except Exception:
+        return None
+    left = max(0.0, -x0)
+    right = max(0.0, x1 - 1.0)
+    bottom = max(0.0, -y0)
+    top = max(0.0, y1 - 1.0)
+    return (left, right, bottom, top)
+
+
+def _measure_ticklabel_overhang_axes(
+    axis, axes
+) -> Optional[Tuple[float, float, float, float]]:
+    try:
+        renderer = axes.figure._get_renderer()
+        inv = axes.transAxes.inverted()
+        labels = axis.get_ticklabels()
+    except Exception:
+        return None
+    min_x, max_x = 0.0, 1.0
+    min_y, max_y = 0.0, 1.0
+    found = False
+    for label in labels:
+        if not label.get_visible() or not label.get_text():
+            continue
+        bbox = label.get_window_extent(renderer=renderer)
+        (x0, y0) = inv.transform((bbox.x0, bbox.y0))
+        (x1, y1) = inv.transform((bbox.x1, bbox.y1))
+        min_x = min(min_x, x0)
+        max_x = max(max_x, x1)
+        min_y = min(min_y, y0)
+        max_y = max(max_y, y1)
+        found = True
+    if not found:
+        return None
+    left = max(0.0, -min_x)
+    right = max(0.0, max_x - 1.0)
+    bottom = max(0.0, -min_y)
+    top = max(0.0, max_y - 1.0)
+    return (left, right, bottom, top)
+
+
+def _get_colorbar_long_axis(colorbar):
+    if hasattr(colorbar, "_long_axis"):
+        return colorbar._long_axis()
+    return colorbar.long_axis
+
+
+def _register_inset_colorbar_reflow(fig):
+    if getattr(fig, "_inset_colorbar_reflow_cid", None) is not None:
+        return
+
+    def _on_resize(event):
+        axes = list(event.canvas.figure.axes)
+        i = 0
+        seen = set()
+        while i < len(axes):
+            ax = axes[i]
+            i += 1
+            ax_id = id(ax)
+            if ax_id in seen:
+                continue
+            seen.add(ax_id)
+            child_axes = getattr(ax, "child_axes", ())
+            if child_axes:
+                axes.extend(child_axes)
+            if getattr(ax, "_inset_colorbar_obj", None) is None:
+                continue
+            ax._inset_colorbar_needs_reflow = True
+        event.canvas.draw_idle()
+
+    fig._inset_colorbar_reflow_cid = fig.canvas.mpl_connect("resize_event", _on_resize)
+
+
+def _solve_inset_colorbar_bounds(
+    *,
+    axes: "Axes",
+    loc: str,
+    orientation: str,
+    length: float,
+    width: float,
+    xpad: float,
+    ypad: float,
+    ticklocation: str,
+    labelloc: Optional[str],
+    label,
+    labelrotation: Union[str, float, None],
+    tick_fontsize: float,
+    label_fontsize: float,
+) -> Tuple[list[float], list[float]]:
+    scale = 1.2
+    labelloc_layout = labelloc if isinstance(labelloc, str) else ticklocation
+    if orientation == "vertical" and labelloc_layout in ("left", "right"):
+        scale = 2
+
+    tick_space_pt = rc["xtick.major.size"] + scale * tick_fontsize
+    label_space_pt = 0.0
+    if label is not None:
+        label_space_pt = scale * label_fontsize
+        layout_rotation = _resolve_label_rotation(
+            labelrotation, labelloc=labelloc_layout, orientation=orientation
+        )
+        extent = _measure_label_points(
+            str(label), layout_rotation, label_fontsize, axes.figure
+        )
+        if extent is not None:
+            width_pt, height_pt = extent
+            if labelloc_layout in ("left", "right"):
+                label_space_pt = max(label_space_pt, width_pt)
+            else:
+                label_space_pt = max(label_space_pt, height_pt)
+
+    fig_w, fig_h = axes._get_size_inches()
+    tick_space_x = (
+        tick_space_pt / 72 / fig_w if ticklocation in ("left", "right") else 0
+    )
+    tick_space_y = (
+        tick_space_pt / 72 / fig_h if ticklocation in ("top", "bottom") else 0
+    )
+    label_space_x = (
+        label_space_pt / 72 / fig_w if labelloc_layout in ("left", "right") else 0
+    )
+    label_space_y = (
+        label_space_pt / 72 / fig_h if labelloc_layout in ("top", "bottom") else 0
+    )
+
+    pad_left = xpad + (tick_space_x if ticklocation == "left" else 0)
+    pad_left += label_space_x if labelloc_layout == "left" else 0
+    pad_right = xpad + (tick_space_x if ticklocation == "right" else 0)
+    pad_right += label_space_x if labelloc_layout == "right" else 0
+    pad_bottom = ypad + (tick_space_y if ticklocation == "bottom" else 0)
+    pad_bottom += label_space_y if labelloc_layout == "bottom" else 0
+    pad_top = ypad + (tick_space_y if ticklocation == "top" else 0)
+    pad_top += label_space_y if labelloc_layout == "top" else 0
+
+    if orientation == "horizontal":
+        cb_width, cb_height = length, width
+    else:
+        cb_width, cb_height = width, length
+    solver = ColorbarLayoutSolver(
+        loc,
+        cb_width,
+        cb_height,
+        pad_left,
+        pad_right,
+        pad_bottom,
+        pad_top,
+    )
+    layout = solver.solve()
+    return list(layout["inset"]), list(layout["frame"])
+
+
+def _legacy_inset_colorbar_bounds(
+    *,
+    axes: "Axes",
+    loc: str,
+    orientation: str,
+    length: float,
+    width: float,
+    xpad: float,
+    ypad: float,
+    ticklocation: str,
+    labelloc: Optional[str],
+    label,
+    labelrotation: Union[str, float, None],
+    tick_fontsize: float,
+    label_fontsize: float,
+) -> Tuple[list[float], list[float]]:
+    labspace = rc["xtick.major.size"] / 72
+    scale = 1.2
+    if orientation == "vertical" and labelloc in ("left", "right"):
+        scale = 2
+    if label is not None:
+        labspace += 2 * scale * label_fontsize / 72
+    else:
+        labspace += scale * tick_fontsize / 72
+
+    if orientation == "horizontal":
+        labspace /= axes._get_size_inches()[1]
+    else:
+        labspace /= axes._get_size_inches()[0]
+
+    if orientation == "horizontal":
+        frame_width = 2 * xpad + length
+        frame_height = 2 * ypad + width + labspace
+    else:
+        frame_width = 2 * xpad + width + labspace
+        frame_height = 2 * ypad + length
+
+    xframe = yframe = 0
+    if loc == "upper right":
+        xframe = 1 - frame_width
+        yframe = 1 - frame_height
+        cb_x = xframe + xpad
+        cb_y = yframe + ypad
+    elif loc == "upper left":
+        yframe = 1 - frame_height
+        cb_x = xpad
+        cb_y = yframe + ypad
+    elif loc == "lower left":
+        cb_x = xpad
+        cb_y = ypad
+    else:
+        xframe = 1 - frame_width
+        cb_x = xframe + xpad
+        cb_y = ypad
+
+    label_offset = 0.5 * labspace
+    labelrotation = _not_none(labelrotation, 0)
+    if labelrotation == "auto":
+        kw_label = {}
+        _determine_label_rotation(
+            "auto",
+            labelloc=labelloc or ticklocation,
+            orientation=orientation,
+            kw_label=kw_label,
+        )
+        labelrotation = kw_label.get("rotation", 0)
+    if not isinstance(labelrotation, (int, float)):
+        labelrotation = 0
+    if labelrotation != 0 and label is not None:
+        import math
+
+        estimated_text_width = len(str(label)) * label_fontsize * 0.6 / 72
+        text_height = label_fontsize / 72
+        angle_rad = math.radians(abs(labelrotation))
+        rotated_width = estimated_text_width * math.cos(
+            angle_rad
+        ) + text_height * math.sin(angle_rad)
+        rotated_height = estimated_text_width * math.sin(
+            angle_rad
+        ) + text_height * math.cos(angle_rad)
+
+        if orientation == "horizontal":
+            rotation_offset = rotated_height / axes._get_size_inches()[1]
+        else:
+            rotation_offset = rotated_width / axes._get_size_inches()[0]
+
+        label_offset = max(label_offset, rotation_offset)
+
+    if orientation == "vertical":
+        if labelloc == "left":
+            cb_x += label_offset
+        elif labelloc == "top":
+            cb_x += label_offset
+            if "upper" in loc:
+                cb_y -= label_offset
+                yframe -= label_offset
+                frame_height += label_offset
+                frame_width += label_offset
+                if "right" in loc:
+                    xframe -= label_offset
+                    cb_x -= label_offset
+            elif "lower" in loc:
+                frame_height += label_offset
+                frame_width += label_offset
+                if "right" in loc:
+                    xframe -= label_offset
+                    cb_x -= label_offset
+        elif labelloc == "bottom":
+            if "left" in loc:
+                cb_x += label_offset
+                frame_width += label_offset
+            else:
+                xframe -= label_offset
+                frame_width += label_offset
+            if "lower" in loc:
+                cb_y += label_offset
+                frame_height += label_offset
+            elif "upper" in loc:
+                yframe -= label_offset
+                frame_height += label_offset
+    elif orientation == "horizontal":
+        cb_y += 2 * label_offset
+        if labelloc == "bottom":
+            if "upper" in loc:
+                yframe -= label_offset
+                frame_height += label_offset
+            elif "lower" in loc:
+                frame_height += label_offset
+                cb_y += 0.5 * label_offset
+        elif labelloc == "top":
+            if "upper" in loc:
+                cb_y -= 1.5 * label_offset
+                yframe -= label_offset
+                frame_height += label_offset
+            elif "lower" in loc:
+                frame_height += label_offset
+                cb_y -= 0.5 * label_offset
+
+    bounds_inset = [cb_x, cb_y]
+    bounds_frame = [xframe, yframe]
+    if orientation == "horizontal":
+        bounds_inset.extend((length, width))
+    else:
+        bounds_inset.extend((width, length))
+    bounds_frame.extend((frame_width, frame_height))
+    return bounds_inset, bounds_frame
+
+
+def _apply_inset_colorbar_layout(
+    axes: "Axes",
+    *,
+    bounds_inset: list[float],
+    bounds_frame: list[float],
+    frame: Optional[mpatches.FancyBboxPatch],
+):
+    parent = getattr(axes, "_inset_colorbar_parent", None)
+    transform = parent.transAxes if parent is not None else axes.transAxes
+    locator = axes._make_inset_locator(bounds_inset, transform)
+    axes.set_axes_locator(locator)
+    axes.set_position(locator(axes, None).bounds)
+    axes._inset_colorbar_bounds = {
+        "inset": bounds_inset,
+        "frame": bounds_frame,
+    }
+    if frame is not None:
+        frame.set_bounds(*bounds_frame)
+
+
+def _reflow_inset_colorbar_frame(
+    colorbar,
+    *,
+    labelloc: str,
+    ticklen: float,
+):
+    cax = colorbar.ax
+    layout = getattr(cax, "_inset_colorbar_layout", None)
+    frame = getattr(cax, "_inset_colorbar_frame", None)
+    if not layout:
+        return
+    parent = getattr(cax, "_inset_colorbar_parent", None)
+    if parent is None:
+        return
+    orientation = layout["orientation"]
+    loc = layout["loc"]
+    ticklocation = layout["ticklocation"]
+    length_raw = layout.get("length_raw")
+    width_raw = layout.get("width_raw")
+    pad_raw = layout.get("pad_raw")
+    if length_raw is None or width_raw is None or pad_raw is None:
+        length = layout["length"]
+        width = layout["width"]
+        xpad = layout["xpad"]
+        ypad = layout["ypad"]
+    else:
+        length = units(length_raw, "em", "ax", axes=parent, width=True)
+        width = units(width_raw, "em", "ax", axes=parent, width=False)
+        xpad = units(pad_raw, "em", "ax", axes=parent, width=True)
+        ypad = units(pad_raw, "em", "ax", axes=parent, width=False)
+        layout["length"] = length
+        layout["width"] = width
+        layout["xpad"] = xpad
+        layout["ypad"] = ypad
+    labelloc_layout = labelloc if isinstance(labelloc, str) else ticklocation
+    if orientation == "horizontal":
+        cb_width = length
+        cb_height = width
+    else:
+        cb_width = width
+        cb_height = length
+
+    renderer = cax.figure._get_renderer()
+    if hasattr(colorbar, "update_ticks"):
+        colorbar.update_ticks(manual_only=True)
+    bboxes = []
+    longaxis = _get_colorbar_long_axis(colorbar)
+    try:
+        bbox = longaxis.get_tightbbox(renderer)
+    except Exception:
+        bbox = None
+    if bbox is not None:
+        bboxes.append(bbox)
+    label_axis = _get_axis_for(
+        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    )
+    if label_axis.label.get_text():
+        try:
+            bboxes.append(label_axis.label.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if colorbar.outline is not None:
+        try:
+            bboxes.append(colorbar.outline.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if getattr(colorbar, "solids", None) is not None:
+        try:
+            bboxes.append(colorbar.solids.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if getattr(colorbar, "dividers", None) is not None:
+        try:
+            bboxes.append(colorbar.dividers.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if not bboxes:
+        return
+    x0 = min(b.x0 for b in bboxes)
+    y0 = min(b.y0 for b in bboxes)
+    x1 = max(b.x1 for b in bboxes)
+    y1 = max(b.y1 for b in bboxes)
+    inv_parent = parent.transAxes.inverted()
+    (px0, py0) = inv_parent.transform((x0, y0))
+    (px1, py1) = inv_parent.transform((x1, y1))
+    cax_bbox = cax.get_window_extent(renderer=renderer)
+    (cx0, cy0) = inv_parent.transform((cax_bbox.x0, cax_bbox.y0))
+    (cx1, cy1) = inv_parent.transform((cax_bbox.x1, cax_bbox.y1))
+    px0, px1 = sorted((px0, px1))
+    py0, py1 = sorted((py0, py1))
+    cx0, cx1 = sorted((cx0, cx1))
+    cy0, cy1 = sorted((cy0, cy1))
+    delta_left = max(0.0, cx0 - px0)
+    delta_right = max(0.0, px1 - cx1)
+    delta_bottom = max(0.0, cy0 - py0)
+    delta_top = max(0.0, py1 - cy1)
+
+    pad_left = xpad + delta_left
+    pad_right = xpad + delta_right
+    pad_bottom = ypad + delta_bottom
+    pad_top = ypad + delta_top
+    try:
+        solver = ColorbarLayoutSolver(
+            loc,
+            cb_width,
+            cb_height,
+            pad_left,
+            pad_right,
+            pad_bottom,
+            pad_top,
+        )
+        bounds = solver.solve()
+    except Exception:
+        return
+    _apply_inset_colorbar_layout(
+        cax,
+        bounds_inset=list(bounds["inset"]),
+        bounds_frame=list(bounds["frame"]),
+        frame=frame,
+    )

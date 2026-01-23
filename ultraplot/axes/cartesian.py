@@ -1273,6 +1273,149 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # Ensure ticks are within axis bounds
         self._fix_ticks(s, fixticks=fixticks)
 
+    def _resolve_axis_format(self, axis, params, rc_kw):
+        """
+        Resolve formatting parameters for a single axis (x or y).
+        """
+        p = params
+
+        # Color resolution
+        color = p.get("color")
+        axis_color = _not_none(p.get(f"{axis}color"), color)
+
+        # Helper to get axis-specific or generic param
+        def get(name):
+            return p.get(f"{axis}{name}")
+
+        # Resolve colors
+        tickcolor = get("tickcolor")
+        if "tick.color" not in rc_kw:
+            tickcolor = _not_none(tickcolor, axis_color)
+
+        ticklabelcolor = get("ticklabelcolor")
+        if "tick.labelcolor" not in rc_kw:
+            ticklabelcolor = _not_none(ticklabelcolor, axis_color)
+
+        labelcolor = get("labelcolor")
+        if "label.color" not in rc_kw:
+            labelcolor = _not_none(labelcolor, axis_color)
+
+        # Flexible keyword args
+        margin = _not_none(
+            get("margin"), p.get("margin"), rc.find(f"axes.{axis}margin", context=True)
+        )
+
+        tickdir = _not_none(
+            get("tickdir"), rc.find(f"{axis}tick.direction", context=True)
+        )
+
+        locator = _not_none(get("locator"), p.get(f"{axis}ticks"))
+        minorlocator = _not_none(get("minorlocator"), p.get(f"{axis}minorticks"))
+
+        formatter = _not_none(get("formatter"), p.get(f"{axis}ticklabels"))
+
+        # Tick minor default logic
+        tickminor = get("tickminor")
+        tickminor_default = None
+        if (
+            isinstance(formatter, mticker.FixedFormatter)
+            or np.iterable(formatter)
+            and not isinstance(formatter, str)
+        ):
+            tickminor_default = False
+
+        tickminor = _not_none(
+            tickminor,
+            tickminor_default,
+            rc.find(f"{axis}tick.minor.visible", context=True),
+        )
+
+        # Tick label dir logic
+        ticklabeldir = p.get("ticklabeldir")
+        axis_ticklabeldir = _not_none(get("ticklabeldir"), ticklabeldir)
+        tickdir = _not_none(tickdir, axis_ticklabeldir)
+
+        # Spine locations
+        loc = get("loc")
+        spineloc = get("spineloc")
+        spineloc = _not_none(loc, spineloc)
+
+        # Spine side inference
+        side = self._get_spine_side(axis, spineloc)
+
+        tickloc = get("tickloc")
+        if side is not None and side not in ("zero", "center", "both"):
+            tickloc = _not_none(tickloc, side)
+
+        # Infer other locations
+        ticklabelloc = get("ticklabelloc")
+        labelloc = get("labelloc")
+        offsetloc = get("offsetloc")
+
+        if tickloc != "both":
+            ticklabelloc = _not_none(ticklabelloc, tickloc)
+            valid_sides = ("bottom", "top") if axis == "x" else ("left", "right")
+
+            if ticklabelloc in valid_sides:
+                labelloc = _not_none(labelloc, ticklabelloc)
+                # Note: original code likely had typo relating xoffset to yticklabels
+                # We assume standard behavior here: follow ticklabelloc
+                offsetloc = _not_none(offsetloc, ticklabelloc)
+
+        tickloc = _not_none(tickloc, rc._get_loc_string(axis, f"{axis}tick"))
+        spineloc = _not_none(spineloc, rc._get_loc_string(axis, "axes.spines"))
+
+        # Map to config fields
+        # Note: min_/max_ map to xmin/xmax etc
+        config_kwargs = {}
+        for field in _AxisFormatConfig.__dataclass_fields__:
+            val = None
+            match field:
+                case "min_":
+                    val = p.get(f"{axis}min")
+                case "max_":
+                    val = p.get(f"{axis}max")
+                case "color":
+                    val = axis_color
+                case "tickcolor":
+                    val = tickcolor
+                case "ticklabelcolor":
+                    val = ticklabelcolor
+                case "labelcolor":
+                    val = labelcolor
+                case "margin":
+                    val = margin
+                case "tickdir":
+                    val = tickdir
+                case "locator":
+                    val = locator
+                case "minorlocator":
+                    val = minorlocator
+                case "formatter":
+                    val = formatter
+                case "tickminor":
+                    val = tickminor
+                case "ticklabeldir":
+                    val = axis_ticklabeldir
+                case "spineloc":
+                    val = spineloc
+                case "tickloc":
+                    val = tickloc
+                case "ticklabelloc":
+                    val = ticklabelloc
+                case "labelloc":
+                    val = labelloc
+                case "offsetloc":
+                    val = offsetloc
+                case _:
+                    # Direct mapping (e.g. xlinewidth -> linewidth)
+                    val = get(field)
+
+            if val is not None:
+                config_kwargs[field] = val
+
+        return _AxisFormatConfig(**config_kwargs)
+
     @docstring._snippet_manager
     def format(
         self,
@@ -1409,120 +1552,13 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         """
         rc_kw, rc_mode = _pop_rc(kwargs)
         with rc.context(rc_kw, mode=rc_mode):
-            # No mutable default args
-            xlabel_kw = xlabel_kw or {}
-            ylabel_kw = ylabel_kw or {}
-            xscale_kw = xscale_kw or {}
-            yscale_kw = yscale_kw or {}
-            xlocator_kw = xlocator_kw or {}
-            ylocator_kw = ylocator_kw or {}
-            xformatter_kw = xformatter_kw or {}
-            yformatter_kw = yformatter_kw or {}
-            xminorlocator_kw = xminorlocator_kw or {}
-            yminorlocator_kw = yminorlocator_kw or {}
+            # Resolve parameters for x and y axes
+            # We capture locals() to pass all named arguments to the helper
+            params = locals()
+            params.update(kwargs)  # Include any extras in kwargs
 
-            # Color keyword arguments. Inherit from 'color' when necessary
-            color = kwargs.pop("color", None)
-            xcolor = _not_none(xcolor, color)
-            ycolor = _not_none(ycolor, color)
-            if "tick.color" not in rc_kw:
-                xtickcolor = _not_none(xtickcolor, xcolor)
-                ytickcolor = _not_none(ytickcolor, ycolor)
-            if "tick.labelcolor" not in rc_kw:
-                xticklabelcolor = _not_none(xticklabelcolor, xcolor)
-                yticklabelcolor = _not_none(yticklabelcolor, ycolor)
-            if "label.color" not in rc_kw:
-                xlabelcolor = _not_none(xlabelcolor, xcolor)
-                ylabelcolor = _not_none(ylabelcolor, ycolor)
-
-            # Flexible keyword args, declare defaults
-            # NOTE: 'xtickdir' and 'ytickdir' read from 'tickdir' arguments here
-            xmargin = _not_none(xmargin, rc.find("axes.xmargin", context=True))
-            ymargin = _not_none(ymargin, rc.find("axes.ymargin", context=True))
-            xtickdir = _not_none(xtickdir, rc.find("xtick.direction", context=True))
-            ytickdir = _not_none(ytickdir, rc.find("ytick.direction", context=True))
-            xlocator = _not_none(xlocator=xlocator, xticks=xticks)
-            ylocator = _not_none(ylocator=ylocator, yticks=yticks)
-            xminorlocator = _not_none(
-                xminorlocator=xminorlocator, xminorticks=xminorticks
-            )  # noqa: E501
-            yminorlocator = _not_none(
-                yminorlocator=yminorlocator, yminorticks=yminorticks
-            )  # noqa: E501
-            xformatter = _not_none(xformatter=xformatter, xticklabels=xticklabels)
-            yformatter = _not_none(yformatter=yformatter, yticklabels=yticklabels)
-            xtickminor_default = ytickminor_default = None
-            if (
-                isinstance(xformatter, mticker.FixedFormatter)
-                or np.iterable(xformatter)
-                and not isinstance(xformatter, str)
-            ):  # noqa: E501
-                xtickminor_default = False
-            if (
-                isinstance(yformatter, mticker.FixedFormatter)
-                or np.iterable(yformatter)
-                and not isinstance(yformatter, str)
-            ):  # noqa: E501
-                ytickminor_default = False
-            xtickminor = _not_none(
-                xtickminor,
-                xtickminor_default,
-                rc.find("xtick.minor.visible", context=True),
-            )  # noqa: E501
-            ytickminor = _not_none(
-                ytickminor,
-                ytickminor_default,
-                rc.find("ytick.minor.visible", context=True),
-            )  # noqa: E501
-            ticklabeldir = kwargs.pop("ticklabeldir", None)
-            xticklabeldir = _not_none(xticklabeldir, ticklabeldir)
-            yticklabeldir = _not_none(yticklabeldir, ticklabeldir)
-            xtickdir = _not_none(xtickdir, xticklabeldir)
-            ytickdir = _not_none(ytickdir, yticklabeldir)
-
-            # Sensible defaults for spine, tick, tick label, and label locs
-            # NOTE: Allow tick labels to be present without ticks! User may
-            # want this sometimes! Same goes for spines!
-            xspineloc = _not_none(xloc=xloc, xspineloc=xspineloc)
-            yspineloc = _not_none(yloc=yloc, yspineloc=yspineloc)
-            xside = self._get_spine_side("x", xspineloc)
-            yside = self._get_spine_side("y", yspineloc)
-            if xside is not None and xside not in ("zero", "center", "both"):
-                xtickloc = _not_none(xtickloc, xside)
-            if yside is not None and yside not in ("zero", "center", "both"):
-                ytickloc = _not_none(ytickloc, yside)
-            if xtickloc != "both":  # then infer others
-                xticklabelloc = _not_none(xticklabelloc, xtickloc)
-                if xticklabelloc in ("bottom", "top"):
-                    xlabelloc = _not_none(xlabelloc, xticklabelloc)
-                    xoffsetloc = _not_none(xoffsetloc, yticklabelloc)
-            if ytickloc != "both":  # then infer others
-                yticklabelloc = _not_none(yticklabelloc, ytickloc)
-                if yticklabelloc in ("left", "right"):
-                    ylabelloc = _not_none(ylabelloc, yticklabelloc)
-                    yoffsetloc = _not_none(yoffsetloc, yticklabelloc)
-            xtickloc = _not_none(xtickloc, rc._get_loc_string("x", "xtick"))
-            ytickloc = _not_none(ytickloc, rc._get_loc_string("y", "ytick"))
-            xspineloc = _not_none(xspineloc, rc._get_loc_string("x", "axes.spines"))
-            yspineloc = _not_none(yspineloc, rc._get_loc_string("y", "axes.spines"))
-
-            # Create config objects dynamically by introspecting the dataclass fields
-            x_kwargs, y_kwargs = {}, {}
-            l_vars = locals()
-            for name in _AxisFormatConfig.__dataclass_fields__:
-                # Handle exceptions to the "x" + name pattern for local variables
-                if name == "min_":
-                    x_var, y_var = "xmin", "ymin"
-                elif name == "max_":
-                    x_var, y_var = "xmax", "ymax"
-                else:
-                    x_var = "x" + name
-                    y_var = "y" + name
-                x_kwargs[name] = l_vars.get(x_var, None)
-                y_kwargs[name] = l_vars.get(y_var, None)
-
-            x_config = _AxisFormatConfig(**x_kwargs)
-            y_config = _AxisFormatConfig(**y_kwargs)
+            x_config = self._resolve_axis_format("x", params, rc_kw)
+            y_config = self._resolve_axis_format("y", params, rc_kw)
 
             # Format axes
             self._format_axis("x", x_config, fixticks=fixticks)

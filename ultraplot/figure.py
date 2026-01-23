@@ -1100,35 +1100,68 @@ class Figure(mfigure.Figure):
 
         # Search axes projections
         name = None
-        if isinstance(proj, str):
+
+        # Handle cartopy/basemap Projection objects directly
+        # These should be converted to Ultraplot GeoAxes
+        if not isinstance(proj, str):
+            # Check if it's a cartopy or basemap projection object
+            if constructor.Projection is not object and isinstance(
+                proj, constructor.Projection
+            ):
+                # It's a cartopy projection - use cartopy backend
+                name = "ultraplot_cartopy"
+                kwargs["map_projection"] = proj
+            elif constructor.Basemap is not object and isinstance(
+                proj, constructor.Basemap
+            ):
+                # It's a basemap projection
+                name = "ultraplot_basemap"
+                kwargs["map_projection"] = proj
+            # If not recognized, leave name as None and it will pass through
+
+        if name is None and isinstance(proj, str):
             try:
                 mproj.get_projection_class("ultraplot_" + proj)
             except (KeyError, ValueError):
                 pass
             else:
+                name = "ultraplot_" + proj
+        if name is None and isinstance(proj, str):
+            # Try geographic projections first if cartopy/basemap available
+            if (
+                constructor.Projection is not object
+                or constructor.Basemap is not object
+            ):
+                try:
+                    proj_obj = constructor.Proj(
+                        proj, backend=backend, include_axes=True, **proj_kw
+                    )
+                    name = "ultraplot_" + proj_obj._proj_backend
+                    kwargs["map_projection"] = proj_obj
+                except ValueError:
+                    # Not a geographic projection, will try matplotlib registry below
+                    pass
+
+            # If not geographic, check if registered globally in Matplotlib (e.g., 'ternary', 'polar', '3d')
+            if name is None and proj in mproj.get_projection_names():
                 name = proj
-        # Helpful error message
-        if (
-            name is None
-            and backend is None
-            and isinstance(proj, str)
-            and constructor.Projection is object
-            and constructor.Basemap is object
-        ):
+
+        # Helpful error message if still not found
+        if name is None and isinstance(proj, str):
             raise ValueError(
                 f"Invalid projection name {proj!r}. If you are trying to generate a "
                 "GeoAxes with a cartopy.crs.Projection or mpl_toolkits.basemap.Basemap "
                 "then cartopy or basemap must be installed. Otherwise the known axes "
                 f"subclasses are:\n{paxes._cls_table}"
             )
-        # Search geographic projections
-        # NOTE: Also raises errors due to unexpected projection type
-        if name is None:
-            proj = constructor.Proj(proj, backend=backend, include_axes=True, **proj_kw)
-            name = proj._proj_backend
-            kwargs["map_projection"] = proj
 
-        kwargs["projection"] = "ultraplot_" + name
+        # Only set projection if we found a named projection
+        # Otherwise preserve the original projection (e.g., cartopy Projection objects)
+        if name is not None:
+            kwargs["projection"] = name
+        # If name is None and proj is not a string, it means we have a non-string
+        # projection (e.g., cartopy.crs.Projection object) that should be passed through
+        # The original projection kwarg is already in kwargs, so no action needed
         return kwargs
 
     def _get_align_axes(self, side):
@@ -1628,7 +1661,55 @@ class Figure(mfigure.Figure):
         kwargs.setdefault("number", 1 + max(self._subplot_dict, default=0))
         kwargs.pop("refwidth", None)  # TODO: remove this
 
-        ax = super().add_subplot(ss, _subplot_spec=ss, **kwargs)
+        # Use container approach for external projections to make them ultraplot-compatible
+        projection_name = kwargs.get("projection")
+        external_axes_class = None
+        external_axes_kwargs = {}
+
+        if projection_name and isinstance(projection_name, str):
+            # Check if this is an external (non-ultraplot) projection
+            # Skip external wrapping for projections that start with "ultraplot_" prefix
+            # as these are already Ultraplot axes classes
+            if not projection_name.startswith("ultraplot_"):
+                try:
+                    # Get the projection class
+                    proj_class = mproj.get_projection_class(projection_name)
+
+                    # Check if it's not a built-in ultraplot axes
+                    # Only wrap if it's NOT a subclass of Ultraplot's Axes
+                    if not issubclass(proj_class, paxes.Axes):
+                        # Store the external axes class and original projection name
+                        external_axes_class = proj_class
+                        external_axes_kwargs["projection"] = projection_name
+
+                        # Create or get the container class for this external axes type
+                        from .axes.container import create_external_axes_container
+
+                        container_name = f"_ultraplot_container_{projection_name}"
+
+                        # Check if container is already registered
+                        if container_name not in mproj.get_projection_names():
+                            container_class = create_external_axes_container(
+                                proj_class, projection_name=container_name
+                            )
+                            mproj.register_projection(container_class)
+
+                        # Use the container projection and pass external axes info
+                        kwargs["projection"] = container_name
+                        kwargs["external_axes_class"] = external_axes_class
+                        kwargs["external_axes_kwargs"] = external_axes_kwargs
+                except (KeyError, ValueError):
+                    # Projection not found, let matplotlib handle the error
+                    pass
+
+        # Remove _subplot_spec from kwargs if present to prevent it from being passed
+        # to .set() or other methods that don't accept it.
+        kwargs.pop("_subplot_spec", None)
+
+        # Pass only the SubplotSpec as a positional argument
+        # Don't pass _subplot_spec as a keyword argument to avoid it being
+        # propagated to Axes.set() or other methods that don't accept it
+        ax = super().add_subplot(ss, **kwargs)
         # Allow sharing for GeoAxes if rectilinear
         if self._sharex or self._sharey:
             if len(self.axes) > 1 and isinstance(ax, paxes.GeoAxes):
@@ -1843,6 +1924,8 @@ class Figure(mfigure.Figure):
         # Create or update the gridspec and add subplots with subplotspecs
         # NOTE: The gridspec is added to the figure when we pass the subplotspec
         if gs is None:
+            if "layout_array" not in gridspec_kw:
+                gridspec_kw = {**gridspec_kw, "layout_array": array}
             gs = pgridspec.GridSpec(*array.shape, **gridspec_kw)
         else:
             gs.update(**gridspec_kw)
