@@ -1874,12 +1874,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if dpi:
             width = round(width * dpi) / dpi
             height = round(height * dpi) / dpi
-        fig = self.figure
-        if fig is not None and getattr(fig, "_refnum", None) == self.number:
-            if getattr(fig, "_refwidth", None) is not None:
-                width = fig._refwidth
-            if getattr(fig, "_refheight", None) is not None:
-                height = fig._refheight
         return np.array([width, height])
 
     def _get_topmost_axes(self):
