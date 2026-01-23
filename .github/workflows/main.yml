@@ -192,9 +192,49 @@ jobs:
       test-mode: ${{ needs.select-tests.outputs.mode }}
       test-nodeids: ${{ needs.select-tests.outputs.tests }}
 
+  unit-tests:
+    name: Unit Tests (coverage focus)
+    needs:
+      - run-if-changes
+    if: always() && needs.run-if-changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: mamba-org/setup-micromamba@v2.0.7
+        with:
+          environment-file: ./environment.yml
+          init-shell: bash
+          create-args: >-
+            --verbose
+            python=3.11
+            matplotlib=3.9
+          cache-environment: true
+          cache-downloads: false
+
+      - name: Build Ultraplot
+        run: |
+          pip install --no-build-isolation --no-deps .
+
+      - name: Run unit tests
+        run: |
+          pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml -m "not mpl_image_compare" ultraplot/tests
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: Ultraplot/ultraplot
+
   build-success:
     needs:
       - build
+      - unit-tests
       - run-if-changes
     if: always()
     runs-on: ubuntu-latest
@@ -203,7 +243,7 @@ jobs:
           if [[ '${{ needs.run-if-changes.outputs.run }}' == 'false' ]]; then
             echo "No changes detected, tests skipped."
           else
-            if [[ '${{ needs.build.result }}' == 'success' ]]; then
+            if [[ '${{ needs.build.result }}' == 'success' && '${{ needs.unit-tests.result }}' == 'success' ]]; then
               echo "All tests passed successfully!"
             else
               echo "Tests failed!"
