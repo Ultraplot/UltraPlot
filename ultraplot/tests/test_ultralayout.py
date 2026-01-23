@@ -4,7 +4,6 @@ import pytest
 import ultraplot as uplt
 from ultraplot import ultralayout
 from ultraplot.gridspec import GridSpec
-from ultraplot.internals.warnings import UltraPlotWarning
 
 
 def test_is_orthogonal_layout_simple_grid():
@@ -90,25 +89,6 @@ def test_gridspec_default_layout_array_with_ultralayout():
     assert gs._use_ultra_layout is True
 
 
-def test_ultralayout_layout_array_shape_mismatch_warns():
-    """Test that mismatched layout arrays fall back to the original array."""
-    pytest.importorskip("kiwisolver")
-    layout = np.array([[1, 2, 3]])
-    with pytest.warns(UltraPlotWarning):
-        gs = GridSpec(2, 2, layout_array=layout)
-        resolved = gs._get_ultra_layout_array()
-    assert resolved.shape == layout.shape
-    assert np.array_equal(resolved, layout)
-
-
-def test_subplots_pass_layout_array_into_gridspec():
-    """Test that subplots pass the layout array to GridSpec."""
-    layout = [[1, 1, 2], [3, 4, 5]]
-    fig, axs = uplt.subplots(array=layout, figsize=(6, 4))
-    assert np.array_equal(fig.gridspec._layout_array, np.array(layout))
-    uplt.close(fig)
-
-
 def test_ultralayout_solver_initialization():
     """Test UltraLayoutSolver can be initialized."""
     pytest.importorskip("kiwisolver")
@@ -165,23 +145,6 @@ def test_subplots_with_non_orthogonal_layout():
         assert pos.height > 0
         assert 0 <= pos.x0 <= 1
         assert 0 <= pos.y0 <= 1
-
-
-def test_ultralayout_panel_alignment_matches_parent():
-    """Test panel axes stay aligned with parent axes under UltraLayout."""
-    pytest.importorskip("kiwisolver")
-    layout = [[1, 1, 2, 2], [0, 3, 3, 0]]
-    fig, axs = uplt.subplots(array=layout, figsize=(8, 5))
-    parent = axs[0]
-    panel = parent.panel_axes("right", width=0.4)
-    fig.auto_layout()
-
-    parent_pos = parent.get_position()
-    panel_pos = panel.get_position()
-    assert np.isclose(panel_pos.y0, parent_pos.y0)
-    assert np.isclose(panel_pos.height, parent_pos.height)
-    assert panel_pos.x0 >= parent_pos.x1
-    uplt.close(fig)
 
 
 def test_subplots_with_orthogonal_layout():

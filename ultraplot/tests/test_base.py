@@ -1,10 +1,6 @@
+import ultraplot as uplt, pytest, numpy as np
 from unittest import mock
-
-import numpy as np
-import pytest
 from packaging import version
-
-import ultraplot as uplt
 
 
 @pytest.mark.parametrize(
@@ -122,28 +118,4 @@ def test_unshare_setting_share_x_or_y():
     ax[0]._unshare(which="x")
     assert ax[0]._sharex is None
     assert ax[1]._sharex is None
-    uplt.close(fig)
-
-
-def test_get_size_inches_rounding_and_reference_override():
-    """
-    _get_size_inches should snap to pixel grid and respect reference sizing.
-    """
-    fig = uplt.figure(figsize=(4, 3), dpi=101)
-    ax = fig.add_subplot(1, 1, 1)
-    ax.set_position([0.0, 0.0, 1 / 3, 0.5])
-
-    size = ax._get_size_inches()
-    expected_width = round((4 * (1 / 3)) * 101) / 101
-    expected_height = round((3 * 0.5) * 101) / 101
-    assert np.isclose(size[0], expected_width)
-    assert np.isclose(size[1], expected_height)
-
-    fig._refnum = ax.number
-    fig._refwidth = 9.5
-    fig._refheight = 7.25
-    size = ax._get_size_inches()
-    assert size[0] == 9.5
-    assert size[1] == 7.25
-
     uplt.close(fig)

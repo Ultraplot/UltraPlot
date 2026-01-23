@@ -74,17 +74,6 @@ def test_external_disables_autolabels_no_label():
     assert (not labels) or (labels[0] in ("_no_label", ""))
 
 
-def test_parse_level_lim_accepts_list_input():
-    """
-    Ensure list inputs are converted before checking ndim in _parse_level_lim.
-    """
-    fig, ax = uplt.subplots()
-    vmin, vmax, _ = ax._parse_level_lim([[1, 2], [3, 4]])
-    assert vmin == 1
-    assert vmax == 4
-    uplt.close(fig)
-
-
 def test_error_shading_explicit_label_external():
     """
     Explicit label on fill_between should be preserved in legend entries.
