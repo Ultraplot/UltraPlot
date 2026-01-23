@@ -55,12 +55,6 @@ def is_orthogonal_layout(array: np.ndarray) -> bool:
     if len(subplot_nums) == 0:
         return True
 
-    # Reject layouts with interior gaps (zeros surrounded by non-zero rows/cols).
-    row_has = np.any(array != 0, axis=1)
-    col_has = np.any(array != 0, axis=0)
-    if np.any((array == 0) & row_has[:, None] & col_has[None, :]):
-        return False
-
     # For each subplot, get its bounding box
     bboxes = {}
     for num in subplot_nums:
