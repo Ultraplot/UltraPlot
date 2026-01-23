@@ -1870,10 +1870,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         bbox = self.get_position()
         width = width * abs(bbox.width)
         height = height * abs(bbox.height)
-        dpi = getattr(self.figure, "dpi", None)
-        if dpi:
-            width = round(width * dpi) / dpi
-            height = round(height * dpi) / dpi
         return np.array([width, height])
 
     def _get_topmost_axes(self):
