@@ -749,7 +749,6 @@ def test_sankey_basic():
     assert getattr(diagram, "flows", None) is not None
     return fig
 
-
 @pytest.mark.mpl_image_compare
 def test_sankey_layered_nodes_flows():
     """
