@@ -20,6 +20,7 @@ on:
 env:
   LC_ALL: en_US.UTF-8
   LANG: en_US.UTF-8
+  DISABLE_BASELINE_CACHE: "true"
 
 jobs:
   build-ultraplot:
@@ -94,7 +95,7 @@ jobs:
       - name: Cache Baseline Figures
         id: cache-baseline
         uses: actions/cache@v4
-        if: ${{ env.IS_PR }}
+        if: ${{ env.IS_PR && env.DISABLE_BASELINE_CACHE != 'true' }}
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
           # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
