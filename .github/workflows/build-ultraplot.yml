@@ -8,14 +8,6 @@ on:
       matplotlib-version:
         required: true
         type: string
-      test-mode:
-        required: false
-        type: string
-        default: full
-      test-nodeids:
-        required: false
-        type: string
-        default: ""
 
 env:
   LC_ALL: en_US.UTF-8
@@ -29,9 +21,6 @@ jobs:
     defaults:
       run:
         shell: bash -el {0}
-    env:
-      TEST_MODE: ${{ inputs.test-mode }}
-      TEST_NODEIDS: ${{ inputs.test-nodeids }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -54,11 +43,7 @@ jobs:
 
       - name: Test Ultraplot
         run: |
-          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS}
-          else
-            pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
-          fi
+          pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -71,8 +56,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IS_PR: ${{ github.event_name == 'pull_request' }}
-      TEST_MODE: ${{ inputs.test-mode }}
-      TEST_NODEIDS: ${{ inputs.test-nodeids }}
     defaults:
       run:
         shell: bash -el {0}
@@ -119,17 +102,10 @@ jobs:
 
           # Generate the baseline images and hash library
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -W ignore \
-              --mpl-generate-path=./ultraplot/tests/baseline/ \
-              --mpl-default-style="./ultraplot.yml" \
-              ${TEST_NODEIDS}
-          else
-            pytest -W ignore \
-              --mpl-generate-path=./ultraplot/tests/baseline/ \
-              --mpl-default-style="./ultraplot.yml" \
-              ultraplot/tests
-          fi
+          pytest -x -W ignore \
+            --mpl-generate-path=./ultraplot/tests/baseline/ \
+            --mpl-default-style="./ultraplot.yml"\
+            ultraplot/tests
 
           # Return to the PR branch for the rest of the job
           if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
@@ -144,23 +120,13 @@ jobs:
 
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -W ignore \
-              --mpl \
-              --mpl-baseline-path=./ultraplot/tests/baseline \
-              --mpl-results-path=./results/ \
-              --mpl-generate-summary=html \
-              --mpl-default-style="./ultraplot.yml" \
-              ${TEST_NODEIDS}
-          else
-            pytest -W ignore \
-              --mpl \
-              --mpl-baseline-path=./ultraplot/tests/baseline \
-              --mpl-results-path=./results/ \
-              --mpl-generate-summary=html \
-              --mpl-default-style="./ultraplot.yml" \
-              ultraplot/tests
-          fi
+          pytest -x -W ignore \
+            --mpl \
+            --mpl-baseline-path=./ultraplot/tests/baseline \
+            --mpl-results-path=./results/ \
+            --mpl-generate-summary=html \
+            --mpl-default-style="./ultraplot.yml" \
+            ultraplot/tests
 
       # Return the html output of the comparison even if failed
       - name: Upload comparison failures
