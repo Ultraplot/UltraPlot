@@ -34,13 +34,10 @@ classifiers = [
 dependencies= [
     "numpy>=1.26.0",
     "matplotlib>=3.9,<3.11",
+    "pycirclize>=1.10.1",
     "typing-extensions; python_version < '3.12'",
 ]
 dynamic = ["version"]
-
-[project.optional-dependencies]
-circos = ["pycirclize>=1.10.1"]
-all = ["pycirclize>=1.10.1"]
 
 [project.urls]
 "Documentation" = "https://ultraplot.readthedocs.io"

@@ -104,12 +104,13 @@ UltraPlot is published on `PyPi <https://pypi.org/project/ultraplot/>`__ and
    pip install ultraplot
    conda install -c conda-forge ultraplot
 
-The default install is minimal. To enable optional features (for example,
-pyCirclize-based plots), install the ``all`` extra:
+The default install includes optional features (for example, pyCirclize-based plots).
+For a minimal install, use ``--no-deps`` and install the core requirements:
 
 .. code-block:: bash
 
-   pip install "ultraplot[all]"
+   pip install ultraplot --no-deps
+   pip install -r requirements-minimal.txt
 
 Likewise, an existing installation of UltraPlot can be upgraded
 to the latest version with:
