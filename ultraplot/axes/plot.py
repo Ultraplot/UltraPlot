@@ -2123,7 +2123,6 @@ class PlotAxes(base.Axes):
         return stream_container
 
     @docstring._snippet_manager
-<<<<<<< HEAD
     def sankey(
         self,
         flows: Any,
@@ -2304,7 +2303,6 @@ class PlotAxes(base.Axes):
         sankey.add(**add_kw, **kwargs)
         diagrams = sankey.finish()
         return diagrams[0] if len(diagrams) == 1 else diagrams
-=======
     def circos(
         self,
         sectors: Mapping[str, Any],
@@ -2521,9 +2519,6 @@ class PlotAxes(base.Axes):
         Alias for `~PlotAxes.radar_chart`.
         """
         return self.radar_chart(*args, **kwargs)
-<<<<<<< HEAD
->>>>>>> 0e5e317b (feat: add pycirclize plot wrappers)
-=======
 
     def circos(
         self,
@@ -2741,7 +2736,6 @@ class PlotAxes(base.Axes):
         Alias for `~PlotAxes.radar_chart`.
         """
         return self.radar_chart(*args, **kwargs)
->>>>>>> 390ce66c (feat: add pycirclize plot wrappers)
 
     def _call_native(self, name, *args, **kwargs):
         """
