@@ -54,6 +54,7 @@ jobs:
 
       - name: Test Ultraplot
         run: |
+          set +e
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
             pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ${TEST_NODEIDS}
             status=$?
@@ -66,6 +67,9 @@ jobs:
           else
             pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ultraplot
           fi
+          status=$?
+          set -e
+          exit "$status"
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -152,6 +156,7 @@ jobs:
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
+            set +e
             pytest -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
@@ -172,6 +177,9 @@ jobs:
             else
               exit "$status"
             fi
+            status=$?
+            set -e
+            exit "$status"
           else
             pytest -W ignore \
               --mpl \
