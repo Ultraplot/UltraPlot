@@ -1,10 +1,13 @@
+import builtins
 import sys
 import types
+from pathlib import Path
 
 import pytest
 
 import ultraplot as uplt
 from ultraplot import rc
+from ultraplot.axes.plot_types import circlize as circlize_mod
 
 
 @pytest.fixture()
@@ -160,4 +163,51 @@ def test_circos_bed_plot_toggle(fake_pycirclize, tmp_path):
     circos = ax.circos_bed(bed_path, plot=True, tooltip=True)
     assert circos.plot_called is True
     assert circos.plot_kwargs["tooltip"] is True
+    uplt.close(fig)
+
+
+def test_import_pycirclize_error_message(monkeypatch):
+    orig_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "pycirclize":
+            raise ImportError("boom")
+        return orig_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    monkeypatch.setattr(Path, "is_dir", lambda self: False)
+    sys.modules.pop("pycirclize", None)
+    with pytest.raises(ImportError, match="pycirclize is required for circos plots"):
+        circlize_mod._import_pycirclize()
+
+
+def test_resolve_defaults_with_existing_objects(fake_pycirclize):
+    matrix_mod = sys.modules["pycirclize.parser.matrix"]
+    table_mod = sys.modules["pycirclize.parser.table"]
+    matrix = matrix_mod.Matrix({"A": {"B": 1}, "B": {"A": 2}})
+    table = table_mod.RadarTable({"A": [1, 2], "B": [3, 4]})
+
+    _, matrix_obj, cmap = circlize_mod._resolve_chord_defaults(matrix, cmap=None)
+    assert matrix_obj is matrix
+    assert set(cmap.keys()) == {"A", "B"}
+
+    _, table_obj, cmap = circlize_mod._resolve_radar_defaults(table, cmap=None)
+    assert table_obj is table
+    assert set(cmap.keys()) == {"A", "B"}
+
+
+def test_alias_methods(fake_pycirclize, tmp_path):
+    fig, ax = uplt.subplots(proj="polar")
+    matrix = {"A": {"B": 1}, "B": {"A": 2}}
+    circos = ax.chord(matrix)
+    assert circos.plot_called is True
+
+    table = {"A": [1, 2], "B": [3, 4]}
+    circos = ax.radar(table, vmin=0, vmax=4, fill=False)
+    assert circos.plot_called is True
+
+    bed_path = tmp_path / "mini.bed"
+    bed_path.write_text("chr1\t0\t10\n", encoding="utf-8")
+    circos = ax.bed(bed_path, plot=False)
+    assert hasattr(circos, "sectors")
     uplt.close(fig)
