@@ -56,6 +56,13 @@ jobs:
         run: |
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
             pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ${TEST_NODEIDS}
+            status=$?
+            if [ "$status" -eq 5 ]; then
+              echo "No tests collected from selected nodeids; running full suite."
+              pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ultraplot
+            else
+              exit "$status"
+            fi
           else
             pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ultraplot
           fi
@@ -152,6 +159,19 @@ jobs:
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
               ${TEST_NODEIDS}
+            status=$?
+            if [ "$status" -eq 5 ]; then
+              echo "No tests collected from selected nodeids; running full suite."
+              pytest -W ignore \
+                --mpl \
+                --mpl-baseline-path=./ultraplot/tests/baseline \
+                --mpl-results-path=./results/ \
+                --mpl-generate-summary=html \
+                --mpl-default-style="./ultraplot.yml" \
+                ultraplot/tests
+            else
+              exit "$status"
+            fi
           else
             pytest -W ignore \
               --mpl \
