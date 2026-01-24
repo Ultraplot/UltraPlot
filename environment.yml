@@ -35,3 +35,4 @@ dependencies:
   - lxml-html-clean
   - pip:
       - git+https://github.com/ultraplot/UltraTheme.git
+      - pycirclize
