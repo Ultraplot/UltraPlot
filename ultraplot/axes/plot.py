@@ -2303,6 +2303,7 @@ class PlotAxes(base.Axes):
         sankey.add(**add_kw, **kwargs)
         diagrams = sankey.finish()
         return diagrams[0] if len(diagrams) == 1 else diagrams
+
     def circos(
         self,
         sectors: Mapping[str, Any],

@@ -1182,6 +1182,7 @@ def test_circos_builder_smoke():
     circos.plotfig(ax=ax)
     uplt.close(fig)
 
+
 def test_circos_unshares_axes():
     """Circos wrappers should unshare axes if they were shared."""
     try:
