@@ -19,6 +19,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     bed_path.write_text(bed_text, encoding="utf-8")
 
     fig, ax = uplt.subplots(proj="polar", refwidth=3.6)
+    ax = ax[0]  # pycirclize expects a PolarAxes, not a SubplotGrid wrapper
     circos = ax.circos_bed(bed_path, plot=False)
 
     for sector in circos.sectors:

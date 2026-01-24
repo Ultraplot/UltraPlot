@@ -1160,9 +1160,8 @@ def test_circos_bed_smoke(tmp_path):
 
     fig, axs = uplt.subplots(proj="polar")
     ax = axs[0]
-    circos = ax.circos_bed(bed_path, plot=False)
+    circos = ax.circos_bed(bed_path, plot=True)
     assert len(circos.sectors) == 2
-    circos.plotfig(ax=ax)
     uplt.close(fig)
 
 
@@ -1177,9 +1176,8 @@ def test_circos_builder_smoke():
 
     fig, axs = uplt.subplots(proj="polar")
     ax = axs[0]
-    circos = ax.circos({"A": 10, "B": 12}, plot=False)
+    circos = ax.circos({"A": 10, "B": 12}, plot=True)
     assert len(circos.sectors) == 2
-    circos.plotfig(ax=ax)
     uplt.close(fig)
 
 
