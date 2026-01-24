@@ -477,7 +477,12 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
                 return
 
         skip_autolayout = getattr(fig, "_skip_autolayout", False)
-        if skip_autolayout and getattr(fig, "_layout_initialized", False):
+        layout_dirty = getattr(fig, "_layout_dirty", False)
+        if (
+            skip_autolayout
+            and getattr(fig, "_layout_initialized", False)
+            and not layout_dirty
+        ):
             fig._skip_autolayout = False
             return func(self, *args, **kwargs)
         fig._skip_autolayout = False
@@ -489,8 +494,10 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         ctx2 = fig._context_authorized()  # skip backend set_constrained_layout()
         ctx3 = rc.context(fig._render_context)  # draw with figure-specific setting
         with ctx1, ctx2, ctx3:
-            fig.auto_layout()
-            fig._layout_initialized = True
+            if not fig._layout_initialized or layout_dirty:
+                fig.auto_layout()
+                fig._layout_initialized = True
+                fig._layout_dirty = False
             return func(self, *args, **kwargs)
 
     # Add preprocessor
@@ -805,6 +812,7 @@ class Figure(mfigure.Figure):
         self._is_adjusting = False
         self._is_authorized = False
         self._layout_initialized = False
+        self._layout_dirty = True
         self._skip_autolayout = False
         self._includepanels = None
         self._render_context = {}
@@ -1555,6 +1563,7 @@ class Figure(mfigure.Figure):
         """
         Add a figure panel.
         """
+        self._layout_dirty = True
         # Interpret args and enforce sensible keyword args
         side = _translate_loc(side, "panel", default="right")
         if side in ("left", "right"):
@@ -1588,6 +1597,7 @@ class Figure(mfigure.Figure):
         """
         The driver function for adding single subplots.
         """
+        self._layout_dirty = True
         # Parse arguments
         kwargs = self._parse_proj(**kwargs)
 
@@ -2558,6 +2568,7 @@ class Figure(mfigure.Figure):
         ultraplot.gridspec.SubplotGrid.format
         ultraplot.config.Configurator.context
         """
+        self._layout_dirty = True
         # Initiate context block
         axs = axs or self._subplot_dict.values()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
@@ -3220,6 +3231,7 @@ class Figure(mfigure.Figure):
             super().set_size_inches(figsize, forward=forward)
         if not samesize:  # gridspec positions will resolve differently
             self.gridspec.update()
+            self._layout_dirty = True
 
     def _iter_axes(self, hidden=False, children=False, panels=True):
         """
