@@ -90,6 +90,9 @@ To build the documentation locally, use the following commands:
    # ...or create a new conda environment
    # conda env create -n ultraplot-dev --file docs/environment.yml
    # source activate ultraplot-dev
+   # Minimal install (no optional dependencies)
+   # pip install ultraplot --no-deps
+   # pip install -r ../requirements-minimal.txt
    # Create HTML documentation
    make html
 
