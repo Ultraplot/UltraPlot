@@ -26,7 +26,7 @@ jobs:
             --verbose
             python=3.11
             matplotlib=3.9
-          cache-environment: false
+          cache-environment: true
           cache-downloads: false
 
       - name: Build Ultraplot

@@ -20,7 +20,6 @@ on:
 env:
   LC_ALL: en_US.UTF-8
   LANG: en_US.UTF-8
-  DISABLE_BASELINE_CACHE: "true"
 
 jobs:
   build-ultraplot:
@@ -46,7 +45,7 @@ jobs:
             --verbose
             python=${{ inputs.python-version }}
             matplotlib=${{ inputs.matplotlib-version }}
-          cache-environment: false
+          cache-environment: true
           cache-downloads: false
 
       - name: Build Ultraplot
@@ -88,14 +87,14 @@ jobs:
             --verbose
             python=${{ inputs.python-version }}
             matplotlib=${{ inputs.matplotlib-version }}
-          cache-environment: false
+          cache-environment: true
           cache-downloads: false
 
       # Cache Baseline Figures (Restore step)
       - name: Cache Baseline Figures
         id: cache-baseline
         uses: actions/cache@v4
-        if: ${{ false }}
+        if: ${{ env.IS_PR }}
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
           # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
