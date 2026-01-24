@@ -55,9 +55,9 @@ jobs:
       - name: Test Ultraplot
         run: |
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ${TEST_NODEIDS}
+            pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ${TEST_NODEIDS}
           else
-            pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ultraplot
+            pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ultraplot
           fi
 
       - name: Upload coverage reports to Codecov
