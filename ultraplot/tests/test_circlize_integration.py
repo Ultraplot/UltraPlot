@@ -113,6 +113,12 @@ def test_chord_diagram_defaults(fake_pycirclize):
     circos = ax.chord_diagram(matrix)
     assert circos.plot_called is True
     assert set(circos.kwargs["cmap"].keys()) == {"A", "B"}
+    label_kws = circos.kwargs["label_kws"]
+    ticks_kws = circos.kwargs["ticks_kws"]
+    assert label_kws["color"] == rc["meta.color"]
+    assert label_kws["size"] == rc["font.size"]
+    assert ticks_kws["label_size"] == rc["font.size"]
+    assert ticks_kws["text_kws"]["color"] == rc["meta.color"]
     uplt.close(fig)
 
 
@@ -122,6 +128,9 @@ def test_radar_chart_defaults(fake_pycirclize):
     circos = ax.radar_chart(table, vmin=0, vmax=4, fill=False)
     assert circos.plot_called is True
     assert set(circos.kwargs["cmap"].keys()) == {"A", "B"}
+    assert circos.kwargs["grid_line_kws"]["color"] == rc["grid.color"]
+    assert circos.kwargs["grid_label_kws"]["color"] == rc["meta.color"]
+    assert circos.kwargs["grid_label_kws"]["size"] == rc["font.size"]
     uplt.close(fig)
 
 
@@ -131,4 +140,24 @@ def test_phylogeny_defaults(fake_pycirclize):
     assert circos.plot_called is True
     assert treeviz["treeviz"] is True
     assert circos.kwargs["leaf_label_size"] == rc["font.size"]
+    uplt.close(fig)
+
+
+def test_circos_plot_and_tooltip(fake_pycirclize):
+    fig, ax = uplt.subplots(proj="polar")
+    circos = ax.circos({"A": 1, "B": 2}, plot=True, tooltip=True)
+    assert circos.plot_called is True
+    assert circos.plot_kwargs["tooltip"] is True
+    uplt.close(fig)
+
+
+def test_circos_bed_plot_toggle(fake_pycirclize, tmp_path):
+    bed_path = tmp_path / "tiny.bed"
+    bed_path.write_text("chr1\t0\t10\n", encoding="utf-8")
+    fig, ax = uplt.subplots(proj="polar")
+    circos = ax.circos_bed(bed_path, plot=False)
+    assert circos.plot_called is False
+    circos = ax.circos_bed(bed_path, plot=True, tooltip=True)
+    assert circos.plot_called is True
+    assert circos.plot_kwargs["tooltip"] is True
     uplt.close(fig)
