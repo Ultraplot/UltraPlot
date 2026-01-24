@@ -3231,7 +3231,8 @@ class Figure(mfigure.Figure):
             super().set_size_inches(figsize, forward=forward)
         if not samesize:  # gridspec positions will resolve differently
             self.gridspec.update()
-            self._layout_dirty = True
+            if not backend and not internal:
+                self._layout_dirty = True
 
     def _iter_axes(self, hidden=False, children=False, panels=True):
         """
