@@ -476,6 +476,12 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
             else:
                 return
 
+        skip_autolayout = getattr(fig, "_skip_autolayout", False)
+        if skip_autolayout and getattr(fig, "_layout_initialized", False):
+            fig._skip_autolayout = False
+            return func(self, *args, **kwargs)
+        fig._skip_autolayout = False
+
         # Adjust layout
         # NOTE: The authorized_context is needed because some backends disable
         # constrained layout or tight layout before printing the figure.
@@ -484,6 +490,7 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         ctx3 = rc.context(fig._render_context)  # draw with figure-specific setting
         with ctx1, ctx2, ctx3:
             fig.auto_layout()
+            fig._layout_initialized = True
             return func(self, *args, **kwargs)
 
     # Add preprocessor
@@ -797,6 +804,8 @@ class Figure(mfigure.Figure):
         self._subplot_counter = 0  # avoid add_subplot() returning an existing subplot
         self._is_adjusting = False
         self._is_authorized = False
+        self._layout_initialized = False
+        self._skip_autolayout = False
         self._includepanels = None
         self._render_context = {}
         rc_kw, rc_mode = _pop_rc(kwargs)
@@ -3134,6 +3143,17 @@ class Figure(mfigure.Figure):
         # method = '_draw' if callable(getattr(canvas, '_draw', None)) else 'draw'
         _add_canvas_preprocessor(canvas, "print_figure", cache=False)  # saves, inlines
         _add_canvas_preprocessor(canvas, method, cache=True)  # renderer displays
+
+        orig_draw_idle = getattr(type(canvas), "draw_idle", None)
+        if orig_draw_idle is not None:
+
+            def _draw_idle(self, *args, **kwargs):
+                fig = self.figure
+                if fig is not None:
+                    fig._skip_autolayout = True
+                return orig_draw_idle(self, *args, **kwargs)
+
+            canvas.draw_idle = _draw_idle.__get__(canvas)
         super().set_canvas(canvas)
 
     def _is_same_size(self, figsize, eps=None):
