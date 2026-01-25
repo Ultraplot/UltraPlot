@@ -967,7 +967,8 @@ def test_panels_geo():
     for dir in dirs:
         not ax[0]._is_ticklabel_on(f"label{dir}")
 
-    return fig
+    fig.canvas.draw()
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare

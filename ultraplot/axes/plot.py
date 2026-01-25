@@ -1826,7 +1826,7 @@ class PlotAxes(base.Axes):
             if cmap is None:
                 cmap = constructor.Colormap(rc["image.cmap"])
             else:
-                cmap = mcm.get_cmap(cmap)
+                cmap = mpl.colormaps.get_cmap(cmap)
 
         # Convert start_points from data to array coords
         # Shift the seed points from the bottom left of the data so that
@@ -5387,6 +5387,9 @@ class PlotAxes(base.Axes):
         # Convert vert boolean to orientation string for newer versions
         orientation = "vertical" if vert else "horizontal"
 
+        if version.parse(str(_version_mpl)) >= version.parse("3.9.0"):
+            if "labels" in kw and "tick_labels" not in kw:
+                kw["tick_labels"] = kw.pop("labels")
         if version.parse(str(_version_mpl)) >= version.parse("3.10.0"):
             # For matplotlib 3.10+:
             # Use the orientation parameters
