@@ -56,16 +56,16 @@ jobs:
         run: |
           set +e
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -q --tb=short -n auto ${TEST_NODEIDS}
+            pytest -q --tb=short --disable-warnings -n auto ${TEST_NODEIDS}
             status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
-              pytest -q --tb=short -n auto ultraplot
+              pytest -q --tb=short --disable-warnings -n auto ultraplot
             else
               exit "$status"
             fi
           else
-            pytest -q --tb=short -n auto ultraplot
+            pytest -q --tb=short --disable-warnings -n auto ultraplot
           fi
           status=$?
           set -e
@@ -75,16 +75,16 @@ jobs:
         run: |
           set +e
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -q --tb=short -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS}
+            pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS}
             status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
-              pytest -q --tb=short -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
+              pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
             else
               exit "$status"
             fi
           else
-            pytest -q --tb=short -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
+            pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
           fi
           status=$?
           set -e
@@ -190,7 +190,7 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
             set +e
-            pytest -q --tb=short -W ignore \
+            pytest -q --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
@@ -200,7 +200,7 @@ jobs:
             status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
-              pytest -q --tb=short -W ignore \
+              pytest -q --tb=short --disable-warnings -W ignore \
                 --mpl \
                 --mpl-baseline-path=./ultraplot/tests/baseline \
                 --mpl-results-path=./results/ \
@@ -214,7 +214,7 @@ jobs:
             set -e
             exit "$status"
           else
-            pytest -q --tb=short -W ignore \
+            pytest -q --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
