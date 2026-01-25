@@ -37,6 +37,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install CA certificates (act)
+        if: ${{ env.ACT }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates
+
       - uses: mamba-org/setup-micromamba@v2.0.7
         with:
           environment-file: ./environment.yml
@@ -55,7 +61,17 @@ jobs:
       - name: Test Ultraplot
         run: |
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS}
+            nodeids=()
+            for token in ${TEST_NODEIDS}; do
+              if [[ "${token}" == *"::"* || "${token}" == *.py ]]; then
+                nodeids+=("${token}")
+              fi
+            done
+            if [ "${#nodeids[@]}" -gt 0 ]; then
+              pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml "${nodeids[@]}"
+            else
+              pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
+            fi
           else
             pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
           fi
@@ -78,6 +94,12 @@ jobs:
         shell: bash -el {0}
     steps:
       - uses: actions/checkout@v6
+
+      - name: Install CA certificates (act)
+        if: ${{ env.ACT }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates
 
       - uses: mamba-org/setup-micromamba@v2.0.7
         with:
