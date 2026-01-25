@@ -36,7 +36,7 @@ jobs:
       - name: Generate test coverage map
         run: |
           mkdir -p .ci
-          pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-context=test --cov-report= ultraplot
+          pytest -n auto --cov=ultraplot --cov-branch --cov-context=test --cov-report= ultraplot
           python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
 
       - name: Cache test map
