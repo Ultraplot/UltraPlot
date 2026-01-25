@@ -58,7 +58,7 @@ jobs:
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
             pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ${TEST_NODEIDS}
             status=$?
-            if [ "$status" -eq 5 ]; then
+            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
               pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ultraplot
             else
@@ -137,7 +137,7 @@ jobs:
               --mpl-default-style="./ultraplot.yml" \
               ${TEST_NODEIDS}
             status=$?
-            if [ "$status" -eq 5 ]; then
+            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids on base; running full suite."
               pytest -W ignore \
                 --mpl-generate-path=./ultraplot/tests/baseline/ \
@@ -179,7 +179,7 @@ jobs:
               --mpl-default-style="./ultraplot.yml" \
               ${TEST_NODEIDS}
             status=$?
-            if [ "$status" -eq 5 ]; then
+            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
               pytest -W ignore \
                 --mpl \
