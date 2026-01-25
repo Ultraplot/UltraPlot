@@ -53,7 +53,6 @@ jobs:
           pip install --no-build-isolation --no-deps .
 
       - name: Test Ultraplot
-        continue-on-error: true
         run: |
           status=0
           filter_nodeids() {
@@ -83,43 +82,6 @@ jobs:
             pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
           fi
           exit "$status"
-
-      - name: Coverage Ultraplot (single process)
-        run: |
-          status=0
-          filter_nodeids() {
-            local filtered=""
-            for nodeid in ${TEST_NODEIDS}; do
-              local path="${nodeid%%::*}"
-              if [ -f "$path" ]; then
-                filtered="${filtered} ${nodeid}"
-              fi
-            done
-            echo "${filtered}"
-          }
-          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            FILTERED_NODEIDS="$(filter_nodeids)"
-            if [ -z "${FILTERED_NODEIDS}" ]; then
-              echo "No valid nodeids found; running full suite."
-              pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot || status=$?
-            else
-              pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${FILTERED_NODEIDS} || status=$?
-              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-                echo "No tests collected from selected nodeids; running full suite."
-                status=0
-                pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot || status=$?
-              fi
-            fi
-          else
-            pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot || status=$?
-          fi
-          exit "$status"
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: Ultraplot/ultraplot
 
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
