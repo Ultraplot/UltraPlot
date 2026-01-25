@@ -11,11 +11,7 @@ jobs:
     outputs:
       run: ${{ (github.event_name == 'push' && github.ref_name == 'main') && 'true' || steps.filter.outputs.python }}
     steps:
-      - name: Install git
-        run: |
-          apt-get update
-          apt-get install -y git
-          - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
         id: filter
         with:
