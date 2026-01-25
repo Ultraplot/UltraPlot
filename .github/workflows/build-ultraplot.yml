@@ -56,16 +56,35 @@ jobs:
         run: |
           set +e
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ${TEST_NODEIDS}
+            pytest -n auto ${TEST_NODEIDS}
             status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
-              pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ultraplot
+              pytest -n auto ultraplot
             else
               exit "$status"
             fi
           else
-            pytest -n auto -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml --cov-append ultraplot
+            pytest -n auto ultraplot
+          fi
+          status=$?
+          set -e
+          exit "$status"
+
+      - name: Coverage Ultraplot (single process)
+        run: |
+          set +e
+          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
+            pytest -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS}
+            status=$?
+            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+              echo "No tests collected from selected nodeids; running full suite."
+              pytest -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
+            else
+              exit "$status"
+            fi
+          else
+            pytest -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
           fi
           status=$?
           set -e
