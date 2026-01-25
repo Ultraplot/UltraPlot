@@ -131,10 +131,24 @@ jobs:
           # Generate the baseline images and hash library
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
+            set +e
             pytest -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
               ${TEST_NODEIDS}
+            status=$?
+            if [ "$status" -eq 5 ]; then
+              echo "No tests collected from selected nodeids on base; running full suite."
+              pytest -W ignore \
+                --mpl-generate-path=./ultraplot/tests/baseline/ \
+                --mpl-default-style="./ultraplot.yml" \
+                ultraplot/tests
+            else
+              exit "$status"
+            fi
+            status=$?
+            set -e
+            exit "$status"
           else
             pytest -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
