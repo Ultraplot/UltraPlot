@@ -56,28 +56,14 @@ jobs:
         run: |
           status=0
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -q --tb=short --disable-warnings -n auto ${TEST_NODEIDS} || status=$?
+            pytest -q --tb=short --disable-warnings -n 0 ${TEST_NODEIDS} || status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
               status=0
-              pytest -q --tb=short --disable-warnings -n auto ultraplot || status=$?
-            fi
-          else
-            pytest -q --tb=short --disable-warnings -n auto ultraplot || status=$?
-          fi
-          if [ "$status" -ne 0 ]; then
-            echo "Parallel pytest exited with $status; retrying in single process."
-            status=0
-            if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-              pytest -q --tb=short --disable-warnings -n 0 ${TEST_NODEIDS} || status=$?
-              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-                echo "No tests collected from selected nodeids; running full suite."
-                status=0
-                pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
-              fi
-            else
               pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
             fi
+          else
+            pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
           fi
           exit "$status"
 
