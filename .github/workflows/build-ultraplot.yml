@@ -54,17 +54,34 @@ jobs:
 
       - name: Test Ultraplot
         run: |
+          status=0
+          filter_nodeids() {
+            local filtered=""
+            for nodeid in ${TEST_NODEIDS}; do
+              local path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                filtered="${filtered} ${nodeid}"
+              fi
+            done
+            echo "${filtered}"
+          }
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS}
+            FILTERED_NODEIDS="$(filter_nodeids)"
+            if [ -z "${FILTERED_NODEIDS}" ]; then
+              echo "No valid nodeids found; running full suite."
+              pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
+            else
+              pytest -q --tb=short --disable-warnings -n 0 ${FILTERED_NODEIDS} || status=$?
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids; running full suite."
+                status=0
+                pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
+              fi
+            fi
           else
-            pytest -n auto --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
+            pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
           fi
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: Ultraplot/ultraplot
+          exit "$status"
 
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
@@ -98,9 +115,9 @@ jobs:
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
           # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
-          key: ${{ runner.os }}-baseline-base-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
+          key: ${{ runner.os }}-baseline-base-v2-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
           restore-keys: |
-            ${{ runner.os }}-baseline-base-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
+            ${{ runner.os }}-baseline-base-v2-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
 
       # Conditional Baseline Generation (Only runs on cache miss)
       - name: Generate baseline from main
@@ -120,12 +137,41 @@ jobs:
           # Generate the baseline images and hash library
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -W ignore \
+            status=0
+            filter_nodeids() {
+              local filtered=""
+              for nodeid in ${TEST_NODEIDS}; do
+                local path="${nodeid%%::*}"
+                if [ -f "$path" ]; then
+                  filtered="${filtered} ${nodeid}"
+                fi
+              done
+              echo "${filtered}"
+            }
+            FILTERED_NODEIDS="$(filter_nodeids)"
+            if [ -z "${FILTERED_NODEIDS}" ]; then
+              echo "No valid nodeids found; running full suite."
+              pytest -q --tb=short --disable-warnings -W ignore \
+                --mpl-generate-path=./ultraplot/tests/baseline/ \
+                --mpl-default-style="./ultraplot.yml" \
+                ultraplot/tests || status=$?
+            else
+              pytest -q --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
-              ${TEST_NODEIDS}
+              ${FILTERED_NODEIDS} || status=$?
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids on base; running full suite."
+                status=0
+                pytest -q --tb=short --disable-warnings -W ignore \
+                  --mpl-generate-path=./ultraplot/tests/baseline/ \
+                  --mpl-default-style="./ultraplot.yml" \
+                  ultraplot/tests || status=$?
+              fi
+            fi
+            exit "$status"
           else
-            pytest -W ignore \
+            pytest -q --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
@@ -145,15 +191,50 @@ jobs:
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -W ignore \
+            status=0
+            filter_nodeids() {
+              local filtered=""
+              for nodeid in ${TEST_NODEIDS}; do
+                local path="${nodeid%%::*}"
+                if [ -f "$path" ]; then
+                  filtered="${filtered} ${nodeid}"
+                fi
+              done
+              echo "${filtered}"
+            }
+            FILTERED_NODEIDS="$(filter_nodeids)"
+            if [ -z "${FILTERED_NODEIDS}" ]; then
+              echo "No valid nodeids found; running full suite."
+              pytest -q --tb=short --disable-warnings -W ignore \
+                --mpl \
+                --mpl-baseline-path=./ultraplot/tests/baseline \
+                --mpl-results-path=./results/ \
+                --mpl-generate-summary=html \
+                --mpl-default-style="./ultraplot.yml" \
+                ultraplot/tests || status=$?
+            else
+              pytest -q --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
-              ${TEST_NODEIDS}
+              ${FILTERED_NODEIDS} || status=$?
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids; running full suite."
+                status=0
+                pytest -q --tb=short --disable-warnings -W ignore \
+                  --mpl \
+                  --mpl-baseline-path=./ultraplot/tests/baseline \
+                  --mpl-results-path=./results/ \
+                  --mpl-generate-summary=html \
+                  --mpl-default-style="./ultraplot.yml" \
+                  ultraplot/tests || status=$?
+              fi
+            fi
+            exit "$status"
           else
-            pytest -W ignore \
+            pytest -q --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
