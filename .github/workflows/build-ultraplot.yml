@@ -55,12 +55,28 @@ jobs:
       - name: Test Ultraplot
         run: |
           status=0
+          filter_nodeids() {
+            local filtered=""
+            for nodeid in ${TEST_NODEIDS}; do
+              local path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                filtered="${filtered} ${nodeid}"
+              fi
+            done
+            echo "${filtered}"
+          }
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -q --tb=short --disable-warnings -n 0 ${TEST_NODEIDS} || status=$?
-            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-              echo "No tests collected from selected nodeids; running full suite."
-              status=0
+            FILTERED_NODEIDS="$(filter_nodeids)"
+            if [ -z "${FILTERED_NODEIDS}" ]; then
+              echo "No valid nodeids found; running full suite."
               pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
+            else
+              pytest -q --tb=short --disable-warnings -n 0 ${FILTERED_NODEIDS} || status=$?
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids; running full suite."
+                status=0
+                pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
+              fi
             fi
           else
             pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
@@ -70,12 +86,28 @@ jobs:
       - name: Coverage Ultraplot (single process)
         run: |
           status=0
+          filter_nodeids() {
+            local filtered=""
+            for nodeid in ${TEST_NODEIDS}; do
+              local path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                filtered="${filtered} ${nodeid}"
+              fi
+            done
+            echo "${filtered}"
+          }
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS} || status=$?
-            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-              echo "No tests collected from selected nodeids; running full suite."
-              status=0
+            FILTERED_NODEIDS="$(filter_nodeids)"
+            if [ -z "${FILTERED_NODEIDS}" ]; then
+              echo "No valid nodeids found; running full suite."
               pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot || status=$?
+            else
+              pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${FILTERED_NODEIDS} || status=$?
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids; running full suite."
+                status=0
+                pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot || status=$?
+              fi
             fi
           else
             pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot || status=$?
@@ -143,17 +175,36 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
             status=0
-            pytest -q --tb=short --disable-warnings -W ignore \
-              --mpl-generate-path=./ultraplot/tests/baseline/ \
-              --mpl-default-style="./ultraplot.yml" \
-              ${TEST_NODEIDS} || status=$?
-            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-              echo "No tests collected from selected nodeids on base; running full suite."
-              status=0
+            filter_nodeids() {
+              local filtered=""
+              for nodeid in ${TEST_NODEIDS}; do
+                local path="${nodeid%%::*}"
+                if [ -f "$path" ]; then
+                  filtered="${filtered} ${nodeid}"
+                fi
+              done
+              echo "${filtered}"
+            }
+            FILTERED_NODEIDS="$(filter_nodeids)"
+            if [ -z "${FILTERED_NODEIDS}" ]; then
+              echo "No valid nodeids found; running full suite."
               pytest -q --tb=short --disable-warnings -W ignore \
                 --mpl-generate-path=./ultraplot/tests/baseline/ \
                 --mpl-default-style="./ultraplot.yml" \
                 ultraplot/tests || status=$?
+            else
+              pytest -q --tb=short --disable-warnings -W ignore \
+              --mpl-generate-path=./ultraplot/tests/baseline/ \
+              --mpl-default-style="./ultraplot.yml" \
+              ${FILTERED_NODEIDS} || status=$?
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids on base; running full suite."
+                status=0
+                pytest -q --tb=short --disable-warnings -W ignore \
+                  --mpl-generate-path=./ultraplot/tests/baseline/ \
+                  --mpl-default-style="./ultraplot.yml" \
+                  ultraplot/tests || status=$?
+              fi
             fi
             exit "$status"
           else
@@ -178,16 +229,19 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
             status=0
-            pytest -q --tb=short --disable-warnings -W ignore \
-              --mpl \
-              --mpl-baseline-path=./ultraplot/tests/baseline \
-              --mpl-results-path=./results/ \
-              --mpl-generate-summary=html \
-              --mpl-default-style="./ultraplot.yml" \
-              ${TEST_NODEIDS} || status=$?
-            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-              echo "No tests collected from selected nodeids; running full suite."
-              status=0
+            filter_nodeids() {
+              local filtered=""
+              for nodeid in ${TEST_NODEIDS}; do
+                local path="${nodeid%%::*}"
+                if [ -f "$path" ]; then
+                  filtered="${filtered} ${nodeid}"
+                fi
+              done
+              echo "${filtered}"
+            }
+            FILTERED_NODEIDS="$(filter_nodeids)"
+            if [ -z "${FILTERED_NODEIDS}" ]; then
+              echo "No valid nodeids found; running full suite."
               pytest -q --tb=short --disable-warnings -W ignore \
                 --mpl \
                 --mpl-baseline-path=./ultraplot/tests/baseline \
@@ -195,6 +249,25 @@ jobs:
                 --mpl-generate-summary=html \
                 --mpl-default-style="./ultraplot.yml" \
                 ultraplot/tests || status=$?
+            else
+              pytest -q --tb=short --disable-warnings -W ignore \
+              --mpl \
+              --mpl-baseline-path=./ultraplot/tests/baseline \
+              --mpl-results-path=./results/ \
+              --mpl-generate-summary=html \
+              --mpl-default-style="./ultraplot.yml" \
+              ${FILTERED_NODEIDS} || status=$?
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids; running full suite."
+                status=0
+                pytest -q --tb=short --disable-warnings -W ignore \
+                  --mpl \
+                  --mpl-baseline-path=./ultraplot/tests/baseline \
+                  --mpl-results-path=./results/ \
+                  --mpl-generate-summary=html \
+                  --mpl-default-style="./ultraplot.yml" \
+                  ultraplot/tests || status=$?
+              fi
             fi
             exit "$status"
           else
