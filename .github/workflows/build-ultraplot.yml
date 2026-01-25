@@ -54,40 +54,32 @@ jobs:
 
       - name: Test Ultraplot
         run: |
-          set +e
+          status=0
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -q --tb=short --disable-warnings -n auto ${TEST_NODEIDS}
-            status=$?
+            pytest -q --tb=short --disable-warnings -n auto ${TEST_NODEIDS} || status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
-              pytest -q --tb=short --disable-warnings -n auto ultraplot
-            else
-              exit "$status"
+              status=0
+              pytest -q --tb=short --disable-warnings -n auto ultraplot || status=$?
             fi
           else
-            pytest -q --tb=short --disable-warnings -n auto ultraplot
+            pytest -q --tb=short --disable-warnings -n auto ultraplot || status=$?
           fi
-          status=$?
-          set -e
           exit "$status"
 
       - name: Coverage Ultraplot (single process)
         run: |
-          set +e
+          status=0
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS}
-            status=$?
+            pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ${TEST_NODEIDS} || status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
-              pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
-            else
-              exit "$status"
+              status=0
+              pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot || status=$?
             fi
           else
-            pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
+            pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot || status=$?
           fi
-          status=$?
-          set -e
           exit "$status"
 
       - name: Upload coverage reports to Codecov
@@ -150,26 +142,22 @@ jobs:
           # Generate the baseline images and hash library
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            set +e
-            pytest -W ignore \
+            status=0
+            pytest -q --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
-              ${TEST_NODEIDS}
-            status=$?
+              ${TEST_NODEIDS} || status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids on base; running full suite."
-              pytest -W ignore \
+              status=0
+              pytest -q --tb=short --disable-warnings -W ignore \
                 --mpl-generate-path=./ultraplot/tests/baseline/ \
                 --mpl-default-style="./ultraplot.yml" \
-                ultraplot/tests
-            else
-              exit "$status"
+                ultraplot/tests || status=$?
             fi
-            status=$?
-            set -e
             exit "$status"
           else
-            pytest -W ignore \
+            pytest -q --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
@@ -189,29 +177,25 @@ jobs:
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            set +e
+            status=0
             pytest -q --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
-              ${TEST_NODEIDS}
-            status=$?
+              ${TEST_NODEIDS} || status=$?
             if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
               echo "No tests collected from selected nodeids; running full suite."
+              status=0
               pytest -q --tb=short --disable-warnings -W ignore \
                 --mpl \
                 --mpl-baseline-path=./ultraplot/tests/baseline \
                 --mpl-results-path=./results/ \
                 --mpl-generate-summary=html \
                 --mpl-default-style="./ultraplot.yml" \
-                ultraplot/tests
-            else
-              exit "$status"
+                ultraplot/tests || status=$?
             fi
-            status=$?
-            set -e
             exit "$status"
           else
             pytest -q --tb=short --disable-warnings -W ignore \
