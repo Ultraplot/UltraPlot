@@ -1,0 +1,29 @@
+name: Local Act Tests
+on:
+  workflow_dispatch:
+    inputs:
+      python-version:
+        description: Python version for the test environment
+        default: "3.12"
+        type: string
+      matplotlib-version:
+        description: Matplotlib version for the test environment
+        default: "3.9"
+        type: string
+      test-mode:
+        description: Test selection mode (full or selected)
+        default: full
+        type: string
+      test-nodeids:
+        description: Space-separated pytest nodeids for selected tests
+        default: ""
+        type: string
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-ultraplot.yml
+    with:
+      python-version: ${{ inputs.python-version }}
+      matplotlib-version: ${{ inputs.matplotlib-version }}
+      test-mode: ${{ inputs.test-mode }}
+      test-nodeids: ${{ inputs.test-nodeids }}
