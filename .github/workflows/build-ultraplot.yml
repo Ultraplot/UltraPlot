@@ -81,6 +81,7 @@ jobs:
           else
             pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
           fi
+          echo "Final test status: ${status}"
           exit "$status"
 
   compare-baseline:
