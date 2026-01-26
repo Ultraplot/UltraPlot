@@ -11,6 +11,7 @@ T"he constructor functions used to build class instances from simple shorthand a
 # part of documentation, but this is redundant and pollutes the namespace.
 # User should just inspect docstrings, use trial-error, or see online tables.
 import copy
+import inspect
 import os
 import re
 from functools import partial
@@ -1256,6 +1257,19 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
     ultraplot.axes.Axes.colorbar
     ultraplot.constructor.Locator
     """  # noqa: E501
+
+    def _pop_unsupported_kwarg(cls, kw, name):
+        if name not in kw:
+            return
+        try:
+            sig = inspect.signature(cls)
+        except (TypeError, ValueError):
+            return
+        if any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values()):
+            return
+        if name not in sig.parameters:
+            kw.pop(name, None)
+
     if (
         np.iterable(formatter)
         and not isinstance(formatter, str)
@@ -1266,12 +1280,16 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         return copy.copy(formatter)
     if isinstance(formatter, str):
         if re.search(r"{x(:.+)?}", formatter):  # str.format
+            _pop_unsupported_kwarg(mticker.StrMethodFormatter, kwargs, "tickrange")
             formatter = mticker.StrMethodFormatter(formatter, *args, **kwargs)
         elif "%" in formatter:  # str % format
             cls = mdates.DateFormatter if date else mticker.FormatStrFormatter
+            _pop_unsupported_kwarg(cls, kwargs, "tickrange")
             formatter = cls(formatter, *args, **kwargs)
         elif formatter in FORMATTERS:
-            formatter = FORMATTERS[formatter](*args, **kwargs)
+            cls = FORMATTERS[formatter]
+            _pop_unsupported_kwarg(cls, kwargs, "tickrange")
+            formatter = cls(*args, **kwargs)
         else:
             raise ValueError(
                 f"Unknown formatter {formatter!r}. Options are: "
@@ -1279,12 +1297,17 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
                 + "."
             )
     elif formatter is True:
+        _pop_unsupported_kwarg(pticker.AutoFormatter, kwargs, "tickrange")
         formatter = pticker.AutoFormatter(*args, **kwargs)
     elif formatter is False:
+        _pop_unsupported_kwarg(mticker.NullFormatter, kwargs, "tickrange")
         formatter = mticker.NullFormatter(*args, **kwargs)
     elif np.iterable(formatter):
-        formatter = (mticker.FixedFormatter, pticker.IndexFormatter)[index](formatter)
+        cls = (mticker.FixedFormatter, pticker.IndexFormatter)[index]
+        _pop_unsupported_kwarg(cls, kwargs, "tickrange")
+        formatter = cls(formatter)
     elif callable(formatter):
+        _pop_unsupported_kwarg(mticker.FuncFormatter, kwargs, "tickrange")
         formatter = mticker.FuncFormatter(formatter, *args, **kwargs)
     else:
         raise ValueError(f"Invalid formatter {formatter!r}.")
