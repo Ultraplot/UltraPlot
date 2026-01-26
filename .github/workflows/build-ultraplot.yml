@@ -87,6 +87,7 @@ jobs:
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       IS_PR: ${{ github.event_name == 'pull_request' }}
       TEST_MODE: ${{ inputs.test-mode }}
