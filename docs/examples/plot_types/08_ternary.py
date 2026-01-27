@@ -25,10 +25,11 @@ vmin = 0.0
 vmax = 1.2
 levels = np.linspace(vmin, vmax, 7)
 
-cs = ax.tripcolor(t, l, r, v, shading='flat', vmin=vmin, vmax=vmax)
+cs = ax.tripcolor(t, l, r, v, cmap = "lapaz_r", shading='flat', vmin=vmin, vmax=vmax)
 ax.set_title("Ternary Plot of Shannon Entropies")
-ax.plot(*get_spiral(), color='black', lw=0.5)
+ax.plot(*get_spiral(), color='white', lw=1.25)
 colorbar = ax.colorbar(cs)
 colorbar.set_label('Entropy', rotation=270, va='baseline')
 
 fig.show()
+uplt.show(block = 1)
