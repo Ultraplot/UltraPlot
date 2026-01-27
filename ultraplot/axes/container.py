@@ -61,6 +61,34 @@ class ExternalAxesContainer(CartesianAxes):
     ``external_padding=2`` or ``external_padding=0`` to disable padding entirely.
     """
 
+    _EXTERNAL_DELEGATE_BLOCKLIST = {
+        # Keep container overrides that mark external axes stale.
+        "plot",
+        "scatter",
+        "fill",
+        "contour",
+        "contourf",
+        "pcolormesh",
+        "tripcolor",
+        "tricontour",
+        "tricontourf",
+        "triplot",
+        "imshow",
+        "hexbin",
+        # Keep UltraPlot formatting/guide behaviors on the container.
+        "format",
+        "colorbar",
+        "legend",
+        "set_title",
+        "set_suptitle",
+        "set_xlabel",
+        "set_ylabel",
+        "set_zlabel",
+        "set_xticks",
+        "set_yticks",
+        "set_zticks",
+    }
+
     def __init__(
         self, *args, external_axes_class=None, external_axes_kwargs=None, **kwargs
     ):
@@ -804,26 +832,26 @@ class ExternalAxesContainer(CartesianAxes):
         This allows the container to act as a transparent wrapper, forwarding
         plotting methods and other attributes to the external axes.
         """
-        # Avoid infinite recursion for private attributes
-        # But allow parent class lookups during initialization
-        if name.startswith("_"):
-            # During initialization, let parent class handle private attributes
-            # This prevents interfering with parent class setup
-            raise AttributeError(
-                f"'{type(self).__name__}' object has no attribute '{name}'"
-            )
-
-        # Try to get from external axes if it exists
-        if hasattr(self, "_external_axes") and self._external_axes is not None:
-            try:
-                return getattr(self._external_axes, name)
-            except AttributeError:
-                pass
-
-        # Not found anywhere
         raise AttributeError(
             f"'{type(self).__name__}' object has no attribute '{name}'"
         )
+
+    def __getattribute__(self, name):
+        """
+        Prefer external axes attributes unless explicitly blocked.
+        """
+        if name.startswith("_"):
+            return object.__getattribute__(self, name)
+        blocklist = object.__getattribute__(self, "_EXTERNAL_DELEGATE_BLOCKLIST")
+        if name in blocklist:
+            return object.__getattribute__(self, name)
+        try:
+            external = object.__getattribute__(self, "_external_axes")
+        except AttributeError:
+            external = None
+        if external is not None and hasattr(external, name):
+            return getattr(external, name)
+        return object.__getattribute__(self, name)
 
     def __dir__(self):
         """Include external axes attributes in dir() output."""
