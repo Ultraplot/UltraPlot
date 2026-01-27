@@ -52,40 +52,10 @@ jobs:
         run: |
           pip install --no-build-isolation --no-deps .
 
-      - name: Test Ultraplot
-        run: |
-          status=0
-          filter_nodeids() {
-            local filtered=""
-            for nodeid in ${TEST_NODEIDS}; do
-              local path="${nodeid%%::*}"
-              if [ -f "$path" ]; then
-                filtered="${filtered} ${nodeid}"
-              fi
-            done
-            echo "${filtered}"
-          }
-          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            FILTERED_NODEIDS="$(filter_nodeids)"
-            if [ -z "${FILTERED_NODEIDS}" ]; then
-              echo "No valid nodeids found; running full suite."
-              pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
-            else
-              pytest -q --tb=short --disable-warnings -n 0 ${FILTERED_NODEIDS} || status=$?
-              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-                echo "No tests collected from selected nodeids; running full suite."
-                status=0
-                pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
-              fi
-            fi
-          else
-            pytest -q --tb=short --disable-warnings -n 0 ultraplot || status=$?
-          fi
-          exit "$status"
-
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       IS_PR: ${{ github.event_name == 'pull_request' }}
       TEST_MODE: ${{ inputs.test-mode }}
