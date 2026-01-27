@@ -62,31 +62,11 @@ class ExternalAxesContainer(CartesianAxes):
     """
 
     _EXTERNAL_DELEGATE_BLOCKLIST = {
-        # Keep container overrides that mark external axes stale.
-        "plot",
-        "scatter",
-        "fill",
-        "contour",
-        "contourf",
-        "pcolormesh",
-        "tripcolor",
-        "tricontour",
-        "tricontourf",
-        "triplot",
-        "imshow",
-        "hexbin",
         # Keep UltraPlot formatting/guide behaviors on the container.
         "format",
         "colorbar",
         "legend",
         "set_title",
-        "set_suptitle",
-        "set_xlabel",
-        "set_ylabel",
-        "set_zlabel",
-        "set_xticks",
-        "set_yticks",
-        "set_zticks",
     }
 
     def __init__(
@@ -827,31 +807,17 @@ class ExternalAxesContainer(CartesianAxes):
 
     def __getattr__(self, name):
         """
-        Delegate attribute access to the external axes when not found on container.
-
-        This allows the container to act as a transparent wrapper, forwarding
-        plotting methods and other attributes to the external axes.
+        Delegate missing attributes to the external axes unless blocked.
         """
+        if name in self._EXTERNAL_DELEGATE_BLOCKLIST:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
+        if self._external_axes is not None:
+            return getattr(self._external_axes, name)
         raise AttributeError(
             f"'{type(self).__name__}' object has no attribute '{name}'"
         )
-
-    def __getattribute__(self, name):
-        """
-        Prefer external axes attributes unless explicitly blocked.
-        """
-        if name.startswith("_"):
-            return object.__getattribute__(self, name)
-        blocklist = object.__getattribute__(self, "_EXTERNAL_DELEGATE_BLOCKLIST")
-        if name in blocklist:
-            return object.__getattribute__(self, name)
-        try:
-            external = object.__getattribute__(self, "_external_axes")
-        except AttributeError:
-            external = None
-        if external is not None and hasattr(external, name):
-            return getattr(external, name)
-        return object.__getattribute__(self, name)
 
     def __dir__(self):
         """Include external axes attributes in dir() output."""
