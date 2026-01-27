@@ -610,6 +610,34 @@ class ExternalAxesContainer(CartesianAxes):
             return self._external_axes.pcolormesh(*args, **kwargs)
         return super().pcolormesh(*args, **kwargs)
 
+    def tripcolor(self, *args, **kwargs):
+        """Delegate tripcolor to external axes."""
+        if self._external_axes is not None:
+            self._external_stale = True  # Mark for redraw
+            return self._external_axes.tripcolor(*args, **kwargs)
+        return super().tripcolor(*args, **kwargs)
+
+    def tricontour(self, *args, **kwargs):
+        """Delegate tricontour to external axes."""
+        if self._external_axes is not None:
+            self._external_stale = True  # Mark for redraw
+            return self._external_axes.tricontour(*args, **kwargs)
+        return super().tricontour(*args, **kwargs)
+
+    def tricontourf(self, *args, **kwargs):
+        """Delegate tricontourf to external axes."""
+        if self._external_axes is not None:
+            self._external_stale = True  # Mark for redraw
+            return self._external_axes.tricontourf(*args, **kwargs)
+        return super().tricontourf(*args, **kwargs)
+
+    def triplot(self, *args, **kwargs):
+        """Delegate triplot to external axes."""
+        if self._external_axes is not None:
+            self._external_stale = True  # Mark for redraw
+            return self._external_axes.triplot(*args, **kwargs)
+        return super().triplot(*args, **kwargs)
+
     def imshow(self, *args, **kwargs):
         """Delegate imshow to external axes."""
         if self._external_axes is not None:
