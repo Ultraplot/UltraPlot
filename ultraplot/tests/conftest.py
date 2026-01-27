@@ -94,6 +94,6 @@ def pytest_configure(config):
         if config.getoption("--mpl-default-tolerance") is None and not config.getini(
             "mpl-default-tolerance"
         ):
-            config.setini("mpl-default-tolerance", "3")
+            config.option.mpl_default_tolerance = "3"
     except Exception as e:
         print(f"Error setting mpl default tolerance: {e}")
