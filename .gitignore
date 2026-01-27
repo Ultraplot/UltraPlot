@@ -52,4 +52,9 @@ trash
 garbage
 
 # version file
+#
 ultraplot/_version.py
+
+
+# Nox build directories
+.nox/*
