@@ -57,3 +57,22 @@ ignore = ["I001", "I002", "I003", "I004"]
 
 [tool.basedpyright]
 exclude = ["**/*.ipynb"]
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "sphinx-gallery",
+    "nbsphinx",
+    "jupytext",
+    "sphinx-copybutton",
+    "sphinx-autoapi",
+    "sphinx-automodapi",
+    "sphinx-rtd-theme",
+    "typing-extensions",
+    "sphinx-design",
+    "m2r2",
+    "lxml-html-clean",
+    "jupyter",
+    "sphinx-sitemap",
+    "ultraplot-theme @ git+https://github.com/ultraplot/UltraTheme.git"
+]
