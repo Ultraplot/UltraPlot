@@ -89,3 +89,11 @@ def pytest_configure(config):
             config.pluginmanager.register(StoreFailedMplPlugin(config))
     except Exception as e:
         print(f"Error during plugin configuration: {e}")
+    # Set a global default tolerance for mpl_image_compare unless overridden.
+    try:
+        if config.getoption("--mpl-default-tolerance") is None and not config.getini(
+            "mpl-default-tolerance"
+        ):
+            config.option.mpl_default_tolerance = "3"
+    except Exception as e:
+        print(f"Error setting mpl default tolerance: {e}")

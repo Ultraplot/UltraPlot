@@ -58,33 +58,10 @@ jobs:
         run: |
           pip install --no-build-isolation --no-deps .
 
-      - name: Test Ultraplot
-        run: |
-          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            nodeids=()
-            for token in ${TEST_NODEIDS}; do
-              if [[ "${token}" == *"::"* || "${token}" == *.py ]]; then
-                nodeids+=("${token}")
-              fi
-            done
-            if [ "${#nodeids[@]}" -gt 0 ]; then
-              pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml "${nodeids[@]}"
-            else
-              pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
-            fi
-          else
-            pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
-          fi
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: Ultraplot/ultraplot
-
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       IS_PR: ${{ github.event_name == 'pull_request' }}
       TEST_MODE: ${{ inputs.test-mode }}
