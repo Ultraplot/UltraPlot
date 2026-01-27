@@ -64,7 +64,7 @@ docs = [
     "jupytext",
     "lxml-html-clean",
     "m2r2",
-    "mpltern", # needed for an example
+    "mpltern",
     "nbsphinx",
     "sphinx",
     "sphinx-autoapi",
@@ -72,8 +72,7 @@ docs = [
     "sphinx-copybutton",
     "sphinx-design",
     "sphinx-gallery",
-    "sphinx-rtd-theme",
+    "sphinx-rtd-light-dark @ git+https://github.com/ultraplot/UltraTheme.git",
     "sphinx-sitemap",
-    "typing-extensions",
-    "ultraplot-theme @ git+https://github.com/ultraplot/UltraTheme.git"
+    "typing-extensions"
 ]
