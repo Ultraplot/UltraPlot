@@ -1256,6 +1256,17 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
     ultraplot.axes.Axes.colorbar
     ultraplot.constructor.Locator
     """  # noqa: E501
+
+    def _construct_formatter(cls, *f_args, **f_kwargs):
+        try:
+            return cls(*f_args, **f_kwargs)
+        except TypeError:
+            if "tickrange" in f_kwargs:
+                f_kwargs = dict(f_kwargs)
+                f_kwargs.pop("tickrange", None)
+                return cls(*f_args, **f_kwargs)
+            raise
+
     if (
         np.iterable(formatter)
         and not isinstance(formatter, str)
@@ -1266,12 +1277,15 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         return copy.copy(formatter)
     if isinstance(formatter, str):
         if re.search(r"{x(:.+)?}", formatter):  # str.format
-            formatter = mticker.StrMethodFormatter(formatter, *args, **kwargs)
+            formatter = _construct_formatter(
+                mticker.StrMethodFormatter, formatter, *args, **kwargs
+            )
         elif "%" in formatter:  # str % format
             cls = mdates.DateFormatter if date else mticker.FormatStrFormatter
-            formatter = cls(formatter, *args, **kwargs)
+            formatter = _construct_formatter(cls, formatter, *args, **kwargs)
         elif formatter in FORMATTERS:
-            formatter = FORMATTERS[formatter](*args, **kwargs)
+            cls = FORMATTERS[formatter]
+            formatter = _construct_formatter(cls, *args, **kwargs)
         else:
             raise ValueError(
                 f"Unknown formatter {formatter!r}. Options are: "
@@ -1279,13 +1293,16 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
                 + "."
             )
     elif formatter is True:
-        formatter = pticker.AutoFormatter(*args, **kwargs)
+        formatter = _construct_formatter(pticker.AutoFormatter, *args, **kwargs)
     elif formatter is False:
-        formatter = mticker.NullFormatter(*args, **kwargs)
+        formatter = _construct_formatter(mticker.NullFormatter, *args, **kwargs)
     elif np.iterable(formatter):
-        formatter = (mticker.FixedFormatter, pticker.IndexFormatter)[index](formatter)
+        cls = (mticker.FixedFormatter, pticker.IndexFormatter)[index]
+        formatter = _construct_formatter(cls, formatter)
     elif callable(formatter):
-        formatter = mticker.FuncFormatter(formatter, *args, **kwargs)
+        formatter = _construct_formatter(
+            mticker.FuncFormatter, formatter, *args, **kwargs
+        )
     else:
         raise ValueError(f"Invalid formatter {formatter!r}.")
     return formatter
