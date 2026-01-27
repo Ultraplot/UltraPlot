@@ -60,19 +60,20 @@ exclude = ["**/*.ipynb"]
 
 [project.optional-dependencies]
 docs = [
-    "sphinx",
-    "sphinx-gallery",
-    "nbsphinx",
+    "jupyter",
     "jupytext",
-    "sphinx-copybutton",
+    "lxml-html-clean",
+    "m2r2",
+    "mpltern", # needed for an example
+    "nbsphinx",
+    "sphinx",
     "sphinx-autoapi",
     "sphinx-automodapi",
-    "sphinx-rtd-theme",
-    "typing-extensions",
+    "sphinx-copybutton",
     "sphinx-design",
-    "m2r2",
-    "lxml-html-clean",
-    "jupyter",
+    "sphinx-gallery",
+    "sphinx-rtd-theme",
     "sphinx-sitemap",
+    "typing-extensions",
     "ultraplot-theme @ git+https://github.com/ultraplot/UltraTheme.git"
 ]
