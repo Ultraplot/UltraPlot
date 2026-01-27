@@ -161,6 +161,8 @@ UltraPlot can be used without installing any of these packages.
 External axes containers (mpltern, others)
 ------------------------------------------
 
+.. _ug_external_axes:
+
 UltraPlot can wrap third-party Matplotlib projections (e.g., ``mpltern``'s
 ``"ternary"`` projection) in a lightweight container. The container keeps
 UltraPlot's figure/labeling behaviors while delegating plotting calls to the
