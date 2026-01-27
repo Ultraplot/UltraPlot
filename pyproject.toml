@@ -75,5 +75,5 @@ docs = [
     "sphinx-rtd-theme",
     "sphinx-sitemap",
     "typing-extensions",
-    "ultraplot-theme @ git+https://github.com/ultraplot/UltraTheme.git"
+    "git+https://github.com/ultraplot/UltraTheme.git"
 ]
