@@ -374,7 +374,7 @@ sphinx_gallery_conf = {
 # The name of the Pygments (syntax highlighting) style to use.
 # The light-dark theme toggler overloads this, but set default anyway
 pygments_style = "none"
-html_baseurl ="https://ultraplot.readthedocs.io/stable"
+html_baseurl = "https://ultraplot.readthedocs.io/stable"
 sitemap_url_scheme = "{link}"
 
 
