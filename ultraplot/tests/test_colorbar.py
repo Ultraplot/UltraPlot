@@ -168,6 +168,7 @@ def test_colorbar_log_formatter_no_tickrange_error(rng):
     m = ax.pcolormesh(data, cmap="magma", norm="log")
     ax.colorbar(m, formatter="log")
     fig.canvas.draw()
+    return fig
 
 
 @pytest.mark.mpl_image_compare
