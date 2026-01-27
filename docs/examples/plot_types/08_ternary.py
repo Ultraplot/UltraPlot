@@ -9,8 +9,7 @@ UltraPlot offers seamless integration with `mpltern`, allowing users to create a
 
 See also
 --------
-* :doc:`2D plot types </2dplots>`
-* :doc:`External axes containers </external_axes>`
+* :doc:`External axes containers <ug_external_axes>`
 """
 # %%
 import mpltern
@@ -33,4 +32,3 @@ colorbar = ax.colorbar(cs)
 colorbar.set_label('Entropy', rotation=270, va='baseline')
 
 fig.show()
-uplt.show(block=1)
