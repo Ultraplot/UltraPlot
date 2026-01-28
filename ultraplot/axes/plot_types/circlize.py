@@ -7,7 +7,7 @@ from __future__ import annotations
 import itertools
 import sys
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Optional, Sequence, Union
 
 from matplotlib.projections.polar import PolarAxes as MplPolarAxes
 
@@ -135,18 +135,18 @@ def chord_diagram(
     ax,
     matrix: Any,
     *,
-    start: float = 0,
-    end: float = 360,
-    space: float | Sequence[float] = 0,
-    endspace: bool = True,
-    r_lim: tuple[float, float] = (97, 100),
+    start: Optional[float] = None,
+    end: Optional[float] = None,
+    space: Optional[Union[float, Sequence[float]]] = None,
+    endspace: Optional[bool] = None,
+    r_lim: Optional[tuple[float, float]] = None,
     cmap: Any = None,
-    link_cmap: list[tuple[str, str, str]] | None = None,
-    ticks_interval: int | None = None,
-    order: str | list[str] | None = None,
-    label_kws: Mapping[str, Any] | None = None,
-    ticks_kws: Mapping[str, Any] | None = None,
-    link_kws: Mapping[str, Any] | None = None,
+    link_cmap: Optional[list[tuple[str, str, str]]] = None,
+    ticks_interval: Optional[int] = None,
+    order: Optional[Union[str, list[str]]] = None,
+    label_kws: Optional[Mapping[str, Any]] = None,
+    ticks_kws: Optional[Mapping[str, Any]] = None,
+    link_kws: Optional[Mapping[str, Any]] = None,
     link_kws_handler=None,
     tooltip: bool = False,
 ):
@@ -154,6 +154,16 @@ def chord_diagram(
     Render a chord diagram using pyCirclize on the provided polar axes.
     """
     ax = _ensure_polar(ax, "chord_diagram")
+
+    start = rc["chord.start"] if start is None else start
+    end = rc["chord.end"] if end is None else end
+    space = rc["chord.space"] if space is None else space
+    endspace = rc["chord.endspace"] if endspace is None else endspace
+    r_lim = rc["chord.r_lim"] if r_lim is None else r_lim
+    ticks_interval = (
+        rc["chord.ticks_interval"] if ticks_interval is None else ticks_interval
+    )
+    order = rc["chord.order"] if order is None else order
 
     pycirclize, matrix_obj, cmap = _resolve_chord_defaults(matrix, cmap)
     label_kws = {} if label_kws is None else dict(label_kws)
@@ -194,18 +204,18 @@ def radar_chart(
     ax,
     table: Any,
     *,
-    r_lim: tuple[float, float] = (0, 100),
-    vmin: float = 0,
-    vmax: float = 100,
-    fill: bool = True,
-    marker_size: int = 0,
-    bg_color: str | None = "#eeeeee80",
-    circular: bool = False,
+    r_lim: Optional[tuple[float, float]] = None,
+    vmin: Optional[float] = None,
+    vmax: Optional[float] = None,
+    fill: Optional[bool] = None,
+    marker_size: Optional[int] = None,
+    bg_color: Optional[str] = None,
+    circular: Optional[bool] = None,
     cmap: Any = None,
-    show_grid_label: bool = True,
-    grid_interval_ratio: float | None = 0.2,
-    grid_line_kws: Mapping[str, Any] | None = None,
-    grid_label_kws: Mapping[str, Any] | None = None,
+    show_grid_label: Optional[bool] = None,
+    grid_interval_ratio: Optional[float] = None,
+    grid_line_kws: Optional[Mapping[str, Any]] = None,
+    grid_label_kws: Optional[Mapping[str, Any]] = None,
     grid_label_formatter=None,
     label_kws_handler=None,
     line_kws_handler=None,
@@ -215,6 +225,22 @@ def radar_chart(
     Render a radar chart using pyCirclize on the provided polar axes.
     """
     ax = _ensure_polar(ax, "radar_chart")
+
+    r_lim = rc["radar.r_lim"] if r_lim is None else r_lim
+    vmin = rc["radar.vmin"] if vmin is None else vmin
+    vmax = rc["radar.vmax"] if vmax is None else vmax
+    fill = rc["radar.fill"] if fill is None else fill
+    marker_size = rc["radar.marker_size"] if marker_size is None else marker_size
+    bg_color = rc["radar.bg_color"] if bg_color is None else bg_color
+    circular = rc["radar.circular"] if circular is None else circular
+    show_grid_label = (
+        rc["radar.show_grid_label"] if show_grid_label is None else show_grid_label
+    )
+    grid_interval_ratio = (
+        rc["radar.grid_interval_ratio"]
+        if grid_interval_ratio is None
+        else grid_interval_ratio
+    )
 
     pycirclize, table_obj, cmap = _resolve_radar_defaults(table, cmap)
     grid_line_kws = {} if grid_line_kws is None else dict(grid_line_kws)
@@ -251,29 +277,55 @@ def phylogeny(
     ax,
     tree_data: Any,
     *,
-    start: float = 0,
-    end: float = 360,
-    r_lim: tuple[float, float] = (50, 100),
-    format: str = "newick",
-    outer: bool = True,
-    align_leaf_label: bool = True,
-    ignore_branch_length: bool = False,
-    leaf_label_size: float | None = None,
-    leaf_label_rmargin: float = 2.0,
-    reverse: bool = False,
-    ladderize: bool = False,
-    line_kws: Mapping[str, Any] | None = None,
+    start: Optional[float] = None,
+    end: Optional[float] = None,
+    r_lim: Optional[tuple[float, float]] = None,
+    format: Optional[str] = None,
+    outer: Optional[bool] = None,
+    align_leaf_label: Optional[bool] = None,
+    ignore_branch_length: Optional[bool] = None,
+    leaf_label_size: Optional[float] = None,
+    leaf_label_rmargin: Optional[float] = None,
+    reverse: Optional[bool] = None,
+    ladderize: Optional[bool] = None,
+    line_kws: Optional[Mapping[str, Any]] = None,
     label_formatter=None,
-    align_line_kws: Mapping[str, Any] | None = None,
+    align_line_kws: Optional[Mapping[str, Any]] = None,
     tooltip: bool = False,
 ):
     """
     Render a phylogenetic tree using pyCirclize on the provided polar axes.
     """
     ax = _ensure_polar(ax, "phylogeny")
-    pycirclize = _import_pycirclize()
+    start = rc["phylogeny.start"] if start is None else start
+    end = rc["phylogeny.end"] if end is None else end
+    r_lim = rc["phylogeny.r_lim"] if r_lim is None else r_lim
+    format = rc["phylogeny.format"] if format is None else format
+    outer = rc["phylogeny.outer"] if outer is None else outer
+    align_leaf_label = (
+        rc["phylogeny.align_leaf_label"]
+        if align_leaf_label is None
+        else align_leaf_label
+    )
+    ignore_branch_length = (
+        rc["phylogeny.ignore_branch_length"]
+        if ignore_branch_length is None
+        else ignore_branch_length
+    )
+    leaf_label_size = (
+        rc["phylogeny.leaf_label_size"] if leaf_label_size is None else leaf_label_size
+    )
     if leaf_label_size is None:
         leaf_label_size = rc["font.size"]
+    leaf_label_rmargin = (
+        rc["phylogeny.leaf_label_rmargin"]
+        if leaf_label_rmargin is None
+        else leaf_label_rmargin
+    )
+    reverse = rc["phylogeny.reverse"] if reverse is None else reverse
+    ladderize = rc["phylogeny.ladderize"] if ladderize is None else ladderize
+
+    pycirclize = _import_pycirclize()
     circos_obj, treeviz = pycirclize.Circos.initialize_from_tree(
         tree_data,
         start=start,

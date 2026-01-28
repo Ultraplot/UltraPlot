@@ -323,9 +323,9 @@ ticks_interval : int, optional
     Tick interval for sector tracks. If None, no ticks are shown.
 order : {'asc', 'desc'} or list, optional
     Node ordering strategy or explicit node order.
-label_kws, ticks_kws, link_kws : dict-like, optional
+label_kw, ticks_kw, link_kw : dict-like, optional
     Keyword arguments passed to pyCirclize for labels, ticks, and links.
-link_kws_handler : callable, optional
+link_kw_handler : callable, optional
     Callback to customize per-link keyword arguments.
 tooltip : bool, optional
     Enable interactive tooltips (requires ipympl).
@@ -364,11 +364,11 @@ show_grid_label : bool, optional
     Whether to show radial grid labels.
 grid_interval_ratio : float or None, optional
     Grid interval ratio (0 to 1).
-grid_line_kws, grid_label_kws : dict-like, optional
+grid_line_kw, grid_label_kw : dict-like, optional
     Keyword arguments passed to pyCirclize for grid lines and labels.
 grid_label_formatter : callable, optional
     Formatter for grid label values.
-label_kws_handler, line_kws_handler, marker_kws_handler : callable, optional
+label_kw_handler, line_kw_handler, marker_kw_handler : callable, optional
     Per-series styling callbacks passed to pyCirclize.
 
 Returns
@@ -436,7 +436,7 @@ reverse : bool, optional
     Reverse tree direction.
 ladderize : bool, optional
     Ladderize tree.
-line_kws, align_line_kws : dict-like, optional
+line_kw, align_line_kw : dict-like, optional
     Keyword arguments for tree line styling.
 label_formatter : callable, optional
     Formatter for leaf labels.
@@ -2340,26 +2340,42 @@ class PlotAxes(base.Axes):
         self,
         tree_data: Any,
         *,
-        start: float = 0,
-        end: float = 360,
-        r_lim: tuple[float, float] = (50, 100),
-        format: str = "newick",
-        outer: bool = True,
-        align_leaf_label: bool = True,
-        ignore_branch_length: bool = False,
-        leaf_label_size: float | None = None,
-        leaf_label_rmargin: float = 2.0,
-        reverse: bool = False,
-        ladderize: bool = False,
-        line_kws: Mapping[str, Any] | None = None,
-        label_formatter: Callable[[str], str] | None = None,
-        align_line_kws: Mapping[str, Any] | None = None,
+        start: Optional[float] = None,
+        end: Optional[float] = None,
+        r_lim: Optional[tuple[float, float]] = None,
+        format: Optional[str] = None,
+        outer: Optional[bool] = None,
+        align_leaf_label: Optional[bool] = None,
+        ignore_branch_length: Optional[bool] = None,
+        leaf_label_size: Optional[float] = None,
+        leaf_label_rmargin: Optional[float] = None,
+        reverse: Optional[bool] = None,
+        ladderize: Optional[bool] = None,
+        line_kw: Optional[Mapping[str, Any]] = None,
+        label_formatter: Optional[Callable[[str], str]] = None,
+        align_line_kw: Optional[Mapping[str, Any]] = None,
         tooltip: bool = False,
     ):
         """
         %(plot.phylogeny)s
         """
         from .plot_types.circlize import phylogeny
+
+        start = _not_none(start, rc["phylogeny.start"])
+        end = _not_none(end, rc["phylogeny.end"])
+        r_lim = _not_none(r_lim, rc["phylogeny.r_lim"])
+        format = _not_none(format, rc["phylogeny.format"])
+        outer = _not_none(outer, rc["phylogeny.outer"])
+        align_leaf_label = _not_none(align_leaf_label, rc["phylogeny.align_leaf_label"])
+        ignore_branch_length = _not_none(
+            ignore_branch_length, rc["phylogeny.ignore_branch_length"]
+        )
+        leaf_label_size = _not_none(leaf_label_size, rc["phylogeny.leaf_label_size"])
+        leaf_label_rmargin = _not_none(
+            leaf_label_rmargin, rc["phylogeny.leaf_label_rmargin"]
+        )
+        reverse = _not_none(reverse, rc["phylogeny.reverse"])
+        ladderize = _not_none(ladderize, rc["phylogeny.ladderize"])
 
         return phylogeny(
             self,
@@ -2375,9 +2391,9 @@ class PlotAxes(base.Axes):
             leaf_label_rmargin=leaf_label_rmargin,
             reverse=reverse,
             ladderize=ladderize,
-            line_kws=line_kws,
+            line_kws=line_kw,
             label_formatter=label_formatter,
-            align_line_kws=align_line_kws,
+            align_line_kws=align_line_kw,
             tooltip=tooltip,
         )
 
@@ -2422,25 +2438,35 @@ class PlotAxes(base.Axes):
         self,
         matrix: Any,
         *,
-        start: float = 0,
-        end: float = 360,
-        space: float | Sequence[float] = 0,
-        endspace: bool = True,
-        r_lim: tuple[float, float] = (97, 100),
+        start: Optional[float] = None,
+        end: Optional[float] = None,
+        space: Optional[Union[float, Sequence[float]]] = None,
+        endspace: Optional[bool] = None,
+        r_lim: Optional[tuple[float, float]] = None,
         cmap: Any = None,
-        link_cmap: list[tuple[str, str, str]] | None = None,
-        ticks_interval: int | None = None,
-        order: str | list[str] | None = None,
-        label_kws: Mapping[str, Any] | None = None,
-        ticks_kws: Mapping[str, Any] | None = None,
-        link_kws: Mapping[str, Any] | None = None,
-        link_kws_handler: Callable[[str, str], Mapping[str, Any] | None] | None = None,
+        link_cmap: Optional[list[tuple[str, str, str]]] = None,
+        ticks_interval: Optional[int] = None,
+        order: Optional[Union[str, list[str]]] = None,
+        label_kw: Optional[Mapping[str, Any]] = None,
+        ticks_kw: Optional[Mapping[str, Any]] = None,
+        link_kw: Optional[Mapping[str, Any]] = None,
+        link_kw_handler: Optional[
+            Callable[[str, str], Optional[Mapping[str, Any]]]
+        ] = None,
         tooltip: bool = False,
     ):
         """
         %(plot.chord_diagram)s
         """
         from .plot_types.circlize import chord_diagram
+
+        start = _not_none(start, rc["chord.start"])
+        end = _not_none(end, rc["chord.end"])
+        space = _not_none(space, rc["chord.space"])
+        endspace = _not_none(endspace, rc["chord.endspace"])
+        r_lim = _not_none(r_lim, rc["chord.r_lim"])
+        ticks_interval = _not_none(ticks_interval, rc["chord.ticks_interval"])
+        order = _not_none(order, rc["chord.order"])
 
         return chord_diagram(
             self,
@@ -2454,10 +2480,10 @@ class PlotAxes(base.Axes):
             link_cmap=link_cmap,
             ticks_interval=ticks_interval,
             order=order,
-            label_kws=label_kws,
-            ticks_kws=ticks_kws,
-            link_kws=link_kws,
-            link_kws_handler=link_kws_handler,
+            label_kws=label_kw,
+            ticks_kws=ticks_kw,
+            link_kws=link_kw,
+            link_kws_handler=link_kw_handler,
             tooltip=tooltip,
         )
 
@@ -2472,27 +2498,39 @@ class PlotAxes(base.Axes):
         self,
         table: Any,
         *,
-        r_lim: tuple[float, float] = (0, 100),
-        vmin: float = 0,
-        vmax: float = 100,
-        fill: bool = True,
-        marker_size: int = 0,
-        bg_color: str | None = "#eeeeee80",
-        circular: bool = False,
+        r_lim: Optional[tuple[float, float]] = None,
+        vmin: Optional[float] = None,
+        vmax: Optional[float] = None,
+        fill: Optional[bool] = None,
+        marker_size: Optional[int] = None,
+        bg_color: Optional[str] = None,
+        circular: Optional[bool] = None,
         cmap: Any = None,
-        show_grid_label: bool = True,
-        grid_interval_ratio: float | None = 0.2,
-        grid_line_kws: Mapping[str, Any] | None = None,
-        grid_label_kws: Mapping[str, Any] | None = None,
-        grid_label_formatter: Callable[[float], str] | None = None,
-        label_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
-        line_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
-        marker_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
+        show_grid_label: Optional[bool] = None,
+        grid_interval_ratio: Optional[float] = None,
+        grid_line_kw: Optional[Mapping[str, Any]] = None,
+        grid_label_kw: Optional[Mapping[str, Any]] = None,
+        grid_label_formatter: Optional[Callable[[float], str]] = None,
+        label_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+        line_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+        marker_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
     ):
         """
         %(plot.radar_chart)s
         """
         from .plot_types.circlize import radar_chart
+
+        r_lim = _not_none(r_lim, rc["radar.r_lim"])
+        vmin = _not_none(vmin, rc["radar.vmin"])
+        vmax = _not_none(vmax, rc["radar.vmax"])
+        fill = _not_none(fill, rc["radar.fill"])
+        marker_size = _not_none(marker_size, rc["radar.marker_size"])
+        bg_color = _not_none(bg_color, rc["radar.bg_color"])
+        circular = _not_none(circular, rc["radar.circular"])
+        show_grid_label = _not_none(show_grid_label, rc["radar.show_grid_label"])
+        grid_interval_ratio = _not_none(
+            grid_interval_ratio, rc["radar.grid_interval_ratio"]
+        )
 
         return radar_chart(
             self,
@@ -2507,12 +2545,12 @@ class PlotAxes(base.Axes):
             cmap=cmap,
             show_grid_label=show_grid_label,
             grid_interval_ratio=grid_interval_ratio,
-            grid_line_kws=grid_line_kws,
-            grid_label_kws=grid_label_kws,
+            grid_line_kws=grid_line_kw,
+            grid_label_kws=grid_label_kw,
             grid_label_formatter=grid_label_formatter,
-            label_kws_handler=label_kws_handler,
-            line_kws_handler=line_kws_handler,
-            marker_kws_handler=marker_kws_handler,
+            label_kws_handler=label_kw_handler,
+            line_kws_handler=line_kw_handler,
+            marker_kws_handler=marker_kw_handler,
         )
 
     def radar(self, *args, **kwargs):
@@ -2557,26 +2595,42 @@ class PlotAxes(base.Axes):
         self,
         tree_data: Any,
         *,
-        start: float = 0,
-        end: float = 360,
-        r_lim: tuple[float, float] = (50, 100),
-        format: str = "newick",
-        outer: bool = True,
-        align_leaf_label: bool = True,
-        ignore_branch_length: bool = False,
-        leaf_label_size: float | None = None,
-        leaf_label_rmargin: float = 2.0,
-        reverse: bool = False,
-        ladderize: bool = False,
-        line_kws: Mapping[str, Any] | None = None,
-        label_formatter: Callable[[str], str] | None = None,
-        align_line_kws: Mapping[str, Any] | None = None,
+        start: Optional[float] = None,
+        end: Optional[float] = None,
+        r_lim: Optional[tuple[float, float]] = None,
+        format: Optional[str] = None,
+        outer: Optional[bool] = None,
+        align_leaf_label: Optional[bool] = None,
+        ignore_branch_length: Optional[bool] = None,
+        leaf_label_size: Optional[float] = None,
+        leaf_label_rmargin: Optional[float] = None,
+        reverse: Optional[bool] = None,
+        ladderize: Optional[bool] = None,
+        line_kw: Optional[Mapping[str, Any]] = None,
+        label_formatter: Optional[Callable[[str], str]] = None,
+        align_line_kw: Optional[Mapping[str, Any]] = None,
         tooltip: bool = False,
     ):
         """
         %(plot.phylogeny)s
         """
         from .plot_types.circlize import phylogeny
+
+        start = _not_none(start, rc["phylogeny.start"])
+        end = _not_none(end, rc["phylogeny.end"])
+        r_lim = _not_none(r_lim, rc["phylogeny.r_lim"])
+        format = _not_none(format, rc["phylogeny.format"])
+        outer = _not_none(outer, rc["phylogeny.outer"])
+        align_leaf_label = _not_none(align_leaf_label, rc["phylogeny.align_leaf_label"])
+        ignore_branch_length = _not_none(
+            ignore_branch_length, rc["phylogeny.ignore_branch_length"]
+        )
+        leaf_label_size = _not_none(leaf_label_size, rc["phylogeny.leaf_label_size"])
+        leaf_label_rmargin = _not_none(
+            leaf_label_rmargin, rc["phylogeny.leaf_label_rmargin"]
+        )
+        reverse = _not_none(reverse, rc["phylogeny.reverse"])
+        ladderize = _not_none(ladderize, rc["phylogeny.ladderize"])
 
         return phylogeny(
             self,
@@ -2592,9 +2646,9 @@ class PlotAxes(base.Axes):
             leaf_label_rmargin=leaf_label_rmargin,
             reverse=reverse,
             ladderize=ladderize,
-            line_kws=line_kws,
+            line_kws=line_kw,
             label_formatter=label_formatter,
-            align_line_kws=align_line_kws,
+            align_line_kws=align_line_kw,
             tooltip=tooltip,
         )
 
@@ -2639,25 +2693,35 @@ class PlotAxes(base.Axes):
         self,
         matrix: Any,
         *,
-        start: float = 0,
-        end: float = 360,
-        space: float | Sequence[float] = 0,
-        endspace: bool = True,
-        r_lim: tuple[float, float] = (97, 100),
+        start: Optional[float] = None,
+        end: Optional[float] = None,
+        space: Optional[Union[float, Sequence[float]]] = None,
+        endspace: Optional[bool] = None,
+        r_lim: Optional[tuple[float, float]] = None,
         cmap: Any = None,
-        link_cmap: list[tuple[str, str, str]] | None = None,
-        ticks_interval: int | None = None,
-        order: str | list[str] | None = None,
-        label_kws: Mapping[str, Any] | None = None,
-        ticks_kws: Mapping[str, Any] | None = None,
-        link_kws: Mapping[str, Any] | None = None,
-        link_kws_handler: Callable[[str, str], Mapping[str, Any] | None] | None = None,
+        link_cmap: Optional[list[tuple[str, str, str]]] = None,
+        ticks_interval: Optional[int] = None,
+        order: Optional[Union[str, list[str]]] = None,
+        label_kw: Optional[Mapping[str, Any]] = None,
+        ticks_kw: Optional[Mapping[str, Any]] = None,
+        link_kw: Optional[Mapping[str, Any]] = None,
+        link_kw_handler: Optional[
+            Callable[[str, str], Optional[Mapping[str, Any]]]
+        ] = None,
         tooltip: bool = False,
     ):
         """
         %(plot.chord_diagram)s
         """
         from .plot_types.circlize import chord_diagram
+
+        start = _not_none(start, rc["chord.start"])
+        end = _not_none(end, rc["chord.end"])
+        space = _not_none(space, rc["chord.space"])
+        endspace = _not_none(endspace, rc["chord.endspace"])
+        r_lim = _not_none(r_lim, rc["chord.r_lim"])
+        ticks_interval = _not_none(ticks_interval, rc["chord.ticks_interval"])
+        order = _not_none(order, rc["chord.order"])
 
         return chord_diagram(
             self,
@@ -2671,10 +2735,10 @@ class PlotAxes(base.Axes):
             link_cmap=link_cmap,
             ticks_interval=ticks_interval,
             order=order,
-            label_kws=label_kws,
-            ticks_kws=ticks_kws,
-            link_kws=link_kws,
-            link_kws_handler=link_kws_handler,
+            label_kws=label_kw,
+            ticks_kws=ticks_kw,
+            link_kws=link_kw,
+            link_kws_handler=link_kw_handler,
             tooltip=tooltip,
         )
 
@@ -2689,27 +2753,39 @@ class PlotAxes(base.Axes):
         self,
         table: Any,
         *,
-        r_lim: tuple[float, float] = (0, 100),
-        vmin: float = 0,
-        vmax: float = 100,
-        fill: bool = True,
-        marker_size: int = 0,
-        bg_color: str | None = "#eeeeee80",
-        circular: bool = False,
+        r_lim: Optional[tuple[float, float]] = None,
+        vmin: Optional[float] = None,
+        vmax: Optional[float] = None,
+        fill: Optional[bool] = None,
+        marker_size: Optional[int] = None,
+        bg_color: Optional[str] = None,
+        circular: Optional[bool] = None,
         cmap: Any = None,
-        show_grid_label: bool = True,
-        grid_interval_ratio: float | None = 0.2,
-        grid_line_kws: Mapping[str, Any] | None = None,
-        grid_label_kws: Mapping[str, Any] | None = None,
-        grid_label_formatter: Callable[[float], str] | None = None,
-        label_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
-        line_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
-        marker_kws_handler: Callable[[str], Mapping[str, Any]] | None = None,
+        show_grid_label: Optional[bool] = None,
+        grid_interval_ratio: Optional[float] = None,
+        grid_line_kw: Optional[Mapping[str, Any]] = None,
+        grid_label_kw: Optional[Mapping[str, Any]] = None,
+        grid_label_formatter: Optional[Callable[[float], str]] = None,
+        label_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+        line_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+        marker_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
     ):
         """
         %(plot.radar_chart)s
         """
         from .plot_types.circlize import radar_chart
+
+        r_lim = _not_none(r_lim, rc["radar.r_lim"])
+        vmin = _not_none(vmin, rc["radar.vmin"])
+        vmax = _not_none(vmax, rc["radar.vmax"])
+        fill = _not_none(fill, rc["radar.fill"])
+        marker_size = _not_none(marker_size, rc["radar.marker_size"])
+        bg_color = _not_none(bg_color, rc["radar.bg_color"])
+        circular = _not_none(circular, rc["radar.circular"])
+        show_grid_label = _not_none(show_grid_label, rc["radar.show_grid_label"])
+        grid_interval_ratio = _not_none(
+            grid_interval_ratio, rc["radar.grid_interval_ratio"]
+        )
 
         return radar_chart(
             self,
@@ -2724,12 +2800,12 @@ class PlotAxes(base.Axes):
             cmap=cmap,
             show_grid_label=show_grid_label,
             grid_interval_ratio=grid_interval_ratio,
-            grid_line_kws=grid_line_kws,
-            grid_label_kws=grid_label_kws,
+            grid_line_kws=grid_line_kw,
+            grid_label_kws=grid_label_kw,
             grid_label_formatter=grid_label_formatter,
-            label_kws_handler=label_kws_handler,
-            line_kws_handler=line_kws_handler,
-            marker_kws_handler=marker_kws_handler,
+            label_kws_handler=label_kw_handler,
+            line_kws_handler=line_kw_handler,
+            marker_kws_handler=marker_kw_handler,
         )
 
     def radar(self, *args, **kwargs):
