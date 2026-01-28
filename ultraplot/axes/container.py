@@ -61,6 +61,14 @@ class ExternalAxesContainer(CartesianAxes):
     ``external_padding=2`` or ``external_padding=0`` to disable padding entirely.
     """
 
+    _EXTERNAL_DELEGATE_BLOCKLIST = {
+        # Keep UltraPlot formatting/guide behaviors on the container.
+        "format",
+        "colorbar",
+        "legend",
+        "set_title",
+    }
+
     def __init__(
         self, *args, external_axes_class=None, external_axes_kwargs=None, **kwargs
     ):
@@ -602,6 +610,34 @@ class ExternalAxesContainer(CartesianAxes):
             return self._external_axes.pcolormesh(*args, **kwargs)
         return super().pcolormesh(*args, **kwargs)
 
+    def tripcolor(self, *args, **kwargs):
+        """Delegate tripcolor to external axes."""
+        if self._external_axes is not None:
+            self._external_stale = True  # Mark for redraw
+            return self._external_axes.tripcolor(*args, **kwargs)
+        return super().tripcolor(*args, **kwargs)
+
+    def tricontour(self, *args, **kwargs):
+        """Delegate tricontour to external axes."""
+        if self._external_axes is not None:
+            self._external_stale = True  # Mark for redraw
+            return self._external_axes.tricontour(*args, **kwargs)
+        return super().tricontour(*args, **kwargs)
+
+    def tricontourf(self, *args, **kwargs):
+        """Delegate tricontourf to external axes."""
+        if self._external_axes is not None:
+            self._external_stale = True  # Mark for redraw
+            return self._external_axes.tricontourf(*args, **kwargs)
+        return super().tricontourf(*args, **kwargs)
+
+    def triplot(self, *args, **kwargs):
+        """Delegate triplot to external axes."""
+        if self._external_axes is not None:
+            self._external_stale = True  # Mark for redraw
+            return self._external_axes.triplot(*args, **kwargs)
+        return super().triplot(*args, **kwargs)
+
     def imshow(self, *args, **kwargs):
         """Delegate imshow to external axes."""
         if self._external_axes is not None:
@@ -799,28 +835,14 @@ class ExternalAxesContainer(CartesianAxes):
 
     def __getattr__(self, name):
         """
-        Delegate attribute access to the external axes when not found on container.
-
-        This allows the container to act as a transparent wrapper, forwarding
-        plotting methods and other attributes to the external axes.
+        Delegate missing attributes to the external axes unless blocked.
         """
-        # Avoid infinite recursion for private attributes
-        # But allow parent class lookups during initialization
-        if name.startswith("_"):
-            # During initialization, let parent class handle private attributes
-            # This prevents interfering with parent class setup
+        if name in self._EXTERNAL_DELEGATE_BLOCKLIST:
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute '{name}'"
             )
-
-        # Try to get from external axes if it exists
-        if hasattr(self, "_external_axes") and self._external_axes is not None:
-            try:
-                return getattr(self._external_axes, name)
-            except AttributeError:
-                pass
-
-        # Not found anywhere
+        if self._external_axes is not None:
+            return getattr(self._external_axes, name)
         raise AttributeError(
             f"'{type(self).__name__}' object has no attribute '{name}'"
         )
