@@ -41,6 +41,10 @@ jobs:
         with:
           environment-file: ./environment.yml
           init-shell: bash
+          condarc: |
+            channels:
+              - conda-forge
+            channel_priority: strict
           post-cleanup: none
           create-args: >-
             --verbose
@@ -71,6 +75,10 @@ jobs:
         with:
           environment-file: ./environment.yml
           init-shell: bash
+          condarc: |
+            channels:
+              - conda-forge
+            channel_priority: strict
           post-cleanup: none
           create-args: >-
             --verbose
