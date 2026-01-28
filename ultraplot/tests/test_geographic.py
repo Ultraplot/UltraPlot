@@ -1137,6 +1137,19 @@ def test_consistent_range():
         assert np.allclose(latview, latlim, atol=1.0)
 
 
+def test_set_extent_preserved_by_ticklen():
+    """
+    Ensure set_extent is not overridden by ticklen-only format calls.
+    """
+    import cartopy.crs as ccrs
+
+    fig, ax = uplt.subplots(proj="cyl")
+    extent = (0.73, 1.92, 0.81, 1.97)
+    ax.set_extent(extent, crs=ccrs.PlateCarree())
+    ax.format(lonlines=0.4, latlines=0.4, ticklen=0.5)
+    assert np.allclose(ax.get_extent(crs=ccrs.PlateCarree()), extent)
+
+
 @pytest.mark.mpl_image_compare
 def test_dms_used_for_mercator():
     """

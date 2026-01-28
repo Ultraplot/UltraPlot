@@ -1860,9 +1860,10 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     def _format_apply_ticklen(
         self,
         *,
-        lonlim: tuple[float | None, float | None],
-        latlim: tuple[float | None, float | None],
+        lonlim: tuple[float | None, float | None] | None,
+        latlim: tuple[float | None, float | None] | None,
         boundinglat: float | None,
+        extent_requested: bool,
         ticklen: Any,
         lonticklen: Any,
         latticklen: Any,
@@ -1882,13 +1883,24 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 # the view; this affects the visible range
                 # we need to force this to prevent
                 # side effects
-                if latlim == (None, None):
+                if latlim is not None and latlim == (None, None):
                     latlim = self._lataxis.get_view_interval()
-                if lonlim == (None, None):
+                if lonlim is not None and lonlim == (None, None):
                     lonlim = self._lonaxis.get_view_interval()
-                self._update_extent(
-                    lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
-                )
+                if not extent_requested and self._name == "cartopy":
+                    extent = (
+                        *self._lonaxis.get_view_interval(),
+                        *self._lataxis.get_view_interval(),
+                    )
+                    self.set_extent(extent, crs=ccrs.PlateCarree())
+                elif extent_requested and (
+                    boundinglat is not None
+                    or (lonlim is not None and lonlim != (None, None))
+                    or (latlim is not None and latlim != (None, None))
+                ):
+                    self._update_extent(
+                        lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
+                    )
             else:
                 warnings._warn_ultraplot(
                     f"Projection is not rectilinear. Ignoring {lonticklen=} and {latticklen=} settings."
@@ -1995,6 +2007,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             # does not translate boolean flag. So here apply translation.
             if extent is not None and not isinstance(extent, str):
                 extent = ("globe", "auto")[int(bool(extent))]
+            extent_requested = (
+                boundinglat is not None or lonlim is not None or latlim is not None
+            )
             self._update_boundary(round)
             self._update_extent_mode(extent, boundinglat)
 
@@ -2080,6 +2095,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             lonlim=lonlim,
             latlim=latlim,
             boundinglat=boundinglat,
+            extent_requested=extent_requested,
             ticklen=ticklen,
             lonticklen=lonticklen,
             latticklen=latticklen,
