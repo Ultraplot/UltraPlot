@@ -61,4 +61,21 @@ exclude = ["**/*.ipynb"]
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore:'resetCache' deprecated - use 'reset_cache':DeprecationWarning:matplotlib._fontconfig_pattern",
+[project.optional-dependencies]
+docs = [
+    "jupyter",
+    "jupytext",
+    "lxml-html-clean",
+    "m2r2",
+    "mpltern",
+    "nbsphinx",
+    "sphinx",
+    "sphinx-autoapi",
+    "sphinx-automodapi",
+    "sphinx-copybutton",
+    "sphinx-design",
+    "sphinx-gallery",
+    "sphinx-rtd-light-dark @ git+https://github.com/ultraplot/UltraTheme.git",
+    "sphinx-sitemap",
+    "typing-extensions"
 ]
