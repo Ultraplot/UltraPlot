@@ -18,12 +18,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install CA certificates (act)
-        if: ${{ env.ACT }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates
-
       - uses: mamba-org/setup-micromamba@v2.0.7
         with:
           environment-file: ./environment.yml
@@ -42,7 +36,7 @@ jobs:
       - name: Generate test coverage map
         run: |
           mkdir -p .ci
-          pytest -n auto --cov=ultraplot --cov-branch --cov-context=test --cov-report= ultraplot
+          pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-context=test --cov-report= ultraplot
           python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
 
       - name: Cache test map

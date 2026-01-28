@@ -12,11 +12,6 @@ jobs:
       run: ${{ (github.event_name == 'push' && github.ref_name == 'main') && 'true' || steps.filter.outputs.python }}
     steps:
       - uses: actions/checkout@v6
-      - name: Install git (act)
-        if: ${{ env.ACT }}
-        run: |
-          apt-get update
-          apt-get install -y git
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -37,12 +32,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install git (act)
-        if: ${{ env.ACT }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git
-
       - name: Prepare workspace
         run: mkdir -p .ci
 
@@ -51,9 +40,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .ci/test-map.json
-          key: test-map-${{ github.event.pull_request.base.sha }}
+          key: test-map-v2-${{ github.event.pull_request.base.sha }}
           restore-keys: |
-            test-map-
+            test-map-v2-
 
       - name: Select impacted tests
         id: select
@@ -92,17 +81,10 @@ jobs:
     outputs:
       python-versions: ${{ steps.set-versions.outputs.python-versions }}
       matplotlib-versions: ${{ steps.set-versions.outputs.matplotlib-versions }}
-      matrix: ${{ steps.set-versions.outputs.matrix }}
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - name: Install git (act)
-        if: ${{ env.ACT }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git
 
       - uses: actions/setup-python@v6
         with:
@@ -188,8 +170,6 @@ jobs:
           echo "Detected Matplotlib versions: ${MPL_VERSIONS}"
           echo "python-versions=$(echo $PYTHON_VERSIONS | jq -c)" >> $GITHUB_OUTPUT
           echo "matplotlib-versions=$(echo $MPL_VERSIONS | jq -c)" >> $GITHUB_OUTPUT
-          MATRIX=$(jq -c --argjson py "$PYTHON_VERSIONS" --argjson mpl "$MPL_VERSIONS" '{"python-version": $py, "matplotlib-version": $mpl}')
-          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
 
   build:
     needs:
@@ -198,7 +178,9 @@ jobs:
       - select-tests
     if: always() && needs.run-if-changes.outputs.run == 'true' && needs.get-versions.result == 'success' && needs.select-tests.result == 'success'
     strategy:
-      matrix: ${{ fromJson(needs.get-versions.outputs.matrix) }}
+      matrix:
+        python-version: ${{ fromJson(needs.get-versions.outputs.python-versions) }}
+        matplotlib-version: ${{ fromJson(needs.get-versions.outputs.matplotlib-versions) }}
       fail-fast: false
     uses: ./.github/workflows/build-ultraplot.yml
     concurrency:
@@ -218,10 +200,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          if [[ '${{ needs.run-if-changes.outputs.run }}' != 'true' ]]; then
+          if [[ '${{ needs.run-if-changes.outputs.run }}' == 'false' ]]; then
             echo "No changes detected, tests skipped."
           else
-            if [[ '${{ needs.build.result }}' == 'success' || '${{ needs.build.result }}' == 'skipped' ]]; then
+            if [[ '${{ needs.build.result }}' == 'success' ]]; then
               echo "All tests passed successfully!"
             else
               echo "Tests failed!"
