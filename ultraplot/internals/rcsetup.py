@@ -455,6 +455,25 @@ def _validate_or_none(validator):
     return _validate_or_none
 
 
+def _validate_float_or_iterable(value):
+    try:
+        return _validate_float(value)
+    except Exception:
+        if np.isiterable(value) and not isinstance(value, (str, bytes)):
+            return tuple(_validate_float(item) for item in value)
+    raise ValueError(f"{value!r} is not a valid float or iterable of floats.")
+
+
+def _validate_string_or_iterable(value):
+    if isinstance(value, str):
+        return _validate_string(value)
+    if np.isiterable(value) and not isinstance(value, (str, bytes)):
+        values = tuple(value)
+        if all(isinstance(item, str) for item in values):
+            return values
+    raise ValueError(f"{value!r} is not a valid string or iterable of strings.")
+
+
 def _validate_rotation(value):
     """
     Valid rotation arguments.
@@ -494,6 +513,14 @@ def _validate_tuple_int_2(value):
     if isinstance(value, (list, tuple)) and len(value) == 2:
         return tuple(_validate_int(item) for item in value)
     raise ValueError(f"Value must be a tuple/list of 2 ints, got {value!r}")
+
+
+def _validate_tuple_float_2(value):
+    if isinstance(value, np.ndarray):
+        value = value.tolist()
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return tuple(_validate_float(item) for item in value)
+    raise ValueError(f"Value must be a tuple/list of 2 floats, got {value!r}")
 
 
 def _rst_table():
@@ -1799,6 +1826,142 @@ _rc_ultraplot_table = {
         False,
         _validate_bool,
         "Toggles rasterization on or off for rivers feature for GeoAxes.",
+    ),
+    # Circlize settings
+    "chord.start": (
+        0.0,
+        _validate_float,
+        "Start angle for chord diagrams.",
+    ),
+    "chord.end": (
+        360.0,
+        _validate_float,
+        "End angle for chord diagrams.",
+    ),
+    "chord.space": (
+        0.0,
+        _validate_float_or_iterable,
+        "Inter-sector spacing for chord diagrams.",
+    ),
+    "chord.endspace": (
+        True,
+        _validate_bool,
+        "Whether to add an ending space gap for chord diagrams.",
+    ),
+    "chord.r_lim": (
+        (97.0, 100.0),
+        _validate_tuple_float_2,
+        "Radial limits for chord diagrams.",
+    ),
+    "chord.ticks_interval": (
+        None,
+        _validate_or_none(_validate_int),
+        "Tick interval for chord diagrams.",
+    ),
+    "chord.order": (
+        None,
+        _validate_or_none(_validate_string_or_iterable),
+        "Ordering of sectors for chord diagrams.",
+    ),
+    "radar.r_lim": (
+        (0.0, 100.0),
+        _validate_tuple_float_2,
+        "Radial limits for radar charts.",
+    ),
+    "radar.vmin": (
+        0.0,
+        _validate_float,
+        "Minimum value for radar charts.",
+    ),
+    "radar.vmax": (
+        100.0,
+        _validate_float,
+        "Maximum value for radar charts.",
+    ),
+    "radar.fill": (
+        True,
+        _validate_bool,
+        "Whether to fill radar chart polygons.",
+    ),
+    "radar.marker_size": (
+        0,
+        _validate_int,
+        "Marker size for radar charts.",
+    ),
+    "radar.bg_color": (
+        "#eeeeee80",
+        _validate_or_none(_validate_color),
+        "Background color for radar charts.",
+    ),
+    "radar.circular": (
+        False,
+        _validate_bool,
+        "Whether to use circular radar charts.",
+    ),
+    "radar.show_grid_label": (
+        True,
+        _validate_bool,
+        "Whether to show grid labels on radar charts.",
+    ),
+    "radar.grid_interval_ratio": (
+        0.2,
+        _validate_or_none(_validate_float),
+        "Grid interval ratio for radar charts.",
+    ),
+    "phylogeny.start": (
+        0.0,
+        _validate_float,
+        "Start angle for phylogeny plots.",
+    ),
+    "phylogeny.end": (
+        360.0,
+        _validate_float,
+        "End angle for phylogeny plots.",
+    ),
+    "phylogeny.r_lim": (
+        (50.0, 100.0),
+        _validate_tuple_float_2,
+        "Radial limits for phylogeny plots.",
+    ),
+    "phylogeny.format": (
+        "newick",
+        _validate_string,
+        "Input format for phylogeny plots.",
+    ),
+    "phylogeny.outer": (
+        True,
+        _validate_bool,
+        "Whether to place phylogeny leaves on the outer edge.",
+    ),
+    "phylogeny.align_leaf_label": (
+        True,
+        _validate_bool,
+        "Whether to align phylogeny leaf labels.",
+    ),
+    "phylogeny.ignore_branch_length": (
+        False,
+        _validate_bool,
+        "Whether to ignore branch lengths in phylogeny plots.",
+    ),
+    "phylogeny.leaf_label_size": (
+        None,
+        _validate_or_none(_validate_float),
+        "Leaf label font size for phylogeny plots.",
+    ),
+    "phylogeny.leaf_label_rmargin": (
+        2.0,
+        _validate_float,
+        "Radial margin for phylogeny leaf labels.",
+    ),
+    "phylogeny.reverse": (
+        False,
+        _validate_bool,
+        "Whether to reverse phylogeny orientation.",
+    ),
+    "phylogeny.ladderize": (
+        False,
+        _validate_bool,
+        "Whether to ladderize phylogeny branches.",
     ),
     # Sankey diagrams
     "sankey.align": (
