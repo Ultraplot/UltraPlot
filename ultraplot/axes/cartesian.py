@@ -897,7 +897,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # Introduced in mpl 3.10 and deprecated in mpl 3.12
         # Save the original if it exists
         converter = (
-            axis.converter if hasattr(axis, "converter") else axis.get_converter()
+            axis.get_converter() if hasattr(axis, "get_converter") else axis.converter
         )
         date = isinstance(converter, DATE_CONVERTERS)
 
@@ -1038,7 +1038,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # Introduced in mpl 3.10 and deprecated in mpl 3.12
         # Save the original if it exists
         converter = (
-            axis.converter if hasattr(axis, "converter") else axis.get_converter()
+            axis.get_converter() if hasattr(axis, "get_converter") else axis.converter
         )
         if rotation is not None:
             setattr(self, default, False)
