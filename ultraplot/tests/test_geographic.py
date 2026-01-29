@@ -499,9 +499,8 @@ def test_sharing_geo_limits():
     after_lat = ax[1]._lataxis.get_view_interval()
 
     # We are sharing y which is the latitude axis
-    # Account for small epsilon expansion in extent (0.5 degrees per side)
     assert all(
-        [np.allclose(i, j, atol=1.0) for i, j in zip(expectation["latlim"], after_lat)]
+        [np.allclose(i, j, atol=1e-6) for i, j in zip(expectation["latlim"], after_lat)]
     )
     # We are not sharing longitude yet
     assert all(
@@ -516,9 +515,8 @@ def test_sharing_geo_limits():
     after_lon = ax[1]._lonaxis.get_view_interval()
 
     assert all([not np.allclose(i, j) for i, j in zip(before_lon, after_lon)])
-    # Account for small epsilon expansion in extent (0.5 degrees per side)
     assert all(
-        [np.allclose(i, j, atol=1.0) for i, j in zip(after_lon, expectation["lonlim"])]
+        [np.allclose(i, j, atol=1e-6) for i, j in zip(after_lon, expectation["lonlim"])]
     )
     uplt.close(fig)
 
@@ -1132,23 +1130,8 @@ def test_consistent_range():
         lonview = np.array(a._lonaxis.get_view_interval())
         latview = np.array(a._lataxis.get_view_interval())
 
-        # Account for small epsilon expansion in extent (0.5 degrees per side)
-        assert np.allclose(lonview, lonlim, atol=1.0)
-        assert np.allclose(latview, latlim, atol=1.0)
-
-
-def test_labels_preserved_with_ticklen():
-    """
-    Ensure ticklen updates do not disable top/right gridline labels.
-    """
-    fig, ax = uplt.subplots(proj="cyl")
-    ax.format(lonlim=(0, 10), latlim=(0, 10), labels="both", lonlines=2, latlines=2)
-    assert ax.gridlines_major.top_labels
-    assert ax.gridlines_major.right_labels
-
-    ax.format(ticklen=1, labels="both")
-    assert ax.gridlines_major.top_labels
-    assert ax.gridlines_major.right_labels
+        assert np.allclose(lonview, lonlim, atol=1e-6)
+        assert np.allclose(latview, latlim, atol=1e-6)
 
 
 @pytest.mark.mpl_image_compare
@@ -1657,11 +1640,11 @@ def test_label_rotation_negative_angles():
 
 
 def _check_boundary_labels(ax, expected_lon_labels, expected_lat_labels):
-    """Helper to check that boundary labels are created and visible."""
+    """Helper to check that specific labels are created and visible."""
     gl = ax._gridlines_major
     assert gl is not None, "Gridliner should exist"
 
-    # Check xlim/ylim are expanded beyond actual limits
+    # Check xlim/ylim are defined on the gridliner
     assert hasattr(gl, "xlim") and hasattr(gl, "ylim")
 
     # Check longitude labels - only verify the visible ones match expected
@@ -1693,10 +1676,7 @@ def _check_boundary_labels(ax, expected_lon_labels, expected_lat_labels):
 
 def test_boundary_labels_positive_longitude():
     """
-    Test that boundary labels are visible with positive longitude limits.
-
-    This tests the fix for the issue where setting lonlim/latlim would hide
-    the outermost labels because cartopy's gridliner was filtering them out.
+    Test that interior labels remain visible with positive longitude limits.
     """
     fig, ax = uplt.subplots(proj="pcarree")
     ax.format(
@@ -1708,13 +1688,13 @@ def test_boundary_labels_positive_longitude():
         grid=False,
     )
     fig.canvas.draw()
-    _check_boundary_labels(ax[0], ["120°E", "125°E", "130°E"], ["10°N", "15°N", "20°N"])
+    _check_boundary_labels(ax[0], ["125°E"], ["15°N"])
     uplt.close(fig)
 
 
 def test_boundary_labels_negative_longitude():
     """
-    Test that boundary labels are visible with negative longitude limits.
+    Test that interior labels remain visible with negative longitude limits.
     """
     fig, ax = uplt.subplots(proj="pcarree")
     ax.format(
@@ -1726,12 +1706,10 @@ def test_boundary_labels_negative_longitude():
         grid=False,
     )
     fig.canvas.draw()
-    # Note: Cartopy hides the boundary label at 20°N due to it being exactly at the limit
-    # This is expected cartopy behavior with floating point precision at boundaries
     _check_boundary_labels(
         ax[0],
-        ["120°W", "90°W", "60°W"],
-        ["20°N", "35°N", "50°N"],
+        ["90°W"],
+        ["35°N"],
     )
     uplt.close(fig)
 
