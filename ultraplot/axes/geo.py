@@ -1860,10 +1860,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     def _format_apply_ticklen(
         self,
         *,
-        lonlim: tuple[float | None, float | None] | None,
-        latlim: tuple[float | None, float | None] | None,
+        lonlim: tuple[float | None, float | None],
+        latlim: tuple[float | None, float | None],
         boundinglat: float | None,
-        extent_requested: bool,
         ticklen: Any,
         lonticklen: Any,
         latticklen: Any,
@@ -1883,24 +1882,13 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 # the view; this affects the visible range
                 # we need to force this to prevent
                 # side effects
-                if latlim is not None and latlim == (None, None):
+                if latlim == (None, None):
                     latlim = self._lataxis.get_view_interval()
-                if lonlim is not None and lonlim == (None, None):
+                if lonlim == (None, None):
                     lonlim = self._lonaxis.get_view_interval()
-                if not extent_requested and self._name == "cartopy":
-                    extent = (
-                        *self._lonaxis.get_view_interval(),
-                        *self._lataxis.get_view_interval(),
-                    )
-                    self.set_extent(extent, crs=ccrs.PlateCarree())
-                elif extent_requested and (
-                    boundinglat is not None
-                    or (lonlim is not None and lonlim != (None, None))
-                    or (latlim is not None and latlim != (None, None))
-                ):
-                    self._update_extent(
-                        lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
-                    )
+                self._update_extent(
+                    lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
+                )
             else:
                 warnings._warn_ultraplot(
                     f"Projection is not rectilinear. Ignoring {lonticklen=} and {latticklen=} settings."
@@ -2007,9 +1995,6 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             # does not translate boolean flag. So here apply translation.
             if extent is not None and not isinstance(extent, str):
                 extent = ("globe", "auto")[int(bool(extent))]
-            extent_requested = (
-                boundinglat is not None or lonlim is not None or latlim is not None
-            )
             self._update_boundary(round)
             self._update_extent_mode(extent, boundinglat)
 
@@ -2095,7 +2080,6 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             lonlim=lonlim,
             latlim=latlim,
             boundinglat=boundinglat,
-            extent_requested=extent_requested,
             ticklen=ticklen,
             lonticklen=lonticklen,
             latticklen=latticklen,
@@ -2155,9 +2139,6 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         for size, which in zip(sizes, ["major", "minor"]):
             params.update({"length": size})
             params.pop("grid_alpha", None)
-            # Avoid overriding gridliner label toggles via tick_params defaults.
-            for key in ("labeltop", "labelbottom", "labelleft", "labelright"):
-                params.pop(key, None)
             self.tick_params(
                 axis=x_or_y,
                 which=which,
@@ -2575,7 +2556,6 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         # (x, y) coordinate pairs (each corner), so something like (-180, 180, -90, 90)
         # will result in *line*, causing error! We correct this here.
         eps_small = 1e-10  # bug with full -180, 180 range when lon_0 != 0
-        eps_label = 0.5  # larger epsilon to ensure boundary labels are included
         lon0 = self._get_lon0()
         proj = type(self.projection).__name__
         north = isinstance(self.projection, self._proj_north)
@@ -2613,18 +2593,11 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
                     lonlim[0] = lon0 - 180
                 if lonlim[1] is None:
                     lonlim[1] = lon0 + 180
-                # Expand limits slightly to ensure boundary labels are included
-                # NOTE: We expand symmetrically (subtract from min, add to max) rather
-                # than just shifting to avoid excluding boundary gridlines
-                lonlim[0] -= eps_label
-                lonlim[1] += eps_label
                 latlim = list(latlim)
                 if latlim[0] is None:
                     latlim[0] = -90
                 if latlim[1] is None:
                     latlim[1] = 90
-                latlim[0] -= eps_label
-                latlim[1] += eps_label
                 extent = lonlim + latlim
                 self.set_extent(extent, crs=ccrs.PlateCarree())
 
@@ -2707,7 +2680,6 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             gl.n_steps = nsteps
         # Set xlim and ylim for cartopy >= 0.19 to control which labels are displayed
         # NOTE: Don't set xlim/ylim here - let cartopy determine from the axes extent
-        # The extent expansion in _update_extent should be sufficient to include boundary labels
         longrid = rc._get_gridline_bool(longrid, axis="x", which=which, native=False)
         if longrid is not None:
             gl.xlines = longrid
