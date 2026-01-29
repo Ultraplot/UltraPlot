@@ -2391,9 +2391,9 @@ class PlotAxes(base.Axes):
             leaf_label_rmargin=leaf_label_rmargin,
             reverse=reverse,
             ladderize=ladderize,
-            line_kws=line_kw,
+            line_kw=line_kw,
             label_formatter=label_formatter,
-            align_line_kws=align_line_kw,
+            align_line_kw=align_line_kw,
             tooltip=tooltip,
         )
 
@@ -2480,10 +2480,10 @@ class PlotAxes(base.Axes):
             link_cmap=link_cmap,
             ticks_interval=ticks_interval,
             order=order,
-            label_kws=label_kw,
-            ticks_kws=ticks_kw,
-            link_kws=link_kw,
-            link_kws_handler=link_kw_handler,
+            label_kw=label_kw,
+            ticks_kw=ticks_kw,
+            link_kw=link_kw,
+            link_kw_handler=link_kw_handler,
             tooltip=tooltip,
         )
 
@@ -2545,12 +2545,12 @@ class PlotAxes(base.Axes):
             cmap=cmap,
             show_grid_label=show_grid_label,
             grid_interval_ratio=grid_interval_ratio,
-            grid_line_kws=grid_line_kw,
-            grid_label_kws=grid_label_kw,
+            grid_line_kw=grid_line_kw,
+            grid_label_kw=grid_label_kw,
             grid_label_formatter=grid_label_formatter,
-            label_kws_handler=label_kw_handler,
-            line_kws_handler=line_kw_handler,
-            marker_kws_handler=marker_kw_handler,
+            label_kw_handler=label_kw_handler,
+            line_kw_handler=line_kw_handler,
+            marker_kw_handler=marker_kw_handler,
         )
 
     def radar(self, *args, **kwargs):
@@ -2646,9 +2646,9 @@ class PlotAxes(base.Axes):
             leaf_label_rmargin=leaf_label_rmargin,
             reverse=reverse,
             ladderize=ladderize,
-            line_kws=line_kw,
+            line_kw=line_kw,
             label_formatter=label_formatter,
-            align_line_kws=align_line_kw,
+            align_line_kw=align_line_kw,
             tooltip=tooltip,
         )
 
@@ -2735,10 +2735,10 @@ class PlotAxes(base.Axes):
             link_cmap=link_cmap,
             ticks_interval=ticks_interval,
             order=order,
-            label_kws=label_kw,
-            ticks_kws=ticks_kw,
-            link_kws=link_kw,
-            link_kws_handler=link_kw_handler,
+            label_kw=label_kw,
+            ticks_kw=ticks_kw,
+            link_kw=link_kw,
+            link_kw_handler=link_kw_handler,
             tooltip=tooltip,
         )
 
@@ -2800,12 +2800,12 @@ class PlotAxes(base.Axes):
             cmap=cmap,
             show_grid_label=show_grid_label,
             grid_interval_ratio=grid_interval_ratio,
-            grid_line_kws=grid_line_kw,
-            grid_label_kws=grid_label_kw,
+            grid_line_kw=grid_line_kw,
+            grid_label_kw=grid_label_kw,
             grid_label_formatter=grid_label_formatter,
-            label_kws_handler=label_kw_handler,
-            line_kws_handler=line_kw_handler,
-            marker_kws_handler=marker_kw_handler,
+            label_kw_handler=label_kw_handler,
+            line_kw_handler=line_kw_handler,
+            marker_kw_handler=marker_kw_handler,
         )
 
     def radar(self, *args, **kwargs):

@@ -144,10 +144,10 @@ def chord_diagram(
     link_cmap: Optional[list[tuple[str, str, str]]] = None,
     ticks_interval: Optional[int] = None,
     order: Optional[Union[str, list[str]]] = None,
-    label_kws: Optional[Mapping[str, Any]] = None,
-    ticks_kws: Optional[Mapping[str, Any]] = None,
-    link_kws: Optional[Mapping[str, Any]] = None,
-    link_kws_handler=None,
+    label_kw: Optional[Mapping[str, Any]] = None,
+    ticks_kw: Optional[Mapping[str, Any]] = None,
+    link_kw: Optional[Mapping[str, Any]] = None,
+    link_kw_handler=None,
     tooltip: bool = False,
 ):
     """
@@ -166,19 +166,19 @@ def chord_diagram(
     order = rc["chord.order"] if order is None else order
 
     pycirclize, matrix_obj, cmap = _resolve_chord_defaults(matrix, cmap)
-    label_kws = {} if label_kws is None else dict(label_kws)
-    ticks_kws = {} if ticks_kws is None else dict(ticks_kws)
+    label_kw = {} if label_kw is None else dict(label_kw)
+    ticks_kw = {} if ticks_kw is None else dict(ticks_kw)
 
-    label_kws.setdefault("size", rc["font.size"])
-    label_kws.setdefault("color", rc["meta.color"])
-    ticks_kws.setdefault("label_size", rc["font.size"])
-    text_kws = ticks_kws.get("text_kws")
-    if text_kws is None:
-        ticks_kws["text_kws"] = {"color": rc["meta.color"]}
+    label_kw.setdefault("size", rc["font.size"])
+    label_kw.setdefault("color", rc["meta.color"])
+    ticks_kw.setdefault("label_size", rc["font.size"])
+    text_kw = ticks_kw.get("text_kw")
+    if text_kw is None:
+        ticks_kw["text_kws"] = {"color": rc["meta.color"]}
     else:
-        text_kws = dict(text_kws)
-        text_kws.setdefault("color", rc["meta.color"])
-        ticks_kws["text_kws"] = text_kws
+        text_kw = dict(text_kws)
+        text_kw.setdefault("color", rc["meta.color"])
+        ticks_kw["text_kws"] = text_kw
 
     circos = pycirclize.Circos.chord_diagram(
         matrix_obj,
@@ -191,10 +191,10 @@ def chord_diagram(
         link_cmap=link_cmap,
         ticks_interval=ticks_interval,
         order=order,
-        label_kws=label_kws,
-        ticks_kws=ticks_kws,
-        link_kws=link_kws,
-        link_kws_handler=link_kws_handler,
+        label_kws=label_kw,
+        ticks_kws=ticks_kw,
+        link_kws=link_kw,
+        link_kws_handler=link_kw_handler,
     )
     circos.plotfig(ax=ax, tooltip=tooltip)
     return circos
@@ -214,12 +214,12 @@ def radar_chart(
     cmap: Any = None,
     show_grid_label: Optional[bool] = None,
     grid_interval_ratio: Optional[float] = None,
-    grid_line_kws: Optional[Mapping[str, Any]] = None,
-    grid_label_kws: Optional[Mapping[str, Any]] = None,
+    grid_line_kw: Optional[Mapping[str, Any]] = None,
+    grid_label_kw: Optional[Mapping[str, Any]] = None,
     grid_label_formatter=None,
-    label_kws_handler=None,
-    line_kws_handler=None,
-    marker_kws_handler=None,
+    label_kw_handler=None,
+    line_kw_handler=None,
+    marker_kw_handler=None,
 ):
     """
     Render a radar chart using pyCirclize on the provided polar axes.
@@ -243,12 +243,12 @@ def radar_chart(
     )
 
     pycirclize, table_obj, cmap = _resolve_radar_defaults(table, cmap)
-    grid_line_kws = {} if grid_line_kws is None else dict(grid_line_kws)
-    grid_label_kws = {} if grid_label_kws is None else dict(grid_label_kws)
+    grid_line_kw = {} if grid_line_kw is None else dict(grid_line_kw)
+    grid_label_kw = {} if grid_label_kw is None else dict(grid_label_kw)
 
-    grid_line_kws.setdefault("color", rc["grid.color"])
-    grid_label_kws.setdefault("size", rc["font.size"])
-    grid_label_kws.setdefault("color", rc["meta.color"])
+    grid_line_kw.setdefault("color", rc["grid.color"])
+    grid_label_kw.setdefault("size", rc["font.size"])
+    grid_label_kw.setdefault("color", rc["meta.color"])
 
     circos = pycirclize.Circos.radar_chart(
         table_obj,
@@ -262,12 +262,12 @@ def radar_chart(
         cmap=cmap,
         show_grid_label=show_grid_label,
         grid_interval_ratio=grid_interval_ratio,
-        grid_line_kws=grid_line_kws,
-        grid_label_kws=grid_label_kws,
+        grid_line_kws=grid_line_kw,
+        grid_label_kws=grid_label_kw,
         grid_label_formatter=grid_label_formatter,
-        label_kws_handler=label_kws_handler,
-        line_kws_handler=line_kws_handler,
-        marker_kws_handler=marker_kws_handler,
+        label_kws_handler=label_kw_handler,
+        line_kws_handler=line_kw_handler,
+        marker_kws_handler=marker_kw_handler,
     )
     circos.plotfig(ax=ax)
     return circos
@@ -288,9 +288,9 @@ def phylogeny(
     leaf_label_rmargin: Optional[float] = None,
     reverse: Optional[bool] = None,
     ladderize: Optional[bool] = None,
-    line_kws: Optional[Mapping[str, Any]] = None,
+    line_kw: Optional[Mapping[str, Any]] = None,
     label_formatter=None,
-    align_line_kws: Optional[Mapping[str, Any]] = None,
+    align_line_kw: Optional[Mapping[str, Any]] = None,
     tooltip: bool = False,
 ):
     """
@@ -339,9 +339,9 @@ def phylogeny(
         leaf_label_rmargin=leaf_label_rmargin,
         reverse=reverse,
         ladderize=ladderize,
-        line_kws=None if line_kws is None else dict(line_kws),
+        line_kws=None if line_kw is None else dict(line_kw),
         label_formatter=label_formatter,
-        align_line_kws=None if align_line_kws is None else dict(align_line_kws),
+        align_line_kws=None if align_line_kw is None else dict(align_line_kw),
     )
     circos_obj.plotfig(ax=ax, tooltip=tooltip)
     return circos_obj, treeviz

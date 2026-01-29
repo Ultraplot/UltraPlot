@@ -116,12 +116,12 @@ def test_chord_diagram_defaults(fake_pycirclize):
     circos = ax.chord_diagram(matrix)
     assert circos.plot_called is True
     assert set(circos.kwargs["cmap"].keys()) == {"A", "B"}
-    label_kws = circos.kwargs["label_kws"]
-    ticks_kws = circos.kwargs["ticks_kws"]
-    assert label_kws["color"] == rc["meta.color"]
-    assert label_kws["size"] == rc["font.size"]
-    assert ticks_kws["label_size"] == rc["font.size"]
-    assert ticks_kws["text_kws"]["color"] == rc["meta.color"]
+    label_kw = circos.kwargs["label_kws"]
+    ticks_kw = circos.kwargs["ticks_kws"]
+    assert label_kw["color"] == rc["meta.color"]
+    assert label_kw["size"] == rc["font.size"]
+    assert ticks_kw["label_size"] == rc["font.size"]
+    assert ticks_kw["text_kws"]["color"] == rc["meta.color"]
     uplt.close(fig)
 
 
