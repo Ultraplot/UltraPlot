@@ -1088,6 +1088,137 @@ def test_sankey_flow_label_text_callable():
     assert text == "1.2"
 
 
+def test_radar_chart_smoke():
+    """Smoke test for pyCirclize radar chart wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    import pandas as pd
+
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4], "C": [2, 1]}, index=["set1", "set2"])
+    fig, ax = uplt.subplots(proj="polar")
+    circos = ax.radar_chart(df, vmin=0, vmax=4, fill=False, marker_size=3)
+    assert hasattr(circos, "plotfig")
+    uplt.close(fig)
+
+
+def test_chord_diagram_smoke():
+    """Smoke test for pyCirclize chord diagram wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    import pandas as pd
+
+    df = pd.DataFrame(
+        [[5, 2, 1], [2, 6, 3], [1, 3, 4]],
+        index=["A", "B", "C"],
+        columns=["A", "B", "C"],
+    )
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
+    circos = ax.chord_diagram(df, ticks_interval=None)
+    assert hasattr(circos, "plotfig")
+    uplt.close(fig)
+
+
+def test_phylogeny_smoke():
+    """Smoke test for pyCirclize phylogeny wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
+    circos, treeviz = ax.phylogeny("((A,B),C);", leaf_label_size=8)
+    assert hasattr(circos, "plotfig")
+    assert treeviz is not None
+    uplt.close(fig)
+
+
+def test_circos_bed_smoke(tmp_path):
+    """Smoke test for BED-based circlize wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    bed_path = tmp_path / "mini.bed"
+    bed_path.write_text("chr1\t0\t100\nchr2\t0\t120\n", encoding="utf-8")
+
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
+    circos = ax.circos_bed(bed_path, plot=True)
+    assert len(circos.sectors) == 2
+    uplt.close(fig)
+
+
+def test_circos_builder_smoke():
+    """Smoke test for general Circos wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
+    circos = ax.circos({"A": 10, "B": 12}, plot=True)
+    assert len(circos.sectors) == 2
+    uplt.close(fig)
+
+
+def test_circos_unshares_axes():
+    """Circos wrappers should unshare axes if they were shared."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(ncols=2, proj="polar", share="all")
+    ax = axs[0]
+    x_siblings = list(ax._shared_axes["x"].get_siblings(ax))
+    y_siblings = list(ax._shared_axes["y"].get_siblings(ax))
+    if len(x_siblings) == 1 and len(y_siblings) == 1:
+        pytest.skip("polar axes are not shared in this configuration")
+    ax.circos({"A": 10, "B": 12}, plot=False)
+    x_siblings = list(ax._shared_axes["x"].get_siblings(ax))
+    y_siblings = list(ax._shared_axes["y"].get_siblings(ax))
+    assert len(x_siblings) == 1
+    assert len(y_siblings) == 1
+    uplt.close(fig)
+
+
+def test_circos_delegation_subplots():
+    """SubplotGrid should delegate circos calls for singleton grids."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(proj="polar")
+    circos = axs.circos({"A": 10, "B": 12}, plot=False)
+    assert len(circos.sectors) == 2
+    uplt.close(fig)
+
+
 def test_histogram_norms():
     """
     Check that all histograms-like plotting functions
