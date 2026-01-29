@@ -1137,17 +1137,18 @@ def test_consistent_range():
         assert np.allclose(latview, latlim, atol=1.0)
 
 
-def test_set_extent_preserved_by_ticklen():
+def test_labels_preserved_with_ticklen():
     """
-    Ensure set_extent is not overridden by ticklen-only format calls.
+    Ensure ticklen updates do not disable top/right gridline labels.
     """
-    import cartopy.crs as ccrs
-
     fig, ax = uplt.subplots(proj="cyl")
-    extent = (0.73, 1.92, 0.81, 1.97)
-    ax.set_extent(extent, crs=ccrs.PlateCarree())
-    ax.format(lonlines=0.4, latlines=0.4, ticklen=0.5)
-    assert np.allclose(ax.get_extent(crs=ccrs.PlateCarree()), extent)
+    ax.format(lonlim=(0, 10), latlim=(0, 10), labels="both", lonlines=2, latlines=2)
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels
+
+    ax.format(ticklen=1, labels="both")
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels
 
 
 @pytest.mark.mpl_image_compare
