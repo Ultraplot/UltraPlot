@@ -41,6 +41,8 @@ jobs:
         with:
           environment-file: ./environment.yml
           init-shell: bash
+          condarc-file: ./.github/micromamba-condarc.yml
+          post-cleanup: none
           create-args: >-
             --verbose
             python=${{ inputs.python-version }}
@@ -70,6 +72,8 @@ jobs:
         with:
           environment-file: ./environment.yml
           init-shell: bash
+          condarc-file: ./.github/micromamba-condarc.yml
+          post-cleanup: none
           create-args: >-
             --verbose
             python=${{ inputs.python-version }}
