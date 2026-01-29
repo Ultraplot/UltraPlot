@@ -1137,6 +1137,20 @@ def test_consistent_range():
         assert np.allclose(latview, latlim, atol=1.0)
 
 
+def test_labels_preserved_with_ticklen():
+    """
+    Ensure ticklen updates do not disable top/right gridline labels.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.format(lonlim=(0, 10), latlim=(0, 10), labels="both", lonlines=2, latlines=2)
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels
+
+    ax.format(ticklen=1, labels="both")
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels
+
+
 @pytest.mark.mpl_image_compare
 def test_dms_used_for_mercator():
     """
