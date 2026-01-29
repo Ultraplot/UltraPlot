@@ -183,6 +183,7 @@ extensions = [
     "sphinxext.custom_roles",  # local extension
     "sphinx_automodapi.automodapi",  # fork of automodapi
     "sphinx_rtd_light_dark",  # use custom theme
+    "sphinx_sitemap",
     "sphinx_copybutton",  # add copy button to code
     "_ext.notoc",
     "nbsphinx",  # parse rst books
@@ -373,6 +374,8 @@ sphinx_gallery_conf = {
 # The name of the Pygments (syntax highlighting) style to use.
 # The light-dark theme toggler overloads this, but set default anyway
 pygments_style = "none"
+html_baseurl = "https://ultraplot.readthedocs.io/stable"
+sitemap_url_scheme = "{link}"
 
 
 # -- Options for HTML output -------------------------------------------------
