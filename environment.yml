@@ -20,3 +20,5 @@ dependencies:
   - networkx
   - pyarrow
   - cftime
+  - pip:
+      - pycirclize
