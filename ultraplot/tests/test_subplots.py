@@ -684,7 +684,8 @@ def test_non_rectangular_outside_labels_top():
     ax.format(bottomlabels=[4, 5])
     ax.format(leftlabels=[1, 3, 4])
     ax.format(toplabels=[1, 2])
-    return fig
+    fig.canvas.draw()
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
