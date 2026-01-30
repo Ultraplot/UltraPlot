@@ -2139,6 +2139,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         for size, which in zip(sizes, ["major", "minor"]):
             params.update({"length": size})
             params.pop("grid_alpha", None)
+            # Avoid overriding gridliner label toggles via tick_params defaults.
+            for key in ("labeltop", "labelbottom", "labelleft", "labelright"):
+                params.pop(key, None)
             self.tick_params(
                 axis=x_or_y,
                 which=which,
