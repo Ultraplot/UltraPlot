@@ -1725,3 +1725,17 @@ def test_boundary_labels_view_intervals():
     assert abs(loninterval[0] - 0) < 1 and abs(loninterval[1] - 60) < 1
     assert abs(latinterval[0] - (-20)) < 1 and abs(latinterval[1] - 40) < 1
     uplt.close(fig)
+
+
+def test_labels_preserved_with_ticklen():
+    """
+    Ensure ticklen updates do not disable top/right gridline labels.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.format(lonlim=(0, 10), latlim=(0, 10), labels="both", lonlines=2, latlines=2)
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels
+
+    ax.format(ticklen=1, labels="both")
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels
