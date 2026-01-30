@@ -1,8 +1,14 @@
-import pytest, numpy as np, xarray as xr, ultraplot as uplt, cftime
-from ultraplot.ticker import AutoCFDatetimeLocator
-from unittest.mock import patch
 import importlib
+from unittest.mock import patch
+
 import cartopy.crs as ccrs
+import cftime
+import numpy as np
+import pytest
+import xarray as xr
+
+import ultraplot as uplt
+from ultraplot.ticker import AutoCFDatetimeLocator
 
 
 @pytest.mark.mpl_image_compare
@@ -267,16 +273,20 @@ def test_missing_modules(module_name):
             assert cftime is None
         elif module_name == "ccrs":
             from ultraplot.ticker import (
-                ccrs,
                 LatitudeFormatter,
                 LongitudeFormatter,
                 _PlateCarreeFormatter,
+                ccrs,
             )
 
             assert ccrs is None
             assert LatitudeFormatter is object
             assert LongitudeFormatter is object
             assert _PlateCarreeFormatter is object
+    # Restore module state for subsequent tests.
+    import ultraplot.ticker
+
+    importlib.reload(ultraplot.ticker)
 
 
 def test_index_locator():
@@ -478,8 +488,9 @@ def test_auto_datetime_locator_tick_values(
     expected_exception,
     expected_resolution,
 ):
-    from ultraplot.ticker import AutoCFDatetimeLocator
     import cftime
+
+    from ultraplot.ticker import AutoCFDatetimeLocator
 
     locator = AutoCFDatetimeLocator(calendar=calendar)
     resolution = expected_resolution
@@ -659,9 +670,10 @@ def test_frac_formatter(formatter_args, value, expected):
 
 
 def test_frac_formatter_unicode_minus():
-    from ultraplot.ticker import FracFormatter
-    from ultraplot.config import rc
     import numpy as np
+
+    from ultraplot.config import rc
+    from ultraplot.ticker import FracFormatter
 
     formatter = FracFormatter(symbol=r"$\\pi$", number=np.pi)
     with rc.context({"axes.unicode_minus": True}):
@@ -675,8 +687,9 @@ def test_frac_formatter_unicode_minus():
     ],
 )
 def test_cfdatetime_formatter_direct_call(fmt, calendar, dt_args, expected):
-    from ultraplot.ticker import CFDatetimeFormatter
     import cftime
+
+    from ultraplot.ticker import CFDatetimeFormatter
 
     formatter = CFDatetimeFormatter(fmt, calendar=calendar)
     dt = cftime.datetime(*dt_args, calendar=calendar)
@@ -694,8 +707,9 @@ def test_cfdatetime_formatter_direct_call(fmt, calendar, dt_args, expected):
 def test_autocftime_locator_subdaily(
     start_date_str, end_date_str, calendar, resolution
 ):
-    from ultraplot.ticker import AutoCFDatetimeLocator
     import cftime
+
+    from ultraplot.ticker import AutoCFDatetimeLocator
 
     locator = AutoCFDatetimeLocator(calendar=calendar)
     units = locator.date_unit
@@ -718,8 +732,9 @@ def test_autocftime_locator_subdaily(
 
 
 def test_autocftime_locator_safe_helpers():
-    from ultraplot.ticker import AutoCFDatetimeLocator
     import cftime
+
+    from ultraplot.ticker import AutoCFDatetimeLocator
 
     # Test _safe_num2date with invalid value
     locator_gregorian = AutoCFDatetimeLocator(calendar="gregorian")
@@ -740,8 +755,9 @@ def test_autocftime_locator_safe_helpers():
     ],
 )
 def test_auto_formatter_options(formatter_args, values, expected, ylim):
-    from ultraplot.ticker import AutoFormatter
     import matplotlib.pyplot as plt
+
+    from ultraplot.ticker import AutoFormatter
 
     fig, ax = plt.subplots()
     formatter = AutoFormatter(**formatter_args)
@@ -771,8 +787,9 @@ def test_autocftime_locator_safe_daily_locator():
 
 
 def test_latitude_locator():
-    from ultraplot.ticker import LatitudeLocator
     import numpy as np
+
+    from ultraplot.ticker import LatitudeLocator
 
     locator = LatitudeLocator()
     ticks = np.array(locator.tick_values(-100, 100))
@@ -781,9 +798,10 @@ def test_latitude_locator():
 
 
 def test_cftime_converter():
-    from ultraplot.ticker import CFTimeConverter, cftime
-    from ultraplot.config import rc
     import numpy as np
+
+    from ultraplot.config import rc
+    from ultraplot.ticker import CFTimeConverter, cftime
 
     converter = CFTimeConverter()
 
