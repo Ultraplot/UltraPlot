@@ -65,7 +65,7 @@ _BASEMAP_LABEL_SIZE_SCALE = 0.5  # empirical scaling for label offset
 _BASEMAP_LABEL_Y_SCALE = 0.65  # empirical spacing to mimic cartopy
 _BASEMAP_LABEL_X_SCALE = 0.25  # empirical spacing to mimic cartopy
 _CARTOPY_LABEL_SIDES = ("labelleft", "labelright", "labelbottom", "labeltop", "geo")
-_BASEMAP_LABEL_SIDES = ("labelleft", "labelright", "labeltop", "labelbottom", "geo")
+_BASEMAP_LABEL_SIDES = ("labelleft", "labelright", "labelbottom", "labeltop", "geo")
 
 
 # Format docstring
@@ -1018,6 +1018,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         """
         # Cache of backend-specific gridliner adapters (major/minor).
         self._gridliner_adapters: dict[str, _GridlinerAdapter] = {}
+        # Extra cartopy edge labels (e.g., endpoint longitudes).
+        self._edge_lon_labels: list[mtext.Text] = []
+        self._edge_lat_labels: list[mtext.Text] = []
         super().__init__(*args, **kwargs)
 
     @override
@@ -1476,6 +1479,115 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             return False
         return adapter.is_label_on(side)
 
+    def _clear_edge_lon_labels(self) -> None:
+        for label in self._edge_lon_labels:
+            try:
+                label.remove()
+            except Exception:
+                pass
+        self._edge_lon_labels = []
+
+    def _sync_edge_lon_labels(self) -> None:
+        """
+        Ensure cartopy top longitude labels include the endpoints when requested.
+        """
+        if self._name != "cartopy" or ccrs is None or not self._is_rectilinear():
+            self._clear_edge_lon_labels()
+            return
+        adapter = self._gridliner_adapter("major", create=False)
+        if adapter is None or not adapter.is_label_on("labeltop"):
+            self._clear_edge_lon_labels()
+            return
+
+        top_labels = adapter.labels_for_sides(top=True).get("top", [])
+        if not top_labels:
+            # No top labels are enabled; avoid adding extras.
+            self._clear_edge_lon_labels()
+            return
+
+        ticks = np.asarray(self._get_lonticklocs(which="major"))
+        if ticks.size == 0:
+            self._clear_edge_lon_labels()
+            return
+
+        # No extra labels; endpoints are intentionally dropped to avoid crowding.
+        self._clear_edge_lon_labels()
+
+    def _clear_edge_lat_labels(self) -> None:
+        for label in self._edge_lat_labels:
+            try:
+                label.remove()
+            except Exception:
+                pass
+        self._edge_lat_labels = []
+
+    def _sync_edge_lat_labels(self) -> None:
+        """
+        Ensure cartopy left/right latitude labels include the endpoints when requested.
+        """
+        if self._name != "cartopy" or ccrs is None or not self._is_rectilinear():
+            self._clear_edge_lat_labels()
+            return
+        adapter = self._gridliner_adapter("major", create=False)
+        if adapter is None:
+            self._clear_edge_lat_labels()
+            return
+
+        left_on = adapter.is_label_on("labelleft")
+        right_on = adapter.is_label_on("labelright")
+        if not left_on and not right_on:
+            self._clear_edge_lat_labels()
+            return
+
+        left_labels = adapter.labels_for_sides(left=True).get("left", []) if left_on else []
+        right_labels = adapter.labels_for_sides(right=True).get("right", []) if right_on else []
+        if not left_labels and not right_labels:
+            self._clear_edge_lat_labels()
+            return
+
+        ticks = np.asarray(self._get_latticklocs(which="major"))
+        if ticks.size == 0:
+            self._clear_edge_lat_labels()
+            return
+
+        # No extra labels; endpoints are intentionally dropped to avoid crowding.
+        self._clear_edge_lat_labels()
+
+    def _prune_corner_labels(self) -> bool:
+        """
+        Drop endpoint labels at the map corners to reduce crowding.
+        """
+        if self._name != "cartopy" or ccrs is None or not self._is_rectilinear():
+            return False
+        adapter = self._gridliner_adapter("major", create=False)
+        if adapter is None:
+            return False
+        eps = 1e-6
+        lon_ticks = np.asarray(self._get_lonticklocs(which="major"))
+        lat_ticks = np.asarray(self._get_latticklocs(which="major"))
+        changed = False
+        if lon_ticks.size:
+            lon_ends = (lon_ticks[0], lon_ticks[-1])
+            for side in ("top", "bottom"):
+                labels = adapter.labels_for_sides(**{side: True}).get(side, [])
+                for label in labels:
+                    x, _ = label.get_position()
+                    if any(np.isclose(x, end, atol=eps) for end in lon_ends):
+                        if label.get_visible():
+                            label.set_visible(False)
+                            changed = True
+        if lat_ticks.size:
+            lat_ends = (lat_ticks[0], lat_ticks[-1])
+            for side in ("left", "right"):
+                labels = adapter.labels_for_sides(**{side: True}).get(side, [])
+                for label in labels:
+                    _, y = label.get_position()
+                    if any(np.isclose(y, end, atol=eps) for end in lat_ends):
+                        if label.get_visible():
+                            label.set_visible(False)
+                            changed = True
+        return changed
+
     @override
     def draw(self, renderer: Any = None, *args: Any, **kwargs: Any) -> None:
         # Perform extra post-processing steps
@@ -1483,7 +1595,12 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # already be complete because auto_layout() (called by figure pre-processor)
         # has to run it before aligning labels. So this is harmless no-op.
         self._apply_axis_sharing()
+        self._sync_edge_lon_labels()
+        self._sync_edge_lat_labels()
         super().draw(renderer, *args, **kwargs)
+        # Prune after draw so cartopy has created label artists.
+        if self._prune_corner_labels():
+            self.stale = True
 
     def _get_lonticklocs(self, which: str = "major") -> np.ndarray:
         """
@@ -2692,7 +2809,13 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         lonlines = self._get_lonticklocs(which=which)
         latlines = self._get_latticklocs(which=which)
         if _version_cartopy >= "0.18":  # see lukelbd/ultraplot#208
-            lonlines = (np.asarray(lonlines) + 180) % 360 - 180  # only for cartopy
+            lonlines = np.asarray(lonlines)
+            lonlines_mod = (lonlines + 180) % 360 - 180  # only for cartopy
+            # Preserve distinct -180/180 ticks so both map edges can be labeled.
+            eps = 1e-10
+            lonlines_mod = np.where(np.isclose(lonlines, -180), -180 + eps, lonlines_mod)
+            lonlines_mod = np.where(np.isclose(lonlines, 180), 180 - eps, lonlines_mod)
+            lonlines = lonlines_mod
         gl.xlocator = mticker.FixedLocator(lonlines)
         gl.ylocator = mticker.FixedLocator(latlines)
         self.stale = True
