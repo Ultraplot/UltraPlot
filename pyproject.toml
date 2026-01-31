@@ -60,6 +60,10 @@ ignore = ["I001", "I002", "I003", "I004"]
 [tool.basedpyright]
 exclude = ["**/*.ipynb"]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:'resetCache' deprecated - use 'reset_cache':DeprecationWarning:matplotlib._fontconfig_pattern",
+]
 [project.optional-dependencies]
 docs = [
     "jupyter",
