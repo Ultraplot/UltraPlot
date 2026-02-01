@@ -46,10 +46,23 @@ jobs:
 
       - name: Build test map on cache miss
         if: steps.restore-map.outputs.cache-hit != 'true'
+        uses: mamba-org/setup-micromamba@v2.0.7
+        with:
+          environment-file: ./environment.yml
+          init-shell: bash
+          create-args: >-
+            --verbose
+            python=3.11
+            matplotlib=3.9
+          cache-environment: true
+          cache-downloads: false
+
+      - name: Generate test map on cache miss
+        if: steps.restore-map.outputs.cache-hit != 'true'
+        shell: bash -el {0}
         run: |
           echo "Test map cache miss; generating map from tests."
-          python -m pip install --upgrade pip
-          pip install -e .[tests] coverage pytest pytest-cov pytest-xdist
+          pip install --no-build-isolation --no-deps .
           mkdir -p .ci
           pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov \
             --cov=ultraplot --cov-branch --cov-context=test --cov-report= \
