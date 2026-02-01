@@ -66,6 +66,7 @@ filterwarnings = [
 mpl-default-style = { axes.prop_cycle = "cycler('color', ['#4c72b0ff', '#55a868ff', '#c44e52ff', '#8172b2ff', '#ccb974ff', '#64b5cdff'])" }
 [project.optional-dependencies]
 docs = [
+    "docutils<0.22",
     "jupyter",
     "jupytext",
     "lxml-html-clean",
