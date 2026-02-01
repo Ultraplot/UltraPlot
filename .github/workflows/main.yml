@@ -54,6 +54,14 @@ jobs:
           fi
 
           git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} > .ci/changed.txt
+          echo "Changed files:"
+          cat .ci/changed.txt || true
+          echo "Test map exists:"
+          if [ -f .ci/test-map.json ]; then
+            echo "yes (size=$(wc -c < .ci/test-map.json))"
+          else
+            echo "no"
+          fi
 
           python tools/ci/select_tests.py \
             --map .ci/test-map.json \
@@ -64,6 +72,8 @@ jobs:
             --always-full 'ultraplot/__init__.py' \
             --ignore 'docs/**' \
             --ignore 'README.rst'
+          echo "Selection output:"
+          cat .ci/selection.json || true
 
           python - <<'PY' > .ci/selection.out
           import json
