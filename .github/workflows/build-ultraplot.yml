@@ -39,6 +39,15 @@ jobs:
         with:
           swap-size-gb: 10
 
+      - name: Show system memory
+        run: |
+          echo "=== System Memory ==="
+          free -h
+          echo ""
+          echo "=== CPU Info ==="
+          nproc
+          cat /proc/cpuinfo | grep "model name" | head -1
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -77,6 +86,15 @@ jobs:
         uses: pierotofy/set-swap-space@master
         with:
           swap-size-gb: 10
+
+      - name: Show system memory
+        run: |
+          echo "=== System Memory ==="
+          free -h
+          echo ""
+          echo "=== CPU Info ==="
+          nproc
+          cat /proc/cpuinfo | grep "model name" | head -1
 
       - uses: actions/checkout@v6
 
@@ -150,10 +168,12 @@ jobs:
               echo "No valid nodeids found on base; skipping baseline generation."
               exit 0
             else
+              echo "=== Memory before baseline generation ===" && free -h
               pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
                 --mpl-generate-path=./ultraplot/tests/baseline/ \
                 --mpl-default-style="./ultraplot.yml" \
                 ${FILTERED_NODEIDS} || status=$?
+              echo "=== Memory after baseline generation ===" && free -h
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
                 echo "No tests collected from selected nodeids on base; skipping baseline generation."
                 status=0
@@ -161,10 +181,12 @@ jobs:
             fi
             exit "$status"
           else
+            echo "=== Memory before baseline generation ===" && free -h
             pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
+            echo "=== Memory after baseline generation ===" && free -h
           fi
 
           # Return to the PR branch for the rest of the job
@@ -200,6 +222,7 @@ jobs:
               echo "No valid nodeids found on PR branch; skipping image comparison."
               exit 0
             else
+              echo "=== Memory before image comparison ===" && free -h
               pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
@@ -207,6 +230,7 @@ jobs:
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
               ${FILTERED_NODEIDS} || status=$?
+              echo "=== Memory after image comparison ===" && free -h
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
                 echo "No tests collected from selected nodeids; skipping image comparison."
                 status=0
@@ -214,6 +238,7 @@ jobs:
             fi
             exit "$status"
           else
+            echo "=== Memory before image comparison ===" && free -h
             pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
@@ -221,6 +246,7 @@ jobs:
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
+            echo "=== Memory after image comparison ===" && free -h
           fi
 
       # Return the html output of the comparison even if failed
