@@ -620,6 +620,24 @@ class GridSpec(mgridspec.GridSpec):
             k1, k2 = key
             num1 = _normalize_index(k1, nrows, axis=0)
             num2 = _normalize_index(k2, ncols, axis=1)
+            if (
+                self._use_ultra_layout
+                and not includepanels
+                and self._layout_array is not None
+            ):
+
+                def _to_range(idx):
+                    if isinstance(idx, tuple):
+                        return idx
+                    return idx, idx
+
+                row1, row2 = _to_range(num1)
+                col1, col2 = _to_range(num2)
+                if row1 != row2 or col1 != col2:
+                    layout_id = self._layout_array[row1, col1]
+                    self._layout_array[row1 : row2 + 1, col1 : col2 + 1] = layout_id
+                    self._ultra_layout_array = None
+                    self._ultra_positions = None
             num1, num2 = np.ravel_multi_index((num1, num2), (nrows, ncols))
         else:
             raise ValueError(f"Invalid index {key!r}.")
