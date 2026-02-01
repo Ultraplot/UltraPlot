@@ -99,6 +99,10 @@ jobs:
         if: steps.cache-baseline.outputs.cache-hit != 'true' || !env.IS_PR
         run: |
           mkdir -p ultraplot/tests/baseline
+          echo "TEST_MODE=${TEST_MODE}"
+          echo "IS_PR=${IS_PR}"
+          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha }}"
+          echo "TEST_NODEIDS=${TEST_NODEIDS}"
           # Save PR-selected nodeids for reuse after checkout (if provided)
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
             printf "%s\n" ${TEST_NODEIDS} > /tmp/pr_selected_nodeids.txt
@@ -129,6 +133,7 @@ jobs:
               echo "${filtered}"
             }
             FILTERED_NODEIDS="$(filter_nodeids)"
+            echo "FILTERED_NODEIDS_BASE=${FILTERED_NODEIDS}"
             if [ -z "${FILTERED_NODEIDS}" ]; then
               echo "No valid nodeids found on base; skipping baseline generation."
               exit 0
@@ -163,6 +168,8 @@ jobs:
 
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
+          echo "TEST_MODE=${TEST_MODE}"
+          echo "TEST_NODEIDS=${TEST_NODEIDS}"
           if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
             filter_nodeids() {
@@ -176,6 +183,7 @@ jobs:
               echo "${filtered}"
             }
             FILTERED_NODEIDS="$(filter_nodeids)"
+            echo "FILTERED_NODEIDS_PR=${FILTERED_NODEIDS}"
             if [ -z "${FILTERED_NODEIDS}" ]; then
               echo "No valid nodeids found on PR branch; skipping image comparison."
               exit 0
