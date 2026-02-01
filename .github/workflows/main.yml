@@ -44,6 +44,18 @@ jobs:
           restore-keys: |
             test-map-
 
+      - name: Build test map on cache miss
+        if: steps.restore-map.outputs.cache-hit != 'true'
+        run: |
+          echo "Test map cache miss; generating map from tests."
+          python -m pip install --upgrade pip
+          pip install -e .[tests] coverage
+          mkdir -p .ci
+          pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov \
+            --cov=ultraplot --cov-branch --cov-context=test --cov-report= \
+            ultraplot/tests
+          python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
+
       - name: Select impacted tests
         id: select
         run: |
