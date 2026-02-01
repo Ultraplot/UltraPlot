@@ -362,6 +362,10 @@ class UltraColorbar:
 
         # Register location and return
         ax._register_guide("colorbar", obj, (loc, align))  # possibly replace another
+        if getattr(cax, "_inset_colorbar_layout", None):
+            cax._inset_colorbar_needs_reflow = True
+            if ax.figure is not None:
+                ax.figure._layout_dirty = True
         return obj
 
 
@@ -995,3 +999,59 @@ def _reflow_inset_colorbar_frame(
     else:
         cb_width = width
         cb_height = length
+
+    renderer = cax.figure._get_renderer()
+    if hasattr(colorbar, "update_ticks"):
+        colorbar.update_ticks(manual_only=True)
+    bboxes = []
+    longaxis = _get_colorbar_long_axis(colorbar)
+    try:
+        bbox = longaxis.get_tightbbox(renderer)
+    except Exception:
+        bbox = None
+    if bbox is not None:
+        bboxes.append(bbox)
+    label_axis = _get_axis_for(
+        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    )
+    if label_axis.label.get_text():
+        try:
+            bboxes.append(label_axis.label.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if colorbar.outline is not None:
+        try:
+            bboxes.append(colorbar.outline.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if getattr(colorbar, "solids", None) is not None:
+        try:
+            bboxes.append(colorbar.solids.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if getattr(colorbar, "dividers", None) is not None:
+        try:
+            bboxes.append(colorbar.dividers.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if not bboxes:
+        return
+    x0 = min(b.x0 for b in bboxes)
+    y0 = min(b.y0 for b in bboxes)
+    x1 = max(b.x1 for b in bboxes)
+    y1 = max(b.y1 for b in bboxes)
+    xpad_extra = ticklen / 72
+    ypad_extra = ticklen / 72
+    if orientation == "horizontal":
+        y0 -= ypad_extra
+        y1 += ypad_extra
+    else:
+        x0 -= xpad_extra
+        x1 += xpad_extra
+    x0, y0 = parent.transAxes.inverted().transform((x0, y0))
+    x1, y1 = parent.transAxes.inverted().transform((x1, y1))
+    bounds_inset = [x0, y0, cb_width, cb_height]
+    bounds_frame = [x0 - xpad, y0 - ypad, cb_width + 2 * xpad, cb_height + 2 * ypad]
+    _apply_inset_colorbar_layout(
+        cax, bounds_inset=bounds_inset, bounds_frame=bounds_frame, frame=frame
+    )
