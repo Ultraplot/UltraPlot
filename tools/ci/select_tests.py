@@ -73,8 +73,16 @@ def main() -> int:
             break
 
     if tests:
+        # Guard against parametrized tests recorded without parameters.
+        # Falling back to file-level nodeids avoids pytest "not found" errors.
+        normalized = set()
+        for nodeid in tests:
+            if "::" in nodeid and "[" not in nodeid:
+                normalized.add(nodeid.split("::", 1)[0])
+            else:
+                normalized.add(nodeid)
         result["mode"] = "selected"
-        result["tests"] = sorted(tests)
+        result["tests"] = sorted(normalized)
 
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_text(json.dumps(result, indent=2), encoding="utf-8")
