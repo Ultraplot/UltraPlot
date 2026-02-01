@@ -26,6 +26,7 @@ from xml.etree import ElementTree
 import matplotlib as mpl
 import matplotlib.cm as mcm
 import matplotlib.colors as mcolors
+import matplotlib.colors as mcolors
 import numpy as np
 import numpy.ma as ma
 
@@ -3218,12 +3219,16 @@ class ColormapDatabase(mcm.ColormapRegistry):
             return None
 
     def get_cmap(self, cmap):
+        if isinstance(cmap, (ContinuousColormap, DiscreteColormap, mcolors.Colormap)):
+            return cmap.copy() if hasattr(cmap, "copy") else cmap
         return self.__getitem__(cmap)
 
     def __getitem__(self, key):
         """
         Get the colormap with flexible input keys.
         """
+        if isinstance(key, (ContinuousColormap, DiscreteColormap, mcolors.Colormap)):
+            return key.copy() if hasattr(key, "copy") else key
         # Sanitize key
         key = self._translate_deprecated(key)
         key = self._translate_key(key, mirror=True)
