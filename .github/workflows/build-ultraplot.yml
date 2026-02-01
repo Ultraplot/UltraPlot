@@ -32,7 +32,13 @@ jobs:
     env:
       TEST_MODE: ${{ inputs.test-mode }}
       TEST_NODEIDS: ${{ inputs.test-nodeids }}
+      PYTEST_WORKERS: 4
     steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -62,10 +68,16 @@ jobs:
       IS_PR: ${{ github.event_name == 'pull_request' }}
       TEST_MODE: ${{ inputs.test-mode }}
       TEST_NODEIDS: ${{ inputs.test-nodeids }}
+      PYTEST_WORKERS: 4
     defaults:
       run:
         shell: bash -el {0}
     steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
       - uses: actions/checkout@v6
 
       - uses: mamba-org/setup-micromamba@v2.0.7
@@ -138,7 +150,7 @@ jobs:
               echo "No valid nodeids found on base; skipping baseline generation."
               exit 0
             else
-              pytest -n auto --tb=short --disable-warnings -W ignore \
+              pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
                 --mpl-generate-path=./ultraplot/tests/baseline/ \
                 --mpl-default-style="./ultraplot.yml" \
                 ${FILTERED_NODEIDS} || status=$?
@@ -149,7 +161,7 @@ jobs:
             fi
             exit "$status"
           else
-            pytest -n auto --tb=short --disable-warnings -W ignore \
+            pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
@@ -188,7 +200,7 @@ jobs:
               echo "No valid nodeids found on PR branch; skipping image comparison."
               exit 0
             else
-              pytest -n auto --tb=short --disable-warnings -W ignore \
+              pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
@@ -202,7 +214,7 @@ jobs:
             fi
             exit "$status"
           else
-            pytest -n auto --tb=short --disable-warnings -W ignore \
+            pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
