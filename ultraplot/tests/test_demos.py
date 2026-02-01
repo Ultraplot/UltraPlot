@@ -105,7 +105,17 @@ def test_show_fonts_with_existing_font():
     # If no fonts are present, skip the test
     if not ttflist:
         pytest.skip("No system fonts available for testing show_fonts.")
-    font_name = ttflist[0].name
+    available = {font.name for font in ttflist}
+    preferred = [
+        "DejaVu Sans",
+        "DejaVu Serif",
+        "Liberation Sans",
+        "Arial",
+        "STIXGeneral",
+    ]
+    font_name = next((name for name in preferred if name in available), None)
+    if font_name is None:
+        pytest.skip("No preferred fonts available for testing show_fonts.")
     fig, axs = demos.show_fonts(font_name)
     assert fig is not None
     # When a single font is requested, we expect a single row (len(props)) of axes
