@@ -49,7 +49,7 @@ jobs:
         run: |
           echo "Test map cache miss; generating map from tests."
           python -m pip install --upgrade pip
-          pip install -e .[tests] coverage
+          pip install -e .[tests] coverage pytest pytest-cov pytest-xdist
           mkdir -p .ci
           pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov \
             --cov=ultraplot --cov-branch --cov-context=test --cov-report= \
