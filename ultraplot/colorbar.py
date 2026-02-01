@@ -13,6 +13,7 @@ import matplotlib.ticker as mticker
 import matplotlib.offsetbox as moffsetbox
 import matplotlib.patches as mpatches
 import matplotlib.transforms as mtransforms
+import matplotlib.text as mtext
 from packaging import version
 
 from . import constructor, colors as pcolors
