@@ -84,7 +84,7 @@ jobs:
       # Cache Baseline Figures (Restore step)
       - name: Cache Baseline Figures
         id: cache-baseline
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: ${{ env.IS_PR }}
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
