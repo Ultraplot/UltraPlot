@@ -213,5 +213,3 @@ def test_cycle_mutation_does_not_corrupt_rcparams():
     observed = [results.get() for _ in range(results.qsize())]
     assert observed, "No rcParams observations were recorded."
     assert all(value in allowed for value in observed)
-=======
->>>>>>> 05e1ec4a (Add threaded rc cycle consistency test)
