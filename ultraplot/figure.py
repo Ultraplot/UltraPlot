@@ -460,6 +460,18 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
     # workaround), (2) override bbox and bbox_inches as *properties* (but these
     # are really complicated, dangerous, and result in unnecessary extra draws),
     # or (3) simply override canvas draw methods. Our choice is #3.
+    def _needs_post_tight_layout(fig):
+        """
+        Return True if the figure should run a second tight-layout pass after draw.
+        """
+        if not getattr(fig, "_tight_active", False):
+            return False
+        for ax in fig._iter_axes(hidden=True, children=False):
+            name = getattr(ax, "_name", None) or getattr(ax, "name", None)
+            if name in ("polar",):
+                return True
+        return False
+
     def _canvas_preprocess(self, *args, **kwargs):
         fig = self.figure  # update even if not stale! needed after saves
         func = getattr(type(self), method)  # the original method
@@ -494,11 +506,17 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         ctx2 = fig._context_authorized()  # skip backend set_constrained_layout()
         ctx3 = rc.context(fig._render_context)  # draw with figure-specific setting
         with ctx1, ctx2, ctx3:
+            needs_post_layout = False
             if not fig._layout_initialized or layout_dirty:
                 fig.auto_layout()
                 fig._layout_initialized = True
                 fig._layout_dirty = False
-            return func(self, *args, **kwargs)
+                needs_post_layout = _needs_post_tight_layout(fig)
+            result = func(self, *args, **kwargs)
+            if needs_post_layout:
+                fig.auto_layout()
+                result = func(self, *args, **kwargs)
+            return result
 
     # Add preprocessor
     setattr(canvas, method, _canvas_preprocess.__get__(canvas))
