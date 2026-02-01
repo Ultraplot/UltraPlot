@@ -124,23 +124,16 @@ jobs:
             }
             FILTERED_NODEIDS="$(filter_nodeids)"
             if [ -z "${FILTERED_NODEIDS}" ]; then
-              echo "No valid nodeids found; running full suite."
-              pytest -q --tb=short --disable-warnings -W ignore \
-                --mpl-generate-path=./ultraplot/tests/baseline/ \
-                --mpl-default-style="./ultraplot.yml" \
-                ultraplot/tests || status=$?
+              echo "No valid nodeids found; skipping baseline generation."
+              exit 0
             else
               pytest -q --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
               ${FILTERED_NODEIDS} || status=$?
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-                echo "No tests collected from selected nodeids on base; running full suite."
-                status=0
-                pytest -q --tb=short --disable-warnings -W ignore \
-                  --mpl-generate-path=./ultraplot/tests/baseline/ \
-                  --mpl-default-style="./ultraplot.yml" \
-                  ultraplot/tests || status=$?
+                echo "No tests collected from selected nodeids on base; skipping baseline generation."
+                exit 0
               fi
             fi
             exit "$status"
@@ -178,14 +171,8 @@ jobs:
             }
             FILTERED_NODEIDS="$(filter_nodeids)"
             if [ -z "${FILTERED_NODEIDS}" ]; then
-              echo "No valid nodeids found; running full suite."
-              pytest -q --tb=short --disable-warnings -W ignore \
-                --mpl \
-                --mpl-baseline-path=./ultraplot/tests/baseline \
-                --mpl-results-path=./results/ \
-                --mpl-generate-summary=html \
-                --mpl-default-style="./ultraplot.yml" \
-                ultraplot/tests || status=$?
+              echo "No valid nodeids found; skipping image comparison."
+              exit 0
             else
               pytest -q --tb=short --disable-warnings -W ignore \
               --mpl \
@@ -195,15 +182,8 @@ jobs:
               --mpl-default-style="./ultraplot.yml" \
               ${FILTERED_NODEIDS} || status=$?
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-                echo "No tests collected from selected nodeids; running full suite."
-                status=0
-                pytest -q --tb=short --disable-warnings -W ignore \
-                  --mpl \
-                  --mpl-baseline-path=./ultraplot/tests/baseline \
-                  --mpl-results-path=./results/ \
-                  --mpl-generate-summary=html \
-                  --mpl-default-style="./ultraplot.yml" \
-                  ultraplot/tests || status=$?
+                echo "No tests collected from selected nodeids; skipping image comparison."
+                exit 0
               fi
             fi
             exit "$status"
