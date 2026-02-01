@@ -162,7 +162,6 @@ def test_cycle_consistent_across_threads():
 
     results = [q.get() for _ in threads]
     assert all(result == expected for result in results)
-<<<<<<< HEAD
 
 
 def test_cycle_mutation_does_not_corrupt_rcparams():
