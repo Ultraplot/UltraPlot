@@ -37,7 +37,7 @@ jobs:
 
       - name: Restore test map cache
         id: restore-map
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .ci/test-map.json
           key: test-map-v2-${{ github.event.pull_request.base.sha }}
