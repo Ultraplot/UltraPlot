@@ -138,10 +138,10 @@ jobs:
               echo "No valid nodeids found on base; skipping baseline generation."
               exit 0
             else
-              pytest -q --tb=short --disable-warnings -W ignore \
-              --mpl-generate-path=./ultraplot/tests/baseline/ \
-              --mpl-default-style="./ultraplot.yml" \
-              ${FILTERED_NODEIDS} || status=$?
+              pytest -n auto --tb=short --disable-warnings -W ignore \
+                --mpl-generate-path=./ultraplot/tests/baseline/ \
+                --mpl-default-style="./ultraplot.yml" \
+                ${FILTERED_NODEIDS} || status=$?
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
                 echo "No tests collected from selected nodeids on base; skipping baseline generation."
                 status=0
@@ -149,7 +149,7 @@ jobs:
             fi
             exit "$status"
           else
-            pytest -q --tb=short --disable-warnings -W ignore \
+            pytest -n auto --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
@@ -188,7 +188,7 @@ jobs:
               echo "No valid nodeids found on PR branch; skipping image comparison."
               exit 0
             else
-              pytest -q --tb=short --disable-warnings -W ignore \
+              pytest -n auto --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
@@ -202,7 +202,7 @@ jobs:
             fi
             exit "$status"
           else
-            pytest -q --tb=short --disable-warnings -W ignore \
+            pytest -n auto --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
