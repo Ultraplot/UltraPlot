@@ -561,6 +561,10 @@ def _to_string(value):
         value = repr(value)  # special case!
     elif isinstance(value, (list, tuple, np.ndarray)):
         value = ", ".join(map(_to_string, value))  # sexy recursion
+    elif isinstance(value, dict):
+        # Convert dict to YAML-style inline format: {key1: val1, key2: val2}
+        items = ", ".join(f"{k}: {_to_string(v)}" for k, v in value.items())
+        value = "{" + items + "}"
     else:
         value = None
     return value
