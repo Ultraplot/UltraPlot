@@ -995,3 +995,82 @@ def _reflow_inset_colorbar_frame(
     else:
         cb_width = width
         cb_height = length
+
+    renderer = cax.figure._get_renderer()
+    if hasattr(colorbar, "update_ticks"):
+        colorbar.update_ticks(manual_only=True)
+    bboxes = []
+    longaxis = _get_colorbar_long_axis(colorbar)
+    try:
+        bbox = longaxis.get_tightbbox(renderer)
+    except Exception:
+        bbox = None
+    if bbox is not None:
+        bboxes.append(bbox)
+    label_axis = _get_axis_for(
+        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    )
+    if label_axis.label.get_text():
+        try:
+            bboxes.append(label_axis.label.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if colorbar.outline is not None:
+        try:
+            bboxes.append(colorbar.outline.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if getattr(colorbar, "solids", None) is not None:
+        try:
+            bboxes.append(colorbar.solids.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if getattr(colorbar, "dividers", None) is not None:
+        try:
+            bboxes.append(colorbar.dividers.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+    if not bboxes:
+        return
+    x0 = min(b.x0 for b in bboxes)
+    y0 = min(b.y0 for b in bboxes)
+    x1 = max(b.x1 for b in bboxes)
+    y1 = max(b.y1 for b in bboxes)
+    inv_parent = parent.transAxes.inverted()
+    (px0, py0) = inv_parent.transform((x0, y0))
+    (px1, py1) = inv_parent.transform((x1, y1))
+    cax_bbox = cax.get_window_extent(renderer=renderer)
+    (cx0, cy0) = inv_parent.transform((cax_bbox.x0, cax_bbox.y0))
+    (cx1, cy1) = inv_parent.transform((cax_bbox.x1, cax_bbox.y1))
+    px0, px1 = sorted((px0, px1))
+    py0, py1 = sorted((py0, py1))
+    cx0, cx1 = sorted((cx0, cx1))
+    cy0, cy1 = sorted((cy0, cy1))
+    delta_left = max(0.0, cx0 - px0)
+    delta_right = max(0.0, px1 - cx1)
+    delta_bottom = max(0.0, cy0 - py0)
+    delta_top = max(0.0, py1 - cy1)
+
+    pad_left = xpad + delta_left
+    pad_right = xpad + delta_right
+    pad_bottom = ypad + delta_bottom
+    pad_top = ypad + delta_top
+    try:
+        solver = ColorbarLayoutSolver(
+            loc,
+            cb_width,
+            cb_height,
+            pad_left,
+            pad_right,
+            pad_bottom,
+            pad_top,
+        )
+        bounds = solver.solve()
+    except Exception:
+        return
+    _apply_inset_colorbar_layout(
+        cax,
+        bounds_inset=list(bounds["inset"]),
+        bounds_frame=list(bounds["frame"]),
+        frame=frame,
+    )
