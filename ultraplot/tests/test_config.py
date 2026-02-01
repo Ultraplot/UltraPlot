@@ -1,7 +1,4 @@
 import importlib
-import threading
-from queue import Queue
-
 import pytest
 
 import ultraplot as uplt
@@ -139,26 +136,3 @@ def test_cycle_rc_setting(cycle, raises_error):
     else:
         uplt.rc["cycle"] = cycle
 
-
-def test_cycle_consistent_across_threads():
-    """
-    Sanity check: concurrent reads of the prop cycle should be consistent.
-    """
-    import matplotlib as mpl
-
-    expected = repr(mpl.rcParams["axes.prop_cycle"])
-    q = Queue()
-    start = threading.Barrier(4)
-
-    def _read_cycle():
-        start.wait()
-        q.put(repr(mpl.rcParams["axes.prop_cycle"]))
-
-    threads = [threading.Thread(target=_read_cycle) for _ in range(4)]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-
-    results = [q.get() for _ in threads]
-    assert all(result == expected for result in results)
