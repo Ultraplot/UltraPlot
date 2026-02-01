@@ -34,8 +34,14 @@ def build_map(coverage_file: str, repo_root: str) -> dict[str, list[str]]:
 
         contexts = set()
         for ctxs in contexts_by_line.values():
-            if ctxs:
-                contexts.update(ctxs)
+            if not ctxs:
+                continue
+            for ctx in ctxs:
+                if not ctx:
+                    continue
+                # Pytest-cov can append "|run"/"|setup"/"|teardown" to nodeids.
+                # Strip phase suffixes so selection uses valid nodeids.
+                contexts.add(ctx.split("|", 1)[0])
         if contexts:
             files_map[rel] = contexts
 

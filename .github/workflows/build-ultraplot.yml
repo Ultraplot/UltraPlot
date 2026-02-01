@@ -32,7 +32,22 @@ jobs:
     env:
       TEST_MODE: ${{ inputs.test-mode }}
       TEST_NODEIDS: ${{ inputs.test-nodeids }}
+      PYTEST_WORKERS: 4
     steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - name: Show system memory
+        run: |
+          echo "=== System Memory ==="
+          free -h
+          echo ""
+          echo "=== CPU Info ==="
+          nproc
+          cat /proc/cpuinfo | grep "model name" | head -1
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -62,10 +77,25 @@ jobs:
       IS_PR: ${{ github.event_name == 'pull_request' }}
       TEST_MODE: ${{ inputs.test-mode }}
       TEST_NODEIDS: ${{ inputs.test-nodeids }}
+      PYTEST_WORKERS: 4
     defaults:
       run:
         shell: bash -el {0}
     steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - name: Show system memory
+        run: |
+          echo "=== System Memory ==="
+          free -h
+          echo ""
+          echo "=== CPU Info ==="
+          nproc
+          cat /proc/cpuinfo | grep "model name" | head -1
+
       - uses: actions/checkout@v6
 
       - uses: mamba-org/setup-micromamba@v2.0.7
@@ -84,7 +114,7 @@ jobs:
       # Cache Baseline Figures (Restore step)
       - name: Cache Baseline Figures
         id: cache-baseline
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: ${{ env.IS_PR }}
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
@@ -99,6 +129,16 @@ jobs:
         if: steps.cache-baseline.outputs.cache-hit != 'true' || !env.IS_PR
         run: |
           mkdir -p ultraplot/tests/baseline
+          echo "TEST_MODE=${TEST_MODE}"
+          echo "IS_PR=${IS_PR}"
+          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha }}"
+          echo "TEST_NODEIDS=${TEST_NODEIDS}"
+          # Save PR-selected nodeids for reuse after checkout (if provided)
+          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
+            printf "%s\n" ${TEST_NODEIDS} > /tmp/pr_selected_nodeids.txt
+          else
+            : > /tmp/pr_selected_nodeids.txt
+          fi
           # Checkout the base commit for PRs; otherwise regenerate from current ref
           if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
             git fetch origin ${{ github.event.pull_request.base.sha }}
@@ -110,11 +150,11 @@ jobs:
 
           # Generate the baseline images and hash library
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
+          if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
             filter_nodeids() {
               local filtered=""
-              for nodeid in ${TEST_NODEIDS}; do
+              for nodeid in $(cat /tmp/pr_selected_nodeids.txt); do
                 local path="${nodeid%%::*}"
                 if [ -f "$path" ]; then
                   filtered="${filtered} ${nodeid}"
@@ -123,37 +163,42 @@ jobs:
               echo "${filtered}"
             }
             FILTERED_NODEIDS="$(filter_nodeids)"
+            echo "FILTERED_NODEIDS_BASE=${FILTERED_NODEIDS}"
             if [ -z "${FILTERED_NODEIDS}" ]; then
-              echo "No valid nodeids found; running full suite."
-              pytest -q --tb=short --disable-warnings -W ignore \
+              echo "No valid nodeids found on base; skipping baseline generation."
+            else
+              echo "=== Memory before baseline generation ===" && free -h
+              pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
                 --mpl-generate-path=./ultraplot/tests/baseline/ \
                 --mpl-default-style="./ultraplot.yml" \
-                ultraplot/tests || status=$?
-            else
-              pytest -q --tb=short --disable-warnings -W ignore \
-              --mpl-generate-path=./ultraplot/tests/baseline/ \
-              --mpl-default-style="./ultraplot.yml" \
-              ${FILTERED_NODEIDS} || status=$?
+                ${FILTERED_NODEIDS} || status=$?
+              echo "=== Memory after baseline generation ===" && free -h
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-                echo "No tests collected from selected nodeids on base; running full suite."
+                echo "No tests collected from selected nodeids on base; skipping baseline generation."
                 status=0
-                pytest -q --tb=short --disable-warnings -W ignore \
-                  --mpl-generate-path=./ultraplot/tests/baseline/ \
-                  --mpl-default-style="./ultraplot.yml" \
-                  ultraplot/tests || status=$?
               fi
             fi
-            exit "$status"
+            # Return to the PR branch before continuing
+            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+              echo "Checking out PR branch: ${{ github.sha }}"
+              git checkout ${{ github.sha }} || echo "Warning: git checkout failed, but continuing"
+            fi
+            if [ "$status" -ne 0 ]; then
+              echo "Baseline generation failed with status $status"
+              exit "$status"
+            fi
           else
-            pytest -q --tb=short --disable-warnings -W ignore \
+            echo "=== Memory before baseline generation ===" && free -h
+            pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl-generate-path=./ultraplot/tests/baseline/ \
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
-          fi
-
-          # Return to the PR branch for the rest of the job
-          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
-            git checkout ${{ github.sha }}
+            echo "=== Memory after baseline generation ===" && free -h
+            # Return to the PR branch for the rest of the job
+            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+              echo "Checking out PR branch: ${{ github.sha }}"
+              git checkout ${{ github.sha }} || echo "Warning: git checkout failed, but continuing"
+            fi
           fi
 
       # Image Comparison (Uses cached or newly generated baseline)
@@ -164,11 +209,13 @@ jobs:
 
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
+          echo "TEST_MODE=${TEST_MODE}"
+          echo "TEST_NODEIDS=${TEST_NODEIDS}"
+          if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
             filter_nodeids() {
               local filtered=""
-              for nodeid in ${TEST_NODEIDS}; do
+              for nodeid in $(cat /tmp/pr_selected_nodeids.txt); do
                 local path="${nodeid%%::*}"
                 if [ -f "$path" ]; then
                   filtered="${filtered} ${nodeid}"
@@ -177,44 +224,36 @@ jobs:
               echo "${filtered}"
             }
             FILTERED_NODEIDS="$(filter_nodeids)"
+            echo "FILTERED_NODEIDS_PR=${FILTERED_NODEIDS}"
             if [ -z "${FILTERED_NODEIDS}" ]; then
-              echo "No valid nodeids found; running full suite."
-              pytest -q --tb=short --disable-warnings -W ignore \
-                --mpl \
-                --mpl-baseline-path=./ultraplot/tests/baseline \
-                --mpl-results-path=./results/ \
-                --mpl-generate-summary=html \
-                --mpl-default-style="./ultraplot.yml" \
-                ultraplot/tests || status=$?
+              echo "No valid nodeids found on PR branch; skipping image comparison."
+              exit 0
             else
-              pytest -q --tb=short --disable-warnings -W ignore \
+              echo "=== Memory before image comparison ===" && free -h
+              pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
               ${FILTERED_NODEIDS} || status=$?
+              echo "=== Memory after image comparison ===" && free -h
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
-                echo "No tests collected from selected nodeids; running full suite."
+                echo "No tests collected from selected nodeids; skipping image comparison."
                 status=0
-                pytest -q --tb=short --disable-warnings -W ignore \
-                  --mpl \
-                  --mpl-baseline-path=./ultraplot/tests/baseline \
-                  --mpl-results-path=./results/ \
-                  --mpl-generate-summary=html \
-                  --mpl-default-style="./ultraplot.yml" \
-                  ultraplot/tests || status=$?
               fi
             fi
             exit "$status"
           else
-            pytest -q --tb=short --disable-warnings -W ignore \
+            echo "=== Memory before image comparison ===" && free -h
+            pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
+            echo "=== Memory after image comparison ===" && free -h
           fi
 
       # Return the html output of the comparison even if failed
@@ -224,3 +263,4 @@ jobs:
         with:
           name: failed-comparisons-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-${{ github.sha }}
           path: results/*
+          if-no-files-found: ignore

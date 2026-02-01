@@ -64,6 +64,7 @@ exclude = ["**/*.ipynb"]
 filterwarnings = [
     "ignore:'resetCache' deprecated - use 'reset_cache':DeprecationWarning:matplotlib._fontconfig_pattern",
 ]
+mpl-default-style = { axes.prop_cycle = "cycler('color', ['#4c72b0ff', '#55a868ff', '#c44e52ff', '#8172b2ff', '#ccb974ff', '#64b5cdff'])" }
 [project.optional-dependencies]
 docs = [
     "jupyter",

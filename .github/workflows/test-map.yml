@@ -14,6 +14,11 @@ jobs:
       run:
         shell: bash -el {0}
     steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -36,11 +41,13 @@ jobs:
       - name: Generate test coverage map
         run: |
           mkdir -p .ci
-          pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov --cov=ultraplot --cov-branch --cov-context=test --cov-report= ultraplot
+          pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov \
+            --cov=ultraplot --cov-branch --cov-context=test --cov-report= \
+            ultraplot/tests
           python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
 
       - name: Cache test map
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ci/test-map.json
           key: test-map-${{ github.sha }}
