@@ -3808,9 +3808,6 @@ def _get_pos_from_locator(
             y = y_pad
     return (x, y)
 
-
-
-
     renderer = cax.figure._get_renderer()
     if hasattr(colorbar, "update_ticks"):
         colorbar.update_ticks(manual_only=True)

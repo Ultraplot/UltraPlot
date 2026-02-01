@@ -32,6 +32,7 @@ class _TextKw:
     kw_label: ColorbarLabelKw
     kw_ticklabels: ColorbarTickKw
 
+
 class UltraColorbar:
     """
     Centralized colorbar builder for axes.
@@ -401,9 +402,7 @@ def _resolve_mappable(
 ) -> tuple[mcm.ScalarMappable, dict[str, Any]]:
     if isinstance(mappable, Iterable) and not isinstance(mappable, (str, bytes)):
         mappable_list = list(mappable)
-        if len(mappable_list) == 1 and isinstance(
-            mappable_list[0], mcm.ScalarMappable
-        ):
+        if len(mappable_list) == 1 and isinstance(mappable_list[0], mcm.ScalarMappable):
             mappable = mappable_list[0]
     if not isinstance(mappable, mcm.ScalarMappable):
         mappable, kwargs = cax._parse_colorbar_arg(mappable, values, **kwargs)
@@ -472,6 +471,7 @@ def _resolve_locators(
         if tickminor and minorlocator is None:
             minorlocator = pticker.DiscreteLocator(ticks, minor=True)
     return norm, formatter, locator, minorlocator, bool(tickminor)
+
 
 def _get_axis_for(
     labelloc: Optional[str],
