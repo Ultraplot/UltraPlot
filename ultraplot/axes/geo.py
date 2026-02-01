@@ -1539,8 +1539,12 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._clear_edge_lat_labels()
             return
 
-        left_labels = adapter.labels_for_sides(left=True).get("left", []) if left_on else []
-        right_labels = adapter.labels_for_sides(right=True).get("right", []) if right_on else []
+        left_labels = (
+            adapter.labels_for_sides(left=True).get("left", []) if left_on else []
+        )
+        right_labels = (
+            adapter.labels_for_sides(right=True).get("right", []) if right_on else []
+        )
         if not left_labels and not right_labels:
             self._clear_edge_lat_labels()
             return
@@ -2813,7 +2817,9 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
             lonlines_mod = (lonlines + 180) % 360 - 180  # only for cartopy
             # Preserve distinct -180/180 ticks so both map edges can be labeled.
             eps = 1e-10
-            lonlines_mod = np.where(np.isclose(lonlines, -180), -180 + eps, lonlines_mod)
+            lonlines_mod = np.where(
+                np.isclose(lonlines, -180), -180 + eps, lonlines_mod
+            )
             lonlines_mod = np.where(np.isclose(lonlines, 180), 180 - eps, lonlines_mod)
             lonlines = lonlines_mod
         gl.xlocator = mticker.FixedLocator(lonlines)

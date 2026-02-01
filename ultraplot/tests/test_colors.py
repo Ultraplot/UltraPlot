@@ -127,3 +127,13 @@ def test_register_new():
         "_my_new_cmap"
     ), f"Received {cmap_get.name.lower()} expected _my_new_cmap"
     assert len(cmap_get.colors) == 2
+
+
+def test_get_cmap_accepts_colormap_objects():
+    """
+    Colormap lookups should accept colormap objects directly.
+    """
+    cmap = pcolors._cmap_database.get_cmap("viridis")
+    cmap_from_obj = pcolors._cmap_database.get_cmap(cmap)
+    assert cmap_from_obj is not cmap
+    assert cmap_from_obj.name == cmap.name
