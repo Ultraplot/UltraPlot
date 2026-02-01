@@ -166,7 +166,6 @@ jobs:
             echo "FILTERED_NODEIDS_BASE=${FILTERED_NODEIDS}"
             if [ -z "${FILTERED_NODEIDS}" ]; then
               echo "No valid nodeids found on base; skipping baseline generation."
-              exit 0
             else
               echo "=== Memory before baseline generation ===" && free -h
               pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
@@ -179,7 +178,15 @@ jobs:
                 status=0
               fi
             fi
-            exit "$status"
+            # Return to the PR branch before continuing
+            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+              echo "Checking out PR branch: ${{ github.sha }}"
+              git checkout ${{ github.sha }} || echo "Warning: git checkout failed, but continuing"
+            fi
+            if [ "$status" -ne 0 ]; then
+              echo "Baseline generation failed with status $status"
+              exit "$status"
+            fi
           else
             echo "=== Memory before baseline generation ===" && free -h
             pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
@@ -187,11 +194,11 @@ jobs:
               --mpl-default-style="./ultraplot.yml" \
               ultraplot/tests
             echo "=== Memory after baseline generation ===" && free -h
-          fi
-
-          # Return to the PR branch for the rest of the job
-          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
-            git checkout ${{ github.sha }}
+            # Return to the PR branch for the rest of the job
+            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+              echo "Checking out PR branch: ${{ github.sha }}"
+              git checkout ${{ github.sha }} || echo "Warning: git checkout failed, but continuing"
+            fi
           fi
 
       # Image Comparison (Uses cached or newly generated baseline)
