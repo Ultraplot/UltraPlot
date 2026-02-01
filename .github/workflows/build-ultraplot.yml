@@ -256,3 +256,4 @@ jobs:
         with:
           name: failed-comparisons-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-${{ github.sha }}
           path: results/*
+          if-no-files-found: ignore
