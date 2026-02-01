@@ -1,4 +1,9 @@
-import pytest, ultraplot as uplt, numpy as np
+import multiprocessing as mp
+import os
+
+import numpy as np
+import pytest
+import ultraplot as uplt
 
 
 def test_unsharing_after_creation(rng):
@@ -144,6 +149,48 @@ def test_toggle_input_axis_sharing():
     fig = uplt.figure()
     with pytest.warns(uplt.internals.warnings.UltraPlotWarning):
         fig._toggle_axis_sharing(which="does not exist")
+
+
+def _layout_signature() -> tuple:
+    fig, ax = uplt.subplots(ncols=2, nrows=2)
+    for axi in ax:
+        axi.plot([0, 1], [0, 1], label="line")
+        axi.set_xlabel("X label")
+        axi.set_ylabel("Y label")
+    fig.suptitle("Title")
+    fig.legend()
+    fig.canvas.draw()
+    signature = tuple(
+        tuple(np.round(axi.get_position().bounds, 6))
+        for axi in fig.axes
+        if axi.get_visible()
+    )
+    uplt.close(fig)
+    return signature
+
+
+def _layout_worker(queue):
+    queue.put(_layout_signature())
+
+
+def test_layout_deterministic_across_runs():
+    """
+    Layout should be deterministic for identical inputs.
+    """
+    positions = [_layout_signature() for _ in range(3)]
+    assert all(p == positions[0] for p in positions)
+
+    # Probe mode: exercise multiple processes to catch nondeterminism.
+    if os.environ.get("ULTRAPLOT_LAYOUT_PROBE") == "1":
+        ctx = mp.get_context("spawn")
+        queue = ctx.Queue()
+        workers = [ctx.Process(target=_layout_worker, args=(queue,)) for _ in range(4)]
+        for proc in workers:
+            proc.start()
+        proc_positions = [queue.get() for _ in workers]
+        for proc in workers:
+            proc.join()
+        assert all(p == proc_positions[0] for p in proc_positions)
 
 
 def test_suptitle_alignment():
