@@ -40,7 +40,7 @@ jobs:
           python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
 
       - name: Cache test map
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .ci/test-map.json
           key: test-map-${{ github.sha }}
