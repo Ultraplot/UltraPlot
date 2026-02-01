@@ -162,3 +162,53 @@ def test_cycle_consistent_across_threads():
 
     results = [q.get() for _ in threads]
     assert all(result == expected for result in results)
+
+
+def test_cycle_mutation_does_not_corrupt_rcparams():
+    """
+    Stress test: concurrent cycle mutations should not corrupt rcParams.
+    """
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+
+    cycle_a = "colorblind"
+    cycle_b = "default"
+    plt.switch_backend("Agg")
+    uplt.rc["cycle"] = cycle_a
+    expected_a = repr(mpl.rcParams["axes.prop_cycle"])
+    uplt.rc["cycle"] = cycle_b
+    expected_b = repr(mpl.rcParams["axes.prop_cycle"])
+    allowed = {expected_a, expected_b}
+
+    start = threading.Barrier(2)
+    done = threading.Event()
+    results = Queue()
+
+    def _writer():
+        start.wait()
+        for _ in range(200):
+            uplt.rc["cycle"] = cycle_a
+            uplt.rc["cycle"] = cycle_b
+        done.set()
+
+    def _reader():
+        start.wait()
+        while not done.is_set():
+            results.put(repr(mpl.rcParams["axes.prop_cycle"]))
+            fig, ax = uplt.subplots()
+            ax.plot([0, 1], [0, 1])
+            fig.canvas.draw()
+            uplt.close(fig)
+
+    threads = [
+        threading.Thread(target=_writer),
+        threading.Thread(target=_reader),
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    observed = [results.get() for _ in range(results.qsize())]
+    assert observed, "No rcParams observations were recorded."
+    assert all(value in allowed for value in observed)
