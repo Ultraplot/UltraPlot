@@ -106,6 +106,238 @@ class UltraLegend:
     def __init__(self, axes):
         self.axes = axes
 
+    @staticmethod
+    def _align_map() -> dict[Optional[str], dict[str, str]]:
+        """
+        Mapping between panel side + align and matplotlib legend loc strings.
+        """
+        return ALIGN_OPTS
+
+    def _resolve_inputs(
+        self,
+        handles=None,
+        labels=None,
+        *,
+        loc=None,
+        align=None,
+        width=None,
+        pad=None,
+        space=None,
+        frame=None,
+        frameon=None,
+        ncol=None,
+        ncols=None,
+        alphabetize=False,
+        center=None,
+        order=None,
+        label=None,
+        title=None,
+        fontsize=None,
+        fontweight=None,
+        fontcolor=None,
+        titlefontsize=None,
+        titlefontweight=None,
+        titlefontcolor=None,
+        handle_kw=None,
+        handler_map=None,
+        span: Optional[Union[int, Tuple[int, int]]] = None,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
+        rows: Optional[Union[int, Tuple[int, int]]] = None,
+        cols: Optional[Union[int, Tuple[int, int]]] = None,
+        **kwargs,
+    ):
+        ncol = _not_none(ncols=ncols, ncol=ncol)
+        order = _not_none(order, "C")
+        frameon = _not_none(frame=frame, frameon=frameon, default=rc["legend.frameon"])
+        fontsize = _not_none(fontsize, rc["legend.fontsize"])
+        titlefontsize = _not_none(
+            title_fontsize=kwargs.pop("title_fontsize", None),
+            titlefontsize=titlefontsize,
+            default=rc["legend.title_fontsize"],
+        )
+        fontsize = _fontsize_to_pt(fontsize)
+        titlefontsize = _fontsize_to_pt(titlefontsize)
+        if order not in ("F", "C"):
+            raise ValueError(
+                f"Invalid order {order!r}. Please choose from "
+                "'C' (row-major, default) or 'F' (column-major)."
+            )
+
+        # Convert relevant keys to em-widths
+        kwargs = _normalize_em_kwargs(kwargs, fontsize=fontsize)
+        return (
+            handles,
+            labels,
+            loc,
+            align,
+            width,
+            pad,
+            space,
+            frameon,
+            ncol,
+            order,
+            label,
+            title,
+            fontsize,
+            fontweight,
+            fontcolor,
+            titlefontsize,
+            titlefontweight,
+            titlefontcolor,
+            handle_kw,
+            handler_map,
+            span,
+            row,
+            col,
+            rows,
+            cols,
+            kwargs,
+        )
+
+    def _resolve_axes_layout(
+        self,
+        *,
+        loc,
+        align,
+        width,
+        pad,
+        space,
+        frameon,
+        span,
+        row,
+        col,
+        rows,
+        cols,
+        fontsize,
+        kwargs,
+    ):
+        ax = self.axes
+        if loc in ("fill", "left", "right", "top", "bottom"):
+            lax = ax._add_guide_panel(
+                loc,
+                align,
+                width=width,
+                space=space,
+                pad=pad,
+                span=span,
+                row=row,
+                col=col,
+                rows=rows,
+                cols=cols,
+            )
+            kwargs.setdefault("borderaxespad", 0)
+            if not frameon:
+                kwargs.setdefault("borderpad", 0)
+            try:
+                kwargs["loc"] = self._align_map()[lax._panel_side][align]
+            except KeyError as exc:
+                raise ValueError(
+                    f"Invalid align={align!r} for legend loc={loc!r}."
+                ) from exc
+        else:
+            lax = ax
+            pad = kwargs.pop("borderaxespad", pad)
+            kwargs["loc"] = loc  # simply pass to legend
+            kwargs["borderaxespad"] = units(pad, "em", fontsize=fontsize)
+        return lax, kwargs
+
+    def _resolve_style_kwargs(
+        self,
+        *,
+        lax,
+        fontcolor,
+        fontweight,
+        handle_kw,
+        kwargs,
+    ):
+        kw_frame, kwargs = lax._parse_frame("legend", **kwargs)
+        kw_text = {}
+        if fontcolor is not None:
+            kw_text["color"] = fontcolor
+        if fontweight is not None:
+            kw_text["weight"] = fontweight
+        kw_handle = _pop_props(kwargs, "line")
+        kw_handle.setdefault("solid_capstyle", "butt")
+        kw_handle.update(handle_kw or {})
+        return kw_frame, kw_text, kw_handle, kwargs
+
+    def _build_legends(
+        self,
+        *,
+        lax,
+        handles,
+        labels,
+        ncol,
+        order,
+        center,
+        alphabetize,
+        handler_map,
+        title,
+        label,
+        frameon,
+        fontsize,
+        titlefontsize,
+        kw_frame,
+        kwargs,
+    ):
+        pairs, multi = lax._parse_legend_handles(
+            handles,
+            labels,
+            ncol=ncol,
+            order=order,
+            center=center,
+            alphabetize=alphabetize,
+            handler_map=handler_map,
+        )
+        title = _not_none(label=label, title=title)
+        kwargs.update(
+            {
+                "title": title,
+                "frameon": frameon,
+                "fontsize": fontsize,
+                "handler_map": handler_map,
+                "title_fontsize": titlefontsize,
+            }
+        )
+        if multi:
+            objs = lax._parse_legend_centered(pairs, kw_frame=kw_frame, **kwargs)
+        else:
+            kwargs.update({key: kw_frame.pop(key) for key in ("shadow", "fancybox")})
+            objs = [lax._parse_legend_aligned(pairs, ncol=ncol, order=order, **kwargs)]
+            objs[0].legendPatch.update(kw_frame)
+        for obj in objs:
+            if hasattr(lax, "legend_") and lax.legend_ is None:
+                lax.legend_ = obj
+            else:
+                lax.add_artist(obj)
+        return objs
+
+    def _apply_handle_styles(self, objs, *, kw_text, kw_handle):
+        for obj in objs:
+            obj.set_clip_on(False)
+            box = getattr(obj, "_legend_handle_box", None)
+            for child in guides._iter_children(box):
+                if isinstance(child, mtext.Text):
+                    kw = kw_text
+                else:
+                    kw = {
+                        key: val
+                        for key, val in kw_handle.items()
+                        if hasattr(child, "set_" + key)
+                    }
+                    if hasattr(child, "set_sizes") and "markersize" in kw_handle:
+                        kw["sizes"] = np.atleast_1d(kw_handle["markersize"])
+                child.update(kw)
+
+    def _finalize(self, objs, *, loc, align):
+        ax = self.axes
+        if isinstance(objs[0], mpatches.FancyBboxPatch):
+            objs = objs[1:]
+        obj = objs[0] if len(objs) == 1 else tuple(objs)
+        ax._register_guide("legend", obj, (loc, align))
+        return obj
+
     def add(
         self,
         handles=None,
@@ -143,56 +375,110 @@ class UltraLegend:
         """
         The driver function for adding axes legends.
         """
-        ax = self.axes
-        # Parse input argument units
-        ncol = _not_none(ncols=ncols, ncol=ncol)
-        order = _not_none(order, "C")
-        frameon = _not_none(frame=frame, frameon=frameon, default=rc["legend.frameon"])
-        fontsize = _not_none(fontsize, rc["legend.fontsize"])
-        titlefontsize = _not_none(
-            title_fontsize=kwargs.pop("title_fontsize", None),
+        (
+            handles,
+            labels,
+            loc,
+            align,
+            width,
+            pad,
+            space,
+            frameon,
+            ncol,
+            order,
+            label,
+            title,
+            fontsize,
+            fontweight,
+            fontcolor,
+            titlefontsize,
+            titlefontweight,
+            titlefontcolor,
+            handle_kw,
+            handler_map,
+            span,
+            row,
+            col,
+            rows,
+            cols,
+            kwargs,
+        ) = self._resolve_inputs(
+            handles,
+            labels,
+            loc=loc,
+            align=align,
+            width=width,
+            pad=pad,
+            space=space,
+            frame=frame,
+            frameon=frameon,
+            ncol=ncol,
+            ncols=ncols,
+            alphabetize=alphabetize,
+            center=center,
+            order=order,
+            label=label,
+            title=title,
+            fontsize=fontsize,
+            fontweight=fontweight,
+            fontcolor=fontcolor,
             titlefontsize=titlefontsize,
-            default=rc["legend.title_fontsize"],
+            titlefontweight=titlefontweight,
+            titlefontcolor=titlefontcolor,
+            handle_kw=handle_kw,
+            handler_map=handler_map,
+            span=span,
+            row=row,
+            col=col,
+            rows=rows,
+            cols=cols,
+            **kwargs,
         )
-        fontsize = _fontsize_to_pt(fontsize)
-        titlefontsize = _fontsize_to_pt(titlefontsize)
-        if order not in ("F", "C"):
-            raise ValueError(
-                f"Invalid order {order!r}. Please choose from "
-                "'C' (row-major, default) or 'F' (column-major)."
-            )
 
-        # Convert relevant keys to em-widths
-        kwargs = _normalize_em_kwargs(kwargs, fontsize=fontsize)
+        lax, kwargs = self._resolve_axes_layout(
+            loc=loc,
+            align=align,
+            width=width,
+            pad=pad,
+            space=space,
+            frameon=frameon,
+            span=span,
+            row=row,
+            col=col,
+            rows=rows,
+            cols=cols,
+            fontsize=fontsize,
+            kwargs=kwargs,
+        )
 
-        # Generate and prepare the legend axes
-        if loc in ("fill", "left", "right", "top", "bottom"):
-            lax = ax._add_guide_panel(
-                loc,
-                align,
-                width=width,
-                space=space,
-                pad=pad,
-                span=span,
-                row=row,
-                col=col,
-                rows=rows,
-                cols=cols,
-            )
-            kwargs.setdefault("borderaxespad", 0)
-            if not frameon:
-                kwargs.setdefault("borderpad", 0)
-            try:
-                kwargs["loc"] = ALIGN_OPTS[lax._panel_side][align]
-            except KeyError as exc:
-                raise ValueError(
-                    f"Invalid align={align!r} for legend loc={loc!r}."
-                ) from exc
-        else:
-            lax = ax
-            pad = kwargs.pop("borderaxespad", pad)
-            kwargs["loc"] = loc  # simply pass to legend
-            kwargs["borderaxespad"] = units(pad, "em", fontsize=fontsize)
+        kw_frame, kw_text, kw_handle, kwargs = self._resolve_style_kwargs(
+            lax=lax,
+            fontcolor=fontcolor,
+            fontweight=fontweight,
+            handle_kw=handle_kw,
+            kwargs=kwargs,
+        )
+
+        objs = self._build_legends(
+            lax=lax,
+            handles=handles,
+            labels=labels,
+            ncol=ncol,
+            order=order,
+            center=center,
+            alphabetize=alphabetize,
+            handler_map=handler_map,
+            title=title,
+            label=label,
+            frameon=frameon,
+            fontsize=fontsize,
+            titlefontsize=titlefontsize,
+            kw_frame=kw_frame,
+            kwargs=kwargs,
+        )
+
+        self._apply_handle_styles(objs, kw_text=kw_text, kw_handle=kw_handle)
+        return self._finalize(objs, loc=loc, align=align)
 
         # Handle and text properties that are applied after-the-fact
         # NOTE: Set solid_capstyle to 'butt' so line does not extend past error bounds
