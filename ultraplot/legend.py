@@ -53,6 +53,8 @@ ALIGN_OPTS = {
     },
 }
 
+LegendKw = dict[str, Any]
+
 
 class Legend(mlegend.Legend):
     # Soft wrapper of matplotlib legend's class.
@@ -145,8 +147,11 @@ class UltraLegend:
         col: Optional[int] = None,
         rows: Optional[Union[int, Tuple[int, int]]] = None,
         cols: Optional[Union[int, Tuple[int, int]]] = None,
-        **kwargs,
+        **kwargs: Any,
     ):
+        """
+        Normalize inputs, apply rc defaults, and convert units.
+        """
         ncol = _not_none(ncols=ncols, ncol=ncol)
         order = _not_none(order, "C")
         frameon = _not_none(frame=frame, frameon=frameon, default=rc["legend.frameon"])
