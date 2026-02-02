@@ -2,6 +2,7 @@
 """
 Utilties related to legends and colorbars.
 """
+
 import matplotlib.artist as martist
 import matplotlib.colorbar as mcolorbar
 import matplotlib.legend as mlegend  # noqa: F401

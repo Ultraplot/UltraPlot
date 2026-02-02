@@ -6,6 +6,7 @@ This module provides the ExternalAxesContainer class which acts as a wrapper
 around external axes classes, allowing them to be used within ultraplot's
 figure system while maintaining their native functionality.
 """
+
 import matplotlib.axes as maxes
 import matplotlib.transforms as mtransforms
 from matplotlib import cbook, container
