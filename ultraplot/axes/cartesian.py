@@ -2,6 +2,7 @@
 """
 The standard Cartesian axes used for most ultraplot figures.
 """
+
 import copy
 import inspect
 from dataclasses import dataclass, field

@@ -2,6 +2,7 @@
 """
 Various axis `~matplotlib.scale.ScaleBase` classes.
 """
+
 import copy
 
 import matplotlib.scale as mscale

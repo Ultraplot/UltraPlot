@@ -2,6 +2,7 @@
 """
 Functions for displaying colors and fonts.
 """
+
 import os
 import re
 

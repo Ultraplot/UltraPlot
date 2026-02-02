@@ -3,6 +3,7 @@
 The second-level axes subclass used for all ultraplot figures.
 Implements plotting method overrides.
 """
+
 import contextlib
 import inspect
 import itertools

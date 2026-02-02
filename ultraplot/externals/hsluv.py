@@ -23,6 +23,7 @@ For more information on colorspaces see the
 the `HCL colorspace <https://en.wikipedia.org/wiki/HCL_color_space>`__,
 and the `HSLuv system <http://www.hsluv.org/implementations/>`__.
 """
+
 # Imports. See: https://stackoverflow.com/a/2353265/4970632
 # The HLS is actually HCL
 import math

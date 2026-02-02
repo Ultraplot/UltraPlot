@@ -2,6 +2,7 @@
 """
 Utilities for modifying ultraplot docstrings.
 """
+
 # WARNING: To check every docstring in the package for
 # unfilled snippets simply use the following code:
 # >>> import ultraplot as uplt

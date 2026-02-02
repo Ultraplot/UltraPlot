@@ -2,6 +2,7 @@
 """
 Various `~matplotlib.ticker.Locator` and `~matplotlib.ticker.Formatter` classes.
 """
+
 import locale
 import re
 from fractions import Fraction
