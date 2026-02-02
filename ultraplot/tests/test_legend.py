@@ -226,6 +226,16 @@ def test_legend_builder_smoke():
     plt.close(fig)
 
 
+def test_legend_normalize_em_kwargs():
+    """
+    Ensure em-based legend kwargs are converted to numeric values.
+    """
+    from ultraplot.legend import _normalize_em_kwargs
+
+    out = _normalize_em_kwargs({"labelspacing": "2em"}, fontsize=10)
+    assert isinstance(out["labelspacing"], (int, float))
+
+
 def test_sync_label_dict(rng):
     """
     Legends are held within _legend_dict for which the key is a tuple of location and alignment.

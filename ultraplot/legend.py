@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Iterable, Optional, Tuple, Union
 
 import numpy as np
 import matplotlib.patches as mpatches
@@ -55,12 +55,14 @@ ALIGN_OPTS = {
 }
 
 LegendKw = dict[str, Any]
+LegendHandles = Any
+LegendLabels = Any
 
 
 @dataclass(frozen=True)
 class _LegendInputs:
-    handles: Any
-    labels: Any
+    handles: LegendHandles
+    labels: LegendLabels
     loc: Any
     align: Any
     width: Any
