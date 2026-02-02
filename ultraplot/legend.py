@@ -81,6 +81,23 @@ class Legend(mlegend.Legend):
             self.axes._legend_dict[(loc, type)] = value
 
 
+def _normalize_em_kwargs(kwargs: dict[str, Any], *, fontsize: float) -> dict[str, Any]:
+    """
+    Convert legend-related em unit kwargs to absolute values in points.
+    """
+    for setting in rcsetup.EM_KEYS:
+        pair = setting.split("legend.", 1)
+        if len(pair) == 1:
+            continue
+        _, key = pair
+        value = kwargs.pop(key, None)
+        if isinstance(value, str):
+            value = units(value, "em", fontsize=fontsize)
+        if value is not None:
+            kwargs[key] = value
+    return kwargs
+
+
 class UltraLegend:
     """
     Centralized legend builder for axes.
@@ -146,16 +163,7 @@ class UltraLegend:
             )
 
         # Convert relevant keys to em-widths
-        for setting in rcsetup.EM_KEYS:  # em-width keys
-            pair = setting.split("legend.", 1)
-            if len(pair) == 1:
-                continue
-            _, key = pair
-            value = kwargs.pop(key, None)
-            if isinstance(value, str):
-                value = units(value, "em", fontsize=fontsize)
-            if value is not None:
-                kwargs[key] = value
+        kwargs = _normalize_em_kwargs(kwargs, fontsize=fontsize)
 
         # Generate and prepare the legend axes
         if loc in ("fill", "left", "right", "top", "bottom"):
