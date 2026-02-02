@@ -2,6 +2,7 @@
 """
 Overrides related to math fonts.
 """
+
 import matplotlib as mpl
 from matplotlib.font_manager import findfont, ttfFontProperty
 from matplotlib.mathtext import MathTextParser

@@ -5,6 +5,7 @@ Edge case and integration tests for ExternalAxesContainer.
 These tests cover error handling, edge cases, and integration scenarios
 without requiring external dependencies.
 """
+
 from unittest.mock import Mock, patch
 
 import numpy as np

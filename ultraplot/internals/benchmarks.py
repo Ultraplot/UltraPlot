@@ -2,6 +2,7 @@
 """
 Utilities for benchmarking ultraplot performance.
 """
+
 import time
 
 from . import ic  # noqa: F401

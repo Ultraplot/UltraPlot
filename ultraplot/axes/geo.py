@@ -2,6 +2,7 @@
 """
 Axes filled with cartographic projections.
 """
+
 from __future__ import annotations
 
 import copy

@@ -2,6 +2,7 @@
 """
 A succinct matplotlib wrapper for making beautiful, publication-quality graphics.
 """
+
 from __future__ import annotations
 
 import sys

@@ -5,6 +5,7 @@ Test external axes container integration.
 These tests verify that the ExternalAxesContainer works correctly with
 external axes like mpltern.TernaryAxes.
 """
+
 import numpy as np
 import pytest
 

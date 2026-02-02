@@ -2,6 +2,7 @@
 """
 Utilities for handling dependencies and version changes.
 """
+
 from . import ic  # noqa: F401
 from . import warnings
 

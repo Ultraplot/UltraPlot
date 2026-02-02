@@ -2,6 +2,7 @@
 """
 The figure class used for all ultraplot figures.
 """
+
 import functools
 import inspect
 import os

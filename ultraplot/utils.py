@@ -2,6 +2,7 @@
 """
 Various tools that may be useful while making plots.
 """
+
 # WARNING: Cannot import 'rc' anywhere in this file or we get circular import
 # issues. The rc param validators need functions in this file.
 import functools

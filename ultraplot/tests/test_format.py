@@ -2,9 +2,9 @@
 """
 Test format and rc behavior.
 """
+
 import locale, numpy as np, ultraplot as uplt, pytest
 import warnings
-
 
 # def test_colormap_assign():
 #     """

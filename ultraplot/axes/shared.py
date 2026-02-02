@@ -2,6 +2,7 @@
 """
 An axes used to jointly format Cartesian and polar axes.
 """
+
 # NOTE: We could define these in base.py but idea is projection-specific formatters
 # should never be defined on the base class. Might add to this class later anyway.
 import numpy as np

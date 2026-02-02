@@ -2,6 +2,7 @@
 """
 Utilities related to matplotlib text labels.
 """
+
 import matplotlib.patheffects as mpatheffects
 import matplotlib.text as mtext
 from matplotlib.font_manager import FontProperties

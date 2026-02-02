@@ -2,6 +2,7 @@
 """
 The various axes classes used throughout ultraplot.
 """
+
 import matplotlib.projections as mproj
 
 from ..internals import context

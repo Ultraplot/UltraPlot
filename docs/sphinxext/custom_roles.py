@@ -2,6 +2,7 @@
 """
 Custom :rc: and :rcraw: roles for rc settings.
 """
+
 import os
 
 from docutils import nodes
