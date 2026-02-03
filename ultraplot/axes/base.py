@@ -3823,7 +3823,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         bordercolor="w",
         borderwidth=2,
         borderinvert=False,
-        borderstyle="miter",
+        borderstyle=None,
         bboxcolor="w",
         bboxstyle="round",
         bboxalpha=0.5,
@@ -3853,7 +3853,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             The color of the text border.
         borderinvert : bool, optional
             If ``True``, the text and border colors are swapped.
-        borderstyle : {'miter', 'round', 'bevel'}, optional
+        borderstyle : {'miter', 'round', 'bevel'}, default: :rc:`text.borderstyle`
             The `line join style \\
 <https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html>`__
             used for the border.
@@ -3900,6 +3900,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             kwargs.update(_pop_props(kwargs, "text"))
 
         # Update the text object using a monkey patch
+        borderstyle = _not_none(borderstyle, rc["text.borderstyle"])
         obj = func(*args, transform=transform, **kwargs)
         obj.update = labels._update_label.__get__(obj)
         obj.update(
