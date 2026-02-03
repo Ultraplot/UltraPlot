@@ -2,6 +2,7 @@
 """
 Helpers for lazy attribute loading in :mod:`ultraplot`.
 """
+
 from __future__ import annotations
 
 import ast
