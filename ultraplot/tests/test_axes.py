@@ -2,6 +2,7 @@
 """
 Test twin, inset, and panel axes.
 """
+
 import numpy as np
 import pytest
 import matplotlib.patheffects as mpatheffects

@@ -2,6 +2,7 @@
 """
 Test subplot layout.
 """
+
 import numpy as np
 import pytest
 

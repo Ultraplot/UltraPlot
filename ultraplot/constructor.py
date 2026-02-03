@@ -2,6 +2,7 @@
 """
 T"he constructor functions used to build class instances from simple shorthand arguments.
 """
+
 # NOTE: These functions used to be in separate files like crs.py and
 # ticker.py but makes more sense to group them together to ensure usage is
 # consistent and so online documentation is easier to understand. Also in

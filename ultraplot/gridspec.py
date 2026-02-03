@@ -2,6 +2,7 @@
 """
 The gridspec and subplot grid classes used throughout ultraplot.
 """
+
 import inspect
 import itertools
 import re

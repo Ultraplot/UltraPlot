@@ -2,6 +2,7 @@
 """
 Utilities for global configuration.
 """
+
 import functools
 import re
 from collections.abc import MutableMapping

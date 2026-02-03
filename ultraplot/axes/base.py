@@ -3,6 +3,7 @@
 The first-level axes subclass used for all ultraplot figures.
 Implements basic shared functionality.
 """
+
 import copy
 import inspect
 import re
@@ -4192,8 +4193,8 @@ def _measure_text_overhang_axes(
         renderer = axes.figure._get_renderer()
         bbox = text.get_window_extent(renderer=renderer)
         inv = axes.transAxes.inverted()
-        (x0, y0) = inv.transform((bbox.x0, bbox.y0))
-        (x1, y1) = inv.transform((bbox.x1, bbox.y1))
+        x0, y0 = inv.transform((bbox.x0, bbox.y0))
+        x1, y1 = inv.transform((bbox.x1, bbox.y1))
     except Exception:
         return None
     left = max(0.0, -x0)
@@ -4219,8 +4220,8 @@ def _measure_ticklabel_overhang_axes(
         if not label.get_visible() or not label.get_text():
             continue
         bbox = label.get_window_extent(renderer=renderer)
-        (x0, y0) = inv.transform((bbox.x0, bbox.y0))
-        (x1, y1) = inv.transform((bbox.x1, bbox.y1))
+        x0, y0 = inv.transform((bbox.x0, bbox.y0))
+        x1, y1 = inv.transform((bbox.x1, bbox.y1))
         min_x = min(min_x, x0)
         max_x = max(max_x, x1)
         min_y = min(min_y, y0)
@@ -4596,11 +4597,11 @@ def _reflow_inset_colorbar_frame(
     x1 = max(b.x1 for b in bboxes)
     y1 = max(b.y1 for b in bboxes)
     inv_parent = parent.transAxes.inverted()
-    (px0, py0) = inv_parent.transform((x0, y0))
-    (px1, py1) = inv_parent.transform((x1, y1))
+    px0, py0 = inv_parent.transform((x0, y0))
+    px1, py1 = inv_parent.transform((x1, y1))
     cax_bbox = cax.get_window_extent(renderer=renderer)
-    (cx0, cy0) = inv_parent.transform((cax_bbox.x0, cax_bbox.y0))
-    (cx1, cy1) = inv_parent.transform((cax_bbox.x1, cax_bbox.y1))
+    cx0, cy0 = inv_parent.transform((cax_bbox.x0, cax_bbox.y0))
+    cx1, cy1 = inv_parent.transform((cax_bbox.x1, cax_bbox.y1))
     px0, px1 = sorted((px0, px1))
     py0, py1 = sorted((py0, py1))
     cx0, cx1 = sorted((cx0, cx1))
