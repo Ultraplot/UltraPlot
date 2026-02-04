@@ -3925,6 +3925,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         y,
         text,
         *,
+        upright=True,
+        ellipsis=False,
+        avoid_overlap=True,
+        overlap_tol=0.1,
+        curvature_pad=2.0,
+        min_advance=1.0,
         border=False,
         bbox=False,
         bordercolor="w",
@@ -3958,6 +3964,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             The color of the text border.
         borderinvert : bool, optional
             If ``True``, the text and border colors are swapped.
+        upright : bool, default: True
+            Whether to flip the curve direction to keep text upright.
+        ellipsis : bool, default: False
+            Whether to show an ellipsis when the text exceeds curve length.
+        avoid_overlap : bool, default: True
+            Whether to hide glyphs that overlap after rotation.
+        overlap_tol : float, default: 0.1
+            Fractional overlap area (0–1) required before hiding a glyph.
+        curvature_pad : float, default: 2.0
+            Extra spacing in pixels per radian of local curvature.
+        min_advance : float, default: 1.0
+            Minimum additional spacing (pixels) enforced between glyph centers.
         borderstyle : {'miter', 'round', 'bevel'}, default: 'miter'
             The `line join style \\
 <https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html>`__
@@ -3986,7 +4004,19 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         from ..text import CurvedText
 
-        obj = CurvedText(x, y, text, axes=self, **kwargs)
+        obj = CurvedText(
+            x,
+            y,
+            text,
+            axes=self,
+            upright=upright,
+            ellipsis=ellipsis,
+            avoid_overlap=avoid_overlap,
+            overlap_tol=overlap_tol,
+            curvature_pad=curvature_pad,
+            min_advance=min_advance,
+            **kwargs,
+        )
 
         if borderstyle is None:
             try:
