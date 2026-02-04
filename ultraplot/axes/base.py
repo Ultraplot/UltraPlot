@@ -3919,6 +3919,96 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         )
         return obj
 
+    def curvedtext(
+        self,
+        x,
+        y,
+        text,
+        *,
+        border=False,
+        bbox=False,
+        bordercolor="w",
+        borderwidth=2,
+        borderinvert=False,
+        borderstyle="miter",
+        bboxcolor="w",
+        bboxstyle="round",
+        bboxalpha=0.5,
+        bboxpad=None,
+        **kwargs,
+    ):
+        """
+        Add curved text that follows a curve.
+
+        Parameters
+        ----------
+        x, y : array-like
+            Curve coordinates.
+        text : str
+            The string for the text.
+        %(axes.transform)s
+
+        Other parameters
+        ----------------
+        border : bool, default: False
+            Whether to draw border around text.
+        borderwidth : float, default: 2
+            The width of the text border.
+        bordercolor : color-spec, default: 'w'
+            The color of the text border.
+        borderinvert : bool, optional
+            If ``True``, the text and border colors are swapped.
+        borderstyle : {'miter', 'round', 'bevel'}, default: 'miter'
+            The `line join style \\
+<https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html>`__
+            used for the border.
+        bbox : bool, default: False
+            Whether to draw a bounding box around text.
+        bboxcolor : color-spec, default: 'w'
+            The color of the text bounding box.
+        bboxstyle : boxstyle, default: 'round'
+            The style of the bounding box.
+        bboxalpha : float, default: 0.5
+            The alpha for the bounding box.
+        bboxpad : float, default: :rc:`title.bboxpad`
+            The padding for the bounding box.
+        %(artist.text)s
+
+        **kwargs
+            Passed to `matplotlib.text.Text`.
+        """
+        transform = kwargs.pop("transform", None)
+        if transform is None:
+            transform = self.transData
+        else:
+            transform = self._get_transform(transform)
+        kwargs["transform"] = transform
+
+        from ..text import CurvedText
+
+        obj = CurvedText(x, y, text, axes=self, **kwargs)
+
+        if borderstyle is None:
+            try:
+                borderstyle = rc["text.borderstyle"]
+            except KeyError:
+                borderstyle = "miter"
+        obj._apply_label_props(
+            {
+                "border": border,
+                "bordercolor": bordercolor,
+                "borderinvert": borderinvert,
+                "borderwidth": borderwidth,
+                "borderstyle": borderstyle,
+                "bbox": bbox,
+                "bboxcolor": bboxcolor,
+                "bboxstyle": bboxstyle,
+                "bboxalpha": bboxalpha,
+                "bboxpad": bboxpad,
+            }
+        )
+        return obj
+
     def _toggle_spines(self, spines: Union[bool, Iterable, str]):
         """
         Turns spines on or off depending on input. Spines can be a list such as ['left', 'right'] etc

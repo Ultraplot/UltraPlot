@@ -132,6 +132,25 @@ def test_cartesian_format_all_units_types():
     ax.format(**kwargs)
 
 
+@pytest.mark.mpl_image_compare
+def test_curvedtext_basic():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 2 * np.pi, 200)
+    y = np.sin(x)
+    ax.plot(x, y, color="C0")
+    ax.curvedtext(
+        x,
+        y,
+        "curved text",
+        ha="center",
+        va="bottom",
+        color="C1",
+        size=16,
+    )
+    ax.format(xlim=(0, 2 * np.pi), ylim=(-1.2, 1.2))
+    return fig
+
+
 def test_dualx_log_transform_is_finite():
     """
     Ensure dualx transforms remain finite on log axes.
