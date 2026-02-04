@@ -7,6 +7,7 @@ import matplotlib.patheffects as mpatheffects
 import matplotlib.text as mtext
 from matplotlib.font_manager import FontProperties
 
+from ..config import rc
 
 from . import ic  # noqa: F401
 
@@ -65,7 +66,7 @@ def _update_label(text, props=None, **kwargs):
     bordercolor = props.pop("bordercolor", "w")
     borderinvert = props.pop("borderinvert", False)
     borderwidth = props.pop("borderwidth", 2)
-    borderstyle = props.pop("borderstyle", "miter")
+    borderstyle = props.pop("borderstyle", rc["text.borderstyle"])
 
     if border:
         facecolor, bgcolor = text.get_color(), bordercolor
