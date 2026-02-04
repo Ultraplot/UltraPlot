@@ -5,6 +5,7 @@ Test twin, inset, and panel axes.
 
 import numpy as np
 import pytest
+import matplotlib.patheffects as mpatheffects
 
 import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
@@ -130,6 +131,31 @@ def test_cartesian_format_all_units_types():
         "yticklabelsize": 10.0,
     }
     ax.format(**kwargs)
+
+
+def _get_text_stroke_joinstyle(text):
+    for effect in text.get_path_effects():
+        if isinstance(effect, mpatheffects.Stroke):
+            for attr in ("joinstyle", "_joinstyle"):
+                if hasattr(effect, attr):
+                    return getattr(effect, attr)
+            if hasattr(effect, "_gc"):
+                return effect._gc.get("joinstyle")
+    return None
+
+
+def test_text_borderstyle_rc_default():
+    fig, ax = uplt.subplots()
+    with uplt.rc.context({"text.borderstyle": "round"}):
+        txt = ax.text(0.5, 0.5, "A", border=True)
+    assert _get_text_stroke_joinstyle(txt) == "round"
+
+
+def test_text_borderstyle_overrides_rc():
+    fig, ax = uplt.subplots()
+    with uplt.rc.context({"text.borderstyle": "round"}):
+        txt = ax.text(0.5, 0.5, "A", border=True, borderstyle="bevel")
+    assert _get_text_stroke_joinstyle(txt) == "bevel"
 
 
 def test_dualx_log_transform_is_finite():
