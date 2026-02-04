@@ -1046,7 +1046,7 @@ _rc_ultraplot_table = {
         "Width of the white border around a-b-c labels.",
     ),
     "text.borderstyle": (
-        "miter",
+        "bevel",
         _validate_joinstyle,
         "Join style for text border strokes. Must be one of "
         "``'miter'``, ``'round'``, or ``'bevel'``.",
