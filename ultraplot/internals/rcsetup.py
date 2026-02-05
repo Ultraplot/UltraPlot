@@ -707,6 +707,7 @@ _validate_boxstyle = _validate_belongs(
     "sawtooth",
     "roundtooth",
 )
+_validate_joinstyle = _validate_belongs("miter", "round", "bevel")
 if hasattr(msetup, "_validate_linestyle"):  # fancy validation including dashes
     _validate_linestyle = msetup._validate_linestyle
 else:  # no dashes allowed then but no big deal
@@ -1043,6 +1044,12 @@ _rc_ultraplot_table = {
         1.5,
         _validate_pt,
         "Width of the white border around a-b-c labels.",
+    ),
+    "text.borderstyle": (
+        "bevel",
+        _validate_joinstyle,
+        "Join style for text border strokes. Must be one of "
+        "``'miter'``, ``'round'``, or ``'bevel'``.",
     ),
     "abc.bbox": (
         False,
