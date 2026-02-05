@@ -84,11 +84,11 @@ try:
 
     warnings.filterwarnings(
         "ignore",
-        message=r"The rc setting 'colorbar.rasterize' was deprecated.*",
         category=UltraPlotWarning,
     )
 except Exception:
     pass
+
 
 # Print available system fonts
 from matplotlib.font_manager import fontManager
@@ -348,6 +348,9 @@ nbsphinx_timeout = 300
 nbsphinx_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
 
 nbsphinx_execute = "auto"
+
+# Suppress warnings in nbsphinx kernels without injecting visible cells.
+os.environ.setdefault("PYTHONWARNINGS", "ignore::UserWarning")
 
 # Sphinx gallery configuration
 sphinx_gallery_conf = {
