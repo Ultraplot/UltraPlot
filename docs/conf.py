@@ -84,22 +84,6 @@ try:
 
     warnings.filterwarnings(
         "ignore",
-        message=r"The rc setting 'colorbar.rasterize' was deprecated.*",
-        category=UltraPlotWarning,
-    )
-    warnings.filterwarnings(
-        "ignore",
-        message=r"Failed to compute UltraLayout:.*Falling back to default grid layout\.",
-        category=UltraPlotWarning,
-    )
-    warnings.filterwarnings(
-        "ignore",
-        message=r"Tick label sharing not implemented for .* subplots\.",
-        category=UltraPlotWarning,
-    )
-    warnings.filterwarnings(
-        "ignore",
-        message=r"Tick label sharing not implemented for mixed subplot types\.",
         category=UltraPlotWarning,
     )
 except Exception:
@@ -125,6 +109,17 @@ def _reset_ultraplot(gallery_conf, fname):
         import ultraplot as uplt
     except Exception:
         return
+    try:
+        from ultraplot.internals.warnings import UltraPlotWarning
+
+        warnings.filterwarnings("ignore", category=UltraPlotWarning)
+    except Exception:
+        pass
+    warnings.filterwarnings(
+        "ignore",
+        message=r"Glyph 8242 .* missing from font\(s\)\.",
+        category=UserWarning,
+    )
     uplt.rc.reset()
 
 
@@ -370,6 +365,9 @@ nbsphinx_timeout = 300
 nbsphinx_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
 
 nbsphinx_execute = "auto"
+
+# Suppress warnings in nbsphinx kernels without injecting visible cells.
+os.environ.setdefault("PYTHONWARNINGS", "ignore::UserWarning")
 
 # Sphinx gallery configuration
 sphinx_gallery_conf = {
