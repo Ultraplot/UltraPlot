@@ -87,8 +87,30 @@ try:
         message=r"The rc setting 'colorbar.rasterize' was deprecated.*",
         category=UltraPlotWarning,
     )
+    warnings.filterwarnings(
+        "ignore",
+        message=r"Failed to compute UltraLayout:.*Falling back to default grid layout\.",
+        category=UltraPlotWarning,
+    )
+    warnings.filterwarnings(
+        "ignore",
+        message=r"Tick label sharing not implemented for .* subplots\.",
+        category=UltraPlotWarning,
+    )
+    warnings.filterwarnings(
+        "ignore",
+        message=r"Tick label sharing not implemented for mixed subplot types\.",
+        category=UltraPlotWarning,
+    )
 except Exception:
     pass
+
+# Suppress font glyph warnings from matplotlib during docs builds.
+warnings.filterwarnings(
+    "ignore",
+    message=r"Glyph \d+ \(\\N\{PRIME\}\) missing from font\(s\).*",
+    category=UserWarning,
+)
 
 # Print available system fonts
 from matplotlib.font_manager import fontManager

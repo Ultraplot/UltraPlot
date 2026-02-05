@@ -15,6 +15,7 @@ import logging
 import os
 import re
 import sys
+import warnings as pywarnings
 from collections import namedtuple
 from collections.abc import MutableMapping
 from numbers import Real
@@ -44,6 +45,37 @@ from .internals import (
 # Suppress warnings emitted by mathtext.py (_mathtext.py in recent versions)
 # when when substituting dummy unavailable glyph due to fallback disabled.
 logging.getLogger("matplotlib.mathtext").setLevel(logging.ERROR)
+
+# Suppress noisy warnings that regularly surface in interactive contexts.
+pywarnings.filterwarnings(
+    "ignore",
+    category=warnings.UltraPlotWarning,
+)
+pywarnings.filterwarnings(
+    "ignore",
+    message=r"Tick label sharing not implemented for .* subplots\.",
+    category=warnings.UltraPlotWarning,
+)
+pywarnings.filterwarnings(
+    "ignore",
+    message=r"Tick label sharing not implemented for mixed subplot types\.",
+    category=warnings.UltraPlotWarning,
+)
+pywarnings.filterwarnings(
+    "ignore",
+    message=r"Failed to compute UltraLayout:.*Falling back to default grid layout\.",
+    category=warnings.UltraPlotWarning,
+)
+pywarnings.filterwarnings(
+    "ignore",
+    message=r"Glyph \d+ \(\\N\{PRIME\}\) missing from font\(s\).*",
+    category=UserWarning,
+)
+pywarnings.filterwarnings(
+    "ignore",
+    message=r"backend='basemap' will be deprecated in next major release.*",
+    category=warnings.UltraPlotWarning,
+)
 
 __all__ = [
     "Configurator",
