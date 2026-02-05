@@ -89,12 +89,6 @@ try:
 except Exception:
     pass
 
-# Suppress font glyph warnings from matplotlib during docs builds.
-warnings.filterwarnings(
-    "ignore",
-    message=r"Glyph \d+ \(\\N\{PRIME\}\) missing from font\(s\).*",
-    category=UserWarning,
-)
 
 # Print available system fonts
 from matplotlib.font_manager import fontManager
@@ -109,17 +103,6 @@ def _reset_ultraplot(gallery_conf, fname):
         import ultraplot as uplt
     except Exception:
         return
-    try:
-        from ultraplot.internals.warnings import UltraPlotWarning
-
-        warnings.filterwarnings("ignore", category=UltraPlotWarning)
-    except Exception:
-        pass
-    warnings.filterwarnings(
-        "ignore",
-        message=r"Glyph 8242 .* missing from font\(s\)\.",
-        category=UserWarning,
-    )
     uplt.rc.reset()
 
 
