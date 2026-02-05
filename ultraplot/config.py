@@ -45,7 +45,6 @@ from .internals import (
 # when when substituting dummy unavailable glyph due to fallback disabled.
 logging.getLogger("matplotlib.mathtext").setLevel(logging.ERROR)
 
-
 __all__ = [
     "Configurator",
     "rc",
