@@ -2099,6 +2099,11 @@ _rc_ultraplot_table = {
         _validate_bool,
         "Whether to auto-adjust the subplot spaces and figure margins.",
     ),
+    "subplots.pixelsnap": (
+        False,
+        _validate_bool,
+        "Whether to snap subplot bounds to the renderer pixel grid during draw.",
+    ),
     # Super title settings
     "suptitle.color": (BLACK, _validate_color, "Figure title color."),
     "suptitle.pad": (
