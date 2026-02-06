@@ -344,6 +344,7 @@ ax = fig.subplot(gs[0], title="Default linear normalizer")
 ax.pcolormesh(data, cmap="magma", colorbar="b")
 ax = fig.subplot(gs[1], title="Logarithmic normalizer with norm='log'")
 ax.pcolormesh(data, cmap="magma", norm="log", colorbar="b")
+fig.show()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -431,6 +432,7 @@ for data, mode, fair in zip(
         ax.colorbar(m, loc="b")
         ax.format(title=f"{mode.title()}-skewed + {fair} scaling")
         i += 1
+fig.show()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_discrete:
@@ -531,6 +533,7 @@ for i, extend in enumerate(("min", "max", "neither", "both")):
         colorbar="b",
         colorbar_kw={"locator": 180},
     )
+fig.show()
 
 # %% [raw] raw_mimetype="text/restructuredtext" tags=[]
 # .. _ug_autonorm:
