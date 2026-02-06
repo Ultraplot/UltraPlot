@@ -428,7 +428,7 @@ years = [1950, 1970, 1990, 2010, 2030]
 mean_temps = [14.0, 14.2, 14.5, 15.0, 15.5]  # warming trend
 data = [state.normal(temp, 0.8, 500) for temp in mean_temps]
 
-fig, axs = uplt.subplots(ncols=2, figsize=(11, 5))
+fig, axs = uplt.subplots(ncols=2, share=0)
 axs.format(abc="A.", abcloc="ul", suptitle="Categorical vs Continuous positioning")
 
 # Categorical positioning (default)
