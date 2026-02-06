@@ -200,7 +200,9 @@ def ribbon_diagram(
                 transitions[(p0, t0, p1, t1)] += v
 
     row_gap = (1.0 - 2 * ymargin) / max(1, len(topics))
-    topic_row_top = {topic: 1.0 - ymargin - i * row_gap for i, topic in enumerate(topics)}
+    topic_row_top = {
+        topic: 1.0 - ymargin - i * row_gap for i, topic in enumerate(topics)
+    }
     topic_label_y = {topic: topic_row_top[topic] - 0.5 * row_gap for topic in topics}
     row_height = row_gap * row_height_ratio
 
@@ -253,16 +255,22 @@ def ribbon_diagram(
 
         src_off = {}
         for topic, total in src_total.items():
-            center, height = node_geom.get((p0, topic), (topic_label_y[topic], total * scale))
+            center, height = node_geom.get(
+                (p0, topic), (topic_label_y[topic], total * scale)
+            )
             top = center + height / 2
             src_off[topic] = top - total * scale
         tgt_off = {}
         for topic, total in tgt_total.items():
-            center, height = node_geom.get((p1, topic), (topic_label_y[topic], total * scale))
+            center, height = node_geom.get(
+                (p1, topic), (topic_label_y[topic], total * scale)
+            )
             top = center + height / 2
             tgt_off[topic] = top - total * scale
 
-        ordered_flows = sorted(flows, key=lambda item: (topics.index(item[0]), topics.index(item[1])))
+        ordered_flows = sorted(
+            flows, key=lambda item: (topics.index(item[0]), topics.index(item[1]))
+        )
         src_mid = {}
         tgt_mid = {}
         for t0, t1, value in ordered_flows:
@@ -334,7 +342,9 @@ def ribbon_diagram(
             .unstack(fill_value=0)
         )
         group_cols = [group for group in groups if group in composition_counts.columns]
-        composition_counts = composition_counts.reindex(index=periods, columns=group_cols)
+        composition_counts = composition_counts.reindex(
+            index=periods, columns=group_cols
+        )
         xpos = np.arange(len(periods))
         composition_ax.stackplot(
             xpos,
@@ -343,8 +353,12 @@ def ribbon_diagram(
             alpha=composition_alpha,
         )
         composition_ax.set_xticks(xpos)
-        composition_ax.set_xticklabels([str(period) for period in periods], rotation=15, ha="right")
-        composition_ax.format(ylabel=composition_ylabel, xlabel="Period", grid=True, gridalpha=0.3)
+        composition_ax.set_xticklabels(
+            [str(period) for period in periods], rotation=15, ha="right"
+        )
+        composition_ax.format(
+            ylabel=composition_ylabel, xlabel="Period", grid=True, gridalpha=0.3
+        )
 
     ax.format(xlim=(0, 1), ylim=(0, 1), grid=False)
     ax.axis("off")
