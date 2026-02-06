@@ -819,7 +819,7 @@ class Figure(mfigure.Figure):
         self._sharey = int(sharey)
         self._sharex_auto = bool(sharex_auto)
         self._sharey_auto = bool(sharey_auto)
-        self._share_incompat_warned = {"x": False, "y": False}
+        self._share_incompat_warned = False
 
         # Translate span and align settings
         spanx = _not_none(
@@ -991,12 +991,12 @@ class Figure(mfigure.Figure):
         return True, None
 
     def _warn_incompatible_share(self, which: str, ref, other, reason: str) -> None:
-        """Warn once per axis direction for explicit incompatible sharing."""
+        """Warn once per figure for explicit incompatible sharing."""
         if self._is_auto_share_mode(which):
             return
-        if self._share_incompat_warned.get(which, False):
+        if bool(self._share_incompat_warned):
             return
-        self._share_incompat_warned[which] = True
+        self._share_incompat_warned = True
         warnings._warn_ultraplot(
             f"Skipping incompatible {which}-axis sharing for {type(ref).__name__} and {type(other).__name__}: {reason}."
         )

@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import os
+import warnings
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -326,9 +327,16 @@ def test_auto_share_skips_mixed_cartesian_polar_without_warning(recwarn):
 
 
 def test_explicit_share_warns_for_mixed_cartesian_polar():
-    with pytest.warns(uplt.internals.warnings.UltraPlotWarning):
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always", uplt.internals.warnings.UltraPlotWarning)
         fig, axs = uplt.subplots(ncols=2, proj=("cart", "polar"), share="all")
-        fig.canvas.draw()
+    incompatible = [
+        w
+        for w in record
+        if issubclass(w.category, uplt.internals.warnings.UltraPlotWarning)
+        and "Skipping incompatible" in str(w.message)
+    ]
+    assert len(incompatible) == 1
 
 
 def test_auto_share_local_yscale_change_splits_group():
