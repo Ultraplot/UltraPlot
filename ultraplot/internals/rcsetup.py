@@ -2084,7 +2084,9 @@ _rc_ultraplot_table = {
     ),
     "subplots.share": (
         "auto",
-        _validate_belongs(0, 1, 2, 3, 4, False, "labels", "limits", True, "all", "auto"),
+        _validate_belongs(
+            0, 1, 2, 3, 4, False, "labels", "limits", True, "all", "auto"
+        ),
         "The axis sharing level, one of ``0``, ``1``, ``2``, or ``3``, or the "
         "more intuitive aliases ``False``, ``'labels'``, ``'limits'``, ``True``, "
         "or ``'auto'``. See `~ultraplot.figure.Figure` for details.",

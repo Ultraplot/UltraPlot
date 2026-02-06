@@ -870,7 +870,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
     def set_xscale(self, value, **kwargs):
         fig = getattr(self, "figure", None)
-        if fig is not None and hasattr(fig, "_is_auto_share_mode") and fig._is_auto_share_mode("x"):
+        if (
+            fig is not None
+            and hasattr(fig, "_is_auto_share_mode")
+            and fig._is_auto_share_mode("x")
+        ):
             self._unshare(which="x")
         result = super().set_xscale(value, **kwargs)
         self._apply_log_formatter_on_scale("x")
@@ -880,7 +884,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
     def set_yscale(self, value, **kwargs):
         fig = getattr(self, "figure", None)
-        if fig is not None and hasattr(fig, "_is_auto_share_mode") and fig._is_auto_share_mode("y"):
+        if (
+            fig is not None
+            and hasattr(fig, "_is_auto_share_mode")
+            and fig._is_auto_share_mode("y")
+        ):
             self._unshare(which="y")
         result = super().set_yscale(value, **kwargs)
         self._apply_log_formatter_on_scale("y")

@@ -808,7 +808,9 @@ class Figure(mfigure.Figure):
                 return 3, True
             value = 3 if value is True else translate.get(value, value)
             if value not in range(5):
-                raise ValueError(f"Invalid sharing value {value!r}. " + self._share_message)
+                raise ValueError(
+                    f"Invalid sharing value {value!r}. " + self._share_message
+                )
             return int(value), False
 
         sharex, sharex_auto = _normalize_share(sharex)
@@ -935,7 +937,9 @@ class Figure(mfigure.Figure):
 
         # External container axes should only share with the same external class.
         ref_external = hasattr(ref, "has_external_axes") and ref.has_external_axes()
-        other_external = hasattr(other, "has_external_axes") and other.has_external_axes()
+        other_external = (
+            hasattr(other, "has_external_axes") and other.has_external_axes()
+        )
         if ref_external or other_external:
             if not (ref_external and other_external):
                 return False, "external and non-external axes cannot be shared"
@@ -952,7 +956,9 @@ class Figure(mfigure.Figure):
                 return False, "geo and non-geo axes cannot be shared"
             if not ref._is_rectilinear() or not other._is_rectilinear():
                 return False, "non-rectilinear GeoAxes cannot be shared"
-            if type(getattr(ref, "projection", None)) is not type(getattr(other, "projection", None)):
+            if type(getattr(ref, "projection", None)) is not type(
+                getattr(other, "projection", None)
+            ):
                 return False, "different Geo projection classes"
 
         # Polar and non-polar should not share.
@@ -963,7 +969,10 @@ class Figure(mfigure.Figure):
 
         # Non-geo external axes are generally Cartesian-like in UltraPlot.
         if not ref_geo and not other_geo and not (ref_external or other_external):
-            if not (isinstance(ref, paxes.CartesianAxes) and isinstance(other, paxes.CartesianAxes)):
+            if not (
+                isinstance(ref, paxes.CartesianAxes)
+                and isinstance(other, paxes.CartesianAxes)
+            ):
                 return False, "different axis families"
 
         # Scale compatibility along the active axis.
