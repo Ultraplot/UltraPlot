@@ -37,6 +37,8 @@ def close_figures_after_test(request):
     # Start from a clean rc state.
     uplt.rc._context.clear()
     uplt.rc.reset(local=False, user=False, default=True)
+    if request.node.get_closest_marker("mpl_image_compare"):
+        uplt.rc["subplots.pixelsnap"] = True
 
     yield
     uplt.close("all")
