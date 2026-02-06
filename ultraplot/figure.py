@@ -1197,6 +1197,10 @@ class Figure(mfigure.Figure):
             if getattr(axi, "_panel_side", None):
                 continue
 
+            # Non-rectilinear GeoAxes should keep independent gridliner labels.
+            if isinstance(axi, paxes.GeoAxes) and not axi._is_rectilinear():
+                return {}, True
+
             # Supported axes types
             if not isinstance(
                 axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
