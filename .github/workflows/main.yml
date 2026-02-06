@@ -74,7 +74,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             echo "mode=full" >> $GITHUB_OUTPUT
-            echo "tests=" >> $GITHUB_OUTPUT
+            echo "tests=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
 
@@ -104,7 +104,7 @@ jobs:
           import json
           data = json.load(open(".ci/selection.json", "r", encoding="utf-8"))
           print(f"mode={data['mode']}")
-          print("tests=" + " ".join(data.get("tests", [])))
+          print("tests=" + json.dumps(data.get("tests", []), separators=(",", ":")))
           PY
           cat .ci/selection.out >> $GITHUB_OUTPUT
 
