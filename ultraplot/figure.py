@@ -1101,6 +1101,7 @@ class Figure(mfigure.Figure):
             autoscale_view = getattr(ref, "autoscale_view", None)
             if callable(autoscale_view):
                 autoscale_view(scalex=(which == "x"), scaley=(which == "y"))
+
     def _snap_axes_to_pixel_grid(self, renderer) -> None:
         """
         Snap visible axes bounds to the renderer pixel grid.

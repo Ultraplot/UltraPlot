@@ -403,6 +403,8 @@ def test_explicit_sharey_propagates_scale_changes():
 
     assert axs[0].get_yscale() == "log"
     assert axs[1].get_yscale() == "log"
+
+
 def test_subplots_pixelsnap_aligns_axes_bounds():
     with uplt.rc.context({"subplots.pixelsnap": True}):
         fig, axs = uplt.subplots(ncols=2, nrows=2)
