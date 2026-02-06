@@ -382,7 +382,15 @@ class UltraLayoutSolver:
             effective = [i for i in spans if not panels[i]]
             if len(effective) <= 1:
                 return start, end
-            desired = sum(sizes[i] for i in effective)
+            # Preserve normal gaps between non-panel slots while collapsing
+            # gaps introduced by panel slots inside the span.
+            gap_count = 0
+            for idx in range(len(spans) - 1):
+                i = spans[idx]
+                j = spans[idx + 1]
+                if not panels[i] and not panels[j]:
+                    gap_count += 1
+            desired = sum(sizes[i] for i in effective) + base_gap * gap_count
             # Collapse inter-column/row gaps inside spans to keep widths consistent.
             # This avoids widening subplots that cross internal panel slots.
             full = end - start

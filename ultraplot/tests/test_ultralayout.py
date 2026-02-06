@@ -220,6 +220,33 @@ def test_ultralayout_respects_spacing():
         assert width2 < width1 or height2 < height1
 
 
+def test_ultralayout_preserves_gap_between_spanning_axes():
+    """Test UltraLayout preserves inter-axes gaps for spanning subplots."""
+    pytest.importorskip("kiwisolver")
+    layout = [[1, 1, 2, 2], [0, 3, 3, 0]]
+
+    fig_ultra, axs_ultra = uplt.subplots(
+        array=layout, ref=3, refwidth=2.3, wspace="1em", ultra_layout=True
+    )
+    fig_ultra.auto_layout()
+    pos_left_ultra = axs_ultra[0].get_position()
+    pos_right_ultra = axs_ultra[1].get_position()
+    gap_ultra = pos_right_ultra.x0 - pos_left_ultra.x1
+    uplt.close(fig_ultra)
+
+    fig_legacy, axs_legacy = uplt.subplots(
+        array=layout, ref=3, refwidth=2.3, wspace="1em", ultra_layout=False
+    )
+    fig_legacy.auto_layout()
+    pos_left_legacy = axs_legacy[0].get_position()
+    pos_right_legacy = axs_legacy[1].get_position()
+    gap_legacy = pos_right_legacy.x0 - pos_left_legacy.x1
+    uplt.close(fig_legacy)
+
+    assert gap_ultra > 0
+    assert np.isclose(gap_ultra, gap_legacy, rtol=0.1, atol=1e-3)
+
+
 def test_ultralayout_respects_ratios():
     """Test that UltraLayout respects width/height ratios."""
     pytest.importorskip("kiwisolver")
