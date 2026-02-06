@@ -297,3 +297,21 @@ def test_suptitle_kw_position_reverted(ha, expectation):
     assert np.isclose(x, expectation, atol=0.1), f"Expected x={expectation}, got {x=}"
 
     uplt.close("all")
+
+
+def test_subplots_pixelsnap_aligns_axes_bounds():
+    with uplt.rc.context({"subplots.pixelsnap": True}):
+        fig, axs = uplt.subplots(ncols=2, nrows=2)
+        axs.plot([0, 1], [0, 1])
+        fig.canvas.draw()
+
+        renderer = fig._get_renderer()
+        width = float(renderer.width)
+        height = float(renderer.height)
+
+        for ax in axs:
+            bbox = ax.get_position(original=False)
+            coords = np.array(
+                [bbox.x0 * width, bbox.y0 * height, bbox.x1 * width, bbox.y1 * height]
+            )
+            assert np.allclose(coords, np.round(coords), atol=1e-8)
