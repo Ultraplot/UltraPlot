@@ -13,6 +13,7 @@
 
 # Import statements
 import datetime
+import logging
 import os
 import re
 import subprocess
@@ -78,10 +79,17 @@ try:
 except Exception:
     pass
 
+# Silence font discovery warnings like "findfont: Font family ..."
+for _logger_name in ("matplotlib", "matplotlib.font_manager"):
+    _logger = logging.getLogger(_logger_name)
+    _logger.setLevel(logging.ERROR)
+    _logger.propagate = False
+
 # Suppress deprecated rc key warnings from local configs during docs builds.
 try:
     from ultraplot.internals.warnings import UltraPlotWarning
 
+    warnings.filterwarnings("ignore")
     warnings.filterwarnings(
         "ignore",
         category=UltraPlotWarning,
@@ -103,6 +111,10 @@ def _reset_ultraplot(gallery_conf, fname):
         import ultraplot as uplt
     except Exception:
         return
+    for _logger_name in ("matplotlib", "matplotlib.font_manager"):
+        _logger = logging.getLogger(_logger_name)
+        _logger.setLevel(logging.ERROR)
+        _logger.propagate = False
     uplt.rc.reset()
 
 
@@ -350,7 +362,7 @@ nbsphinx_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
 nbsphinx_execute = "auto"
 
 # Suppress warnings in nbsphinx kernels without injecting visible cells.
-os.environ.setdefault("PYTHONWARNINGS", "ignore::UserWarning")
+os.environ["PYTHONWARNINGS"] = "ignore"
 
 # Sphinx gallery configuration
 sphinx_gallery_conf = {

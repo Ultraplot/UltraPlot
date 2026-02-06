@@ -86,6 +86,7 @@ fig, ax = uplt.subplot(suptitle="Single subplot", xlabel="x axis", ylabel="y axi
 # fig = uplt.figure(suptitle='Single subplot')  # equivalent to above
 # ax = fig.subplot(xlabel='x axis', ylabel='y axis')
 ax.plot(data, lw=2)
+fig.show()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -184,6 +185,7 @@ axs.format(
     ylabel="ylabel",
 )
 axs[2].plot(data, lw=2)
+fig.show()
 # fig.save('~/example2.png')  # save the figure
 # fig.savefig('~/example2.png')  # alternative
 
@@ -301,6 +303,7 @@ axs[1, 1:].format(fc="blush")
 axs[1, :1].format(fc="sky blue")
 axs[-1, -1].format(fc="gray4", grid=False)
 axs[0].plot((state.rand(50, 10) - 0.5).cumsum(axis=0), cycle="Grays_r", lw=2)
+fig.show()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -361,6 +364,7 @@ axs.format(
     suptitle="Quick plotting demo",
 )
 fig.colorbar(m, loc="b", label="label")
+fig.show()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
@@ -565,3 +569,4 @@ styles = ("ggplot", "seaborn", "538", "bmh")
 for ax, style in zip(axs, styles):
     ax.format(style=style, xlabel="xlabel", ylabel="ylabel", title=style)
     ax.plot(data, linewidth=3)
+fig.show()
