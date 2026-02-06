@@ -6525,7 +6525,7 @@ class PlotAxes(base.Axes):
         else:
             # Categorical (evenly-spaced) positioning mode
             max_height = max(y.max() for x, y in ridges)
-            spacing = max_height * (1 + overlap)
+            spacing = max(0.0, 1 - overlap)
 
         artists = []
         # Base zorder for ridgelines - use a high value to ensure they're on top
@@ -6544,7 +6544,7 @@ class PlotAxes(base.Axes):
                 y_plot = y_scaled + offset
             else:
                 # Categorical mode: normalize and space evenly
-                y_normalized = y / max_height
+                y_normalized = y / max_height if max_height > 0 else y
                 offset = i * spacing
                 y_plot = y_normalized + offset
 
