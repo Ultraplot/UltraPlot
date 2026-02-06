@@ -6456,7 +6456,9 @@ class PlotAxes(base.Axes):
         if hist:
             allowed = ("fill", "bar", "step", "stepfilled")
             if histtype not in allowed:
-                raise ValueError(f"Invalid histtype={histtype!r}. Options are {allowed}.")
+                raise ValueError(
+                    f"Invalid histtype={histtype!r}. Options are {allowed}."
+                )
         for i, dist in enumerate(data):
             dist = np.asarray(dist).ravel()
             dist = dist[~np.isnan(dist)]  # Remove NaNs
