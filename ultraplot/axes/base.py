@@ -4510,7 +4510,7 @@ def _apply_inset_colorbar_layout(
         "inset": bounds_inset,
         "frame": bounds_frame,
     }
-    if frame is not None:
+    if frame is not None and hasattr(frame, "set_bounds"):
         frame.set_bounds(*bounds_frame)
 
 
