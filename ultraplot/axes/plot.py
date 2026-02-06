@@ -2305,6 +2305,116 @@ class PlotAxes(base.Axes):
         diagrams = sankey.finish()
         return diagrams[0] if len(diagrams) == 1 else diagrams
 
+    @docstring._snippet_manager
+    def ribbon(
+        self,
+        data: Any,
+        *,
+        id_col: str = "id",
+        period_col: str = "period",
+        topic_col: str = "topic",
+        value_col: str | None = None,
+        period_order: Sequence[Any] | None = None,
+        topic_order: Sequence[Any] | None = None,
+        group_map: Mapping[Any, Any] | None = None,
+        group_order: Sequence[Any] | None = None,
+        group_colors: Mapping[Any, Any] | None = None,
+        xmargin: float = 0.12,
+        ymargin: float = 0.08,
+        row_height_ratio: float = 2.2,
+        node_width: float = 0.018,
+        flow_curvature: float = 0.45,
+        flow_alpha: float = 0.58,
+        show_topic_labels: bool = True,
+        topic_label_offset: float = 0.028,
+        topic_label_size: float = 7.4,
+        topic_label_box: bool = True,
+        composition_ax: Any | None = None,
+        composition: bool = False,
+        composition_alpha: float = 0.86,
+        composition_ylabel: str = "Assigned topics",
+    ) -> dict[str, Any]:
+        """
+        Draw a fixed-row, top-aligned ribbon flow diagram from long-form records.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame or mapping-like
+            Long-form records with entity id, period, and topic columns.
+        id_col, period_col, topic_col : str, optional
+            Column names for entity id, period, and topic.
+        value_col : str, optional
+            Optional weight column. If omitted, each record is weighted as 1.
+        period_order, topic_order : sequence, optional
+            Explicit ordering for periods and topic rows.
+        group_map : mapping, optional
+            Topic-to-group mapping used for grouped ordering and colors.
+        group_order : sequence, optional
+            Group ordering for row arrangement and composition stacking.
+        group_colors : mapping, optional
+            Group-to-color mapping. Missing groups use the patch color cycle.
+        xmargin, ymargin : float, optional
+            Plot-space margins in normalized axes coordinates.
+        row_height_ratio : float, optional
+            Scale factor controlling row occupancy by nodes/flows.
+        node_width : float, optional
+            Node column width in normalized axes coordinates.
+        flow_curvature : float, optional
+            Bezier curvature for ribbons.
+        flow_alpha : float, optional
+            Ribbon alpha.
+        show_topic_labels : bool, optional
+            Whether to draw topic labels on the right.
+        topic_label_offset : float, optional
+            Offset for right-side topic labels.
+        topic_label_size : float, optional
+            Topic label font size.
+        topic_label_box : bool, optional
+            Whether to draw white backing boxes behind topic labels.
+        composition_ax : `~ultraplot.axes.Axes`, optional
+            Optional secondary axes for a stacked group composition panel.
+        composition : bool, optional
+            Whether to draw composition stackplot on `composition_ax`.
+        composition_alpha : float, optional
+            Alpha for composition stack areas.
+        composition_ylabel : str, optional
+            Y label for composition panel.
+
+        Returns
+        -------
+        dict
+            Mapping of created artists and resolved orders.
+        """
+        from .plot_types.ribbon import ribbon_diagram
+
+        return ribbon_diagram(
+            self,
+            data,
+            id_col=id_col,
+            period_col=period_col,
+            topic_col=topic_col,
+            value_col=value_col,
+            period_order=period_order,
+            topic_order=topic_order,
+            group_map=group_map,
+            group_order=group_order,
+            group_colors=group_colors,
+            xmargin=xmargin,
+            ymargin=ymargin,
+            row_height_ratio=row_height_ratio,
+            node_width=node_width,
+            flow_curvature=flow_curvature,
+            flow_alpha=flow_alpha,
+            show_topic_labels=show_topic_labels,
+            topic_label_offset=topic_label_offset,
+            topic_label_size=topic_label_size,
+            topic_label_box=topic_label_box,
+            composition_ax=composition_ax,
+            composition=composition,
+            composition_alpha=composition_alpha,
+            composition_ylabel=composition_ylabel,
+        )
+
     def circos(
         self,
         sectors: Mapping[str, Any],
