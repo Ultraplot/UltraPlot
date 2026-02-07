@@ -22,7 +22,6 @@ import pandas as pd
 
 import ultraplot as uplt
 
-
 GROUP_COLORS = {
     "Group A": "#2E7D32",
     "Group B": "#6A1B9A",
@@ -67,8 +66,12 @@ def build_assignments():
                 next_topic = topic
             else:
                 group = TOPIC_TO_GROUP[topic]
-                same_group = [t for t in topics if TOPIC_TO_GROUP[t] == group and t != topic]
-                next_topic = state.choice(same_group if same_group and state.rand() < 0.6 else topics)
+                same_group = [
+                    t for t in topics if TOPIC_TO_GROUP[t] == group and t != topic
+                ]
+                next_topic = state.choice(
+                    same_group if same_group and state.rand() < 0.6 else topics
+                )
             topic = next_topic
             rows.append((country, period, topic))
     return pd.DataFrame(rows, columns=["country", "period", "topic"]), periods
