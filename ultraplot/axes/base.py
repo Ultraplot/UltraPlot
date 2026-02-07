@@ -40,6 +40,17 @@ from .. import colors as pcolors
 from .. import constructor
 from .. import legend as plegend
 from .. import ticker as pticker
+from ..colorbar import (
+    UltraColorbar,
+    _apply_inset_colorbar_layout,
+    _determine_label_rotation,
+    _get_axis_for,
+    _get_colorbar_long_axis,
+    _legacy_inset_colorbar_bounds,
+    _reflow_inset_colorbar_frame,
+    _register_inset_colorbar_reflow,
+    _solve_inset_colorbar_bounds,
+)
 from ..config import rc
 from ..internals import (
     _kwargs_to_args,
@@ -59,17 +70,6 @@ from ..internals import (
 )
 from ..ultralayout import KIWI_AVAILABLE, ColorbarLayoutSolver
 from ..utils import _fontsize_to_pt, edges, units
-from ..colorbar import (
-    UltraColorbar,
-    _apply_inset_colorbar_layout,
-    _determine_label_rotation,
-    _get_axis_for,
-    _get_colorbar_long_axis,
-    _legacy_inset_colorbar_bounds,
-    _register_inset_colorbar_reflow,
-    _reflow_inset_colorbar_frame,
-    _solve_inset_colorbar_bounds,
-)
 
 try:
     from cartopy.crs import CRS, PlateCarree
@@ -3810,8 +3810,6 @@ def _get_pos_from_locator(
             y = y_pad
     return (x, y)
 
-<<<<<<< refactor/ultra-colorbar
-=======
 
 def _get_axis_for(
     labelloc: str,
@@ -4335,7 +4333,6 @@ def _reflow_inset_colorbar_frame(
         cb_width = width
         cb_height = length
 
->>>>>>> main
     renderer = cax.figure._get_renderer()
     if hasattr(colorbar, "update_ticks"):
         colorbar.update_ticks(manual_only=True)
