@@ -4206,11 +4206,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             **kwargs,
         )
 
-        if borderstyle is None:
-            try:
-                borderstyle = rc["text.borderstyle"]
-            except KeyError:
-                borderstyle = "miter"
+        borderstyle = _not_none(borderstyle, rc["text.borderstyle"])
         obj._apply_label_props(
             {
                 "border": border,
