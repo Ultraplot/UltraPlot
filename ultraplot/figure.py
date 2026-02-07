@@ -903,7 +903,9 @@ class Figure(mfigure.Figure):
         minw = invw
         minh = invh
 
-        for ax in self._iter_axes(hidden=False, children=False, panels=True):
+        # Only snap main subplot axes. Guide/panel axes host legends/colorbars
+        # that use their own fractional placement and can be over-constrained.
+        for ax in self._iter_axes(hidden=False, children=False, panels=False):
             bbox = ax.get_position(original=False)
             old = np.array([bbox.x0, bbox.y0, bbox.x1, bbox.y1], dtype=float)
             new = np.array(
