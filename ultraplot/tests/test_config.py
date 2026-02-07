@@ -1,4 +1,8 @@
 import importlib
+import os
+import pathlib
+import subprocess
+import sys
 import threading
 from queue import Queue
 
@@ -212,3 +216,45 @@ def test_cycle_mutation_does_not_corrupt_rcparams():
     observed = [results.get() for _ in range(results.qsize())]
     assert observed, "No rcParams observations were recorded."
     assert all(value in allowed for value in observed)
+
+
+def _run_in_subprocess(code):
+    code = (
+        "import pathlib\n"
+        "import sys\n"
+        "sys.path.insert(0, str(pathlib.Path.cwd()))\n" + code
+    )
+    env = os.environ.copy()
+    env["MPLBACKEND"] = "Agg"
+    return subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        cwd=str(pathlib.Path(__file__).resolve().parents[2]),
+        env=env,
+    )
+
+
+def test_matplotlib_import_before_ultraplot_allows_rc_mutation():
+    """
+    Import order regression test for issue #568.
+    """
+    result = _run_in_subprocess(
+        "import matplotlib.pyplot as plt\n"
+        "import ultraplot as uplt\n"
+        "uplt.rc['figure.facecolor'] = 'white'\n"
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_matplotlib_import_before_ultraplot_allows_custom_fontsize_tokens():
+    """
+    Ensure patched fontsize validators are active regardless of import order.
+    """
+    result = _run_in_subprocess(
+        "import matplotlib.pyplot as plt\n"
+        "import ultraplot as uplt\n"
+        "for key in ('axes.titlesize', 'figure.titlesize', 'legend.fontsize', 'xtick.labelsize'):\n"
+        "    uplt.rc[key] = 'med-large'\n"
+    )
+    assert result.returncode == 0, result.stderr
