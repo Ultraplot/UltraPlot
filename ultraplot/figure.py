@@ -2,6 +2,7 @@
 """
 The figure class used for all ultraplot figures.
 """
+
 import functools
 import inspect
 import os
@@ -868,6 +869,7 @@ class Figure(mfigure.Figure):
 
     @override
     def draw(self, renderer):
+        self._snap_axes_to_pixel_grid(renderer)
         # implement the tick sharing here
         # should be shareable --> either all cartesian or all geographic
         # but no mixing (panels can be mixed)
@@ -878,6 +880,53 @@ class Figure(mfigure.Figure):
         self._share_ticklabels(axis="y")
         self._apply_share_label_groups()
         super().draw(renderer)
+
+    def _snap_axes_to_pixel_grid(self, renderer) -> None:
+        """
+        Snap visible axes bounds to the renderer pixel grid.
+        """
+        if not rc.find("subplots.pixelsnap", context=True):
+            return
+
+        width = getattr(renderer, "width", None)
+        height = getattr(renderer, "height", None)
+        if not width or not height:
+            return
+
+        width = float(width)
+        height = float(height)
+        if width <= 0 or height <= 0:
+            return
+
+        invw = 1.0 / width
+        invh = 1.0 / height
+        minw = invw
+        minh = invh
+
+        for ax in self._iter_axes(hidden=False, children=False, panels=True):
+            bbox = ax.get_position(original=False)
+            old = np.array([bbox.x0, bbox.y0, bbox.x1, bbox.y1], dtype=float)
+            new = np.array(
+                [
+                    round(old[0] * width) * invw,
+                    round(old[1] * height) * invh,
+                    round(old[2] * width) * invw,
+                    round(old[3] * height) * invh,
+                ],
+                dtype=float,
+            )
+
+            if new[2] <= new[0]:
+                new[2] = new[0] + minw
+            if new[3] <= new[1]:
+                new[3] = new[1] + minh
+
+            if np.allclose(new, old, rtol=0.0, atol=1e-12):
+                continue
+            ax.set_position(
+                [new[0], new[1], new[2] - new[0], new[3] - new[1]],
+                which="both",
+            )
 
     def _share_ticklabels(self, *, axis: str) -> None:
         """

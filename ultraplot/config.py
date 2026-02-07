@@ -3,6 +3,7 @@
 Tools for setting up ultraplot and configuring global settings.
 See the :ref:`configuration guide <ug_config>` for details.
 """
+
 # NOTE: The matplotlib analogue to this file is actually __init__.py
 # but it makes more sense to have all the setup actions in a separate file
 # so the namespace of the top-level module is unpolluted.

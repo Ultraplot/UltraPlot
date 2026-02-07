@@ -5,6 +5,7 @@ Unit tests for ExternalAxesContainer using mocked external axes.
 These tests verify container behavior without requiring external dependencies
 like mpltern to be installed.
 """
+
 from unittest.mock import MagicMock, Mock, call, patch
 
 import numpy as np

@@ -2,6 +2,7 @@
 """
 Utilities for global configuration.
 """
+
 import functools
 import re
 from collections.abc import MutableMapping
@@ -706,6 +707,7 @@ _validate_boxstyle = _validate_belongs(
     "sawtooth",
     "roundtooth",
 )
+_validate_joinstyle = _validate_belongs("miter", "round", "bevel")
 if hasattr(msetup, "_validate_linestyle"):  # fancy validation including dashes
     _validate_linestyle = msetup._validate_linestyle
 else:  # no dashes allowed then but no big deal
@@ -1042,6 +1044,12 @@ _rc_ultraplot_table = {
         1.5,
         _validate_pt,
         "Width of the white border around a-b-c labels.",
+    ),
+    "text.borderstyle": (
+        "bevel",
+        _validate_joinstyle,
+        "Join style for text border strokes. Must be one of "
+        "``'miter'``, ``'round'``, or ``'bevel'``.",
     ),
     "abc.bbox": (
         False,
@@ -2090,6 +2098,11 @@ _rc_ultraplot_table = {
         True,
         _validate_bool,
         "Whether to auto-adjust the subplot spaces and figure margins.",
+    ),
+    "subplots.pixelsnap": (
+        False,
+        _validate_bool,
+        "Whether to snap subplot bounds to the renderer pixel grid during draw.",
     ),
     # Super title settings
     "suptitle.color": (BLACK, _validate_color, "Figure title color."),

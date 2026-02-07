@@ -135,7 +135,22 @@ jobs:
           echo "TEST_NODEIDS=${TEST_NODEIDS}"
           # Save PR-selected nodeids for reuse after checkout (if provided)
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
-            printf "%s\n" ${TEST_NODEIDS} > /tmp/pr_selected_nodeids.txt
+            python -c 'import json, os
+raw = os.environ.get("TEST_NODEIDS", "").strip()
+nodeids = []
+if raw and raw != "[]":
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        parsed = raw.split()
+    if isinstance(parsed, str):
+        parsed = [parsed]
+    if isinstance(parsed, list):
+        nodeids = [item for item in parsed if isinstance(item, str) and item]
+with open("/tmp/pr_selected_nodeids.txt", "w", encoding="utf-8") as fh:
+    for nodeid in nodeids:
+        fh.write(f"{nodeid}\n")
+print(f"Selected nodeids parsed: {len(nodeids)}")'
           else
             : > /tmp/pr_selected_nodeids.txt
           fi
@@ -152,26 +167,22 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
-            filter_nodeids() {
-              local filtered=""
-              for nodeid in $(cat /tmp/pr_selected_nodeids.txt); do
-                local path="${nodeid%%::*}"
-                if [ -f "$path" ]; then
-                  filtered="${filtered} ${nodeid}"
-                fi
-              done
-              echo "${filtered}"
-            }
-            FILTERED_NODEIDS="$(filter_nodeids)"
-            echo "FILTERED_NODEIDS_BASE=${FILTERED_NODEIDS}"
-            if [ -z "${FILTERED_NODEIDS}" ]; then
+            mapfile -t FILTERED_NODEIDS < <(
+              while IFS= read -r nodeid; do
+                [ -z "$nodeid" ] && continue
+                path="${nodeid%%::*}"
+                [ -f "$path" ] && printf '%s\n' "$nodeid"
+              done < /tmp/pr_selected_nodeids.txt
+            )
+            echo "FILTERED_NODEIDS_BASE_COUNT=${#FILTERED_NODEIDS[@]}"
+            if [ "${#FILTERED_NODEIDS[@]}" -eq 0 ]; then
               echo "No valid nodeids found on base; skipping baseline generation."
             else
               echo "=== Memory before baseline generation ===" && free -h
               pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
                 --mpl-generate-path=./ultraplot/tests/baseline/ \
                 --mpl-default-style="./ultraplot.yml" \
-                ${FILTERED_NODEIDS} || status=$?
+                "${FILTERED_NODEIDS[@]}" || status=$?
               echo "=== Memory after baseline generation ===" && free -h
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
                 echo "No tests collected from selected nodeids on base; skipping baseline generation."
@@ -213,19 +224,15 @@ jobs:
           echo "TEST_NODEIDS=${TEST_NODEIDS}"
           if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
-            filter_nodeids() {
-              local filtered=""
-              for nodeid in $(cat /tmp/pr_selected_nodeids.txt); do
-                local path="${nodeid%%::*}"
-                if [ -f "$path" ]; then
-                  filtered="${filtered} ${nodeid}"
-                fi
-              done
-              echo "${filtered}"
-            }
-            FILTERED_NODEIDS="$(filter_nodeids)"
-            echo "FILTERED_NODEIDS_PR=${FILTERED_NODEIDS}"
-            if [ -z "${FILTERED_NODEIDS}" ]; then
+            mapfile -t FILTERED_NODEIDS < <(
+              while IFS= read -r nodeid; do
+                [ -z "$nodeid" ] && continue
+                path="${nodeid%%::*}"
+                [ -f "$path" ] && printf '%s\n' "$nodeid"
+              done < /tmp/pr_selected_nodeids.txt
+            )
+            echo "FILTERED_NODEIDS_PR_COUNT=${#FILTERED_NODEIDS[@]}"
+            if [ "${#FILTERED_NODEIDS[@]}" -eq 0 ]; then
               echo "No valid nodeids found on PR branch; skipping image comparison."
               exit 0
             else
@@ -236,7 +243,7 @@ jobs:
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
-              ${FILTERED_NODEIDS} || status=$?
+              "${FILTERED_NODEIDS[@]}" || status=$?
               echo "=== Memory after image comparison ===" && free -h
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
                 echo "No tests collected from selected nodeids; skipping image comparison."

@@ -2,6 +2,7 @@
 """
 The gridspec and subplot grid classes used throughout ultraplot.
 """
+
 import inspect
 import itertools
 import re
@@ -1162,7 +1163,27 @@ class GridSpec(mgridspec.GridSpec):
                 x1 = max(ax._range_tightbbox(x)[1] for ax in group1)
                 x2 = min(ax._range_tightbbox(x)[0] for ax in group2)
                 margins.append((x2 - x1) / self.figure.dpi)
-            s = 0 if not margins else max(0, s - min(margins) + p)
+            if not margins:
+                s = 0
+            else:
+                s = max(0, s - min(margins) + p)
+                # Keep at least the pad when adjacent axes exist.
+                if s == 0 and p:
+                    s = p
+                # Ensure enough space for inner-side labels/ticks on the right axes.
+                if w == "w":
+                    figwidth = self.figure.get_size_inches()[0]
+                    left_margins = []
+                    for _, group2 in groups:
+                        for ax in group2:
+                            bbox = getattr(ax, "_tight_bbox", None)
+                            if bbox is None:
+                                continue
+                            x0 = ax.get_position().x0 * figwidth
+                            left_margins.append(max(0.0, x0 - bbox.xmin))
+                    if left_margins:
+                        extra_pad = 0.5 * self._labelspace / 72
+                        s = max(s, max(left_margins) + p + extra_pad)
             space[i] = s
 
         return space
