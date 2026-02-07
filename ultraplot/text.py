@@ -377,7 +377,9 @@ class CurvedText(mtext.Text):
                 bbox = _place_at(target, t)
                 if bbox is not None and self._avoid_overlap and prev_bbox is not None:
                     attempts = 0
-                    while bbox is not None and bbox.overlaps(prev_bbox) and attempts < 20:
+                    while (
+                        bbox is not None and bbox.overlaps(prev_bbox) and attempts < 20
+                    ):
                         ov_dx = min(bbox.x1, prev_bbox.x1) - max(bbox.x0, prev_bbox.x0)
                         ov_dy = min(bbox.y1, prev_bbox.y1) - max(bbox.y0, prev_bbox.y0)
                         if ov_dx <= 0 or ov_dy <= 0:
