@@ -6,9 +6,11 @@ Test twin, inset, and panel axes.
 import numpy as np
 import pytest
 import matplotlib.patheffects as mpatheffects
+import matplotlib.text as mtext
 
 import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
+from ultraplot.text import CurvedText
 
 
 @pytest.mark.parametrize(
@@ -150,6 +152,59 @@ def test_curvedtext_basic():
     )
     ax.format(xlim=(0, 2 * np.pi), ylim=(-1.2, 1.2))
     return fig
+
+
+def test_text_scalar_returns_text():
+    fig, ax = uplt.subplots()
+    obj = ax.text(0.5, 0.5, "scalar")
+    assert isinstance(obj, mtext.Text)
+    assert not isinstance(obj, CurvedText)
+
+
+def test_text_curve_xy_returns_curvedtext():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = x**2
+    obj = ax.text(x, y, "curve")
+    assert isinstance(obj, CurvedText)
+
+
+def test_annotate_scalar_returns_annotation():
+    fig, ax = uplt.subplots()
+    obj = ax.annotate("point", xy=(0.5, 0.5))
+    assert isinstance(obj, mtext.Annotation)
+    assert not isinstance(obj, CurvedText)
+
+
+def test_annotate_curve_xy_returns_curvedtext():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = np.sin(2 * np.pi * x)
+    obj = ax.annotate("curve", xy=(x, y))
+    assert isinstance(obj, CurvedText)
+    assert not hasattr(obj, "_annotation")
+
+
+def test_annotate_curve_xy_with_arrow_uses_curve_center():
+    fig, ax = uplt.subplots()
+    ax = ax[0]
+    x = np.linspace(0, 1, 31)
+    y = x**2
+    obj = ax.annotate(
+        "curve",
+        xy=(x, y),
+        xytext=(0.2, 0.8),
+        arrowprops={"arrowstyle": "->"},
+    )
+    assert isinstance(obj, CurvedText)
+    assert isinstance(getattr(obj, "_annotation", None), mtext.Annotation)
+
+    xmid, ymid = ax._curve_center(x, y, ax.transData)
+    ax_x, ax_y = obj._annotation.xy
+    assert np.isclose(ax_x, xmid)
+    assert np.isclose(ax_y, ymid)
+
+
 def _get_text_stroke_joinstyle(text):
     for effect in text.get_path_effects():
         if isinstance(effect, mpatheffects.Stroke):
