@@ -222,8 +222,7 @@ def _run_in_subprocess(code):
     code = (
         "import pathlib\n"
         "import sys\n"
-        "sys.path.insert(0, str(pathlib.Path.cwd()))\n"
-        + code
+        "sys.path.insert(0, str(pathlib.Path.cwd()))\n" + code
     )
     env = os.environ.copy()
     env["MPLBACKEND"] = "Agg"

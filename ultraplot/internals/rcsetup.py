@@ -734,6 +734,7 @@ font_scalings["med-large"] = 1.1  # add scaling
 if not hasattr(RcParams, "validate"):  # not mission critical so skip
     warnings._warn_ultraplot("Failed to update matplotlib rcParams validators.")
 else:
+
     def _validator_accepts(validator, value):
         try:
             validator(value)
