@@ -11,7 +11,7 @@ import sys
 import types
 from collections.abc import Iterable as IterableType
 from numbers import Integral, Number
-from typing import Iterable, MutableMapping, Optional, Tuple, Union
+from typing import Any, Iterable, MutableMapping, Optional, Tuple, Union
 
 try:
     # From python 3.12
@@ -4015,15 +4015,15 @@ class Axes(_ExternalModeMixin, maxes.Axes):
     @docstring._concatenate_inherited
     def annotate(
         self,
-        text,
-        xy,
-        xytext=None,
-        xycoords="data",
-        textcoords=None,
-        arrowprops=None,
-        annotation_clip=None,
-        **kwargs,
-    ):
+        text: str,
+        xy: Any,
+        xytext: Optional[Tuple[float, float]] = None,
+        xycoords: Union[str, mtransforms.Transform] = "data",
+        textcoords: Optional[Union[str, mtransforms.Transform]] = None,
+        arrowprops: Optional[dict[str, Any]] = None,
+        annotation_clip: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> Union[mtext.Annotation, "CurvedText"]:
         """
         Add an annotation. If `xy` is a pair of 1D arrays, draw curved text.
 
