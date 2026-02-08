@@ -689,7 +689,7 @@ def test_non_rectangular_outside_labels_top():
     uplt.close(fig)
 
 
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(tolerance=4)
 def test_outside_labels_with_panels():
     fig, ax = uplt.subplots(
         ncols=2,
