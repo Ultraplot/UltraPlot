@@ -260,6 +260,34 @@ def test_external_mode_mixing_context_manager():
     uplt.close(fig)
 
 
+def test_legend_entry_helpers():
+    h1 = uplt.LegendEntry.line("Line", color="red8", linewidth=3)
+    h2 = uplt.LegendEntry.marker("Marker", color="blue8", marker="s", markersize=8)
+
+    assert h1.get_linestyle() != "none"
+    assert h1.get_label() == "Line"
+    assert h2.get_linestyle() == "None"
+    assert h2.get_marker() == "s"
+    assert h2.get_label() == "Marker"
+
+
+def test_legend_entry_with_axes_legend():
+    fig, ax = uplt.subplots()
+    handles = [
+        uplt.LegendEntry.line("Trend", color="green7", linewidth=2.5),
+        uplt.LegendEntry.marker("Samples", color="orange7", marker="o", markersize=7),
+    ]
+    leg = ax.legend(handles=handles, loc="best")
+
+    labels = [text.get_text() for text in leg.get_texts()]
+    assert labels == ["Trend", "Samples"]
+    lines = leg.get_lines()
+    assert len(lines) == 2
+    assert lines[0].get_linewidth() > 0
+    assert lines[1].get_marker() == "o"
+    uplt.close(fig)
+
+
 def test_external_mode_toggle_enables_auto():
     """
     Toggling external mode back off should resume on-the-fly guide creation.
