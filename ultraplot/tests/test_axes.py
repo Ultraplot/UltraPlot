@@ -205,6 +205,53 @@ def test_annotate_curve_xy_with_arrow_uses_curve_center():
     assert np.isclose(ax_y, ymid)
 
 
+def test_curvedtext_uses_rc_defaults():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = x**2
+    with uplt.rc.context(
+        {
+            "text.curved.upright": False,
+            "text.curved.ellipsis": True,
+            "text.curved.avoid_overlap": False,
+            "text.curved.overlap_tol": 0.25,
+            "text.curved.curvature_pad": 3.5,
+            "text.curved.min_advance": 2.5,
+        }
+    ):
+        obj = ax.curvedtext(x, y, "curve")
+    assert obj._upright is False
+    assert obj._ellipsis is True
+    assert obj._avoid_overlap is False
+    assert np.isclose(obj._overlap_tol, 0.25)
+    assert np.isclose(obj._curvature_pad, 3.5)
+    assert np.isclose(obj._min_advance, 2.5)
+
+
+def test_annotate_curve_xy_uses_rc_defaults():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = np.sin(2 * np.pi * x)
+    with uplt.rc.context(
+        {
+            "text.curved.upright": False,
+            "text.curved.ellipsis": True,
+            "text.curved.avoid_overlap": False,
+            "text.curved.overlap_tol": 0.2,
+            "text.curved.curvature_pad": 4.0,
+            "text.curved.min_advance": 1.5,
+        }
+    ):
+        obj = ax.annotate("curve", xy=(x, y))
+    assert isinstance(obj, CurvedText)
+    assert obj._upright is False
+    assert obj._ellipsis is True
+    assert obj._avoid_overlap is False
+    assert np.isclose(obj._overlap_tol, 0.2)
+    assert np.isclose(obj._curvature_pad, 4.0)
+    assert np.isclose(obj._min_advance, 1.5)
+
+
 def _get_text_stroke_joinstyle(text):
     for effect in text.get_path_effects():
         if isinstance(effect, mpatheffects.Stroke):

@@ -4113,12 +4113,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         y,
         text,
         *,
-        upright=True,
-        ellipsis=False,
-        avoid_overlap=True,
-        overlap_tol=0.1,
-        curvature_pad=2.0,
-        min_advance=1.0,
+        upright=None,
+        ellipsis=None,
+        avoid_overlap=None,
+        overlap_tol=None,
+        curvature_pad=None,
+        min_advance=None,
         border=False,
         bbox=False,
         bordercolor="w",
@@ -4152,17 +4152,17 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             The color of the text border.
         borderinvert : bool, optional
             If ``True``, the text and border colors are swapped.
-        upright : bool, default: True
+        upright : bool, default: :rc:`text.curved.upright`
             Whether to flip the curve direction to keep text upright.
-        ellipsis : bool, default: False
+        ellipsis : bool, default: :rc:`text.curved.ellipsis`
             Whether to show an ellipsis when the text exceeds curve length.
-        avoid_overlap : bool, default: True
+        avoid_overlap : bool, default: :rc:`text.curved.avoid_overlap`
             Whether to hide glyphs that overlap after rotation.
-        overlap_tol : float, default: 0.1
+        overlap_tol : float, default: :rc:`text.curved.overlap_tol`
             Fractional overlap area (0–1) required before hiding a glyph.
-        curvature_pad : float, default: 2.0
+        curvature_pad : float, default: :rc:`text.curved.curvature_pad`
             Extra spacing in pixels per radian of local curvature.
-        min_advance : float, default: 1.0
+        min_advance : float, default: :rc:`text.curved.min_advance`
             Minimum additional spacing (pixels) enforced between glyph centers.
         borderstyle : {'miter', 'round', 'bevel'}, default: 'miter'
             The `line join style \\
@@ -4189,6 +4189,13 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         else:
             transform = self._get_transform(transform)
         kwargs["transform"] = transform
+
+        upright = _not_none(upright, rc["text.curved.upright"])
+        ellipsis = _not_none(ellipsis, rc["text.curved.ellipsis"])
+        avoid_overlap = _not_none(avoid_overlap, rc["text.curved.avoid_overlap"])
+        overlap_tol = _not_none(overlap_tol, rc["text.curved.overlap_tol"])
+        curvature_pad = _not_none(curvature_pad, rc["text.curved.curvature_pad"])
+        min_advance = _not_none(min_advance, rc["text.curved.min_advance"])
 
         from ..text import CurvedText
 
