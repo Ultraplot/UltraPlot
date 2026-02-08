@@ -2,6 +2,7 @@
 """
 The starting point for creating ultraplot figures.
 """
+
 import matplotlib.pyplot as plt
 
 from . import axes as paxes

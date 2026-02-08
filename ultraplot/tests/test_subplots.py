@@ -2,6 +2,7 @@
 """
 Test subplot layout.
 """
+
 import numpy as np
 import pytest
 
@@ -693,6 +694,7 @@ def test_outside_labels_with_panels():
     fig, ax = uplt.subplots(
         ncols=2,
         nrows=2,
+        share=True,
     )
     # Create extreme case where we add a lot of panels
     # This should push the left labels further left

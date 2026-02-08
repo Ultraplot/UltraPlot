@@ -2,6 +2,7 @@
 """
 Various colormap classes and colormap normalization classes.
 """
+
 # NOTE: To avoid name conflicts between registered colormaps and colors, print
 # set(uplt.colors._cmap_database) & set(uplt.colors._color_database) whenever
 # you add new colormaps. v0.8 result is {'gray', 'marine', 'ocean', 'pink'} due
