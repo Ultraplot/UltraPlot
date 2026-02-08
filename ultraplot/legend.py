@@ -1,5 +1,7 @@
 from matplotlib import lines as mlines
 from matplotlib import legend as mlegend
+from matplotlib import legend_handler as mhandler
+from matplotlib import patches as mpatches
 
 try:
     from typing import override
@@ -7,6 +9,27 @@ except ImportError:
     from typing_extensions import override
 
 __all__ = ["Legend", "LegendEntry"]
+
+
+def _wedge_legend_patch(
+    legend,
+    orig_handle,
+    xdescent,
+    ydescent,
+    width,
+    height,
+    fontsize,
+):
+    """
+    Draw wedge-shaped legend keys for pie wedge handles.
+    """
+    center = (-xdescent + width * 0.5, -ydescent + height * 0.5)
+    radius = 0.5 * min(width, height)
+    theta1 = float(getattr(orig_handle, "theta1", 0.0))
+    theta2 = float(getattr(orig_handle, "theta2", 300.0))
+    if theta2 == theta1:
+        theta2 = theta1 + 300.0
+    return mpatches.Wedge(center, radius, theta1=theta1, theta2=theta2)
 
 
 class LegendEntry(mlines.Line2D):
@@ -79,6 +102,18 @@ class Legend(mlegend.Legend):
     # a legend format was not behaving according to the docs
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    @classmethod
+    def get_default_handler_map(cls):
+        """
+        Extend matplotlib defaults with a wedge handler for pie legends.
+        """
+        handler_map = dict(super().get_default_handler_map())
+        handler_map.setdefault(
+            mpatches.Wedge,
+            mhandler.HandlerPatch(patch_func=_wedge_legend_patch),
+        )
+        return handler_map
 
     @override
     def set_loc(self, loc=None):

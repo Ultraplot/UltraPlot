@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import pytest
+from matplotlib import legend_handler as mhandler
+from matplotlib import patches as mpatches
 
 import ultraplot as uplt
 from ultraplot.axes import Axes as UAxes
@@ -285,6 +287,31 @@ def test_legend_entry_with_axes_legend():
     assert len(lines) == 2
     assert lines[0].get_linewidth() > 0
     assert lines[1].get_marker() == "o"
+    uplt.close(fig)
+
+
+def test_pie_legend_uses_wedge_handles():
+    fig, ax = uplt.subplots()
+    wedges, _ = ax.pie([30, 70], labels=["a", "b"])
+    leg = ax.legend(wedges, ["a", "b"], loc="best")
+    handles = leg.legend_handles
+    assert len(handles) == 2
+    assert all(isinstance(handle, mpatches.Wedge) for handle in handles)
+    uplt.close(fig)
+
+
+def test_pie_legend_handler_map_override():
+    fig, ax = uplt.subplots()
+    wedges, _ = ax.pie([30, 70], labels=["a", "b"])
+    leg = ax.legend(
+        wedges,
+        ["a", "b"],
+        loc="best",
+        handler_map={mpatches.Wedge: mhandler.HandlerPatch()},
+    )
+    handles = leg.legend_handles
+    assert len(handles) == 2
+    assert all(isinstance(handle, mpatches.Rectangle) for handle in handles)
     uplt.close(fig)
 
 
