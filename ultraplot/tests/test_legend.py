@@ -349,8 +349,6 @@ def test_pie_legend_handler_map_override():
     assert len(handles) == 2
     assert all(isinstance(handle, mpatches.Rectangle) for handle in handles)
     uplt.close(fig)
-
-
 def test_external_mode_toggle_enables_auto():
     """
     Toggling external mode back off should resume on-the-fly guide creation.
