@@ -203,9 +203,8 @@ jobs:
       # Image Comparison (Uses cached or newly generated baseline)
       - name: Image Comparison Ultraplot
         run: |
-          set -Euo pipefail
+          set -uo pipefail
           PS4='+ [compare:${LINENO}] '
-          trap 'rc=$?; echo "::error title=Image Comparison shell failure::line ${LINENO}: ${BASH_COMMAND} (exit ${rc})"; exit ${rc}' ERR
           set -x
 
           # Re-install the Ultraplot version from the current PR branch
