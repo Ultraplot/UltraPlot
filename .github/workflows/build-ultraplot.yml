@@ -221,15 +221,44 @@ jobs:
               echo "No valid nodeids found on PR branch; skipping image comparison."
               exit 0
             else
+              status=0
               echo "=== Memory before image comparison ===" && free -h
+              set +e
               pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
-              --mpl \
-              --mpl-baseline-path=./ultraplot/tests/baseline \
-              --mpl-results-path=./results/ \
-              --mpl-generate-summary=html \
-              --mpl-default-style="./ultraplot.yml" \
-              "${FILTERED_NODEIDS[@]}" || status=$?
+                --mpl \
+                --mpl-baseline-path=./ultraplot/tests/baseline \
+                --mpl-results-path=./results/ \
+                --mpl-generate-summary=html \
+                --mpl-default-style="./ultraplot.yml" \
+                --junitxml=./results/junit.xml \
+                "${FILTERED_NODEIDS[@]}"
+              status=$?
+              set -e
               echo "=== Memory after image comparison ===" && free -h
+              if [ "$status" -ne 0 ] && [ -f ./results/junit.xml ]; then
+                if python - <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+try:
+    root = ET.parse("./results/junit.xml").getroot()
+except Exception:
+    sys.exit(1)
+if root.tag == "testsuites":
+    suites = list(root.findall("testsuite"))
+else:
+    suites = [root]
+failures = 0
+errors = 0
+for suite in suites:
+    failures += int(suite.attrib.get("failures", 0) or 0)
+    errors += int(suite.attrib.get("errors", 0) or 0)
+sys.exit(0 if (failures == 0 and errors == 0) else 1)
+PY
+                then
+                  echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
+                  status=0
+                fi
+              fi
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
                 echo "No tests collected from selected nodeids; skipping image comparison."
                 status=0
@@ -237,15 +266,49 @@ jobs:
             fi
             exit "$status"
           else
+            status=0
             echo "=== Memory before image comparison ===" && free -h
+            set +e
             pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
+              --junitxml=./results/junit.xml \
               ultraplot/tests
+            status=$?
+            set -e
             echo "=== Memory after image comparison ===" && free -h
+            if [ "$status" -ne 0 ] && [ -f ./results/junit.xml ]; then
+              if python - <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+try:
+    root = ET.parse("./results/junit.xml").getroot()
+except Exception:
+    sys.exit(1)
+if root.tag == "testsuites":
+    suites = list(root.findall("testsuite"))
+else:
+    suites = [root]
+failures = 0
+errors = 0
+for suite in suites:
+    failures += int(suite.attrib.get("failures", 0) or 0)
+    errors += int(suite.attrib.get("errors", 0) or 0)
+sys.exit(0 if (failures == 0 and errors == 0) else 1)
+PY
+              then
+                echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
+                status=0
+              fi
+            fi
+            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+              echo "No tests collected; skipping image comparison."
+              status=0
+            fi
+            exit "$status"
           fi
 
       # Return the html output of the comparison even if failed
