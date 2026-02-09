@@ -246,7 +246,6 @@ jobs:
                 --junitxml=./results/junit.xml \
                 "${FILTERED_NODEIDS[@]}"
               status=$?
-              set -e
               echo "=== Memory after image comparison ===" && free -h
               junit_failures=0
               junit_errors=0
@@ -281,7 +280,6 @@ jobs:
               --junitxml=./results/junit.xml \
               ultraplot/tests
             status=$?
-            set -e
             echo "=== Memory after image comparison ===" && free -h
             junit_failures=0
             junit_errors=0
