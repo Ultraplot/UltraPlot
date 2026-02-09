@@ -236,24 +236,7 @@ jobs:
               set -e
               echo "=== Memory after image comparison ===" && free -h
               if [ "$status" -ne 0 ] && [ -f ./results/junit.xml ]; then
-                if python - <<'PY'
-import sys
-import xml.etree.ElementTree as ET
-try:
-    root = ET.parse("./results/junit.xml").getroot()
-except Exception:
-    sys.exit(1)
-if root.tag == "testsuites":
-    suites = list(root.findall("testsuite"))
-else:
-    suites = [root]
-failures = 0
-errors = 0
-for suite in suites:
-    failures += int(suite.attrib.get("failures", 0) or 0)
-    errors += int(suite.attrib.get("errors", 0) or 0)
-sys.exit(0 if (failures == 0 and errors == 0) else 1)
-PY
+                if python -c "import sys, xml.etree.ElementTree as ET; root = ET.parse('./results/junit.xml').getroot(); suites = list(root.findall('testsuite')) if root.tag == 'testsuites' else [root]; failures = sum(int(s.attrib.get('failures', 0) or 0) for s in suites); errors = sum(int(s.attrib.get('errors', 0) or 0) for s in suites); sys.exit(0 if (failures == 0 and errors == 0) else 1)"
                 then
                   echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
                   status=0
@@ -281,24 +264,7 @@ PY
             set -e
             echo "=== Memory after image comparison ===" && free -h
             if [ "$status" -ne 0 ] && [ -f ./results/junit.xml ]; then
-              if python - <<'PY'
-import sys
-import xml.etree.ElementTree as ET
-try:
-    root = ET.parse("./results/junit.xml").getroot()
-except Exception:
-    sys.exit(1)
-if root.tag == "testsuites":
-    suites = list(root.findall("testsuite"))
-else:
-    suites = [root]
-failures = 0
-errors = 0
-for suite in suites:
-    failures += int(suite.attrib.get("failures", 0) or 0)
-    errors += int(suite.attrib.get("errors", 0) or 0)
-sys.exit(0 if (failures == 0 and errors == 0) else 1)
-PY
+              if python -c "import sys, xml.etree.ElementTree as ET; root = ET.parse('./results/junit.xml').getroot(); suites = list(root.findall('testsuite')) if root.tag == 'testsuites' else [root]; failures = sum(int(s.attrib.get('failures', 0) or 0) for s in suites); errors = sum(int(s.attrib.get('errors', 0) or 0) for s in suites); sys.exit(0 if (failures == 0 and errors == 0) else 1)"
               then
                 echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
                 status=0
