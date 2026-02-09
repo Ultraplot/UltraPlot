@@ -403,6 +403,8 @@ def test_explicit_sharey_propagates_scale_changes():
 
     assert axs[0].get_yscale() == "log"
     assert axs[1].get_yscale() == "log"
+
+
 @pytest.mark.parametrize("va", ["bottom", "center", "top"])
 def test_suptitle_vertical_alignment_preserves_top_spacing(va):
     """
