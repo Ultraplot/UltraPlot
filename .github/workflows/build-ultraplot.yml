@@ -207,10 +207,11 @@ jobs:
           PS4='+ [compare:${LINENO}] '
           set -x
           # This workflow runs in a login shell (bash -el), which executes
-          # ~/.bash_logout on exit. Ubuntu images call clear_console there,
-          # and it can return non-zero on CI TTY-less runners.
+          # ~/.bash_logout on exit. Neutralize that file to prevent runner
+          # teardown commands (e.g. clear_console) from overriding step status.
           if [ -f "${HOME}/.bash_logout" ]; then
-            sed -i.bak '/clear_console/d' "${HOME}/.bash_logout" || true
+            cp "${HOME}/.bash_logout" "${HOME}/.bash_logout.bak" || true
+            : > "${HOME}/.bash_logout" || true
           fi
 
           # Re-install the Ultraplot version from the current PR branch
