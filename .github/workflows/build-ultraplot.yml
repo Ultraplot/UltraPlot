@@ -33,6 +33,7 @@ jobs:
       TEST_MODE: ${{ inputs.test-mode }}
       TEST_NODEIDS: ${{ inputs.test-nodeids }}
       PYTEST_WORKERS: 4
+      PYTHONHASHSEED: "0"
     steps:
       - name: Set up swap space
         uses: pierotofy/set-swap-space@master
@@ -78,6 +79,7 @@ jobs:
       TEST_MODE: ${{ inputs.test-mode }}
       TEST_NODEIDS: ${{ inputs.test-nodeids }}
       PYTEST_WORKERS: 4
+      PYTHONHASHSEED: "0"
     defaults:
       run:
         shell: bash -el {0}
