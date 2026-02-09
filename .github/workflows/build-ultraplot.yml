@@ -154,9 +154,13 @@ jobs:
             status=0
             mapfile -t FILTERED_NODEIDS < <(
               while IFS= read -r nodeid; do
-                [ -z "$nodeid" ] && continue
+                if [ -z "$nodeid" ]; then
+                  continue
+                fi
                 path="${nodeid%%::*}"
-                [ -f "$path" ] && printf '%s\n' "$nodeid"
+                if [ -f "$path" ]; then
+                  printf '%s\n' "$nodeid"
+                fi
               done < /tmp/pr_selected_nodeids.txt
             )
             echo "FILTERED_NODEIDS_BASE_COUNT=${#FILTERED_NODEIDS[@]}"
@@ -211,9 +215,13 @@ jobs:
             status=0
             mapfile -t FILTERED_NODEIDS < <(
               while IFS= read -r nodeid; do
-                [ -z "$nodeid" ] && continue
+                if [ -z "$nodeid" ]; then
+                  continue
+                fi
                 path="${nodeid%%::*}"
-                [ -f "$path" ] && printf '%s\n' "$nodeid"
+                if [ -f "$path" ]; then
+                  printf '%s\n' "$nodeid"
+                fi
               done < /tmp/pr_selected_nodeids.txt
             )
             echo "FILTERED_NODEIDS_PR_COUNT=${#FILTERED_NODEIDS[@]}"
