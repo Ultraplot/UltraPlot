@@ -211,31 +211,7 @@ jobs:
           echo "TEST_MODE=${TEST_MODE}"
           echo "TEST_NODEIDS=${TEST_NODEIDS}"
           parse_junit_counts() {
-            python - "$1" <<'PY'
-import sys
-from xml.etree import ElementTree as ET
-
-failures = 0
-errors = 0
-path = sys.argv[1]
-try:
-    root = ET.parse(path).getroot()
-    if root.tag == "testsuite":
-        failures = int(root.attrib.get("failures", 0))
-        errors = int(root.attrib.get("errors", 0))
-    elif root.tag == "testsuites":
-        suites = root.findall("testsuite")
-        if suites:
-            failures = sum(int(suite.attrib.get("failures", 0)) for suite in suites)
-            errors = sum(int(suite.attrib.get("errors", 0)) for suite in suites)
-        else:
-            failures = int(root.attrib.get("failures", 0))
-            errors = int(root.attrib.get("errors", 0))
-except Exception:
-    failures = 0
-    errors = 0
-print(f"{failures} {errors}")
-PY
+            python -c "import sys,xml.etree.ElementTree as ET; root=ET.parse(sys.argv[1]).getroot(); suites=[root] if root.tag=='testsuite' else root.findall('testsuite'); failures=sum(int(s.attrib.get('failures', 0)) for s in suites); errors=sum(int(s.attrib.get('errors', 0)) for s in suites); print(f'{failures} {errors}')" "$1" 2>/dev/null || echo "0 0"
           }
           if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
