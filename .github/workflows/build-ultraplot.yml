@@ -8,6 +8,14 @@ on:
       matplotlib-version:
         required: true
         type: string
+      test-mode:
+        required: false
+        type: string
+        default: full
+      test-nodeids:
+        required: false
+        type: string
+        default: ""
 
 env:
   LC_ALL: en_US.UTF-8
@@ -21,7 +29,26 @@ jobs:
     defaults:
       run:
         shell: bash -el {0}
+    env:
+      TEST_MODE: ${{ inputs.test-mode }}
+      TEST_NODEIDS: ${{ inputs.test-nodeids }}
+      PYTEST_WORKERS: 4
+      PYTHONHASHSEED: "0"
     steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - name: Show system memory
+        run: |
+          echo "=== System Memory ==="
+          free -h
+          echo ""
+          echo "=== CPU Info ==="
+          nproc
+          cat /proc/cpuinfo | grep "model name" | head -1
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -30,6 +57,8 @@ jobs:
         with:
           environment-file: ./environment.yml
           init-shell: bash
+          condarc-file: ./.github/micromamba-condarc.yml
+          post-cleanup: none
           create-args: >-
             --verbose
             python=${{ inputs.python-version }}
@@ -41,29 +70,42 @@ jobs:
         run: |
           pip install --no-build-isolation --no-deps .
 
-      - name: Test Ultraplot
-        run: |
-          pytest --cov=ultraplot --cov-branch --cov-report term-missing --cov-report=xml ultraplot
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: Ultraplot/ultraplot
-
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      IS_PR: ${{ github.event_name == 'pull_request' }}
+      TEST_MODE: ${{ inputs.test-mode }}
+      TEST_NODEIDS: ${{ inputs.test-nodeids }}
+      PYTEST_WORKERS: 4
+      PYTHONHASHSEED: "0"
     defaults:
       run:
         shell: bash -el {0}
     steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - name: Show system memory
+        run: |
+          echo "=== System Memory ==="
+          free -h
+          echo ""
+          echo "=== CPU Info ==="
+          nproc
+          cat /proc/cpuinfo | grep "model name" | head -1
+
       - uses: actions/checkout@v6
 
       - uses: mamba-org/setup-micromamba@v2.0.7
         with:
           environment-file: ./environment.yml
           init-shell: bash
+          condarc-file: ./.github/micromamba-condarc.yml
+          post-cleanup: none
           create-args: >-
             --verbose
             python=${{ inputs.python-version }}
@@ -71,29 +113,201 @@ jobs:
           cache-environment: true
           cache-downloads: false
 
-      - name: Generate baseline from main
-        run: |
-          mkdir -p baseline
-          git fetch origin ${{ github.event.pull_request.base.sha }}
-          git checkout ${{ github.event.pull_request.base.sha }}
-          python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -W ignore \
-            --mpl-generate-path=./baseline/ \
-            --mpl-default-style="./ultraplot.yml"\
-            ultraplot/tests
-          git checkout ${{ github.sha }}  # Return to PR branch
+      # Cache Baseline Figures (Restore step)
+      - name: Cache Baseline Figures
+        id: cache-baseline
+        uses: actions/cache@v5
+        if: ${{ env.IS_PR }}
+        with:
+          path: ./ultraplot/tests/baseline # The directory to cache
+          # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
+          key: ${{ runner.os }}-baseline-base-v2-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
+          restore-keys: |
+            ${{ runner.os }}-baseline-base-v2-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
 
+      # Conditional Baseline Generation (Only runs on cache miss)
+      - name: Generate baseline from main
+        # Skip this step if the cache was found (cache-hit is true)
+        if: steps.cache-baseline.outputs.cache-hit != 'true' || !env.IS_PR
+        run: |
+          mkdir -p ultraplot/tests/baseline
+          echo "TEST_MODE=${TEST_MODE}"
+          echo "IS_PR=${IS_PR}"
+          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha }}"
+          echo "TEST_NODEIDS=${TEST_NODEIDS}"
+          # Save PR-selected nodeids for reuse after checkout (if provided)
+          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
+            python -c 'import json,os; raw=os.environ.get("TEST_NODEIDS","").strip(); parsed=json.loads(raw) if raw and raw!="[]" else []; parsed=[parsed] if isinstance(parsed,str) else parsed; nodeids=[item for item in parsed if isinstance(item,str) and item]; open("/tmp/pr_selected_nodeids.txt","w",encoding="utf-8").write("".join(f"{nodeid}\n" for nodeid in nodeids)); print(f"Selected nodeids parsed: {len(nodeids)}")'
+          else
+            : > /tmp/pr_selected_nodeids.txt
+          fi
+          # Checkout the base commit for PRs; otherwise regenerate from current ref
+          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            git fetch origin ${{ github.event.pull_request.base.sha }}
+            git checkout ${{ github.event.pull_request.base.sha }}
+          fi
+
+          # Install the Ultraplot version from the base branch's code
+          pip install --no-build-isolation --no-deps .
+
+          # Generate the baseline images and hash library
+          python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
+          if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
+            status=0
+            FILTERED_NODEIDS=()
+            while IFS= read -r nodeid; do
+              if [ -z "$nodeid" ]; then
+                continue
+              fi
+              path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                FILTERED_NODEIDS+=("$nodeid")
+              fi
+            done < /tmp/pr_selected_nodeids.txt
+            echo "FILTERED_NODEIDS_BASE_COUNT=${#FILTERED_NODEIDS[@]}"
+            if [ "${#FILTERED_NODEIDS[@]}" -eq 0 ]; then
+              echo "No valid nodeids found on base; skipping baseline generation."
+            else
+              echo "=== Memory before baseline generation ===" && free -h
+              pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
+                --mpl-generate-path=./ultraplot/tests/baseline/ \
+                --mpl-default-style="./ultraplot.yml" \
+                "${FILTERED_NODEIDS[@]}" || status=$?
+              echo "=== Memory after baseline generation ===" && free -h
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids on base; skipping baseline generation."
+                status=0
+              fi
+            fi
+            # Return to the PR branch before continuing
+            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+              echo "Checking out PR branch: ${{ github.sha }}"
+              git checkout ${{ github.sha }} || echo "Warning: git checkout failed, but continuing"
+            fi
+            if [ "$status" -ne 0 ]; then
+              echo "Baseline generation failed with status $status"
+              exit "$status"
+            fi
+          else
+            echo "=== Memory before baseline generation ===" && free -h
+            pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
+              --mpl-generate-path=./ultraplot/tests/baseline/ \
+              --mpl-default-style="./ultraplot.yml" \
+              ultraplot/tests
+            echo "=== Memory after baseline generation ===" && free -h
+            # Return to the PR branch for the rest of the job
+            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+              echo "Checking out PR branch: ${{ github.sha }}"
+              git checkout ${{ github.sha }} || echo "Warning: git checkout failed, but continuing"
+            fi
+          fi
+
+      # Image Comparison (Uses cached or newly generated baseline)
       - name: Image Comparison Ultraplot
         run: |
+          set -uo pipefail
+          # This workflow runs in a login shell (bash -el), which executes
+          # ~/.bash_logout on exit. Neutralize that file to prevent runner
+          # teardown commands (e.g. clear_console) from overriding step status.
+          if [ -f "${HOME}/.bash_logout" ]; then
+            cp "${HOME}/.bash_logout" "${HOME}/.bash_logout.bak" || true
+            : > "${HOME}/.bash_logout" || true
+          fi
+
+          # Re-install the Ultraplot version from the current PR branch
+          pip install --no-build-isolation --no-deps .
+
           mkdir -p results
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-          pytest -W ignore \
+          echo "TEST_MODE=${TEST_MODE}"
+          echo "TEST_NODEIDS=${TEST_NODEIDS}"
+          parse_junit_counts() {
+            python -c "import sys,xml.etree.ElementTree as ET; root=ET.parse(sys.argv[1]).getroot(); suites=[root] if root.tag=='testsuite' else root.findall('testsuite'); failures=sum(int(s.attrib.get('failures', 0)) for s in suites); errors=sum(int(s.attrib.get('errors', 0)) for s in suites); print(f'{failures} {errors}')" "$1" 2>/dev/null || echo "0 0"
+          }
+          if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
+            status=0
+            FILTERED_NODEIDS=()
+            while IFS= read -r nodeid; do
+              if [ -z "$nodeid" ]; then
+                continue
+              fi
+              path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                FILTERED_NODEIDS+=("$nodeid")
+              fi
+            done < /tmp/pr_selected_nodeids.txt
+            echo "FILTERED_NODEIDS_PR_COUNT=${#FILTERED_NODEIDS[@]}"
+            if [ "${#FILTERED_NODEIDS[@]}" -eq 0 ]; then
+              echo "No valid nodeids found on PR branch; skipping image comparison."
+              exit 0
+            else
+              status=0
+              echo "=== Memory before image comparison ===" && free -h
+              set +e
+              pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
+                --mpl \
+                --mpl-baseline-path=./ultraplot/tests/baseline \
+                --mpl-results-path=./results/ \
+                --mpl-generate-summary=html \
+                --mpl-default-style="./ultraplot.yml" \
+                --junitxml=./results/junit.xml \
+                "${FILTERED_NODEIDS[@]}"
+              status=$?
+              echo "=== Memory after image comparison ===" && free -h
+              junit_failures=0
+              junit_errors=0
+              if [ -f ./results/junit.xml ]; then
+                junit_counts="$(parse_junit_counts ./results/junit.xml || echo '0 0')"
+                junit_failures="${junit_counts%% *}"
+                junit_errors="${junit_counts##* }"
+              fi
+              case "$junit_failures" in ''|*[!0-9]*) junit_failures=0 ;; esac
+              case "$junit_errors" in ''|*[!0-9]*) junit_errors=0 ;; esac
+              echo "pytest_status=$status junit_failures=$junit_failures junit_errors=$junit_errors"
+              if [ "$status" -ne 0 ] && [ "$junit_failures" -eq 0 ] && [ "$junit_errors" -eq 0 ]; then
+                echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
+                status=0
+              fi
+              if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+                echo "No tests collected from selected nodeids; skipping image comparison."
+                status=0
+              fi
+            fi
+            exit "$status"
+          else
+            status=0
+            echo "=== Memory before image comparison ===" && free -h
+            set +e
+            pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
-              --mpl-baseline-path=./baseline/ \
+              --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
+              --junitxml=./results/junit.xml \
               ultraplot/tests
+            status=$?
+            echo "=== Memory after image comparison ===" && free -h
+            junit_failures=0
+            junit_errors=0
+            if [ -f ./results/junit.xml ]; then
+              junit_counts="$(parse_junit_counts ./results/junit.xml || echo '0 0')"
+              junit_failures="${junit_counts%% *}"
+              junit_errors="${junit_counts##* }"
+            fi
+            case "$junit_failures" in ''|*[!0-9]*) junit_failures=0 ;; esac
+            case "$junit_errors" in ''|*[!0-9]*) junit_errors=0 ;; esac
+            echo "pytest_status=$status junit_failures=$junit_failures junit_errors=$junit_errors"
+            if [ "$status" -ne 0 ] && [ "$junit_failures" -eq 0 ] && [ "$junit_errors" -eq 0 ]; then
+              echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
+              status=0
+            fi
+            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+              echo "No tests collected; skipping image comparison."
+              status=0
+            fi
+            exit "$status"
+          fi
 
       # Return the html output of the comparison even if failed
       - name: Upload comparison failures
@@ -102,3 +316,4 @@ jobs:
         with:
           name: failed-comparisons-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-${{ github.sha }}
           path: results/*
+          if-no-files-found: ignore

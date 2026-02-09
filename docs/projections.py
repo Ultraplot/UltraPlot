@@ -55,8 +55,9 @@
 # For details, see :meth:`ultraplot.axes.PolarAxes.format`.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 N = 200
 state = np.random.RandomState(51423)
@@ -203,7 +204,7 @@ axs.format(
 # .. important::
 #
 #    * By default, UltraPlot bounds polar cartopy projections like
-#      :classs:`~cartopy.crs.NorthPolarStereo` at the equator and gives non-polar cartopy
+#      :class:`~cartopy.crs.NorthPolarStereo` at the equator and gives non-polar cartopy
 #      projections global extent by calling :meth:`~cartopy.mpl.geoaxes.GeoAxes.set_global`.
 #      This is a deviation from cartopy, which determines map boundaries automatically
 #      based on the coordinates of the plotted content. To revert to cartopy's
@@ -285,8 +286,9 @@ uplt.rc.reset()
 # for details).
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Fake data with unusual longitude seam location and without coverage over poles
 offset = -40

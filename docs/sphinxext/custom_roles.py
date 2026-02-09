@@ -2,6 +2,7 @@
 """
 Custom :rc: and :rcraw: roles for rc settings.
 """
+
 import os
 
 from docutils import nodes
@@ -22,8 +23,10 @@ def _node_list(rawtext, text, inliner):
         refuri = "https://matplotlib.org/stable/tutorials/introductory/customizing.html"
         refuri = f"{refuri}?highlight={text}#the-matplotlibrc-file"
     else:
-        path = "../" * relsource[1].count("/") + "en/stable"
-        refuri = f"{path}/configuration.html?highlight={text}#table-of-settings"
+        refuri = (
+            "https://ultraplot.readthedocs.io/en/stable/"
+            "configuration.html#table-of-settings"
+        )
     node = nodes.Text(f"rc[{text!r}]" if "." in text else f"rc.{text}")
     ref = nodes.reference(rawtext, node, refuri=refuri)
     return [nodes.literal("", "", ref)]

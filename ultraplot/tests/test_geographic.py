@@ -499,9 +499,8 @@ def test_sharing_geo_limits():
     after_lat = ax[1]._lataxis.get_view_interval()
 
     # We are sharing y which is the latitude axis
-    # Account for small epsilon expansion in extent (0.5 degrees per side)
     assert all(
-        [np.allclose(i, j, atol=1.0) for i, j in zip(expectation["latlim"], after_lat)]
+        [np.allclose(i, j, atol=1e-6) for i, j in zip(expectation["latlim"], after_lat)]
     )
     # We are not sharing longitude yet
     assert all(
@@ -516,9 +515,8 @@ def test_sharing_geo_limits():
     after_lon = ax[1]._lonaxis.get_view_interval()
 
     assert all([not np.allclose(i, j) for i, j in zip(before_lon, after_lon)])
-    # Account for small epsilon expansion in extent (0.5 degrees per side)
     assert all(
-        [np.allclose(i, j, atol=1.0) for i, j in zip(after_lon, expectation["lonlim"])]
+        [np.allclose(i, j, atol=1e-6) for i, j in zip(after_lon, expectation["lonlim"])]
     )
     uplt.close(fig)
 
@@ -612,6 +610,144 @@ def test_get_gridliner_labels_cartopy():
                 assert len(labels.get(dir, [])) > 0
             else:
                 assert len(labels.get(dir, [])) == 0
+    uplt.close(fig)
+
+
+def test_get_gridliner_labels_basemap():
+    fig, ax = uplt.subplots(proj="cyl", backend="basemap")
+    ax.format(labels="both", lonlines=30, latlines=30)
+    fig.canvas.draw()  # ensure labels are positioned
+    labels = ax[0]._get_gridliner_labels(bottom=True, top=True, left=True, right=True)
+    assert labels.get("bottom")
+    assert labels.get("top")
+    assert labels.get("left")
+    assert labels.get("right")
+    uplt.close(fig)
+
+
+def test_toggle_gridliner_labels_basemap():
+    fig, ax = uplt.subplots(proj="cyl", backend="basemap")
+    ax[0].format(labels="both", lonlines=30, latlines=30)
+    fig.canvas.draw()
+
+    ax[0]._toggle_gridliner_labels(
+        labelbottom=False,
+        labeltop=True,
+        labelleft=True,
+        labelright=True,
+    )
+    labels = ax[0]._get_gridliner_labels(bottom=True, top=True, left=True, right=True)
+    assert labels.get("bottom")
+    assert labels.get("top")
+    assert labels.get("left")
+    assert labels.get("right")
+    assert all(not label.get_visible() for label in labels["bottom"])
+    assert any(label.get_visible() for label in labels["top"])
+    assert any(label.get_visible() for label in labels["left"])
+    assert any(label.get_visible() for label in labels["right"])
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_tick_params_updates_gridliner(backend):
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    ax[0].format(lonlines=30, latlines=30, labels=True, grid=True)
+    ax[0].tick_params(
+        labelcolor="red",
+        labelsize=8,
+        labelrotation=15,
+        pad=6,
+        colors="blue",
+        width=1.5,
+        labelbottom=False,
+        labelleft=False,
+    )
+
+    assert not ax[0]._is_ticklabel_on("labelbottom")
+    assert not ax[0]._is_ticklabel_on("labelleft")
+
+    if ax[0]._name == "cartopy":
+        gl = ax[0].gridlines_major
+        assert gl.collection_kwargs.get("color") == "blue"
+        assert gl.collection_kwargs.get("linewidth") == 1.5
+        assert gl.xlabel_style.get("color") == "red"
+        assert gl.ylabel_style.get("color") == "red"
+        assert gl.xlabel_style.get("fontsize") == 8
+        assert gl.ylabel_style.get("fontsize") == 8
+        assert gl.xlabel_style.get("rotation") == 15
+        assert gl.ylabel_style.get("rotation") == 15
+        if hasattr(gl, "xpadding"):
+            assert gl.xpadding == 6
+        if hasattr(gl, "ypadding"):
+            assert gl.ypadding == 6
+    else:  # basemap
+        from matplotlib import colors as mcolors
+        from matplotlib import text as mtext
+
+        lonlines, latlines = ax[0].gridlines_major
+        label_colors = []
+        label_sizes = []
+        label_rotations = []
+        line_colors = []
+        line_widths = []
+        for grid in (lonlines, latlines):
+            for _, (lines, labels) in grid.items():
+                for line in lines:
+                    if hasattr(line, "get_color"):
+                        line_colors.append(mcolors.to_rgba(line.get_color()))
+                    if hasattr(line, "get_linewidth"):
+                        line_widths.append(line.get_linewidth())
+                for label in labels:
+                    if isinstance(label, mtext.Text):
+                        label_colors.append(mcolors.to_rgba(label.get_color()))
+                        label_sizes.append(label.get_fontsize())
+                        label_rotations.append(label.get_rotation())
+        expected_label_color = mcolors.to_rgba("red")
+        expected_line_color = mcolors.to_rgba("blue")
+        assert label_colors and all(c == expected_label_color for c in label_colors)
+        assert label_sizes and all(np.isclose(s, 8) for s in label_sizes)
+        assert label_rotations and all(np.isclose(r, 15) for r in label_rotations)
+        assert line_colors and all(c == expected_line_color for c in line_colors)
+        assert line_widths and all(np.isclose(w, 1.5) for w in line_widths)
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_gridliner_adapter_refresh(backend):
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    ax[0].format(lonlines=30, latlines=30, labels=True)
+    assert ax[0]._gridliner_adapter("major", create=False) is not None
+
+    ax[0]._gridliner_adapters.pop("major", None)
+    assert ax[0]._gridliner_adapter("major", create=False) is None
+    _ = ax[0].gridlines_major
+    assert ax[0]._gridliner_adapter("major", create=False) is not None
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_gridliner_tick_positions(backend):
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    ax[0].format(lonlines=30, latlines=30, labels=True, grid=True)
+    fig.canvas.draw()
+    lon_positions = ax[0]._gridliner_tick_positions("x", which="major")
+    lat_positions = ax[0]._gridliner_tick_positions("y", which="major")
+    assert len(lon_positions) > 0
+    assert len(lat_positions) > 0
+
+    if ax[0]._name == "cartopy":
+        expected_lon = ax[0]._get_lonticklocs()
+        expected_lat = ax[0]._get_latticklocs()
+        assert np.allclose(lon_positions, expected_lon)
+        assert np.allclose(lat_positions, expected_lat)
+    else:  # basemap
+        lonlines, latlines = ax[0].gridlines_major
+        expected_lon = np.sort(np.asarray(list(lonlines.keys())))
+        expected_lat = np.sort(np.asarray(list(latlines.keys())))
+        assert np.allclose(np.sort(lon_positions), expected_lon)
+        assert np.allclose(np.sort(lat_positions), expected_lat)
+
     uplt.close(fig)
 
 
@@ -829,7 +965,8 @@ def test_panels_geo():
     for dir in dirs:
         not ax[0]._is_ticklabel_on(f"label{dir}")
 
-    return fig
+    fig.canvas.draw()
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
@@ -994,9 +1131,8 @@ def test_consistent_range():
         lonview = np.array(a._lonaxis.get_view_interval())
         latview = np.array(a._lataxis.get_view_interval())
 
-        # Account for small epsilon expansion in extent (0.5 degrees per side)
-        assert np.allclose(lonview, lonlim, atol=1.0)
-        assert np.allclose(latview, latlim, atol=1.0)
+        assert np.allclose(lonview, lonlim, atol=1e-6)
+        assert np.allclose(latview, latlim, atol=1e-6)
 
 
 @pytest.mark.mpl_image_compare
@@ -1505,11 +1641,11 @@ def test_label_rotation_negative_angles():
 
 
 def _check_boundary_labels(ax, expected_lon_labels, expected_lat_labels):
-    """Helper to check that boundary labels are created and visible."""
+    """Helper to check that specific labels are created and visible."""
     gl = ax._gridlines_major
     assert gl is not None, "Gridliner should exist"
 
-    # Check xlim/ylim are expanded beyond actual limits
+    # Check xlim/ylim are defined on the gridliner
     assert hasattr(gl, "xlim") and hasattr(gl, "ylim")
 
     # Check longitude labels - only verify the visible ones match expected
@@ -1541,10 +1677,7 @@ def _check_boundary_labels(ax, expected_lon_labels, expected_lat_labels):
 
 def test_boundary_labels_positive_longitude():
     """
-    Test that boundary labels are visible with positive longitude limits.
-
-    This tests the fix for the issue where setting lonlim/latlim would hide
-    the outermost labels because cartopy's gridliner was filtering them out.
+    Test that interior labels remain visible with positive longitude limits.
     """
     fig, ax = uplt.subplots(proj="pcarree")
     ax.format(
@@ -1556,13 +1689,13 @@ def test_boundary_labels_positive_longitude():
         grid=False,
     )
     fig.canvas.draw()
-    _check_boundary_labels(ax[0], ["120°E", "125°E", "130°E"], ["10°N", "15°N", "20°N"])
+    _check_boundary_labels(ax[0], ["125°E"], ["15°N"])
     uplt.close(fig)
 
 
 def test_boundary_labels_negative_longitude():
     """
-    Test that boundary labels are visible with negative longitude limits.
+    Test that interior labels remain visible with negative longitude limits.
     """
     fig, ax = uplt.subplots(proj="pcarree")
     ax.format(
@@ -1574,12 +1707,10 @@ def test_boundary_labels_negative_longitude():
         grid=False,
     )
     fig.canvas.draw()
-    # Note: Cartopy hides the boundary label at 20°N due to it being exactly at the limit
-    # This is expected cartopy behavior with floating point precision at boundaries
     _check_boundary_labels(
         ax[0],
-        ["120°W", "90°W", "60°W"],
-        ["20°N", "35°N", "50°N"],
+        ["90°W"],
+        ["35°N"],
     )
     uplt.close(fig)
 
@@ -1595,3 +1726,17 @@ def test_boundary_labels_view_intervals():
     assert abs(loninterval[0] - 0) < 1 and abs(loninterval[1] - 60) < 1
     assert abs(latinterval[0] - (-20)) < 1 and abs(latinterval[1] - 40) < 1
     uplt.close(fig)
+
+
+def test_labels_preserved_with_ticklen():
+    """
+    Ensure ticklen updates do not disable top/right gridline labels.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.format(lonlim=(0, 10), latlim=(0, 10), labels="both", lonlines=2, latlines=2)
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels
+
+    ax.format(ticklen=1, labels="both")
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels

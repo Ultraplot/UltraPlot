@@ -3,6 +3,7 @@
 Tools for setting up ultraplot and configuring global settings.
 See the :ref:`configuration guide <ug_config>` for details.
 """
+
 # NOTE: The matplotlib analogue to this file is actually __init__.py
 # but it makes more sense to have all the setup actions in a separate file
 # so the namespace of the top-level module is unpolluted.
@@ -17,7 +18,7 @@ import sys
 from collections import namedtuple
 from collections.abc import MutableMapping
 from numbers import Real
-
+from typing import Any, Callable, Dict
 
 import cycler
 import matplotlib as mpl
@@ -27,9 +28,7 @@ import matplotlib.mathtext  # noqa: F401
 import matplotlib.style.core as mstyle
 import numpy as np
 from matplotlib import RcParams
-from typing import Callable, Any, Dict
 
-from .internals import ic  # noqa: F401
 from .internals import (
     _not_none,
     _pop_kwargs,
@@ -37,17 +36,10 @@ from .internals import (
     _translate_grid,
     _version_mpl,
     docstring,
+    ic,  # noqa: F401
     rcsetup,
     warnings,
 )
-
-try:
-    from IPython import get_ipython
-except ImportError:
-
-    def get_ipython():
-        return
-
 
 # Suppress warnings emitted by mathtext.py (_mathtext.py in recent versions)
 # when when substituting dummy unavailable glyph due to fallback disabled.
@@ -414,10 +406,10 @@ def config_inline_backend(fmt=None):
 
     .. code-block:: ipython
 
-        %config InlineBackend.figure_formats = rc['inlineformat']
-        %config InlineBackend.rc = {}  # never override rc settings
-        %config InlineBackend.close_figures = True  # cells start with no active figures
-        %config InlineBackend.print_figure_kwargs = {'bbox_inches': None}
+        %%config InlineBackend.figure_formats = rc['inlineformat']
+        %%config InlineBackend.rc = {}  # never override rc settings
+        %%config InlineBackend.close_figures = True  # cells start with no active figures
+        %%config InlineBackend.print_figure_kwargs = {'bbox_inches': None}
 
     When the inline backend is inactive or unavailable, this has no effect.
     This function is called when you modify the :rcraw:`inlineformat` property.
@@ -433,6 +425,10 @@ def config_inline_backend(fmt=None):
     Configurator
     """
     # Note if inline backend is unavailable this will fail silently
+    try:
+        from IPython import get_ipython
+    except ImportError:
+        return
     ipython = get_ipython()
     if ipython is None:
         return

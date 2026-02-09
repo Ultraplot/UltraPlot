@@ -2,6 +2,7 @@
 """
 Various axis `~matplotlib.scale.ScaleBase` classes.
 """
+
 import copy
 
 import matplotlib.scale as mscale
@@ -36,7 +37,7 @@ __all__ = [
 def _parse_logscale_args(*keys, **kwargs):
     """
     Parse arguments for `LogScale` and `SymmetricalLogScale` that
-    inexplicably require ``x`` and ``y`` suffixes by default. Also
+    inexplicably require `x` and `y` suffixes by default. Also
     change the default `linthresh` to ``1``.
     """
     # NOTE: Scale classes ignore unused arguments with warnings, but matplotlib 3.3
@@ -186,7 +187,7 @@ class LogitScale(_Scale, mscale.LogitScale):
 class LogScale(_Scale, mscale.LogScale):
     """
     As with `~matplotlib.scale.LogScale` but with `~ultraplot.ticker.AutoFormatter`
-    as the default major formatter. ``x`` and ``y`` versions of each keyword
+    as the default major formatter. `x` and `y` versions of each keyword
     argument are no longer required.
     """
 
@@ -224,7 +225,7 @@ class SymmetricalLogScale(_Scale, mscale.SymmetricalLogScale):
     """
     As with `~matplotlib.scale.SymmetricalLogScale` but with
     `~ultraplot.ticker.AutoFormatter` as the default major formatter.
-    ``x`` and ``y`` versions of each keyword argument are no longer
+    `x` and `y` versions of each keyword argument are no longer
     required.
     """
 

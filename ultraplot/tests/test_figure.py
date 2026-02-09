@@ -1,4 +1,9 @@
-import pytest, ultraplot as uplt, numpy as np
+import multiprocessing as mp
+import os
+
+import numpy as np
+import pytest
+import ultraplot as uplt
 
 
 def test_unsharing_after_creation(rng):
@@ -146,6 +151,48 @@ def test_toggle_input_axis_sharing():
         fig._toggle_axis_sharing(which="does not exist")
 
 
+def _layout_signature() -> tuple:
+    fig, ax = uplt.subplots(ncols=2, nrows=2)
+    for axi in ax:
+        axi.plot([0, 1], [0, 1], label="line")
+        axi.set_xlabel("X label")
+        axi.set_ylabel("Y label")
+    fig.suptitle("Title")
+    fig.legend()
+    fig.canvas.draw()
+    signature = tuple(
+        tuple(np.round(axi.get_position().bounds, 6))
+        for axi in fig.axes
+        if axi.get_visible()
+    )
+    uplt.close(fig)
+    return signature
+
+
+def _layout_worker(queue):
+    queue.put(_layout_signature())
+
+
+def test_layout_deterministic_across_runs():
+    """
+    Layout should be deterministic for identical inputs.
+    """
+    positions = [_layout_signature() for _ in range(3)]
+    assert all(p == positions[0] for p in positions)
+
+    # Probe mode: exercise multiple processes to catch nondeterminism.
+    if os.environ.get("ULTRAPLOT_LAYOUT_PROBE") == "1":
+        ctx = mp.get_context("spawn")
+        queue = ctx.Queue()
+        workers = [ctx.Process(target=_layout_worker, args=(queue,)) for _ in range(4)]
+        for proc in workers:
+            proc.start()
+        proc_positions = [queue.get() for _ in workers]
+        for proc in workers:
+            proc.join()
+        assert all(p == proc_positions[0] for p in proc_positions)
+
+
 def test_suptitle_alignment():
     """
     Test that suptitle uses the original centering behavior with includepanels parameter.
@@ -250,3 +297,48 @@ def test_suptitle_kw_position_reverted(ha, expectation):
     assert np.isclose(x, expectation, atol=0.1), f"Expected x={expectation}, got {x=}"
 
     uplt.close("all")
+
+
+@pytest.mark.parametrize("va", ["bottom", "center", "top"])
+def test_suptitle_vertical_alignment_preserves_top_spacing(va):
+    """
+    Suptitle vertical alignment should not reduce the spacing above top content.
+    """
+    fig, axs = uplt.subplots(ncols=2)
+    fig.format(
+        suptitle="Long figure title\nsecond line",
+        suptitle_kw={"va": va},
+        toplabels=("left", "right"),
+    )
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+
+    axs_top = fig._get_align_axes("top")
+    labs = tuple(t for t in fig._suplabel_dict["top"].values() if t.get_text())
+    pad = (fig._suptitle_pad / 72) / fig.get_size_inches()[1]
+    y_expected = fig._get_offset_coord("top", axs_top, renderer, pad=pad, extra=labs)
+
+    bbox = fig._suptitle.get_window_extent(renderer)
+    y_actual = fig.transFigure.inverted().transform((0, bbox.ymin))[1]
+    y_tol = 1.5 / (fig.dpi * fig.get_size_inches()[1])  # ~1.5 px tolerance
+    assert y_actual >= y_expected - y_tol
+
+    uplt.close("all")
+
+
+def test_subplots_pixelsnap_aligns_axes_bounds():
+    with uplt.rc.context({"subplots.pixelsnap": True}):
+        fig, axs = uplt.subplots(ncols=2, nrows=2)
+        axs.plot([0, 1], [0, 1])
+        fig.canvas.draw()
+
+        renderer = fig._get_renderer()
+        width = float(renderer.width)
+        height = float(renderer.height)
+
+        for ax in axs:
+            bbox = ax.get_position(original=False)
+            coords = np.array(
+                [bbox.x0 * width, bbox.y0 * height, bbox.x1 * width, bbox.y1 * height]
+            )
+            assert np.allclose(coords, np.round(coords), atol=1e-8)

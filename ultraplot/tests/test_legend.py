@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
-"""
-Test legends.
-"""
 import numpy as np
 import pandas as pd
 import pytest
 
 import ultraplot as uplt
+from ultraplot.axes import Axes as UAxes
 
 
 @pytest.mark.mpl_image_compare
@@ -471,13 +468,13 @@ def test_legend_column_without_span():
 def test_legend_multiple_sides_with_span():
     """Test multiple legends on different sides with span control."""
     fig, axs = uplt.subplots(nrows=3, ncols=3)
-    axs[0, 0].plot([], [], label="test")
+    axs.plot([0, 1], [0, 1], label="line")
 
     # Create legends on all 4 sides with different spans
-    leg_bottom = fig.legend(ax=axs[0, 0], span=(1, 2), loc="bottom")
-    leg_top = fig.legend(ax=axs[1, 0], span=(2, 3), loc="top")
-    leg_right = fig.legend(ax=axs[0, 0], rows=(1, 2), loc="right")
-    leg_left = fig.legend(ax=axs[0, 1], rows=(2, 3), loc="left")
+    leg_bottom = fig.legend(ref=axs[0, 0], span=(1, 2), loc="bottom")
+    leg_top = fig.legend(ref=axs[1, 0], span=(2, 3), loc="top")
+    leg_right = fig.legend(ref=axs[0, 0], rows=(1, 2), loc="right")
+    leg_left = fig.legend(ref=axs[0, 1], rows=(2, 3), loc="left")
 
     assert leg_bottom is not None
     assert leg_top is not None
@@ -529,3 +526,221 @@ def test_legend_explicit_handles_labels_override_auto_collection():
     assert leg is not None
     assert len(leg.get_texts()) == 1
     assert leg.get_texts()[0].get_text() == "custom_label"
+
+
+def test_legend_ref_argument():
+    """Test using 'ref' to decouple legend location from content axes."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    axs[0, 0].plot([], [], label="line1")  # Row 0
+    axs[1, 0].plot([], [], label="line2")  # Row 1
+
+    # Place legend below Row 0 (axs[0, :]) using content from Row 1 (axs[1, :])
+    leg = fig.legend(ax=axs[1, :], ref=axs[0, :], loc="bottom")
+
+    assert leg is not None
+
+    # Should be a single legend because span is inferred from ref
+    assert not isinstance(leg, tuple)
+
+    texts = [t.get_text() for t in leg.get_texts()]
+    assert "line2" in texts
+    assert "line1" not in texts
+
+
+def test_legend_ref_argument_no_ax():
+    """Test using 'ref' where 'ax' is implied to be 'ref'."""
+    fig, axs = uplt.subplots(nrows=1, ncols=1)
+    axs[0].plot([], [], label="line1")
+
+    # ref provided, ax=None. Should behave like ax=ref.
+    leg = fig.legend(ref=axs[0], loc="bottom")
+    assert leg is not None
+
+    # Should be a single legend
+    assert not isinstance(leg, tuple)
+
+    texts = [t.get_text() for t in leg.get_texts()]
+    assert "line1" in texts
+
+
+def test_ref_with_explicit_handles():
+    """Test using ref with explicit handles and labels."""
+    fig, axs = uplt.subplots(ncols=2)
+    h = axs[0].plot([0, 1], [0, 1], label="line")
+
+    # Place legend below both axes (ref=axs) using explicit handle
+    leg = fig.legend(handles=h, labels=["explicit"], ref=axs, loc="bottom")
+
+    assert leg is not None
+    texts = [t.get_text() for t in leg.get_texts()]
+    assert texts == ["explicit"]
+
+
+def test_ref_with_non_edge_location():
+    """Test using ref with an inset location (should not infer span)."""
+    fig, axs = uplt.subplots(ncols=2)
+    axs[0].plot([0, 1], label="test")
+
+    # ref=axs (list of 2).
+    # 'upper left' is inset. Should fallback to first axis.
+    leg = fig.legend(ref=axs, loc="upper left")
+
+    assert leg is not None
+    if isinstance(leg, tuple):
+        leg = leg[0]
+    # Should be associated with axs[0] (or a panel of it? Inset is child of axes)
+    # leg.axes is the axes containing the legend. For inset, it's the parent axes?
+    # No, legend itself is an artist. leg.axes should be axs[0].
+    assert leg.axes is axs[0]
+
+
+def test_ref_with_single_axis():
+    """Test using ref with a single axis object."""
+    fig, axs = uplt.subplots(ncols=2)
+    axs[0].plot([0, 1], label="line")
+
+    # ref=axs[1]. loc='bottom'.
+    leg = fig.legend(ref=axs[1], ax=axs[0], loc="bottom")
+    assert leg is not None
+
+
+def test_ref_with_manual_axes_no_subplotspec():
+    """Test using ref with axes that don't have subplotspec."""
+    fig = uplt.figure()
+    ax1 = fig.add_axes([0.1, 0.1, 0.4, 0.4])
+    ax2 = fig.add_axes([0.5, 0.1, 0.4, 0.4])
+    ax1.plot([0, 1], [0, 1], label="line")
+    # ref=[ax1, ax2]. loc='upper right' (inset).
+    leg = fig.legend(ref=[ax1, ax2], loc="upper right")
+    assert leg is not None
+
+
+def _decode_panel_span(panel_ax, axis):
+    ss = panel_ax.get_subplotspec().get_topmost_subplotspec()
+    r1, r2, c1, c2 = ss._get_rows_columns()
+    gs = ss.get_gridspec()
+    if axis == "rows":
+        r1, r2 = gs._decode_indices(r1, r2, which="h")
+        return int(r1), int(r2)
+    if axis == "cols":
+        c1, c2 = gs._decode_indices(c1, c2, which="w")
+        return int(c1), int(c2)
+    raise ValueError(f"Unknown axis {axis!r}.")
+
+
+def _anchor_axis(ref):
+    if np.iterable(ref) and not isinstance(ref, (str, UAxes)):
+        return next(iter(ref))
+    return ref
+
+
+@pytest.mark.parametrize(
+    "first_loc, first_ref, second_loc, second_ref, span_axis",
+    [
+        ("b", lambda axs: axs[0], "r", lambda axs: axs[:, 1], "rows"),
+        ("r", lambda axs: axs[:, 2], "b", lambda axs: axs[1, :], "cols"),
+        ("t", lambda axs: axs[2], "l", lambda axs: axs[:, 0], "rows"),
+        ("l", lambda axs: axs[:, 0], "t", lambda axs: axs[1, :], "cols"),
+    ],
+)
+def test_legend_span_inference_with_multi_panels(
+    first_loc, first_ref, second_loc, second_ref, span_axis
+):
+    fig, axs = uplt.subplots(nrows=3, ncols=3)
+    axs.plot([0, 1], [0, 1], label="line")
+
+    fig.legend(ref=first_ref(axs), loc=first_loc)
+    fig.legend(ref=second_ref(axs), loc=second_loc)
+
+    side_map = {"l": "left", "r": "right", "t": "top", "b": "bottom"}
+    anchor = _anchor_axis(second_ref(axs))
+    panel_ax = anchor._panel_dict[side_map[second_loc]][-1]
+    span = _decode_panel_span(panel_ax, span_axis)
+    assert span == (0, 2)
+
+
+def test_legend_best_axis_selection_right_left():
+    fig, axs = uplt.subplots(nrows=1, ncols=3)
+    axs.plot([0, 1], [0, 1], label="line")
+    ref = [axs[0, 0], axs[0, 2]]
+
+    fig.legend(ref=ref, loc="r", rows=1)
+    assert len(axs[0, 2]._panel_dict["right"]) == 1
+    assert len(axs[0, 0]._panel_dict["right"]) == 0
+
+    fig.legend(ref=ref, loc="l", rows=1)
+    assert len(axs[0, 0]._panel_dict["left"]) == 1
+    assert len(axs[0, 2]._panel_dict["left"]) == 0
+
+
+def test_legend_best_axis_selection_top_bottom():
+    fig, axs = uplt.subplots(nrows=2, ncols=1)
+    axs.plot([0, 1], [0, 1], label="line")
+    ref = [axs[0, 0], axs[1, 0]]
+
+    fig.legend(ref=ref, loc="t", cols=1)
+    assert len(axs[0, 0]._panel_dict["top"]) == 1
+    assert len(axs[1, 0]._panel_dict["top"]) == 0
+
+    fig.legend(ref=ref, loc="b", cols=1)
+    assert len(axs[1, 0]._panel_dict["bottom"]) == 1
+    assert len(axs[0, 0]._panel_dict["bottom"]) == 0
+
+
+def test_legend_span_decode_fallback(monkeypatch):
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    axs.plot([0, 1], [0, 1], label="line")
+    ref = axs[:, 0]
+
+    gs = axs[0, 0].get_subplotspec().get_topmost_subplotspec().get_gridspec()
+
+    def _raise_decode(*args, **kwargs):
+        raise ValueError("forced")
+
+    monkeypatch.setattr(gs, "_decode_indices", _raise_decode)
+    leg = fig.legend(ref=ref, loc="r")
+    assert leg is not None
+
+
+def test_legend_span_inference_skips_invalid_ref_axes():
+    class DummyNoSpec:
+        pass
+
+    class DummyNullSpec:
+        def get_subplotspec(self):
+            return None
+
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    axs[0].plot([0, 1], [0, 1], label="line")
+    ref = [DummyNoSpec(), DummyNullSpec(), axs[0]]
+
+    leg = fig.legend(ax=axs[0], ref=ref, loc="r")
+    assert leg is not None
+    assert len(axs[0]._panel_dict["right"]) == 1
+
+
+def test_legend_best_axis_fallback_with_inset_loc():
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    axs.plot([0, 1], [0, 1], label="line")
+
+    leg = fig.legend(ref=axs, loc="upper left", rows=1)
+    assert leg is not None
+
+
+def test_legend_best_axis_fallback_empty_iterable_ref():
+    class LegendProxy:
+        def __init__(self, ax):
+            self._ax = ax
+
+        def __iter__(self):
+            return iter(())
+
+        def legend(self, *args, **kwargs):
+            return self._ax.legend(*args, **kwargs)
+
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1], [0, 1], label="line")
+    proxy = LegendProxy(ax)
+
+    leg = fig.legend(ref=proxy, loc="upper left", rows=1)
+    assert leg is not None

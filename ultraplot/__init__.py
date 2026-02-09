@@ -2,7 +2,15 @@
 """
 A succinct matplotlib wrapper for making beautiful, publication-quality graphics.
 """
-# SCM versioning
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+from typing import Optional
+
+from ._lazy import LazyLoader, install_module_proxy
+
 name = "ultraplot"
 
 try:
@@ -12,106 +20,225 @@ except ImportError:
 
 version = __version__
 
-# Import dependencies early to isolate import times
-from . import internals, externals, tests  # noqa: F401
-from .internals.benchmarks import _benchmark
+_SETUP_DONE = False
+_SETUP_RUNNING = False
+_EAGER_DONE = False
+_EXPOSED_MODULES = set()
+_ATTR_MAP = None
+_REGISTRY_ATTRS = None
 
-with _benchmark("pyplot"):
-    from matplotlib import pyplot  # noqa: F401
-with _benchmark("cartopy"):
+_LAZY_LOADING_EXCEPTIONS = {
+    "constructor": ("constructor", None),
+    "crs": ("proj", None),
+    "colormaps": ("colors", "_cmap_database"),
+    "check_for_update": ("utils", "check_for_update"),
+    "NORMS": ("constructor", "NORMS"),
+    "LOCATORS": ("constructor", "LOCATORS"),
+    "FORMATTERS": ("constructor", "FORMATTERS"),
+    "SCALES": ("constructor", "SCALES"),
+    "PROJS": ("constructor", "PROJS"),
+    "internals": ("internals", None),
+    "externals": ("externals", None),
+    "Proj": ("constructor", "Proj"),
+    "tests": ("tests", None),
+    "rcsetup": ("internals", "rcsetup"),
+    "warnings": ("internals", "warnings"),
+    "figure": ("ui", "figure"),  # Points to the FUNCTION in ui.py
+    "Figure": ("figure", "Figure"),  # Points to the CLASS in figure.py
+    "Colormap": ("constructor", "Colormap"),
+    "Cycle": ("constructor", "Cycle"),
+    "Norm": ("constructor", "Norm"),
+    "Locator": ("constructor", "Locator"),
+    "Scale": ("constructor", "Scale"),
+    "Formatter": ("constructor", "Formatter"),
+}
+
+
+def _setup():
+    global _SETUP_DONE, _SETUP_RUNNING
+    if _SETUP_DONE or _SETUP_RUNNING:
+        return
+    _SETUP_RUNNING = True
+    success = False
     try:
-        import cartopy  # noqa: F401
-    except ImportError:
-        pass
-with _benchmark("basemap"):
-    try:
-        from mpl_toolkits import basemap  # noqa: F401
-    except ImportError:
-        pass
+        from .config import (
+            rc,
+            register_cmaps,
+            register_colors,
+            register_cycles,
+            register_fonts,
+        )
+        from .internals import (
+            fonts as _fonts,  # noqa: F401 - ensure mathtext override is active
+        )
+        from .internals import rcsetup, warnings
+        from .internals.benchmarks import _benchmark
 
-# Import everything to top level
-with _benchmark("config"):
-    from .config import *  # noqa: F401 F403
-with _benchmark("proj"):
-    from .proj import *  # noqa: F401 F403
-with _benchmark("utils"):
-    from .utils import *  # noqa: F401 F403
-with _benchmark("colors"):
-    from .colors import *  # noqa: F401 F403
-with _benchmark("ticker"):
-    from .ticker import *  # noqa: F401 F403
-with _benchmark("scale"):
-    from .scale import *  # noqa: F401 F403
-with _benchmark("axes"):
-    from .axes import *  # noqa: F401 F403
-with _benchmark("gridspec"):
-    from .gridspec import *  # noqa: F401 F403
-with _benchmark("figure"):
-    from .figure import *  # noqa: F401 F403
-with _benchmark("constructor"):
-    from .constructor import *  # noqa: F401 F403
-with _benchmark("ui"):
-    from .ui import *  # noqa: F401 F403
-with _benchmark("demos"):
-    from .demos import *  # noqa: F401 F403
+        with _benchmark("cmaps"):
+            register_cmaps(default=True)
+        with _benchmark("cycles"):
+            register_cycles(default=True)
+        with _benchmark("colors"):
+            register_colors(default=True)
+        with _benchmark("fonts"):
+            register_fonts(default=True)
 
-# Dynamically add registered classes to top-level namespace
-from . import proj as crs  # backwards compatibility  # noqa: F401
-from .constructor import NORMS, LOCATORS, FORMATTERS, SCALES, PROJS
+        rcsetup.VALIDATE_REGISTERED_CMAPS = True
+        rcsetup.VALIDATE_REGISTERED_COLORS = True
 
-_globals = globals()
-for _src in (NORMS, LOCATORS, FORMATTERS, SCALES, PROJS):
-    for _key, _cls in _src.items():
-        if isinstance(_cls, type):  # i.e. not a scale preset
-            _globals[_cls.__name__] = _cls  # may overwrite ultraplot names
-# Register objects
-from .config import register_cmaps, register_cycles, register_colors, register_fonts
+        if rc["ultraplot.check_for_latest_version"]:
+            from .utils import check_for_update
 
-with _benchmark("cmaps"):
-    register_cmaps(default=True)
-with _benchmark("cycles"):
-    register_cycles(default=True)
-with _benchmark("colors"):
-    register_colors(default=True)
-with _benchmark("fonts"):
-    register_fonts(default=True)
-
-# Validate colormap names and propagate 'cycle' to 'axes.prop_cycle'
-# NOTE: cmap.sequential also updates siblings 'cmap' and 'image.cmap'
-from .config import rc
-from .internals import rcsetup, warnings
+            check_for_update("ultraplot")
+        success = True
+    finally:
+        if success:
+            _SETUP_DONE = True
+        _SETUP_RUNNING = False
 
 
-rcsetup.VALIDATE_REGISTERED_CMAPS = True
-for _key in (
-    "cycle",
-    "cmap.sequential",
-    "cmap.diverging",
-    "cmap.cyclic",
-    "cmap.qualitative",
-):  # noqa: E501
-    try:
-        rc[_key] = rc[_key]
-    except ValueError as err:
-        warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
-        rc[_key] = "Greys"  # fill value
+def setup(eager: Optional[bool] = None) -> None:
+    """
+    Initialize registries and optionally import the public API eagerly.
+    """
+    _setup()
+    if eager is None:
+        from .config import rc
 
-# Validate color names now that colors are registered
-# NOTE: This updates all settings with 'color' in name (harmless if it's not a color)
-from .config import rc_ultraplot, rc_matplotlib
+        eager = bool(rc["ultraplot.eager_import"])
+    if eager:
+        _LOADER.load_all(globals())
 
-rcsetup.VALIDATE_REGISTERED_COLORS = True
-for _src in (rc_ultraplot, rc_matplotlib):
-    for _key in _src:  # loop through unsynced properties
-        if "color" not in _key:
-            continue
+
+def _build_registry_map():
+    global _REGISTRY_ATTRS
+    if _REGISTRY_ATTRS is not None:
+        return
+    from .constructor import FORMATTERS, LOCATORS, NORMS, PROJS, SCALES
+
+    registry = {}
+    for src in (NORMS, LOCATORS, FORMATTERS, SCALES, PROJS):
+        for _, cls in src.items():
+            if isinstance(cls, type):
+                registry[cls.__name__] = cls
+    _REGISTRY_ATTRS = registry
+
+
+def _get_registry_attr(name):
+    _build_registry_map()
+    return _REGISTRY_ATTRS.get(name) if _REGISTRY_ATTRS else None
+
+
+_LOADER: LazyLoader = LazyLoader(
+    package=__name__,
+    package_path=Path(__file__).resolve().parent,
+    exceptions=_LAZY_LOADING_EXCEPTIONS,
+    setup_callback=_setup,
+    registry_attr_callback=_get_registry_attr,
+    registry_build_callback=_build_registry_map,
+    registry_names_callback=lambda: _REGISTRY_ATTRS,
+)
+
+
+def __getattr__(name):
+    # If the name is already in globals, return it immediately
+    # (Prevents re-running logic for already loaded attributes)
+    if name in globals():
+        return globals()[name]
+
+    if name == "pytest_plugins":
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    # Priority 2: Core metadata
+    if name in {"__version__", "version", "name", "__all__"}:
+        if name == "__all__":
+            val = _LOADER.load_all(globals())
+            globals()["__all__"] = val
+            return val
+        return globals().get(name)
+
+    # Priority 3: Special handling for figure
+    if name == "figure":
+        # Special handling for figure to allow module imports
+        import inspect
+        import sys
+
+        # Check if this is a module import by looking at the call stack
+        frame = inspect.currentframe()
         try:
-            _src[_key] = _src[_key]
-        except ValueError as err:
-            warnings._warn_ultraplot(f"Invalid user rc file setting: {err}")
-            _src[_key] = "black"  # fill value
-from .colors import _cmap_database as colormaps
-from .utils import check_for_update
+            caller_frame = frame.f_back
+            if caller_frame:
+                # Check if the caller is likely the import system
+                caller_code = caller_frame.f_code
+                # Check if this is a module import
+                is_import = (
+                    "importlib" in caller_code.co_filename
+                    or caller_code.co_name
+                    in ("_handle_fromlist", "_find_and_load", "_load_unlocked")
+                    or "_bootstrap" in caller_code.co_filename
+                )
 
-if rc["ultraplot.check_for_latest_version"]:
-    check_for_update("ultraplot")
+                # Also check if the caller is a module-level import statement
+                if not is_import and caller_code.co_name == "<module>":
+                    try:
+                        source_lines = inspect.getframeinfo(caller_frame).code_context
+                        if source_lines and any(
+                            "import" in line and "figure" in line
+                            for line in source_lines
+                        ):
+                            is_import = True
+                    except Exception:
+                        pass
+
+                if is_import:
+                    # This is likely a module import, let Python handle it
+                    # Return early to avoid delegating to the lazy loader
+                    raise AttributeError(
+                        f"module {__name__!r} has no attribute {name!r}"
+                    )
+            # If no caller frame, delegate to the lazy loader
+            return _LOADER.get_attr(name, globals())
+        except Exception as e:
+            if not (
+                isinstance(e, AttributeError)
+                and str(e) == f"module {__name__!r} has no attribute {name!r}"
+            ):
+                return _LOADER.get_attr(name, globals())
+            raise
+        finally:
+            del frame
+
+    # Priority 4: External dependencies
+    if name == "pyplot":
+        import matplotlib.pyplot as plt
+
+        globals()[name] = plt
+        return plt
+    if name == "cartopy":
+        try:
+            import cartopy as ctp
+        except ImportError as exc:
+            raise AttributeError(
+                f"module {__name__!r} has no attribute {name!r}"
+            ) from exc
+        globals()[name] = ctp
+        return ctp
+    if name == "basemap":
+        try:
+            import mpl_toolkits.basemap as basemap
+        except ImportError as exc:
+            raise AttributeError(
+                f"module {__name__!r} has no attribute {name!r}"
+            ) from exc
+        globals()[name] = basemap
+        return basemap
+
+    return _LOADER.get_attr(name, globals())
+
+
+def __dir__():
+    return _LOADER.iter_dir_names(globals())
+
+
+# Prevent "import ultraplot.figure" from clobbering the top-level callable.
+install_module_proxy(sys.modules.get(__name__))

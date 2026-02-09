@@ -2,6 +2,7 @@
 """
 Utilities for processing input data passed to plotting commands.
 """
+
 import functools
 import sys
 

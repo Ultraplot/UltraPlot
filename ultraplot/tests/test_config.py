@@ -1,5 +1,14 @@
-import ultraplot as uplt, pytest
 import importlib
+import os
+import pathlib
+import subprocess
+import sys
+import threading
+from queue import Queue
+
+import pytest
+
+import ultraplot as uplt
 
 
 def test_wrong_keyword_reset():
@@ -34,9 +43,22 @@ def test_cycle_in_rc_file(tmp_path):
     assert uplt.rc["cycle"] == "colorblind"
 
 
+def test_sankey_rc_defaults():
+    """
+    Sanity check the new sankey defaults in rc.
+    """
+    assert uplt.rc["sankey.nodepad"] == 0.02
+    assert uplt.rc["sankey.nodewidth"] == 0.03
+    assert uplt.rc["sankey.margin"] == 0.05
+    assert uplt.rc["sankey.flow.alpha"] == 0.75
+    assert uplt.rc["sankey.flow.curvature"] == 0.5
+    assert uplt.rc["sankey.node.facecolor"] == "0.75"
+
+
 import io
-from unittest.mock import patch, MagicMock
 from importlib.metadata import PackageNotFoundError
+from unittest.mock import MagicMock, patch
+
 from ultraplot.utils import check_for_update
 
 
@@ -120,3 +142,119 @@ def test_cycle_rc_setting(cycle, raises_error):
             uplt.rc["cycle"] = cycle
     else:
         uplt.rc["cycle"] = cycle
+
+
+def test_cycle_consistent_across_threads():
+    """
+    Sanity check: concurrent reads of the prop cycle should be consistent.
+    """
+    import matplotlib as mpl
+
+    expected = repr(mpl.rcParams["axes.prop_cycle"])
+    q = Queue()
+    start = threading.Barrier(4)
+
+    def _read_cycle():
+        start.wait()
+        q.put(repr(mpl.rcParams["axes.prop_cycle"]))
+
+    threads = [threading.Thread(target=_read_cycle) for _ in range(4)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    results = [q.get() for _ in threads]
+    assert all(result == expected for result in results)
+
+
+def test_cycle_mutation_does_not_corrupt_rcparams():
+    """
+    Stress test: concurrent cycle mutations should not corrupt rcParams.
+    """
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+
+    cycle_a = "colorblind"
+    cycle_b = "default"
+    plt.switch_backend("Agg")
+    uplt.rc["cycle"] = cycle_a
+    expected_a = repr(mpl.rcParams["axes.prop_cycle"])
+    uplt.rc["cycle"] = cycle_b
+    expected_b = repr(mpl.rcParams["axes.prop_cycle"])
+    allowed = {expected_a, expected_b}
+
+    start = threading.Barrier(2)
+    done = threading.Event()
+    results = Queue()
+
+    def _writer():
+        start.wait()
+        for _ in range(200):
+            uplt.rc["cycle"] = cycle_a
+            uplt.rc["cycle"] = cycle_b
+        done.set()
+
+    def _reader():
+        start.wait()
+        while not done.is_set():
+            results.put(repr(mpl.rcParams["axes.prop_cycle"]))
+            fig, ax = uplt.subplots()
+            ax.plot([0, 1], [0, 1])
+            fig.canvas.draw()
+            uplt.close(fig)
+
+    threads = [
+        threading.Thread(target=_writer),
+        threading.Thread(target=_reader),
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    observed = [results.get() for _ in range(results.qsize())]
+    assert observed, "No rcParams observations were recorded."
+    assert all(value in allowed for value in observed)
+
+
+def _run_in_subprocess(code):
+    code = (
+        "import pathlib\n"
+        "import sys\n"
+        "sys.path.insert(0, str(pathlib.Path.cwd()))\n" + code
+    )
+    env = os.environ.copy()
+    env["MPLBACKEND"] = "Agg"
+    return subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        cwd=str(pathlib.Path(__file__).resolve().parents[2]),
+        env=env,
+    )
+
+
+def test_matplotlib_import_before_ultraplot_allows_rc_mutation():
+    """
+    Import order regression test for issue #568.
+    """
+    result = _run_in_subprocess(
+        "import matplotlib.pyplot as plt\n"
+        "import ultraplot as uplt\n"
+        "uplt.rc['figure.facecolor'] = 'white'\n"
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_matplotlib_import_before_ultraplot_allows_custom_fontsize_tokens():
+    """
+    Ensure patched fontsize validators are active regardless of import order.
+    """
+    result = _run_in_subprocess(
+        "import matplotlib.pyplot as plt\n"
+        "import ultraplot as uplt\n"
+        "for key in ('axes.titlesize', 'figure.titlesize', 'legend.fontsize', 'xtick.labelsize'):\n"
+        "    uplt.rc[key] = 'med-large'\n"
+    )
+    assert result.returncode == 0, result.stderr
