@@ -152,17 +152,16 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
-            mapfile -t FILTERED_NODEIDS < <(
-              while IFS= read -r nodeid; do
-                if [ -z "$nodeid" ]; then
-                  continue
-                fi
-                path="${nodeid%%::*}"
-                if [ -f "$path" ]; then
-                  printf '%s\n' "$nodeid"
-                fi
-              done < /tmp/pr_selected_nodeids.txt
-            )
+            FILTERED_NODEIDS=()
+            while IFS= read -r nodeid; do
+              if [ -z "$nodeid" ]; then
+                continue
+              fi
+              path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                FILTERED_NODEIDS+=("$nodeid")
+              fi
+            done < /tmp/pr_selected_nodeids.txt
             echo "FILTERED_NODEIDS_BASE_COUNT=${#FILTERED_NODEIDS[@]}"
             if [ "${#FILTERED_NODEIDS[@]}" -eq 0 ]; then
               echo "No valid nodeids found on base; skipping baseline generation."
@@ -211,19 +210,45 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           echo "TEST_MODE=${TEST_MODE}"
           echo "TEST_NODEIDS=${TEST_NODEIDS}"
+          parse_junit_counts() {
+            python - "$1" <<'PY'
+import sys
+from xml.etree import ElementTree as ET
+
+failures = 0
+errors = 0
+path = sys.argv[1]
+try:
+    root = ET.parse(path).getroot()
+    if root.tag == "testsuite":
+        failures = int(root.attrib.get("failures", 0))
+        errors = int(root.attrib.get("errors", 0))
+    elif root.tag == "testsuites":
+        suites = root.findall("testsuite")
+        if suites:
+            failures = sum(int(suite.attrib.get("failures", 0)) for suite in suites)
+            errors = sum(int(suite.attrib.get("errors", 0)) for suite in suites)
+        else:
+            failures = int(root.attrib.get("failures", 0))
+            errors = int(root.attrib.get("errors", 0))
+except Exception:
+    failures = 0
+    errors = 0
+print(f"{failures} {errors}")
+PY
+          }
           if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
-            mapfile -t FILTERED_NODEIDS < <(
-              while IFS= read -r nodeid; do
-                if [ -z "$nodeid" ]; then
-                  continue
-                fi
-                path="${nodeid%%::*}"
-                if [ -f "$path" ]; then
-                  printf '%s\n' "$nodeid"
-                fi
-              done < /tmp/pr_selected_nodeids.txt
-            )
+            FILTERED_NODEIDS=()
+            while IFS= read -r nodeid; do
+              if [ -z "$nodeid" ]; then
+                continue
+              fi
+              path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                FILTERED_NODEIDS+=("$nodeid")
+              fi
+            done < /tmp/pr_selected_nodeids.txt
             echo "FILTERED_NODEIDS_PR_COUNT=${#FILTERED_NODEIDS[@]}"
             if [ "${#FILTERED_NODEIDS[@]}" -eq 0 ]; then
               echo "No valid nodeids found on PR branch; skipping image comparison."
@@ -243,14 +268,15 @@ jobs:
               status=$?
               set -e
               echo "=== Memory after image comparison ===" && free -h
-              junit_failures=-1
-              junit_errors=-1
+              junit_failures=0
+              junit_errors=0
               if [ -f ./results/junit.xml ]; then
-                junit_failures=$(sed -n 's/.*failures="\([0-9][0-9]*\)".*/\1/p' ./results/junit.xml | head -n 1)
-                junit_errors=$(sed -n 's/.*errors="\([0-9][0-9]*\)".*/\1/p' ./results/junit.xml | head -n 1)
-                junit_failures=${junit_failures:-0}
-                junit_errors=${junit_errors:-0}
+                junit_counts="$(parse_junit_counts ./results/junit.xml || echo '0 0')"
+                junit_failures="${junit_counts%% *}"
+                junit_errors="${junit_counts##* }"
               fi
+              case "$junit_failures" in ''|*[!0-9]*) junit_failures=0 ;; esac
+              case "$junit_errors" in ''|*[!0-9]*) junit_errors=0 ;; esac
               echo "pytest_status=$status junit_failures=$junit_failures junit_errors=$junit_errors"
               if [ "$status" -ne 0 ] && [ "$junit_failures" -eq 0 ] && [ "$junit_errors" -eq 0 ]; then
                 echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
@@ -277,14 +303,15 @@ jobs:
             status=$?
             set -e
             echo "=== Memory after image comparison ===" && free -h
-            junit_failures=-1
-            junit_errors=-1
+            junit_failures=0
+            junit_errors=0
             if [ -f ./results/junit.xml ]; then
-              junit_failures=$(sed -n 's/.*failures="\([0-9][0-9]*\)".*/\1/p' ./results/junit.xml | head -n 1)
-              junit_errors=$(sed -n 's/.*errors="\([0-9][0-9]*\)".*/\1/p' ./results/junit.xml | head -n 1)
-              junit_failures=${junit_failures:-0}
-              junit_errors=${junit_errors:-0}
+              junit_counts="$(parse_junit_counts ./results/junit.xml || echo '0 0')"
+              junit_failures="${junit_counts%% *}"
+              junit_errors="${junit_counts##* }"
             fi
+            case "$junit_failures" in ''|*[!0-9]*) junit_failures=0 ;; esac
+            case "$junit_errors" in ''|*[!0-9]*) junit_errors=0 ;; esac
             echo "pytest_status=$status junit_failures=$junit_failures junit_errors=$junit_errors"
             if [ "$status" -ne 0 ] && [ "$junit_failures" -eq 0 ] && [ "$junit_errors" -eq 0 ]; then
               echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
