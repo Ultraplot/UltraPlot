@@ -2322,18 +2322,23 @@ class Figure(mfigure.Figure):
         ha = self._suptitle.get_ha()
         va = self._suptitle.get_va()
 
-        # Use original centering algorithm for positioning (regardless of alignment)
+        # Use original centering algorithm for horizontal positioning.
         x, _ = self._get_align_coord(
             "top",
             axs,
             includepanels=self._includepanels,
             align=ha,
         )
-        y = self._get_offset_coord("top", axs, renderer, pad=pad, extra=labs)
+        y_target = self._get_offset_coord("top", axs, renderer, pad=pad, extra=labs)
 
-        # Set final position and alignment on the suptitle
+        # Place suptitle so its *bbox bottom* sits at the target offset.
+        # This preserves spacing for all vertical alignments (e.g. va='top').
         self._suptitle.set_ha(ha)
         self._suptitle.set_va(va)
+        self._suptitle.set_position((x, 0))
+        bbox = self._suptitle.get_window_extent(renderer)
+        y_bbox = self.transFigure.inverted().transform((0, bbox.ymin))[1]
+        y = y_target - y_bbox
         self._suptitle.set_position((x, y))
 
     def _update_axis_label(self, side, axs):
