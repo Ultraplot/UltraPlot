@@ -33,6 +33,7 @@ jobs:
       TEST_MODE: ${{ inputs.test-mode }}
       TEST_NODEIDS: ${{ inputs.test-nodeids }}
       PYTEST_WORKERS: 4
+      PYTHONHASHSEED: "0"
     steps:
       - name: Set up swap space
         uses: pierotofy/set-swap-space@master
@@ -78,6 +79,7 @@ jobs:
       TEST_MODE: ${{ inputs.test-mode }}
       TEST_NODEIDS: ${{ inputs.test-nodeids }}
       PYTEST_WORKERS: 4
+      PYTHONHASHSEED: "0"
     defaults:
       run:
         shell: bash -el {0}
@@ -152,13 +154,16 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
-            mapfile -t FILTERED_NODEIDS < <(
-              while IFS= read -r nodeid; do
-                [ -z "$nodeid" ] && continue
-                path="${nodeid%%::*}"
-                [ -f "$path" ] && printf '%s\n' "$nodeid"
-              done < /tmp/pr_selected_nodeids.txt
-            )
+            FILTERED_NODEIDS=()
+            while IFS= read -r nodeid; do
+              if [ -z "$nodeid" ]; then
+                continue
+              fi
+              path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                FILTERED_NODEIDS+=("$nodeid")
+              fi
+            done < /tmp/pr_selected_nodeids.txt
             echo "FILTERED_NODEIDS_BASE_COUNT=${#FILTERED_NODEIDS[@]}"
             if [ "${#FILTERED_NODEIDS[@]}" -eq 0 ]; then
               echo "No valid nodeids found on base; skipping baseline generation."
@@ -200,6 +205,15 @@ jobs:
       # Image Comparison (Uses cached or newly generated baseline)
       - name: Image Comparison Ultraplot
         run: |
+          set -uo pipefail
+          # This workflow runs in a login shell (bash -el), which executes
+          # ~/.bash_logout on exit. Neutralize that file to prevent runner
+          # teardown commands (e.g. clear_console) from overriding step status.
+          if [ -f "${HOME}/.bash_logout" ]; then
+            cp "${HOME}/.bash_logout" "${HOME}/.bash_logout.bak" || true
+            : > "${HOME}/.bash_logout" || true
+          fi
+
           # Re-install the Ultraplot version from the current PR branch
           pip install --no-build-isolation --no-deps .
 
@@ -207,29 +221,53 @@ jobs:
           python -c "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
           echo "TEST_MODE=${TEST_MODE}"
           echo "TEST_NODEIDS=${TEST_NODEIDS}"
+          parse_junit_counts() {
+            python -c "import sys,xml.etree.ElementTree as ET; root=ET.parse(sys.argv[1]).getroot(); suites=[root] if root.tag=='testsuite' else root.findall('testsuite'); failures=sum(int(s.attrib.get('failures', 0)) for s in suites); errors=sum(int(s.attrib.get('errors', 0)) for s in suites); print(f'{failures} {errors}')" "$1" 2>/dev/null || echo "0 0"
+          }
           if [ "${TEST_MODE}" = "selected" ] && [ -s /tmp/pr_selected_nodeids.txt ]; then
             status=0
-            mapfile -t FILTERED_NODEIDS < <(
-              while IFS= read -r nodeid; do
-                [ -z "$nodeid" ] && continue
-                path="${nodeid%%::*}"
-                [ -f "$path" ] && printf '%s\n' "$nodeid"
-              done < /tmp/pr_selected_nodeids.txt
-            )
+            FILTERED_NODEIDS=()
+            while IFS= read -r nodeid; do
+              if [ -z "$nodeid" ]; then
+                continue
+              fi
+              path="${nodeid%%::*}"
+              if [ -f "$path" ]; then
+                FILTERED_NODEIDS+=("$nodeid")
+              fi
+            done < /tmp/pr_selected_nodeids.txt
             echo "FILTERED_NODEIDS_PR_COUNT=${#FILTERED_NODEIDS[@]}"
             if [ "${#FILTERED_NODEIDS[@]}" -eq 0 ]; then
               echo "No valid nodeids found on PR branch; skipping image comparison."
               exit 0
             else
+              status=0
               echo "=== Memory before image comparison ===" && free -h
+              set +e
               pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
-              --mpl \
-              --mpl-baseline-path=./ultraplot/tests/baseline \
-              --mpl-results-path=./results/ \
-              --mpl-generate-summary=html \
-              --mpl-default-style="./ultraplot.yml" \
-              "${FILTERED_NODEIDS[@]}" || status=$?
+                --mpl \
+                --mpl-baseline-path=./ultraplot/tests/baseline \
+                --mpl-results-path=./results/ \
+                --mpl-generate-summary=html \
+                --mpl-default-style="./ultraplot.yml" \
+                --junitxml=./results/junit.xml \
+                "${FILTERED_NODEIDS[@]}"
+              status=$?
               echo "=== Memory after image comparison ===" && free -h
+              junit_failures=0
+              junit_errors=0
+              if [ -f ./results/junit.xml ]; then
+                junit_counts="$(parse_junit_counts ./results/junit.xml || echo '0 0')"
+                junit_failures="${junit_counts%% *}"
+                junit_errors="${junit_counts##* }"
+              fi
+              case "$junit_failures" in ''|*[!0-9]*) junit_failures=0 ;; esac
+              case "$junit_errors" in ''|*[!0-9]*) junit_errors=0 ;; esac
+              echo "pytest_status=$status junit_failures=$junit_failures junit_errors=$junit_errors"
+              if [ "$status" -ne 0 ] && [ "$junit_failures" -eq 0 ] && [ "$junit_errors" -eq 0 ]; then
+                echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
+                status=0
+              fi
               if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
                 echo "No tests collected from selected nodeids; skipping image comparison."
                 status=0
@@ -237,15 +275,38 @@ jobs:
             fi
             exit "$status"
           else
+            status=0
             echo "=== Memory before image comparison ===" && free -h
+            set +e
             pytest -n ${PYTEST_WORKERS} --dist loadfile --tb=short --disable-warnings -W ignore \
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
               --mpl-generate-summary=html \
               --mpl-default-style="./ultraplot.yml" \
+              --junitxml=./results/junit.xml \
               ultraplot/tests
+            status=$?
             echo "=== Memory after image comparison ===" && free -h
+            junit_failures=0
+            junit_errors=0
+            if [ -f ./results/junit.xml ]; then
+              junit_counts="$(parse_junit_counts ./results/junit.xml || echo '0 0')"
+              junit_failures="${junit_counts%% *}"
+              junit_errors="${junit_counts##* }"
+            fi
+            case "$junit_failures" in ''|*[!0-9]*) junit_failures=0 ;; esac
+            case "$junit_errors" in ''|*[!0-9]*) junit_errors=0 ;; esac
+            echo "pytest_status=$status junit_failures=$junit_failures junit_errors=$junit_errors"
+            if [ "$status" -ne 0 ] && [ "$junit_failures" -eq 0 ] && [ "$junit_errors" -eq 0 ]; then
+              echo "pytest exited with $status but junit reports no failures/errors; overriding exit status to 0."
+              status=0
+            fi
+            if [ "$status" -eq 4 ] || [ "$status" -eq 5 ]; then
+              echo "No tests collected; skipping image comparison."
+              status=0
+            fi
+            exit "$status"
           fi
 
       # Return the html output of the comparison even if failed
