@@ -36,7 +36,7 @@ def test_singleton_legend():
     return fig
 
 
-@pytest.mark.mpl_image_compare(tolerance=5)
+@pytest.mark.mpl_image_compare
 def test_centered_legends(rng):
     """
     Test success of algorithm.
