@@ -206,8 +206,6 @@ jobs:
       - name: Image Comparison Ultraplot
         run: |
           set -uo pipefail
-          PS4='+ [compare:${LINENO}] '
-          set -x
           # This workflow runs in a login shell (bash -el), which executes
           # ~/.bash_logout on exit. Neutralize that file to prevent runner
           # teardown commands (e.g. clear_console) from overriding step status.
