@@ -299,6 +299,33 @@ def test_suptitle_kw_position_reverted(ha, expectation):
     uplt.close("all")
 
 
+@pytest.mark.parametrize("va", ["bottom", "center", "top"])
+def test_suptitle_vertical_alignment_preserves_top_spacing(va):
+    """
+    Suptitle vertical alignment should not reduce the spacing above top content.
+    """
+    fig, axs = uplt.subplots(ncols=2)
+    fig.format(
+        suptitle="Long figure title\nsecond line",
+        suptitle_kw={"va": va},
+        toplabels=("left", "right"),
+    )
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+
+    axs_top = fig._get_align_axes("top")
+    labs = tuple(t for t in fig._suplabel_dict["top"].values() if t.get_text())
+    pad = (fig._suptitle_pad / 72) / fig.get_size_inches()[1]
+    y_expected = fig._get_offset_coord("top", axs_top, renderer, pad=pad, extra=labs)
+
+    bbox = fig._suptitle.get_window_extent(renderer)
+    y_actual = fig.transFigure.inverted().transform((0, bbox.ymin))[1]
+    y_tol = 1.5 / (fig.dpi * fig.get_size_inches()[1])  # ~1.5 px tolerance
+    assert y_actual >= y_expected - y_tol
+
+    uplt.close("all")
+
+
 def test_subplots_pixelsnap_aligns_axes_bounds():
     with uplt.rc.context({"subplots.pixelsnap": True}):
         fig, axs = uplt.subplots(ncols=2, nrows=2)
