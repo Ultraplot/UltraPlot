@@ -1856,7 +1856,19 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         irange = self._range_subplotspec(sx)
         axs = self.figure._iter_axes(hidden=False, children=False, panels=panels)
         axs = [ax for ax in axs if ax._range_subplotspec(sx) == irange]
-        axs = list({self, *axs})  # self may be missing during initialization
+        # Preserve figure iteration order while ensuring self is included.
+        # Using set() here introduces hash-order nondeterminism that can
+        # change share-group roots and produce flaky layouts in image tests.
+        axs = [self, *axs]  # self may be missing during initialization
+        seen = set()
+        unique = []
+        for ax in axs:
+            ax_id = id(ax)
+            if ax_id in seen:
+                continue
+            seen.add(ax_id)
+            unique.append(ax)
+        axs = unique
         pax = axs.pop(argfunc([ax._range_subplotspec(sy)[i] for ax in axs]))
         return [pax, *axs]  # return with leftmost or bottommost first
 
