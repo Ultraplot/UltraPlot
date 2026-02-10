@@ -1073,6 +1073,36 @@ _rc_ultraplot_table = {
         "Join style for text border strokes. Must be one of "
         "``'miter'``, ``'round'``, or ``'bevel'``.",
     ),
+    "text.curved.upright": (
+        True,
+        _validate_bool,
+        "Whether curved text is flipped to remain upright by default.",
+    ),
+    "text.curved.ellipsis": (
+        False,
+        _validate_bool,
+        "Whether to show ellipses when curved text exceeds path length.",
+    ),
+    "text.curved.avoid_overlap": (
+        True,
+        _validate_bool,
+        "Whether curved text hides overlapping glyphs by default.",
+    ),
+    "text.curved.overlap_tol": (
+        0.1,
+        _validate_float,
+        "Overlap threshold used when hiding curved-text glyphs.",
+    ),
+    "text.curved.curvature_pad": (
+        2.0,
+        _validate_float,
+        "Extra curved-text glyph spacing per radian of local curvature.",
+    ),
+    "text.curved.min_advance": (
+        1.0,
+        _validate_float,
+        "Minimum extra curved-text glyph spacing in pixels.",
+    ),
     "abc.bbox": (
         False,
         _validate_bool,
