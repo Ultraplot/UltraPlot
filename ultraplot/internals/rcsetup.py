@@ -734,6 +734,14 @@ font_scalings["med-large"] = 1.1  # add scaling
 if not hasattr(RcParams, "validate"):  # not mission critical so skip
     warnings._warn_ultraplot("Failed to update matplotlib rcParams validators.")
 else:
+
+    def _validator_accepts(validator, value):
+        try:
+            validator(value)
+            return True
+        except Exception:
+            return False
+
     _validate = RcParams.validate
     _validate["image.cmap"] = _validate_cmap("continuous")
     _validate["legend.loc"] = _validate_belongs(*LEGEND_LOCS)
@@ -752,6 +760,20 @@ else:
             _validate[_key] = functools.partial(_validate_color, alternative="auto")
         if _validator is getattr(msetup, "validate_color_or_inherit", None):
             _validate[_key] = functools.partial(_validate_color, alternative="inherit")
+        # Matplotlib may wrap fontsize validators in callable objects instead of
+        # exposing validate_fontsize directly. Detect these by behavior so custom
+        # shorthands like "med-large" remain valid regardless of import order.
+        if (
+            _key.endswith("size")
+            and _key not in FONT_KEYS
+            and _validator_accepts(_validator, "large")
+            and not _validator_accepts(_validator, "med-large")
+        ):
+            FONT_KEYS.add(_key)
+            if _validator_accepts(_validator, None):
+                _validate[_key] = _validate_or_none(_validate_fontsize)
+            else:
+                _validate[_key] = _validate_fontsize
     for _keys, _validator_replace in ((EM_KEYS, _validate_em), (PT_KEYS, _validate_pt)):
         for _key in _keys:
             _validator = _validate.get(_key, None)
@@ -1050,6 +1072,36 @@ _rc_ultraplot_table = {
         _validate_joinstyle,
         "Join style for text border strokes. Must be one of "
         "``'miter'``, ``'round'``, or ``'bevel'``.",
+    ),
+    "text.curved.upright": (
+        True,
+        _validate_bool,
+        "Whether curved text is flipped to remain upright by default.",
+    ),
+    "text.curved.ellipsis": (
+        False,
+        _validate_bool,
+        "Whether to show ellipses when curved text exceeds path length.",
+    ),
+    "text.curved.avoid_overlap": (
+        True,
+        _validate_bool,
+        "Whether curved text hides overlapping glyphs by default.",
+    ),
+    "text.curved.overlap_tol": (
+        0.1,
+        _validate_float,
+        "Overlap threshold used when hiding curved-text glyphs.",
+    ),
+    "text.curved.curvature_pad": (
+        2.0,
+        _validate_float,
+        "Extra curved-text glyph spacing per radian of local curvature.",
+    ),
+    "text.curved.min_advance": (
+        1.0,
+        _validate_float,
+        "Minimum extra curved-text glyph spacing in pixels.",
     ),
     "abc.bbox": (
         False,
