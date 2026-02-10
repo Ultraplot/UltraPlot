@@ -2,6 +2,10 @@
 import { getCollection, render } from "astro:content";
 import DocsLayout from "../../layouts/DocsLayout.astro";
 
+function normalizeId(id: string) {
+  return id.replace(/\.md$/i, "");
+}
+
 const entries = (await getCollection("docs"))
   .filter((entry) => !entry.data.draft)
   .sort(
@@ -10,18 +14,21 @@ const entries = (await getCollection("docs"))
         (b.data.order ?? Number.MAX_SAFE_INTEGER) || a.data.title.localeCompare(b.data.title)
   );
 
-const nav = entries.map((entry) => ({ title: entry.data.title, href: `/docs/${entry.id}` }));
+const nav = entries.map((entry) => ({
+  title: entry.data.title,
+  href: `/docs/${normalizeId(entry.id)}`
+}));
 
 export async function getStaticPaths() {
   const pages = (await getCollection("docs")).filter((entry) => !entry.data.draft);
   return pages.map((entry) => ({
-    params: { slug: entry.id },
+    params: { slug: entry.id.replace(/\.md$/i, "") },
     props: { entry }
   }));
 }
 
 const { entry } = Astro.props;
-const currentHref = `/docs/${entry.id}`;
+const currentHref = `/docs/${normalizeId(entry.id)}`;
 const { Content } = await render(entry);
 ---
 
