@@ -6,9 +6,11 @@ Test twin, inset, and panel axes.
 import numpy as np
 import pytest
 import matplotlib.patheffects as mpatheffects
+import matplotlib.text as mtext
 
 import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
+from ultraplot.text import CurvedText
 
 
 @pytest.mark.parametrize(
@@ -131,6 +133,123 @@ def test_cartesian_format_all_units_types():
         "yticklabelsize": 10.0,
     }
     ax.format(**kwargs)
+
+
+@pytest.mark.mpl_image_compare
+def test_curvedtext_basic():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 2 * np.pi, 200)
+    y = np.sin(x)
+    ax.plot(x, y, color="C0")
+    ax.curvedtext(
+        x,
+        y,
+        "curved text",
+        ha="center",
+        va="bottom",
+        color="C1",
+        size=16,
+    )
+    ax.format(xlim=(0, 2 * np.pi), ylim=(-1.2, 1.2))
+    return fig
+
+
+def test_text_scalar_returns_text():
+    fig, ax = uplt.subplots()
+    obj = ax.text(0.5, 0.5, "scalar")
+    assert isinstance(obj, mtext.Text)
+    assert not isinstance(obj, CurvedText)
+
+
+def test_text_curve_xy_returns_curvedtext():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = x**2
+    obj = ax.text(x, y, "curve")
+    assert isinstance(obj, CurvedText)
+
+
+def test_annotate_scalar_returns_annotation():
+    fig, ax = uplt.subplots()
+    obj = ax.annotate("point", xy=(0.5, 0.5))
+    assert isinstance(obj, mtext.Annotation)
+    assert not isinstance(obj, CurvedText)
+
+
+def test_annotate_curve_xy_returns_curvedtext():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = np.sin(2 * np.pi * x)
+    obj = ax.annotate("curve", xy=(x, y))
+    assert isinstance(obj, CurvedText)
+    assert not hasattr(obj, "_annotation")
+
+
+def test_annotate_curve_xy_with_arrow_uses_curve_center():
+    fig, ax = uplt.subplots()
+    ax = ax[0]
+    x = np.linspace(0, 1, 31)
+    y = x**2
+    obj = ax.annotate(
+        "curve",
+        xy=(x, y),
+        xytext=(0.2, 0.8),
+        arrowprops={"arrowstyle": "->"},
+    )
+    assert isinstance(obj, CurvedText)
+    assert isinstance(getattr(obj, "_annotation", None), mtext.Annotation)
+
+    xmid, ymid = ax._curve_center(x, y, ax.transData)
+    ax_x, ax_y = obj._annotation.xy
+    assert np.isclose(ax_x, xmid)
+    assert np.isclose(ax_y, ymid)
+
+
+def test_curvedtext_uses_rc_defaults():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = x**2
+    with uplt.rc.context(
+        {
+            "text.curved.upright": False,
+            "text.curved.ellipsis": True,
+            "text.curved.avoid_overlap": False,
+            "text.curved.overlap_tol": 0.25,
+            "text.curved.curvature_pad": 3.5,
+            "text.curved.min_advance": 2.5,
+        }
+    ):
+        obj = ax.curvedtext(x, y, "curve")
+    assert obj._upright is False
+    assert obj._ellipsis is True
+    assert obj._avoid_overlap is False
+    assert np.isclose(obj._overlap_tol, 0.25)
+    assert np.isclose(obj._curvature_pad, 3.5)
+    assert np.isclose(obj._min_advance, 2.5)
+
+
+def test_annotate_curve_xy_uses_rc_defaults():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = np.sin(2 * np.pi * x)
+    with uplt.rc.context(
+        {
+            "text.curved.upright": False,
+            "text.curved.ellipsis": True,
+            "text.curved.avoid_overlap": False,
+            "text.curved.overlap_tol": 0.2,
+            "text.curved.curvature_pad": 4.0,
+            "text.curved.min_advance": 1.5,
+        }
+    ):
+        obj = ax.annotate("curve", xy=(x, y))
+    assert isinstance(obj, CurvedText)
+    assert obj._upright is False
+    assert obj._ellipsis is True
+    assert obj._avoid_overlap is False
+    assert np.isclose(obj._overlap_tol, 0.2)
+    assert np.isclose(obj._curvature_pad, 4.0)
+    assert np.isclose(obj._min_advance, 1.5)
 
 
 def _get_text_stroke_joinstyle(text):
