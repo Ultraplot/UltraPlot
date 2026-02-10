@@ -4040,7 +4040,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             Iterable[float],
             np.ndarray,
         ],
-        xytext: Optional[Union[Tuple[float, float], Iterable[float], np.ndarray]] = None,
+        xytext: Optional[
+            Union[Tuple[float, float], Iterable[float], np.ndarray]
+        ] = None,
         xycoords: Union[str, mtransforms.Transform] = "data",
         textcoords: Optional[Union[str, mtransforms.Transform]] = None,
         arrowprops: Optional[dict[str, Any]] = None,
