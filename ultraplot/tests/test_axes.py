@@ -2,10 +2,15 @@
 """
 Test twin, inset, and panel axes.
 """
+
 import numpy as np
 import pytest
+import matplotlib.patheffects as mpatheffects
+import matplotlib.text as mtext
+
 import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
+from ultraplot.text import CurvedText
 
 
 @pytest.mark.parametrize(
@@ -128,6 +133,276 @@ def test_cartesian_format_all_units_types():
         "yticklabelsize": 10.0,
     }
     ax.format(**kwargs)
+
+
+@pytest.mark.mpl_image_compare
+def test_curvedtext_basic():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 2 * np.pi, 200)
+    y = np.sin(x)
+    ax.plot(x, y, color="C0")
+    ax.curvedtext(
+        x,
+        y,
+        "curved text",
+        ha="center",
+        va="bottom",
+        color="C1",
+        size=16,
+    )
+    ax.format(xlim=(0, 2 * np.pi), ylim=(-1.2, 1.2))
+    return fig
+
+
+def test_text_scalar_returns_text():
+    fig, ax = uplt.subplots()
+    obj = ax.text(0.5, 0.5, "scalar")
+    assert isinstance(obj, mtext.Text)
+    assert not isinstance(obj, CurvedText)
+
+
+def test_text_curve_xy_returns_curvedtext():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = x**2
+    obj = ax.text(x, y, "curve")
+    assert isinstance(obj, CurvedText)
+
+
+def test_annotate_scalar_returns_annotation():
+    fig, ax = uplt.subplots()
+    obj = ax.annotate("point", xy=(0.5, 0.5))
+    assert isinstance(obj, mtext.Annotation)
+    assert not isinstance(obj, CurvedText)
+
+
+def test_annotate_curve_xy_returns_curvedtext():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = np.sin(2 * np.pi * x)
+    obj = ax.annotate("curve", xy=(x, y))
+    assert isinstance(obj, CurvedText)
+    assert not hasattr(obj, "_annotation")
+
+
+def test_annotate_curve_xy_with_arrow_uses_curve_center():
+    fig, ax = uplt.subplots()
+    ax = ax[0]
+    x = np.linspace(0, 1, 31)
+    y = x**2
+    obj = ax.annotate(
+        "curve",
+        xy=(x, y),
+        xytext=(0.2, 0.8),
+        arrowprops={"arrowstyle": "->"},
+    )
+    assert isinstance(obj, CurvedText)
+    assert isinstance(getattr(obj, "_annotation", None), mtext.Annotation)
+
+    xmid, ymid = ax._curve_center(x, y, ax.transData)
+    ax_x, ax_y = obj._annotation.xy
+    assert np.isclose(ax_x, xmid)
+    assert np.isclose(ax_y, ymid)
+
+
+def test_curvedtext_uses_rc_defaults():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = x**2
+    with uplt.rc.context(
+        {
+            "text.curved.upright": False,
+            "text.curved.ellipsis": True,
+            "text.curved.avoid_overlap": False,
+            "text.curved.overlap_tol": 0.25,
+            "text.curved.curvature_pad": 3.5,
+            "text.curved.min_advance": 2.5,
+        }
+    ):
+        obj = ax.curvedtext(x, y, "curve")
+    assert obj._upright is False
+    assert obj._ellipsis is True
+    assert obj._avoid_overlap is False
+    assert np.isclose(obj._overlap_tol, 0.25)
+    assert np.isclose(obj._curvature_pad, 3.5)
+    assert np.isclose(obj._min_advance, 2.5)
+
+
+def test_annotate_curve_xy_uses_rc_defaults():
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 20)
+    y = np.sin(2 * np.pi * x)
+    with uplt.rc.context(
+        {
+            "text.curved.upright": False,
+            "text.curved.ellipsis": True,
+            "text.curved.avoid_overlap": False,
+            "text.curved.overlap_tol": 0.2,
+            "text.curved.curvature_pad": 4.0,
+            "text.curved.min_advance": 1.5,
+        }
+    ):
+        obj = ax.annotate("curve", xy=(x, y))
+    assert isinstance(obj, CurvedText)
+    assert obj._upright is False
+    assert obj._ellipsis is True
+    assert obj._avoid_overlap is False
+    assert np.isclose(obj._overlap_tol, 0.2)
+    assert np.isclose(obj._curvature_pad, 4.0)
+    assert np.isclose(obj._min_advance, 1.5)
+
+
+def _get_text_stroke_joinstyle(text):
+    for effect in text.get_path_effects():
+        if isinstance(effect, mpatheffects.Stroke):
+            for attr in ("joinstyle", "_joinstyle"):
+                if hasattr(effect, attr):
+                    return getattr(effect, attr)
+            if hasattr(effect, "_gc"):
+                return effect._gc.get("joinstyle")
+    return None
+
+
+def test_text_borderstyle_rc_default():
+    fig, ax = uplt.subplots()
+    with uplt.rc.context({"text.borderstyle": "round"}):
+        txt = ax.text(0.5, 0.5, "A", border=True)
+    assert _get_text_stroke_joinstyle(txt) == "round"
+
+
+def test_text_borderstyle_overrides_rc():
+    fig, ax = uplt.subplots()
+    with uplt.rc.context({"text.borderstyle": "round"}):
+        txt = ax.text(0.5, 0.5, "A", border=True, borderstyle="bevel")
+    assert _get_text_stroke_joinstyle(txt) == "bevel"
+
+
+def test_dualx_log_transform_is_finite():
+    """
+    Ensure dualx transforms remain finite on log axes.
+    """
+    fig, ax = uplt.subplots()
+    ax.set_xscale("log")
+    ax.set_xlim(0.1, 10)
+    sec = ax.dualx(lambda x: 1 / x)
+    fig.canvas.draw()
+
+    ticks = sec.get_xticks()
+    assert ticks.size > 0
+    xy = np.column_stack([ticks, np.zeros_like(ticks)])
+    transformed = sec.transData.transform(xy)
+    assert np.isfinite(transformed).all()
+
+
+def test_title_manual_size_ignores_auto_shrink():
+    """
+    Ensure explicit title sizes bypass auto-scaling.
+    """
+    fig, axs = uplt.subplots(figsize=(2, 2))
+    axs.format(
+        abc=True,
+        title="X" * 200,
+        titleloc="left",
+        abcloc="left",
+        title_kw={"size": 20},
+    )
+    title_obj = axs[0]._title_dict["left"]
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() == 20
+
+
+def test_title_shrinks_when_abc_overlaps_different_loc():
+    """
+    Ensure long titles shrink when overlapping abc at a different location.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 200, titleloc="center", abcloc="left")
+    title_obj = axs[0]._title_dict["center"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_shrinks_right_aligned_same_location():
+    """
+    Test that right-aligned titles shrink when they would overflow with abc label.
+    """
+    fig, axs = uplt.subplots(figsize=(2, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="right", abcloc="right")
+    title_obj = axs[0]._title_dict["right"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_shrinks_centered_same_location():
+    """
+    Test that centered titles shrink when they would overflow with abc label.
+    """
+    fig, axs = uplt.subplots(figsize=(2, 2))
+    axs.format(abc=True, title="X" * 150, titleloc="center", abcloc="center")
+    title_obj = axs[0]._title_dict["center"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_shrinks_right_aligned_different_location():
+    """
+    Test that right-aligned titles shrink when overlapping abc at different location.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="right", abcloc="left")
+    title_obj = axs[0]._title_dict["right"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_shrinks_left_aligned_different_location():
+    """
+    Test that left-aligned titles shrink when overlapping abc at different location.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="left", abcloc="right")
+    title_obj = axs[0]._title_dict["left"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+
+
+def test_title_no_shrink_when_no_overlap():
+    """
+    Test that titles don't shrink when there's no overlap with abc label.
+    """
+    fig, axs = uplt.subplots(figsize=(4, 2))
+    axs.format(abc=True, title="Short Title", titleloc="left", abcloc="right")
+    title_obj = axs[0]._title_dict["left"]
+    original_size = title_obj.get_fontsize()
+    fig, ax = uplt.subplots()
+    ax.set_xscale("log")
+    ax.set_xlim(0.1, 10)
+    sec = ax.dualx(lambda x: 1 / x)
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() == original_size
+
+
+def test_title_shrinks_centered_left_of_abc():
+    """
+    Test that centered titles shrink when they are to the left of abc label.
+    This covers the specific case where base_x <= ax0 - pad for centered titles.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="center", abcloc="right")
+    title_obj = axs[0]._title_dict["center"]
+    original_size = title_obj.get_fontsize()
+    fig.canvas.draw()
+    assert title_obj.get_fontsize() < original_size
+    ticks = axs[0].get_xticks()
+    assert ticks.size > 0
+    xy = np.column_stack([ticks, np.zeros_like(ticks)])
+    transformed = axs[0].transData.transform(xy)
+    assert np.isfinite(transformed).all()
 
 
 def test_axis_access():
@@ -487,3 +762,46 @@ def test_alt_axes_x_shared():
         assert alt.get_ylabel() == ""
         axi.set_xlabel("X")
     return fig
+
+
+def test_inset_format_scope():
+    """
+    Test that calling format() on an inset axes does not affect the
+    parent figure's properties like suptitle or super labels.
+    """
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    # Inset axes are instances of the same class as the parent
+    ix = ax.inset_axes([0.5, 0.5, 0.4, 0.4])
+    assert ix._inset_parent is ax, "Inset parent should be the main axes"
+
+    # Test that suptitle is not set
+    ix.format(suptitle="This should not appear")
+    assert (
+        fig._suptitle is None or fig._suptitle.get_text() == ""
+    ), "Inset format should not set the figure's suptitle."
+
+    # Test that leftlabels are not set
+    # Create a copy to ensure we're not comparing against a modified list
+    original_left_labels = list(fig._suplabel_dict["left"])
+    ix.format(leftlabels=["a", "b"])
+    assert (
+        list(fig._suplabel_dict["left"]) == original_left_labels
+    ), "Inset format should not set the figure's leftlabels."
+
+
+def test_panel_format_scope():
+    """
+    Test that calling format() on a panel axes does not affect the
+    parent figure's properties like suptitle.
+    """
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    pax = ax.panel_axes("right")
+    assert pax._panel_parent is ax, "Panel parent should be the main axes"
+
+    # Test that suptitle is not set
+    pax.format(suptitle="This should not appear")
+    assert (
+        fig._suptitle is None or fig._suptitle.get_text() == ""
+    ), "Panel format should not set the figure's suptitle."

@@ -11,13 +11,102 @@ jobs:
     outputs:
       run: ${{ (github.event_name == 'push' && github.ref_name == 'main') && 'true' || steps.filter.outputs.python }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
             python:
               - 'ultraplot/**'
+
+  select-tests:
+    runs-on: ubuntu-latest
+    needs:
+      - run-if-changes
+    if: always() && needs.run-if-changes.outputs.run == 'true'
+    outputs:
+      mode: ${{ steps.select.outputs.mode }}
+      tests: ${{ steps.select.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Prepare workspace
+        run: mkdir -p .ci
+
+      - name: Restore test map cache
+        id: restore-map
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci/test-map.json
+          key: test-map-${{ github.event.pull_request.base.sha }}
+          restore-keys: |
+            test-map-
+
+      - name: Build test map on cache miss
+        if: steps.restore-map.outputs.cache-hit != 'true'
+        uses: mamba-org/setup-micromamba@v2.0.7
+        with:
+          environment-file: ./environment.yml
+          init-shell: bash
+          create-args: >-
+            --verbose
+            python=3.11
+            matplotlib=3.9
+          cache-environment: true
+          cache-downloads: false
+
+      - name: Generate test map on cache miss
+        if: steps.restore-map.outputs.cache-hit != 'true'
+        shell: bash -el {0}
+        run: |
+          echo "Test map cache miss; generating map from tests."
+          pip install --no-build-isolation --no-deps .
+          mkdir -p .ci
+          pytest -q --tb=short --disable-warnings -n auto -p pytest_cov \
+            --cov=ultraplot --cov-branch --cov-context=test --cov-report= \
+            ultraplot/tests
+          python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
+
+      - name: Select impacted tests
+        id: select
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "mode=full" >> $GITHUB_OUTPUT
+            echo "tests=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} > .ci/changed.txt
+          echo "Changed files:"
+          cat .ci/changed.txt || true
+          echo "Test map exists:"
+          if [ -f .ci/test-map.json ]; then
+            echo "yes (size=$(wc -c < .ci/test-map.json))"
+          else
+            echo "no"
+          fi
+
+          python tools/ci/select_tests.py \
+            --map .ci/test-map.json \
+            --changed-files .ci/changed.txt \
+            --output .ci/selection.json \
+            --always-full 'pyproject.toml' \
+            --always-full 'environment.yml' \
+            --always-full 'ultraplot/__init__.py' \
+            --ignore 'docs/**' \
+            --ignore 'README.rst'
+          echo "Selection output:"
+          cat .ci/selection.json || true
+
+          python - <<'PY' > .ci/selection.out
+          import json
+          data = json.load(open(".ci/selection.json", "r", encoding="utf-8"))
+          print(f"mode={data['mode']}")
+          print("tests=" + json.dumps(data.get("tests", []), separators=(",", ":")))
+          PY
+          cat .ci/selection.out >> $GITHUB_OUTPUT
 
   get-versions:
     runs-on: ubuntu-latest
@@ -28,7 +117,7 @@ jobs:
       python-versions: ${{ steps.set-versions.outputs.python-versions }}
       matplotlib-versions: ${{ steps.set-versions.outputs.matplotlib-versions }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -121,19 +210,23 @@ jobs:
     needs:
       - get-versions
       - run-if-changes
-    if: always() && needs.run-if-changes.outputs.run == 'true' && needs.get-versions.result == 'success'
+      - select-tests
+    if: always() && needs.run-if-changes.outputs.run == 'true' && needs.get-versions.result == 'success' && needs.select-tests.result == 'success'
     strategy:
       matrix:
         python-version: ${{ fromJson(needs.get-versions.outputs.python-versions) }}
         matplotlib-version: ${{ fromJson(needs.get-versions.outputs.matplotlib-versions) }}
       fail-fast: false
+      max-parallel: 4
     uses: ./.github/workflows/build-ultraplot.yml
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }}-${{ matrix.matplotlib-version }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     with:
       python-version: ${{ matrix.python-version }}
       matplotlib-version: ${{ matrix.matplotlib-version }}
+      test-mode: ${{ needs.select-tests.outputs.mode }}
+      test-nodeids: ${{ needs.select-tests.outputs.tests }}
 
   build-success:
     needs:

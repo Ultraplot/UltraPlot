@@ -3,6 +3,7 @@
 The second-level axes subclass used for all ultraplot figures.
 Implements plotting method overrides.
 """
+
 import contextlib
 import inspect
 import itertools
@@ -10,7 +11,7 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from numbers import Integral, Number
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
 import matplotlib as mpl
 import matplotlib.artist as martist
@@ -205,6 +206,279 @@ CurvedQuiverSet
 """
 
 docstring._snippet_manager["plot.curved_quiver"] = _curved_quiver_docstring
+
+_sankey_docstring = """
+Draw a Sankey diagram.
+
+Parameters
+----------
+flows : sequence of float or flow tuples
+    If a numeric sequence, use Matplotlib's Sankey implementation.
+    Otherwise, expect flow tuples or dicts describing (source, target, value).
+nodes : sequence or dict, optional
+    Node identifiers or dicts with ``id``/``label``/``color`` keys. If omitted,
+    nodes are inferred from flow sources/targets.
+labels : sequence of str, optional
+    Labels for each flow in Matplotlib's Sankey mode.
+orientations : sequence of int, optional
+    Flow orientations (-1: down, 0: right, 1: up) for Matplotlib's Sankey.
+pathlengths : float or sequence of float, optional
+    Path lengths for each flow in Matplotlib's Sankey. Defaults to
+    :rc:`sankey.pathlengths` when omitted.
+trunklength : float, optional
+    Length of the trunk between the input and output flows. Defaults to
+    :rc:`sankey.trunklength` when omitted.
+patchlabel : str, optional
+    Label for the main patch in Matplotlib's Sankey mode. Defaults to
+    :rc:`sankey.pathlabel` when omitted.
+scale, unit, format, gap, radius, shoulder, offset, head_angle, margin, tolerance : optional
+    Passed to `matplotlib.sankey.Sankey`.
+prior : int, optional
+    Index of a prior diagram to connect to.
+connect : (int, int), optional
+    Flow indices for the prior and current diagram connection. Defaults to
+    :rc:`sankey.connect` when omitted.
+rotation : float, optional
+    Rotation angle in degrees. Defaults to :rc:`sankey.rotation` when omitted.
+node_kw, flow_kw, label_kw : dict-like, optional
+    Style dictionaries for the layered Sankey renderer.
+node_label_kw, flow_label_kw : dict-like, optional
+    Label style dictionaries for node and flow labels in layered mode.
+node_label_box : bool or dict-like, optional
+    If ``True``, draw a rounded box behind node labels. If dict-like, used as
+    the ``bbox`` argument for node label styling.
+style : {'budget', 'pastel', 'mono'}, optional
+    Built-in styling presets for layered mode.
+node_order : sequence, optional
+    Explicit node ordering for layered mode.
+layer_order : sequence, optional
+    Explicit layer ordering for layered mode.
+group_cycle : sequence, optional
+    Cycle for flow group colors (defaults to flow cycle).
+flow_other : float, optional
+    Aggregate flows below this threshold into a single ``other_label``.
+other_label : str, optional
+    Label for the aggregated flow target. Defaults to :rc:`sankey.other_label`
+    when omitted.
+value_format : str or callable, optional
+    Formatter for flow labels when not explicitly provided.
+node_label_outside : {'auto', True, False}, optional
+    Place node labels outside narrow nodes. Defaults to
+    :rc:`sankey.node_label_outside` when omitted.
+node_label_offset : float, optional
+    Offset for outside node labels (axes-relative units). Defaults to
+    :rc:`sankey.node_label_offset` when omitted.
+flow_sort : bool, optional
+    Whether to sort flows by target position to reduce crossings. Defaults to
+    :rc:`sankey.flow_sort` when omitted.
+flow_label_pos : float, optional
+    Horizontal placement for single flow labels (0 to 1 along the ribbon).
+    Defaults to :rc:`sankey.flow_label_pos` when omitted.
+    When flow labels overlap, positions are redistributed between 0.25 and 0.75.
+node_labels, flow_labels : bool, optional
+    Whether to draw node or flow labels in layered mode. Defaults to
+    :rc:`sankey.node_labels` and :rc:`sankey.flow_labels` when omitted.
+align : {'center', 'top', 'bottom'}, optional
+    Vertical alignment for nodes within each layer in layered mode. Defaults to
+    :rc:`sankey.align` when omitted.
+layers : dict-like, optional
+    Manual layer assignments for nodes in layered mode.
+**kwargs
+    Patch properties passed to `matplotlib.sankey.Sankey.add` in Matplotlib mode.
+
+Layered defaults
+----------------
+Layered mode uses :rc:`sankey.nodepad`, :rc:`sankey.nodewidth`,
+:rc:`sankey.margin`, :rc:`sankey.flow.alpha`, :rc:`sankey.flow.curvature`,
+and :rc:`sankey.node.facecolor` when not set explicitly.
+
+Returns
+-------
+matplotlib.sankey.Sankey or list or SankeyDiagram
+    The Sankey diagram instance, or a list for multi-diagram usage. For layered
+    mode, returns a `~ultraplot.axes.plot_types.sankey.SankeyDiagram`.
+"""
+
+docstring._snippet_manager["plot.sankey"] = _sankey_docstring
+_chord_docstring = """
+Draw a chord diagram using pyCirclize.
+
+Parameters
+----------
+matrix : str, Path, pandas.DataFrame, or Matrix
+    Input matrix for the chord diagram.
+start, end : float, optional
+    Plot start and end degrees (-360 <= start < end <= 360).
+space : float or sequence of float, optional
+    Space degrees between sectors.
+endspace : bool, optional
+    If True, insert space after the final sector.
+r_lim : 2-tuple of float, optional
+    Outer track radius limits (0 to 100).
+cmap : str or dict, optional
+    Colormap name or name-to-color mapping for sectors and links. If omitted,
+    UltraPlot's color cycle is used.
+link_cmap : list of (from, to, color), optional
+    Override link colors.
+ticks_interval : int, optional
+    Tick interval for sector tracks. If None, no ticks are shown.
+order : {'asc', 'desc'} or list, optional
+    Node ordering strategy or explicit node order.
+label_kw, ticks_kw, link_kw : dict-like, optional
+    Keyword arguments passed to pyCirclize for labels, ticks, and links.
+link_kw_handler : callable, optional
+    Callback to customize per-link keyword arguments.
+tooltip : bool, optional
+    Enable interactive tooltips (requires ipympl).
+
+Returns
+-------
+pycirclize.Circos
+    The underlying Circos instance.
+"""
+
+docstring._snippet_manager["plot.chord_diagram"] = _chord_docstring
+
+_radar_docstring = """
+Draw a radar chart using pyCirclize.
+
+Parameters
+----------
+table : str, Path, pandas.DataFrame, or RadarTable
+    Input table for the radar chart.
+r_lim : 2-tuple of float, optional
+    Radar chart radius limits (0 to 100).
+vmin, vmax : float, optional
+    Value range for the radar chart.
+fill : bool, optional
+    Whether to fill the radar polygons.
+marker_size : int, optional
+    Marker size for radar points.
+bg_color : color-spec or None, optional
+    Background fill color.
+circular : bool, optional
+    Whether to draw circular grid lines.
+cmap : str or dict, optional
+    Colormap name or row-name-to-color mapping. If omitted, UltraPlot's
+    color cycle is used.
+show_grid_label : bool, optional
+    Whether to show radial grid labels.
+grid_interval_ratio : float or None, optional
+    Grid interval ratio (0 to 1).
+grid_line_kw, grid_label_kw : dict-like, optional
+    Keyword arguments passed to pyCirclize for grid lines and labels.
+grid_label_formatter : callable, optional
+    Formatter for grid label values.
+label_kw_handler, line_kw_handler, marker_kw_handler : callable, optional
+    Per-series styling callbacks passed to pyCirclize.
+
+Returns
+-------
+pycirclize.Circos
+    The underlying Circos instance.
+"""
+
+docstring._snippet_manager["plot.radar_chart"] = _radar_docstring
+
+_circos_docstring = """
+Create a Circos instance using pyCirclize.
+
+Parameters
+----------
+sectors : mapping
+    Sector name and size (or range) mapping.
+start, end : float, optional
+    Plot start and end degrees (-360 <= start < end <= 360).
+space : float or sequence of float, optional
+    Space degrees between sectors.
+endspace : bool, optional
+    If True, insert space after the final sector.
+sector2clockwise : dict, optional
+    Override clockwise settings per sector.
+show_axis_for_debug : bool, optional
+    Show the polar axis for debug layout.
+plot : bool, optional
+    If True, immediately render the circos figure on this axes.
+tooltip : bool, optional
+    Enable interactive tooltips (requires ipympl).
+
+Returns
+-------
+pycirclize.Circos
+    The underlying Circos instance.
+"""
+
+docstring._snippet_manager["plot.circos"] = _circos_docstring
+
+_phylogeny_docstring = """
+Draw a phylogenetic tree using pyCirclize.
+
+Parameters
+----------
+tree_data : str, Path, or Tree
+    Tree data (file, URL, Tree object, or tree string).
+start, end : float, optional
+    Plot start and end degrees (-360 <= start < end <= 360).
+r_lim : 2-tuple of float, optional
+    Tree track radius limits (0 to 100).
+format : str, optional
+    Tree format (`newick`, `phyloxml`, `nexus`, `nexml`, `cdao`).
+outer : bool, optional
+    If True, plot tree on the outer side.
+align_leaf_label : bool, optional
+    If True, align leaf labels.
+ignore_branch_length : bool, optional
+    Ignore branch lengths when plotting.
+leaf_label_size : float, optional
+    Leaf label size.
+leaf_label_rmargin : float, optional
+    Leaf label radius margin.
+reverse : bool, optional
+    Reverse tree direction.
+ladderize : bool, optional
+    Ladderize tree.
+line_kw, align_line_kw : dict-like, optional
+    Keyword arguments for tree line styling.
+label_formatter : callable, optional
+    Formatter for leaf labels.
+tooltip : bool, optional
+    Enable interactive tooltips (requires ipympl).
+
+Returns
+-------
+pycirclize.Circos, pycirclize.TreeViz
+    The Circos instance and TreeViz helper.
+"""
+
+docstring._snippet_manager["plot.phylogeny"] = _phylogeny_docstring
+
+_circos_bed_docstring = """
+Create a Circos instance from a BED file using pyCirclize.
+
+Parameters
+----------
+bed_file : str or Path
+    BED file describing chromosome ranges.
+start, end : float, optional
+    Plot start and end degrees (-360 <= start < end <= 360).
+space : float or sequence of float, optional
+    Space degrees between sectors.
+endspace : bool, optional
+    If True, insert space after the final sector.
+sector2clockwise : dict, optional
+    Override clockwise settings per sector.
+plot : bool, optional
+    If True, immediately render the circos figure on this axes.
+tooltip : bool, optional
+    Enable interactive tooltips (requires ipympl).
+
+Returns
+-------
+pycirclize.Circos
+    The underlying Circos instance.
+"""
+
+docstring._snippet_manager["plot.circos_bed"] = _circos_bed_docstring
 # Auto colorbar and legend docstring
 _guide_docstring = """
 colorbar : bool, int, or str, optional
@@ -951,7 +1225,7 @@ edgecolors, markeredgecolor, markeredgecolors \
 **kwargs
     Passed to `~matplotlib.axes.Axes.scatter`.
 
-See for more info on the grouping behavior :func:`~ultraplot.PlotAxes.bar`, and for formatting :func:~ultraplot.PlotAxes.scatter`.
+See for more info on the grouping behavior :func:`~ultraplot.PlotAxes.bar`, and for formatting :func:`~ultraplot.PlotAxes.scatter`.
 Returns
 -------
 List of ~matplotlib.collections.PatchCollection, and a ~matplotlib.collections.LineCollection
@@ -1106,6 +1380,106 @@ docstring._snippet_manager["plot.violinplot"] = _violinplot_docstring.format(
 )
 docstring._snippet_manager["plot.violinploth"] = _violinplot_docstring.format(
     y="x", orientation="horizontal"
+)
+
+
+# Ridgeline plot docstrings
+_ridgeline_docstring = """
+Create a {orientation} ridgeline plot (also known as a joyplot).
+
+Ridgeline plots visualize distributions of multiple datasets as stacked,
+overlapping density curves. They are useful for comparing distributions
+across categories or over time.
+
+Parameters
+----------
+data : list of array-like
+    List of distributions to plot. Each element should be an array-like
+    object containing the data points for one distribution.
+labels : list of str, optional
+    Labels for each distribution. If not provided, generates default labels.
+positions : array-like, optional
+    Y-coordinates for positioning each ridge. If provided, enables continuous
+    (coordinate-based) positioning mode where ridges are anchored to specific
+    numerical coordinates along the Y-axis. If None (default), uses categorical
+    positioning with evenly-spaced ridges.
+height : float or array-like, optional
+    Height of each ridge in Y-axis units. Only used in continuous positioning mode
+    (when positions is provided). Can be a single value applied to all ridges or
+    an array of values (one per ridge). If None, defaults to the minimum spacing
+    between positions divided by 2.
+overlap : float, default: 0.5
+    Amount of overlap between ridges, from 0 (no overlap) to 1 (full overlap).
+    Higher values create more dramatic visual overlapping. Only used in categorical
+    positioning mode (when positions is None).
+kde_kw : dict, optional
+    Keyword arguments passed to `scipy.stats.gaussian_kde`. Common parameters include:
+
+    * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
+    * ``weights`` : Array of weights for each data point
+
+    Only used when hist=False.
+points : int, default: 200
+    Number of evaluation points for KDE curves. Higher values create smoother
+    curves but take longer to compute. Only used when hist=False.
+hist : bool, default: False
+    If True, uses histograms instead of kernel density estimation.
+bins : int or sequence or str, default: 'auto'
+    Bin specification for histograms. Can be an integer (number of bins),
+    a sequence defining bin edges, or a string method ('auto', 'sturges', etc.).
+    Only used when hist=True.
+fill : bool, default: True
+    Whether to fill the area under each density curve.
+alpha : float, default: 0.7
+    Transparency level for filled areas (0=transparent, 1=opaque).
+linewidth : float, default: 1.5
+    Width of the outline for each ridge.
+edgecolor : color, default: 'black'
+    Color of the ridge outlines.
+facecolor : color or list of colors, optional
+    Fill color(s) for the ridges. If a single color, applies to all ridges.
+    If a list, must match the number of distributions. If None, uses the
+    current color cycle or colormap.
+cmap : str or Colormap, optional
+    Colormap name or object to use for coloring ridges. Overridden by facecolor.
+
+Returns
+-------
+list
+    List of artist objects for each ridge (PolyCollection or Line2D).
+
+Examples
+--------
+>>> import ultraplot as uplt
+>>> import numpy as np
+>>> fig, ax = uplt.subplots()
+>>> data = [np.random.normal(i, 1, 1000) for i in range(5)]
+>>> ax.ridgeline(data, labels=[f'Group {{i+1}}' for i in range(5)])
+
+>>> # With colormap
+>>> fig, ax = uplt.subplots()
+>>> ax.ridgeline(data, cmap='viridis', overlap=0.7)
+
+>>> # With histograms instead of KDE
+>>> fig, ax = uplt.subplots()
+>>> ax.ridgeline(data, hist=True, bins=20)
+
+>>> # Continuous positioning (e.g., at specific depths)
+>>> fig, ax = uplt.subplots()
+>>> depths = [0, 10, 25, 50, 100]  # meters
+>>> ax.ridgeline(data, positions=depths, height=8, labels=['Surface', '10m', '25m', '50m', '100m'])
+>>> ax.format(ylabel='Depth (m)', xlabel='Temperature (°C)')
+
+See Also
+--------
+violinplot : Violin plots for distribution visualization
+hist : Histogram for single distribution
+"""
+docstring._snippet_manager["plot.ridgeline"] = _ridgeline_docstring.format(
+    orientation="vertical"
+)
+docstring._snippet_manager["plot.ridgelineh"] = _ridgeline_docstring.format(
+    orientation="horizontal"
 )
 
 
@@ -1282,8 +1656,8 @@ Plot a networkx graph with flexible node, edge, and label options.
 Parameters
 ----------
 g : networkx.Graph
-    The graph object to be plotted. Can be any subclass of :class:`networkx.Graph`, such as
-    :class:`networkx.DiGraph` or :class:`networkx.MultiGraph`.
+    The graph object to be plotted. Can be any subclass of :class:`~networkx.Graph`, such as
+    :class:`~networkx.DiGraph` or :class:`~networkx.MultiGraph`.
 layout : callable or dict, optional
     A layout function or a precomputed dict mapping nodes to 2D positions. If a function
     is given, it is called as ``layout(g, **layout_kw)`` to compute positions. See :func:`networkx.drawing.nx_pylab.draw` for more information.
@@ -1632,7 +2006,7 @@ class PlotAxes(base.Axes):
             if cmap is None:
                 cmap = constructor.Colormap(rc["image.cmap"])
             else:
-                cmap = mcm.get_cmap(cmap)
+                cmap = mpl.colormaps.get_cmap(cmap)
 
         # Convert start_points from data to array coords
         # Shift the seed points from the bottom left of the data so that
@@ -1748,6 +2122,698 @@ class PlotAxes(base.Axes):
         ac = mcollections.PatchCollection(arrows)
         stream_container = CurvedQuiverSet(lc, ac)
         return stream_container
+
+    @docstring._snippet_manager
+    def sankey(
+        self,
+        flows: Any,
+        labels: Optional[Sequence[str]] = None,
+        orientations: Optional[Sequence[int]] = None,
+        pathlengths: Optional[Union[float, Sequence[float]]] = None,
+        trunklength: Optional[float] = None,
+        patchlabel: Optional[str] = None,
+        *,
+        nodes: Any = None,
+        links: Any = None,
+        node_kw: Optional[Mapping[str, Any]] = None,
+        flow_kw: Optional[Mapping[str, Any]] = None,
+        label_kw: Optional[Mapping[str, Any]] = None,
+        node_label_kw: Optional[Mapping[str, Any]] = None,
+        flow_label_kw: Optional[Mapping[str, Any]] = None,
+        node_label_box: Optional[Union[bool, Mapping[str, Any]]] = None,
+        style: Optional[str] = None,
+        node_order: Optional[Sequence[Any]] = None,
+        layer_order: Optional[Sequence[int]] = None,
+        group_cycle: Optional[Sequence[Any]] = None,
+        flow_other: Optional[float] = None,
+        other_label: Optional[str] = None,
+        value_format: Optional[Union[str, Callable[[float], str]]] = None,
+        node_label_outside: Optional[Union[bool, str]] = None,
+        node_label_offset: Optional[float] = None,
+        flow_sort: Optional[bool] = None,
+        flow_label_pos: Optional[float] = None,
+        node_labels: Optional[bool] = None,
+        flow_labels: Optional[bool] = None,
+        align: Optional[str] = None,
+        layers: Optional[Mapping[Any, int]] = None,
+        scale: Optional[float] = None,
+        unit: Optional[str] = None,
+        format: Optional[str] = None,
+        gap: Optional[float] = None,
+        radius: Optional[float] = None,
+        shoulder: Optional[float] = None,
+        offset: Optional[float] = None,
+        head_angle: Optional[float] = None,
+        margin: Optional[float] = None,
+        tolerance: Optional[float] = None,
+        prior: Optional[int] = None,
+        connect: Optional[tuple[int, int]] = None,
+        rotation: Optional[float] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        %(plot.sankey)s
+        """
+        # Parameter parsing
+        pathlengths = _not_none(pathlengths, rc["sankey.pathlengths"])
+        trunklength = _not_none(trunklength, rc["sankey.trunklength"])
+        patchlabel = _not_none(patchlabel, rc["sankey.pathlabel"])
+        other_label = _not_none(other_label, rc["sankey.other_label"])
+        node_label_outside = _not_none(
+            node_label_outside, rc["sankey.node_label_outside"]
+        )
+        node_label_offset = _not_none(node_label_offset, rc["sankey.node_label_offset"])
+        flow_sort = _not_none(flow_sort, rc["sankey.flow_sort"])
+        flow_label_pos = _not_none(flow_label_pos, rc["sankey.flow_label_pos"])
+        node_labels = _not_none(node_labels, rc["sankey.node_labels"])
+        flow_labels = _not_none(flow_labels, rc["sankey.flow_labels"])
+        align = _not_none(align, rc["sankey.align"])
+        connect = _not_none(connect, rc["sankey.connect"])
+        rotation = _not_none(rotation, rc["sankey.rotation"])
+
+        def _looks_like_links(values):
+            """
+            Helper function to parse links
+            """
+            if values is None:
+                return False
+            if isinstance(values, np.ndarray) and values.ndim == 1:
+                return False
+            if isinstance(values, dict):
+                return True
+            if isinstance(values, (list, tuple)) and values:
+                first = values[0]
+                if isinstance(first, dict):
+                    return True
+                if isinstance(first, (list, tuple)) and len(first) >= 3:
+                    return True
+            return False
+
+        use_layered = nodes is not None or links is not None or _looks_like_links(flows)
+        if use_layered:
+            from .plot_types.sankey import sankey_diagram
+
+            node_kw = node_kw or {}
+            flow_kw = flow_kw or {}
+            label_kw = label_kw or {}
+            if links is None:
+                links = flows
+            cycle = rc["axes.prop_cycle"].by_key().get("color", [])
+            if not cycle:
+                cycle = [self._get_lines.get_next_color()]
+
+            # Real logic is here
+            return sankey_diagram(
+                self,
+                nodes=nodes,
+                flows=links,
+                layers=layers,
+                flow_cycle=cycle,
+                group_cycle=group_cycle,
+                node_order=node_order,
+                layer_order=layer_order,
+                style=style,
+                flow_other=flow_other,
+                other_label=other_label,
+                value_format=value_format,
+                node_kw=node_kw,
+                flow_kw=flow_kw,
+                label_kw=label_kw,
+                node_label_kw=node_label_kw,
+                flow_label_kw=flow_label_kw,
+                node_label_box=node_label_box,
+                node_label_outside=node_label_outside,
+                node_label_offset=node_label_offset,
+                flow_sort=flow_sort,
+                flow_label_pos=flow_label_pos,
+                node_labels=node_labels,
+                flow_labels=flow_labels,
+                align=align,
+                node_pad=rc["sankey.nodepad"],
+                node_width=rc["sankey.nodewidth"],
+                margin=rc["sankey.margin"],
+                flow_alpha=rc["sankey.flow.alpha"],
+                flow_curvature=rc["sankey.flow.curvature"],
+                node_facecolor=rc["sankey.node.facecolor"],
+            )
+
+        from matplotlib.sankey import Sankey
+
+        sankey_kw = {}
+        if scale is not None:
+            sankey_kw["scale"] = scale
+        if unit is not None:
+            sankey_kw["unit"] = unit
+        if format is not None:
+            sankey_kw["format"] = format
+        if gap is not None:
+            sankey_kw["gap"] = gap
+        if radius is not None:
+            sankey_kw["radius"] = radius
+        if shoulder is not None:
+            sankey_kw["shoulder"] = shoulder
+        if offset is not None:
+            sankey_kw["offset"] = offset
+        if head_angle is not None:
+            sankey_kw["head_angle"] = head_angle
+        if margin is not None:
+            sankey_kw["margin"] = margin
+        if tolerance is not None:
+            sankey_kw["tolerance"] = tolerance
+
+        if "facecolor" not in kwargs and "color" not in kwargs:
+            kwargs["facecolor"] = self._get_lines.get_next_color()
+
+        sankey = Sankey(ax=self, **sankey_kw)
+        add_kw = {
+            "flows": flows,
+            "trunklength": trunklength,
+            "patchlabel": patchlabel,
+            "rotation": rotation,
+            "pathlengths": pathlengths,
+        }
+        if labels is not None:
+            add_kw["labels"] = labels
+        if orientations is not None:
+            add_kw["orientations"] = orientations
+        if prior is not None:
+            add_kw["prior"] = prior
+        if connect is not None:
+            add_kw["connect"] = (0, 0)
+
+        sankey.add(**add_kw, **kwargs)
+        diagrams = sankey.finish()
+        return diagrams[0] if len(diagrams) == 1 else diagrams
+
+    def circos(
+        self,
+        sectors: Mapping[str, Any],
+        *,
+        start: float = 0,
+        end: float = 360,
+        space: float | Sequence[float] = 0,
+        endspace: bool = True,
+        sector2clockwise: Mapping[str, bool] | None = None,
+        show_axis_for_debug: bool = False,
+        plot: bool = False,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.circos)s
+        """
+        from .plot_types.circlize import circos
+
+        return circos(
+            self,
+            sectors,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            sector2clockwise=sector2clockwise,
+            show_axis_for_debug=show_axis_for_debug,
+            plot=plot,
+            tooltip=tooltip,
+        )
+
+    @docstring._snippet_manager
+    def phylogeny(
+        self,
+        tree_data: Any,
+        *,
+        start: Optional[float] = None,
+        end: Optional[float] = None,
+        r_lim: Optional[tuple[float, float]] = None,
+        format: Optional[str] = None,
+        outer: Optional[bool] = None,
+        align_leaf_label: Optional[bool] = None,
+        ignore_branch_length: Optional[bool] = None,
+        leaf_label_size: Optional[float] = None,
+        leaf_label_rmargin: Optional[float] = None,
+        reverse: Optional[bool] = None,
+        ladderize: Optional[bool] = None,
+        line_kw: Optional[Mapping[str, Any]] = None,
+        label_formatter: Optional[Callable[[str], str]] = None,
+        align_line_kw: Optional[Mapping[str, Any]] = None,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.phylogeny)s
+        """
+        from .plot_types.circlize import phylogeny
+
+        start = _not_none(start, rc["phylogeny.start"])
+        end = _not_none(end, rc["phylogeny.end"])
+        r_lim = _not_none(r_lim, rc["phylogeny.r_lim"])
+        format = _not_none(format, rc["phylogeny.format"])
+        outer = _not_none(outer, rc["phylogeny.outer"])
+        align_leaf_label = _not_none(align_leaf_label, rc["phylogeny.align_leaf_label"])
+        ignore_branch_length = _not_none(
+            ignore_branch_length, rc["phylogeny.ignore_branch_length"]
+        )
+        leaf_label_size = _not_none(leaf_label_size, rc["phylogeny.leaf_label_size"])
+        leaf_label_rmargin = _not_none(
+            leaf_label_rmargin, rc["phylogeny.leaf_label_rmargin"]
+        )
+        reverse = _not_none(reverse, rc["phylogeny.reverse"])
+        ladderize = _not_none(ladderize, rc["phylogeny.ladderize"])
+
+        return phylogeny(
+            self,
+            tree_data,
+            start=start,
+            end=end,
+            r_lim=r_lim,
+            format=format,
+            outer=outer,
+            align_leaf_label=align_leaf_label,
+            ignore_branch_length=ignore_branch_length,
+            leaf_label_size=leaf_label_size,
+            leaf_label_rmargin=leaf_label_rmargin,
+            reverse=reverse,
+            ladderize=ladderize,
+            line_kw=line_kw,
+            label_formatter=label_formatter,
+            align_line_kw=align_line_kw,
+            tooltip=tooltip,
+        )
+
+    @docstring._snippet_manager
+    def circos_bed(
+        self,
+        bed_file: Any,
+        *,
+        start: float = 0,
+        end: float = 360,
+        space: float | Sequence[float] = 0,
+        endspace: bool = True,
+        sector2clockwise: Mapping[str, bool] | None = None,
+        plot: bool = False,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.circos_bed)s
+        """
+        from .plot_types.circlize import circos_bed
+
+        return circos_bed(
+            self,
+            bed_file,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            sector2clockwise=sector2clockwise,
+            plot=plot,
+            tooltip=tooltip,
+        )
+
+    def bed(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.circos_bed`.
+        """
+        return self.circos_bed(*args, **kwargs)
+
+    @docstring._snippet_manager
+    def chord_diagram(
+        self,
+        matrix: Any,
+        *,
+        start: Optional[float] = None,
+        end: Optional[float] = None,
+        space: Optional[Union[float, Sequence[float]]] = None,
+        endspace: Optional[bool] = None,
+        r_lim: Optional[tuple[float, float]] = None,
+        cmap: Any = None,
+        link_cmap: Optional[list[tuple[str, str, str]]] = None,
+        ticks_interval: Optional[int] = None,
+        order: Optional[Union[str, list[str]]] = None,
+        label_kw: Optional[Mapping[str, Any]] = None,
+        ticks_kw: Optional[Mapping[str, Any]] = None,
+        link_kw: Optional[Mapping[str, Any]] = None,
+        link_kw_handler: Optional[
+            Callable[[str, str], Optional[Mapping[str, Any]]]
+        ] = None,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.chord_diagram)s
+        """
+        from .plot_types.circlize import chord_diagram
+
+        start = _not_none(start, rc["chord.start"])
+        end = _not_none(end, rc["chord.end"])
+        space = _not_none(space, rc["chord.space"])
+        endspace = _not_none(endspace, rc["chord.endspace"])
+        r_lim = _not_none(r_lim, rc["chord.r_lim"])
+        ticks_interval = _not_none(ticks_interval, rc["chord.ticks_interval"])
+        order = _not_none(order, rc["chord.order"])
+
+        return chord_diagram(
+            self,
+            matrix,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            r_lim=r_lim,
+            cmap=cmap,
+            link_cmap=link_cmap,
+            ticks_interval=ticks_interval,
+            order=order,
+            label_kw=label_kw,
+            ticks_kw=ticks_kw,
+            link_kw=link_kw,
+            link_kw_handler=link_kw_handler,
+            tooltip=tooltip,
+        )
+
+    def chord(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.chord_diagram`.
+        """
+        return self.chord_diagram(*args, **kwargs)
+
+    @docstring._snippet_manager
+    def radar_chart(
+        self,
+        table: Any,
+        *,
+        r_lim: Optional[tuple[float, float]] = None,
+        vmin: Optional[float] = None,
+        vmax: Optional[float] = None,
+        fill: Optional[bool] = None,
+        marker_size: Optional[int] = None,
+        bg_color: Optional[str] = None,
+        circular: Optional[bool] = None,
+        cmap: Any = None,
+        show_grid_label: Optional[bool] = None,
+        grid_interval_ratio: Optional[float] = None,
+        grid_line_kw: Optional[Mapping[str, Any]] = None,
+        grid_label_kw: Optional[Mapping[str, Any]] = None,
+        grid_label_formatter: Optional[Callable[[float], str]] = None,
+        label_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+        line_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+        marker_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+    ):
+        """
+        %(plot.radar_chart)s
+        """
+        from .plot_types.circlize import radar_chart
+
+        r_lim = _not_none(r_lim, rc["radar.r_lim"])
+        vmin = _not_none(vmin, rc["radar.vmin"])
+        vmax = _not_none(vmax, rc["radar.vmax"])
+        fill = _not_none(fill, rc["radar.fill"])
+        marker_size = _not_none(marker_size, rc["radar.marker_size"])
+        bg_color = _not_none(bg_color, rc["radar.bg_color"])
+        circular = _not_none(circular, rc["radar.circular"])
+        show_grid_label = _not_none(show_grid_label, rc["radar.show_grid_label"])
+        grid_interval_ratio = _not_none(
+            grid_interval_ratio, rc["radar.grid_interval_ratio"]
+        )
+
+        return radar_chart(
+            self,
+            table,
+            r_lim=r_lim,
+            vmin=vmin,
+            vmax=vmax,
+            fill=fill,
+            marker_size=marker_size,
+            bg_color=bg_color,
+            circular=circular,
+            cmap=cmap,
+            show_grid_label=show_grid_label,
+            grid_interval_ratio=grid_interval_ratio,
+            grid_line_kw=grid_line_kw,
+            grid_label_kw=grid_label_kw,
+            grid_label_formatter=grid_label_formatter,
+            label_kw_handler=label_kw_handler,
+            line_kw_handler=line_kw_handler,
+            marker_kw_handler=marker_kw_handler,
+        )
+
+    def radar(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.radar_chart`.
+        """
+        return self.radar_chart(*args, **kwargs)
+
+    def circos(
+        self,
+        sectors: Mapping[str, Any],
+        *,
+        start: float = 0,
+        end: float = 360,
+        space: float | Sequence[float] = 0,
+        endspace: bool = True,
+        sector2clockwise: Mapping[str, bool] | None = None,
+        show_axis_for_debug: bool = False,
+        plot: bool = False,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.circos)s
+        """
+        from .plot_types.circlize import circos
+
+        return circos(
+            self,
+            sectors,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            sector2clockwise=sector2clockwise,
+            show_axis_for_debug=show_axis_for_debug,
+            plot=plot,
+            tooltip=tooltip,
+        )
+
+    @docstring._snippet_manager
+    def phylogeny(
+        self,
+        tree_data: Any,
+        *,
+        start: Optional[float] = None,
+        end: Optional[float] = None,
+        r_lim: Optional[tuple[float, float]] = None,
+        format: Optional[str] = None,
+        outer: Optional[bool] = None,
+        align_leaf_label: Optional[bool] = None,
+        ignore_branch_length: Optional[bool] = None,
+        leaf_label_size: Optional[float] = None,
+        leaf_label_rmargin: Optional[float] = None,
+        reverse: Optional[bool] = None,
+        ladderize: Optional[bool] = None,
+        line_kw: Optional[Mapping[str, Any]] = None,
+        label_formatter: Optional[Callable[[str], str]] = None,
+        align_line_kw: Optional[Mapping[str, Any]] = None,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.phylogeny)s
+        """
+        from .plot_types.circlize import phylogeny
+
+        start = _not_none(start, rc["phylogeny.start"])
+        end = _not_none(end, rc["phylogeny.end"])
+        r_lim = _not_none(r_lim, rc["phylogeny.r_lim"])
+        format = _not_none(format, rc["phylogeny.format"])
+        outer = _not_none(outer, rc["phylogeny.outer"])
+        align_leaf_label = _not_none(align_leaf_label, rc["phylogeny.align_leaf_label"])
+        ignore_branch_length = _not_none(
+            ignore_branch_length, rc["phylogeny.ignore_branch_length"]
+        )
+        leaf_label_size = _not_none(leaf_label_size, rc["phylogeny.leaf_label_size"])
+        leaf_label_rmargin = _not_none(
+            leaf_label_rmargin, rc["phylogeny.leaf_label_rmargin"]
+        )
+        reverse = _not_none(reverse, rc["phylogeny.reverse"])
+        ladderize = _not_none(ladderize, rc["phylogeny.ladderize"])
+
+        return phylogeny(
+            self,
+            tree_data,
+            start=start,
+            end=end,
+            r_lim=r_lim,
+            format=format,
+            outer=outer,
+            align_leaf_label=align_leaf_label,
+            ignore_branch_length=ignore_branch_length,
+            leaf_label_size=leaf_label_size,
+            leaf_label_rmargin=leaf_label_rmargin,
+            reverse=reverse,
+            ladderize=ladderize,
+            line_kw=line_kw,
+            label_formatter=label_formatter,
+            align_line_kw=align_line_kw,
+            tooltip=tooltip,
+        )
+
+    @docstring._snippet_manager
+    def circos_bed(
+        self,
+        bed_file: Any,
+        *,
+        start: float = 0,
+        end: float = 360,
+        space: float | Sequence[float] = 0,
+        endspace: bool = True,
+        sector2clockwise: Mapping[str, bool] | None = None,
+        plot: bool = False,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.circos_bed)s
+        """
+        from .plot_types.circlize import circos_bed
+
+        return circos_bed(
+            self,
+            bed_file,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            sector2clockwise=sector2clockwise,
+            plot=plot,
+            tooltip=tooltip,
+        )
+
+    def bed(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.circos_bed`.
+        """
+        return self.circos_bed(*args, **kwargs)
+
+    @docstring._snippet_manager
+    def chord_diagram(
+        self,
+        matrix: Any,
+        *,
+        start: Optional[float] = None,
+        end: Optional[float] = None,
+        space: Optional[Union[float, Sequence[float]]] = None,
+        endspace: Optional[bool] = None,
+        r_lim: Optional[tuple[float, float]] = None,
+        cmap: Any = None,
+        link_cmap: Optional[list[tuple[str, str, str]]] = None,
+        ticks_interval: Optional[int] = None,
+        order: Optional[Union[str, list[str]]] = None,
+        label_kw: Optional[Mapping[str, Any]] = None,
+        ticks_kw: Optional[Mapping[str, Any]] = None,
+        link_kw: Optional[Mapping[str, Any]] = None,
+        link_kw_handler: Optional[
+            Callable[[str, str], Optional[Mapping[str, Any]]]
+        ] = None,
+        tooltip: bool = False,
+    ):
+        """
+        %(plot.chord_diagram)s
+        """
+        from .plot_types.circlize import chord_diagram
+
+        start = _not_none(start, rc["chord.start"])
+        end = _not_none(end, rc["chord.end"])
+        space = _not_none(space, rc["chord.space"])
+        endspace = _not_none(endspace, rc["chord.endspace"])
+        r_lim = _not_none(r_lim, rc["chord.r_lim"])
+        ticks_interval = _not_none(ticks_interval, rc["chord.ticks_interval"])
+        order = _not_none(order, rc["chord.order"])
+
+        return chord_diagram(
+            self,
+            matrix,
+            start=start,
+            end=end,
+            space=space,
+            endspace=endspace,
+            r_lim=r_lim,
+            cmap=cmap,
+            link_cmap=link_cmap,
+            ticks_interval=ticks_interval,
+            order=order,
+            label_kw=label_kw,
+            ticks_kw=ticks_kw,
+            link_kw=link_kw,
+            link_kw_handler=link_kw_handler,
+            tooltip=tooltip,
+        )
+
+    def chord(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.chord_diagram`.
+        """
+        return self.chord_diagram(*args, **kwargs)
+
+    @docstring._snippet_manager
+    def radar_chart(
+        self,
+        table: Any,
+        *,
+        r_lim: Optional[tuple[float, float]] = None,
+        vmin: Optional[float] = None,
+        vmax: Optional[float] = None,
+        fill: Optional[bool] = None,
+        marker_size: Optional[int] = None,
+        bg_color: Optional[str] = None,
+        circular: Optional[bool] = None,
+        cmap: Any = None,
+        show_grid_label: Optional[bool] = None,
+        grid_interval_ratio: Optional[float] = None,
+        grid_line_kw: Optional[Mapping[str, Any]] = None,
+        grid_label_kw: Optional[Mapping[str, Any]] = None,
+        grid_label_formatter: Optional[Callable[[float], str]] = None,
+        label_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+        line_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+        marker_kw_handler: Optional[Callable[[str], Mapping[str, Any]]] = None,
+    ):
+        """
+        %(plot.radar_chart)s
+        """
+        from .plot_types.circlize import radar_chart
+
+        r_lim = _not_none(r_lim, rc["radar.r_lim"])
+        vmin = _not_none(vmin, rc["radar.vmin"])
+        vmax = _not_none(vmax, rc["radar.vmax"])
+        fill = _not_none(fill, rc["radar.fill"])
+        marker_size = _not_none(marker_size, rc["radar.marker_size"])
+        bg_color = _not_none(bg_color, rc["radar.bg_color"])
+        circular = _not_none(circular, rc["radar.circular"])
+        show_grid_label = _not_none(show_grid_label, rc["radar.show_grid_label"])
+        grid_interval_ratio = _not_none(
+            grid_interval_ratio, rc["radar.grid_interval_ratio"]
+        )
+
+        return radar_chart(
+            self,
+            table,
+            r_lim=r_lim,
+            vmin=vmin,
+            vmax=vmax,
+            fill=fill,
+            marker_size=marker_size,
+            bg_color=bg_color,
+            circular=circular,
+            cmap=cmap,
+            show_grid_label=show_grid_label,
+            grid_interval_ratio=grid_interval_ratio,
+            grid_line_kw=grid_line_kw,
+            grid_label_kw=grid_label_kw,
+            grid_label_formatter=grid_label_formatter,
+            label_kw_handler=label_kw_handler,
+            line_kw_handler=line_kw_handler,
+            marker_kw_handler=marker_kw_handler,
+        )
+
+    def radar(self, *args, **kwargs):
+        """
+        Alias for `~PlotAxes.radar_chart`.
+        """
+        return self.radar_chart(*args, **kwargs)
 
     def _call_native(self, name, *args, **kwargs):
         """
@@ -3187,9 +4253,9 @@ class PlotAxes(base.Axes):
         for z in zs:
             if z is None:  # e.g. empty scatter color
                 continue
+            z = inputs._to_numpy_array(z)
             if z.ndim > 2:  # e.g. imshow data
                 continue
-            z = inputs._to_numpy_array(z)
             if inbounds and x is not None and y is not None:  # ignore if None coords
                 z = self._inbounds_vlim(x, y, z, to_centers=to_centers)
             imin, imax = inputs._safe_range(z, pmin, pmax)
@@ -5011,6 +6077,9 @@ class PlotAxes(base.Axes):
         # Convert vert boolean to orientation string for newer versions
         orientation = "vertical" if vert else "horizontal"
 
+        if version.parse(str(_version_mpl)) >= version.parse("3.9.0"):
+            if "labels" in kw and "tick_labels" not in kw:
+                kw["tick_labels"] = kw.pop("labels")
         if version.parse(str(_version_mpl)) >= version.parse("3.10.0"):
             # For matplotlib 3.10+:
             # Use the orientation parameters
@@ -5261,6 +6330,337 @@ class PlotAxes(base.Axes):
         """
         kwargs = _parse_vert(default_vert=False, **kwargs)
         return self._apply_violinplot(*args, **kwargs)
+
+    def _apply_ridgeline(
+        self,
+        data,
+        labels=None,
+        positions=None,
+        height=None,
+        overlap=0.5,
+        kde_kw=None,
+        points=200,
+        hist=False,
+        bins="auto",
+        fill=True,
+        alpha=1.0,
+        linewidth=1.5,
+        edgecolor="black",
+        facecolor=None,
+        cmap=None,
+        vert=True,
+        **kwargs,
+    ):
+        """
+        Apply ridgeline plot (joyplot).
+
+        Parameters
+        ----------
+        data : list of array-like
+            List of distributions to plot as ridges.
+        labels : list of str, optional
+            Labels for each distribution.
+        positions : array-like, optional
+            Y-coordinates for continuous positioning mode. If provided, ridges are
+            anchored to these coordinates along the Y-axis.
+        height : float or array-like, optional
+            Height of each ridge in Y-axis units (continuous mode only).
+        overlap : float, default: 0.5
+            Amount of overlap between ridges (0-1). Higher values create more overlap.
+            Only used in categorical mode.
+        kde_kw : dict, optional
+            Keyword arguments passed to `scipy.stats.gaussian_kde`. Common parameters:
+
+            * ``bw_method`` : Bandwidth selection method
+            * ``weights`` : Array of weights for each data point
+
+            Only used when hist=False.
+        points : int, default: 200
+            Number of points to evaluate the KDE at. Higher values create smoother curves
+            but take longer to compute. Only used when hist=False.
+        hist : bool, default: False
+            If True, use histograms instead of kernel density estimation.
+        bins : int or sequence or str, default: 'auto'
+            Bin specification for histograms. Passed to numpy.histogram.
+            Only used when hist=True.
+        fill : bool, default: True
+            Whether to fill the area under each curve.
+        alpha : float, default: 1.0
+            Transparency of filled areas.
+        linewidth : float, default: 1.5
+            Width of the ridge lines.
+        edgecolor : color, default: 'black'
+            Color of the ridge lines.
+        facecolor : color or list of colors, optional
+            Fill color(s). If None, uses current color cycle or colormap.
+        cmap : str or Colormap, optional
+            Colormap to use for coloring ridges.
+        vert : bool, default: True
+            If True, ridges are horizontal (traditional ridgeline plot).
+            If False, ridges are vertical.
+        **kwargs
+            Additional keyword arguments passed to fill_between or fill_betweenx.
+
+        Returns
+        -------
+        list
+            List of PolyCollection objects for each ridge.
+        """
+        from scipy.stats import gaussian_kde
+
+        # Validate input
+        if not isinstance(data, (list, tuple)):
+            data = [data]
+
+        n_ridges = len(data)
+        if labels is None:
+            labels = [f"Ridge {i+1}" for i in range(n_ridges)]
+        elif len(labels) != n_ridges:
+            raise ValueError(
+                f"Number of labels ({len(labels)}) must match number of data series ({n_ridges})"
+            )
+
+        # Determine colors
+        if facecolor is None:
+            if cmap is not None:
+                # Use colormap
+                cmap = constructor.Colormap(cmap)
+                colors = [cmap(i / (n_ridges - 1)) for i in range(n_ridges)]
+            else:
+                # Use color cycle
+                parser = self._get_patches_for_fill
+                colors = [parser.get_next_color() for _ in range(n_ridges)]
+        elif isinstance(facecolor, (list, tuple)):
+            colors = list(facecolor)
+        else:
+            colors = [facecolor] * n_ridges
+
+        # Ensure we have enough colors
+        if len(colors) < n_ridges:
+            colors = colors * (n_ridges // len(colors) + 1)
+        colors = colors[:n_ridges]
+
+        # Prepare KDE kwargs
+        if kde_kw is None:
+            kde_kw = {}
+
+        # Calculate KDE or histogram for each distribution
+        ridges = []
+        for i, dist in enumerate(data):
+            dist = np.asarray(dist).ravel()
+            dist = dist[~np.isnan(dist)]  # Remove NaNs
+
+            if len(dist) < 2:
+                warnings._warn_ultraplot(
+                    f"Distribution {i} has less than 2 points, skipping"
+                )
+                continue
+
+            if hist:
+                # Use histogram
+                try:
+                    counts, bin_edges = np.histogram(dist, bins=bins)
+                    # Create x values as bin centers
+                    x = (bin_edges[:-1] + bin_edges[1:]) / 2
+                    # Extend to bin edges for proper fill
+                    x_extended = np.concatenate([[bin_edges[0]], x, [bin_edges[-1]]])
+                    y_extended = np.concatenate([[0], counts, [0]])
+                    ridges.append((x_extended, y_extended))
+                except Exception as e:
+                    warnings._warn_ultraplot(
+                        f"Histogram failed for distribution {i}: {e}, skipping"
+                    )
+                    continue
+            else:
+                # Perform KDE
+                try:
+                    kde = gaussian_kde(dist, **kde_kw)
+                    # Create smooth x values
+                    x_min, x_max = dist.min(), dist.max()
+                    x_range = x_max - x_min
+                    x_margin = x_range * 0.1  # 10% margin
+                    x = np.linspace(x_min - x_margin, x_max + x_margin, points)
+                    y = kde(x)
+                    ridges.append((x, y))
+                except Exception as e:
+                    warnings._warn_ultraplot(
+                        f"KDE failed for distribution {i}: {e}, skipping"
+                    )
+                    continue
+
+        if not ridges:
+            raise ValueError("No valid distributions to plot")
+
+        # Determine positioning mode
+        continuous_mode = positions is not None
+        n_ridges = len(ridges)
+
+        if continuous_mode:
+            # Continuous (coordinate-based) positioning mode
+            positions = np.asarray(positions)
+            if len(positions) != len(data):
+                raise ValueError(
+                    f"Number of positions ({len(positions)}) must match "
+                    f"number of data series ({len(data)})"
+                )
+
+            # Handle height parameter
+            if height is None:
+                # Auto-determine height from position spacing
+                if len(positions) > 1:
+                    min_spacing = np.min(np.diff(np.sort(positions)))
+                    height = min_spacing / 2
+                else:
+                    height = 1.0
+
+            if np.isscalar(height):
+                heights = np.full(n_ridges, height)
+            else:
+                heights = np.asarray(height)
+                if len(heights) != n_ridges:
+                    raise ValueError(
+                        f"Number of heights ({len(heights)}) must match "
+                        f"number of ridges ({n_ridges})"
+                    )
+        else:
+            # Categorical (evenly-spaced) positioning mode
+            max_height = max(y.max() for x, y in ridges)
+            spacing = max(0.0, 1 - overlap)
+
+        artists = []
+        # Base zorder for ridgelines - use a high value to ensure they're on top
+        base_zorder = kwargs.pop("zorder", 2)
+        n_ridges = len(ridges)
+
+        for i, (x, y) in enumerate(ridges):
+            if continuous_mode:
+                # Continuous mode: scale to specified height and position at coordinate
+                y_max = y.max()
+                if y_max > 0:
+                    y_scaled = (y / y_max) * heights[i]
+                else:
+                    y_scaled = y
+                offset = positions[i]
+                y_plot = y_scaled + offset
+            else:
+                # Categorical mode: normalize and space evenly
+                y_normalized = y / max_height if max_height > 0 else y
+                offset = i * spacing
+                y_plot = y_normalized + offset
+
+            # Each ridge gets its own zorder, with fill and outline properly layered
+            # Lower ridges (smaller i, visually in front) get higher z-order
+            # Ridge i: fill at base + (n-i-1)*2, outline at base + (n-i-1)*2 + 1
+            fill_zorder = base_zorder + (n_ridges - i - 1) * 2
+            outline_zorder = fill_zorder + 1
+
+            if vert:
+                # Traditional horizontal ridges
+                if fill:
+                    # Fill without edge
+                    poly = self.fill_between(
+                        x,
+                        offset,
+                        y_plot,
+                        facecolor=colors[i],
+                        alpha=alpha,
+                        edgecolor="none",
+                        label=labels[i],
+                        zorder=fill_zorder,
+                    )
+                    # Draw outline on top (excluding baseline)
+                    self.plot(
+                        x,
+                        y_plot,
+                        color=edgecolor,
+                        linewidth=linewidth,
+                        zorder=outline_zorder,
+                    )
+                else:
+                    poly = self.plot(
+                        x,
+                        y_plot,
+                        color=colors[i],
+                        linewidth=linewidth,
+                        label=labels[i],
+                        zorder=outline_zorder,
+                    )[0]
+            else:
+                # Vertical ridges
+                if fill:
+                    # Fill without edge
+                    poly = self.fill_betweenx(
+                        x,
+                        offset,
+                        y_plot,
+                        facecolor=colors[i],
+                        alpha=alpha,
+                        edgecolor="none",
+                        label=labels[i],
+                        zorder=fill_zorder,
+                    )
+                    # Draw outline on top (excluding baseline)
+                    self.plot(
+                        y_plot,
+                        x,
+                        color=edgecolor,
+                        linewidth=linewidth,
+                        zorder=outline_zorder,
+                    )
+                else:
+                    poly = self.plot(
+                        y_plot,
+                        x,
+                        color=colors[i],
+                        linewidth=linewidth,
+                        label=labels[i],
+                        zorder=outline_zorder,
+                    )[0]
+
+            artists.append(poly)
+
+        # Set appropriate labels and limits
+        if continuous_mode:
+            # In continuous mode, positions are actual coordinates
+            if vert:
+                # Optionally set ticks at positions
+                if labels and all(labels[: len(ridges)]):
+                    self.set_yticks(positions[: len(ridges)])
+                    self.set_yticklabels(labels[: len(ridges)])
+            else:
+                if labels and all(labels[: len(ridges)]):
+                    self.set_xticks(positions[: len(ridges)])
+                    self.set_xticklabels(labels[: len(ridges)])
+        else:
+            # Categorical mode: set ticks at evenly-spaced positions
+            if vert:
+                self.set_yticks(np.arange(n_ridges) * spacing)
+                self.set_yticklabels(labels[: len(ridges)])
+                self.set_ylabel("")
+            else:
+                self.set_xticks(np.arange(n_ridges) * spacing)
+                self.set_xticklabels(labels[: len(ridges)])
+                self.set_xlabel("")
+
+        return artists
+
+    @inputs._preprocess_or_redirect("data")
+    @docstring._snippet_manager
+    def ridgeline(self, data, **kwargs):
+        """
+        %(plot.ridgeline)s
+        """
+        kwargs = _parse_vert(default_vert=True, **kwargs)
+        return self._apply_ridgeline(data, **kwargs)
+
+    @inputs._preprocess_or_redirect("data")
+    @docstring._snippet_manager
+    def ridgelineh(self, data, **kwargs):
+        """
+        %(plot.ridgelineh)s
+        """
+        kwargs = _parse_vert(default_vert=False, **kwargs)
+        return self._apply_ridgeline(data, **kwargs)
 
     def _apply_hist(
         self,

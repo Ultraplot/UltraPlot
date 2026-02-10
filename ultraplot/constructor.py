@@ -2,6 +2,7 @@
 """
 T"he constructor functions used to build class instances from simple shorthand arguments.
 """
+
 # NOTE: These functions used to be in separate files like crs.py and
 # ticker.py but makes more sense to group them together to ensure usage is
 # consistent and so online documentation is easier to understand. Also in
@@ -29,12 +30,12 @@ from . import proj as pproj
 from . import scale as pscale
 from . import ticker as pticker
 from .config import rc
-from .internals import ic  # noqa: F401
 from .internals import (
     _not_none,
     _pop_props,
     _version_cartopy,
     _version_mpl,
+    ic,  # noqa: F401
     warnings,
 )
 from .utils import get_colors, to_hex, to_rgba
@@ -1173,11 +1174,11 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         * If a string containing ``{x}`` or ``{x:...}``, ticks will be
           formatted by calling ``string.format(x=number)``. Returns
           a `~matplotlib.ticker.StrMethodFormatter`.
-        * If a string containing ``'%'`` and `date` is ``False``, ticks
-          will be formatted using the C-style ``string % number`` method. See
+        * If a string containing ``'%%'`` and `date` is ``False``, ticks
+          will be formatted using the C-style ``string %% number`` method. See
           `this page <https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting>`__
           for a review. Returns a `~matplotlib.ticker.FormatStrFormatter`.
-        * If a string containing ``'%'`` and `date` is ``True``, ticks
+        * If a string containing ``'%%'`` and `date` is ``True``, ticks
           will be formatted using `~datetime.datetime.strfrtime`. See
           `this page <https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes>`__
           for a review. Returns a `~matplotlib.dates.DateFormatter`.
@@ -1205,10 +1206,10 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         ``'frac'``              `~ultraplot.ticker.FracFormatter`                 Rational fractions
         ``'date'``              `~matplotlib.dates.AutoDateFormatter`           Default tick labels for datetime axes
         ``'concise'``           `~matplotlib.dates.ConciseDateFormatter`        More concise date labels introduced in matplotlib 3.1
-        ``'datestr'``           `~matplotlib.dates.DateFormatter`               Date formatting with C-style ``string % format`` notation
+        ``'datestr'``           `~matplotlib.dates.DateFormatter`               Date formatting with C-style ``string %% format`` notation
         ``'eng'``               `~matplotlib.ticker.EngFormatter`               Engineering notation
         ``'fixed'``             `~matplotlib.ticker.FixedFormatter`             List of strings
-        ``'formatstr'``         `~matplotlib.ticker.FormatStrFormatter`         From C-style ``string % format`` notation
+        ``'formatstr'``         `~matplotlib.ticker.FormatStrFormatter`         From C-style ``string %% format`` notation
         ``'func'``              `~matplotlib.ticker.FuncFormatter`              Use an arbitrary function
         ``'index'``             :class:`~ultraplot.ticker.IndexFormatter`                List of strings corresponding to non-negative integer positions
         ``'log'``               `~matplotlib.ticker.LogFormatterSciNotation`    For log-scale axes with scientific notation
@@ -1231,7 +1232,7 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         ======================  ==============================================  =================================================================
 
     date : bool, optional
-        Toggles the behavior when `formatter` contains a ``'%'`` sign
+        Toggles the behavior when `formatter` contains a ``'%%'`` sign
         (see above).
     index : bool, optional
         Controls the behavior when `formatter` is a sequence of strings
@@ -1256,6 +1257,17 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
     ultraplot.axes.Axes.colorbar
     ultraplot.constructor.Locator
     """  # noqa: E501
+
+    def _construct_formatter(cls, *f_args, **f_kwargs):
+        try:
+            return cls(*f_args, **f_kwargs)
+        except TypeError:
+            if "tickrange" in f_kwargs:
+                f_kwargs = dict(f_kwargs)
+                f_kwargs.pop("tickrange", None)
+                return cls(*f_args, **f_kwargs)
+            raise
+
     if (
         np.iterable(formatter)
         and not isinstance(formatter, str)
@@ -1266,12 +1278,15 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
         return copy.copy(formatter)
     if isinstance(formatter, str):
         if re.search(r"{x(:.+)?}", formatter):  # str.format
-            formatter = mticker.StrMethodFormatter(formatter, *args, **kwargs)
+            formatter = _construct_formatter(
+                mticker.StrMethodFormatter, formatter, *args, **kwargs
+            )
         elif "%" in formatter:  # str % format
             cls = mdates.DateFormatter if date else mticker.FormatStrFormatter
-            formatter = cls(formatter, *args, **kwargs)
+            formatter = _construct_formatter(cls, formatter, *args, **kwargs)
         elif formatter in FORMATTERS:
-            formatter = FORMATTERS[formatter](*args, **kwargs)
+            cls = FORMATTERS[formatter]
+            formatter = _construct_formatter(cls, *args, **kwargs)
         else:
             raise ValueError(
                 f"Unknown formatter {formatter!r}. Options are: "
@@ -1279,13 +1294,16 @@ def Formatter(formatter, *args, date=False, index=False, **kwargs):
                 + "."
             )
     elif formatter is True:
-        formatter = pticker.AutoFormatter(*args, **kwargs)
+        formatter = _construct_formatter(pticker.AutoFormatter, *args, **kwargs)
     elif formatter is False:
-        formatter = mticker.NullFormatter(*args, **kwargs)
+        formatter = _construct_formatter(mticker.NullFormatter, *args, **kwargs)
     elif np.iterable(formatter):
-        formatter = (mticker.FixedFormatter, pticker.IndexFormatter)[index](formatter)
+        cls = (mticker.FixedFormatter, pticker.IndexFormatter)[index]
+        formatter = _construct_formatter(cls, formatter)
     elif callable(formatter):
-        formatter = mticker.FuncFormatter(formatter, *args, **kwargs)
+        formatter = _construct_formatter(
+            mticker.FuncFormatter, formatter, *args, **kwargs
+        )
     else:
         raise ValueError(f"Invalid formatter {formatter!r}.")
     return formatter

@@ -2,13 +2,20 @@
 """
 The starting point for creating ultraplot figures.
 """
+
 import matplotlib.pyplot as plt
 
 from . import axes as paxes
 from . import figure as pfigure
 from . import gridspec as pgridspec
-from .internals import ic  # noqa: F401
-from .internals import _not_none, _pop_params, _pop_props, _pop_rc, docstring
+from .internals import (
+    _not_none,
+    _pop_params,
+    _pop_props,
+    _pop_rc,
+    docstring,
+    ic,  # noqa: F401
+)
 
 __all__ = [
     "figure",

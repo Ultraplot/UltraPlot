@@ -2,25 +2,37 @@
 """
 The gridspec and subplot grid classes used throughout ultraplot.
 """
+
 import inspect
 import itertools
 import re
 from collections.abc import MutableSequence
+from functools import wraps
 from numbers import Integral
+from typing import List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
 import matplotlib.transforms as mtransforms
 import numpy as np
-from typing import List, Optional, Union, Tuple
-from functools import wraps
 
 from . import axes as paxes
 from .config import rc
-from .internals import ic  # noqa: F401
-from .internals import _not_none, docstring, warnings
+from .internals import (
+    _not_none,
+    docstring,
+    ic,  # noqa: F401
+    warnings,
+)
 from .utils import _fontsize_to_pt, units
-from .internals import warnings
+
+try:
+    from . import ultralayout
+
+    ULTRA_AVAILABLE = True
+except ImportError:
+    ultralayout = None
+    ULTRA_AVAILABLE = False
 
 __all__ = ["GridSpec", "SubplotGrid"]
 
@@ -225,6 +237,20 @@ class _SubplotSpec(mgridspec.SubplotSpec):
             nrows, ncols = gs.get_total_geometry()
         else:
             nrows, ncols = gs.get_geometry()
+
+        # Check if we should use UltraLayout for this subplot
+        if isinstance(gs, GridSpec) and gs._use_ultra_layout:
+            bbox = gs._get_ultra_position(self.num1, figure)
+            if bbox is not None:
+                if return_all:
+                    rows, cols = np.unravel_index(
+                        [self.num1, self.num2], (nrows, ncols)
+                    )
+                    return bbox, rows[0], cols[0], nrows, ncols
+                else:
+                    return bbox
+
+        # Default behavior: use grid positions
         rows, cols = np.unravel_index([self.num1, self.num2], (nrows, ncols))
         bottoms, tops, lefts, rights = gs.get_grid_positions(figure)
         bottom = bottoms[rows].min()
@@ -264,7 +290,14 @@ class GridSpec(mgridspec.GridSpec):
         super().__getattribute__(attr)  # native error message
 
     @docstring._snippet_manager
-    def __init__(self, nrows=1, ncols=1, **kwargs):
+    def __init__(
+        self,
+        nrows=1,
+        ncols=1,
+        layout_array=None,
+        ultra_layout: Optional[bool] = None,
+        **kwargs,
+    ):
         """
         Parameters
         ----------
@@ -272,6 +305,14 @@ class GridSpec(mgridspec.GridSpec):
             The number of rows in the subplot grid.
         ncols : int, optional
             The number of columns in the subplot grid.
+        layout_array : array-like, optional
+            2D array specifying the subplot layout, where each unique integer
+            represents a subplot and 0 represents empty space. When provided,
+            enables UltraLayout constraint-based positioning (requires
+            kiwisolver package).
+        ultra_layout : bool, optional
+            Whether to use the UltraLayout constraint solver. Defaults to True
+            when kiwisolver is available. Set to False to use the legacy solver.
 
         Other parameters
         ----------------
@@ -301,6 +342,27 @@ class GridSpec(mgridspec.GridSpec):
         manually and want the same geometry for multiple figures, you must create
         a copy with `GridSpec.copy` before working on the subsequent figure).
         """
+        # Layout array for UltraLayout
+        self._layout_array = (
+            np.array(layout_array) if layout_array is not None else None
+        )
+        self._ultra_positions = None  # Cache for UltraLayout-computed positions
+        self._ultra_layout_array = None  # Cache for expanded UltraLayout array
+        self._use_ultra_layout = False  # Flag to enable UltraLayout
+
+        # Check if we should use UltraLayout
+        if ultra_layout is not None:
+            self._use_ultra_layout = bool(ultra_layout) and ULTRA_AVAILABLE
+        elif ULTRA_AVAILABLE:
+            self._use_ultra_layout = True
+        if ultra_layout and not ULTRA_AVAILABLE:
+            warnings._warn_ultraplot(
+                "ultra_layout=True requested but kiwisolver is not available. "
+                "Falling back to the legacy layout solver."
+            )
+        if self._use_ultra_layout and self._layout_array is None:
+            self._layout_array = np.arange(1, nrows * ncols + 1).reshape(nrows, ncols)
+
         # Fundamental GridSpec properties
         self._nrows_total = nrows
         self._ncols_total = ncols
@@ -363,6 +425,162 @@ class GridSpec(mgridspec.GridSpec):
         }
         self._update_params(pad=pad, **kwargs)
 
+    def _get_ultra_position(self, subplot_num, figure):
+        """
+        Get the position of a subplot using UltraLayout constraint-based positioning.
+
+        Parameters
+        ----------
+        subplot_num : int
+            The subplot number (in total geometry indexing)
+        figure : Figure
+            The matplotlib figure instance
+
+        Returns
+        -------
+        bbox : Bbox or None
+            The bounding box for the subplot, or None if kiwi layout fails
+        """
+        if not self._use_ultra_layout or self._layout_array is None:
+            return None
+
+        # Ensure figure is set
+        if not self.figure:
+            self._figure = figure
+        if not self.figure:
+            return None
+
+        # Compute or retrieve cached UltraLayout positions
+        if self._ultra_positions is None:
+            self._compute_ultra_positions()
+        if self._ultra_positions is None:
+            return None
+        layout_array = self._get_ultra_layout_array()
+        if layout_array is None:
+            return None
+
+        # Find which subplot number in the layout array corresponds to this subplot_num
+        # We need to map from the gridspec cell index to the layout array subplot number
+        nrows, ncols = layout_array.shape
+
+        # Decode the subplot_num to find which layout number it corresponds to
+        # This is a bit tricky because subplot_num is in total geometry space
+        # We need to find which unique number in the layout_array this corresponds to
+
+        # Get the cell position from subplot_num
+        if (nrows, ncols) == self.get_total_geometry():
+            row, col = divmod(subplot_num, self.ncols_total)
+        else:
+            decoded = self._decode_indices(subplot_num)
+            row, col = divmod(decoded, ncols)
+
+        # Check if this is within the layout array bounds
+        if row >= nrows or col >= ncols:
+            return None
+
+        # Get the layout number at this position
+        layout_num = layout_array[row, col]
+
+        if layout_num == 0 or layout_num not in self._ultra_positions:
+            return None
+
+        # Return the cached position
+        left, bottom, width, height = self._ultra_positions[layout_num]
+        bbox = mtransforms.Bbox.from_bounds(left, bottom, width, height)
+        return bbox
+
+    def _compute_ultra_positions(self):
+        """
+        Compute subplot positions using UltraLayout and cache them.
+        """
+        if not ULTRA_AVAILABLE or self._layout_array is None:
+            return
+        layout_array = self._get_ultra_layout_array()
+        if layout_array is None:
+            return
+
+        # Get figure size
+        if not self.figure:
+            return
+
+        figwidth, figheight = self.figure.get_size_inches()
+
+        # Convert spacing to inches (including default ticklabel sizes).
+        wspace_inches = list(self.wspace_total)
+        hspace_inches = list(self.hspace_total)
+
+        # Get margins
+        left = self.left
+        right = self.right
+        top = self.top
+        bottom = self.bottom
+
+        # Compute positions using UltraLayout
+        try:
+            self._ultra_positions = ultralayout.compute_ultra_positions(
+                layout_array,
+                figwidth=figwidth,
+                figheight=figheight,
+                wspace=wspace_inches,
+                hspace=hspace_inches,
+                left=left,
+                right=right,
+                top=top,
+                bottom=bottom,
+                wratios=self._wratios_total,
+                hratios=self._hratios_total,
+                wpanels=[bool(val) for val in self._wpanels],
+                hpanels=[bool(val) for val in self._hpanels],
+            )
+        except Exception as e:
+            warnings._warn_ultraplot(
+                f"Failed to compute UltraLayout: {e}. "
+                "Falling back to default grid layout."
+            )
+            self._use_ultra_layout = False
+            self._ultra_positions = None
+
+    def _get_ultra_layout_array(self):
+        """
+        Return the layout array expanded to total geometry to include panels.
+        """
+        if self._layout_array is None:
+            return None
+        if self._ultra_layout_array is not None:
+            return self._ultra_layout_array
+
+        nrows_total, ncols_total = self.get_total_geometry()
+        layout = self._layout_array
+        if layout.shape == (nrows_total, ncols_total):
+            self._ultra_layout_array = layout
+            return layout
+
+        nrows, ncols = self.get_geometry()
+        if layout.shape != (nrows, ncols):
+            warnings._warn_ultraplot(
+                "Layout array shape does not match gridspec geometry; "
+                "using the original layout array for UltraLayout."
+            )
+            self._ultra_layout_array = layout
+            return layout
+
+        row_idxs = self._get_indices("h", panel=False)
+        col_idxs = self._get_indices("w", panel=False)
+        if len(row_idxs) != nrows or len(col_idxs) != ncols:
+            warnings._warn_ultraplot(
+                "Layout array shape does not match non-panel gridspec geometry; "
+                "using the original layout array for UltraLayout."
+            )
+            self._ultra_layout_array = layout
+            return layout
+
+        expanded = np.zeros((nrows_total, ncols_total), dtype=layout.dtype)
+        for i, row_idx in enumerate(row_idxs):
+            for j, col_idx in enumerate(col_idxs):
+                expanded[row_idx, col_idx] = layout[i, j]
+        self._ultra_layout_array = expanded
+        return expanded
+
     def __getitem__(self, key):
         """
         Get a `~matplotlib.gridspec.SubplotSpec`. "Hidden" slots allocated for axes
@@ -403,6 +621,24 @@ class GridSpec(mgridspec.GridSpec):
             k1, k2 = key
             num1 = _normalize_index(k1, nrows, axis=0)
             num2 = _normalize_index(k2, ncols, axis=1)
+            if (
+                self._use_ultra_layout
+                and not includepanels
+                and self._layout_array is not None
+            ):
+
+                def _to_range(idx):
+                    if isinstance(idx, tuple):
+                        return idx
+                    return idx, idx
+
+                row1, row2 = _to_range(num1)
+                col1, col2 = _to_range(num2)
+                if row1 != row2 or col1 != col2:
+                    layout_id = self._layout_array[row1, col1]
+                    self._layout_array[row1 : row2 + 1, col1 : col2 + 1] = layout_id
+                    self._ultra_layout_array = None
+                    self._ultra_positions = None
             num1, num2 = np.ravel_multi_index((num1, num2), (nrows, ncols))
         else:
             raise ValueError(f"Invalid index {key!r}.")
@@ -423,7 +659,10 @@ class GridSpec(mgridspec.GridSpec):
         idxs = self._get_indices(which=which, panel=panel)
         for arg in args:
             try:
-                nums.append(idxs[arg])
+                if isinstance(arg, (list, np.ndarray)):
+                    nums.append([idxs[i] for i in list(arg)])
+                else:
+                    nums.append(idxs[arg])
             except (IndexError, TypeError):
                 raise ValueError(f"Invalid gridspec index {arg}.")
         return nums[0] if len(nums) == 1 else nums
@@ -486,6 +725,9 @@ class GridSpec(mgridspec.GridSpec):
         """
         Update the axes subplot specs by inserting rows and columns as specified.
         """
+        if self._use_ultra_layout:
+            self._ultra_positions = None
+            self._ultra_layout_array = None
         fig = self.figure
         ncols = self._ncols_total - int(newcol is not None)  # previous columns
         inserts = (newrow, newrow, newcol, newcol)
@@ -921,7 +1163,27 @@ class GridSpec(mgridspec.GridSpec):
                 x1 = max(ax._range_tightbbox(x)[1] for ax in group1)
                 x2 = min(ax._range_tightbbox(x)[0] for ax in group2)
                 margins.append((x2 - x1) / self.figure.dpi)
-            s = 0 if not margins else max(0, s - min(margins) + p)
+            if not margins:
+                s = 0
+            else:
+                s = max(0, s - min(margins) + p)
+                # Keep at least the pad when adjacent axes exist.
+                if s == 0 and p:
+                    s = p
+                # Ensure enough space for inner-side labels/ticks on the right axes.
+                if w == "w":
+                    figwidth = self.figure.get_size_inches()[0]
+                    left_margins = []
+                    for _, group2 in groups:
+                        for ax in group2:
+                            bbox = getattr(ax, "_tight_bbox", None)
+                            if bbox is None:
+                                continue
+                            x0 = ax.get_position().x0 * figwidth
+                            left_margins.append(max(0.0, x0 - bbox.xmin))
+                    if left_margins:
+                        extra_pad = 0.5 * self._labelspace / 72
+                        s = max(s, max(left_margins) + p + extra_pad)
             space[i] = s
 
         return space
@@ -961,8 +1223,11 @@ class GridSpec(mgridspec.GridSpec):
 
         # Update the layout
         figsize = self._update_figsize()
-        if not fig._is_same_size(figsize):
-            fig.set_size_inches(figsize, internal=True)
+        eps = 0.01
+        if fig._refwidth is not None or fig._refheight is not None:
+            eps = 0
+        if not fig._is_same_size(figsize, eps=eps):
+            fig.set_size_inches(figsize, internal=True, eps=0)
 
     def _auto_layout_tight(self, renderer):
         """
@@ -1020,8 +1285,11 @@ class GridSpec(mgridspec.GridSpec):
         # spaces (necessary since native position coordinates are figure-relative)
         # and to enforce fixed panel ratios. So only self.update() if we skip resize.
         figsize = self._update_figsize()
-        if not fig._is_same_size(figsize):
-            fig.set_size_inches(figsize, internal=True)
+        eps = 0.01
+        if fig._refwidth is not None or fig._refheight is not None:
+            eps = 0  # force resize when explicit reference sizing is requested
+        if not fig._is_same_size(figsize, eps=eps):
+            fig.set_size_inches(figsize, internal=True, eps=0)
         else:
             self.update()
 
@@ -1038,14 +1306,14 @@ class GridSpec(mgridspec.GridSpec):
             return
         ss = ax.get_subplotspec().get_topmost_subplotspec()
         y1, y2, x1, x2 = ss._get_rows_columns()
-        refhspace = sum(self.hspace_total[y1:y2])
-        refwspace = sum(self.wspace_total[x1:x2])
-        refhpanel = sum(
-            self.hratios_total[i] for i in range(y1, y2 + 1) if self._hpanels[i]
-        )  # noqa: E501
-        refwpanel = sum(
-            self.wratios_total[i] for i in range(x1, x2 + 1) if self._wpanels[i]
-        )  # noqa: E501
+        # NOTE: Reference width/height should correspond to the span of the *axes*
+        # themselves. Spaces between rows/columns and adjacent panel slots should
+        # not reduce the target size; those are accounted for separately when the
+        # full figure size is rebuilt below.
+        refhspace = 0
+        refwspace = 0
+        refhpanel = 0
+        refwpanel = 0
         refhsubplot = sum(
             self.hratios_total[i] for i in range(y1, y2 + 1) if not self._hpanels[i]
         )  # noqa: E501
@@ -1057,6 +1325,10 @@ class GridSpec(mgridspec.GridSpec):
         # NOTE: The sizing arguments should have been normalized already
         figwidth, figheight = fig._figwidth, fig._figheight
         refwidth, refheight = fig._refwidth, fig._refheight
+        if refwidth is not None:
+            figwidth = None  # prefer explicit reference sizing over preset fig size
+        if refheight is not None:
+            figheight = None
         refaspect = _not_none(fig._refaspect, fig._refaspect_default)
         if refheight is None and figheight is None:
             if figwidth is not None:
@@ -1087,6 +1359,15 @@ class GridSpec(mgridspec.GridSpec):
             gridwidth = refwidth * self.gridwidth / refwsubplot
             figwidth = gridwidth + self.spacewidth + self.panelwidth
 
+        # Snap explicit reference-driven sizes to the pixel grid to avoid
+        # rounding the axes width below the requested reference size.
+        if fig and (fig._refwidth is not None or fig._refheight is not None):
+            dpi = _not_none(getattr(fig, "dpi", None), 72)
+            if figwidth is not None:
+                figwidth = np.ceil(figwidth * dpi) / dpi
+            if figheight is not None:
+                figheight = np.ceil(figheight * dpi) / dpi
+
         # Return the figure size
         figsize = (figwidth, figheight)
         if all(np.isfinite(figsize)):
@@ -1097,6 +1378,7 @@ class GridSpec(mgridspec.GridSpec):
     def _update_params(
         self,
         *,
+        ultra_layout=None,
         left=None,
         bottom=None,
         right=None,
@@ -1124,6 +1406,20 @@ class GridSpec(mgridspec.GridSpec):
         """
         Update the user-specified properties.
         """
+        if ultra_layout is not None:
+            self._use_ultra_layout = bool(ultra_layout) and ULTRA_AVAILABLE
+            if ultra_layout and not ULTRA_AVAILABLE:
+                warnings._warn_ultraplot(
+                    "ultra_layout=True requested but kiwisolver is not available. "
+                    "Falling back to the legacy layout solver."
+                )
+            if self._use_ultra_layout and self._layout_array is None:
+                nrows, ncols = self.get_geometry()
+                self._layout_array = np.arange(1, nrows * ncols + 1).reshape(
+                    nrows, ncols
+                )
+            self._ultra_positions = None
+            self._ultra_layout_array = None
 
         # Assign scalar args
         # WARNING: The key signature here is critical! Used in ui.py to
@@ -1216,7 +1512,12 @@ class GridSpec(mgridspec.GridSpec):
         # WARNING: For some reason copy.copy() fails. Updating e.g. wpanels
         # and hpanels on the copy also updates this object. No idea why.
         nrows, ncols = self.get_geometry()
-        gs = GridSpec(nrows, ncols)
+        gs = GridSpec(
+            nrows,
+            ncols,
+            layout_array=self._layout_array,
+            ultra_layout=self._use_ultra_layout,
+        )
         hidxs = self._get_indices("h")
         widxs = self._get_indices("w")
         gs._hratios_total = [self._hratios_total[i] for i in hidxs]
@@ -1381,6 +1682,9 @@ class GridSpec(mgridspec.GridSpec):
         # Apply positions to all axes
         # NOTE: This uses the current figure size to fix panel widths
         # and determine physical grid spacing.
+        if self._use_ultra_layout:
+            self._ultra_positions = None
+            self._ultra_layout_array = None
         self._update_params(**kwargs)
         fig = self.figure
         if fig is None:
@@ -1436,8 +1740,30 @@ class GridSpec(mgridspec.GridSpec):
     get_height_ratios = _disable_method("get_height_ratios")
     set_width_ratios = _disable_method("set_width_ratios")
     set_height_ratios = _disable_method("set_height_ratios")
-    get_subplot_params = _disable_method("get_subplot_params")
-    locally_modified_subplot_params = _disable_method("locally_modified_subplot_params")
+
+    # Compat: some backends (e.g., Positron) call these for read-only checks.
+    # We return current margins/spaces without permitting mutation.
+    def get_subplot_params(self, figure=None):
+        from matplotlib.figure import SubplotParams
+
+        fig = figure or self.figure
+        if fig is None:
+            raise RuntimeError("Figure must be assigned to gridspec.")
+        # Convert absolute margins to figure-relative floats
+        width, height = fig.get_size_inches()
+        left = self.left / width
+        right = 1 - self.right / width
+        bottom = self.bottom / height
+        top = 1 - self.top / height
+        wspace = sum(self.wspace_total) / width
+        hspace = sum(self.hspace_total) / height
+        return SubplotParams(
+            left=left, right=right, bottom=bottom, top=top, wspace=wspace, hspace=hspace
+        )
+
+    def locally_modified_subplot_params(self):
+        # Backend probe: report False/None semantics (no local mods to MPL params).
+        return False
 
     # Immutable helper properties used to calculate figure size and subplot positions
     # NOTE: The spaces are auto-filled with defaults wherever user left them unset
@@ -1613,6 +1939,9 @@ class SubplotGrid(MutableSequence, list):
             return list.__getitem__(self, key)
         elif isinstance(key, slice):
             return SubplotGrid(list.__getitem__(self, key))
+        elif isinstance(key, (list, np.ndarray)):
+            objs = [list.__getitem__(self, idx) for idx in list(key)]
+            return SubplotGrid(objs)
 
         # Allow 2D array-like indexing
         # NOTE: We assume this is a 2D array of subplots, because this is
@@ -1650,7 +1979,10 @@ class SubplotGrid(MutableSequence, list):
                 )
             new_key.append(encoded_keyi)
         xs, ys = new_key
-        objs = grid[xs, ys]
+        if np.iterable(xs) and np.iterable(ys):
+            objs = grid[np.ix_(xs, ys)]
+        else:
+            objs = grid[xs, ys]
         if hasattr(objs, "flat"):
             objs = [obj for obj in objs.flat if obj is not None]
         elif not isinstance(objs, list):
@@ -1694,6 +2026,7 @@ class SubplotGrid(MutableSequence, list):
         if self:
             gridspec = self.gridspec  # compare against existing gridspec
         for item in items.flat:
+            # Accept ultraplot axes (including ExternalAxesContainer which inherits from paxes.Axes)
             if not isinstance(item, paxes.Axes):
                 raise ValueError(message.format(f"the object {item!r}"))
             item = item._get_topmost_axes()
@@ -1743,7 +2076,50 @@ class SubplotGrid(MutableSequence, list):
         ultraplot.figure.Figure.format
         ultraplot.config.Configurator.context
         """
+        # Implicit label sharing for subset format calls
+        share_xlabels = kwargs.get("share_xlabels", None)
+        share_ylabels = kwargs.get("share_ylabels", None)
+        xlabel = kwargs.get("xlabel", None)
+        ylabel = kwargs.get("ylabel", None)
+        axes = [ax for ax in self if ax is not None]
+        all_axes = set(self.figure._subplot_dict.values())
+        is_subset = bool(axes) and all_axes and set(axes) != all_axes
+        if len(self) > 1:
+            if share_xlabels is False:
+                self.figure._clear_share_label_groups(self, target="x")
+            if share_ylabels is False:
+                self.figure._clear_share_label_groups(self, target="y")
+            if not is_subset and share_xlabels is None and xlabel is not None:
+                self.figure._clear_share_label_groups(self, target="x")
+            if not is_subset and share_ylabels is None and ylabel is not None:
+                self.figure._clear_share_label_groups(self, target="y")
+            if is_subset and share_xlabels is None and xlabel is not None:
+                self.figure._register_share_label_group(self, target="x")
+            if is_subset and share_ylabels is None and ylabel is not None:
+                self.figure._register_share_label_group(self, target="y")
         self.figure.format(axs=self, **kwargs)
+        # Refresh groups after labels are set
+        if len(self) > 1:
+            if is_subset and share_xlabels is None and xlabel is not None:
+                self.figure._register_share_label_group(self, target="x")
+            if is_subset and share_ylabels is None and ylabel is not None:
+                self.figure._register_share_label_group(self, target="y")
+
+    def share_labels(self, *, axis="x"):
+        """
+        Register an explicit label-sharing group for this subset.
+        """
+        if not self:
+            return self
+        axis = axis.lower()
+        if axis in ("x", "y"):
+            self.figure._register_share_label_group(self, target=axis)
+        elif axis in ("both", "all", "xy"):
+            self.figure._register_share_label_group(self, target="x")
+            self.figure._register_share_label_group(self, target="y")
+        else:
+            raise ValueError(f"Invalid axis={axis!r}. Options are 'x', 'y', or 'both'.")
+        return self
 
     @property
     def figure(self):

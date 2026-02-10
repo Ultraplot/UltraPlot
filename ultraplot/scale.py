@@ -2,6 +2,7 @@
 """
 Various axis `~matplotlib.scale.ScaleBase` classes.
 """
+
 import copy
 
 import matplotlib.scale as mscale
@@ -11,8 +12,12 @@ import numpy as np
 import numpy.ma as ma
 
 from . import ticker as pticker
-from .internals import ic  # noqa: F401
-from .internals import _not_none, _version_mpl, warnings
+from .internals import (
+    _not_none,
+    _version_mpl,
+    ic,  # noqa: F401
+    warnings,
+)
 
 __all__ = [
     "CutoffScale",
@@ -32,7 +37,7 @@ __all__ = [
 def _parse_logscale_args(*keys, **kwargs):
     """
     Parse arguments for `LogScale` and `SymmetricalLogScale` that
-    inexplicably require ``x`` and ``y`` suffixes by default. Also
+    inexplicably require `x` and `y` suffixes by default. Also
     change the default `linthresh` to ``1``.
     """
     # NOTE: Scale classes ignore unused arguments with warnings, but matplotlib 3.3
@@ -182,7 +187,7 @@ class LogitScale(_Scale, mscale.LogitScale):
 class LogScale(_Scale, mscale.LogScale):
     """
     As with `~matplotlib.scale.LogScale` but with `~ultraplot.ticker.AutoFormatter`
-    as the default major formatter. ``x`` and ``y`` versions of each keyword
+    as the default major formatter. `x` and `y` versions of each keyword
     argument are no longer required.
     """
 
@@ -220,7 +225,7 @@ class SymmetricalLogScale(_Scale, mscale.SymmetricalLogScale):
     """
     As with `~matplotlib.scale.SymmetricalLogScale` but with
     `~ultraplot.ticker.AutoFormatter` as the default major formatter.
-    ``x`` and ``y`` versions of each keyword argument are no longer
+    `x` and `y` versions of each keyword argument are no longer
     required.
     """
 
@@ -370,7 +375,9 @@ class FuncScale(_Scale, mscale.ScaleBase):
             kwsym["linthresh"] = inverse(kwsym["linthresh"])
             parent_scale = SymmetricalLogScale(**kwsym)
         self.functions = (forward, inverse)
-        self._transform = parent_scale.get_transform() + FuncTransform(forward, inverse)
+        # Apply the function in data space, then parent scale (e.g., log).
+        # This ensures dual axes behave correctly when the parent is non-linear.
+        self._transform = FuncTransform(forward, inverse) + parent_scale.get_transform()
 
         # Apply default locators and formatters
         # NOTE: We pass these through contructor functions

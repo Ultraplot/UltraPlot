@@ -3,6 +3,7 @@
 Tools for setting up ultraplot and configuring global settings.
 See the :ref:`configuration guide <ug_config>` for details.
 """
+
 # NOTE: The matplotlib analogue to this file is actually __init__.py
 # but it makes more sense to have all the setup actions in a separate file
 # so the namespace of the top-level module is unpolluted.
@@ -17,7 +18,7 @@ import sys
 from collections import namedtuple
 from collections.abc import MutableMapping
 from numbers import Real
-
+from typing import Any, Callable, Dict
 
 import cycler
 import matplotlib as mpl
@@ -27,9 +28,7 @@ import matplotlib.mathtext  # noqa: F401
 import matplotlib.style.core as mstyle
 import numpy as np
 from matplotlib import RcParams
-from typing import Callable, Any, Dict
 
-from .internals import ic  # noqa: F401
 from .internals import (
     _not_none,
     _pop_kwargs,
@@ -37,17 +36,10 @@ from .internals import (
     _translate_grid,
     _version_mpl,
     docstring,
+    ic,  # noqa: F401
     rcsetup,
     warnings,
 )
-
-try:
-    from IPython import get_ipython
-except ImportError:
-
-    def get_ipython():
-        return
-
 
 # Suppress warnings emitted by mathtext.py (_mathtext.py in recent versions)
 # when when substituting dummy unavailable glyph due to fallback disabled.

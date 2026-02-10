@@ -78,8 +78,9 @@
 #    complex arrangements of subplots, colorbars, and legends.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 fig = uplt.figure(share=False, refwidth=2.3)
@@ -183,8 +184,9 @@ ax.contour(
 )
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 N = 10
 state = np.random.RandomState(51423)
@@ -232,8 +234,9 @@ for j, ax in enumerate(axs):
 # and the tight layout padding can be controlled with the `pad` keyword.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 fig, axs = uplt.subplots(ncols=3, nrows=3, refwidth=1.4)
@@ -254,8 +257,9 @@ fig.colorbar(m, label="stacked colorbar", ticks=0.1, loc="b", minorticks=0.05)
 fig.colorbar(m, label="colorbar with length <1", ticks=0.1, loc="r", length=0.7)
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 fig, axs = uplt.subplots(
@@ -299,7 +303,7 @@ for ax, title in zip(axs, ("2D {} #1", "2D {} #2", "Line {} #1", "Line {} #2")):
 #   will build the required `~matplotlib.cm.ScalarMappable` on-the-fly. Lists
 #   of :class:`~matplotlib.artist.Artists`\ s are used when you use the `colorbar`
 #   keyword with :ref:`1D commands <ug_1dplots>` like :func:`~ultraplot.axes.PlotAxes.plot`.
-# * The associated :ref:`colormap normalizer <ug_norm>` can be specified with the
+# * The associated :ref:`colormap normalizer <ug_apply_norm>` can be specified with the
 #   `vmin`, `vmax`, `norm`, and `norm_kw` keywords. The `~ultraplot.colors.DiscreteNorm`
 #   levels can be specified with `values`, or UltraPlot will infer them from the
 #   :class:`~matplotlib.artist.Artist` labels (non-numeric labels will be applied to
@@ -332,8 +336,9 @@ for ax, title in zip(axs, ("2D {} #1", "2D {} #2", "Line {} #1", "Line {} #2")):
 # See :func:`~ultraplot.axes.Axes.colorbar` for details.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 fig = uplt.figure(share=False, refwidth=2)
 
@@ -427,8 +432,9 @@ fig.format(
 # (or use the `handle_kw` keyword). See `ultraplot.axes.Axes.legend` for details.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 uplt.rc.cycle = "538"
 fig, axs = uplt.subplots(ncols=2, span=False, share="labels", refwidth=2.3)
@@ -463,3 +469,44 @@ ax.legend(hs1, loc="b", ncols=3, title="row major", order="C", facecolor="gray2"
 ax = axs[1]
 ax.legend(hs2, loc="b", ncols=3, center=True, title="centered rows")
 axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
+# %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_guides_decouple:
+#
+# Decoupling legend content and location
+# --------------------------------------
+#
+# Sometimes you may want to generate a legend using handles from specific axes
+# but place it relative to other axes. In UltraPlot, you can achieve this by passing
+# both the `ax` and `ref` keywords to :func:`~ultraplot.figure.Figure.legend`
+# (or :func:`~ultraplot.figure.Figure.colorbar`). The `ax` keyword specifies the
+# axes used to generate the legend handles, while the `ref` keyword specifies the
+# reference axes used to determine the legend location.
+#
+# For example, to draw a legend based on the handles in the second row of subplots
+# but place it below the first row of subplots, you can use
+# ``fig.legend(ax=axs[1, :], ref=axs[0, :], loc='bottom')``. If ``ref`` is a list
+# of axes, UltraPlot intelligently infers the span (width or height) and anchors
+# the legend to the appropriate outer edge (e.g., the bottom-most axis for ``loc='bottom'``
+# or the right-most axis for ``loc='right'``).
+
+# %%
+import numpy as np
+
+import ultraplot as uplt
+
+fig, axs = uplt.subplots(nrows=2, ncols=2, refwidth=2, share=False)
+axs.format(abc="A.", suptitle="Decoupled legend location demo")
+
+# Plot data on all axes
+state = np.random.RandomState(51423)
+data = (state.rand(20, 4) - 0.5).cumsum(axis=0)
+axs[0, :].plot(data, cycle="538", labels=list("abcd"))
+axs[1, :].plot(data, cycle="accent", labels=list("abcd"))
+
+# Legend 1: Content from Row 2 (ax=axs[1, :]), Location below Row 1 (ref=axs[0, :])
+# This places a legend describing the bottom row data underneath the top row.
+fig.legend(ax=axs[1, :], ref=axs[0, :], loc="bottom", title="Data from Row 2")
+
+# Legend 2: Content from Row 1 (ax=axs[0, :]), Location below Row 2 (ref=axs[1, :])
+# This places a legend describing the top row data underneath the bottom row.
+fig.legend(ax=axs[0, :], ref=axs[1, :], loc="bottom", title="Data from Row 1")

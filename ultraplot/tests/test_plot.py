@@ -74,6 +74,17 @@ def test_external_disables_autolabels_no_label():
     assert (not labels) or (labels[0] in ("_no_label", ""))
 
 
+def test_parse_level_lim_accepts_list_input():
+    """
+    Ensure list inputs are converted before checking ndim in _parse_level_lim.
+    """
+    fig, ax = uplt.subplots()
+    vmin, vmax, _ = ax[0]._parse_level_lim([[1, 2], [3, 4]])
+    assert vmin == 1
+    assert vmax == 4
+    uplt.close(fig)
+
+
 def test_error_shading_explicit_label_external():
     """
     Explicit label on fill_between should be preserved in legend entries.
@@ -357,6 +368,33 @@ def test_setting_log_with_rc():
             for target in targets:
                 axi = getattr(ax, f"{target}axis")
                 check_ticks(axi, target=False)
+
+    uplt.close(fig)
+
+
+def test_format_log_scale_preserves_log_formatter():
+    """
+    Test that setting a log scale preserves the log formatter when enabled.
+    """
+    x = np.linspace(1, 1e6, 10)
+    log_formatter = uplt.constructor.Formatter("log")
+    log_formatter_type = type(log_formatter)
+
+    with uplt.rc.context({"formatter.log": True}):
+        fig, ax = uplt.subplots()
+        ax.plot(x, x)
+        ax.format(yscale="log")
+        assert isinstance(ax.yaxis.get_major_formatter(), log_formatter_type)
+        ax.set_yscale("log")
+        assert isinstance(ax.yaxis.get_major_formatter(), log_formatter_type)
+
+    with uplt.rc.context({"formatter.log": False}):
+        fig, ax = uplt.subplots()
+        ax.plot(x, x)
+        ax.format(yscale="log")
+        assert not isinstance(ax.yaxis.get_major_formatter(), log_formatter_type)
+        ax.set_yscale("log")
+        assert not isinstance(ax.yaxis.get_major_formatter(), log_formatter_type)
 
     uplt.close(fig)
 
@@ -693,6 +731,492 @@ def test_curved_quiver_color_and_cmap(rng, cmap):
     fig, ax = uplt.subplots()
     ax.curved_quiver(X, Y, U, V, color=color, cmap=cmap)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_sankey_basic():
+    """
+    Basic sanity check for Sankey diagrams.
+    """
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -0.6, -0.4],
+        labels=["in", "out_a", "out_b"],
+        orientations=[0, 1, -1],
+        trunklength=1.1,
+    )
+    assert getattr(diagram, "patch", None) is not None
+    assert getattr(diagram, "flows", None) is not None
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_sankey_layered_nodes_flows():
+    """
+    Check that layered sankey accepts nodes and flows.
+    """
+    fig, ax = uplt.subplots()
+    nodes = ["Budget", "Ops", "R&D", "Marketing"]
+    flows = [
+        ("Budget", "Ops", 5),
+        ("Budget", "R&D", 3),
+        ("Budget", "Marketing", 2),
+    ]
+    diagram = ax.sankey(nodes=nodes, flows=flows)
+    assert len(diagram.nodes) == len(nodes)
+    assert len(diagram.flows) == len(flows)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_sankey_layered_labels_and_style():
+    """
+    Check that style presets and label boxes are accepted.
+    """
+    fig, ax = uplt.subplots()
+    nodes = ["Budget", "Ops", "R&D", "Marketing"]
+    flows = [
+        ("Budget", "Ops", 5),
+        ("Budget", "R&D", 3),
+        ("Budget", "Marketing", 2),
+    ]
+    diagram = ax.sankey(
+        nodes=nodes,
+        flows=flows,
+        style="budget",
+        flow_labels=True,
+        value_format="{:.1f}",
+        node_label_box=True,
+    )
+    flow_label_keys = [key for key in diagram.labels if isinstance(key, tuple)]
+    assert flow_label_keys
+    return fig
+
+
+def test_sankey_invalid_flows():
+    """Validate error handling for malformed flow inputs."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    with pytest.raises(ValueError):
+        sankey_mod._normalize_flows(None)
+    with pytest.raises(ValueError):
+        sankey_mod._normalize_flows([("A", "B", -1)])
+    with pytest.raises(ValueError):
+        sankey_mod._normalize_flows([("A", "B", 0)])
+
+
+def test_sankey_cycle_layers_error():
+    """Cycles in the graph should raise a clear error."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0},
+        {"source": "B", "target": "A", "value": 1.0},
+    ]
+    with pytest.raises(ValueError):
+        sankey_mod._assign_layers(flows, ["A", "B"], None)
+
+
+def test_sankey_flow_label_frac_alternates():
+    """Label fractions should alternate around the midpoint."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    base = 0.5
+    assert sankey_mod._flow_label_frac(0, 2, base) == 0.25
+    assert sankey_mod._flow_label_frac(1, 2, base) == 0.75
+    frac0 = sankey_mod._flow_label_frac(0, 3, base)
+    frac1 = sankey_mod._flow_label_frac(1, 3, base)
+    frac2 = sankey_mod._flow_label_frac(2, 3, base)
+    assert 0.05 <= frac0 <= 0.95
+    assert 0.05 <= frac1 <= 0.95
+    assert 0.05 <= frac2 <= 0.95
+    assert frac0 < base < frac1
+
+
+def test_sankey_node_labels_outside_auto():
+    """Auto outside labels should flip to the left/right on edge layers."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        nodes=["A", "B", "C"],
+        flows=[("A", "B", 2.0), ("B", "C", 2.0)],
+        node_labels=True,
+        flow_labels=False,
+    )
+    label_a = diagram.labels["A"]
+    label_c = diagram.labels["C"]
+    node_a = diagram.nodes["A"]
+    node_c = diagram.nodes["C"]
+    ax_a, _ = label_a.get_position()
+    ax_c, _ = label_c.get_position()
+    assert ax_a < node_a.get_x()
+    assert ax_c > node_c.get_x() + node_c.get_width()
+    uplt.close(fig)
+
+
+def test_sankey_flow_other_creates_other_node():
+    """Small flows should be aggregated into an 'Other' node when requested."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[("A", "X", 0.2), ("A", "Y", 2.0)],
+        flow_other=0.5,
+        other_label="Other",
+        node_labels=True,
+    )
+    assert "Other" in diagram.nodes
+    assert "Other" in diagram.labels
+    uplt.close(fig)
+
+
+def test_sankey_unknown_style_error():
+    """Unknown style presets should raise."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    with pytest.raises(ValueError):
+        sankey_mod._apply_style(
+            "nope",
+            flow_cycle=["C0"],
+            node_facecolor="0.7",
+            flow_alpha=0.8,
+            flow_curvature=0.5,
+            node_label_box=False,
+            node_label_kw={},
+        )
+
+
+def test_sankey_links_parameter_uses_layered():
+    """Links should force layered sankey even with numeric flows input."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -1.0],
+        links=[("A", "B", 1.0)],
+        node_labels=False,
+        flow_labels=False,
+    )
+    assert "A" in diagram.nodes
+    assert "B" in diagram.nodes
+    assert diagram.layout["scale"] > 0
+    uplt.close(fig)
+
+
+def test_sankey_tuple_flows_use_layered():
+    """Tuple flows without nodes should trigger layered sankey."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(flows=[("A", "B", 1.0)])
+    assert "A" in diagram.nodes
+    assert "B" in diagram.nodes
+    uplt.close(fig)
+
+
+def test_sankey_dict_flows_use_layered():
+    """Dict flows should trigger layered sankey."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(flows=[{"source": "A", "target": "B", "value": 1.0}])
+    assert "A" in diagram.nodes
+    assert "B" in diagram.nodes
+    assert "nodes" in diagram.layout
+    uplt.close(fig)
+
+
+def test_sankey_mixed_flow_formats_layered():
+    """Mixed dict/tuple flows should still render in layered mode."""
+    fig, ax = uplt.subplots()
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0},
+        ("B", "C", 2.0),
+    ]
+    diagram = ax.sankey(flows=flows)
+    assert set(diagram.nodes.keys()) == {"A", "B", "C"}
+    assert len(diagram.flows) == 2
+    uplt.close(fig)
+
+
+def test_sankey_numpy_flows_use_matplotlib():
+    """1D numeric flows should use Matplotlib Sankey."""
+    import numpy as np
+
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(flows=np.array([1.0, -1.0]))
+    assert hasattr(diagram, "patch")
+    assert not hasattr(diagram, "layout")
+    uplt.close(fig)
+
+
+def test_sankey_matplotlib_kwargs_passthrough():
+    """Matplotlib sankey should pass patch kwargs through."""
+    from matplotlib.colors import to_rgba
+
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -1.0],
+        orientations=[0, 0],
+        facecolor="red",
+        edgecolor="blue",
+        linewidth=1.5,
+    )
+    assert np.allclose(diagram.patch.get_facecolor(), to_rgba("red"))
+    assert np.allclose(diagram.patch.get_edgecolor(), to_rgba("blue"))
+    assert diagram.patch.get_linewidth() == 1.5
+    uplt.close(fig)
+
+
+def test_sankey_matplotlib_connect_none():
+    """Matplotlib sankey should allow connect=None."""
+    fig, ax = uplt.subplots()
+    diagram = ax.sankey(
+        flows=[1.0, -1.0],
+        orientations=[0, 0],
+        connect=None,
+    )
+    assert hasattr(diagram, "patch")
+    uplt.close(fig)
+
+
+def test_sankey_normalize_nodes_dict_order_and_labels():
+    """Node dict inputs should preserve order and resolve labels."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    nodes = {"A": {"label": "Alpha"}, "B": {"label": "Beta"}}
+    flows = [{"source": "A", "target": "B", "value": 1.0}]
+    node_map, order = sankey_mod._normalize_nodes(nodes, flows)
+    assert order == ["A", "B"]
+    assert node_map["A"]["label"] == "Alpha"
+    assert node_map["B"]["label"] == "Beta"
+
+
+def test_sankey_layer_order_missing_raises():
+    """layer_order must include every layer."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0},
+        {"source": "B", "target": "C", "value": 1.0},
+    ]
+    with pytest.raises(ValueError):
+        sankey_mod._validate_layer_order([0], flows, ["A", "B", "C"], None)
+
+
+def test_sankey_label_box_dict_copy():
+    """Label box dicts should be copied so callers can reuse input."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    box = {"boxstyle": "round", "facecolor": "white"}
+    resolved = sankey_mod._label_box(box)
+    assert resolved == box
+    assert resolved is not box
+
+
+def test_sankey_label_box_default():
+    """node_label_box=True should create a default box style."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    resolved = sankey_mod._label_box(True)
+    assert resolved["boxstyle"].startswith("round")
+    assert resolved["facecolor"] == "white"
+
+
+def test_sankey_assign_flow_colors_group_cycle():
+    """Group cycle should be used for flow colors."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0, "group": "g1", "color": None},
+        {"source": "A", "target": "C", "value": 1.0, "group": "g2", "color": None},
+    ]
+    color_map = sankey_mod._assign_flow_colors(
+        flows, flow_cycle=None, group_cycle=["C0", "C1"]
+    )
+    assert color_map["g1"] == "C0"
+    assert color_map["g2"] == "C1"
+    assert flows[0]["color"] == "C0"
+    assert flows[1]["color"] == "C1"
+
+
+def test_sankey_assign_flow_colors_preserves_explicit():
+    """Explicit flow colors should be preserved."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "B", "value": 1.0, "group": "g1", "color": "red"}
+    ]
+    color_map = sankey_mod._assign_flow_colors(flows, flow_cycle=None, group_cycle=None)
+    assert flows[0]["color"] == "red"
+    assert color_map == {}
+
+
+def test_sankey_node_dict_missing_id_raises():
+    """Node dicts must include id or name."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [{"source": "A", "target": "B", "value": 1.0}]
+    with pytest.raises(ValueError):
+        sankey_mod._normalize_nodes([{"label": "missing"}], flows)
+
+
+def test_sankey_node_order_missing_nodes_raises():
+    """node_order must include all flow endpoints."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [{"source": "A", "target": "B", "value": 1.0}]
+    with pytest.raises(ValueError):
+        sankey_mod._ensure_nodes(["A"], flows, node_order=["A"])
+
+
+def test_sankey_flow_other_multiple_sources():
+    """flow_other should aggregate per source."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flows = [
+        {"source": "A", "target": "X", "value": 0.2, "label": None, "color": None},
+        {"source": "A", "target": "Y", "value": 0.1, "label": None, "color": None},
+        {"source": "B", "target": "Z", "value": 0.3, "label": None, "color": None},
+        {"source": "B", "target": "W", "value": 2.0, "label": None, "color": None},
+    ]
+    result = sankey_mod._apply_flow_other(flows, 0.5, "Other")
+    others = [flow for flow in result if flow["target"] == "Other"]
+    assert len(others) == 2
+    sums = {flow["source"]: flow["value"] for flow in others}
+    assert np.isclose(sums["A"], 0.3)
+    assert np.isclose(sums["B"], 0.3)
+
+
+def test_sankey_flow_label_text_callable():
+    """Callable value_format should be used for flow labels."""
+    from ultraplot.axes.plot_types import sankey as sankey_mod
+
+    flow = {"value": 1.234, "label": None}
+    text = sankey_mod._flow_label_text(flow, lambda v: f"{v:.1f}")
+    assert text == "1.2"
+
+
+def test_radar_chart_smoke():
+    """Smoke test for pyCirclize radar chart wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    import pandas as pd
+
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4], "C": [2, 1]}, index=["set1", "set2"])
+    fig, ax = uplt.subplots(proj="polar")
+    circos = ax.radar_chart(df, vmin=0, vmax=4, fill=False, marker_size=3)
+    assert hasattr(circos, "plotfig")
+    uplt.close(fig)
+
+
+def test_chord_diagram_smoke():
+    """Smoke test for pyCirclize chord diagram wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    import pandas as pd
+
+    df = pd.DataFrame(
+        [[5, 2, 1], [2, 6, 3], [1, 3, 4]],
+        index=["A", "B", "C"],
+        columns=["A", "B", "C"],
+    )
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
+    circos = ax.chord_diagram(df, ticks_interval=None)
+    assert hasattr(circos, "plotfig")
+    uplt.close(fig)
+
+
+def test_phylogeny_smoke():
+    """Smoke test for pyCirclize phylogeny wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
+    circos, treeviz = ax.phylogeny("((A,B),C);", leaf_label_size=8)
+    assert hasattr(circos, "plotfig")
+    assert treeviz is not None
+    uplt.close(fig)
+
+
+def test_circos_bed_smoke(tmp_path):
+    """Smoke test for BED-based circlize wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    bed_path = tmp_path / "mini.bed"
+    bed_path.write_text("chr1\t0\t100\nchr2\t0\t120\n", encoding="utf-8")
+
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
+    circos = ax.circos_bed(bed_path, plot=True)
+    assert len(circos.sectors) == 2
+    uplt.close(fig)
+
+
+def test_circos_builder_smoke():
+    """Smoke test for general Circos wrapper."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(proj="polar")
+    ax = axs[0]
+    circos = ax.circos({"A": 10, "B": 12}, plot=True)
+    assert len(circos.sectors) == 2
+    uplt.close(fig)
+
+
+def test_circos_unshares_axes():
+    """Circos wrappers should unshare axes if they were shared."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(ncols=2, proj="polar", share="all")
+    ax = axs[0]
+    x_siblings = list(ax._shared_axes["x"].get_siblings(ax))
+    y_siblings = list(ax._shared_axes["y"].get_siblings(ax))
+    if len(x_siblings) == 1 and len(y_siblings) == 1:
+        pytest.skip("polar axes are not shared in this configuration")
+    ax.circos({"A": 10, "B": 12}, plot=False)
+    x_siblings = list(ax._shared_axes["x"].get_siblings(ax))
+    y_siblings = list(ax._shared_axes["y"].get_siblings(ax))
+    assert len(x_siblings) == 1
+    assert len(y_siblings) == 1
+    uplt.close(fig)
+
+
+def test_circos_delegation_subplots():
+    """SubplotGrid should delegate circos calls for singleton grids."""
+    try:
+        from ultraplot.axes.plot_types.circlize import _import_pycirclize
+
+        _import_pycirclize()
+    except ImportError:
+        pytest.skip("pycirclize is not available")
+
+    fig, axs = uplt.subplots(proj="polar")
+    circos = axs.circos({"A": 10, "B": 12}, plot=False)
+    assert len(circos.sectors) == 2
+    uplt.close(fig)
 
 
 def test_histogram_norms():

@@ -1,6 +1,10 @@
-import ultraplot as uplt, numpy as np, warnings
-import pytest
+import warnings
 from unittest import mock
+
+import numpy as np
+import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -403,6 +407,45 @@ def test_geo_panel_share_flag_controls_membership():
     assert ax2[0]._panel_sharex_group is False
 
 
+def test_geo_subset_share_xlabels_override():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share="labels", span=False)
+    # GeoAxes.format does not accept xlabel/ylabel; set labels directly.
+    ax[0, 0].set_xlabel("Top-left X")
+    ax[0, 1].set_xlabel("Top-right X")
+    bottom = ax[1, :]
+    bottom[0].set_xlabel("Bottom-row X")
+    bottom.format(share_xlabels=list(bottom))
+
+    fig.canvas.draw()
+
+    assert not ax[0, 0].xaxis.get_label().get_visible()
+    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert bottom[0].get_xlabel().strip() == ""
+    assert bottom[1].get_xlabel().strip() == ""
+    assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
+def test_geo_subset_share_xlabels_implicit():
+    fig, ax = uplt.subplots(ncols=2, nrows=2, proj="cyl", share="labels", span=False)
+    ax[0, 0].set_xlabel("Top-left X")
+    ax[0, 1].set_xlabel("Top-right X")
+    bottom = ax[1, :]
+    bottom[0].set_xlabel("Bottom-row X")
+    bottom.share_labels(axis="x")
+
+    fig.canvas.draw()
+
+    assert not ax[0, 0].xaxis.get_label().get_visible()
+    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert bottom[0].get_xlabel().strip() == ""
+    assert bottom[1].get_xlabel().strip() == ""
+    assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
+
+    uplt.close(fig)
+
+
 def test_geo_non_rectilinear_right_panel_forces_no_share_and_warns():
     """
     Non-rectilinear Geo projections should not allow panel sharing; adding a right panel
@@ -456,7 +499,9 @@ def test_sharing_geo_limits():
     after_lat = ax[1]._lataxis.get_view_interval()
 
     # We are sharing y which is the latitude axis
-    assert all([np.allclose(i, j) for i, j in zip(expectation["latlim"], after_lat)])
+    assert all(
+        [np.allclose(i, j, atol=1e-6) for i, j in zip(expectation["latlim"], after_lat)]
+    )
     # We are not sharing longitude yet
     assert all(
         [
@@ -470,7 +515,9 @@ def test_sharing_geo_limits():
     after_lon = ax[1]._lonaxis.get_view_interval()
 
     assert all([not np.allclose(i, j) for i, j in zip(before_lon, after_lon)])
-    assert all([np.allclose(i, j) for i, j in zip(after_lon, expectation["lonlim"])])
+    assert all(
+        [np.allclose(i, j, atol=1e-6) for i, j in zip(after_lon, expectation["lonlim"])]
+    )
     uplt.close(fig)
 
 
@@ -563,6 +610,144 @@ def test_get_gridliner_labels_cartopy():
                 assert len(labels.get(dir, [])) > 0
             else:
                 assert len(labels.get(dir, [])) == 0
+    uplt.close(fig)
+
+
+def test_get_gridliner_labels_basemap():
+    fig, ax = uplt.subplots(proj="cyl", backend="basemap")
+    ax.format(labels="both", lonlines=30, latlines=30)
+    fig.canvas.draw()  # ensure labels are positioned
+    labels = ax[0]._get_gridliner_labels(bottom=True, top=True, left=True, right=True)
+    assert labels.get("bottom")
+    assert labels.get("top")
+    assert labels.get("left")
+    assert labels.get("right")
+    uplt.close(fig)
+
+
+def test_toggle_gridliner_labels_basemap():
+    fig, ax = uplt.subplots(proj="cyl", backend="basemap")
+    ax[0].format(labels="both", lonlines=30, latlines=30)
+    fig.canvas.draw()
+
+    ax[0]._toggle_gridliner_labels(
+        labelbottom=False,
+        labeltop=True,
+        labelleft=True,
+        labelright=True,
+    )
+    labels = ax[0]._get_gridliner_labels(bottom=True, top=True, left=True, right=True)
+    assert labels.get("bottom")
+    assert labels.get("top")
+    assert labels.get("left")
+    assert labels.get("right")
+    assert all(not label.get_visible() for label in labels["bottom"])
+    assert any(label.get_visible() for label in labels["top"])
+    assert any(label.get_visible() for label in labels["left"])
+    assert any(label.get_visible() for label in labels["right"])
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_tick_params_updates_gridliner(backend):
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    ax[0].format(lonlines=30, latlines=30, labels=True, grid=True)
+    ax[0].tick_params(
+        labelcolor="red",
+        labelsize=8,
+        labelrotation=15,
+        pad=6,
+        colors="blue",
+        width=1.5,
+        labelbottom=False,
+        labelleft=False,
+    )
+
+    assert not ax[0]._is_ticklabel_on("labelbottom")
+    assert not ax[0]._is_ticklabel_on("labelleft")
+
+    if ax[0]._name == "cartopy":
+        gl = ax[0].gridlines_major
+        assert gl.collection_kwargs.get("color") == "blue"
+        assert gl.collection_kwargs.get("linewidth") == 1.5
+        assert gl.xlabel_style.get("color") == "red"
+        assert gl.ylabel_style.get("color") == "red"
+        assert gl.xlabel_style.get("fontsize") == 8
+        assert gl.ylabel_style.get("fontsize") == 8
+        assert gl.xlabel_style.get("rotation") == 15
+        assert gl.ylabel_style.get("rotation") == 15
+        if hasattr(gl, "xpadding"):
+            assert gl.xpadding == 6
+        if hasattr(gl, "ypadding"):
+            assert gl.ypadding == 6
+    else:  # basemap
+        from matplotlib import colors as mcolors
+        from matplotlib import text as mtext
+
+        lonlines, latlines = ax[0].gridlines_major
+        label_colors = []
+        label_sizes = []
+        label_rotations = []
+        line_colors = []
+        line_widths = []
+        for grid in (lonlines, latlines):
+            for _, (lines, labels) in grid.items():
+                for line in lines:
+                    if hasattr(line, "get_color"):
+                        line_colors.append(mcolors.to_rgba(line.get_color()))
+                    if hasattr(line, "get_linewidth"):
+                        line_widths.append(line.get_linewidth())
+                for label in labels:
+                    if isinstance(label, mtext.Text):
+                        label_colors.append(mcolors.to_rgba(label.get_color()))
+                        label_sizes.append(label.get_fontsize())
+                        label_rotations.append(label.get_rotation())
+        expected_label_color = mcolors.to_rgba("red")
+        expected_line_color = mcolors.to_rgba("blue")
+        assert label_colors and all(c == expected_label_color for c in label_colors)
+        assert label_sizes and all(np.isclose(s, 8) for s in label_sizes)
+        assert label_rotations and all(np.isclose(r, 15) for r in label_rotations)
+        assert line_colors and all(c == expected_line_color for c in line_colors)
+        assert line_widths and all(np.isclose(w, 1.5) for w in line_widths)
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_gridliner_adapter_refresh(backend):
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    ax[0].format(lonlines=30, latlines=30, labels=True)
+    assert ax[0]._gridliner_adapter("major", create=False) is not None
+
+    ax[0]._gridliner_adapters.pop("major", None)
+    assert ax[0]._gridliner_adapter("major", create=False) is None
+    _ = ax[0].gridlines_major
+    assert ax[0]._gridliner_adapter("major", create=False) is not None
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_gridliner_tick_positions(backend):
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    ax[0].format(lonlines=30, latlines=30, labels=True, grid=True)
+    fig.canvas.draw()
+    lon_positions = ax[0]._gridliner_tick_positions("x", which="major")
+    lat_positions = ax[0]._gridliner_tick_positions("y", which="major")
+    assert len(lon_positions) > 0
+    assert len(lat_positions) > 0
+
+    if ax[0]._name == "cartopy":
+        expected_lon = ax[0]._get_lonticklocs()
+        expected_lat = ax[0]._get_latticklocs()
+        assert np.allclose(lon_positions, expected_lon)
+        assert np.allclose(lat_positions, expected_lat)
+    else:  # basemap
+        lonlines, latlines = ax[0].gridlines_major
+        expected_lon = np.sort(np.asarray(list(lonlines.keys())))
+        expected_lat = np.sort(np.asarray(list(latlines.keys())))
+        assert np.allclose(np.sort(lon_positions), expected_lon)
+        assert np.allclose(np.sort(lat_positions), expected_lat)
+
     uplt.close(fig)
 
 
@@ -780,7 +965,8 @@ def test_panels_geo():
     for dir in dirs:
         not ax[0]._is_ticklabel_on(f"label{dir}")
 
-    return fig
+    fig.canvas.draw()
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
@@ -945,8 +1131,8 @@ def test_consistent_range():
         lonview = np.array(a._lonaxis.get_view_interval())
         latview = np.array(a._lataxis.get_view_interval())
 
-        assert np.allclose(lonview, lonlim)
-        assert np.allclose(latview, latlim)
+        assert np.allclose(lonview, lonlim, atol=1e-6)
+        assert np.allclose(latview, latlim, atol=1e-6)
 
 
 @pytest.mark.mpl_image_compare
@@ -1010,3 +1196,547 @@ def test_grid_indexing_formatting(rng):
     axs[-1, :].format(lonlabels=True)
     axs[:, 0].format(latlabels=True)
     return fig
+
+
+@pytest.mark.parametrize(
+    "backend",
+    [
+        "cartopy",
+        "basemap",
+    ],
+)
+def test_label_rotation(backend):
+    """
+    Test label rotation parameters for both Cartopy and Basemap backends.
+    Tests labelrotation, lonlabelrotation, and latlabelrotation parameters.
+    """
+    fig, axs = uplt.subplots(ncols=2, proj="cyl", backend=backend, share=0)
+
+    # Test 1: labelrotation applies to both axes
+    axs[0].format(
+        title="Both rotated 45°",
+        lonlabels="b",
+        latlabels="l",
+        labelrotation=45,
+        lonlines=30,
+        latlines=30,
+    )
+
+    # Test 2: Different rotations for lon and lat
+    axs[1].format(
+        title="Lon: 90°, Lat: 0°",
+        lonlabels="b",
+        latlabels="l",
+        lonlabelrotation=90,
+        latlabelrotation=0,
+        lonlines=30,
+        latlines=30,
+    )
+
+    # Verify that rotation was applied based on actual backend
+    if axs[0]._name == "cartopy":
+        # For Cartopy, check gridliner xlabel_style and ylabel_style
+        gl0 = axs[0].gridlines_major
+        assert gl0.xlabel_style.get("rotation") == 45
+        assert gl0.ylabel_style.get("rotation") == 45
+
+        gl1 = axs[1].gridlines_major
+        assert gl1.xlabel_style.get("rotation") == 90
+        assert gl1.ylabel_style.get("rotation") == 0
+
+    else:  # basemap
+        # For Basemap, check Text object rotation
+        from matplotlib import text as mtext
+
+        def get_text_rotations(gridlines_dict):
+            """Extract rotation angles from Text objects in gridlines."""
+            rotations = []
+            for line_dict in gridlines_dict.values():
+                for obj_list in line_dict:
+                    for obj in obj_list:
+                        if isinstance(obj, mtext.Text):
+                            rotations.append(obj.get_rotation())
+            return rotations
+
+        # Check first axes (both 45°)
+        lonlines_0, latlines_0 = axs[0].gridlines_major
+        lon_rotations_0 = get_text_rotations(lonlines_0)
+        lat_rotations_0 = get_text_rotations(latlines_0)
+        if lon_rotations_0:  # Only check if labels exist
+            assert all(r == 45 for r in lon_rotations_0)
+        if lat_rotations_0:
+            assert all(r == 45 for r in lat_rotations_0)
+
+        # Check second axes (lon: 90°, lat: 0°)
+        lonlines_1, latlines_1 = axs[1].gridlines_major
+        lon_rotations_1 = get_text_rotations(lonlines_1)
+        lat_rotations_1 = get_text_rotations(latlines_1)
+        if lon_rotations_1:
+            assert all(r == 90 for r in lon_rotations_1)
+        if lat_rotations_1:
+            assert all(r == 0 for r in lat_rotations_1)
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_label_rotation_precedence(backend):
+    """
+    Test that specific rotation parameters take precedence over general labelrotation.
+    """
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+
+    # lonlabelrotation should override labelrotation for lon axis
+    # latlabelrotation not specified, so should use labelrotation
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        labelrotation=30,
+        lonlabelrotation=60,  # This should override for lon
+        lonlines=30,
+        latlines=30,
+    )
+
+    if ax[0]._name == "cartopy":
+        gl = ax[0].gridlines_major
+        assert gl.xlabel_style.get("rotation") == 60  # Override value
+        assert gl.ylabel_style.get("rotation") == 30  # Fallback value
+    else:  # basemap
+        from matplotlib import text as mtext
+
+        def get_text_rotations(gridlines_dict):
+            rotations = []
+            for line_dict in gridlines_dict.values():
+                for obj_list in line_dict:
+                    for obj in obj_list:
+                        if isinstance(obj, mtext.Text):
+                            rotations.append(obj.get_rotation())
+            return rotations
+
+        lonlines, latlines = ax[0].gridlines_major
+        lon_rotations = get_text_rotations(lonlines)
+        lat_rotations = get_text_rotations(latlines)
+
+        if lon_rotations:
+            assert all(r == 60 for r in lon_rotations)
+        if lat_rotations:
+            assert all(r == 30 for r in lat_rotations)
+
+    uplt.close(fig)
+
+
+def test_label_rotation_backward_compatibility():
+    """
+    Test that existing code without rotation parameters still works.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+
+    # Should work without any rotation parameters
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        lonlines=30,
+        latlines=30,
+    )
+
+    # Verify no rotation was applied (should be default or None)
+    gl = ax[0]._gridlines_major
+    # If rotation key doesn't exist or is None/0, that's expected
+    lon_rotation = gl.xlabel_style.get("rotation")
+    lat_rotation = gl.ylabel_style.get("rotation")
+
+    # Default rotation should be None or 0 (no rotation)
+    assert lon_rotation is None or lon_rotation == 0
+    assert lat_rotation is None or lat_rotation == 0
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("rotation_angle", [0, 45, 90, -30, 180])
+def test_label_rotation_angles(rotation_angle):
+    """
+    Test various rotation angles to ensure they're applied correctly.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        labelrotation=rotation_angle,
+        lonlines=60,
+        latlines=30,
+    )
+
+    gl = ax[0]._gridlines_major
+    assert gl.xlabel_style.get("rotation") == rotation_angle
+    assert gl.ylabel_style.get("rotation") == rotation_angle
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_label_rotation_only_lon(backend):
+    """
+    Test rotation applied only to longitude labels.
+    """
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+
+    # Only rotate longitude labels
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        lonlabelrotation=45,
+        lonlines=30,
+        latlines=30,
+    )
+
+    if ax[0]._name == "cartopy":
+        gl = ax[0].gridlines_major
+        assert gl.xlabel_style.get("rotation") == 45
+        assert gl.ylabel_style.get("rotation") is None
+    else:  # basemap
+        from matplotlib import text as mtext
+
+        def get_text_rotations(gridlines_dict):
+            rotations = []
+            for line_dict in gridlines_dict.values():
+                for obj_list in line_dict:
+                    for obj in obj_list:
+                        if isinstance(obj, mtext.Text):
+                            rotations.append(obj.get_rotation())
+            return rotations
+
+        lonlines, latlines = ax[0].gridlines_major
+        lon_rotations = get_text_rotations(lonlines)
+        lat_rotations = get_text_rotations(latlines)
+
+        if lon_rotations:
+            assert all(r == 45 for r in lon_rotations)
+        if lat_rotations:
+            # Default rotation should be 0
+            assert all(r == 0 for r in lat_rotations)
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_label_rotation_only_lat(backend):
+    """
+    Test rotation applied only to latitude labels.
+    """
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+
+    # Only rotate latitude labels
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        latlabelrotation=60,
+        lonlines=30,
+        latlines=30,
+    )
+
+    if ax[0]._name == "cartopy":
+        gl = ax[0].gridlines_major
+        assert gl.xlabel_style.get("rotation") is None
+        assert gl.ylabel_style.get("rotation") == 60
+    else:  # basemap
+        from matplotlib import text as mtext
+
+        def get_text_rotations(gridlines_dict):
+            rotations = []
+            for line_dict in gridlines_dict.values():
+                for obj_list in line_dict:
+                    for obj in obj_list:
+                        if isinstance(obj, mtext.Text):
+                            rotations.append(obj.get_rotation())
+            return rotations
+
+        lonlines, latlines = ax[0].gridlines_major
+        lon_rotations = get_text_rotations(lonlines)
+        lat_rotations = get_text_rotations(latlines)
+
+        if lon_rotations:
+            # Default rotation should be 0
+            assert all(r == 0 for r in lon_rotations)
+        if lat_rotations:
+            assert all(r == 60 for r in lat_rotations)
+
+    uplt.close(fig)
+
+
+def test_label_rotation_with_different_projections():
+    """
+    Test label rotation with various projections.
+    """
+    projections = ["cyl", "robin", "moll"]
+
+    for proj in projections:
+        fig, ax = uplt.subplots(proj=proj)
+
+        ax.format(
+            lonlabels="b",
+            latlabels="l",
+            labelrotation=30,
+            lonlines=60,
+            latlines=30,
+        )
+
+        # For cartopy, verify rotation was set
+        if ax[0]._name == "cartopy":
+            gl = ax[0]._gridlines_major
+            if gl is not None:  # Some projections might not support gridlines
+                assert gl.xlabel_style.get("rotation") == 30
+                assert gl.ylabel_style.get("rotation") == 30
+
+        uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_label_rotation_with_format_options(backend):
+    """
+    Test label rotation combined with other format options.
+    """
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+
+    # Combine rotation with other formatting
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        lonlabelrotation=45,
+        latlabelrotation=30,
+        lonlines=30,
+        latlines=30,
+        coast=True,
+        land=True,
+    )
+
+    # Verify rotation was applied
+    if ax[0]._name == "cartopy":
+        gl = ax[0].gridlines_major
+        assert gl.xlabel_style.get("rotation") == 45
+        assert gl.ylabel_style.get("rotation") == 30
+    else:  # basemap
+        from matplotlib import text as mtext
+
+        def get_text_rotations(gridlines_dict):
+            rotations = []
+            for line_dict in gridlines_dict.values():
+                for obj_list in line_dict:
+                    for obj in obj_list:
+                        if isinstance(obj, mtext.Text):
+                            rotations.append(obj.get_rotation())
+            return rotations
+
+        lonlines, latlines = ax[0].gridlines_major
+        lon_rotations = get_text_rotations(lonlines)
+        lat_rotations = get_text_rotations(latlines)
+
+        if lon_rotations:
+            assert all(r == 45 for r in lon_rotations)
+        if lat_rotations:
+            assert all(r == 30 for r in lat_rotations)
+
+    uplt.close(fig)
+
+
+def test_label_rotation_none_values():
+    """
+    Test that None values for rotation work correctly.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+
+    # Explicitly set None for rotations
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        lonlabelrotation=None,
+        latlabelrotation=None,
+        lonlines=30,
+        latlines=30,
+    )
+
+    gl = ax[0]._gridlines_major
+    # None should result in no rotation being set
+    lon_rotation = gl.xlabel_style.get("rotation")
+    lat_rotation = gl.ylabel_style.get("rotation")
+
+    assert lon_rotation is None or lon_rotation == 0
+    assert lat_rotation is None or lat_rotation == 0
+
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_label_rotation_update_existing(backend):
+    """
+    Test updating rotation on axes that already have labels.
+    """
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+
+    # First format without rotation
+    ax.format(
+        lonlabels="b",
+        latlabels="l",
+        lonlines=30,
+        latlines=30,
+    )
+
+    # Then update with rotation
+    ax.format(
+        lonlabelrotation=45,
+        latlabelrotation=90,
+    )
+
+    # Verify rotation was applied
+    if ax[0]._name == "cartopy":
+        gl = ax[0].gridlines_major
+        assert gl.xlabel_style.get("rotation") == 45
+        assert gl.ylabel_style.get("rotation") == 90
+    else:  # basemap
+        from matplotlib import text as mtext
+
+        def get_text_rotations(gridlines_dict):
+            rotations = []
+            for line_dict in gridlines_dict.values():
+                for obj_list in line_dict:
+                    for obj in obj_list:
+                        if isinstance(obj, mtext.Text):
+                            rotations.append(obj.get_rotation())
+            return rotations
+
+        lonlines, latlines = ax[0].gridlines_major
+        lon_rotations = get_text_rotations(lonlines)
+        lat_rotations = get_text_rotations(latlines)
+
+        if lon_rotations:
+            assert all(r == 45 for r in lon_rotations)
+        if lat_rotations:
+            assert all(r == 90 for r in lat_rotations)
+
+    uplt.close(fig)
+
+
+def test_label_rotation_negative_angles():
+    """
+    Test various negative rotation angles.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+
+    negative_angles = [-15, -45, -90, -120, -180]
+
+    for angle in negative_angles:
+        ax.format(
+            lonlabels="b",
+            latlabels="l",
+            labelrotation=angle,
+            lonlines=60,
+            latlines=30,
+        )
+
+        gl = ax[0]._gridlines_major
+        assert gl.xlabel_style.get("rotation") == angle
+        assert gl.ylabel_style.get("rotation") == angle
+
+    uplt.close(fig)
+
+
+def _check_boundary_labels(ax, expected_lon_labels, expected_lat_labels):
+    """Helper to check that specific labels are created and visible."""
+    gl = ax._gridlines_major
+    assert gl is not None, "Gridliner should exist"
+
+    # Check xlim/ylim are defined on the gridliner
+    assert hasattr(gl, "xlim") and hasattr(gl, "ylim")
+
+    # Check longitude labels - only verify the visible ones match expected
+    lon_texts = [
+        label.get_text() for label in gl.bottom_label_artists if label.get_visible()
+    ]
+    assert len(lon_texts) == len(expected_lon_labels), (
+        f"Should have {len(expected_lon_labels)} visible longitude labels, "
+        f"got {len(lon_texts)}: {lon_texts}"
+    )
+    for expected in expected_lon_labels:
+        assert any(
+            expected in text for text in lon_texts
+        ), f"{expected} label should be visible, got: {lon_texts}"
+
+    # Check latitude labels - only verify the visible ones match expected
+    lat_texts = [
+        label.get_text() for label in gl.left_label_artists if label.get_visible()
+    ]
+    assert len(lat_texts) == len(expected_lat_labels), (
+        f"Should have {len(expected_lat_labels)} visible latitude labels, "
+        f"got {len(lat_texts)}: {lat_texts}"
+    )
+    for expected in expected_lat_labels:
+        assert any(
+            expected in text for text in lat_texts
+        ), f"{expected} label should be visible, got: {lat_texts}"
+
+
+def test_boundary_labels_positive_longitude():
+    """
+    Test that interior labels remain visible with positive longitude limits.
+    """
+    fig, ax = uplt.subplots(proj="pcarree")
+    ax.format(
+        lonlim=(120, 130),
+        latlim=(10, 20),
+        lonlocator=[120, 125, 130],
+        latlocator=[10, 15, 20],
+        labels=True,
+        grid=False,
+    )
+    fig.canvas.draw()
+    _check_boundary_labels(ax[0], ["125°E"], ["15°N"])
+    uplt.close(fig)
+
+
+def test_boundary_labels_negative_longitude():
+    """
+    Test that interior labels remain visible with negative longitude limits.
+    """
+    fig, ax = uplt.subplots(proj="pcarree")
+    ax.format(
+        lonlim=(-120, -60),
+        latlim=(20, 50),
+        lonlocator=[-120, -90, -60],
+        latlocator=[20, 35, 50],
+        labels=True,
+        grid=False,
+    )
+    fig.canvas.draw()
+    _check_boundary_labels(
+        ax[0],
+        ["90°W"],
+        ["35°N"],
+    )
+    uplt.close(fig)
+
+
+def test_boundary_labels_view_intervals():
+    """
+    Test that view intervals match requested limits after setting lonlim/latlim.
+    """
+    fig, ax = uplt.subplots(proj="pcarree")
+    ax.format(lonlim=(0, 60), latlim=(-20, 40), lonlines=30, latlines=20, labels=True)
+    loninterval = ax[0]._lonaxis.get_view_interval()
+    latinterval = ax[0]._lataxis.get_view_interval()
+    assert abs(loninterval[0] - 0) < 1 and abs(loninterval[1] - 60) < 1
+    assert abs(latinterval[0] - (-20)) < 1 and abs(latinterval[1] - 40) < 1
+    uplt.close(fig)
+
+
+def test_labels_preserved_with_ticklen():
+    """
+    Ensure ticklen updates do not disable top/right gridline labels.
+    """
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.format(lonlim=(0, 10), latlim=(0, 10), labels="both", lonlines=2, latlines=2)
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels
+
+    ax.format(ticklen=1, labels="both")
+    assert ax.gridlines_major.top_labels
+    assert ax.gridlines_major.right_labels

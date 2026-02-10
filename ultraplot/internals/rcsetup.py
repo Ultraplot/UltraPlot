@@ -2,11 +2,13 @@
 """
 Utilities for global configuration.
 """
+
 import functools
-import re, matplotlib as mpl
+import re
 from collections.abc import MutableMapping
 from numbers import Integral, Real
 
+import matplotlib as mpl
 import matplotlib.rcsetup as msetup
 import numpy as np
 from cycler import Cycler
@@ -20,8 +22,10 @@ if hasattr(mpl, "_fontconfig_pattern"):
 else:
     from matplotlib.fontconfig_pattern import parse_fontconfig_pattern
 
-from . import ic  # noqa: F401
-from . import warnings
+from . import (
+    ic,  # noqa: F401
+    warnings,
+)
 from .versions import _version_mpl
 
 # Regex for "probable" unregistered named colors. Try to retain warning message for
@@ -357,6 +361,14 @@ def _validate_bool_or_iterable(value):
     raise ValueError(f"{value!r} is not a valid bool or iterable of node labels.")
 
 
+def _validate_bool_or_string(value):
+    if isinstance(value, bool):
+        return _validate_bool(value)
+    if isinstance(value, str):
+        return _validate_string(value)
+    raise ValueError(f"{value!r} is not a valid bool or string.")
+
+
 def _validate_fontprops(s):
     """
     Parse font property with support for ``'regular'`` placeholder.
@@ -444,6 +456,25 @@ def _validate_or_none(validator):
     return _validate_or_none
 
 
+def _validate_float_or_iterable(value):
+    try:
+        return _validate_float(value)
+    except Exception:
+        if np.isiterable(value) and not isinstance(value, (str, bytes)):
+            return tuple(_validate_float(item) for item in value)
+    raise ValueError(f"{value!r} is not a valid float or iterable of floats.")
+
+
+def _validate_string_or_iterable(value):
+    if isinstance(value, str):
+        return _validate_string(value)
+    if np.isiterable(value) and not isinstance(value, (str, bytes)):
+        values = tuple(value)
+        if all(isinstance(item, str) for item in values):
+            return values
+    raise ValueError(f"{value!r} is not a valid string or iterable of strings.")
+
+
 def _validate_rotation(value):
     """
     Valid rotation arguments.
@@ -475,6 +506,22 @@ def _validate_float_or_auto(value):
         return float(value)
     except (ValueError, TypeError):
         raise ValueError(f"Value must be a float or 'auto', got {value!r}")
+
+
+def _validate_tuple_int_2(value):
+    if isinstance(value, np.ndarray):
+        value = value.tolist()
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return tuple(_validate_int(item) for item in value)
+    raise ValueError(f"Value must be a tuple/list of 2 ints, got {value!r}")
+
+
+def _validate_tuple_float_2(value):
+    if isinstance(value, np.ndarray):
+        value = value.tolist()
+    if isinstance(value, (list, tuple)) and len(value) == 2:
+        return tuple(_validate_float(item) for item in value)
+    raise ValueError(f"Value must be a tuple/list of 2 floats, got {value!r}")
 
 
 def _rst_table():
@@ -515,6 +562,10 @@ def _to_string(value):
         value = repr(value)  # special case!
     elif isinstance(value, (list, tuple, np.ndarray)):
         value = ", ".join(map(_to_string, value))  # sexy recursion
+    elif isinstance(value, dict):
+        # Convert dict to YAML-style inline format: {key1: val1, key2: val2}
+        items = ", ".join(f"{k}: {_to_string(v)}" for k, v in value.items())
+        value = "{" + items + "}"
     else:
         value = None
     return value
@@ -656,6 +707,7 @@ _validate_boxstyle = _validate_belongs(
     "sawtooth",
     "roundtooth",
 )
+_validate_joinstyle = _validate_belongs("miter", "round", "bevel")
 if hasattr(msetup, "_validate_linestyle"):  # fancy validation including dashes
     _validate_linestyle = msetup._validate_linestyle
 else:  # no dashes allowed then but no big deal
@@ -682,6 +734,14 @@ font_scalings["med-large"] = 1.1  # add scaling
 if not hasattr(RcParams, "validate"):  # not mission critical so skip
     warnings._warn_ultraplot("Failed to update matplotlib rcParams validators.")
 else:
+
+    def _validator_accepts(validator, value):
+        try:
+            validator(value)
+            return True
+        except Exception:
+            return False
+
     _validate = RcParams.validate
     _validate["image.cmap"] = _validate_cmap("continuous")
     _validate["legend.loc"] = _validate_belongs(*LEGEND_LOCS)
@@ -700,6 +760,20 @@ else:
             _validate[_key] = functools.partial(_validate_color, alternative="auto")
         if _validator is getattr(msetup, "validate_color_or_inherit", None):
             _validate[_key] = functools.partial(_validate_color, alternative="inherit")
+        # Matplotlib may wrap fontsize validators in callable objects instead of
+        # exposing validate_fontsize directly. Detect these by behavior so custom
+        # shorthands like "med-large" remain valid regardless of import order.
+        if (
+            _key.endswith("size")
+            and _key not in FONT_KEYS
+            and _validator_accepts(_validator, "large")
+            and not _validator_accepts(_validator, "med-large")
+        ):
+            FONT_KEYS.add(_key)
+            if _validator_accepts(_validator, None):
+                _validate[_key] = _validate_or_none(_validate_fontsize)
+            else:
+                _validate[_key] = _validate_fontsize
     for _keys, _validator_replace in ((EM_KEYS, _validate_em), (PT_KEYS, _validate_pt)):
         for _key in _keys:
             _validator = _validate.get(_key, None)
@@ -929,6 +1003,42 @@ _rc_ultraplot_table = {
         _validate_bool,
         "Whether to draw arrows at the end of curved quiver lines by default.",
     ),
+    "external.shrink": (
+        0.9,
+        _validate_float,
+        "Default shrink factor for external axes containers.",
+    ),
+    # Sankey settings
+    "sankey.nodepad": (
+        0.02,
+        _validate_float,
+        "Vertical padding between nodes in layered sankey diagrams.",
+    ),
+    "sankey.nodewidth": (
+        0.03,
+        _validate_float,
+        "Node width for layered sankey diagrams (axes-relative units).",
+    ),
+    "sankey.margin": (
+        0.05,
+        _validate_float,
+        "Margin around layered sankey diagrams (axes-relative units).",
+    ),
+    "sankey.flow.alpha": (
+        0.75,
+        _validate_float,
+        "Flow transparency for layered sankey diagrams.",
+    ),
+    "sankey.flow.curvature": (
+        0.5,
+        _validate_float,
+        "Flow curvature for layered sankey diagrams.",
+    ),
+    "sankey.node.facecolor": (
+        "0.75",
+        _validate_color,
+        "Default node facecolor for layered sankey diagrams.",
+    ),
     # Stylesheet
     "style": (
         None,
@@ -943,8 +1053,8 @@ _rc_ultraplot_table = {
         False,
         _validate_abc,
         "If ``False`` then a-b-c labels are disabled. If ``True`` the default label "
-        "style ``a`` is used. If string this indicates the style and must contain the "
-        "character ``a`` or ``A``, for example ``'a.'`` or ``'(A)'``.",
+        "style `a` is used. If string this indicates the style and must contain the "
+        "character `a` or ``A``, for example ``'a.'`` or ``'(A)'``.",
     ),
     "abc.border": (
         True,
@@ -956,6 +1066,42 @@ _rc_ultraplot_table = {
         1.5,
         _validate_pt,
         "Width of the white border around a-b-c labels.",
+    ),
+    "text.borderstyle": (
+        "bevel",
+        _validate_joinstyle,
+        "Join style for text border strokes. Must be one of "
+        "``'miter'``, ``'round'``, or ``'bevel'``.",
+    ),
+    "text.curved.upright": (
+        True,
+        _validate_bool,
+        "Whether curved text is flipped to remain upright by default.",
+    ),
+    "text.curved.ellipsis": (
+        False,
+        _validate_bool,
+        "Whether to show ellipses when curved text exceeds path length.",
+    ),
+    "text.curved.avoid_overlap": (
+        True,
+        _validate_bool,
+        "Whether curved text hides overlapping glyphs by default.",
+    ),
+    "text.curved.overlap_tol": (
+        0.1,
+        _validate_float,
+        "Overlap threshold used when hiding curved-text glyphs.",
+    ),
+    "text.curved.curvature_pad": (
+        2.0,
+        _validate_float,
+        "Extra curved-text glyph spacing per radian of local curvature.",
+    ),
+    "text.curved.min_advance": (
+        1.0,
+        _validate_float,
+        "Minimum extra curved-text glyph spacing in pixels.",
     ),
     "abc.bbox": (
         False,
@@ -1745,6 +1891,208 @@ _rc_ultraplot_table = {
         _validate_bool,
         "Toggles rasterization on or off for rivers feature for GeoAxes.",
     ),
+    # Circlize settings
+    "chord.start": (
+        0.0,
+        _validate_float,
+        "Start angle for chord diagrams.",
+    ),
+    "chord.end": (
+        360.0,
+        _validate_float,
+        "End angle for chord diagrams.",
+    ),
+    "chord.space": (
+        0.0,
+        _validate_float_or_iterable,
+        "Inter-sector spacing for chord diagrams.",
+    ),
+    "chord.endspace": (
+        True,
+        _validate_bool,
+        "Whether to add an ending space gap for chord diagrams.",
+    ),
+    "chord.r_lim": (
+        (97.0, 100.0),
+        _validate_tuple_float_2,
+        "Radial limits for chord diagrams.",
+    ),
+    "chord.ticks_interval": (
+        None,
+        _validate_or_none(_validate_int),
+        "Tick interval for chord diagrams.",
+    ),
+    "chord.order": (
+        None,
+        _validate_or_none(_validate_string_or_iterable),
+        "Ordering of sectors for chord diagrams.",
+    ),
+    "radar.r_lim": (
+        (0.0, 100.0),
+        _validate_tuple_float_2,
+        "Radial limits for radar charts.",
+    ),
+    "radar.vmin": (
+        0.0,
+        _validate_float,
+        "Minimum value for radar charts.",
+    ),
+    "radar.vmax": (
+        100.0,
+        _validate_float,
+        "Maximum value for radar charts.",
+    ),
+    "radar.fill": (
+        True,
+        _validate_bool,
+        "Whether to fill radar chart polygons.",
+    ),
+    "radar.marker_size": (
+        0,
+        _validate_int,
+        "Marker size for radar charts.",
+    ),
+    "radar.bg_color": (
+        "#eeeeee80",
+        _validate_or_none(_validate_color),
+        "Background color for radar charts.",
+    ),
+    "radar.circular": (
+        False,
+        _validate_bool,
+        "Whether to use circular radar charts.",
+    ),
+    "radar.show_grid_label": (
+        True,
+        _validate_bool,
+        "Whether to show grid labels on radar charts.",
+    ),
+    "radar.grid_interval_ratio": (
+        0.2,
+        _validate_or_none(_validate_float),
+        "Grid interval ratio for radar charts.",
+    ),
+    "phylogeny.start": (
+        0.0,
+        _validate_float,
+        "Start angle for phylogeny plots.",
+    ),
+    "phylogeny.end": (
+        360.0,
+        _validate_float,
+        "End angle for phylogeny plots.",
+    ),
+    "phylogeny.r_lim": (
+        (50.0, 100.0),
+        _validate_tuple_float_2,
+        "Radial limits for phylogeny plots.",
+    ),
+    "phylogeny.format": (
+        "newick",
+        _validate_string,
+        "Input format for phylogeny plots.",
+    ),
+    "phylogeny.outer": (
+        True,
+        _validate_bool,
+        "Whether to place phylogeny leaves on the outer edge.",
+    ),
+    "phylogeny.align_leaf_label": (
+        True,
+        _validate_bool,
+        "Whether to align phylogeny leaf labels.",
+    ),
+    "phylogeny.ignore_branch_length": (
+        False,
+        _validate_bool,
+        "Whether to ignore branch lengths in phylogeny plots.",
+    ),
+    "phylogeny.leaf_label_size": (
+        None,
+        _validate_or_none(_validate_float),
+        "Leaf label font size for phylogeny plots.",
+    ),
+    "phylogeny.leaf_label_rmargin": (
+        2.0,
+        _validate_float,
+        "Radial margin for phylogeny leaf labels.",
+    ),
+    "phylogeny.reverse": (
+        False,
+        _validate_bool,
+        "Whether to reverse phylogeny orientation.",
+    ),
+    "phylogeny.ladderize": (
+        False,
+        _validate_bool,
+        "Whether to ladderize phylogeny branches.",
+    ),
+    # Sankey diagrams
+    "sankey.align": (
+        "center",
+        _validate_belongs("center", "left", "right", "justify"),
+        "Horizontal alignment of nodes.",
+    ),
+    "sankey.connect": (
+        (0, 0),
+        _validate_tuple_int_2,
+        "Connection path for Sankey diagram.",
+    ),
+    "sankey.flow_labels": (
+        False,
+        _validate_bool,
+        "Whether to draw flow labels.",
+    ),
+    "sankey.flow_label_pos": (
+        0.5,
+        _validate_float,
+        "Position of flow labels along the flow.",
+    ),
+    "sankey.flow_sort": (
+        True,
+        _validate_bool,
+        "Whether to sort flows.",
+    ),
+    "sankey.node_labels": (
+        True,
+        _validate_bool,
+        "Whether to draw node labels.",
+    ),
+    "sankey.node_label_offset": (
+        0.01,
+        _validate_float,
+        "Offset for node labels.",
+    ),
+    "sankey.node_label_outside": (
+        "auto",
+        _validate_bool_or_string,
+        "Position of node labels relative to the node.",
+    ),
+    "sankey.other_label": (
+        "Other",
+        _validate_string,
+        "Label for 'other' category in Sankey diagram.",
+    ),
+    "sankey.pathlabel": (
+        "",
+        _validate_string,
+        "Label for the patch.",
+    ),
+    "sankey.pathlengths": (
+        0.25,
+        _validate_float,
+        "Path lengths for Sankey diagram.",
+    ),
+    "sankey.rotation": (
+        0.0,
+        _validate_float,
+        "Rotation of the Sankey diagram.",
+    ),
+    "sankey.trunklength": (
+        1.0,
+        _validate_float,
+        "Trunk length for Sankey diagram.",
+    ),
     # Subplots settings
     "subplots.align": (
         False,
@@ -1802,6 +2150,11 @@ _rc_ultraplot_table = {
         True,
         _validate_bool,
         "Whether to auto-adjust the subplot spaces and figure margins.",
+    ),
+    "subplots.pixelsnap": (
+        False,
+        _validate_bool,
+        "Whether to snap subplot bounds to the renderer pixel grid during draw.",
     ),
     # Super title settings
     "suptitle.color": (BLACK, _validate_color, "Figure title color."),
@@ -1957,6 +2310,11 @@ _rc_ultraplot_table = {
         False,
         _validate_bool,
         "Whether to check for the latest version of UltraPlot on PyPI when importing",
+    ),
+    "ultraplot.eager_import": (
+        False,
+        _validate_bool,
+        "Whether to import the full public API during setup instead of lazily.",
     ),
 }
 

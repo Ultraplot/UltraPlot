@@ -1,7 +1,8 @@
+import numpy as np
 import pytest
-
-import ultraplot as plt, numpy as np
 from matplotlib.testing import setup
+
+import ultraplot as plt
 
 
 @pytest.fixture()
@@ -39,7 +40,6 @@ def test_standardized_input(rng):
         axs[1].pcolormesh(xedges, yedges, data)
         axs[2].contourf(x, y, data)
         axs[3].contourf(xedges, yedges, data)
-    fig.show()
     return fig
 
 

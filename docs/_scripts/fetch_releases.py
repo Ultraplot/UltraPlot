@@ -2,8 +2,11 @@
 Dynamically build what's new page based on github releases
 """
 
-import requests, re
+import re
 from pathlib import Path
+
+import requests
+from m2r2 import convert
 
 GITHUB_REPO = "ultraplot/ultraplot"
 OUTPUT_RST = Path("whats_new.rst")
@@ -14,26 +17,48 @@ GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 
 def format_release_body(text):
     """Formats GitHub release notes for better RST readability."""
-    lines = text.strip().split("\n")
-    formatted = []
+    # Convert Markdown to RST using m2r2
+    formatted_text = convert(text)
 
-    for line in lines:
-        line = line.strip()
-
-        # Convert Markdown ## Headers to RST H2
-        if line.startswith("## "):
-            title = line[3:].strip()  # Remove "## " from start
-            formatted.append(f"{title}\n{'~' * len(title)}\n")  # RST H2 Format
-        else:
-            formatted.append(line)
+    formatted_text = _downgrade_headings(formatted_text)
+    formatted_text = formatted_text.replace("→", "->")
+    formatted_text = re.sub(r"^\\s*`\\s*$", "", formatted_text, flags=re.MULTILINE)
 
     # Convert PR references (remove "by @user in ..." but keep the link)
-    formatted_text = "\n".join(formatted)
     formatted_text = re.sub(
         r" by @\w+ in (https://github.com/[^\s]+)", r" (\1)", formatted_text
     )
 
     return formatted_text.strip()
+
+
+def _downgrade_headings(text):
+    """
+    Downgrade all heading levels by one to avoid H1/H2 collisions in the TOC.
+    """
+    adornment_map = {
+        "=": "-",
+        "-": "~",
+        "~": "^",
+        "^": '"',
+        '"': "'",
+        "'": "`",
+    }
+    lines = text.splitlines()
+    for idx in range(len(lines) - 1):
+        title = lines[idx]
+        underline = lines[idx + 1]
+        if not title.strip():
+            continue
+        if not underline:
+            continue
+        char = underline[0]
+        if char not in adornment_map:
+            continue
+        if underline.strip(char):
+            continue
+        lines[idx + 1] = adornment_map[char] * len(underline)
+    return "\n".join(lines)
 
 
 def fetch_all_releases():

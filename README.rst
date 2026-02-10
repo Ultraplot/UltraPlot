@@ -20,6 +20,7 @@ Checkout our examples
 =====================
 
 Below is a gallery showing random examples of what UltraPlot can do, for more examples checkout our extensive `docs <https://ultraplot.readthedocs.io>`_.
+View the full gallery here: `Gallery <https://ultraplot.readthedocs.io/en/latest/gallery/index.html>`_.
 
 .. list-table::
    :widths: 33 33 33
@@ -102,6 +103,14 @@ UltraPlot is published on `PyPi <https://pypi.org/project/ultraplot/>`__ and
 
    pip install ultraplot
    conda install -c conda-forge ultraplot
+
+The default install includes optional features (for example, pyCirclize-based plots).
+For a minimal install, use ``--no-deps`` and install the core requirements:
+
+.. code-block:: bash
+
+   pip install ultraplot --no-deps
+   pip install -r requirements-minimal.txt
 
 Likewise, an existing installation of UltraPlot can be upgraded
 to the latest version with:

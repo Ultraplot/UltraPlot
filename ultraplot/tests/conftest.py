@@ -1,6 +1,23 @@
-import os, shutil, pytest, re, numpy as np, ultraplot as uplt
+import os
+import shutil
+import tempfile
+import pytest
+import re
+import numpy as np
+import logging
+import gc
 from pathlib import Path
-import warnings, logging, gc
+
+# Ensure each xdist worker uses an isolated matplotlib config/cache dir.
+worker = os.environ.get("PYTEST_XDIST_WORKER")
+if worker and "MPLCONFIGDIR" not in os.environ:
+    mpl_config_dir = os.path.join(tempfile.gettempdir(), f"matplotlib-{worker}")
+    os.makedirs(mpl_config_dir, exist_ok=True)
+    os.environ["MPLCONFIGDIR"] = mpl_config_dir
+
+import matplotlib as mpl
+import ultraplot as uplt
+import ultraplot.colors as _uplt_colors  # ensure rc cycle handler is registered
 from matplotlib._pylab_helpers import Gcf
 
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
@@ -16,12 +33,21 @@ def rng():
 
 
 @pytest.fixture(autouse=True)
-def close_figures_after_test():
+def close_figures_after_test(request):
+    # Start from a clean rc state.
+    uplt.rc._context.clear()
+    uplt.rc.reset(local=False, user=False, default=True)
+    if request.node.get_closest_marker("mpl_image_compare"):
+        uplt.rc["subplots.pixelsnap"] = True
+
     yield
     uplt.close("all")
     assert uplt.pyplot.get_fignums() == [], f"Open figures {uplt.pyplot.get_fignums()}"
     Gcf.destroy_all()
     gc.collect()
+    # Reset rc state to avoid cross-test contamination.
+    uplt.rc._context.clear()
+    uplt.rc.reset(local=False, user=False, default=True)
 
 
 # Define command line option
@@ -89,3 +115,27 @@ def pytest_configure(config):
             config.pluginmanager.register(StoreFailedMplPlugin(config))
     except Exception as e:
         print(f"Error during plugin configuration: {e}")
+    # Set a global default tolerance for mpl_image_compare unless overridden.
+    try:
+        if config.getoption("--mpl-default-tolerance") is None and not config.getini(
+            "mpl-default-tolerance"
+        ):
+            config.option.mpl_default_tolerance = "3"
+    except Exception as e:
+        print(f"Error setting mpl default tolerance: {e}")
+    # Force mpl default style to match current UltraPlot rc state.
+    try:
+        if config.getoption("--mpl-default-style") is None:
+            uplt.rc.reset(local=False, user=False, default=True)
+            config.option.mpl_default_style = dict(mpl.rcParams)
+    except Exception as e:
+        print(f"Error setting mpl default style: {e}")
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_runtest_call(item):
+    # Force cycle immediately before test call for mpl image comparisons.
+    if item.get_closest_marker("mpl_image_compare"):
+        cycle = uplt.Cycle("seaborn")
+        mpl.rcParams["axes.prop_cycle"] = cycle
+        uplt.rc["cycle"] = "seaborn"

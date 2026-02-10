@@ -34,6 +34,7 @@ classifiers = [
 dependencies= [
     "numpy>=1.26.0",
     "matplotlib>=3.9,<3.11",
+    "pycirclize>=1.10.1",
     "typing-extensions; python_version < '3.12'",
 ]
 dynamic = ["version"]
@@ -50,3 +51,34 @@ include-package-data = true
 [tool.setuptools_scm]
 write_to = "ultraplot/_version.py"
 write_to_template = "__version__ = '{version}'\n"
+
+
+[tool.ruff]
+ignore = ["I001", "I002", "I003", "I004"]
+
+[tool.basedpyright]
+exclude = ["**/*.ipynb"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:'resetCache' deprecated - use 'reset_cache':DeprecationWarning:matplotlib._fontconfig_pattern",
+]
+mpl-default-style = { axes.prop_cycle = "cycler('color', ['#4c72b0ff', '#55a868ff', '#c44e52ff', '#8172b2ff', '#ccb974ff', '#64b5cdff'])" }
+[project.optional-dependencies]
+docs = [
+    "jupyter",
+    "jupytext",
+    "lxml-html-clean",
+    "m2r2",
+    "mpltern",
+    "nbsphinx",
+    "sphinx",
+    "sphinx-autoapi",
+    "sphinx-automodapi",
+    "sphinx-copybutton",
+    "sphinx-design",
+    "sphinx-gallery",
+    "sphinx-rtd-light-dark @ git+https://github.com/ultraplot/UltraTheme.git",
+    "sphinx-sitemap",
+    "typing-extensions"
+]

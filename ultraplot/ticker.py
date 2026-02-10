@@ -2,6 +2,7 @@
 """
 Various `~matplotlib.ticker.Locator` and `~matplotlib.ticker.Formatter` classes.
 """
+
 import locale
 import re
 from fractions import Fraction
@@ -64,7 +65,7 @@ precision : int, default: {6, 2}
     when `zerotrim` is ``True`` and ``2`` otherwise.
 """
 _zerotrim_docstring = """
-zerotrim : bool, default: :rc:`format.zerotrim`
+zerotrim : bool, default: :rc:`formatter.zerotrim`
     Whether to trim trailing decimal zeros.
 """
 _auto_docstring = """

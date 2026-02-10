@@ -2,6 +2,7 @@
 """
 Polar axes using azimuth and radius instead of *x* and *y*.
 """
+
 import inspect
 
 try:
@@ -83,7 +84,7 @@ thetaformatter_kw, rformatter_kw : dict-like, optional
     `~ultraplot.constructor.Formatter`.
 color : color-spec, default: :rc:`meta.color`
     Color for the axes edge. Propagates to `labelcolor` unless specified
-    otherwise (similar to :func:`ultraplot.axes.CartesianAxes.format`).
+    otherwise (similar to :func:`~ultraplot.axes.CartesianAxes.format`).
 labelcolor, gridlabelcolor : color-spec, default: `color` or :rc:`grid.labelcolor`
     Color for the gridline labels.
 labelpad, gridlabelpad : unit-spec, default: :rc:`grid.labelpad`

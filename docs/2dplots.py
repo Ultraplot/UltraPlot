@@ -77,8 +77,9 @@
 #    setting and the :ref:`user guide <ug_1dstd>`).
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -110,8 +111,9 @@ with uplt.rc.context({"cmap": "Grays", "cmap.levels": 21}):
     axs[3].contourf(xedges, yedges, data)
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 cmap = "turku_r"
@@ -184,9 +186,9 @@ fig.format(
 #    `~pint.UnitRegistry.setup_matplotlib` so that the axes become unit-aware.
 
 # %%
-import xarray as xr
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 # DataArray
 state = np.random.RandomState(51423)
@@ -261,12 +263,13 @@ ax.format(xtickminor=False, yformatter="%b", ytickminor=False)
 # ``diverging=True``, ``cyclic=True``, or ``qualitative=True`` to any plotting
 # command. If the colormap type is not explicitly specified, `sequential` is
 # used with the default linear normalizer when data is strictly positive
-# or negative, and `diverging` is used with the :ref:`diverging normalizer <ug_norm>`
+# or negative, and `diverging` is used with the :ref:`diverging normalizer <ug_apply_norm>`
 # when the data limits or colormap levels cross zero (see :ref:`below <ug_autonorm>`).
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 N = 18
@@ -294,8 +297,9 @@ for ax, typ in zip(axs, types):
 uplt.rc.reset()
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 N = 20
@@ -322,8 +326,9 @@ ax.contourf(
     colorbar="b",
 )
 
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 N = 20
@@ -339,15 +344,18 @@ ax = fig.subplot(gs[0], title="Default linear normalizer")
 ax.pcolormesh(data, cmap="magma", colorbar="b")
 ax = fig.subplot(gs[1], title="Logarithmic normalizer with norm='log'")
 ax.pcolormesh(data, cmap="magma", norm="log", colorbar="b")
+fig.show()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_apply_norm:
+#
 # .. _ug_norm:
 #
 # Special normalizers
 # -------------------
 #
-# UltraPlot includes two new :ref:`"continuous" normalizers <ug_norm>`. The
+# UltraPlot includes two new :ref:`"continuous" normalizers <ug_apply_norm>`. The
 # `~ultraplot.colors.SegmentedNorm` normalizer provides even color gradations with respect
 # to index for an arbitrary monotonically increasing or decreasing list of levels. This
 # is automatically applied if you pass unevenly spaced `levels` to a plotting command,
@@ -372,8 +380,9 @@ ax.pcolormesh(data, cmap="magma", norm="log", colorbar="b")
 # affect the interpretation of different datasets.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -395,8 +404,9 @@ for ax, norm in zip(axs, ("linear", "segmented")):
     )
     ax.format(title=norm.title() + " normalizer")
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -422,6 +432,7 @@ for data, mode, fair in zip(
         ax.colorbar(m, loc="b")
         ax.format(title=f"{mode.title()}-skewed + {fair} scaling")
         i += 1
+fig.show()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_discrete:
@@ -434,7 +445,7 @@ for data, mode, fair in zip(
 # commands (e.g., :func:`~ultraplot.axes.PlotAxes.contourf`, :func:`~ultraplot.axes.PlotAxes.pcolor`).
 # This is analogous to `matplotlib.colors.BoundaryNorm`, except
 # `~ultraplot.colors.DiscreteNorm` can be paired with arbitrary
-# continuous normalizers specified by `norm` (see :ref:`above <ug_norm>`).
+# continuous normalizers specified by `norm` (see :ref:`above <ug_apply_norm>`).
 # Discrete color levels can help readers discern exact numeric values and
 # tend to reveal qualitative structure in the data. `~ultraplot.colors.DiscreteNorm`
 # also repairs the colormap end-colors by ensuring the following conditions are met:
@@ -463,8 +474,9 @@ for data, mode, fair in zip(
 # the zero level (useful for single-color :func:`~ultraplot.axes.PlotAxes.contour` plots).
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -485,8 +497,9 @@ m = axs[2].imshow(data, cmap="oslo", colorbar="b")
 axs[2].format(title="Imshow plot\ndiscrete=False (default)", yformatter="auto")
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -520,6 +533,7 @@ for i, extend in enumerate(("min", "max", "neither", "both")):
         colorbar="b",
         colorbar_kw={"locator": 180},
     )
+fig.show()
 
 # %% [raw] raw_mimetype="text/restructuredtext" tags=[]
 # .. _ug_autonorm:
@@ -547,7 +561,7 @@ for i, extend in enumerate(("min", "max", "neither", "both")):
 # the 2D :class:`~ultraplot.axes.PlotAxes` commands will apply the diverging colormap
 # :rc:`cmap.diverging` (rather than :rc:`cmap.sequential`) and the diverging
 # normalizer `~ultraplot.colors.DivergingNorm` (rather than :class:`~matplotlib.colors.Normalize`
-# -- see :ref:`above <ug_norm>`) if the following conditions are met:
+# -- see :ref:`above <ug_apply_norm>`) if the following conditions are met:
 #
 # #. If discrete levels are enabled (see :ref:`above <ug_discrete>`) and the
 #    level list includes at least 2 negative and 2 positive values.
@@ -560,8 +574,9 @@ for i, extend in enumerate(("min", "max", "neither", "both")):
 # setting :rcraw:`cmap.autodiverging` to ``False``.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 N = 20
 state = np.random.RandomState(51423)
@@ -605,9 +620,10 @@ uplt.rc.reset()
 # command documentation for details.
 
 # %%
-import ultraplot as uplt
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -663,9 +679,10 @@ ax.format(title="Line contours with labels")
 # `~ultraplot.axes.CartesianAxes`.
 
 # %%
-import ultraplot as uplt
 import numpy as np
 import pandas as pd
+
+import ultraplot as uplt
 
 # Covariance data
 state = np.random.RandomState(51423)
