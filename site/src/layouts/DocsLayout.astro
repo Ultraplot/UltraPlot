@@ -6,11 +6,12 @@ interface NavItem {
 
 interface Props {
   title: string;
-  nav: NavItem[];
+  primaryNav: NavItem[];
+  apiNav: NavItem[];
   currentHref: string;
 }
 
-const { title, nav, currentHref } = Astro.props;
+const { title, primaryNav, apiNav, currentHref } = Astro.props;
 ---
 
 <html lang="en">
@@ -20,18 +21,21 @@ const { title, nav, currentHref } = Astro.props;
     <title>{title} | UltraPlot Docs</title>
     <style>
       :root {
-        --bg: #f3f4f6;
-        --panel: #f8f8f8;
-        --text: #15181f;
-        --muted: #5f6673;
-        --line: #d4d9e3;
-        --accent: #1f4b99;
+        --bg: #f5f6f7;
+        --panel: #eceef1;
+        --panel-strong: #e2e5ea;
+        --text: #16181d;
+        --muted: #5a6270;
+        --line: #cfd5de;
+        --accent: #111827;
+        --accent-soft: #dbe3ef;
+        --code-bg: #f0f3f7;
       }
       body {
         margin: 0;
         color: var(--text);
-        background: linear-gradient(170deg, #f6f7f9 0%, #eceff4 100%);
-        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background: var(--bg);
+        font-family: "Avenir Next", "Source Sans 3", "Segoe UI", sans-serif;
       }
       .wrap {
         display: grid;
@@ -41,11 +45,28 @@ const { title, nav, currentHref } = Astro.props;
       .sidebar {
         background: var(--panel);
         border-right: 1px solid var(--line);
-        padding: 1rem;
+        padding: 1.1rem 0.9rem;
       }
       .brand {
-        font-weight: 700;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        margin-bottom: 1.2rem;
+        padding: 0.45rem 0.55rem;
+        background: var(--panel-strong);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      .section {
         margin-bottom: 1rem;
+      }
+      .section h3 {
+        margin: 0 0 0.45rem;
+        padding: 0 0.4rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #4b5563;
       }
       .navlist {
         list-style: none;
@@ -57,16 +78,52 @@ const { title, nav, currentHref } = Astro.props;
         color: var(--muted);
         text-decoration: none;
         border-radius: 6px;
-        padding: 0.35rem 0.5rem;
-        margin-bottom: 0.1rem;
+        padding: 0.38rem 0.5rem;
+        margin-bottom: 0.12rem;
+        line-height: 1.25;
+      }
+      .navlist a:hover {
+        background: #e6eaf0;
+        color: #293142;
       }
       .navlist a.active {
-        color: #fff;
-        background: var(--accent);
+        color: var(--accent);
+        background: var(--accent-soft);
+        font-weight: 700;
       }
       .content {
-        padding: 2rem;
-        max-width: 960px;
+        padding: 2rem 2.2rem 2.6rem;
+        max-width: 920px;
+      }
+      .content :global(h1),
+      .content :global(h2),
+      .content :global(h3) {
+        letter-spacing: 0.01em;
+      }
+      .content :global(h1) {
+        margin-top: 0.15rem;
+      }
+      .content :global(p),
+      .content :global(li) {
+        line-height: 1.65;
+      }
+      .content :global(pre),
+      .content :global(code) {
+        background: var(--code-bg);
+      }
+      .content :global(pre) {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0.85rem;
+        overflow-x: auto;
+      }
+      .content :global(table) {
+        border-collapse: collapse;
+      }
+      .content :global(th),
+      .content :global(td) {
+        border: 1px solid var(--line);
+        padding: 0.35rem 0.45rem;
       }
       .content :global(code) {
         font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
@@ -85,16 +142,33 @@ const { title, nav, currentHref } = Astro.props;
   <body>
     <div class="wrap">
       <aside class="sidebar">
-        <div class="brand">UltraPlot Docs</div>
-        <ul class="navlist">
-          {nav.map((item) => (
-            <li>
-              <a class={item.href === currentHref ? "active" : ""} href={item.href}
-                >{item.title}</a
-              >
-            </li>
-          ))}
-        </ul>
+        <div class="brand">UltraPlot Documentation</div>
+        <section class="section">
+          <h3>Overview</h3>
+          <ul class="navlist">
+            {primaryNav.map((item) => (
+              <li>
+                <a class={item.href === currentHref ? "active" : ""} href={item.href}
+                  >{item.title}</a
+                >
+              </li>
+            ))}
+          </ul>
+        </section>
+        {apiNav.length > 0 && (
+          <section class="section">
+            <h3>API Modules</h3>
+            <ul class="navlist">
+              {apiNav.map((item) => (
+                <li>
+                  <a class={item.href === currentHref ? "active" : ""} href={item.href}
+                    >{item.title}</a
+                  >
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </aside>
       <main class="content">
         <slot />

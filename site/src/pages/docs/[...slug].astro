@@ -14,10 +14,22 @@ const entries = (await getCollection("docs"))
         (b.data.order ?? Number.MAX_SAFE_INTEGER) || a.data.title.localeCompare(b.data.title)
   );
 
-const nav = entries.map((entry) => ({
-  title: entry.data.title,
-  href: `/docs/${normalizeId(entry.id)}`
-}));
+const primaryIds = new Set(["index", "migration-plan", "api/index"]);
+const primaryNav = entries
+  .filter((entry) => primaryIds.has(normalizeId(entry.id)))
+  .map((entry) => ({
+    title: entry.data.title,
+    href: `/docs/${normalizeId(entry.id)}`
+  }));
+
+const apiNav = entries
+  .filter((entry) => normalizeId(entry.id).startsWith("api/") && normalizeId(entry.id) !== "api/index")
+  .map((entry) => ({
+    title: entry.data.title.startsWith("ultraplot.")
+      ? entry.data.title.replace(/^ultraplot\./, "")
+      : entry.data.title,
+    href: `/docs/${normalizeId(entry.id)}`
+  }));
 
 export async function getStaticPaths() {
   const pages = (await getCollection("docs")).filter((entry) => !entry.data.draft);
@@ -32,6 +44,6 @@ const currentHref = `/docs/${normalizeId(entry.id)}`;
 const { Content } = await render(entry);
 ---
 
-<DocsLayout title={entry.data.title} nav={nav} currentHref={currentHref}>
+<DocsLayout title={entry.data.title} primaryNav={primaryNav} apiNav={apiNav} currentHref={currentHref}>
   <Content />
 </DocsLayout>
