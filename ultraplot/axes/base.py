@@ -11,7 +11,7 @@ import sys
 import types
 from collections.abc import Iterable as IterableType
 from numbers import Integral, Number
-from typing import Iterable, MutableMapping, Optional, Tuple, Union
+from typing import Any, Iterable, MutableMapping, Optional, Tuple, Union
 
 try:
     # From python 3.12
@@ -1722,7 +1722,19 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         irange = self._range_subplotspec(sx)
         axs = self.figure._iter_axes(hidden=False, children=False, panels=panels)
         axs = [ax for ax in axs if ax._range_subplotspec(sx) == irange]
-        axs = list({self, *axs})  # self may be missing during initialization
+        # Preserve figure iteration order while ensuring self is included.
+        # Using set() here introduces hash-order nondeterminism that can
+        # change share-group roots and produce flaky layouts in image tests.
+        axs = [self, *axs]  # self may be missing during initialization
+        seen = set()
+        unique = []
+        for ax in axs:
+            ax_id = id(ax)
+            if ax_id in seen:
+                continue
+            seen.add(ax_id)
+            unique.append(ax)
+        axs = unique
         pax = axs.pop(argfunc([ax._range_subplotspec(sy)[i] for ax in axs]))
         return [pax, *axs]  # return with leftmost or bottommost first
 
@@ -3680,6 +3692,72 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 **kwargs,
             )
 
+    @classmethod
+    def _coerce_curve_xy(cls, x, y):
+        """
+        Return validated 1D numeric curve coordinates or ``None``.
+        """
+        if np.isscalar(x) or np.isscalar(y):
+            return None
+        if isinstance(x, str) or isinstance(y, str):
+            return None
+        try:
+            xarr = np.asarray(x)
+            yarr = np.asarray(y)
+        except Exception:
+            return None
+        if xarr.ndim != 1 or yarr.ndim != 1:
+            return None
+        if xarr.size < 2 or yarr.size < 2 or xarr.size != yarr.size:
+            return None
+        try:
+            return np.asarray(xarr, dtype=float), np.asarray(yarr, dtype=float)
+        except Exception:
+            return None
+
+    @classmethod
+    def _coerce_curve_xy_from_xy_arg(cls, xy):
+        """
+        Parse annotate-style ``xy`` into validated curve arrays or ``None``.
+        """
+        if isinstance(xy, (tuple, list)) and len(xy) == 2:
+            return cls._coerce_curve_xy(xy[0], xy[1])
+        if isinstance(xy, np.ndarray) and xy.ndim == 2:
+            if xy.shape[0] == 2:
+                return cls._coerce_curve_xy(xy[0], xy[1])
+            if xy.shape[1] == 2:
+                return cls._coerce_curve_xy(xy[:, 0], xy[:, 1])
+        return None
+
+    @staticmethod
+    def _curve_center(x, y, transform):
+        """
+        Return the arc-length midpoint of a curve in the curve coordinate system.
+        """
+        pts = np.column_stack([x, y]).astype(float)
+        try:
+            pts_disp = transform.transform(pts)
+            dx = np.diff(pts_disp[:, 0])
+            dy = np.diff(pts_disp[:, 1])
+            seg = np.hypot(dx, dy)
+            if seg.size == 0 or np.allclose(seg, 0):
+                return float(x[0]), float(y[0])
+            arc = np.concatenate([[0.0], np.cumsum(seg)])
+            target = 0.5 * arc[-1]
+            idx = np.searchsorted(arc, target, side="right") - 1
+            idx = int(np.clip(idx, 0, seg.size - 1))
+            frac = 0.0 if seg[idx] == 0 else (target - arc[idx]) / seg[idx]
+            mid_disp = np.array(
+                [
+                    pts_disp[idx, 0] + frac * dx[idx],
+                    pts_disp[idx, 1] + frac * dy[idx],
+                ]
+            )
+            mid = transform.inverted().transform(mid_disp)
+            return float(mid[0]), float(mid[1])
+        except Exception:
+            return float(np.mean(x)), float(np.mean(y))
+
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def text(
@@ -3766,11 +3844,262 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             warnings.simplefilter("ignore", warnings.UltraPlotWarning)
             kwargs.update(_pop_props(kwargs, "text"))
 
+        # Interpret 1D array x/y as a curved text path.
+        # This preserves scalar behavior while adding ergonomic path labeling.
+        curve_xy = None
+        if len(args) >= 2 and self._name != "three":
+            curve_xy = self._coerce_curve_xy(args[0], args[1])
+        if curve_xy is not None:
+            x_curve, y_curve = curve_xy
+            borderstyle = _not_none(borderstyle, rc["text.borderstyle"])
+            return self.curvedtext(
+                x_curve,
+                y_curve,
+                args[2],
+                transform=transform,
+                border=border,
+                bordercolor=bordercolor,
+                borderinvert=borderinvert,
+                borderwidth=borderwidth,
+                borderstyle=borderstyle,
+                bbox=bbox,
+                bboxcolor=bboxcolor,
+                bboxstyle=bboxstyle,
+                bboxalpha=bboxalpha,
+                bboxpad=bboxpad,
+                **kwargs,
+            )
+
         # Update the text object using a monkey patch
         borderstyle = _not_none(borderstyle, rc["text.borderstyle"])
         obj = func(*args, transform=transform, **kwargs)
         obj.update = labels._update_label.__get__(obj)
         obj.update(
+            {
+                "border": border,
+                "bordercolor": bordercolor,
+                "borderinvert": borderinvert,
+                "borderwidth": borderwidth,
+                "borderstyle": borderstyle,
+                "bbox": bbox,
+                "bboxcolor": bboxcolor,
+                "bboxstyle": bboxstyle,
+                "bboxalpha": bboxalpha,
+                "bboxpad": bboxpad,
+            }
+        )
+        return obj
+
+    @docstring._concatenate_inherited
+    def annotate(
+        self,
+        text: str,
+        xy: Union[
+            Tuple[float, float],
+            Tuple[Iterable[float], Iterable[float]],
+            Iterable[float],
+            np.ndarray,
+        ],
+        xytext: Optional[
+            Union[Tuple[float, float], Iterable[float], np.ndarray]
+        ] = None,
+        xycoords: Union[str, mtransforms.Transform] = "data",
+        textcoords: Optional[Union[str, mtransforms.Transform]] = None,
+        arrowprops: Optional[dict[str, Any]] = None,
+        annotation_clip: Optional[bool] = None,
+        **kwargs: Any,
+    ) -> Union[mtext.Annotation, "CurvedText"]:
+        """
+        Add an annotation. If `xy` is a pair of 1D arrays, draw curved text.
+
+        For curved input with `arrowprops`, the arrow points to the curve center.
+        """
+        curve_xy = self._coerce_curve_xy_from_xy_arg(xy)
+        if curve_xy is None:
+            return super().annotate(
+                text,
+                xy=xy,
+                xytext=xytext,
+                xycoords=xycoords,
+                textcoords=textcoords,
+                arrowprops=arrowprops,
+                annotation_clip=annotation_clip,
+                **kwargs,
+            )
+
+        x_curve, y_curve = curve_xy
+        try:
+            transform = self._get_transform(xycoords, default="data")
+        except Exception:
+            return super().annotate(
+                text,
+                xy=xy,
+                xytext=xytext,
+                xycoords=xycoords,
+                textcoords=textcoords,
+                arrowprops=arrowprops,
+                annotation_clip=annotation_clip,
+                **kwargs,
+            )
+
+        # Reuse text border/bbox conveniences for curved annotate mode.
+        border = kwargs.pop("border", False)
+        bbox = kwargs.pop("bbox", False)
+        bordercolor = kwargs.pop("bordercolor", "w")
+        borderwidth = kwargs.pop("borderwidth", 2)
+        borderinvert = kwargs.pop("borderinvert", False)
+        borderstyle = kwargs.pop("borderstyle", None)
+        bboxcolor = kwargs.pop("bboxcolor", "w")
+        bboxstyle = kwargs.pop("bboxstyle", "round")
+        bboxalpha = kwargs.pop("bboxalpha", 0.5)
+        bboxpad = kwargs.pop("bboxpad", None)
+        borderstyle = _not_none(borderstyle, rc["text.borderstyle"])
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", warnings.UltraPlotWarning)
+            kwargs.update(_pop_props(kwargs, "text"))
+
+        obj = self.curvedtext(
+            x_curve,
+            y_curve,
+            text,
+            transform=transform,
+            border=border,
+            bordercolor=bordercolor,
+            borderinvert=borderinvert,
+            borderwidth=borderwidth,
+            borderstyle=borderstyle,
+            bbox=bbox,
+            bboxcolor=bboxcolor,
+            bboxstyle=bboxstyle,
+            bboxalpha=bboxalpha,
+            bboxpad=bboxpad,
+            **kwargs,
+        )
+
+        # Optional arrow: point to the curve center for now.
+        if arrowprops is not None:
+            xmid, ymid = self._curve_center(x_curve, y_curve, transform)
+            ann = super().annotate(
+                "",
+                xy=(xmid, ymid),
+                xytext=xytext,
+                xycoords=xycoords,
+                textcoords=textcoords,
+                arrowprops=arrowprops,
+                annotation_clip=annotation_clip,
+            )
+            obj._annotation = ann
+        return obj
+
+    def curvedtext(
+        self,
+        x,
+        y,
+        text,
+        *,
+        upright=None,
+        ellipsis=None,
+        avoid_overlap=None,
+        overlap_tol=None,
+        curvature_pad=None,
+        min_advance=None,
+        border=False,
+        bbox=False,
+        bordercolor="w",
+        borderwidth=2,
+        borderinvert=False,
+        borderstyle="miter",
+        bboxcolor="w",
+        bboxstyle="round",
+        bboxalpha=0.5,
+        bboxpad=None,
+        **kwargs,
+    ):
+        """
+        Add curved text that follows a curve.
+
+        Parameters
+        ----------
+        x, y : array-like
+            Curve coordinates.
+        text : str
+            The string for the text.
+        %(axes.transform)s
+
+        Other parameters
+        ----------------
+        border : bool, default: False
+            Whether to draw border around text.
+        borderwidth : float, default: 2
+            The width of the text border.
+        bordercolor : color-spec, default: 'w'
+            The color of the text border.
+        borderinvert : bool, optional
+            If ``True``, the text and border colors are swapped.
+        upright : bool, default: :rc:`text.curved.upright`
+            Whether to flip the curve direction to keep text upright.
+        ellipsis : bool, default: :rc:`text.curved.ellipsis`
+            Whether to show an ellipsis when the text exceeds curve length.
+        avoid_overlap : bool, default: :rc:`text.curved.avoid_overlap`
+            Whether to hide glyphs that overlap after rotation.
+        overlap_tol : float, default: :rc:`text.curved.overlap_tol`
+            Fractional overlap area (0–1) required before hiding a glyph.
+        curvature_pad : float, default: :rc:`text.curved.curvature_pad`
+            Extra spacing in pixels per radian of local curvature.
+        min_advance : float, default: :rc:`text.curved.min_advance`
+            Minimum additional spacing (pixels) enforced between glyph centers.
+        borderstyle : {'miter', 'round', 'bevel'}, default: 'miter'
+            The `line join style \\
+<https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html>`__
+            used for the border.
+        bbox : bool, default: False
+            Whether to draw a bounding box around text.
+        bboxcolor : color-spec, default: 'w'
+            The color of the text bounding box.
+        bboxstyle : boxstyle, default: 'round'
+            The style of the bounding box.
+        bboxalpha : float, default: 0.5
+            The alpha for the bounding box.
+        bboxpad : float, default: :rc:`title.bboxpad`
+            The padding for the bounding box.
+        %(artist.text)s
+
+        **kwargs
+            Passed to `matplotlib.text.Text`.
+        """
+        transform = kwargs.pop("transform", None)
+        if transform is None:
+            transform = self.transData
+        else:
+            transform = self._get_transform(transform)
+        kwargs["transform"] = transform
+
+        upright = _not_none(upright, rc["text.curved.upright"])
+        ellipsis = _not_none(ellipsis, rc["text.curved.ellipsis"])
+        avoid_overlap = _not_none(avoid_overlap, rc["text.curved.avoid_overlap"])
+        overlap_tol = _not_none(overlap_tol, rc["text.curved.overlap_tol"])
+        curvature_pad = _not_none(curvature_pad, rc["text.curved.curvature_pad"])
+        min_advance = _not_none(min_advance, rc["text.curved.min_advance"])
+
+        from ..text import CurvedText
+
+        obj = CurvedText(
+            x,
+            y,
+            text,
+            axes=self,
+            upright=upright,
+            ellipsis=ellipsis,
+            avoid_overlap=avoid_overlap,
+            overlap_tol=overlap_tol,
+            curvature_pad=curvature_pad,
+            min_advance=min_advance,
+            **kwargs,
+        )
+
+        borderstyle = _not_none(borderstyle, rc["text.borderstyle"])
+        obj._apply_label_props(
             {
                 "border": border,
                 "bordercolor": bordercolor,
