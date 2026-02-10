@@ -1,0 +1,17 @@
+{
+  "name": "ultraplot-docs-site",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "docs:sync": "python ../tools/docs/generate_astro_api.py --output site/src/content/docs/api",
+    "dev": "npm run docs:sync && astro dev",
+    "build": "npm run docs:sync && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.2.5",
+    "astro": "^5.13.0",
+    "zod": "^3.24.1"
+  }
+}

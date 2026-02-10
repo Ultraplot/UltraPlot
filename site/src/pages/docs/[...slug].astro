@@ -1,0 +1,30 @@
+---
+import { getCollection, render } from "astro:content";
+import DocsLayout from "../../layouts/DocsLayout.astro";
+
+const entries = (await getCollection("docs"))
+  .filter((entry) => !entry.data.draft)
+  .sort(
+    (a, b) =>
+      (a.data.order ?? Number.MAX_SAFE_INTEGER) -
+        (b.data.order ?? Number.MAX_SAFE_INTEGER) || a.data.title.localeCompare(b.data.title)
+  );
+
+const nav = entries.map((entry) => ({ title: entry.data.title, href: `/docs/${entry.id}` }));
+
+export async function getStaticPaths() {
+  const pages = (await getCollection("docs")).filter((entry) => !entry.data.draft);
+  return pages.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+const currentHref = `/docs/${entry.id}`;
+const { Content } = await render(entry);
+---
+
+<DocsLayout title={entry.data.title} nav={nav} currentHref={currentHref}>
+  <Content />
+</DocsLayout>

@@ -1,0 +1,104 @@
+---
+interface NavItem {
+  title: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  nav: NavItem[];
+  currentHref: string;
+}
+
+const { title, nav, currentHref } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} | UltraPlot Docs</title>
+    <style>
+      :root {
+        --bg: #f3f4f6;
+        --panel: #f8f8f8;
+        --text: #15181f;
+        --muted: #5f6673;
+        --line: #d4d9e3;
+        --accent: #1f4b99;
+      }
+      body {
+        margin: 0;
+        color: var(--text);
+        background: linear-gradient(170deg, #f6f7f9 0%, #eceff4 100%);
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      .sidebar {
+        background: var(--panel);
+        border-right: 1px solid var(--line);
+        padding: 1rem;
+      }
+      .brand {
+        font-weight: 700;
+        margin-bottom: 1rem;
+      }
+      .navlist {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .navlist a {
+        display: block;
+        color: var(--muted);
+        text-decoration: none;
+        border-radius: 6px;
+        padding: 0.35rem 0.5rem;
+        margin-bottom: 0.1rem;
+      }
+      .navlist a.active {
+        color: #fff;
+        background: var(--accent);
+      }
+      .content {
+        padding: 2rem;
+        max-width: 960px;
+      }
+      .content :global(code) {
+        font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, monospace;
+      }
+      @media (max-width: 940px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          border-right: none;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <aside class="sidebar">
+        <div class="brand">UltraPlot Docs</div>
+        <ul class="navlist">
+          {nav.map((item) => (
+            <li>
+              <a class={item.href === currentHref ? "active" : ""} href={item.href}
+                >{item.title}</a
+              >
+            </li>
+          ))}
+        </ul>
+      </aside>
+      <main class="content">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>
