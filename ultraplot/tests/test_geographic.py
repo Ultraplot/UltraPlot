@@ -179,6 +179,38 @@ def test_geoticks_input_handling(recwarn):
     ax.format(lonticklen="1em")
 
 
+def test_geoticks_label_shorthand_lb_no_warning(recwarn):
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.format(land=True, lonlines=30, latlines=30, labels="lb")
+    assert len(recwarn) == 0
+    assert ax[0].xaxis.get_ticks_position() == "bottom"
+    assert ax[0].yaxis.get_ticks_position() == "left"
+    uplt.close(fig)
+
+
+def test_toggle_ticks_supports_bool_and_sequence_specs():
+    fig, ax = uplt.subplots(proj="cyl")
+    geo = ax[0]
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always", uplt.warnings.UltraPlotWarning)
+        geo._toggle_ticks(True, "x")
+        assert geo.xaxis.get_ticks_position() == "bottom"
+        geo._toggle_ticks((True, True), "x")
+        assert geo.xaxis.get_ticks_position() in ("both", "default")
+        geo._toggle_ticks(("left", "bottom"), "x")
+        assert geo.xaxis.get_ticks_position() == "bottom"
+
+        geo._toggle_ticks(True, "y")
+        assert geo.yaxis.get_ticks_position() == "left"
+        geo._toggle_ticks((True, True), "y")
+        assert geo.yaxis.get_ticks_position() in ("both", "default")
+        geo._toggle_ticks(("left", "bottom"), "y")
+        assert geo.yaxis.get_ticks_position() == "left"
+
+    assert not caught
+    uplt.close(fig)
+
+
 @pytest.mark.parametrize(
     ("layout", "lonlabels", "latlabels"),
     [
@@ -993,7 +1025,7 @@ def test_geo_with_panels(rng):
     elevation = np.clip(elevation, 0, 4000)
 
     fig, ax = uplt.subplots(nrows=2, proj="cyl")
-    ax.format(lonlabels="r")  # by default they are off
+    ax.format(latlabels="r")  # by default right-side latitude labels are off
     pax = ax.panel("r")
     z = elevation.sum()
     pax[0].barh(lat_zoom, elevation.sum(axis=1))
