@@ -55,6 +55,22 @@ def test_sankey_rc_defaults():
     assert uplt.rc["sankey.node.facecolor"] == "0.75"
 
 
+def test_ribbon_rc_defaults():
+    """
+    Sanity check ribbon defaults in rc.
+    """
+    assert uplt.rc["ribbon.xmargin"] == 0.12
+    assert uplt.rc["ribbon.ymargin"] == 0.08
+    assert uplt.rc["ribbon.row_height_ratio"] == 2.2
+    assert uplt.rc["ribbon.node_width"] == 0.018
+    assert uplt.rc["ribbon.flow.curvature"] == 0.45
+    assert uplt.rc["ribbon.flow.alpha"] == 0.58
+    assert uplt.rc["ribbon.show_topic_labels"] is True
+    assert uplt.rc["ribbon.topic_label_offset"] == 0.028
+    assert uplt.rc["ribbon.topic_label_size"] == 7.4
+    assert uplt.rc["ribbon.topic_label_box"] is True
+
+
 import io
 from importlib.metadata import PackageNotFoundError
 from unittest.mock import MagicMock, patch

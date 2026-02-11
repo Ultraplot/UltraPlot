@@ -2319,16 +2319,16 @@ class PlotAxes(base.Axes):
         group_map: Mapping[Any, Any] | None = None,
         group_order: Sequence[Any] | None = None,
         group_colors: Mapping[Any, Any] | None = None,
-        xmargin: float = 0.12,
-        ymargin: float = 0.08,
-        row_height_ratio: float = 2.2,
-        node_width: float = 0.018,
-        flow_curvature: float = 0.45,
-        flow_alpha: float = 0.58,
-        show_topic_labels: bool = True,
-        topic_label_offset: float = 0.028,
-        topic_label_size: float = 7.4,
-        topic_label_box: bool = True,
+        xmargin: Optional[float] = None,
+        ymargin: Optional[float] = None,
+        row_height_ratio: Optional[float] = None,
+        node_width: Optional[float] = None,
+        flow_curvature: Optional[float] = None,
+        flow_alpha: Optional[float] = None,
+        show_topic_labels: Optional[bool] = None,
+        topic_label_offset: Optional[float] = None,
+        topic_label_size: Optional[float] = None,
+        topic_label_box: Optional[bool] = None,
     ) -> dict[str, Any]:
         """
         Draw a fixed-row, top-aligned ribbon flow diagram from long-form records.
@@ -2374,6 +2374,19 @@ class PlotAxes(base.Axes):
             Mapping of created artists and resolved orders.
         """
         from .plot_types.ribbon import ribbon_diagram
+
+        xmargin = _not_none(xmargin, rc["ribbon.xmargin"])
+        ymargin = _not_none(ymargin, rc["ribbon.ymargin"])
+        row_height_ratio = _not_none(row_height_ratio, rc["ribbon.row_height_ratio"])
+        node_width = _not_none(node_width, rc["ribbon.node_width"])
+        flow_curvature = _not_none(flow_curvature, rc["ribbon.flow.curvature"])
+        flow_alpha = _not_none(flow_alpha, rc["ribbon.flow.alpha"])
+        show_topic_labels = _not_none(show_topic_labels, rc["ribbon.show_topic_labels"])
+        topic_label_offset = _not_none(
+            topic_label_offset, rc["ribbon.topic_label_offset"]
+        )
+        topic_label_size = _not_none(topic_label_size, rc["ribbon.topic_label_size"])
+        topic_label_box = _not_none(topic_label_box, rc["ribbon.topic_label_box"])
 
         return ribbon_diagram(
             self,
