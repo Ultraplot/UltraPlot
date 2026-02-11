@@ -1031,7 +1031,7 @@ def test_ribbon_smoke():
     ]
     data = pd.DataFrame(records, columns=["id", "period", "topic"])
 
-    fig, ax = uplt.subplots(nrows=2, hratios=(2, 1), share=False)
+    fig, ax = uplt.subplots()
     artists = ax.ribbon(
         data,
         id_col="id",
