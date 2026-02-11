@@ -1050,12 +1050,12 @@ _rc_ultraplot_table = {
         _validate_float,
         "Vertical margin around ribbon diagrams (axes-relative units).",
     ),
-    "ribbon.row_height_ratio": (
+    "ribbon.rowheightratio": (
         2.2,
         _validate_float,
         "Height scale factor controlling ribbon row occupancy.",
     ),
-    "ribbon.node_width": (
+    "ribbon.nodewidth": (
         0.018,
         _validate_float,
         "Node width for ribbon diagrams (axes-relative units).",
@@ -1070,7 +1070,7 @@ _rc_ultraplot_table = {
         _validate_float,
         "Flow transparency for ribbon diagrams.",
     ),
-    "ribbon.show_topic_labels": (
+    "ribbon.topic_labels": (
         True,
         _validate_bool,
         "Whether to draw topic labels on the right side of ribbon diagrams.",

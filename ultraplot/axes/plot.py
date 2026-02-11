@@ -2377,11 +2377,11 @@ class PlotAxes(base.Axes):
 
         xmargin = _not_none(xmargin, rc["ribbon.xmargin"])
         ymargin = _not_none(ymargin, rc["ribbon.ymargin"])
-        row_height_ratio = _not_none(row_height_ratio, rc["ribbon.row_height_ratio"])
-        node_width = _not_none(node_width, rc["ribbon.node_width"])
+        row_height_ratio = _not_none(row_height_ratio, rc["ribbon.rowheightratio"])
+        node_width = _not_none(node_width, rc["ribbon.nodewidth"])
         flow_curvature = _not_none(flow_curvature, rc["ribbon.flow.curvature"])
         flow_alpha = _not_none(flow_alpha, rc["ribbon.flow.alpha"])
-        show_topic_labels = _not_none(show_topic_labels, rc["ribbon.show_topic_labels"])
+        show_topic_labels = _not_none(show_topic_labels, rc["ribbon.topic_labels"])
         topic_label_offset = _not_none(
             topic_label_offset, rc["ribbon.topic_label_offset"]
         )
