@@ -1031,8 +1031,8 @@ def test_ribbon_smoke():
     ]
     data = pd.DataFrame(records, columns=["id", "period", "topic"])
 
-    fig, axs = uplt.subplots(nrows=2, hratios=(2, 1), share=False)
-    artists = axs[0].ribbon(
+    fig, ax = uplt.subplots(nrows=2, hratios=(2, 1), share=False)
+    artists = ax.ribbon(
         data,
         id_col="id",
         period_col="period",
@@ -1041,8 +1041,6 @@ def test_ribbon_smoke():
         topic_order=["T1", "T2", "T3"],
         group_map={"T1": "G1", "T2": "G1", "T3": "G2"},
         group_order=["G1", "G2"],
-        composition=True,
-        composition_ax=axs[1],
     )
     assert artists["node_patches"]
     assert artists["flow_patches"]
