@@ -230,6 +230,31 @@ def test_cycle_mutation_does_not_corrupt_rcparams():
     assert all(value in allowed for value in observed)
 
 
+def test_rc_registry_merge_disjoint_tables():
+    """
+    Registry merge should combine disjoint rc tables.
+    """
+    from ultraplot.internals.rc.registry import merge_rc_tables
+
+    left = {"a.b": (1, lambda x: x, "left")}
+    right = {"c.d": (2, lambda x: x, "right")}
+    merged = merge_rc_tables(left, right)
+    assert merged["a.b"][0] == 1
+    assert merged["c.d"][0] == 2
+
+
+def test_rc_registry_merge_duplicate_keys_raises():
+    """
+    Registry merge should fail fast on duplicate keys.
+    """
+    from ultraplot.internals.rc.registry import merge_rc_tables
+
+    table1 = {"a.b": (1, lambda x: x, "first")}
+    table2 = {"a.b": (2, lambda x: x, "second")}
+    with pytest.raises(ValueError, match="Duplicate rc keys"):
+        merge_rc_tables(table1, table2)
+
+
 def _run_in_subprocess(code):
     code = (
         "import pathlib\n"
