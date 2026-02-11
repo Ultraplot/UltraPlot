@@ -113,6 +113,21 @@ jobs:
           cache-environment: true
           cache-downloads: false
 
+      - name: Resolve baseline reference
+        id: baseline-ref
+        run: |
+          if [ "${IS_PR}" = "true" ]; then
+            BASE_REF="${{ github.event.pull_request.base.ref }}"
+            git fetch origin "${BASE_REF}"
+            BASE_SHA="$(git rev-parse "origin/${BASE_REF}")"
+          else
+            BASE_REF="${GITHUB_REF_NAME:-main}"
+            BASE_SHA="${GITHUB_SHA}"
+          fi
+          echo "base_ref=${BASE_REF}" >> "${GITHUB_OUTPUT}"
+          echo "base_sha=${BASE_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "Resolved baseline ref=${BASE_REF} sha=${BASE_SHA}"
+
       # Cache Baseline Figures (Restore step)
       - name: Cache Baseline Figures
         id: cache-baseline
@@ -121,9 +136,9 @@ jobs:
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
           # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
-          key: ${{ runner.os }}-baseline-base-v3-hs${{ env.PYTHONHASHSEED }}-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
+          key: ${{ runner.os }}-baseline-base-v4-hs${{ env.PYTHONHASHSEED }}-${{ steps.baseline-ref.outputs.base_sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
           restore-keys: |
-            ${{ runner.os }}-baseline-base-v3-hs${{ env.PYTHONHASHSEED }}-${{ github.event.pull_request.base.sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
+            ${{ runner.os }}-baseline-base-v4-hs${{ env.PYTHONHASHSEED }}-${{ steps.baseline-ref.outputs.base_sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
 
       # Conditional Baseline Generation (Only runs on cache miss)
       - name: Generate baseline from main
@@ -133,7 +148,8 @@ jobs:
           mkdir -p ultraplot/tests/baseline
           echo "TEST_MODE=${TEST_MODE}"
           echo "IS_PR=${IS_PR}"
-          echo "PR_BASE_SHA=${{ github.event.pull_request.base.sha }}"
+          echo "PR_BASE_REF=${{ steps.baseline-ref.outputs.base_ref }}"
+          echo "PR_BASE_SHA=${{ steps.baseline-ref.outputs.base_sha }}"
           echo "TEST_NODEIDS=${TEST_NODEIDS}"
           # Save PR-selected nodeids for reuse after checkout (if provided)
           if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
@@ -141,10 +157,9 @@ jobs:
           else
             : > /tmp/pr_selected_nodeids.txt
           fi
-          # Checkout the base commit for PRs; otherwise regenerate from current ref
-          if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
-            git fetch origin ${{ github.event.pull_request.base.sha }}
-            git checkout ${{ github.event.pull_request.base.sha }}
+          # Checkout the resolved base-branch tip for PR baseline generation.
+          if [ "${IS_PR}" = "true" ]; then
+            git checkout "${{ steps.baseline-ref.outputs.base_sha }}"
           fi
 
           # Install the Ultraplot version from the base branch's code
@@ -180,7 +195,7 @@ jobs:
               fi
             fi
             # Return to the PR branch before continuing
-            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            if [ "${IS_PR}" = "true" ]; then
               echo "Checking out PR branch: ${{ github.sha }}"
               git checkout ${{ github.sha }} || echo "Warning: git checkout failed, but continuing"
             fi
@@ -196,7 +211,7 @@ jobs:
               ultraplot/tests
             echo "=== Memory after baseline generation ===" && free -h
             # Return to the PR branch for the rest of the job
-            if [ -n "${{ github.event.pull_request.base.sha }}" ]; then
+            if [ "${IS_PR}" = "true" ]; then
               echo "Checking out PR branch: ${{ github.sha }}"
               git checkout ${{ github.sha }} || echo "Warning: git checkout failed, but continuing"
             fi
