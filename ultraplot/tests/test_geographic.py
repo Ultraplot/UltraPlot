@@ -1025,7 +1025,7 @@ def test_geo_with_panels(rng):
     elevation = np.clip(elevation, 0, 4000)
 
     fig, ax = uplt.subplots(nrows=2, proj="cyl")
-    ax.format(lonlabels="r")  # by default they are off
+    ax.format(latlabels="r")  # by default right-side latitude labels are off
     pax = ax.panel("r")
     z = elevation.sum()
     pax[0].barh(lat_zoom, elevation.sum(axis=1))
