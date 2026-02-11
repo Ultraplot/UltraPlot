@@ -27,14 +27,9 @@ from . import (
     warnings,
 )
 from .rc import (
-    build_axes_rc_table,
-    build_ribbon_rc_table,
-    build_sankey_rc_table,
-    build_subplots_rc_table,
-    build_text_rc_table,
+    build_settings_rc_table,
     get_rc_removed,
     get_rc_renamed,
-    merge_rc_tables,
 )
 from .versions import _version_mpl
 
@@ -981,13 +976,7 @@ _addendum_font = (
     " Must be a :ref:`relative font size <font_table>` or unit string "
     "interpreted by `~ultraplot.utils.units`. Numeric units are points."
 )
-_rc_ultraplot_table = merge_rc_tables(
-    build_axes_rc_table(globals()),
-    build_text_rc_table(globals()),
-    build_subplots_rc_table(globals()),
-    build_sankey_rc_table(globals()),
-    build_ribbon_rc_table(globals()),
-)
+_rc_ultraplot_table = build_settings_rc_table(globals())
 
 # Child settings. Changing the parent changes all the children, but
 # changing any of the children does not change the parent.

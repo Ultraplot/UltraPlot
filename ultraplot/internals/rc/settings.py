@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
-Core rc defaults extracted from rcsetup.
+Single-source rc setting table with section headers.
 """
 
 from __future__ import annotations
 
 from typing import Any, Callable, Mapping
 
+from .validators import build_validator_aliases
+
 RcValidator = Callable[[Any], Any]
 RcEntry = tuple[Any, RcValidator, str]
 RcTable = dict[str, RcEntry]
 
-
-def build_core_rc_table(ns: Mapping[str, Any]) -> RcTable:
+def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
     """Build the core ultraplot rc table from rcsetup namespace symbols."""
     BLACK = ns["BLACK"]
     CMAPCAT = ns["CMAPCAT"]
@@ -79,7 +80,78 @@ def build_core_rc_table(ns: Mapping[str, Any]) -> RcTable:
     _validate_string_or_iterable = ns["_validate_string_or_iterable"]
     _validate_tuple_float_2 = ns["_validate_tuple_float_2"]
     _validate_tuple_int_2 = ns["_validate_tuple_int_2"]
+
+    validators = build_validator_aliases(ns)
+    validate_bool = validators["bool"]
+    validate_color = validators["color"]
+    validate_float = validators["float"]
+    validate_int = validators["int"]
+    validate_string = validators["string"]
+
     return {
+        # Plot-type settings
+        # Curved quiver settings
+        "curved_quiver.arrowsize": (
+            1.0,
+            validate_float,
+            "Default size scaling for arrows in curved quiver plots.",
+        ),
+        "curved_quiver.arrowstyle": (
+            "-|>",
+            validate_string,
+            "Default arrow style for curved quiver plots.",
+        ),
+        "curved_quiver.scale": (
+            1.0,
+            validate_float,
+            "Default scale factor for curved quiver plots.",
+        ),
+        "curved_quiver.grains": (
+            15,
+            validate_int,
+            "Default number of grains (segments) for curved quiver arrows.",
+        ),
+        "curved_quiver.density": (
+            10,
+            validate_int,
+            "Default density of arrows for curved quiver plots.",
+        ),
+        "curved_quiver.arrows_at_end": (
+            True,
+            validate_bool,
+            "Whether to draw arrows at the end of curved quiver lines by default.",
+        ),
+        # Sankey settings
+        "sankey.nodepad": (
+            0.02,
+            validate_float,
+            "Vertical padding between nodes in layered sankey diagrams.",
+        ),
+        "sankey.nodewidth": (
+            0.03,
+            validate_float,
+            "Node width for layered sankey diagrams (axes-relative units).",
+        ),
+        "sankey.margin": (
+            0.05,
+            validate_float,
+            "Margin around layered sankey diagrams (axes-relative units).",
+        ),
+        "sankey.flow.alpha": (
+            0.75,
+            validate_float,
+            "Flow transparency for layered sankey diagrams.",
+        ),
+        "sankey.flow.curvature": (
+            0.5,
+            validate_float,
+            "Flow curvature for layered sankey diagrams.",
+        ),
+        "sankey.node.facecolor": (
+            "0.75",
+            validate_color,
+            "Default node facecolor for layered sankey diagrams.",
+        ),
         "external.shrink": (
             0.9,
             _validate_float,
