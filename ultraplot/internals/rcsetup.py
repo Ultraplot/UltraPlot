@@ -26,6 +26,7 @@ from . import (
     ic,  # noqa: F401
     warnings,
 )
+from .rc import build_plot_type_rc_table
 from .versions import _version_mpl
 
 # Regex for "probable" unregistered named colors. Try to retain warning message for
@@ -972,72 +973,18 @@ _addendum_font = (
     "interpreted by `~ultraplot.utils.units`. Numeric units are points."
 )
 _rc_ultraplot_table = {
-    # Curved quiver settings
-    "curved_quiver.arrowsize": (
-        1.0,
-        _validate_float,
-        "Default size scaling for arrows in curved quiver plots.",
-    ),
-    "curved_quiver.arrowstyle": (
-        "-|>",
-        _validate_string,
-        "Default arrow style for curved quiver plots.",
-    ),
-    "curved_quiver.scale": (
-        1.0,
-        _validate_float,
-        "Default scale factor for curved quiver plots.",
-    ),
-    "curved_quiver.grains": (
-        15,
-        _validate_int,
-        "Default number of grains (segments) for curved quiver arrows.",
-    ),
-    "curved_quiver.density": (
-        10,
-        _validate_int,
-        "Default density of arrows for curved quiver plots.",
-    ),
-    "curved_quiver.arrows_at_end": (
-        True,
-        _validate_bool,
-        "Whether to draw arrows at the end of curved quiver lines by default.",
+    # Plot-type settings are grouped in internals/rc/plot_types.py
+    **build_plot_type_rc_table(
+        validate_bool=_validate_bool,
+        validate_color=_validate_color,
+        validate_float=_validate_float,
+        validate_int=_validate_int,
+        validate_string=_validate_string,
     ),
     "external.shrink": (
         0.9,
         _validate_float,
         "Default shrink factor for external axes containers.",
-    ),
-    # Sankey settings
-    "sankey.nodepad": (
-        0.02,
-        _validate_float,
-        "Vertical padding between nodes in layered sankey diagrams.",
-    ),
-    "sankey.nodewidth": (
-        0.03,
-        _validate_float,
-        "Node width for layered sankey diagrams (axes-relative units).",
-    ),
-    "sankey.margin": (
-        0.05,
-        _validate_float,
-        "Margin around layered sankey diagrams (axes-relative units).",
-    ),
-    "sankey.flow.alpha": (
-        0.75,
-        _validate_float,
-        "Flow transparency for layered sankey diagrams.",
-    ),
-    "sankey.flow.curvature": (
-        0.5,
-        _validate_float,
-        "Flow curvature for layered sankey diagrams.",
-    ),
-    "sankey.node.facecolor": (
-        "0.75",
-        _validate_color,
-        "Default node facecolor for layered sankey diagrams.",
     ),
     # Stylesheet
     "style": (

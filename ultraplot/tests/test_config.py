@@ -55,6 +55,18 @@ def test_sankey_rc_defaults():
     assert uplt.rc["sankey.node.facecolor"] == "0.75"
 
 
+def test_curved_quiver_rc_defaults():
+    """
+    Sanity check curved_quiver defaults in rc.
+    """
+    assert uplt.rc["curved_quiver.arrowsize"] == 1.0
+    assert uplt.rc["curved_quiver.arrowstyle"] == "-|>"
+    assert uplt.rc["curved_quiver.scale"] == 1.0
+    assert uplt.rc["curved_quiver.grains"] == 15
+    assert uplt.rc["curved_quiver.density"] == 10
+    assert uplt.rc["curved_quiver.arrows_at_end"] is True
+
+
 import io
 from importlib.metadata import PackageNotFoundError
 from unittest.mock import MagicMock, patch
