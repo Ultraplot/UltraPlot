@@ -14,10 +14,10 @@ A dictionary-like object named :obj:`~ultraplot.config.rc`, belonging to the
 :class:`~ultraplot.config.Configurator` class, is created when you import UltraPlot.
 This is your one-stop shop for working with
 `matplotlib settings <ug_rcmpl_>`_
-stored in :obj:`~ultraplot.config.rc_matplotlib`
+stored in :obj:`~ultraplot.config.rc.rc_matplotlib`
 (our name for the :obj:`~matplotlib.rcParams` dictionary)
 and :ref:`ultraplot settings <ug_rcUltraPlot>`
-stored in :obj:`~ultraplot.config.rc_ultraplot`.
+stored in :obj:`~ultraplot.config.rc.rc_ultraplot`.
 
 To change global settings on-the-fly, simply update :obj:`~ultraplot.config.rc`
 using either dot notation or as you would any other dictionary:
@@ -73,7 +73,7 @@ Matplotlib settings
 
 Matplotlib settings are natively stored in the :obj:`~matplotlib.rcParams`
 dictionary. UltraPlot makes this dictionary available in the top-level namespace as
-:obj:`~ultraplot.config.rc_matplotlib`. All matplotlib settings can also be changed with
+:obj:`~ultraplot.config.rc.rc_matplotlib`. All matplotlib settings can also be changed with
 :obj:`~ultraplot.config.rc`. Details on the matplotlib settings can be found on
 `this page <ug_rcmpl_>`_.
 
@@ -83,9 +83,9 @@ dictionary. UltraPlot makes this dictionary available in the top-level namespace
 UltraPlot settings
 ----------------
 
-UltraPlot settings are natively stored in the :obj:`~ultraplot.config.rc_ultraplot` dictionary.
+UltraPlot settings are natively stored in the :obj:`~ultraplot.config.rc.rc_ultraplot` dictionary.
 They should almost always be changed with :obj:`~ultraplot.config.rc` rather than
-:obj:`~ultraplot.config.rc_ultraplot` to ensure that :ref:`meta-settings <ug_rcmeta>` are
+:obj:`~ultraplot.config.rc.rc_ultraplot` to ensure that :ref:`meta-settings <ug_rcmeta>` are
 synced. These settings are not found in :obj:`~matplotlib.rcParams` -- they either
 control UltraPlot-managed features (e.g., a-b-c labels and geographic gridlines)
 or they represent existing matplotlib settings with more clear or succinct names.
@@ -120,7 +120,7 @@ Meta-settings
 Some UltraPlot settings may be more accurately described as "meta-settings",
 as they change several matplotlib and UltraPlot settings at once (note that settings
 are only synced when they are changed on the :obj:`~ultraplot.config.rc` object rather than
-the :obj:`~ultraplot.config.rc_UltraPlot` and :obj:`~ultraplot.config.rc_matplotlib` dictionaries).
+the :obj:`~ultraplot.config.rc.rc_ultraplot` and :obj:`~ultraplot.config.rc.rc_matplotlib` dictionaries).
 Here's a broad overview of the "meta-settings":
 
 * Setting :rcraw:`font.small` (or, equivalently, :rcraw:`fontsmall`) changes

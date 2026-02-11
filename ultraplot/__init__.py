@@ -105,78 +105,13 @@ def setup(eager: Optional[bool] = None) -> None:
     if eager is None:
         from .config import rc
 
-        eager = bool(rc["ultraplot.eager_import"])
-    if eager:
-        _LOADER.load_all(globals())
+# Validate color names now that colors are registered
+# NOTE: This updates all settings with 'color' in name (harmless if it's not a color)
+rcsetup.VALIDATE_REGISTERED_COLORS = True
+rc.sync()  # triggers validation
 
-
-def _build_registry_map():
-    global _REGISTRY_ATTRS
-    if _REGISTRY_ATTRS is not None:
-        return
-    from .constructor import FORMATTERS, LOCATORS, NORMS, PROJS, SCALES
-
-    registry = {}
-    for src in (NORMS, LOCATORS, FORMATTERS, SCALES, PROJS):
-        for _, cls in src.items():
-            if isinstance(cls, type):
-                registry[cls.__name__] = cls
-    _REGISTRY_ATTRS = registry
-
-
-def _get_registry_attr(name):
-    _build_registry_map()
-    return _REGISTRY_ATTRS.get(name) if _REGISTRY_ATTRS else None
-
-
-_LOADER: LazyLoader = LazyLoader(
-    package=__name__,
-    package_path=Path(__file__).resolve().parent,
-    exceptions=_LAZY_LOADING_EXCEPTIONS,
-    setup_callback=_setup,
-    registry_attr_callback=_get_registry_attr,
-    registry_build_callback=_build_registry_map,
-    registry_names_callback=lambda: _REGISTRY_ATTRS,
-)
-
-
-def __getattr__(name):
-    # If the name is already in globals, return it immediately
-    # (Prevents re-running logic for already loaded attributes)
-    if name in globals():
-        return globals()[name]
-
-    if name == "pytest_plugins":
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-    # Priority 2: Core metadata
-    if name in {"__version__", "version", "name", "__all__"}:
-        if name == "__all__":
-            val = _LOADER.load_all(globals())
-            globals()["__all__"] = val
-            return val
-        return globals().get(name)
-
-    # Priority 3: Special handling for figure
-    if name == "figure":
-        # Special handling for figure to allow module imports
-        import inspect
-        import sys
-
-        # Check if this is a module import by looking at the call stack
-        frame = inspect.currentframe()
-        try:
-            caller_frame = frame.f_back
-            if caller_frame:
-                # Check if the caller is likely the import system
-                caller_code = caller_frame.f_code
-                # Check if this is a module import
-                is_import = (
-                    "importlib" in caller_code.co_filename
-                    or caller_code.co_name
-                    in ("_handle_fromlist", "_find_and_load", "_load_unlocked")
-                    or "_bootstrap" in caller_code.co_filename
-                )
+from .colors import _cmap_database as colormaps
+from .utils import check_for_update
 
                 # Also check if the caller is a module-level import statement
                 if not is_import and caller_code.co_name == "<module>":

@@ -489,7 +489,7 @@ axs.format(
 # <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__ and
 # :ref:`ultraplot settings <ug_rcUltraPlot>`. The matplotlib-specific settings are
 # stored in :func:`~ultraplot.config.rc_matplotlib` (our name for :data:`~matplotlib.rcParams`) and
-# the UltraPlot-specific settings are stored in :class:`~ultraplot.config.rc_ultraplot`.
+# the UltraPlot-specific settings are stored in :class:`~ultraplot.config.rc.rc_ultraplot`.
 # UltraPlot also includes a :rcraw:`style` setting that can be used to
 # switch between `matplotlib stylesheets
 # <https://matplotlib.org/stable/gallery/style_sheets/style_sheets_reference.html>`__.

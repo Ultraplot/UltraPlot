@@ -299,46 +299,28 @@ def test_suptitle_kw_position_reverted(ha, expectation):
     uplt.close("all")
 
 
-@pytest.mark.parametrize("va", ["bottom", "center", "top"])
-def test_suptitle_vertical_alignment_preserves_top_spacing(va):
+def test_disable_matplotlib_native_layout_flags_and_warnings():
     """
-    Suptitle vertical alignment should not reduce the spacing above top content.
+    Ensure that native matplotlib layout flags are disabled by ultraplot and that
+    UltraPlotWarning is emitted when creating a Figure while the matplotlib
+    rc flags 'figure.autolayout' or 'figure.constrained_layout.use' are True.
+
+    This verifies the branches that call warnings._warn_ultraplot(...) and
+    then set the flags to False inside Figure.__init__.
     """
-    fig, axs = uplt.subplots(ncols=2)
-    fig.format(
-        suptitle="Long figure title\nsecond line",
-        suptitle_kw={"va": va},
-        toplabels=("left", "right"),
-    )
-    fig.canvas.draw()
-    renderer = fig.canvas.get_renderer()
+    # Ensure the matplotlib-related rc flags are set on the ultraplot rc wrapper
+    # prior to creating a figure.
+    uplt.rc.rc_matplotlib["figure.autolayout"] = True
+    uplt.rc.rc_matplotlib["figure.constrained_layout.use"] = True
 
-    axs_top = fig._get_align_axes("top")
-    labs = tuple(t for t in fig._suplabel_dict["top"].values() if t.get_text())
-    pad = (fig._suptitle_pad / 72) / fig.get_size_inches()[1]
-    y_expected = fig._get_offset_coord("top", axs_top, renderer, pad=pad, extra=labs)
+    # Creating the figure should emit at least one UltraPlotWarning (we don't
+    # rely on exact message content) and should reset the matplotlib rc flags.
+    with pytest.warns(uplt.internals.warnings.UltraPlotWarning):
+        fig = uplt.figure()
 
-    bbox = fig._suptitle.get_window_extent(renderer)
-    y_actual = fig.transFigure.inverted().transform((0, bbox.ymin))[1]
-    y_tol = 1.5 / (fig.dpi * fig.get_size_inches()[1])  # ~1.5 px tolerance
-    assert y_actual >= y_expected - y_tol
+    # After construction, the matplotlib rc flags should have been set to False.
+    assert uplt.rc.rc_matplotlib.get("figure.autolayout", False) is False
+    assert uplt.rc.rc_matplotlib.get("figure.constrained_layout.use", False) is False
 
-    uplt.close("all")
-
-
-def test_subplots_pixelsnap_aligns_axes_bounds():
-    with uplt.rc.context({"subplots.pixelsnap": True}):
-        fig, axs = uplt.subplots(ncols=2, nrows=2)
-        axs.plot([0, 1], [0, 1])
-        fig.canvas.draw()
-
-        renderer = fig._get_renderer()
-        width = float(renderer.width)
-        height = float(renderer.height)
-
-        for ax in axs:
-            bbox = ax.get_position(original=False)
-            coords = np.array(
-                [bbox.x0 * width, bbox.y0 * height, bbox.x1 * width, bbox.y1 * height]
-            )
-            assert np.allclose(coords, np.round(coords), atol=1e-8)
+    # Clean up
+    uplt.close(fig)

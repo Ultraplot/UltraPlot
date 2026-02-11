@@ -815,8 +815,8 @@ Acceptable units include inches, centimeters, millimeters,
 pixels, `points <https://en.wikipedia.org/wiki/Point_(typography)>`__, and `picas
 <https://en.wikipedia.org/wiki/Pica_(typography)>`__ (a table of acceptable
 units is found :ref:`here <units_table>`). Note the :func:`~ultraplot.utils.units` engine
-also translates rc settings assigned to :func:`~ultraplot.config.rc_matplotlib` and
-:obj:`~ultraplot.config.rc_UltraPlot`, e.g. :rcraw:`subplots.refwidth`,
+also translates rc settings assigned to :func:`~ultraplot.config.rc.rc_matplotlib` and
+:obj:`~ultraplot.config.rc.rc_ultraplot`, e.g. :rcraw:`subplots.refwidth`,
 :rcraw:`legend.columnspacing`, and :rcraw:`axes.labelpad`.
 
 Links
@@ -848,8 +848,8 @@ Changes
 -------
 
 In UltraPlot, you can use the :obj:`~ultraplot.config.rc` object to change both native
-matplotlib settings (found in :obj:`~ultraplot.config.rc_matplotlib`) and added UltraPlot
-settings (found in :obj:`~ultraplot.config.rc_UltraPlot`). Assigned settings are always
+matplotlib settings (found in :obj:`~ultraplot.config.rc.rc_matplotlib`) and added UltraPlot
+settings (found in :obj:`~ultraplot.config.rc.rc_ultraplot`). Assigned settings are always
 validated, and "meta" settings like ``meta.edgecolor``, ``meta.linewidth``, and
 ``font.smallsize`` can be used to update many settings all at once. Settings can
 be changed with ``uplt.rc.key = value``, ``uplt.rc[key] = value``,
