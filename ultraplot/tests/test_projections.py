@@ -46,6 +46,18 @@ def test_cartopy_labels():
     return fig
 
 
+def test_cartopy_labels_not_shared_for_non_rectilinear():
+    """
+    Non-rectilinear cartopy axes should keep independent gridliner labels.
+    """
+    fig, axs = uplt.subplots(ncols=2, proj="robin", refwidth=3)
+    axs.format(coast=True, labels=True)
+    fig.canvas.draw()
+
+    assert axs[0]._is_ticklabel_on("labelleft")
+    assert axs[1]._is_ticklabel_on("labelleft")
+
+
 @pytest.mark.mpl_image_compare
 def test_cartopy_contours(rng):
     """
