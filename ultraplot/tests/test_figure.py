@@ -1,5 +1,7 @@
 import multiprocessing as mp
 import os
+import warnings
+from datetime import datetime, timedelta
 
 import numpy as np
 import pytest
@@ -297,6 +299,110 @@ def test_suptitle_kw_position_reverted(ha, expectation):
     assert np.isclose(x, expectation, atol=0.1), f"Expected x={expectation}, got {x=}"
 
     uplt.close("all")
+
+
+def _share_sibling_count(ax, which: str) -> int:
+    return len(list(ax._shared_axes[which].get_siblings(ax)))
+
+
+def test_default_share_mode_is_auto():
+    fig, axs = uplt.subplots(ncols=2)
+    assert fig._sharex_auto is True
+    assert fig._sharey_auto is True
+
+
+def test_auto_share_skips_mixed_cartesian_polar_without_warning(recwarn):
+    fig, axs = uplt.subplots(ncols=2, proj=("cart", "polar"), share="auto")
+
+    ultra_warnings = [
+        w
+        for w in recwarn
+        if issubclass(w.category, uplt.internals.warnings.UltraPlotWarning)
+    ]
+    assert len(ultra_warnings) == 0
+
+    for which in ("x", "y"):
+        assert _share_sibling_count(axs[0], which) == 1
+        assert _share_sibling_count(axs[1], which) == 1
+
+
+def test_explicit_share_warns_for_mixed_cartesian_polar():
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always", uplt.internals.warnings.UltraPlotWarning)
+        fig, axs = uplt.subplots(ncols=2, proj=("cart", "polar"), share="all")
+    incompatible = [
+        w
+        for w in record
+        if issubclass(w.category, uplt.internals.warnings.UltraPlotWarning)
+        and "Skipping incompatible" in str(w.message)
+    ]
+    assert len(incompatible) == 1
+
+
+def test_auto_share_local_yscale_change_splits_group():
+    fig, axs = uplt.subplots(ncols=2, share="auto")
+    fig.canvas.draw()
+
+    assert _share_sibling_count(axs[0], "y") == 2
+    assert _share_sibling_count(axs[1], "y") == 2
+
+    axs[0].format(yscale="log")
+    fig.canvas.draw()
+
+    assert axs[0].get_yscale() == "log"
+    assert axs[1].get_yscale() == "linear"
+    assert _share_sibling_count(axs[0], "y") == 1
+    assert _share_sibling_count(axs[1], "y") == 1
+
+
+def test_auto_share_grid_yscale_change_keeps_shared_limits():
+    fig, axs = uplt.subplots(ncols=2, share="auto")
+    x = np.linspace(1, 10, 100)
+    axs[0].plot(x, x)
+    axs[1].plot(x, 100 * x)
+
+    axs.format(yscale="log")
+    fig.canvas.draw()
+
+    assert _share_sibling_count(axs[0], "y") == 2
+    assert _share_sibling_count(axs[1], "y") == 2
+
+    ymin, ymax = axs[0].get_ylim()
+    assert ymax > 500
+    assert ymin > 0
+
+
+def test_auto_share_splits_mixed_x_unit_domains_after_refresh():
+    fig, axs = uplt.subplots(ncols=2, share="auto")
+    fig.canvas.draw()
+
+    # Start from independent x groups so each axis can establish units separately.
+    for axi in axs:
+        axi._unshare(which="x")
+    assert _share_sibling_count(axs[0], "x") == 1
+    assert _share_sibling_count(axs[1], "x") == 1
+
+    t0 = datetime(2020, 1, 1)
+    axs[0].plot([t0, t0 + timedelta(days=1)], [0, 1])
+    axs[1].plot([0.0, 1.0], [0, 1])
+
+    fig._refresh_auto_share("x")
+    fig.canvas.draw()
+
+    sig0 = fig._axis_unit_signature(axs[0], "x")
+    sig1 = fig._axis_unit_signature(axs[1], "x")
+    assert sig0 != sig1
+    assert _share_sibling_count(axs[0], "x") == 1
+    assert _share_sibling_count(axs[1], "x") == 1
+
+
+def test_explicit_sharey_propagates_scale_changes():
+    fig, axs = uplt.subplots(ncols=2, sharey=True)
+    axs[0].format(yscale="log")
+    fig.canvas.draw()
+
+    assert axs[0].get_yscale() == "log"
+    assert axs[1].get_yscale() == "log"
 
 
 @pytest.mark.parametrize("va", ["bottom", "center", "top"])

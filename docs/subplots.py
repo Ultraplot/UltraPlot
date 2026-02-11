@@ -373,8 +373,9 @@ for (name1, equal), (name2, group) in zip(equals, groups):
 #    `~matplotlib.figure.Figure.supxlabel` and `~matplotlib.figure.Figure.supylabel`,
 #    these labels are aligned between gridspec edges rather than figure edges.
 # #. Supporting five sharing "levels". These values can be passed to `sharex`,
-#    `sharey`, or `share`, or assigned to :rcraw:`subplots.share`. The levels
-#    are defined as follows:
+#    `sharey`, or `share`, or assigned to :rcraw:`subplots.share`.
+#    UltraPlot supports five explicit sharing levels plus ``'auto'``.
+#    The levels are defined as follows:
 #
 #    * ``False`` or ``0``: Axis sharing is disabled.
 #    * ``'labels'``, ``'labs'``, or ``1``: Axis labels are shared, but nothing else.
@@ -384,6 +385,14 @@ for (name1, equal), (name2, group) in zip(equals, groups):
 #      in the same row or column of the :class:`~ultraplot.gridspec.GridSpec`; a space
 #      or empty plot will add the labels, but not break the limit sharing. See below
 #      for a more complex example.
+#    * ``'limits'``, ``'lims'``, or ``2``: As above, plus share limits/scales/ticks.
+#    * ``True`` or ``3``: As above, plus hide inner tick labels.
+#    * ``'all'`` or ``4``: As above, plus share limits across the full subplot grid.
+#    * ``'auto'`` (default): Start from level ``3`` and only share compatible axes.
+#      This suppresses warnings for mixed axis families (e.g., cartesian + polar).
+#
+#    Explicit sharing levels still force sharing attempts and may warn when
+#    incompatible axes are encountered.
 #
 # The below examples demonstrate the effect of various axis and label sharing
 # settings on the appearance of several subplot grids.
@@ -417,6 +426,20 @@ for i, (span, share) in enumerate(zip(spans, shares)):
             ylabel="shared axis",
             suptitle=f"Sharing mode {share!r} (level {i}) with spanning labels {on}",
         )
+
+# %%
+import ultraplot as uplt
+import numpy as np
+
+# The default `share='auto'` keeps incompatible axis families unshared.
+fig, axs = uplt.subplots(ncols=2, proj=("cart", "polar"))
+x = np.linspace(0, 2 * np.pi, 100)
+axs[0].plot(x, np.sin(x))
+axs[1].plot(x, np.abs(np.sin(2 * x)))
+axs.format(
+    suptitle="Auto sharing with mixed cartesian and polar axes",
+    title=("cartesian", "polar"),
+)
 
 # %%
 import ultraplot as uplt

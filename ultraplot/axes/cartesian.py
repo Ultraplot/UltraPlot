@@ -869,13 +869,31 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._update_formatter(s, "log")
 
     def set_xscale(self, value, **kwargs):
+        fig = getattr(self, "figure", None)
+        if (
+            fig is not None
+            and hasattr(fig, "_is_auto_share_mode")
+            and fig._is_auto_share_mode("x")
+        ):
+            self._unshare(which="x")
         result = super().set_xscale(value, **kwargs)
         self._apply_log_formatter_on_scale("x")
+        if fig is not None and hasattr(fig, "_refresh_auto_share"):
+            fig._refresh_auto_share("x")
         return result
 
     def set_yscale(self, value, **kwargs):
+        fig = getattr(self, "figure", None)
+        if (
+            fig is not None
+            and hasattr(fig, "_is_auto_share_mode")
+            and fig._is_auto_share_mode("y")
+        ):
+            self._unshare(which="y")
         result = super().set_yscale(value, **kwargs)
         self._apply_log_formatter_on_scale("y")
+        if fig is not None and hasattr(fig, "_refresh_auto_share"):
+            fig._refresh_auto_share("y")
         return result
 
     def _update_formatter(

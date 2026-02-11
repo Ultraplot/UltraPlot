@@ -1702,21 +1702,39 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 iax._sharey_setup(left)
 
         # External axes sharing, sometimes overrides panel axes sharing
-        # Share x axes
-        parent, *children = self._get_share_axes("x")
-        for child in children:
-            child._sharex_setup(parent)
-        # Share y axes
-        parent, *children = self._get_share_axes("y")
-        for child in children:
-            child._sharey_setup(parent)
-        # Global sharing, use the reference subplot because why not
+        # Share x axes within compatible groups
+        axes_x = self._get_share_axes("x")
+        for group in self.figure._partition_share_axes(axes_x, "x"):
+            if not group:
+                continue
+            parent, *children = group
+            for child in children:
+                child._sharex_setup(parent)
+
+        # Share y axes within compatible groups
+        axes_y = self._get_share_axes("y")
+        for group in self.figure._partition_share_axes(axes_y, "y"):
+            if not group:
+                continue
+            parent, *children = group
+            for child in children:
+                child._sharey_setup(parent)
+
+        # Global sharing, use the reference subplot where compatible
         ref = self.figure._subplot_dict.get(self.figure._refnum, None)
-        if self is not ref:
+        if self is not ref and ref is not None:
             if self.figure._sharex > 3:
-                self._sharex_setup(ref, labels=False)
+                ok, reason = self.figure._share_axes_compatible(ref, self, "x")
+                if ok:
+                    self._sharex_setup(ref, labels=False)
+                else:
+                    self.figure._warn_incompatible_share("x", ref, self, reason)
             if self.figure._sharey > 3:
-                self._sharey_setup(ref, labels=False)
+                ok, reason = self.figure._share_axes_compatible(ref, self, "y")
+                if ok:
+                    self._sharey_setup(ref, labels=False)
+                else:
+                    self.figure._warn_incompatible_share("y", ref, self, reason)
 
     def _artist_fully_clipped(self, artist):
         """
