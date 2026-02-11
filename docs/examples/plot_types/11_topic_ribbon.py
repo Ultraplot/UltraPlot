@@ -84,8 +84,8 @@ topic_order = []
 for group in group_order:
     topic_order.extend(sorted([t for t, g in TOPIC_TO_GROUP.items() if g == group]))
 
-fig, axs = uplt.subplots(nrows=2, hratios=(3.0, 0.8), refwidth=6.3, share=False)
-axs[0].ribbon(
+fig, ax = uplt.subplots(refwidth=6.3)
+ax.ribbon(
     df,
     id_col="country",
     period_col="period",
@@ -95,11 +95,8 @@ axs[0].ribbon(
     group_map=TOPIC_TO_GROUP,
     group_order=group_order,
     group_colors=GROUP_COLORS,
-    composition=True,
-    composition_ax=axs[1],
-    composition_ylabel="Assigned topics",
 )
 
-axs[0].format(title="Category transitions with fixed top-aligned rows")
+ax.format(title="Category transitions with fixed top-aligned rows")
 fig.format(suptitle="Top-aligned ribbon flow by period")
 fig.show()

@@ -2329,10 +2329,6 @@ class PlotAxes(base.Axes):
         topic_label_offset: float = 0.028,
         topic_label_size: float = 7.4,
         topic_label_box: bool = True,
-        composition_ax: Any | None = None,
-        composition: bool = False,
-        composition_alpha: float = 0.86,
-        composition_ylabel: str = "Assigned topics",
     ) -> dict[str, Any]:
         """
         Draw a fixed-row, top-aligned ribbon flow diagram from long-form records.
@@ -2350,7 +2346,7 @@ class PlotAxes(base.Axes):
         group_map : mapping, optional
             Topic-to-group mapping used for grouped ordering and colors.
         group_order : sequence, optional
-            Group ordering for row arrangement and composition stacking.
+            Group ordering for row arrangement.
         group_colors : mapping, optional
             Group-to-color mapping. Missing groups use the patch color cycle.
         xmargin, ymargin : float, optional
@@ -2371,14 +2367,6 @@ class PlotAxes(base.Axes):
             Topic label font size.
         topic_label_box : bool, optional
             Whether to draw white backing boxes behind topic labels.
-        composition_ax : `~ultraplot.axes.Axes`, optional
-            Optional secondary axes for a stacked group composition panel.
-        composition : bool, optional
-            Whether to draw composition stackplot on `composition_ax`.
-        composition_alpha : float, optional
-            Alpha for composition stack areas.
-        composition_ylabel : str, optional
-            Y label for composition panel.
 
         Returns
         -------
@@ -2409,10 +2397,6 @@ class PlotAxes(base.Axes):
             topic_label_offset=topic_label_offset,
             topic_label_size=topic_label_size,
             topic_label_box=topic_label_box,
-            composition_ax=composition_ax,
-            composition=composition,
-            composition_alpha=composition_alpha,
-            composition_ylabel=composition_ylabel,
         )
 
     def circos(

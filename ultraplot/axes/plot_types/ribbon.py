@@ -78,10 +78,6 @@ def ribbon_diagram(
     topic_label_offset: float,
     topic_label_size: float,
     topic_label_box: bool,
-    composition_ax: Any | None,
-    composition: bool,
-    composition_alpha: float,
-    composition_ylabel: str,
 ) -> dict[str, Any]:
     """
     Build a fixed-row, top-aligned ribbon flow diagram from long-form assignments.
@@ -332,33 +328,6 @@ def ribbon_diagram(
             fontsize=max(topic_label_size + 1, 8),
         )
         period_text.append(text)
-
-    if composition and composition_ax is not None:
-        frame = df[df[period_col].isin(periods) & df[topic_col].isin(topics)].copy()
-        frame["_group"] = frame[topic_col].map(group_map)
-        composition_counts = (
-            frame.groupby([period_col, "_group"])["value_internal"]
-            .sum()
-            .unstack(fill_value=0)
-        )
-        group_cols = [group for group in groups if group in composition_counts.columns]
-        composition_counts = composition_counts.reindex(
-            index=periods, columns=group_cols
-        )
-        xpos = np.arange(len(periods))
-        composition_ax.stackplot(
-            xpos,
-            [composition_counts[col].to_numpy() for col in group_cols],
-            colors=[group_colors[col] for col in group_cols],
-            alpha=composition_alpha,
-        )
-        composition_ax.set_xticks(xpos)
-        composition_ax.set_xticklabels(
-            [str(period) for period in periods], rotation=15, ha="right"
-        )
-        composition_ax.format(
-            ylabel=composition_ylabel, xlabel="Period", grid=True, gridalpha=0.3
-        )
 
     ax.format(xlim=(0, 1), ylim=(0, 1), grid=False)
     ax.axis("off")
