@@ -1100,43 +1100,42 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         super()._sharex_setup(sharex, labels=labels, limits=limits)
         return self.__share_axis_setup(sharex, which="x", labels=labels, limits=limits)
 
-    def _toggle_ticks(self, label: str | None, which: str) -> None:
+    def _toggle_ticks(self, label: Any, which: str) -> None:
         """
-        Ticks are controlled by matplotlib independent of the backend. We can toggle ticks on and of depending on the desired position.
+        Toggle x/y tick positions from geo label specifications.
+
+        Accepts the same `labels` forms as format(), including booleans, strings,
+        and boolean/string sequences. Only sides relevant to the requested axis
+        are considered: bottom/top for ``which='x'`` and left/right for
+        ``which='y'``.
         """
-        if not isinstance(label, str):
+        if label is None:
             return
 
-        # Only allow "lrbt" and "all" or "both"
-        label = label.replace("top", "t")
-        label = label.replace("bottom", "b")
-        label = label.replace("left", "l")
-        label = label.replace("right", "r")
-        match label:
-            case _ if len(label) == 2 and "t" in label and "b" in label:
-                self.xaxis.set_ticks_position("both")
-            case _ if len(label) == 2 and "l" in label and "r" in label:
-                self.yaxis.set_ticks_position("both")
-            case "t":
-                self.xaxis.set_ticks_position("top")
-            case "b":
-                self.xaxis.set_ticks_position("bottom")
-            case "l":
-                self.yaxis.set_ticks_position("left")
-            case "r":
-                self.yaxis.set_ticks_position("right")
-            case "all":
-                self.xaxis.set_ticks_position("both")
-                self.yaxis.set_ticks_position("both")
-            case "both":
-                if which == "x":
-                    self.xaxis.set_ticks_position("both")
-                else:
-                    self.yaxis.set_ticks_position("both")
-            case _:
-                warnings._warn_ultraplot(
-                    f"Not toggling {label=}. Input was not understood. Valid values are ['left', 'right', 'top', 'bottom', 'all', 'both']"
-                )
+        is_lon = which == "x"
+        try:
+            array = self._to_label_array(label, lon=is_lon)
+        except ValueError:
+            warnings._warn_ultraplot(
+                f"Not toggling label={label!r}. Input was not understood."
+            )
+            return
+
+        if is_lon:
+            side0, side1 = bool(array[2]), bool(array[3])  # bottom, top
+            axis = self.xaxis
+            name0, name1 = "bottom", "top"
+        else:
+            side0, side1 = bool(array[0]), bool(array[1])  # left, right
+            axis = self.yaxis
+            name0, name1 = "left", "right"
+
+        if side0 and side1:
+            axis.set_ticks_position("both")
+        elif side0:
+            axis.set_ticks_position(name0)
+        elif side1:
+            axis.set_ticks_position(name1)
 
     def _set_gridliner_adapter(
         self, which: str, adapter: Optional[_GridlinerAdapter]
