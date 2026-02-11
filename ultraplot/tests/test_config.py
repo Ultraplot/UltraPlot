@@ -255,6 +255,54 @@ def test_rc_registry_merge_duplicate_keys_raises():
         merge_rc_tables(table1, table2)
 
 
+def test_rc_domain_tables_match_legacy_tables():
+    """
+    Domain split tables should match legacy composed rc table keys.
+    """
+    from ultraplot.internals import rcsetup
+    from ultraplot.internals.rc import (
+        build_axes_rc_table,
+        build_core_rc_table,
+        build_plot_type_rc_table,
+        build_ribbon_rc_table,
+        build_sankey_rc_table,
+        build_subplots_rc_table,
+        build_text_rc_table,
+        merge_rc_tables,
+    )
+
+    ns = vars(rcsetup)
+    legacy = merge_rc_tables(
+        build_core_rc_table(ns),
+        build_plot_type_rc_table(
+            validate_bool=ns["_validate_bool"],
+            validate_color=ns["_validate_color"],
+            validate_float=ns["_validate_float"],
+            validate_int=ns["_validate_int"],
+            validate_string=ns["_validate_string"],
+        ),
+    )
+    domain_split = merge_rc_tables(
+        build_axes_rc_table(ns),
+        build_text_rc_table(ns),
+        build_subplots_rc_table(ns),
+        build_sankey_rc_table(ns),
+        build_ribbon_rc_table(ns),
+    )
+    assert set(domain_split) == set(legacy)
+
+
+def test_rc_deprecations_module_matches_rcsetup():
+    """
+    Deprecation maps should be sourced from rc.deprecations.
+    """
+    from ultraplot.internals import rcsetup
+    from ultraplot.internals.rc.deprecations import get_rc_removed, get_rc_renamed
+
+    assert rcsetup._rc_removed == get_rc_removed()
+    assert rcsetup._rc_renamed == get_rc_renamed()
+
+
 def _run_in_subprocess(code):
     code = (
         "import pathlib\n"
