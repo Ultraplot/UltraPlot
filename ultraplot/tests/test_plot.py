@@ -1014,6 +1014,39 @@ def test_sankey_label_box_default():
     assert resolved["facecolor"] == "white"
 
 
+def test_ribbon_smoke():
+    """Smoke test for top-aligned ribbon flow diagrams."""
+    import pandas as pd
+
+    records = [
+        ("E1", "P1", "T1"),
+        ("E1", "P2", "T2"),
+        ("E1", "P3", "T2"),
+        ("E2", "P1", "T1"),
+        ("E2", "P2", "T1"),
+        ("E2", "P3", "T3"),
+        ("E3", "P1", "T2"),
+        ("E3", "P2", "T2"),
+        ("E3", "P3", "T3"),
+    ]
+    data = pd.DataFrame(records, columns=["id", "period", "topic"])
+
+    fig, ax = uplt.subplots()
+    artists = ax.ribbon(
+        data,
+        id_col="id",
+        period_col="period",
+        topic_col="topic",
+        period_order=["P1", "P2", "P3"],
+        topic_order=["T1", "T2", "T3"],
+        group_map={"T1": "G1", "T2": "G1", "T3": "G2"},
+        group_order=["G1", "G2"],
+    )
+    assert artists["node_patches"]
+    assert artists["flow_patches"]
+    uplt.close(fig)
+
+
 def test_sankey_assign_flow_colors_group_cycle():
     """Group cycle should be used for flow colors."""
     from ultraplot.axes.plot_types import sankey as sankey_mod
