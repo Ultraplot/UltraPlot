@@ -2186,11 +2186,13 @@ _rc_ultraplot_table = {
         "Default width of the reference subplot." + _addendum_in,
     ),
     "subplots.share": (
-        True,
-        _validate_belongs(0, 1, 2, 3, 4, False, "labels", "limits", True, "all"),
+        "auto",
+        _validate_belongs(
+            0, 1, 2, 3, 4, False, "labels", "limits", True, "all", "auto"
+        ),
         "The axis sharing level, one of ``0``, ``1``, ``2``, or ``3``, or the "
-        "more intuitive aliases ``False``, ``'labels'``, ``'limits'``, or ``True``. "
-        "See `~ultraplot.figure.Figure` for details.",
+        "more intuitive aliases ``False``, ``'labels'``, ``'limits'``, ``True``, "
+        "or ``'auto'``. See `~ultraplot.figure.Figure` for details.",
     ),
     "subplots.span": (
         True,
