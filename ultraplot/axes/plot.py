@@ -6449,6 +6449,7 @@ class PlotAxes(base.Axes):
         points=200,
         hist=False,
         bins="auto",
+        histtype=None,
         fill=True,
         alpha=1.0,
         linewidth=1.5,
@@ -6489,6 +6490,10 @@ class PlotAxes(base.Axes):
             If True, use histograms instead of kernel density estimation.
         bins : int or sequence or str, default: 'auto'
             Bin specification for histograms. Passed to numpy.histogram.
+            Only used when hist=True.
+        histtype : {'fill', 'bar', 'step', 'stepfilled'}, optional
+            Rendering style for histogram ridgelines. Defaults to ``'fill'``,
+            which uses a filled ridge curve. ``'bar'`` draws histogram bars.
             Only used when hist=True.
         fill : bool, default: True
             Whether to fill the area under each curve.
@@ -6553,6 +6558,14 @@ class PlotAxes(base.Axes):
 
         # Calculate KDE or histogram for each distribution
         ridges = []
+        if hist and histtype is None:
+            histtype = "fill"
+        if hist:
+            allowed = ("fill", "bar", "step", "stepfilled")
+            if histtype not in allowed:
+                raise ValueError(
+                    f"Invalid histtype={histtype!r}. Options are {allowed}."
+                )
         for i, dist in enumerate(data):
             dist = np.asarray(dist).ravel()
             dist = dist[~np.isnan(dist)]  # Remove NaNs
@@ -6572,7 +6585,15 @@ class PlotAxes(base.Axes):
                     # Extend to bin edges for proper fill
                     x_extended = np.concatenate([[bin_edges[0]], x, [bin_edges[-1]]])
                     y_extended = np.concatenate([[0], counts, [0]])
-                    ridges.append((x_extended, y_extended))
+                    ridges.append(
+                        {
+                            "x": x_extended,
+                            "y": y_extended,
+                            "hist": True,
+                            "counts": counts,
+                            "bin_edges": bin_edges,
+                        }
+                    )
                 except Exception as e:
                     warnings._warn_ultraplot(
                         f"Histogram failed for distribution {i}: {e}, skipping"
@@ -6588,7 +6609,7 @@ class PlotAxes(base.Axes):
                     x_margin = x_range * 0.1  # 10% margin
                     x = np.linspace(x_min - x_margin, x_max + x_margin, points)
                     y = kde(x)
-                    ridges.append((x, y))
+                    ridges.append({"x": x, "y": y, "hist": False})
                 except Exception as e:
                     warnings._warn_ultraplot(
                         f"KDE failed for distribution {i}: {e}, skipping"
@@ -6631,15 +6652,18 @@ class PlotAxes(base.Axes):
                     )
         else:
             # Categorical (evenly-spaced) positioning mode
-            max_height = max(y.max() for x, y in ridges)
-            spacing = max(0.0, 1 - overlap)
+            max_height = max(ridge["y"].max() for ridge in ridges)
+            spacing = max_height * (1 + overlap)
 
         artists = []
         # Base zorder for ridgelines - use a high value to ensure they're on top
         base_zorder = kwargs.pop("zorder", 2)
         n_ridges = len(ridges)
 
-        for i, (x, y) in enumerate(ridges):
+        for i, ridge in enumerate(ridges):
+            x = ridge["x"]
+            y = ridge["y"]
+            is_hist = ridge.get("hist", False)
             if continuous_mode:
                 # Continuous mode: scale to specified height and position at coordinate
                 y_max = y.max()
@@ -6661,68 +6685,170 @@ class PlotAxes(base.Axes):
             fill_zorder = base_zorder + (n_ridges - i - 1) * 2
             outline_zorder = fill_zorder + 1
 
-            if vert:
-                # Traditional horizontal ridges
-                if fill:
-                    # Fill without edge
-                    poly = self.fill_between(
-                        x,
-                        offset,
-                        y_plot,
-                        facecolor=colors[i],
+            if is_hist and histtype == "bar":
+                counts = ridge["counts"]
+                bin_edges = ridge["bin_edges"]
+                if continuous_mode:
+                    y_max = y.max()
+                    scale = (heights[i] / y_max) if y_max > 0 else 1.0
+                    bar_heights = counts * scale
+                else:
+                    scale = (1.0 / max_height) if max_height > 0 else 1.0
+                    bar_heights = counts * scale
+                if vert:
+                    poly = self.bar(
+                        bin_edges[:-1],
+                        bar_heights,
+                        width=np.diff(bin_edges),
+                        bottom=offset,
+                        align="edge",
+                        color=colors[i],
                         alpha=alpha,
-                        edgecolor="none",
+                        edgecolor=edgecolor,
+                        linewidth=linewidth,
                         label=labels[i],
                         zorder=fill_zorder,
                     )
-                    # Draw outline on top (excluding baseline)
+                else:
+                    poly = self.barh(
+                        bin_edges[:-1],
+                        bar_heights,
+                        height=np.diff(bin_edges),
+                        left=offset,
+                        align="edge",
+                        color=colors[i],
+                        alpha=alpha,
+                        edgecolor=edgecolor,
+                        linewidth=linewidth,
+                        label=labels[i],
+                        zorder=fill_zorder,
+                    )
+            elif is_hist and histtype in ("step", "stepfilled"):
+                if vert:
+                    if histtype == "stepfilled":
+                        poly = self.fill_between(
+                            x,
+                            offset,
+                            y_plot,
+                            facecolor=colors[i],
+                            alpha=alpha,
+                            edgecolor="none",
+                            label=labels[i],
+                            step="mid",
+                            zorder=fill_zorder,
+                        )
+                    else:
+                        poly = self.plot(
+                            x,
+                            y_plot,
+                            color=edgecolor,
+                            linewidth=linewidth,
+                            label=labels[i],
+                            drawstyle="steps-mid",
+                            zorder=outline_zorder,
+                        )[0]
                     self.plot(
                         x,
                         y_plot,
                         color=edgecolor,
                         linewidth=linewidth,
+                        drawstyle="steps-mid",
                         zorder=outline_zorder,
                     )
                 else:
-                    poly = self.plot(
-                        x,
+                    if histtype == "stepfilled":
+                        poly = self.fill_betweenx(
+                            x,
+                            offset,
+                            y_plot,
+                            facecolor=colors[i],
+                            alpha=alpha,
+                            edgecolor="none",
+                            label=labels[i],
+                            step="mid",
+                            zorder=fill_zorder,
+                        )
+                    else:
+                        poly = self.plot(
+                            y_plot,
+                            x,
+                            color=edgecolor,
+                            linewidth=linewidth,
+                            label=labels[i],
+                            drawstyle="steps-mid",
+                            zorder=outline_zorder,
+                        )[0]
+                    self.plot(
                         y_plot,
-                        color=colors[i],
+                        x,
+                        color=edgecolor,
                         linewidth=linewidth,
-                        label=labels[i],
+                        drawstyle="steps-mid",
                         zorder=outline_zorder,
-                    )[0]
+                    )
             else:
-                # Vertical ridges
-                if fill:
-                    # Fill without edge
-                    poly = self.fill_betweenx(
-                        x,
-                        offset,
-                        y_plot,
-                        facecolor=colors[i],
-                        alpha=alpha,
-                        edgecolor="none",
-                        label=labels[i],
-                        zorder=fill_zorder,
-                    )
-                    # Draw outline on top (excluding baseline)
-                    self.plot(
-                        y_plot,
-                        x,
-                        color=edgecolor,
-                        linewidth=linewidth,
-                        zorder=outline_zorder,
-                    )
+                if vert:
+                    # Traditional horizontal ridges
+                    if fill:
+                        # Fill without edge
+                        poly = self.fill_between(
+                            x,
+                            offset,
+                            y_plot,
+                            facecolor=colors[i],
+                            alpha=alpha,
+                            edgecolor="none",
+                            label=labels[i],
+                            zorder=fill_zorder,
+                        )
+                        # Draw outline on top (excluding baseline)
+                        self.plot(
+                            x,
+                            y_plot,
+                            color=edgecolor,
+                            linewidth=linewidth,
+                            zorder=outline_zorder,
+                        )
+                    else:
+                        poly = self.plot(
+                            x,
+                            y_plot,
+                            color=colors[i],
+                            linewidth=linewidth,
+                            label=labels[i],
+                            zorder=outline_zorder,
+                        )[0]
                 else:
-                    poly = self.plot(
-                        y_plot,
-                        x,
-                        color=colors[i],
-                        linewidth=linewidth,
-                        label=labels[i],
-                        zorder=outline_zorder,
-                    )[0]
+                    # Vertical ridges
+                    if fill:
+                        # Fill without edge
+                        poly = self.fill_betweenx(
+                            x,
+                            offset,
+                            y_plot,
+                            facecolor=colors[i],
+                            alpha=alpha,
+                            edgecolor="none",
+                            label=labels[i],
+                            zorder=fill_zorder,
+                        )
+                        # Draw outline on top (excluding baseline)
+                        self.plot(
+                            y_plot,
+                            x,
+                            color=edgecolor,
+                            linewidth=linewidth,
+                            zorder=outline_zorder,
+                        )
+                    else:
+                        poly = self.plot(
+                            y_plot,
+                            x,
+                            color=colors[i],
+                            linewidth=linewidth,
+                            label=labels[i],
+                            zorder=outline_zorder,
+                        )[0]
 
             artists.append(poly)
 
