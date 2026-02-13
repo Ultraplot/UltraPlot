@@ -129,6 +129,57 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             v["color"],
             "Default node facecolor for layered sankey diagrams.",
         ),
+        # Ribbon settings
+        "ribbon.xmargin": (
+            0.12,
+            v["float"],
+            "Horizontal margin around ribbon diagrams (axes-relative units).",
+        ),
+        "ribbon.ymargin": (
+            0.08,
+            v["float"],
+            "Vertical margin around ribbon diagrams (axes-relative units).",
+        ),
+        "ribbon.rowheightratio": (
+            2.2,
+            v["float"],
+            "Height scale factor controlling ribbon row occupancy.",
+        ),
+        "ribbon.nodewidth": (
+            0.018,
+            v["float"],
+            "Node width for ribbon diagrams (axes-relative units).",
+        ),
+        "ribbon.flow.curvature": (
+            0.45,
+            v["float"],
+            "Flow curvature for ribbon diagrams.",
+        ),
+        "ribbon.flow.alpha": (
+            0.58,
+            v["float"],
+            "Flow transparency for ribbon diagrams.",
+        ),
+        "ribbon.topic_labels": (
+            True,
+            v["bool"],
+            "Whether to draw topic labels on the right side of ribbon diagrams.",
+        ),
+        "ribbon.topic_label_offset": (
+            0.028,
+            v["float"],
+            "Offset for right-side ribbon topic labels.",
+        ),
+        "ribbon.topic_label_size": (
+            7.4,
+            v["float"],
+            "Font size for ribbon topic labels.",
+        ),
+        "ribbon.topic_label_box": (
+            True,
+            v["bool"],
+            "Whether to draw backing boxes behind ribbon topic labels.",
+        ),
         "external.shrink": (
             0.9,
             g("_validate_float"),
