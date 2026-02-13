@@ -32,7 +32,7 @@
 
     --uplt-color-code-bg: var(--uplt-color-sidebar-bg); /* same as page */
     --uplt-color-code-fg: #6a6a6a; /* gray code text (light) */
-    --code-block-background: var(--uplt-color-code-bg) !important;
+    --code-block-background: var(--uplt-color-code-bg);
     --sy-c-link: var(--uplt-color-accent);
     --sy-c-link-hover: #0b5f59;
     --uplt-color-toc-bg: #e9e9e9;
@@ -216,7 +216,9 @@ html.dark-theme,
     --sy-c-link: #58d5c9;
     --sy-c-link-hover: #84e8df;
     --uplt-color-panel-bg: #202020;
-    --code-block-background: #2a2a2a;
+    --code-block-background: #141414;
+    --syntax-dark-background: #141414;
+    --syntax-dark-highlight: #2a2f2f;
     --uplt-color-toc-bg: #171717;
 }
 
@@ -649,12 +651,12 @@ body.wy-body-for-nav
     background-color: var(--uplt-color-toc-bg);
 }
 
-/*.yue div.nbinput.container,
-.yue div.nboutput.container,
 .yue div.nbinput.container > div.input_area,
-.yue div.nboutput.container > div.output_area {
-    background-color: var(--uplt-color-sidebar-bg);
-}*/
+.yue div.nboutput.container > div.output_area,
+.yue .highlight,
+.yue .highlight pre {
+    background-color: var(--code-block-background) !important;
+}
 
 /* Shibuya right TOC: collapse sub-H1 headings under each H1 section */
 .sy-rside .localtoc {
