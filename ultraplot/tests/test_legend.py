@@ -44,7 +44,7 @@ def test_centered_legends(rng):
     Test success of algorithm.
     """
     # Basic centered legends
-    fig, axs = uplt.subplots(ncols=2, nrows=2, axwidth=2)
+    fig, axs = uplt.subplots(ncols=2, nrows=2, axwidth=2, share=True)
     hs = axs[0].plot(rng.random((10, 6)))
     locs = ["l", "t", "r", "uc", "ul", "ll"]
     locs = ["l", "t", "uc", "ll"]
