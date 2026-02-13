@@ -65,6 +65,20 @@ def test_curved_quiver_rc_defaults():
     assert uplt.rc["curved_quiver.grains"] == 15
     assert uplt.rc["curved_quiver.density"] == 10
     assert uplt.rc["curved_quiver.arrows_at_end"] is True
+def test_ribbon_rc_defaults():
+    """
+    Sanity check ribbon defaults in rc.
+    """
+    assert uplt.rc["ribbon.xmargin"] == 0.12
+    assert uplt.rc["ribbon.ymargin"] == 0.08
+    assert uplt.rc["ribbon.rowheightratio"] == 2.2
+    assert uplt.rc["ribbon.nodewidth"] == 0.018
+    assert uplt.rc["ribbon.flow.curvature"] == 0.45
+    assert uplt.rc["ribbon.flow.alpha"] == 0.58
+    assert uplt.rc["ribbon.topic_labels"] is True
+    assert uplt.rc["ribbon.topic_label_offset"] == 0.028
+    assert uplt.rc["ribbon.topic_label_size"] == 7.4
+    assert uplt.rc["ribbon.topic_label_box"] is True
 
 
 import io
