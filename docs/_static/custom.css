@@ -814,6 +814,28 @@ body.wy-body-for-nav
     border-bottom: 1px solid var(--sy-c-divider);
 }
 
+.sy-rside .localtoc > .uplt-toc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+    margin: 0 0 0.5rem 0;
+    padding: 0 0 0.45rem 0;
+    border-bottom: 1px solid var(--sy-c-divider);
+}
+
+.sy-rside .localtoc > .uplt-toc-head > h3 {
+    color: var(--sy-c-light);
+    font-family: var(--sy-f-heading);
+    font-size: 0.86rem;
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
 .sy-rside .localtoc > ul li > a {
     display: block;
     padding: 0.08rem 0.2rem 0.08rem 0.45rem;
@@ -828,7 +850,7 @@ body.wy-body-for-nav
 .sy-rside .localtoc > .uplt-toc-controls {
     display: flex;
     gap: 0.35rem;
-    margin: 0.35rem 0 0.75rem 0;
+    margin: 0 0 0.75rem 0;
 }
 
 .sy-rside .localtoc > .uplt-code-controls {
@@ -863,6 +885,10 @@ body.wy-body-for-nav
         color 0.2s ease,
         background-color 0.2s ease,
         box-shadow 0.2s ease;
+}
+
+.sy-rside .localtoc > .uplt-toc-head .uplt-toc-btn-hide {
+    padding: 0.14rem 0.42rem;
 }
 
 .sy-rside .localtoc .uplt-toc-btn:hover {

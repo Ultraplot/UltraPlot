@@ -212,6 +212,32 @@ function initShibuyaRightToc() {
 
   const topList = getDirectChildByTag(localtoc, "UL");
   if (!topList) return;
+
+  let headRow =
+    Array.from(localtoc.children).find(
+      (child) => child.classList && child.classList.contains("uplt-toc-head"),
+    ) || null;
+  const directHeading = getDirectChildByTag(localtoc, "H3");
+  if (!headRow && directHeading) {
+    headRow = document.createElement("div");
+    headRow.className = "uplt-toc-head";
+    localtoc.insertBefore(headRow, directHeading);
+    headRow.appendChild(directHeading);
+  }
+  if (headRow) {
+    let hideBtn = headRow.querySelector(".uplt-toc-btn-hide");
+    if (!hideBtn) {
+      hideBtn = document.createElement("button");
+      hideBtn.type = "button";
+      hideBtn.className = "uplt-toc-btn uplt-toc-btn-hide";
+      hideBtn.textContent = "Hide";
+      hideBtn.addEventListener("click", function () {
+        setRightTocHidden(true);
+      });
+      headRow.appendChild(hideBtn);
+    }
+  }
+
   const topItems = Array.from(topList.children).filter(
     (node) => node.tagName === "LI",
   );
@@ -264,41 +290,42 @@ function initShibuyaRightToc() {
       (child) =>
         child.classList && child.classList.contains("uplt-toc-controls"),
     ) || null;
-  if (!controls) {
-    const controls = document.createElement("div");
-    controls.className = "uplt-toc-controls";
+  if (!collapsibleItems.length) {
+    if (controls) controls.remove();
+    syncRightTocCodeButtons(localtoc);
+    return;
+  }
 
-    const collapseBtn = document.createElement("button");
+  if (!controls) {
+    controls = document.createElement("div");
+    controls.className = "uplt-toc-controls";
+    localtoc.insertBefore(controls, topList);
+  }
+
+  let collapseBtn = controls.querySelector(".uplt-toc-btn-collapse");
+  if (!collapseBtn) {
+    collapseBtn = document.createElement("button");
     collapseBtn.type = "button";
-    collapseBtn.className = "uplt-toc-btn";
+    collapseBtn.className = "uplt-toc-btn uplt-toc-btn-collapse";
     collapseBtn.textContent = "Collapse";
     collapseBtn.addEventListener("click", function () {
       collapsibleItems.forEach((item) => setTocItemExpanded(item, false));
     });
+    controls.appendChild(collapseBtn);
+  }
 
-    const expandBtn = document.createElement("button");
+  let expandBtn = controls.querySelector(".uplt-toc-btn-expand");
+  if (!expandBtn) {
+    expandBtn = document.createElement("button");
     expandBtn.type = "button";
-    expandBtn.className = "uplt-toc-btn";
+    expandBtn.className = "uplt-toc-btn uplt-toc-btn-expand";
     expandBtn.textContent = "Expand";
     expandBtn.addEventListener("click", function () {
       collapsibleItems.forEach((item) => setTocItemExpanded(item, true));
     });
-
-    const hideBtn = document.createElement("button");
-    hideBtn.type = "button";
-    hideBtn.className = "uplt-toc-btn uplt-toc-btn-hide";
-    hideBtn.textContent = "Hide";
-    hideBtn.addEventListener("click", function () {
-      setRightTocHidden(true);
-    });
-
-    controls.appendChild(collapseBtn);
     controls.appendChild(expandBtn);
-    controls.appendChild(hideBtn);
-    localtoc.insertBefore(controls, topList);
-    syncRightTocCodeButtons(localtoc);
-    return;
   }
+
   syncRightTocCodeButtons(localtoc);
 }
 
