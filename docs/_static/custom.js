@@ -99,6 +99,22 @@ function syncRightTocCodeButtons(localtoc) {
 function initShibuyaRightToc() {
   const shibuyaRightToc = document.querySelector(".sy-rside");
   if (!shibuyaRightToc) return;
+  const path = window.location.pathname || "";
+  const isGalleryIndexPage =
+    /\/gallery\/?$/.test(path) ||
+    /\/gallery\/index(?:_new)?\.html$/.test(path);
+  const forceHideRightToc =
+    document.body.classList.contains("no-right-toc") ||
+    isGalleryIndexPage ||
+    !!document.querySelector(".sphx-glr-thumbcontainer") ||
+    !!document.querySelector(".sphx-glr-thumbnails");
+  if (forceHideRightToc) {
+    shibuyaRightToc.style.display = "none";
+    const overlay = document.querySelector(".rside-overlay");
+    if (overlay) overlay.style.display = "none";
+    return;
+  }
+
   const localtoc = shibuyaRightToc.querySelector(".localtoc");
   if (!localtoc) return;
 
@@ -238,6 +254,10 @@ function initShibuyaRightToc() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  if (document.querySelector(".sphx-glr-thumbcontainer")) {
+    document.body.classList.add("no-right-toc");
+  }
+
   // Shibuya theme: right TOC controls and collapsible sub-sections.
   initShibuyaRightToc();
   window.addEventListener("hashchange", initShibuyaRightToc);
