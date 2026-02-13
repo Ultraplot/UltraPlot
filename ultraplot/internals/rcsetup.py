@@ -1039,6 +1039,57 @@ _rc_ultraplot_table = {
         _validate_color,
         "Default node facecolor for layered sankey diagrams.",
     ),
+    # Ribbon settings
+    "ribbon.xmargin": (
+        0.12,
+        _validate_float,
+        "Horizontal margin around ribbon diagrams (axes-relative units).",
+    ),
+    "ribbon.ymargin": (
+        0.08,
+        _validate_float,
+        "Vertical margin around ribbon diagrams (axes-relative units).",
+    ),
+    "ribbon.rowheightratio": (
+        2.2,
+        _validate_float,
+        "Height scale factor controlling ribbon row occupancy.",
+    ),
+    "ribbon.nodewidth": (
+        0.018,
+        _validate_float,
+        "Node width for ribbon diagrams (axes-relative units).",
+    ),
+    "ribbon.flow.curvature": (
+        0.45,
+        _validate_float,
+        "Flow curvature for ribbon diagrams.",
+    ),
+    "ribbon.flow.alpha": (
+        0.58,
+        _validate_float,
+        "Flow transparency for ribbon diagrams.",
+    ),
+    "ribbon.topic_labels": (
+        True,
+        _validate_bool,
+        "Whether to draw topic labels on the right side of ribbon diagrams.",
+    ),
+    "ribbon.topic_label_offset": (
+        0.028,
+        _validate_float,
+        "Offset for right-side ribbon topic labels.",
+    ),
+    "ribbon.topic_label_size": (
+        7.4,
+        _validate_float,
+        "Font size for ribbon topic labels.",
+    ),
+    "ribbon.topic_label_box": (
+        True,
+        _validate_bool,
+        "Whether to draw backing boxes behind ribbon topic labels.",
+    ),
     # Stylesheet
     "style": (
         None,
@@ -2135,11 +2186,13 @@ _rc_ultraplot_table = {
         "Default width of the reference subplot." + _addendum_in,
     ),
     "subplots.share": (
-        True,
-        _validate_belongs(0, 1, 2, 3, 4, False, "labels", "limits", True, "all"),
+        "auto",
+        _validate_belongs(
+            0, 1, 2, 3, 4, False, "labels", "limits", True, "all", "auto"
+        ),
         "The axis sharing level, one of ``0``, ``1``, ``2``, or ``3``, or the "
-        "more intuitive aliases ``False``, ``'labels'``, ``'limits'``, or ``True``. "
-        "See `~ultraplot.figure.Figure` for details.",
+        "more intuitive aliases ``False``, ``'labels'``, ``'limits'``, ``True``, "
+        "or ``'auto'``. See `~ultraplot.figure.Figure` for details.",
     ),
     "subplots.span": (
         True,
