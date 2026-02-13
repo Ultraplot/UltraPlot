@@ -82,6 +82,16 @@ if DOCS_THEME == "shibuya":
 # Update path for sphinx-automodapi and sphinxext extension
 sys.path.append(os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(".."))
+_ultratheme_path = os.path.abspath("../UltraTheme")
+if os.path.isdir(_ultratheme_path):
+    sys.path.insert(0, _ultratheme_path)
+
+try:
+    import ultraplot_theme  # noqa: F401
+
+    HAVE_ULTRAPLOT_THEME_EXT = True
+except Exception:
+    HAVE_ULTRAPLOT_THEME_EXT = False
 
 # Ensure whats_new exists during local builds without GitHub fetch.
 whats_new_path = Path(__file__).parent / "whats_new.rst"
@@ -221,7 +231,9 @@ extensions = [
 ]
 if not FAST_PREVIEW:
     extensions.append("sphinx_sitemap")
-if DOCS_THEME == "sphinx_rtd_light_dark":
+if HAVE_ULTRAPLOT_THEME_EXT:
+    extensions.append("ultraplot_theme")
+elif DOCS_THEME == "sphinx_rtd_light_dark":
     extensions.append("sphinx_rtd_light_dark")
 
 autosectionlabel_prefix_document = True
@@ -501,9 +513,9 @@ html_favicon = str(Path("_static") / "logo_blank.svg")
 htmlhelp_basename = "ultraplotdoc"
 
 
-if DOCS_THEME == "shibuya":
-    html_css_files = ["custom.css"]
-    html_js_files = ["custom.js"]
+if HAVE_ULTRAPLOT_THEME_EXT:
+    html_css_files = []
+    html_js_files = []
 else:
     html_css_files = ["custom.css"]
     html_js_files = ["custom.js"]

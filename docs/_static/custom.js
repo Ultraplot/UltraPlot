@@ -38,6 +38,55 @@ function getCodeDetailsBlocks() {
   return Array.from(document.querySelectorAll("details.uplt-code-details"));
 }
 
+function initScrollChromeFade() {
+  const topBar = document.querySelector(".sy-head");
+  const leftBar = document.querySelector(".sy-lside");
+  if (!topBar && !leftBar) return;
+
+  let lastY = window.scrollY || 0;
+  let ticking = false;
+  const minDelta = 6;
+  const revealThreshold = 96;
+
+  const setHidden = (hidden) => {
+    document.documentElement.classList.toggle("uplt-chrome-hidden", hidden);
+  };
+
+  const update = () => {
+    const y = window.scrollY || 0;
+    const delta = y - lastY;
+    const expanded = (document.body.getAttribute("data-expanded") || "").trim();
+    const isMobileMenuOpen =
+      expanded.includes("head-nav") ||
+      expanded.includes("lside") ||
+      expanded.includes("rside");
+
+    if (window.innerWidth < 768 || isMobileMenuOpen || y < revealThreshold) {
+      setHidden(false);
+    } else if (delta > minDelta) {
+      setHidden(true);
+    } else if (delta < -minDelta) {
+      setHidden(false);
+    }
+
+    lastY = y;
+    ticking = false;
+  };
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    },
+    { passive: true },
+  );
+  window.addEventListener("resize", update, { passive: true });
+  update();
+}
+
 function syncRightTocCodeButtons(localtoc) {
   if (!localtoc) return;
   const blocks = getCodeDetailsBlocks();
@@ -254,6 +303,8 @@ function initShibuyaRightToc() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  initScrollChromeFade();
+
   if (document.querySelector(".sphx-glr-thumbcontainer")) {
     document.body.classList.add("no-right-toc");
   }
