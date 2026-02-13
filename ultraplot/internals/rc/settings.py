@@ -255,13 +255,21 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             "Whether to draw semi-transparent bounding boxes around a-b-c labels "
             "when :rcraw:`abc.loc` is inside the axes.",
         ),
-        "abc.bboxcolor": (g("WHITE"), g("_validate_color"), "a-b-c label bounding box color."),
+        "abc.bboxcolor": (
+            g("WHITE"),
+            g("_validate_color"),
+            "a-b-c label bounding box color.",
+        ),
         "abc.bboxstyle": (
             "square",
             g("_validate_boxstyle"),
             "a-b-c label bounding box style.",
         ),
-        "abc.bboxalpha": (0.5, g("_validate_float"), "a-b-c label bounding box opacity."),
+        "abc.bboxalpha": (
+            0.5,
+            g("_validate_float"),
+            "a-b-c label bounding box opacity.",
+        ),
         "abc.bboxpad": (
             None,
             g("_validate_or_none")(g("_validate_pt")),
@@ -318,7 +326,11 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             "Add value of the bars to the bar labels",
         ),
         # Country borders
-        "borders": (False, g("_validate_bool"), "Toggles country border lines on and off."),
+        "borders": (
+            False,
+            g("_validate_bool"),
+            "Toggles country border lines on and off.",
+        ),
         "borders.alpha": (
             None,
             g("_validate_or_none")(g("_validate_float")),
@@ -365,7 +377,8 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
         "bottomlabel.size": (
             g("LARGESIZE"),
             g("_validate_fontsize"),
-            "Font size for column labels on the bottom of the figure." + g("_addendum_font"),
+            "Font size for column labels on the bottom of the figure."
+            + g("_addendum_font"),
         ),
         "bottomlabel.weight": (
             "bold",
@@ -406,8 +419,16 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_or_none")(g("_validate_float")),
             "Opacity for coast lines",
         ),
-        "coast.color": (g("BLACK"), g("_validate_color"), "Line color for coast lines."),
-        "coast.linewidth": (g("LINEWIDTH"), g("_validate_pt"), "Line width for coast lines."),
+        "coast.color": (
+            g("BLACK"),
+            g("_validate_color"),
+            "Line color for coast lines.",
+        ),
+        "coast.linewidth": (
+            g("LINEWIDTH"),
+            g("_validate_pt"),
+            "Line width for coast lines.",
+        ),
         "coast.zorder": (g("ZLINES"), g("_validate_float"), "Z-order for coast lines."),
         "coast.rasterized": (
             False,
@@ -595,7 +616,11 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             "to colorbar levels and bar, area, pcolor, and contour plots.",
         ),
         # Font settings
-        "font.name": (g("FONTNAME"), g("_validate_fontname"), "Alias for :rcraw:`font.family`."),
+        "font.name": (
+            g("FONTNAME"),
+            g("_validate_fontname"),
+            "Alias for :rcraw:`font.family`.",
+        ),
         "font.small": (
             g("SMALLSIZE"),
             g("_validate_fontsize"),
@@ -618,7 +643,8 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_fontsize"),
             "Meta setting that changes the title-like sizes ``abc.size``, ``title.size``, "
             "``suptitle.size``, ``leftlabel.size``, ``rightlabel.size``, etc. Default is "
-            "``'med-large'`` (i.e. 1.1 times :rcraw:`font.size`)." + g("_addendum_font"),
+            "``'med-large'`` (i.e. 1.1 times :rcraw:`font.size`)."
+            + g("_addendum_font"),
         ),
         # Formatter settings
         "formatter.timerotation": (
@@ -713,7 +739,11 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_belongs")("equal", "auto"),
             "The aspect ratio of the graph.",
         ),
-        "graph.facecolor": ("none", g("_validate_color"), "The facecolor of the graph."),
+        "graph.facecolor": (
+            "none",
+            g("_validate_color"),
+            "The facecolor of the graph.",
+        ),
         "graph.draw_spines": (
             False,
             g("_validate_bool_or_iterable"),
@@ -778,7 +808,8 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
         "grid.labelsize": (
             g("SMALLSIZE"),
             g("_validate_fontsize"),
-            "Font size for `~ultraplot.axes.GeoAxes` gridline labels." + g("_addendum_font"),
+            "Font size for `~ultraplot.axes.GeoAxes` gridline labels."
+            + g("_addendum_font"),
         ),
         "grid.labelweight": (
             "normal",
@@ -790,7 +821,11 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_int"),
             "Number of points used to draw cartopy `~ultraplot.axes.GeoAxes` gridlines.",
         ),
-        "grid.pad": (g("GRIDPAD"), g("_validate_pt"), "Alias for :rcraw:`grid.labelpad`."),
+        "grid.pad": (
+            g("GRIDPAD"),
+            g("_validate_pt"),
+            "Alias for :rcraw:`grid.labelpad`.",
+        ),
         "grid.rotatelabels": (
             False,  # False limits projections where labels are available
             g("_validate_bool"),
@@ -813,7 +848,11 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
         ),
         # Minor gridlines
         "gridminor": (False, g("_validate_bool"), "Toggle minor gridlines on and off."),
-        "gridminor.alpha": (g("GRIDALPHA"), g("_validate_float"), "Minor gridline opacity."),
+        "gridminor.alpha": (
+            g("GRIDALPHA"),
+            g("_validate_float"),
+            "Minor gridline opacity.",
+        ),
         "gridminor.color": (g("BLACK"), g("_validate_color"), "Minor gridline color."),
         "gridminor.linestyle": (
             g("GRIDSTYLE"),
@@ -870,7 +909,11 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             "Z-order for internal political border lines.",
         ),
         # Axis label settings
-        "label.color": (g("BLACK"), g("_validate_color"), "Alias for :rcraw:`axes.labelcolor`."),
+        "label.color": (
+            g("BLACK"),
+            g("_validate_color"),
+            "Alias for :rcraw:`axes.labelcolor`.",
+        ),
         "label.pad": (
             g("LABELPAD"),
             g("_validate_pt"),
@@ -893,8 +936,16 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_or_none")(g("_validate_float")),
             "Opacity for lake patches",
         ),
-        "lakes.color": (g("WHITE"), g("_validate_color"), "Face color for lake patches."),
-        "lakes.zorder": (g("ZPATCHES"), g("_validate_float"), "Z-order for lake patches."),
+        "lakes.color": (
+            g("WHITE"),
+            g("_validate_color"),
+            "Face color for lake patches.",
+        ),
+        "lakes.zorder": (
+            g("ZPATCHES"),
+            g("_validate_float"),
+            "Z-order for lake patches.",
+        ),
         "lakes.rasterized": (
             False,
             g("_validate_bool"),
@@ -907,8 +958,16 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_or_none")(g("_validate_float")),
             "Opacity for land patches",
         ),
-        "land.color": (g("BLACK"), g("_validate_color"), "Face color for land patches."),
-        "land.zorder": (g("ZPATCHES"), g("_validate_float"), "Z-order for land patches."),
+        "land.color": (
+            g("BLACK"),
+            g("_validate_color"),
+            "Face color for land patches.",
+        ),
+        "land.zorder": (
+            g("ZPATCHES"),
+            g("_validate_float"),
+            "Z-order for land patches.",
+        ),
         "land.rasterized": (
             False,
             g("_validate_bool"),
@@ -1010,8 +1069,16 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_or_none")(g("_validate_float")),
             "Opacity for ocean patches",
         ),
-        "ocean.color": (g("WHITE"), g("_validate_color"), "Face color for ocean patches."),
-        "ocean.zorder": (g("ZPATCHES"), g("_validate_float"), "Z-order for ocean patches."),
+        "ocean.color": (
+            g("WHITE"),
+            g("_validate_color"),
+            "Face color for ocean patches.",
+        ),
+        "ocean.zorder": (
+            g("ZPATCHES"),
+            g("_validate_float"),
+            "Z-order for ocean patches.",
+        ),
         "ocean.rasterized": (
             False,
             g("_validate_bool"),
@@ -1058,9 +1125,21 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_or_none")(g("_validate_float")),
             "Opacity for river lines.",
         ),
-        "rivers.color": (g("BLACK"), g("_validate_color"), "Line color for river lines."),
-        "rivers.linewidth": (g("LINEWIDTH"), g("_validate_pt"), "Line width for river lines."),
-        "rivers.zorder": (g("ZLINES"), g("_validate_float"), "Z-order for river lines."),
+        "rivers.color": (
+            g("BLACK"),
+            g("_validate_color"),
+            "Line color for river lines.",
+        ),
+        "rivers.linewidth": (
+            g("LINEWIDTH"),
+            g("_validate_pt"),
+            "Line width for river lines.",
+        ),
+        "rivers.zorder": (
+            g("ZLINES"),
+            g("_validate_float"),
+            "Z-order for river lines.",
+        ),
         "rivers.rasterized": (
             False,
             g("_validate_bool"),
@@ -1342,14 +1421,19 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
         "suptitle.pad": (
             g("TITLEPAD"),
             g("_validate_pt"),
-            "Padding between axes content and the figure super title." + g("_addendum_pt"),
+            "Padding between axes content and the figure super title."
+            + g("_addendum_pt"),
         ),
         "suptitle.size": (
             g("LARGESIZE"),
             g("_validate_fontsize"),
             "Figure title font size." + g("_addendum_font"),
         ),
-        "suptitle.weight": ("bold", g("_validate_fontweight"), "Figure title font weight."),
+        "suptitle.weight": (
+            "bold",
+            g("_validate_fontweight"),
+            "Figure title font weight.",
+        ),
         # Tick settings
         "tick.color": (g("BLACK"), g("_validate_color"), "Major and minor tick color."),
         "tick.dir": (
@@ -1374,7 +1458,11 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_fontweight"),
             "Axis tick label font weight.",
         ),
-        "tick.len": (g("TICKLEN"), g("_validate_pt"), "Length of major ticks in points."),
+        "tick.len": (
+            g("TICKLEN"),
+            g("_validate_pt"),
+            "Length of major ticks in points.",
+        ),
         "tick.lenratio": (
             g("TICKLENRATIO"),
             g("_validate_float"),
@@ -1386,7 +1474,11 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             g("_validate_bool"),
             "Toggles minor ticks on and off.",
         ),
-        "tick.pad": (g("TICKPAD"), g("_validate_pt"), "Alias for :rcraw:`tick.labelpad`."),
+        "tick.pad": (
+            g("TICKPAD"),
+            g("_validate_pt"),
+            "Alias for :rcraw:`tick.labelpad`.",
+        ),
         "tick.width": (
             g("LINEWIDTH"),
             g("_validate_pt"),
@@ -1411,20 +1503,32 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
             "Whether to draw a white border around titles "
             "when :rcraw:`title.loc` is inside the axes.",
         ),
-        "title.borderwidth": (1.5, g("_validate_pt"), "Width of the border around titles."),
+        "title.borderwidth": (
+            1.5,
+            g("_validate_pt"),
+            "Width of the border around titles.",
+        ),
         "title.bbox": (
             False,
             g("_validate_bool"),
             "Whether to draw semi-transparent bounding boxes around titles "
             "when :rcraw:`title.loc` is inside the axes.",
         ),
-        "title.bboxcolor": (g("WHITE"), g("_validate_color"), "Axes title bounding box color."),
+        "title.bboxcolor": (
+            g("WHITE"),
+            g("_validate_color"),
+            "Axes title bounding box color.",
+        ),
         "title.bboxstyle": (
             "square",
             g("_validate_boxstyle"),
             "Axes title bounding box style.",
         ),
-        "title.bboxalpha": (0.5, g("_validate_float"), "Axes title bounding box opacity."),
+        "title.bboxalpha": (
+            0.5,
+            g("_validate_float"),
+            "Axes title bounding box opacity.",
+        ),
         "title.bboxpad": (
             None,
             g("_validate_or_none")(g("_validate_pt")),
@@ -1450,7 +1554,8 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
         "title.size": (
             g("LARGESIZE"),
             g("_validate_fontsize"),
-            "Axes title font size. Alias for :rcraw:`axes.titlesize`." + g("_addendum_font"),
+            "Axes title font size. Alias for :rcraw:`axes.titlesize`."
+            + g("_addendum_font"),
         ),
         "title.weight": (
             "normal",
@@ -1472,12 +1577,14 @@ def build_settings_rc_table(ns: Mapping[str, Any]) -> RcTable:
         "toplabel.rotation": (
             "horizontal",
             g("_validate_rotation"),
-            "Rotation for column labels at the top of the figure." + g("_addendum_rotation"),
+            "Rotation for column labels at the top of the figure."
+            + g("_addendum_rotation"),
         ),
         "toplabel.size": (
             g("LARGESIZE"),
             g("_validate_fontsize"),
-            "Font size for column labels on the top of the figure." + g("_addendum_font"),
+            "Font size for column labels on the top of the figure."
+            + g("_addendum_font"),
         ),
         "toplabel.weight": (
             "bold",

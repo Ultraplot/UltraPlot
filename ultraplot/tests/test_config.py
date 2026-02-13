@@ -65,6 +65,8 @@ def test_curved_quiver_rc_defaults():
     assert uplt.rc["curved_quiver.grains"] == 15
     assert uplt.rc["curved_quiver.density"] == 10
     assert uplt.rc["curved_quiver.arrows_at_end"] is True
+
+
 def test_ribbon_rc_defaults():
     """
     Sanity check ribbon defaults in rc.
