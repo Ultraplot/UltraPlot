@@ -277,6 +277,29 @@ def test_subset_share_xlabels_override():
     uplt.close(fig)
 
 
+def test_spanning_labels_excluded_from_tight_layout_bbox():
+    """
+    Spanning x/y labels should not be counted twice by tight layout.
+
+    Regression test: with ``space=0``, including the figure-level spanning labels
+    in layout caused oversized left/bottom margins.
+    """
+    fig, ax = uplt.subplots(space=0, refwidth="10em")
+    ax.format(xticks="null", yticks="null", xlabel="x axis", ylabel="y axis")
+    fig.canvas.draw()
+
+    assert fig._supxlabel_dict
+    assert fig._supylabel_dict
+    assert all(not lab.get_in_layout() for lab in fig._supxlabel_dict.values())
+    assert all(not lab.get_in_layout() for lab in fig._supylabel_dict.values())
+
+    left, bottom, _, _ = ax.get_position().bounds
+    assert left < 0.25
+    assert bottom < 0.25
+
+    uplt.close(fig)
+
+
 def test_subset_share_xlabels_implicit():
     fig, ax = uplt.subplots(ncols=2, nrows=2, share="labels", span=False)
     ax[0, 0].format(xlabel="Top-left X")
