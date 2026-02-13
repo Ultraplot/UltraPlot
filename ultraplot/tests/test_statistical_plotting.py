@@ -271,6 +271,26 @@ def test_ridgeline_histogram_colormap(rng):
     return fig
 
 
+def test_ridgeline_histogram_bar(rng):
+    """
+    Test ridgeline plot with histogram bars.
+    """
+    data = [rng.normal(i, 1, 300) for i in range(4)]
+    labels = [f"Group {i+1}" for i in range(4)]
+
+    fig, ax = uplt.subplots()
+    artists = ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        hist=True,
+        histtype="bar",
+        bins=12,
+    )
+    assert len(artists) == len(data)
+    uplt.close(fig)
+
+
 @pytest.mark.mpl_image_compare
 def test_ridgeline_comparison_kde_vs_hist(rng):
     """
