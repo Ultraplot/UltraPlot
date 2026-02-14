@@ -17,49 +17,37 @@ See also
 * :doc:`Colorbars and legends </colorbars_legends>`
 """
 
-from matplotlib.path import Path
+# %%
+import cartopy.crs as ccrs
 import numpy as np
+import shapely.geometry as sg
+from matplotlib.path import Path
 
 import ultraplot as uplt
 
-rng = np.random.default_rng(2)
+np.random.seed(0)
+data = np.random.randn(2, 100)
+sizes = np.random.randint(10, 512, data.shape[1])
+colors = np.random.rand(data.shape[1])
 
-fig, axs = uplt.subplots(nrows=2, ncols=2, refwidth=2.4, share=0)
-axs.format(abc=True, abcloc="ul", grid=False, suptitle="Semantic legend helpers")
+fig, ax = uplt.subplots()
+ax.scatter(*data, color=colors, s=sizes, cmap="viko")
+ax.format(title="Semantic legend helpers")
 
-# Categorical legend
-ax = axs[0, 0]
-x = np.linspace(0, 2 * np.pi, 120)
-ax.plot(x, np.sin(x), color="gray6", lw=1.5)
 ax.cat_legend(
     ["A", "B", "C"],
     colors={"A": "red7", "B": "green7", "C": "blue7"},
     markers={"A": "o", "B": "s", "C": "^"},
-    loc="ul",
-    title="Category",
-    frame=False,
+    loc="top",
+    frameon=False,
 )
-ax.format(title="cat_legend", xlocator="null", ylocator="null")
-
-# Size legend
-ax = axs[0, 1]
-vals = rng.normal(0, 1, 30)
-ax.scatter(rng.uniform(0, 1, 30), vals, c="gray6", s=12, alpha=0.5)
 ax.size_legend(
     [10, 50, 200],
-    color="blue7",
-    fmt="{:.0f}",
-    loc="ur",
-    ncols=1,
+    loc="upper right",
     title="Population",
-    frame=False,
+    ncols=1,
+    frameon=False,
 )
-ax.format(title="size_legend", xlocator="null", ylocator="null")
-
-# Numeric-color legend
-ax = axs[1, 0]
-z = rng.uniform(0, 1, 60)
-ax.scatter(rng.uniform(0, 1, 60), rng.uniform(0, 1, 60), c=z, cmap="viko", s=16)
 ax.num_legend(
     vmin=0,
     vmax=1,
@@ -68,26 +56,37 @@ ax.num_legend(
     fmt="{:.2f}",
     loc="ll",
     ncols=1,
-    title="Score",
-    frame=False,
+    frameon=False,
 )
-ax.format(title="num_legend", xlocator="null", ylocator="null")
 
-# Geometry legend
-ax = axs[1, 1]
-diamond = Path.unit_regular_polygon(4)
+poly1 = sg.Polygon([(0, 0), (2, 0), (1.2, 1.4)])
 ax.geo_legend(
     [
-        ("Triangle", "triangle", {"facecolor": "#6baed6"}),
-        ("Diamond", diamond, {"facecolor": "#74c476"}),
-        ("Hexagon", "hexagon", {"facecolor": "#fd8d3c"}),
+        ("Triangle", "triangle"),
+        ("Triangle-ish", poly1),
+        ("Australia", "country:AU"),
+        ("Netherlands (Mercator)", "country:NLD", "mercator"),
+        (
+            "Netherlands (Lambert)",
+            "country:NLD",
+            {
+                "country_proj": ccrs.LambertConformal(
+                    central_longitude=5,
+                    central_latitude=52,
+                ),
+                "country_reso": "10m",
+                "country_territories": False,
+                "facecolor": "steelblue",
+                "fill": True,
+            },
+        ),
     ],
-    loc="lr",
-    title="Geometry",
-    handlesize=1.8,
-    linewidth=1.0,
-    frame=False,
+    loc="r",
+    ncols=1,
+    handlesize=2.4,
+    handletextpad=0.35,
+    frameon=False,
+    country_reso="10m",
 )
-ax.format(title="geo_legend", xlocator="null", ylocator="null")
-
 fig.show()
+uplt.show(block=1)
