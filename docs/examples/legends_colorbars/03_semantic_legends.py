@@ -89,4 +89,3 @@ ax.geo_legend(
     country_reso="10m",
 )
 fig.show()
-uplt.show(block=1)
