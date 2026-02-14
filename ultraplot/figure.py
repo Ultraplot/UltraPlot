@@ -2558,6 +2558,10 @@ class Figure(mfigure.Figure):
             props = ("ha", "va", "rotation", "rotation_mode")
             suplab = suplabs[ax] = self.text(0, 0, "")
             suplab.update({prop: getattr(axlab, "get_" + prop)() for prop in props})
+        # Spanning labels are positioned manually while regular axis labels are
+        # replaced by space placeholders to reserve bbox space. Exclude these
+        # figure-level labels from tight layout to avoid double counting.
+        suplab.set_in_layout(False)
 
         # Copy text from the central label to the spanning label
         # NOTE: Must use spaces rather than newlines, otherwise tight layout
