@@ -469,6 +469,103 @@ ax.legend(hs1, loc="b", ncols=3, title="row major", order="C", facecolor="gray2"
 ax = axs[1]
 ax.legend(hs2, loc="b", ncols=3, center=True, title="centered rows")
 axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
+
+# %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_semantic_legends:
+# Semantic legends
+# ----------------
+#
+# Legends usually annotate artists already drawn on an axes, but sometimes you need
+# standalone semantic keys (categories, size scales, color levels, or geometry types).
+# UltraPlot provides helper methods that build these entries directly:
+#
+# * :meth:`~ultraplot.axes.Axes.cat_legend`
+# * :meth:`~ultraplot.axes.Axes.size_legend`
+# * :meth:`~ultraplot.axes.Axes.num_legend`
+# * :meth:`~ultraplot.axes.Axes.geo_legend`
+
+# %%
+import cartopy.crs as ccrs
+import shapely.geometry as sg
+
+fig, axs = uplt.subplots(
+    ncols=2,
+    nrows=2,
+    refwidth=2.25,
+    span=False,
+    share=False,
+    suptitle="Semantic legend helpers",
+)
+axs.format(grid=False)
+
+ax = axs[0]
+ax.cat_legend(
+    ["A", "B", "C"],
+    colors={"A": "red7", "B": "green7", "C": "blue7"},
+    markers={"A": "o", "B": "s", "C": "^"},
+    loc="c",
+    frameon=False,
+)
+ax.format(title="cat_legend()")
+ax.axis("off")
+
+ax = axs[1]
+ax.size_legend(
+    [10, 50, 200],
+    loc="c",
+    title="Population",
+    frameon=False,
+)
+ax.format(title="size_legend()")
+ax.axis("off")
+
+ax = axs[2]
+ax.num_legend(
+    vmin=0,
+    vmax=1,
+    n=5,
+    cmap="viko",
+    fmt="{:.2f}",
+    loc="c",
+    frameon=False,
+)
+ax.format(title="num_legend()")
+ax.axis("off")
+
+poly1 = sg.Polygon([(0, 0), (2, 0), (1.2, 1.4)])
+ax = axs[3]
+ax.geo_legend(
+    [
+        ("Triangle", "triangle"),
+        ("Triangle-ish", poly1),
+        ("Australia", "country:AU"),
+        ("Netherlands (Mercator)", "country:NLD", "mercator"),
+        (
+            "Netherlands (Lambert)",
+            "country:NLD",
+            {
+                "country_proj": ccrs.LambertConformal(
+                    central_longitude=5,
+                    central_latitude=52,
+                ),
+                "country_reso": "10m",
+                "country_territories": False,
+                "facecolor": "steelblue",
+                "fill": True,
+            },
+        ),
+    ],
+    loc="c",
+    ncols=1,
+    handlesize=1.6,
+    handletextpad=0.35,
+    frameon=False,
+    country_reso="10m",
+)
+ax.format(title="geo_legend()")
+ax.axis("off")
+
+
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_guides_decouple:
 #
