@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from matplotlib import colors as mcolors
 from matplotlib import legend_handler as mhandler
 from matplotlib import patches as mpatches
 
@@ -324,6 +325,322 @@ def test_legend_entry_with_axes_legend():
     assert lines[0].get_linewidth() > 0
     assert lines[1].get_marker() == "o"
     uplt.close(fig)
+
+
+def test_semantic_helpers_not_public_on_module():
+    for name in ("cat_legend", "size_legend", "num_legend", "geo_legend"):
+        assert not hasattr(uplt, name)
+
+
+def test_geo_legend_helper_shapes():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.geo_legend(
+        [("Triangle", "triangle"), ("Hex", "hexagon")], add=False
+    )
+    assert labels == ["Triangle", "Hex"]
+    assert len(handles) == 2
+    assert all(isinstance(handle, mpatches.PathPatch) for handle in handles)
+    uplt.close(fig)
+
+
+def test_semantic_legend_rc_defaults():
+    fig, axs = uplt.subplots(ncols=4, share=False)
+    with uplt.rc.context(
+        {
+            "legend.cat.line": True,
+            "legend.cat.marker": "s",
+            "legend.cat.linewidth": 3.25,
+            "legend.size.marker": "^",
+            "legend.size.minsize": 8.0,
+            "legend.num.n": 3,
+            "legend.geo.facecolor": "red7",
+            "legend.geo.edgecolor": "black",
+            "legend.geo.fill": True,
+        }
+    ):
+        leg = axs[0].cat_legend(["A"], loc="best")
+        h = leg.legend_handles[0]
+        assert h.get_marker() == "s"
+        assert h.get_linewidth() == pytest.approx(3.25)
+
+        leg = axs[1].size_legend([1.0], loc="best")
+        h = leg.legend_handles[0]
+        assert h.get_marker() == "^"
+        assert h.get_markersize() >= 8.0
+
+        leg = axs[2].num_legend(vmin=0, vmax=1, loc="best")
+        assert len(leg.legend_handles) == 3
+
+        leg = axs[3].geo_legend([("shape", "triangle")], loc="best")
+        h = leg.legend_handles[0]
+        assert isinstance(h, mpatches.PathPatch)
+        assert np.allclose(h.get_facecolor(), mcolors.to_rgba("red7"))
+    uplt.close(fig)
+
+
+def test_semantic_legend_loc_shorthand():
+    fig, ax = uplt.subplots()
+    leg = ax.cat_legend(["A", "B"], loc="r")
+    assert leg is not None
+    assert [text.get_text() for text in leg.get_texts()] == ["A", "B"]
+    uplt.close(fig)
+
+
+def test_geo_legend_handlesize_scales_handle_box():
+    fig, ax = uplt.subplots()
+    leg = ax.geo_legend([("shape", "triangle")], loc="best", handlesize=2.0)
+    assert leg.handlelength == pytest.approx(2.0 * uplt.rc["legend.handlelength"])
+    assert leg.handleheight == pytest.approx(2.0 * uplt.rc["legend.handleheight"])
+
+    with uplt.rc.context({"legend.geo.handlesize": 1.5}):
+        leg = ax.geo_legend([("shape", "triangle")], loc="best")
+        assert leg.handlelength == pytest.approx(1.5 * uplt.rc["legend.handlelength"])
+        assert leg.handleheight == pytest.approx(1.5 * uplt.rc["legend.handleheight"])
+    uplt.close(fig)
+
+
+def test_geo_legend_helper_with_axes_legend(monkeypatch):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    monkeypatch.setattr(
+        plegend,
+        "_resolve_country_geometry",
+        lambda _, resolution="110m", include_far=False: sgeom.box(-1, -1, 1, 1),
+    )
+    fig, ax = uplt.subplots()
+    leg = ax.geo_legend({"AUS": "country:AU", "NZL": "country:NZ"}, loc="best")
+    assert [text.get_text() for text in leg.get_texts()] == ["AUS", "NZL"]
+    uplt.close(fig)
+
+
+def test_geo_legend_country_resolution_passthrough(monkeypatch):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    calls = []
+
+    def _fake_country(code, resolution="110m", include_far=False):
+        calls.append((str(code).upper(), resolution, bool(include_far)))
+        return sgeom.box(-1, -1, 1, 1)
+
+    monkeypatch.setattr(plegend, "_resolve_country_geometry", _fake_country)
+
+    fig, ax = uplt.subplots()
+    ax.geo_legend([("NLD", "country:NLD")], country_reso="10m", add=False)
+    assert calls == [("NLD", "10m", False)]
+
+    calls.clear()
+    with uplt.rc.context({"legend.geo.country_reso": "50m"}):
+        ax.geo_legend([("NLD", "country:NLD")], add=False)
+    assert calls == [("NLD", "50m", False)]
+
+    calls.clear()
+    ax.geo_legend([("NLD", "country:NLD")], country_territories=True, add=False)
+    assert calls == [("NLD", "110m", True)]
+
+    calls.clear()
+    with uplt.rc.context({"legend.geo.country_territories": True}):
+        ax.geo_legend([("NLD", "country:NLD")], add=False)
+    assert calls == [("NLD", "110m", True)]
+    uplt.close(fig)
+
+
+def test_geo_legend_country_projection_passthrough(monkeypatch):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from shapely import affinity
+    from ultraplot import legend as plegend
+
+    monkeypatch.setattr(
+        plegend,
+        "_resolve_country_geometry",
+        lambda code, resolution="110m", include_far=False: sgeom.box(0, 0, 2, 1),
+    )
+    fig, ax = uplt.subplots()
+    handles0, _ = ax.geo_legend([("NLD", "country:NLD")], add=False)
+    handles1, _ = ax.geo_legend(
+        [("NLD", "country:NLD")],
+        country_proj=lambda geom: affinity.scale(
+            geom, xfact=2.0, yfact=1.0, origin=(0, 0)
+        ),
+        add=False,
+    )
+    w0 = np.ptp(handles0[0].get_path().vertices[:, 0])
+    w1 = np.ptp(handles1[0].get_path().vertices[:, 0])
+    assert w1 > w0
+
+    handles2, _ = ax.geo_legend(
+        [("NLD", "country:NLD")],
+        add=False,
+        country_proj="platecarree",
+    )
+    assert isinstance(handles2[0], mpatches.PathPatch)
+
+    # Per-entry overrides via 3-tuples
+    handles3, labels3 = ax.geo_legend(
+        [
+            ("Base", "country:NLD"),
+            (
+                "Wide",
+                "country:NLD",
+                {
+                    "country_proj": lambda geom: affinity.scale(
+                        geom, xfact=2.0, yfact=1.0, origin=(0, 0)
+                    )
+                },
+            ),
+            ("StringProj", "country:NLD", "platecarree"),
+        ],
+        add=False,
+    )
+    assert labels3 == ["Base", "Wide", "StringProj"]
+    w_base = np.ptp(handles3[0].get_path().vertices[:, 0])
+    w_wide = np.ptp(handles3[1].get_path().vertices[:, 0])
+    assert w_wide > w_base
+    uplt.close(fig)
+
+
+def test_country_geometry_uses_dominant_component():
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    big = sgeom.box(4.0, 51.0, 7.0, 54.0)
+    tiny_far = sgeom.box(-69.0, 12.0, -68.8, 12.2)
+    geometry = sgeom.MultiPolygon([big, tiny_far])
+    dominant = plegend._country_geometry_for_legend(geometry)
+    assert dominant.equals(big)
+
+
+def test_country_geometry_keeps_nearby_islands():
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    mainland = sgeom.box(4.0, 51.0, 7.0, 54.0)
+    nearby_island = sgeom.box(5.0, 54.2, 5.2, 54.35)
+    far_island = sgeom.box(-69.0, 12.0, -68.8, 12.2)
+    geometry = sgeom.MultiPolygon([mainland, nearby_island, far_island])
+
+    reduced = plegend._country_geometry_for_legend(geometry)
+    geoms = list(getattr(reduced, "geoms", [reduced]))
+    assert any(part.equals(mainland) for part in geoms)
+    assert any(part.equals(nearby_island) for part in geoms)
+    assert not any(part.equals(far_island) for part in geoms)
+
+
+def test_country_geometry_can_include_far_territories():
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    mainland = sgeom.box(4.0, 51.0, 7.0, 54.0)
+    far_island = sgeom.box(-69.0, 12.0, -68.8, 12.2)
+    geometry = sgeom.MultiPolygon([mainland, far_island])
+    kept = plegend._country_geometry_for_legend(geometry, include_far=True)
+    geoms = list(getattr(kept, "geoms", [kept]))
+    assert any(part.equals(mainland) for part in geoms)
+    assert any(part.equals(far_island) for part in geoms)
+
+
+def test_geo_axes_add_geometries_auto_legend():
+    ccrs = pytest.importorskip("cartopy.crs")
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.add_geometries(
+        [sgeom.box(-20, -10, 20, 10)],
+        ccrs.PlateCarree(),
+        facecolor="blue7",
+        edgecolor="blue9",
+        label="Region",
+    )
+    leg = ax.legend(loc="best")
+    labels = [text.get_text() for text in leg.get_texts()]
+    assert "Region" in labels
+    assert len(leg.legend_handles) == 1
+    assert isinstance(leg.legend_handles[0], mpatches.PathPatch)
+    uplt.close(fig)
+
+
+@pytest.mark.mpl_image_compare
+def test_semantic_legends_showcase_smoke(monkeypatch):
+    """
+    End-to-end smoke test showing semantic legend helpers in one figure:
+    categorical, size, numeric-color, and geometry (generic + country shorthands).
+    """
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    # Prefer real Natural Earth country geometries if available. In offline CI,
+    # fall back to deterministic local geometries while still exercising shorthand.
+    country_entries = [("Australia", "country:AU"), ("New Zealand", "country:NZ")]
+    uses_real_countries = True
+    try:
+        fig_tmp, ax_tmp = uplt.subplots()
+        ax_tmp.geo_legend(
+            country_entries, edgecolor="black", facecolor="none", add=False
+        )
+        uplt.close(fig_tmp)
+    except ValueError:
+        uses_real_countries = False
+        country_geoms = {
+            "AU": sgeom.box(110, -45, 155, -10),
+            "NZ": sgeom.box(166, -48, 179, -34),
+        }
+
+        def _fake_country(code):
+            key = str(code).upper()
+            if key not in country_geoms:
+                raise ValueError(f"Unknown shorthand in test: {code!r}")
+            return country_geoms[key]
+
+        monkeypatch.setattr(plegend, "_resolve_country_geometry", _fake_country)
+
+    fig, axs = uplt.subplots(ncols=2, nrows=2, share=False)
+
+    leg = axs[0].cat_legend(
+        ["A", "B", "C"],
+        colors={"A": "red7", "B": "green7", "C": "blue7"},
+        markers={"A": "o", "B": "s", "C": "^"},
+        loc="best",
+        title="cat_legend",
+    )
+    assert [text.get_text() for text in leg.get_texts()] == ["A", "B", "C"]
+
+    leg = axs[1].size_legend(
+        [10, 50, 200], color="gray6", loc="best", title="size_legend"
+    )
+    assert [text.get_text() for text in leg.get_texts()] == ["10", "50", "200"]
+
+    leg = axs[2].num_legend(
+        vmin=0.0,
+        vmax=1.0,
+        n=4,
+        cmap="viridis",
+        fmt="{:.2f}",
+        loc="best",
+        title="num_legend",
+    )
+    assert len(leg.legend_handles) == 4
+    assert all(isinstance(handle, mpatches.Patch) for handle in leg.legend_handles)
+
+    handles, labels = axs[3].geo_legend(
+        [
+            ("Triangle", "triangle"),
+            ("Hexagon", "hexagon"),
+            *country_entries,
+        ],
+        edgecolor="black",
+        facecolor="none",
+        add=False,
+    )
+    leg = axs[3].legend(handles, labels, loc="best", title="geo_legend")
+    legend_labels = [text.get_text() for text in leg.get_texts()]
+    assert set(legend_labels) == set(labels)
+    assert len(legend_labels) == len(labels)
+    assert all(isinstance(handle, mpatches.PathPatch) for handle in leg.legend_handles)
+    if uses_real_countries:
+        # Real shorthand resolution succeeded (no monkeypatched fallback).
+        assert {"Australia", "New Zealand"}.issubset(set(legend_labels))
+    return fig
 
 
 def test_pie_legend_uses_wedge_handles():
