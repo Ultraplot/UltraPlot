@@ -55,6 +55,18 @@ def test_sankey_rc_defaults():
     assert uplt.rc["sankey.node.facecolor"] == "0.75"
 
 
+def test_curved_quiver_rc_defaults():
+    """
+    Sanity check curved_quiver defaults in rc.
+    """
+    assert uplt.rc["curved_quiver.arrowsize"] == 1.0
+    assert uplt.rc["curved_quiver.arrowstyle"] == "-|>"
+    assert uplt.rc["curved_quiver.scale"] == 1.0
+    assert uplt.rc["curved_quiver.grains"] == 15
+    assert uplt.rc["curved_quiver.density"] == 10
+    assert uplt.rc["curved_quiver.arrows_at_end"] is True
+
+
 def test_ribbon_rc_defaults():
     """
     Sanity check ribbon defaults in rc.
@@ -232,6 +244,67 @@ def test_cycle_mutation_does_not_corrupt_rcparams():
     observed = [results.get() for _ in range(results.qsize())]
     assert observed, "No rcParams observations were recorded."
     assert all(value in allowed for value in observed)
+
+
+def test_rc_registry_merge_disjoint_tables():
+    """
+    Registry merge should combine disjoint rc tables.
+    """
+    from ultraplot.internals.rc.registry import merge_rc_tables
+
+    left = {"a.b": (1, lambda x: x, "left")}
+    right = {"c.d": (2, lambda x: x, "right")}
+    merged = merge_rc_tables(left, right)
+    assert merged["a.b"][0] == 1
+    assert merged["c.d"][0] == 2
+
+
+def test_rc_registry_merge_duplicate_keys_raises():
+    """
+    Registry merge should fail fast on duplicate keys.
+    """
+    from ultraplot.internals.rc.registry import merge_rc_tables
+
+    table1 = {"a.b": (1, lambda x: x, "first")}
+    table2 = {"a.b": (2, lambda x: x, "second")}
+    with pytest.raises(ValueError, match="Duplicate rc keys"):
+        merge_rc_tables(table1, table2)
+
+
+def test_rc_settings_table_matches_rcsetup_table():
+    """
+    Single settings table should match rcsetup composed table keys.
+    """
+    from ultraplot.internals import rcsetup
+    from ultraplot.internals.rc import build_settings_rc_table
+
+    ns = vars(rcsetup)
+    settings_table = build_settings_rc_table(ns)
+    assert set(settings_table) == set(rcsetup._rc_ultraplot_table)
+
+
+def test_rc_validator_aliases_include_common_validators():
+    """
+    Validator aliases should include common primitive validators.
+    """
+    from ultraplot.internals import rcsetup
+    from ultraplot.internals.rc import build_validator_aliases
+
+    aliases = build_validator_aliases(vars(rcsetup))
+    assert aliases["float"] is rcsetup._validate_float
+    assert aliases["bool"] is rcsetup._validate_bool
+    assert aliases["color"] is rcsetup._validate_color
+
+
+def test_rc_deprecations_module_matches_rcsetup():
+    """
+    Deprecation maps should be sourced from rc.deprecations.
+    """
+    from ultraplot.internals import rcsetup
+    from ultraplot.internals.rc.deprecations import get_rc_removed, get_rc_renamed
+
+    assert rcsetup._rc_removed == get_rc_removed()
+    assert rcsetup._rc_renamed == get_rc_renamed()
 
 
 def _run_in_subprocess(code):
