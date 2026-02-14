@@ -65,6 +65,8 @@ def _wedge_legend_patch(
     if theta2 == theta1:
         theta2 = theta1 + 300.0
     return mpatches.Wedge(center, radius, theta1=theta1, theta2=theta2)
+
+
 class LegendEntry(mlines.Line2D):
     """
     Convenience artist for custom legend entries.
@@ -125,6 +127,8 @@ class LegendEntry(mlines.Line2D):
         Build a marker-style legend entry.
         """
         return cls(label=label, line=False, marker=marker, **kwargs)
+
+
 _GEOMETRY_SHAPE_PATHS = {
     "circle": mpath.Path.unit_circle(),
     "square": mpath.Path.unit_rectangle(),
@@ -917,6 +921,8 @@ def _num_legend_entries(
         for value, label in zip(values, labels)
     ]
     return handles, labels
+
+
 ALIGN_OPTS = {
     None: {
         "center": "center",
@@ -988,6 +994,7 @@ class _LegendInputs:
     rows: Optional[Union[int, Tuple[int, int]]]
     cols: Optional[Union[int, Tuple[int, int]]]
     kwargs: dict[str, Any]
+
 
 class Legend(mlegend.Legend):
     # Soft wrapper of matplotlib legend's class.
