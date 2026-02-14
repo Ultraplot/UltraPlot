@@ -136,9 +136,9 @@ jobs:
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
           # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
-          key: ${{ runner.os }}-baseline-base-v4-hs${{ env.PYTHONHASHSEED }}-${{ steps.baseline-ref.outputs.base_sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
+          key: ${{ runner.os }}-baseline-base-v5-hs${{ env.PYTHONHASHSEED }}-${{ steps.baseline-ref.outputs.base_sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}
           restore-keys: |
-            ${{ runner.os }}-baseline-base-v4-hs${{ env.PYTHONHASHSEED }}-${{ steps.baseline-ref.outputs.base_sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
+            ${{ runner.os }}-baseline-base-v5-hs${{ env.PYTHONHASHSEED }}-${{ steps.baseline-ref.outputs.base_sha }}-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-
 
       # Conditional Baseline Generation (Only runs on cache miss)
       - name: Generate baseline from main
