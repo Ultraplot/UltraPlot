@@ -88,6 +88,22 @@
     letter-spacing: 0.065em;
     text-transform: uppercase;
     line-height: 1.25;
+    color: #138a73;
+    background-image: linear-gradient(
+        90deg,
+        #0f6d5f 0%,
+        #11806b 12%,
+        #139378 24%,
+        #15a685 36%,
+        #17b793 48%,
+        #19a988 60%,
+        #1a9c7d 72%,
+        #1c8f73 84%,
+        #1e8268 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 @media (min-width: 768px) {
@@ -236,6 +252,24 @@ html.dark-theme .sy-head .sy-head-links a,
 [data-color-mode="dark"] .sy-head .sy-head-links a {
     color: #dbe6e5;
     opacity: 0.96;
+}
+
+html.dark .sy-head .sy-head-brand strong,
+html.dark-theme .sy-head .sy-head-brand strong,
+[data-color-mode="dark"] .sy-head .sy-head-brand strong {
+    color: #6ee0c8;
+    background-image: linear-gradient(
+        90deg,
+        #47cdb2 0%,
+        #53d6bc 12%,
+        #5fdec6 24%,
+        #6be6d0 36%,
+        #77edd9 48%,
+        #6be6d0 60%,
+        #5fdec6 72%,
+        #53d6bc 84%,
+        #47cdb2 100%
+    );
 }
 
 html.dark .sy-head .sy-head-links a:hover,
