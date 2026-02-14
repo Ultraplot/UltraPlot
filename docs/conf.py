@@ -133,6 +133,20 @@ from matplotlib.font_manager import fontManager
 from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 
+def _set_plot_transparency_defaults():
+    """
+    Use transparent defaults so rendered docs figures adapt to light/dark themes.
+    """
+    try:
+        import matplotlib as mpl
+    except Exception:
+        return
+    mpl.rcParams["figure.facecolor"] = "none"
+    mpl.rcParams["axes.facecolor"] = "none"
+    mpl.rcParams["savefig.facecolor"] = "none"
+    mpl.rcParams["savefig.edgecolor"] = "none"
+
+
 def _reset_ultraplot(gallery_conf, fname):
     """
     Reset UltraPlot rc state between gallery examples.
@@ -146,6 +160,10 @@ def _reset_ultraplot(gallery_conf, fname):
         _logger.setLevel(logging.ERROR)
         _logger.propagate = False
     uplt.rc.reset()
+    _set_plot_transparency_defaults()
+
+
+_set_plot_transparency_defaults()
 
 
 # -- Project information -------------------------------------------------------
@@ -394,6 +412,16 @@ nbsphinx_timeout = 300
 
 # Add jupytext support to nbsphinx
 nbsphinx_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
+
+# Keep notebook output backgrounds theme-adaptive.
+nbsphinx_execute_arguments = [
+    "--InlineBackend.rc={"
+    "'figure.facecolor': 'none', "
+    "'axes.facecolor': 'none', "
+    "'savefig.facecolor': 'none', "
+    "'savefig.edgecolor': 'none'"
+    "}",
+]
 
 # Control notebook execution from env for predictable local/CI builds.
 # Use values: auto, always, never.

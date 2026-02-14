@@ -24,6 +24,8 @@
     --uplt-color-accent-grad-end: rgba(15, 118, 110, 0.02);
     --uplt-color-accent-shadow-strong: rgba(15, 118, 110, 0.2);
     --uplt-color-accent-shadow-soft: rgba(15, 118, 110, 0.1);
+    --uplt-color-plot-panel-bg: #f2f4f6;
+    --uplt-color-plot-panel-border: #d9dde2;
 
     /* Scrollbar */
     --uplt-color-scrollbar-track: #f1f1f1;
@@ -281,6 +283,8 @@ html.dark-theme,
     --uplt-color-accent-grad-end: rgba(26, 168, 154, 0.04);
     --uplt-color-accent-shadow-strong: rgba(26, 168, 154, 0.26);
     --uplt-color-accent-shadow-soft: rgba(26, 168, 154, 0.14);
+    --uplt-color-plot-panel-bg: #1b2024;
+    --uplt-color-plot-panel-border: #313940;
     --sy-c-link: #58d5c9;
     --sy-c-link-hover: #84e8df;
     --uplt-color-panel-bg: #202020;
@@ -782,10 +786,16 @@ body.wy-body-for-nav
 }
 
 .yue div.nbinput.container > div.input_area,
-.yue div.nboutput.container > div.output_area,
 .yue .highlight,
 .yue .highlight pre {
     background-color: var(--code-block-background) !important;
+}
+
+.yue div.nboutput.container > div.output_area {
+    background-color: var(--uplt-color-plot-panel-bg) !important;
+    border: 1px solid var(--uplt-color-plot-panel-border);
+    border-radius: 0.45rem;
+    padding: 0.4rem;
 }
 
 /* Shibuya right TOC: collapse sub-H1 headings under each H1 section */
