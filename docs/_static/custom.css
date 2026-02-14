@@ -791,11 +791,28 @@ body.wy-body-for-nav
     background-color: var(--code-block-background) !important;
 }
 
+.yue div.nboutput.container {
+    display: block !important;
+}
+
+.yue div.nboutput.container > div.prompt {
+    display: none !important;
+}
+
 .yue div.nboutput.container > div.output_area {
     background-color: var(--uplt-color-plot-panel-bg) !important;
     border: 1px solid var(--uplt-color-plot-panel-border);
     border-radius: 0.45rem;
     padding: 0.4rem;
+    width: 100%;
+    max-width: 100%;
+    margin: 0.25rem 0 !important;
+    overflow: visible;
+}
+
+.yue div.nboutput.container > div.output_area > * {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Shibuya right TOC: collapse sub-H1 headings under each H1 section */
