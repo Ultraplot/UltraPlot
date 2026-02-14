@@ -146,6 +146,7 @@ _GEOMETRY_SHAPE_ALIASES = {
     "pent": "pentagon",
     "hex": "hexagon",
 }
+_DEFAULT_GEO_JOINSTYLE = "bevel"
 
 
 def _normalize_shape_name(value: str) -> str:
@@ -471,6 +472,27 @@ def _first_scalar(value: Any, default: Any = None) -> Any:
     return value
 
 
+def _patch_joinstyle(value: Any, default: str = _DEFAULT_GEO_JOINSTYLE) -> str:
+    """
+    Resolve patch joinstyle from artist methods/kwargs with a sensible default.
+    """
+    getter = getattr(value, "get_joinstyle", None)
+    if callable(getter):
+        try:
+            joinstyle = getter()
+        except Exception:
+            joinstyle = None
+        if joinstyle:
+            return joinstyle
+    kwargs = getattr(value, "_kwargs", None)
+    if isinstance(kwargs, dict):
+        for key in ("joinstyle", "solid_joinstyle", "linejoin"):
+            joinstyle = kwargs.get(key, None)
+            if joinstyle:
+                return joinstyle
+    return default
+
+
 def _feature_legend_patch(
     legend,
     orig_handle,
@@ -493,7 +515,7 @@ def _feature_legend_patch(
         width=width,
         height=height,
     )
-    return mpatches.PathPatch(path)
+    return mpatches.PathPatch(path, joinstyle=_DEFAULT_GEO_JOINSTYLE)
 
 
 def _shapely_geometry_patch(
@@ -522,7 +544,7 @@ def _shapely_geometry_patch(
         width=width,
         height=height,
     )
-    return mpatches.PathPatch(path)
+    return mpatches.PathPatch(path, joinstyle=_DEFAULT_GEO_JOINSTYLE)
 
 
 def _geometry_entry_patch(
@@ -544,7 +566,7 @@ def _geometry_entry_patch(
         width=width,
         height=height,
     )
-    return mpatches.PathPatch(path)
+    return mpatches.PathPatch(path, joinstyle=_DEFAULT_GEO_JOINSTYLE)
 
 
 class _FeatureArtistLegendHandler(mhandler.HandlerPatch):
@@ -583,6 +605,7 @@ class _FeatureArtistLegendHandler(mhandler.HandlerPatch):
         legend_handle.set_facecolor(facecolor)
         legend_handle.set_edgecolor(edgecolor)
         legend_handle.set_linewidth(linewidth)
+        legend_handle.set_joinstyle(_patch_joinstyle(orig_handle))
         if hasattr(orig_handle, "get_alpha"):
             legend_handle.set_alpha(orig_handle.get_alpha())
         legend._set_artist_props(legend_handle)
@@ -600,7 +623,23 @@ class _ShapelyGeometryLegendHandler(mhandler.HandlerPatch):
 
     def update_prop(self, legend_handle, orig_handle, legend):
         # No style information is stored on shapely geometry objects.
+        legend_handle.set_joinstyle(_DEFAULT_GEO_JOINSTYLE)
         legend._set_artist_props(legend_handle)
+        legend_handle.set_clip_box(None)
+        legend_handle.set_clip_path(None)
+
+
+class _GeometryEntryLegendHandler(mhandler.HandlerPatch):
+    """
+    Legend handler for `GeometryEntry` custom handles.
+    """
+
+    def __init__(self):
+        super().__init__(patch_func=_geometry_entry_patch)
+
+    def update_prop(self, legend_handle, orig_handle, legend):
+        super().update_prop(legend_handle, orig_handle, legend)
+        legend_handle.set_joinstyle(_patch_joinstyle(orig_handle))
         legend_handle.set_clip_box(None)
         legend_handle.set_clip_path(None)
 
@@ -627,6 +666,7 @@ class GeometryEntry(mpatches.PathPatch):
         facecolor: Any = "none",
         edgecolor: Any = "0.25",
         linewidth: float = 1.0,
+        joinstyle: str = _DEFAULT_GEO_JOINSTYLE,
         alpha: Optional[float] = None,
         fill: Optional[bool] = None,
         **kwargs: Any,
@@ -645,6 +685,7 @@ class GeometryEntry(mpatches.PathPatch):
             facecolor=facecolor,
             edgecolor=edgecolor,
             linewidth=linewidth,
+            joinstyle=joinstyle,
             alpha=alpha,
             fill=fill,
             **kwargs,
@@ -1013,7 +1054,7 @@ class Legend(mlegend.Legend):
         handler_map = dict(super().get_default_handler_map())
         handler_map.setdefault(
             GeometryEntry,
-            mhandler.HandlerPatch(patch_func=_geometry_entry_patch),
+            _GeometryEntryLegendHandler(),
         )
         handler_map.setdefault(
             mpatches.Wedge,

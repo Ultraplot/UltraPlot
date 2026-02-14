@@ -557,6 +557,22 @@ def test_geo_axes_add_geometries_auto_legend():
     assert "Region" in labels
     assert len(leg.legend_handles) == 1
     assert isinstance(leg.legend_handles[0], mpatches.PathPatch)
+    assert leg.legend_handles[0].get_joinstyle() == "bevel"
+    uplt.close(fig)
+
+
+def test_geo_legend_defaults_to_bevel_joinstyle():
+    fig, ax = uplt.subplots()
+    leg = ax.geo_legend([("shape", "triangle")], loc="best")
+    assert isinstance(leg.legend_handles[0], mpatches.PathPatch)
+    assert leg.legend_handles[0].get_joinstyle() == "bevel"
+    uplt.close(fig)
+
+
+def test_geo_legend_joinstyle_override():
+    fig, ax = uplt.subplots()
+    leg = ax.geo_legend([("shape", "triangle", {"joinstyle": "round"})], loc="best")
+    assert leg.legend_handles[0].get_joinstyle() == "round"
     uplt.close(fig)
 
 
