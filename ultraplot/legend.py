@@ -16,6 +16,10 @@ from .config import rc
 from .internals import _not_none, _pop_props, guides, rcsetup
 from .utils import _fontsize_to_pt, units
 
+from .config import rc
+from .internals import _not_none, _pop_props, guides, rcsetup
+from .utils import _fontsize_to_pt, units
+
 try:
     from typing import override
 except ImportError:
