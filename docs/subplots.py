@@ -181,8 +181,9 @@ axs.format(
 #      depending on the number of subplots in the figure.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Grid of images (note the square pixels)
 state = np.random.RandomState(51423)
@@ -353,7 +354,7 @@ for (name1, equal), (name2, group) in zip(equals, groups):
 # ------------------
 #
 # Figures with lots of subplots often have :ref:`redundant labels <why_redundant>`.
-# To help address this, the matplotlib command `matplotlib.pyplot.subplots` includes
+# To help address this, the matplotlib command :py:func:`matplotlib.pyplot.subplots` includes
 # `sharex` and `sharey` keywords that permit sharing axis limits and ticks between
 # like rows and columns of subplots. UltraPlot builds on this feature by:
 #
@@ -370,7 +371,7 @@ for (name1, equal), (name2, group) in zip(equals, groups):
 #    It is controlled by the `spanx` and `spany` :class:`~ultraplot.figure.Figure`
 #    keywords (default is :rc:`subplots.span`). Use the `span` keyword
 #    as a shorthand to set both `spanx` and `spany`. Note that unlike
-#    `~matplotlib.figure.Figure.supxlabel` and `~matplotlib.figure.Figure.supylabel`,
+#    :py:func:`~matplotlib.figure.Figure.supxlabel` and :py:func:`~matplotlib.figure.Figure.supylabel`,
 #    these labels are aligned between gridspec edges rather than figure edges.
 # #. Supporting five sharing "levels". These values can be passed to `sharex`,
 #    `sharey`, or `share`, or assigned to :rcraw:`subplots.share`.
@@ -398,8 +399,9 @@ for (name1, equal), (name2, group) in zip(equals, groups):
 # settings on the appearance of several subplot grids.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 N = 50
 M = 40
@@ -428,8 +430,9 @@ for i, (span, share) in enumerate(zip(spans, shares)):
         )
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # The default `share='auto'` keeps incompatible axis families unshared.
 fig, axs = uplt.subplots(ncols=2, proj=("cart", "polar"))
@@ -442,8 +445,9 @@ axs.format(
 )
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 
@@ -475,7 +479,9 @@ for span, share, title in zip(spans, shares, titles):
 # complex layouts, UltraPlot will add the labels when the subplot
 # is facing and "edge" which is defined as not immediately having a subplot next to it. For example:
 # %%
-import ultraplot as uplt, numpy as np
+import numpy as np
+
+import ultraplot as uplt
 
 layout = [[1, 0, 2], [0, 3, 0], [4, 0, 6]]
 fig, ax = uplt.subplots(layout)
@@ -522,8 +528,9 @@ for axi in ax:
 # and `points <https://en.wikipedia.org/wiki/Point_(typography)>`__.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 with uplt.rc.context(fontsize="12px"):  # depends on rc['figure.dpi']
     fig, axs = uplt.subplots(

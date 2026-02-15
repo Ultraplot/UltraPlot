@@ -58,7 +58,7 @@
 # direction is automatically reversed. If coordinate *centers* are passed to commands
 # like :func:`~ultraplot.axes.PlotAxes.pcolor` and :func:`~ultraplot.axes.PlotAxes.pcolormesh`, they
 # are automatically converted to edges using :func:`~ultraplot.utils.edges` or
-# `:func:`~ultraplot.utils.edges2d``, and if coordinate *edges* are passed to commands like
+# :func:`~ultraplot.utils.edges2d`, and if coordinate *edges* are passed to commands like
 # :func:`~ultraplot.axes.PlotAxes.contour` and :func:`~ultraplot.axes.PlotAxes.contourf`, they are
 # automatically converted to centers (notice the locations of the rectangle edges
 # in the ``pcolor`` plots below). All positional arguments can also be specified
@@ -161,11 +161,11 @@ fig.format(
 #
 # The 2D :class:`~ultraplot.axes.PlotAxes` commands recognize `pandas`_
 # and `xarray`_ data structures. If you omit *x* and *y* coordinates,
-# the commands try to infer them from the `pandas.DataFrame` or
-# `xarray.DataArray`. If you did not explicitly set the *x* or *y* axis label
+# the commands try to infer them from the :class:`pandas.DataFrame` or
+# :class:`xarray.DataArray`. If you did not explicitly set the *x* or *y* axis label
 # or :ref:`legend or colorbar <ug_guides_loc>` label(s), the commands
-# try to retrieve them from the `pandas.DataFrame` or `xarray.DataArray`.
-# The commands also recognize `pint.Quantity` structures and apply
+# try to retrieve them from the :class:`~pandas.DataFrame` or :class:`~xarray.DataArray`.
+# The commands also recognize :class:`~pint.Quantity` structures and apply
 # unit string labels with formatting specified by :rc:`unitformat`.
 #
 # These features restore some of the convenience you get with the builtin
@@ -176,14 +176,14 @@ fig.format(
 #
 # .. note::
 #
-#    For every plotting command, you can pass a `~xarray.Dataset`, :class:`~pandas.DataFrame`,
+#    For every plotting command, you can pass a :class:`~xarray.Dataset`, :class:`~pandas.DataFrame`,
 #    or `dict` to the `data` keyword with strings as data arguments instead of arrays
 #    -- just like matplotlib. For example, ``ax.plot('y', data=dataset)`` and
 #    ``ax.plot(y='y', data=dataset)`` are translated to ``ax.plot(dataset['y'])``.
 #    This is the preferred input style for most `seaborn`_ plotting commands.
-#    Also, if you pass a `pint.Quantity` or :class:`~xarray.DataArray`
-#    containing a `pint.Quantity`, UltraPlot will automatically call
-#    `~pint.UnitRegistry.setup_matplotlib` so that the axes become unit-aware.
+#    Also, if you pass a :class:`pint.Quantity` or :py:class:`~xarray.DataArray`
+#    containing a :class:`~pint.Quantity`, UltraPlot will automatically call
+#    :py:meth:`~pint.UnitRegistry.setup_matplotlib` so that the axes become unit-aware.
 
 # %%
 import numpy as np
@@ -356,13 +356,13 @@ fig.show()
 # -------------------
 #
 # UltraPlot includes two new :ref:`"continuous" normalizers <ug_apply_norm>`. The
-# `~ultraplot.colors.SegmentedNorm` normalizer provides even color gradations with respect
+# :class:`~ultraplot.colors.SegmentedNorm` normalizer provides even color gradations with respect
 # to index for an arbitrary monotonically increasing or decreasing list of levels. This
 # is automatically applied if you pass unevenly spaced `levels` to a plotting command,
 # or it can be manually applied using e.g. ``norm='segmented'``. This can be useful for
 # datasets with unusual statistical distributions or spanning many orders of magnitudes.
 #
-# The `~ultraplot.colors.DivergingNorm` normalizer ensures that colormap midpoints lie
+# The :class:`~ultraplot.colors.DivergingNorm` normalizer ensures that colormap midpoints lie
 # on some central data value (usually ``0``), even if `vmin`, `vmax`, or `levels`
 # are asymmetric with respect to the central value. This is automatically applied
 # if your data contains negative and positive values (see :ref:`below <ug_autonorm>`),
@@ -440,14 +440,14 @@ fig.show()
 # Discrete levels
 # ---------------
 #
-# By default, UltraPlot uses `~ultraplot.colors.DiscreteNorm` to "discretize"
+# By default, UltraPlot uses :class:`~ultraplot.colors.DiscreteNorm` to "discretize"
 # the possible colormap colors for contour and pseudocolor :class:`~ultraplot.axes.PlotAxes`
 # commands (e.g., :func:`~ultraplot.axes.PlotAxes.contourf`, :func:`~ultraplot.axes.PlotAxes.pcolor`).
-# This is analogous to `matplotlib.colors.BoundaryNorm`, except
-# `~ultraplot.colors.DiscreteNorm` can be paired with arbitrary
+# This is analogous to :class:`matplotlib.colors.BoundaryNorm`, except
+# :class:`~ultraplot.colors.DiscreteNorm` can be paired with arbitrary
 # continuous normalizers specified by `norm` (see :ref:`above <ug_apply_norm>`).
 # Discrete color levels can help readers discern exact numeric values and
-# tend to reveal qualitative structure in the data. `~ultraplot.colors.DiscreteNorm`
+# tend to reveal qualitative structure in the data. :class:`~ultraplot.colors.DiscreteNorm`
 # also repairs the colormap end-colors by ensuring the following conditions are met:
 #
 # #. All colormaps always span the *entire color range*
@@ -458,7 +458,7 @@ fig.show()
 # To explicitly toggle discrete levels on or off, change :rcraw:`cmap.discrete`
 # or pass ``discrete=False`` or ``discrete=True`` to any plotting command
 # that accepts a `cmap` argument. The level edges or centers used with
-# `~ultraplot.colors.DiscreteNorm` can be explicitly specified using the `levels` or
+# :class:`~ultraplot.colors.DiscreteNorm` can be explicitly specified using the `levels` or
 # `values` keywords, respectively (:func:`~ultraplot.utils.arange` and :func:`~ultraplot.utils.edges`
 # are useful for generating `levels` and `values` lists). You can also pass an integer
 # to these keywords (or to the `N` keyword) to automatically generate approximately this
@@ -560,7 +560,7 @@ fig.show()
 # UltraPlot can automatically detect "diverging" datasets. By default,
 # the 2D :class:`~ultraplot.axes.PlotAxes` commands will apply the diverging colormap
 # :rc:`cmap.diverging` (rather than :rc:`cmap.sequential`) and the diverging
-# normalizer `~ultraplot.colors.DivergingNorm` (rather than :class:`~matplotlib.colors.Normalize`
+# normalizer :class:`~ultraplot.colors.DivergingNorm` (rather than :class:`~matplotlib.colors.Normalize`
 # -- see :ref:`above <ug_apply_norm>`) if the following conditions are met:
 #
 # #. If discrete levels are enabled (see :ref:`above <ug_discrete>`) and the
@@ -613,7 +613,7 @@ uplt.rc.reset()
 # plots by passing ``labels=True`` to the plotting command. The
 # label text is colored black or white depending on the luminance of the underlying
 # grid box or filled contour (see the section on :ref:`colorspaces <ug_perceptual>`).
-# Contour labels are drawn with `~matplotlib.axes.Axes.clabel` and grid box
+# Contour labels are drawn with :meth:`~matplotlib.axes.Axes.clabel` and grid box
 # labels are drawn with :func:`~ultraplot.axes.Axes.text`. You can pass keyword arguments
 # to these functions by passing a dictionary to `labels_kw`, and you can
 # change the label precision using the `precision` keyword. See the plotting
@@ -676,7 +676,7 @@ ax.format(title="Line contours with labels")
 # gridlines, no minor ticks, and major ticks at the center of each box. Among other
 # things, this is useful for displaying covariance and correlation matrices, as shown
 # below. :func:`~ultraplot.axes.PlotAxes.heatmap` should generally only be used with
-# `~ultraplot.axes.CartesianAxes`.
+# :class:`~ultraplot.axes.CartesianAxes`.
 
 # %%
 import numpy as np
