@@ -18,7 +18,7 @@ maintainers = [
 ]
 description = "A succinct matplotlib wrapper for making beautiful, publication-quality graphics."
 readme = "README.rst"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10,<3.15"
 license = {text = "MIT"}
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -29,6 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Framework :: Matplotlib",
 ]
 dependencies= [
