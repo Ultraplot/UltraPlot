@@ -1397,6 +1397,171 @@ _rc_ultraplot_table = {
         _validate_bool,
         "Whether to add a shadow underneath inset colorbar frames.",
     ),
+    # Semantic legend helper defaults
+    "legend.cat.line": (
+        False,
+        _validate_bool,
+        "Default line/marker mode for `Axes.cat_legend`.",
+    ),
+    "legend.cat.marker": (
+        "o",
+        _validate_string,
+        "Default marker for `Axes.cat_legend` entries.",
+    ),
+    "legend.cat.linestyle": (
+        "-",
+        _validate_linestyle,
+        "Default line style for `Axes.cat_legend` entries.",
+    ),
+    "legend.cat.linewidth": (
+        2.0,
+        _validate_float,
+        "Default line width for `Axes.cat_legend` entries.",
+    ),
+    "legend.cat.markersize": (
+        6.0,
+        _validate_float,
+        "Default marker size for `Axes.cat_legend` entries.",
+    ),
+    "legend.cat.alpha": (
+        None,
+        _validate_or_none(_validate_float),
+        "Default alpha for `Axes.cat_legend` entries.",
+    ),
+    "legend.cat.markeredgecolor": (
+        None,
+        _validate_or_none(_validate_color),
+        "Default marker edge color for `Axes.cat_legend` entries.",
+    ),
+    "legend.cat.markeredgewidth": (
+        None,
+        _validate_or_none(_validate_float),
+        "Default marker edge width for `Axes.cat_legend` entries.",
+    ),
+    "legend.size.color": (
+        "0.35",
+        _validate_color,
+        "Default marker color for `Axes.size_legend` entries.",
+    ),
+    "legend.size.marker": (
+        "o",
+        _validate_string,
+        "Default marker for `Axes.size_legend` entries.",
+    ),
+    "legend.size.area": (
+        True,
+        _validate_bool,
+        "Whether `Axes.size_legend` interprets levels as marker area by default.",
+    ),
+    "legend.size.scale": (
+        1.0,
+        _validate_float,
+        "Default marker size scale factor for `Axes.size_legend` entries.",
+    ),
+    "legend.size.minsize": (
+        3.0,
+        _validate_float,
+        "Default minimum marker size for `Axes.size_legend` entries.",
+    ),
+    "legend.size.format": (
+        None,
+        _validate_or_none(_validate_string),
+        "Default label format string for `Axes.size_legend` entries.",
+    ),
+    "legend.size.alpha": (
+        None,
+        _validate_or_none(_validate_float),
+        "Default alpha for `Axes.size_legend` entries.",
+    ),
+    "legend.size.markeredgecolor": (
+        None,
+        _validate_or_none(_validate_color),
+        "Default marker edge color for `Axes.size_legend` entries.",
+    ),
+    "legend.size.markeredgewidth": (
+        None,
+        _validate_or_none(_validate_float),
+        "Default marker edge width for `Axes.size_legend` entries.",
+    ),
+    "legend.num.n": (
+        5,
+        _validate_int,
+        "Default number of sampled levels for `Axes.num_legend`.",
+    ),
+    "legend.num.cmap": (
+        "viridis",
+        _validate_cmap("continuous"),
+        "Default colormap for `Axes.num_legend` entries.",
+    ),
+    "legend.num.edgecolor": (
+        "none",
+        _validate_or_none(_validate_color),
+        "Default edge color for `Axes.num_legend` patch entries.",
+    ),
+    "legend.num.linewidth": (
+        0.0,
+        _validate_float,
+        "Default edge width for `Axes.num_legend` patch entries.",
+    ),
+    "legend.num.alpha": (
+        None,
+        _validate_or_none(_validate_float),
+        "Default alpha for `Axes.num_legend` entries.",
+    ),
+    "legend.num.format": (
+        None,
+        _validate_or_none(_validate_string),
+        "Default label format string for `Axes.num_legend` entries.",
+    ),
+    "legend.geo.facecolor": (
+        "none",
+        _validate_or_none(_validate_color),
+        "Default face color for `Axes.geo_legend` entries.",
+    ),
+    "legend.geo.edgecolor": (
+        "0.25",
+        _validate_or_none(_validate_color),
+        "Default edge color for `Axes.geo_legend` entries.",
+    ),
+    "legend.geo.linewidth": (
+        1.0,
+        _validate_float,
+        "Default edge width for `Axes.geo_legend` entries.",
+    ),
+    "legend.geo.alpha": (
+        None,
+        _validate_or_none(_validate_float),
+        "Default alpha for `Axes.geo_legend` entries.",
+    ),
+    "legend.geo.fill": (
+        None,
+        _validate_or_none(_validate_bool),
+        "Default fill mode for `Axes.geo_legend` entries.",
+    ),
+    "legend.geo.country_reso": (
+        "110m",
+        _validate_belongs("10m", "50m", "110m"),
+        "Default Natural Earth resolution used for country shorthand geometry "
+        "entries in `Axes.geo_legend`.",
+    ),
+    "legend.geo.country_territories": (
+        False,
+        _validate_bool,
+        "Whether country shorthand entries in `Axes.geo_legend` include far-away "
+        "territories instead of pruning to the local footprint.",
+    ),
+    "legend.geo.country_proj": (
+        None,
+        _validate_or_none(_validate_string),
+        "Optional projection name for country shorthand entries in `Axes.geo_legend`. "
+        "Can be overridden per call with a cartopy CRS or callable.",
+    ),
+    "legend.geo.handlesize": (
+        1.0,
+        _validate_float,
+        "Scale factor applied to both legend handle length and height for "
+        "`Axes.geo_legend` when explicit handle dimensions are not provided.",
+    ),
     # Color cycle additions
     "cycle": (
         CYCLE,
