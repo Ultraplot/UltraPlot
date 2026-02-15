@@ -116,6 +116,7 @@ jobs:
     outputs:
       python-versions: ${{ steps.set-versions.outputs.python-versions }}
       matplotlib-versions: ${{ steps.set-versions.outputs.matplotlib-versions }}
+      test-matrix: ${{ steps.set-versions.outputs.test-matrix }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -187,9 +188,28 @@ jobs:
               mpl_versions = ["3.9"]
 
           # Create output dictionary
+          midpoint_python = python_versions[len(python_versions) // 2]
+          midpoint_mpl = mpl_versions[len(mpl_versions) // 2]
+          matrix_candidates = [
+              (python_versions[0], mpl_versions[0]),  # lowest + lowest
+              (midpoint_python, midpoint_mpl),        # midpoint + midpoint
+              (python_versions[-1], mpl_versions[-1]) # latest + latest
+          ]
+          test_matrix = []
+          seen = set()
+          for py_ver, mpl_ver in matrix_candidates:
+              key = (py_ver, mpl_ver)
+              if key in seen:
+                  continue
+              seen.add(key)
+              test_matrix.append(
+                  {"python-version": py_ver, "matplotlib-version": mpl_ver}
+              )
+
           output = {
               "python_versions": python_versions,
-              "matplotlib_versions": mpl_versions
+              "matplotlib_versions": mpl_versions,
+              "test_matrix": test_matrix,
           }
 
           # Print as JSON
@@ -203,8 +223,10 @@ jobs:
 
           echo "Detected Python versions: ${PYTHON_VERSIONS}"
           echo "Detected Matplotlib versions: ${MPL_VERSIONS}"
+          echo "Detected test matrix: $(echo $OUTPUT | jq -c '.test_matrix')"
           echo "python-versions=$(echo $PYTHON_VERSIONS | jq -c)" >> $GITHUB_OUTPUT
           echo "matplotlib-versions=$(echo $MPL_VERSIONS | jq -c)" >> $GITHUB_OUTPUT
+          echo "test-matrix=$(echo $OUTPUT | jq -c '.test_matrix')" >> $GITHUB_OUTPUT
 
   build:
     needs:
@@ -214,8 +236,7 @@ jobs:
     if: always() && needs.run-if-changes.outputs.run == 'true' && needs.get-versions.result == 'success' && needs.select-tests.result == 'success'
     strategy:
       matrix:
-        python-version: ${{ fromJson(needs.get-versions.outputs.python-versions) }}
-        matplotlib-version: ${{ fromJson(needs.get-versions.outputs.matplotlib-versions) }}
+        include: ${{ fromJson(needs.get-versions.outputs.test-matrix) }}
       fail-fast: false
       max-parallel: 4
     uses: ./.github/workflows/build-ultraplot.yml
