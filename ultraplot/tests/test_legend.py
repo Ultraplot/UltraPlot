@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import pytest
+from matplotlib import legend_handler as mhandler
+from matplotlib import patches as mpatches
 
 import ultraplot as uplt
 from ultraplot.axes import Axes as UAxes
@@ -42,7 +44,7 @@ def test_centered_legends(rng):
     Test success of algorithm.
     """
     # Basic centered legends
-    fig, axs = uplt.subplots(ncols=2, nrows=2, axwidth=2)
+    fig, axs = uplt.subplots(ncols=2, nrows=2, axwidth=2, share=True)
     hs = axs[0].plot(rng.random((10, 6)))
     locs = ["l", "t", "r", "uc", "ul", "ll"]
     locs = ["l", "t", "uc", "ll"]
@@ -200,6 +202,42 @@ def test_legend_col_spacing(rng):
     return fig
 
 
+def test_legend_align_opts_mapping():
+    """
+    Basic sanity check for legend alignment mapping.
+    """
+    from ultraplot.legend import ALIGN_OPTS
+
+    assert ALIGN_OPTS[None]["center"] == "center"
+    assert ALIGN_OPTS["left"]["top"] == "upper right"
+    assert ALIGN_OPTS["right"]["bottom"] == "lower left"
+    assert ALIGN_OPTS["top"]["center"] == "lower center"
+    assert ALIGN_OPTS["bottom"]["right"] == "upper right"
+
+
+def test_legend_builder_smoke():
+    """
+    Ensure the legend builder path returns a legend object.
+    """
+    import matplotlib.pyplot as plt
+
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1, 2], label="a")
+    leg = ax.legend(loc="right", align="center")
+    assert leg is not None
+    plt.close(fig)
+
+
+def test_legend_normalize_em_kwargs():
+    """
+    Ensure em-based legend kwargs are converted to numeric values.
+    """
+    from ultraplot.legend import _normalize_em_kwargs
+
+    out = _normalize_em_kwargs({"labelspacing": "2em"}, fontsize=10)
+    assert isinstance(out["labelspacing"], (int, float))
+
+
 def test_sync_label_dict(rng):
     """
     Legends are held within _legend_dict for which the key is a tuple of location and alignment.
@@ -257,6 +295,59 @@ def test_external_mode_mixing_context_manager():
     leg = ax.legend([ext, intr], loc="b")
     labels = {t.get_text() for t in leg.get_texts()}
     assert {"ext", "int"}.issubset(labels)
+    uplt.close(fig)
+
+
+def test_legend_entry_helpers():
+    h1 = uplt.LegendEntry.line("Line", color="red8", linewidth=3)
+    h2 = uplt.LegendEntry.marker("Marker", color="blue8", marker="s", markersize=8)
+
+    assert h1.get_linestyle() != "none"
+    assert h1.get_label() == "Line"
+    assert h2.get_linestyle() == "None"
+    assert h2.get_marker() == "s"
+    assert h2.get_label() == "Marker"
+
+
+def test_legend_entry_with_axes_legend():
+    fig, ax = uplt.subplots()
+    handles = [
+        uplt.LegendEntry.line("Trend", color="green7", linewidth=2.5),
+        uplt.LegendEntry.marker("Samples", color="orange7", marker="o", markersize=7),
+    ]
+    leg = ax.legend(handles=handles, loc="best")
+
+    labels = [text.get_text() for text in leg.get_texts()]
+    assert labels == ["Trend", "Samples"]
+    lines = leg.get_lines()
+    assert len(lines) == 2
+    assert lines[0].get_linewidth() > 0
+    assert lines[1].get_marker() == "o"
+    uplt.close(fig)
+
+
+def test_pie_legend_uses_wedge_handles():
+    fig, ax = uplt.subplots()
+    wedges, _ = ax.pie([30, 70], labels=["a", "b"])
+    leg = ax.legend(wedges, ["a", "b"], loc="best")
+    handles = leg.legend_handles
+    assert len(handles) == 2
+    assert all(isinstance(handle, mpatches.Wedge) for handle in handles)
+    uplt.close(fig)
+
+
+def test_pie_legend_handler_map_override():
+    fig, ax = uplt.subplots()
+    wedges, _ = ax.pie([30, 70], labels=["a", "b"])
+    leg = ax.legend(
+        wedges,
+        ["a", "b"],
+        loc="best",
+        handler_map={mpatches.Wedge: mhandler.HandlerPatch()},
+    )
+    handles = leg.legend_handles
+    assert len(handles) == 2
+    assert all(isinstance(handle, mpatches.Rectangle) for handle in handles)
     uplt.close(fig)
 
 
