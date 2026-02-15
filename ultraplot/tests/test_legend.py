@@ -386,6 +386,39 @@ def test_semantic_legend_loc_shorthand():
     uplt.close(fig)
 
 
+@pytest.mark.parametrize(
+    "builder, args, kwargs",
+    (
+        ("cat_legend", (["A", "B"],), {}),
+        ("size_legend", ([10, 50],), {}),
+        ("num_legend", tuple(), {"vmin": 0, "vmax": 1}),
+        ("geo_legend", ([("shape", "triangle")],), {}),
+    ),
+)
+def test_semantic_legend_rejects_label_kwarg(builder, args, kwargs):
+    fig, ax = uplt.subplots()
+    method = getattr(ax, builder)
+    with pytest.raises(TypeError, match="Use title=\\.\\.\\. for the legend title"):
+        method(*args, label="Legend", **kwargs)
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize(
+    "builder, args, kwargs",
+    (
+        ("cat_legend", (["A", "B"],), {}),
+        ("size_legend", ([10, 50],), {}),
+        ("num_legend", tuple(), {"vmin": 0, "vmax": 1}),
+    ),
+)
+def test_semantic_legend_rejects_labels_kwarg(builder, args, kwargs):
+    fig, ax = uplt.subplots()
+    method = getattr(ax, builder)
+    with pytest.raises(TypeError, match="does not accept the legend kwarg 'labels'"):
+        method(*args, labels=["x", "y"], **kwargs)
+    uplt.close(fig)
+
+
 def test_geo_legend_handlesize_scales_handle_box():
     fig, ax = uplt.subplots()
     leg = ax.geo_legend([("shape", "triangle")], loc="best", handlesize=2.0)

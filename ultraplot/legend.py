@@ -1111,6 +1111,22 @@ class UltraLegend:
     def __init__(self, axes):
         self.axes = axes
 
+    @staticmethod
+    def _validate_semantic_kwargs(method: str, kwargs: dict[str, Any]) -> None:
+        """
+        Prevent ambiguous legend kwargs for semantic legend helpers.
+        """
+        if "label" in kwargs:
+            raise TypeError(
+                f"{method}() does not accept the legend kwarg 'label'. "
+                "Use title=... for the legend title."
+            )
+        if "labels" in kwargs:
+            raise TypeError(
+                f"{method}() does not accept the legend kwarg 'labels'. "
+                "Semantic legend labels are derived from the helper inputs."
+            )
+
     def cat_legend(
         self,
         categories: Iterable[Any],
@@ -1152,6 +1168,7 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
+        self._validate_semantic_kwargs("cat_legend", legend_kwargs)
         # Route through Axes.legend so location shorthands (e.g. 'r', 'b')
         # and queued guide keyword handling behave exactly like the public API.
         return self.axes.legend(handles, labels, **legend_kwargs)
@@ -1198,6 +1215,7 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
+        self._validate_semantic_kwargs("size_legend", legend_kwargs)
         return self.axes.legend(handles, labels, **legend_kwargs)
 
     def num_legend(
@@ -1239,6 +1257,7 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
+        self._validate_semantic_kwargs("num_legend", legend_kwargs)
         return self.axes.legend(handles, labels, **legend_kwargs)
 
     def geo_legend(
@@ -1286,6 +1305,7 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
+        self._validate_semantic_kwargs("geo_legend", legend_kwargs)
         if handlesize is not None:
             handlesize = float(handlesize)
             if handlesize <= 0:
