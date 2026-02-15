@@ -202,6 +202,42 @@ def test_legend_col_spacing(rng):
     return fig
 
 
+def test_legend_align_opts_mapping():
+    """
+    Basic sanity check for legend alignment mapping.
+    """
+    from ultraplot.legend import ALIGN_OPTS
+
+    assert ALIGN_OPTS[None]["center"] == "center"
+    assert ALIGN_OPTS["left"]["top"] == "upper right"
+    assert ALIGN_OPTS["right"]["bottom"] == "lower left"
+    assert ALIGN_OPTS["top"]["center"] == "lower center"
+    assert ALIGN_OPTS["bottom"]["right"] == "upper right"
+
+
+def test_legend_builder_smoke():
+    """
+    Ensure the legend builder path returns a legend object.
+    """
+    import matplotlib.pyplot as plt
+
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1, 2], label="a")
+    leg = ax.legend(loc="right", align="center")
+    assert leg is not None
+    plt.close(fig)
+
+
+def test_legend_normalize_em_kwargs():
+    """
+    Ensure em-based legend kwargs are converted to numeric values.
+    """
+    from ultraplot.legend import _normalize_em_kwargs
+
+    out = _normalize_em_kwargs({"labelspacing": "2em"}, fontsize=10)
+    assert isinstance(out["labelspacing"], (int, float))
+
+
 def test_sync_label_dict(rng):
     """
     Legends are held within _legend_dict for which the key is a tuple of location and alignment.
