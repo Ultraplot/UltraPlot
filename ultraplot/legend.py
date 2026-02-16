@@ -1131,7 +1131,7 @@ class UltraLegend:
                 "Semantic legend labels are derived from the helper inputs."
             )
 
-    def cat_legend(
+    def catlegend(
         self,
         categories: Iterable[Any],
         *,
@@ -1172,12 +1172,12 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("cat_legend", legend_kwargs)
+        self._validate_semantic_kwargs("catlegend", legend_kwargs)
         # Route through Axes.legend so location shorthands (e.g. 'r', 'b')
         # and queued guide keyword handling behave exactly like the public API.
         return self.axes.legend(handles, labels, **legend_kwargs)
 
-    def size_legend(
+    def sizelegend(
         self,
         levels: Iterable[float],
         *,
@@ -1219,10 +1219,10 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("size_legend", legend_kwargs)
+        self._validate_semantic_kwargs("sizelegend", legend_kwargs)
         return self.axes.legend(handles, labels, **legend_kwargs)
 
-    def num_legend(
+    def numlegend(
         self,
         levels=None,
         *,
@@ -1261,10 +1261,10 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("num_legend", legend_kwargs)
+        self._validate_semantic_kwargs("numlegend", legend_kwargs)
         return self.axes.legend(handles, labels, **legend_kwargs)
 
-    def geo_legend(
+    def geolegend(
         self,
         entries: Iterable[Any] | dict[Any, Any],
         labels: Optional[Iterable[Any]] = None,
@@ -1309,11 +1309,11 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("geo_legend", legend_kwargs)
+        self._validate_semantic_kwargs("geolegend", legend_kwargs)
         if handlesize is not None:
             handlesize = float(handlesize)
             if handlesize <= 0:
-                raise ValueError("geo_legend handlesize must be positive.")
+                raise ValueError("geolegend handlesize must be positive.")
             if "handlelength" not in legend_kwargs:
                 legend_kwargs["handlelength"] = rc["legend.handlelength"] * handlesize
             if "handleheight" not in legend_kwargs:

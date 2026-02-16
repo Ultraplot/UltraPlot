@@ -3502,7 +3502,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 **kwargs,
             )
 
-    def cat_legend(self, categories, **kwargs):
+    def catlegend(self, categories, **kwargs):
         """
         Build categorical legend entries and optionally add a legend.
 
@@ -3511,12 +3511,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         categories
             Category labels used to generate legend handles.
         **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.cat_legend`.
+            Forwarded to `ultraplot.legend.UltraLegend.catlegend`.
             Pass ``add=False`` to return ``(handles, labels)`` without drawing.
         """
-        return plegend.UltraLegend(self).cat_legend(categories, **kwargs)
+        return plegend.UltraLegend(self).catlegend(categories, **kwargs)
 
-    def size_legend(self, levels, **kwargs):
+    def sizelegend(self, levels, **kwargs):
         """
         Build size legend entries and optionally add a legend.
 
@@ -3525,12 +3525,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         levels
             Numeric levels used to generate marker-size entries.
         **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.size_legend`.
+            Forwarded to `ultraplot.legend.UltraLegend.sizelegend`.
             Pass ``add=False`` to return ``(handles, labels)`` without drawing.
         """
-        return plegend.UltraLegend(self).size_legend(levels, **kwargs)
+        return plegend.UltraLegend(self).sizelegend(levels, **kwargs)
 
-    def num_legend(self, levels=None, **kwargs):
+    def numlegend(self, levels=None, **kwargs):
         """
         Build numeric-color legend entries and optionally add a legend.
 
@@ -3539,12 +3539,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         levels
             Numeric levels or number of levels.
         **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.num_legend`.
+            Forwarded to `ultraplot.legend.UltraLegend.numlegend`.
             Pass ``add=False`` to return ``(handles, labels)`` without drawing.
         """
-        return plegend.UltraLegend(self).num_legend(levels=levels, **kwargs)
+        return plegend.UltraLegend(self).numlegend(levels=levels, **kwargs)
 
-    def geo_legend(self, entries, labels=None, **kwargs):
+    def geolegend(self, entries, labels=None, **kwargs):
         """
         Build geometry legend entries and optionally add a legend.
 
@@ -3555,10 +3555,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         labels
             Optional labels for geometry sequences.
         **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.geo_legend`.
+            Forwarded to `ultraplot.legend.UltraLegend.geolegend`.
             Pass ``add=False`` to return ``(handles, labels)`` without drawing.
         """
-        return plegend.UltraLegend(self).geo_legend(entries, labels=labels, **kwargs)
+        return plegend.UltraLegend(self).geolegend(entries, labels=labels, **kwargs)
 
     @classmethod
     def _coerce_curve_xy(cls, x, y):

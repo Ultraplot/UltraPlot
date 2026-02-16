@@ -328,13 +328,13 @@ def test_legend_entry_with_axes_legend():
 
 
 def test_semantic_helpers_not_public_on_module():
-    for name in ("cat_legend", "size_legend", "num_legend", "geo_legend"):
+    for name in ("catlegend", "sizelegend", "numlegend", "geolegend"):
         assert not hasattr(uplt, name)
 
 
 def test_geo_legend_helper_shapes():
     fig, ax = uplt.subplots()
-    handles, labels = ax.geo_legend(
+    handles, labels = ax.geolegend(
         [("Triangle", "triangle"), ("Hex", "hexagon")], add=False
     )
     assert labels == ["Triangle", "Hex"]
@@ -358,20 +358,20 @@ def test_semantic_legend_rc_defaults():
             "legend.geo.fill": True,
         }
     ):
-        leg = axs[0].cat_legend(["A"], loc="best")
+        leg = axs[0].catlegend(["A"], loc="best")
         h = leg.legend_handles[0]
         assert h.get_marker() == "s"
         assert h.get_linewidth() == pytest.approx(3.25)
 
-        leg = axs[1].size_legend([1.0], loc="best")
+        leg = axs[1].sizelegend([1.0], loc="best")
         h = leg.legend_handles[0]
         assert h.get_marker() == "^"
         assert h.get_markersize() >= 8.0
 
-        leg = axs[2].num_legend(vmin=0, vmax=1, loc="best")
+        leg = axs[2].numlegend(vmin=0, vmax=1, loc="best")
         assert len(leg.legend_handles) == 3
 
-        leg = axs[3].geo_legend([("shape", "triangle")], loc="best")
+        leg = axs[3].geolegend([("shape", "triangle")], loc="best")
         h = leg.legend_handles[0]
         assert isinstance(h, mpatches.PathPatch)
         assert np.allclose(h.get_facecolor(), mcolors.to_rgba("red7"))
@@ -380,7 +380,7 @@ def test_semantic_legend_rc_defaults():
 
 def test_semantic_legend_loc_shorthand():
     fig, ax = uplt.subplots()
-    leg = ax.cat_legend(["A", "B"], loc="r")
+    leg = ax.catlegend(["A", "B"], loc="r")
     assert leg is not None
     assert [text.get_text() for text in leg.get_texts()] == ["A", "B"]
     uplt.close(fig)
@@ -389,10 +389,10 @@ def test_semantic_legend_loc_shorthand():
 @pytest.mark.parametrize(
     "builder, args, kwargs",
     (
-        ("cat_legend", (["A", "B"],), {}),
-        ("size_legend", ([10, 50],), {}),
-        ("num_legend", tuple(), {"vmin": 0, "vmax": 1}),
-        ("geo_legend", ([("shape", "triangle")],), {}),
+        ("catlegend", (["A", "B"],), {}),
+        ("sizelegend", ([10, 50],), {}),
+        ("numlegend", tuple(), {"vmin": 0, "vmax": 1}),
+        ("geolegend", ([("shape", "triangle")],), {}),
     ),
 )
 def test_semantic_legend_rejects_label_kwarg(builder, args, kwargs):
@@ -406,9 +406,9 @@ def test_semantic_legend_rejects_label_kwarg(builder, args, kwargs):
 @pytest.mark.parametrize(
     "builder, args, kwargs",
     (
-        ("cat_legend", (["A", "B"],), {}),
-        ("size_legend", ([10, 50],), {}),
-        ("num_legend", tuple(), {"vmin": 0, "vmax": 1}),
+        ("catlegend", (["A", "B"],), {}),
+        ("sizelegend", ([10, 50],), {}),
+        ("numlegend", tuple(), {"vmin": 0, "vmax": 1}),
     ),
 )
 def test_semantic_legend_rejects_labels_kwarg(builder, args, kwargs):
@@ -421,12 +421,12 @@ def test_semantic_legend_rejects_labels_kwarg(builder, args, kwargs):
 
 def test_geo_legend_handlesize_scales_handle_box():
     fig, ax = uplt.subplots()
-    leg = ax.geo_legend([("shape", "triangle")], loc="best", handlesize=2.0)
+    leg = ax.geolegend([("shape", "triangle")], loc="best", handlesize=2.0)
     assert leg.handlelength == pytest.approx(2.0 * uplt.rc["legend.handlelength"])
     assert leg.handleheight == pytest.approx(2.0 * uplt.rc["legend.handleheight"])
 
     with uplt.rc.context({"legend.geo.handlesize": 1.5}):
-        leg = ax.geo_legend([("shape", "triangle")], loc="best")
+        leg = ax.geolegend([("shape", "triangle")], loc="best")
         assert leg.handlelength == pytest.approx(1.5 * uplt.rc["legend.handlelength"])
         assert leg.handleheight == pytest.approx(1.5 * uplt.rc["legend.handleheight"])
     uplt.close(fig)
@@ -442,7 +442,7 @@ def test_geo_legend_helper_with_axes_legend(monkeypatch):
         lambda _, resolution="110m", include_far=False: sgeom.box(-1, -1, 1, 1),
     )
     fig, ax = uplt.subplots()
-    leg = ax.geo_legend({"AUS": "country:AU", "NZL": "country:NZ"}, loc="best")
+    leg = ax.geolegend({"AUS": "country:AU", "NZL": "country:NZ"}, loc="best")
     assert [text.get_text() for text in leg.get_texts()] == ["AUS", "NZL"]
     uplt.close(fig)
 
@@ -460,21 +460,21 @@ def test_geo_legend_country_resolution_passthrough(monkeypatch):
     monkeypatch.setattr(plegend, "_resolve_country_geometry", _fake_country)
 
     fig, ax = uplt.subplots()
-    ax.geo_legend([("NLD", "country:NLD")], country_reso="10m", add=False)
+    ax.geolegend([("NLD", "country:NLD")], country_reso="10m", add=False)
     assert calls == [("NLD", "10m", False)]
 
     calls.clear()
     with uplt.rc.context({"legend.geo.country_reso": "50m"}):
-        ax.geo_legend([("NLD", "country:NLD")], add=False)
+        ax.geolegend([("NLD", "country:NLD")], add=False)
     assert calls == [("NLD", "50m", False)]
 
     calls.clear()
-    ax.geo_legend([("NLD", "country:NLD")], country_territories=True, add=False)
+    ax.geolegend([("NLD", "country:NLD")], country_territories=True, add=False)
     assert calls == [("NLD", "110m", True)]
 
     calls.clear()
     with uplt.rc.context({"legend.geo.country_territories": True}):
-        ax.geo_legend([("NLD", "country:NLD")], add=False)
+        ax.geolegend([("NLD", "country:NLD")], add=False)
     assert calls == [("NLD", "110m", True)]
     uplt.close(fig)
 
@@ -490,8 +490,8 @@ def test_geo_legend_country_projection_passthrough(monkeypatch):
         lambda code, resolution="110m", include_far=False: sgeom.box(0, 0, 2, 1),
     )
     fig, ax = uplt.subplots()
-    handles0, _ = ax.geo_legend([("NLD", "country:NLD")], add=False)
-    handles1, _ = ax.geo_legend(
+    handles0, _ = ax.geolegend([("NLD", "country:NLD")], add=False)
+    handles1, _ = ax.geolegend(
         [("NLD", "country:NLD")],
         country_proj=lambda geom: affinity.scale(
             geom, xfact=2.0, yfact=1.0, origin=(0, 0)
@@ -502,7 +502,7 @@ def test_geo_legend_country_projection_passthrough(monkeypatch):
     w1 = np.ptp(handles1[0].get_path().vertices[:, 0])
     assert w1 > w0
 
-    handles2, _ = ax.geo_legend(
+    handles2, _ = ax.geolegend(
         [("NLD", "country:NLD")],
         add=False,
         country_proj="platecarree",
@@ -510,7 +510,7 @@ def test_geo_legend_country_projection_passthrough(monkeypatch):
     assert isinstance(handles2[0], mpatches.PathPatch)
 
     # Per-entry overrides via 3-tuples
-    handles3, labels3 = ax.geo_legend(
+    handles3, labels3 = ax.geolegend(
         [
             ("Base", "country:NLD"),
             (
@@ -596,7 +596,7 @@ def test_geo_axes_add_geometries_auto_legend():
 
 def test_geo_legend_defaults_to_bevel_joinstyle():
     fig, ax = uplt.subplots()
-    leg = ax.geo_legend([("shape", "triangle")], loc="best")
+    leg = ax.geolegend([("shape", "triangle")], loc="best")
     assert isinstance(leg.legend_handles[0], mpatches.PathPatch)
     assert leg.legend_handles[0].get_joinstyle() == "bevel"
     uplt.close(fig)
@@ -604,7 +604,7 @@ def test_geo_legend_defaults_to_bevel_joinstyle():
 
 def test_geo_legend_joinstyle_override():
     fig, ax = uplt.subplots()
-    leg = ax.geo_legend([("shape", "triangle", {"joinstyle": "round"})], loc="best")
+    leg = ax.geolegend([("shape", "triangle", {"joinstyle": "round"})], loc="best")
     assert leg.legend_handles[0].get_joinstyle() == "round"
     uplt.close(fig)
 
@@ -624,7 +624,7 @@ def test_semantic_legends_showcase_smoke(monkeypatch):
     uses_real_countries = True
     try:
         fig_tmp, ax_tmp = uplt.subplots()
-        ax_tmp.geo_legend(
+        ax_tmp.geolegend(
             country_entries, edgecolor="black", facecolor="none", add=False
         )
         uplt.close(fig_tmp)
@@ -645,33 +645,33 @@ def test_semantic_legends_showcase_smoke(monkeypatch):
 
     fig, axs = uplt.subplots(ncols=2, nrows=2, share=False)
 
-    leg = axs[0].cat_legend(
+    leg = axs[0].catlegend(
         ["A", "B", "C"],
         colors={"A": "red7", "B": "green7", "C": "blue7"},
         markers={"A": "o", "B": "s", "C": "^"},
         loc="best",
-        title="cat_legend",
+        title="catlegend",
     )
     assert [text.get_text() for text in leg.get_texts()] == ["A", "B", "C"]
 
-    leg = axs[1].size_legend(
-        [10, 50, 200], color="gray6", loc="best", title="size_legend"
+    leg = axs[1].sizelegend(
+        [10, 50, 200], color="gray6", loc="best", title="sizelegend"
     )
     assert [text.get_text() for text in leg.get_texts()] == ["10", "50", "200"]
 
-    leg = axs[2].num_legend(
+    leg = axs[2].numlegend(
         vmin=0.0,
         vmax=1.0,
         n=4,
         cmap="viridis",
         fmt="{:.2f}",
         loc="best",
-        title="num_legend",
+        title="numlegend",
     )
     assert len(leg.legend_handles) == 4
     assert all(isinstance(handle, mpatches.Patch) for handle in leg.legend_handles)
 
-    handles, labels = axs[3].geo_legend(
+    handles, labels = axs[3].geolegend(
         [
             ("Triangle", "triangle"),
             ("Hexagon", "hexagon"),
@@ -681,7 +681,7 @@ def test_semantic_legends_showcase_smoke(monkeypatch):
         facecolor="none",
         add=False,
     )
-    leg = axs[3].legend(handles, labels, loc="best", title="geo_legend")
+    leg = axs[3].legend(handles, labels, loc="best", title="geolegend")
     legend_labels = [text.get_text() for text in leg.get_texts()]
     assert set(legend_labels) == set(labels)
     assert len(legend_labels) == len(labels)

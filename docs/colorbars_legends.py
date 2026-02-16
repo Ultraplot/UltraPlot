@@ -479,10 +479,10 @@ axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
 # standalone semantic keys (categories, size scales, color levels, or geometry types).
 # UltraPlot provides helper methods that build these entries directly:
 #
-# * :meth:`~ultraplot.axes.Axes.cat_legend`
-# * :meth:`~ultraplot.axes.Axes.size_legend`
-# * :meth:`~ultraplot.axes.Axes.num_legend`
-# * :meth:`~ultraplot.axes.Axes.geo_legend`
+# * :meth:`~ultraplot.axes.Axes.catlegend`
+# * :meth:`~ultraplot.axes.Axes.sizelegend`
+# * :meth:`~ultraplot.axes.Axes.numlegend`
+# * :meth:`~ultraplot.axes.Axes.geolegend`
 
 # %%
 import cartopy.crs as ccrs
@@ -491,21 +491,21 @@ import shapely.geometry as sg
 fig, ax = uplt.subplots(refwidth=4.2)
 ax.format(title="Semantic legend helpers", grid=False)
 
-ax.cat_legend(
+ax.catlegend(
     ["A", "B", "C"],
     colors={"A": "red7", "B": "green7", "C": "blue7"},
     markers={"A": "o", "B": "s", "C": "^"},
     loc="top",
     frameon=False,
 )
-ax.size_legend(
+ax.sizelegend(
     [10, 50, 200],
     loc="upper right",
     title="Population",
     ncols=1,
     frameon=False,
 )
-ax.num_legend(
+ax.numlegend(
     vmin=0,
     vmax=1,
     n=5,
@@ -517,7 +517,7 @@ ax.num_legend(
 )
 
 poly1 = sg.Polygon([(0, 0), (2, 0), (1.2, 1.4)])
-ax.geo_legend(
+ax.geolegend(
     [
         ("Triangle", "triangle"),
         ("Triangle-ish", poly1),

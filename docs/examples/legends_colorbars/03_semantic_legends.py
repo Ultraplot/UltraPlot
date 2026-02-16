@@ -7,10 +7,10 @@ Build legends from semantic mappings rather than existing artists.
 Why UltraPlot here?
 -------------------
 UltraPlot adds semantic legend helpers directly on axes:
-``cat_legend``, ``size_legend``, ``num_legend``, and ``geo_legend``.
+``catlegend``, ``sizelegend``, ``numlegend``, and ``geolegend``.
 These are useful when you want legend meaning decoupled from plotted handles.
 
-Key functions: :py:meth:`ultraplot.axes.Axes.cat_legend`, :py:meth:`ultraplot.axes.Axes.size_legend`, :py:meth:`ultraplot.axes.Axes.num_legend`, :py:meth:`ultraplot.axes.Axes.geo_legend`.
+Key functions: :py:meth:`ultraplot.axes.Axes.catlegend`, :py:meth:`ultraplot.axes.Axes.sizelegend`, :py:meth:`ultraplot.axes.Axes.numlegend`, :py:meth:`ultraplot.axes.Axes.geolegend`.
 
 See also
 --------
@@ -34,21 +34,21 @@ fig, ax = uplt.subplots()
 ax.scatter(*data, color=colors, s=sizes, cmap="viko")
 ax.format(title="Semantic legend helpers")
 
-ax.cat_legend(
+ax.catlegend(
     ["A", "B", "C"],
     colors={"A": "red7", "B": "green7", "C": "blue7"},
     markers={"A": "o", "B": "s", "C": "^"},
     loc="top",
     frameon=False,
 )
-ax.size_legend(
+ax.sizelegend(
     [10, 50, 200],
     loc="upper right",
     title="Population",
     ncols=1,
     frameon=False,
 )
-ax.num_legend(
+ax.numlegend(
     vmin=0,
     vmax=1,
     n=5,
@@ -60,7 +60,7 @@ ax.num_legend(
 )
 
 poly1 = sg.Polygon([(0, 0), (2, 0), (1.2, 1.4)])
-ax.geo_legend(
+ax.geolegend(
     [
         ("Triangle", "triangle"),
         ("Triangle-ish", poly1),
