@@ -906,7 +906,9 @@ _rc_matplotlib_default = {
     "hatch.color": BLACK,
     "hatch.linewidth": LINEWIDTH,
     "image.cmap": CMAPSEQ,
-    "image.interpolation": "none",
+    # Keep matplotlib default globally to avoid affecting third-party raster artists.
+    # UltraPlot image methods apply their own interpolation defaults locally.
+    "image.interpolation": "auto",
     "lines.linestyle": "-",
     "lines.linewidth": 1.5,
     "lines.markersize": 6.0,
@@ -934,7 +936,9 @@ _rc_matplotlib_default = {
     "savefig.directory": "",  # use the working directory
     "savefig.dpi": 1000,  # use academic journal recommendation
     "savefig.facecolor": WHITE,  # use white instead of 'auto'
-    "savefig.format": "pdf",  # use vector graphics
+    # Keep matplotlib default globally to avoid side-effects in third-party
+    # rasterization pipelines that call draw_without_rendering() + FigureCanvasAgg.
+    "savefig.format": "png",
     "savefig.transparent": False,
     "xtick.color": BLACK,
     "xtick.direction": TICKDIR,
