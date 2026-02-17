@@ -936,9 +936,7 @@ _rc_matplotlib_default = {
     "savefig.directory": "",  # use the working directory
     "savefig.dpi": 1000,  # use academic journal recommendation
     "savefig.facecolor": WHITE,  # use white instead of 'auto'
-    # Keep matplotlib default globally to avoid side-effects in third-party
-    # rasterization pipelines that call draw_without_rendering() + FigureCanvasAgg.
-    "savefig.format": "png",
+    "savefig.format": "pdf",  # use vector graphics
     "savefig.transparent": False,
     "xtick.color": BLACK,
     "xtick.direction": TICKDIR,

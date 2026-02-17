@@ -285,13 +285,11 @@ def test_ultraplot_subplots_does_not_force_global_image_interpolation():
         "import matplotlib as mpl\n"
         "from matplotlib.offsetbox import OffsetImage\n"
         "mpl.rcParams['image.interpolation'] = 'auto'\n"
-        "mpl.rcParams['savefig.format'] = 'png'\n"
         "import ultraplot as uplt\n"
         "fig, ax = uplt.subplots()\n"
         "fig.canvas.draw()\n"
         "uplt.close(fig)\n"
         "assert mpl.rcParams['image.interpolation'] == 'auto'\n"
-        "assert mpl.rcParams['savefig.format'] == 'png'\n"
         "img = OffsetImage([[[0, 0, 0, 0]]]).get_children()[0]\n"
         "assert img.get_interpolation() == 'auto'\n"
     )
