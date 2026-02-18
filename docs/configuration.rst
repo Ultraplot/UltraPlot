@@ -150,6 +150,28 @@ Here's a broad overview of the "meta-settings":
 * Setting :rcraw:`title.border` or :rcraw:`abc.border` to ``True`` automatically
   sets :rcraw:`title.bbox` or :rcraw:`abc.bbox` to ``False``, and vice versa.
 
+.. _font_table:
+
+Relative font size table
+------------------------
+
+When a setting accepts a *relative font size* string, these values are available.
+The ``'med'``, ``'med-small'``, and ``'med-large'`` aliases are added by UltraPlot.
+
+==========================  =====
+Size                        Scale
+==========================  =====
+``'xx-small'``              0.579
+``'x-small'``               0.694
+``'small'``, ``'smaller'``  0.833
+``'med-small'``             0.9
+``'med'``, ``'medium'``     1.0
+``'med-large'``             1.1
+``'large'``, ``'larger'``   1.2
+``'x-large'``               1.440
+``'xx-large'``              1.728
+==========================  =====
+
 .. _ug_rctable:
 
 Table of settings
