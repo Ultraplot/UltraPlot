@@ -469,6 +469,85 @@ ax.legend(hs1, loc="b", ncols=3, title="row major", order="C", facecolor="gray2"
 ax = axs[1]
 ax.legend(hs2, loc="b", ncols=3, center=True, title="centered rows")
 axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
+
+# %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_semantic_legends:
+# Semantic legends
+# ----------------
+#
+# Legends usually annotate artists already drawn on an axes, but sometimes you need
+# standalone semantic keys (categories, size scales, color levels, or geometry types).
+# UltraPlot provides helper methods that build these entries directly:
+#
+# * :meth:`~ultraplot.axes.Axes.catlegend`
+# * :meth:`~ultraplot.axes.Axes.sizelegend`
+# * :meth:`~ultraplot.axes.Axes.numlegend`
+# * :meth:`~ultraplot.axes.Axes.geolegend`
+
+# %%
+import cartopy.crs as ccrs
+import shapely.geometry as sg
+
+fig, ax = uplt.subplots(refwidth=4.2)
+ax.format(title="Semantic legend helpers", grid=False)
+
+ax.catlegend(
+    ["A", "B", "C"],
+    colors={"A": "red7", "B": "green7", "C": "blue7"},
+    markers={"A": "o", "B": "s", "C": "^"},
+    loc="top",
+    frameon=False,
+)
+ax.sizelegend(
+    [10, 50, 200],
+    loc="upper right",
+    title="Population",
+    ncols=1,
+    frameon=False,
+)
+ax.numlegend(
+    vmin=0,
+    vmax=1,
+    n=5,
+    cmap="viko",
+    fmt="{:.2f}",
+    loc="ll",
+    ncols=1,
+    frameon=False,
+)
+
+poly1 = sg.Polygon([(0, 0), (2, 0), (1.2, 1.4)])
+ax.geolegend(
+    [
+        ("Triangle", "triangle"),
+        ("Triangle-ish", poly1),
+        ("Australia", "country:AU"),
+        ("Netherlands (Mercator)", "country:NLD", "mercator"),
+        (
+            "Netherlands (Lambert)",
+            "country:NLD",
+            {
+                "country_proj": ccrs.LambertConformal(
+                    central_longitude=5,
+                    central_latitude=52,
+                ),
+                "country_reso": "10m",
+                "country_territories": False,
+                "facecolor": "steelblue",
+                "fill": True,
+            },
+        ),
+    ],
+    loc="r",
+    ncols=1,
+    handlesize=2.4,
+    handletextpad=0.35,
+    frameon=False,
+    country_reso="10m",
+)
+ax.axis("off")
+
+
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_guides_decouple:
 #

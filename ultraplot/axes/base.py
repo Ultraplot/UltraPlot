@@ -2100,10 +2100,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         return objs
 
     @staticmethod
-    def _parse_legend_group(handles, labels=None):
+    def _parse_legend_group(handles, labels=None, handler_map=None):
         """
         Parse possibly tuple-grouped input handles.
         """
+        handler_map_full = plegend.Legend.get_default_handler_map().copy()
+        handler_map_full.update(handler_map or {})
 
         # Helper function. Retrieve labels from a tuple group or from objects
         # in a container. Multiple labels lead to multiple legend entries.
@@ -2154,7 +2156,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                         continue
                     handles.append(obj)
                 else:
-                    warnings._warn_ultraplot(f"Ignoring invalid legend handle {obj!r}.")
+                    try:
+                        handler = plegend.Legend.get_legend_handler(
+                            handler_map_full, obj
+                        )
+                    except Exception:
+                        handler = None
+                    if handler is not None:
+                        handles.append(obj)
+                    else:
+                        warnings._warn_ultraplot(
+                            f"Ignoring invalid legend handle {obj!r}."
+                        )
             return tuple(handles)
 
         # Sanitize labels. Ignore e.g. extra hist() or hist2d() return values,
@@ -2247,7 +2260,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             ihandles, ilabels = to_list(ihandles), to_list(ilabels)
             if ihandles is None:
                 ihandles = self._get_legend_handles(handler_map)
-            ihandles, ilabels = self._parse_legend_group(ihandles, ilabels)
+            ihandles, ilabels = self._parse_legend_group(
+                ihandles, ilabels, handler_map=handler_map
+            )
             ipairs = list(zip(ihandles, ilabels))
             if alphabetize:
                 ipairs = sorted(ipairs, key=lambda pair: pair[1])
@@ -3486,6 +3501,79 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 cols=cols,
                 **kwargs,
             )
+
+    def catlegend(self, categories, **kwargs):
+        """
+        Build categorical legend entries and optionally add a legend.
+
+        Parameters
+        ----------
+        categories
+            Category labels used to generate legend handles.
+        **kwargs
+            Forwarded to `ultraplot.legend.UltraLegend.catlegend`.
+            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        """
+        return plegend.UltraLegend(self).catlegend(categories, **kwargs)
+
+    def entrylegend(self, entries, **kwargs):
+        """
+        Build generic semantic legend entries and optionally add a legend.
+
+        Parameters
+        ----------
+        entries
+            Entry specifications as handles, style dictionaries, or ``(label, spec)``
+            pairs.
+        **kwargs
+            Forwarded to `ultraplot.legend.UltraLegend.entrylegend`.
+            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        """
+        return plegend.UltraLegend(self).entrylegend(entries, **kwargs)
+
+    def sizelegend(self, levels, **kwargs):
+        """
+        Build size legend entries and optionally add a legend.
+
+        Parameters
+        ----------
+        levels
+            Numeric levels used to generate marker-size entries.
+        **kwargs
+            Forwarded to `ultraplot.legend.UltraLegend.sizelegend`.
+            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        """
+        return plegend.UltraLegend(self).sizelegend(levels, **kwargs)
+
+    def numlegend(self, levels=None, **kwargs):
+        """
+        Build numeric-color legend entries and optionally add a legend.
+
+        Parameters
+        ----------
+        levels
+            Numeric levels or number of levels.
+        **kwargs
+            Forwarded to `ultraplot.legend.UltraLegend.numlegend`.
+            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        """
+        return plegend.UltraLegend(self).numlegend(levels=levels, **kwargs)
+
+    def geolegend(self, entries, labels=None, **kwargs):
+        """
+        Build geometry legend entries and optionally add a legend.
+
+        Parameters
+        ----------
+        entries
+            Geometry entries (mapping, ``(label, geometry)`` pairs, or geometries).
+        labels
+            Optional labels for geometry sequences.
+        **kwargs
+            Forwarded to `ultraplot.legend.UltraLegend.geolegend`.
+            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        """
+        return plegend.UltraLegend(self).geolegend(entries, labels=labels, **kwargs)
 
     @classmethod
     def _coerce_curve_xy(cls, x, y):
