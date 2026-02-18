@@ -1,0 +1,3 @@
+# Read the Docs-only theme extension dependency.
+# Keep this out of pyproject metadata to satisfy PyPI/TestPyPI validation.
+git+https://github.com/ultraplot/UltraTheme.git
