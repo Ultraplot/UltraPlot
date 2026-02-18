@@ -57,11 +57,41 @@ except Exception:
 # Build what's news page from github releases
 from subprocess import run
 
-run([sys.executable, "_scripts/fetch_releases.py"], check=False)
+FAST_PREVIEW = os.environ.get("UPLT_DOCS_FAST_PREVIEW", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+if not FAST_PREVIEW:
+    run([sys.executable, "_scripts/fetch_releases.py"], check=False)
+
+# Docs theme selector. Default to Shibuya, but keep env override for A/B checks.
+DOCS_THEME = os.environ.get("UPLT_DOCS_THEME", "shibuya").strip().lower()
+if DOCS_THEME in {"ultratheme", "rtd", "sphinx_rtd_light_dark"}:
+    DOCS_THEME = "sphinx_rtd_light_dark"
+else:
+    DOCS_THEME = "shibuya"
+if DOCS_THEME == "shibuya":
+    try:
+        import shibuya  # noqa: F401
+    except Exception:
+        print("Shibuya theme not installed; falling back to sphinx_rtd_light_dark.")
+        DOCS_THEME = "sphinx_rtd_light_dark"
 
 # Update path for sphinx-automodapi and sphinxext extension
 sys.path.append(os.path.abspath("."))
 sys.path.insert(0, os.path.abspath(".."))
+_ultratheme_path = os.path.abspath("../UltraTheme")
+if os.path.isdir(_ultratheme_path):
+    sys.path.insert(0, _ultratheme_path)
+
+try:
+    import ultraplot_theme  # noqa: F401
+
+    HAVE_ULTRAPLOT_THEME_EXT = True
+except Exception:
+    HAVE_ULTRAPLOT_THEME_EXT = False
 
 # Ensure whats_new exists during local builds without GitHub fetch.
 whats_new_path = Path(__file__).parent / "whats_new.rst"
@@ -103,6 +133,20 @@ from matplotlib.font_manager import fontManager
 from sphinx_gallery.sorting import ExplicitOrder, FileNameSortKey
 
 
+def _set_plot_transparency_defaults():
+    """
+    Use transparent defaults so rendered docs figures adapt to light/dark themes.
+    """
+    try:
+        import matplotlib as mpl
+    except Exception:
+        return
+    mpl.rcParams["figure.facecolor"] = "none"
+    mpl.rcParams["axes.facecolor"] = "none"
+    mpl.rcParams["savefig.facecolor"] = "none"
+    mpl.rcParams["savefig.edgecolor"] = "none"
+
+
 def _reset_ultraplot(gallery_conf, fname):
     """
     Reset UltraPlot rc state between gallery examples.
@@ -116,6 +160,10 @@ def _reset_ultraplot(gallery_conf, fname):
         _logger.setLevel(logging.ERROR)
         _logger.propagate = False
     uplt.rc.reset()
+    _set_plot_transparency_defaults()
+
+
+_set_plot_transparency_defaults()
 
 
 # -- Project information -------------------------------------------------------
@@ -194,13 +242,17 @@ extensions = [
     "sphinx.ext.autosummary",  # autosummary directive
     "sphinxext.custom_roles",  # local extension
     "sphinx_automodapi.automodapi",  # fork of automodapi
-    "sphinx_rtd_light_dark",  # use custom theme
-    "sphinx_sitemap",
     "sphinx_copybutton",  # add copy button to code
     "_ext.notoc",
     "nbsphinx",  # parse rst books
     "sphinx_gallery.gen_gallery",
 ]
+if not FAST_PREVIEW:
+    extensions.append("sphinx_sitemap")
+if HAVE_ULTRAPLOT_THEME_EXT:
+    extensions.append("ultraplot_theme")
+elif DOCS_THEME == "sphinx_rtd_light_dark":
+    extensions.append("sphinx_rtd_light_dark")
 
 autosectionlabel_prefix_document = True
 
@@ -306,6 +358,8 @@ intersphinx_mapping = {
     "pint": ("https://pint.readthedocs.io/en/stable/", None),
     "networkx": ("https://networkx.org/documentation/stable/", None),
 }
+if FAST_PREVIEW:
+    intersphinx_mapping = {}
 
 
 # Fix duplicate class member documentation from autosummary + numpydoc
@@ -359,7 +413,21 @@ nbsphinx_timeout = 300
 # Add jupytext support to nbsphinx
 nbsphinx_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
 
-nbsphinx_execute = "auto"
+# Keep notebook output backgrounds theme-adaptive.
+nbsphinx_execute_arguments = [
+    "--InlineBackend.rc={"
+    "'figure.facecolor': 'none', "
+    "'axes.facecolor': 'none', "
+    "'savefig.facecolor': 'none', "
+    "'savefig.edgecolor': 'none'"
+    "}",
+]
+
+# Control notebook execution from env for predictable local/CI builds.
+# Use values: auto, always, never.
+nbsphinx_execute = os.environ.get("UPLT_DOCS_EXECUTE", "auto").strip().lower()
+if nbsphinx_execute not in {"auto", "always", "never"}:
+    nbsphinx_execute = "auto"
 
 # Suppress warnings in nbsphinx kernels without injecting visible cells.
 os.environ["PYTHONWARNINGS"] = "ignore"
@@ -387,8 +455,9 @@ sphinx_gallery_conf = {
 }
 
 # The name of the Pygments (syntax highlighting) style to use.
-# The light-dark theme toggler overloads this, but set default anyway
-pygments_style = "none"
+# Use non-purple-forward palettes for clearer code contrast in both modes.
+pygments_style = "friendly"
+pygments_dark_style = "native"
 html_baseurl = "https://ultraplot.readthedocs.io/stable"
 sitemap_url_scheme = "{link}"
 
@@ -405,20 +474,45 @@ html_logo = str(Path("_static") / "logo_square.png")
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-# Use modified RTD theme with overrides in custom.css and custom.js
-style = None
-html_theme = "sphinx_rtd_light_dark"
-# html_theme = "alabaster"
-# html_theme = "sphinx_rtd_theme"
-html_theme_options = {
-    "logo_only": True,
-    "collapse_navigation": True,
-    "navigation_depth": 4,
-    "prev_next_buttons_location": "bottom",  # top and bottom
-    "includehidden": True,
-    "titles_only": True,
-    "sticky_navigation": True,
-}
+# Shibuya is default. Keep legacy RTD-light-dark settings for fallback builds.
+if DOCS_THEME == "shibuya":
+    html_theme = "shibuya"
+    html_theme_options = {
+        "toctree_collapse": True,
+        "toctree_maxdepth": 4,
+        "toctree_titles_only": True,
+        "toctree_includehidden": True,
+        "globaltoc_expand_depth": 1,
+        "light_logo": "logo_square.png",
+        "dark_logo": "logo_square.png",
+        "logo_target": "index.html",
+        "accent_color": "blue",
+        "nav_links": [
+            {"title": "Why UltraPlot?", "url": "why"},
+            {"title": "Gallery", "url": "gallery/index"},
+            {"title": "Installation guide", "url": "install"},
+            {"title": "Usage", "url": "usage"},
+            {"title": "API", "url": "api"},
+            {"title": "GitHub", "url": "https://github.com/Ultraplot/UltraPlot"},
+            {
+                "title": "Discussions",
+                "url": "https://github.com/Ultraplot/UltraPlot/discussions",
+            },
+        ],
+    }
+else:
+    # Use modified RTD theme with overrides in custom.css and custom.js.
+    style = None
+    html_theme = "sphinx_rtd_light_dark"
+    html_theme_options = {
+        "logo_only": True,
+        "collapse_navigation": True,
+        "navigation_depth": 4,
+        "prev_next_buttons_location": "bottom",  # top and bottom
+        "includehidden": True,
+        "titles_only": True,
+        "sticky_navigation": True,
+    }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -447,12 +541,12 @@ html_favicon = str(Path("_static") / "logo_blank.svg")
 htmlhelp_basename = "ultraplotdoc"
 
 
-html_css_files = [
-    "custom.css",
-]
-html_js_files = [
-    "custom.js",
-]
+if HAVE_ULTRAPLOT_THEME_EXT:
+    html_css_files = []
+    html_js_files = []
+else:
+    html_css_files = ["custom.css"]
+    html_js_files = ["custom.js"]
 
 # -- Options for LaTeX output ------------------------------------------------
 

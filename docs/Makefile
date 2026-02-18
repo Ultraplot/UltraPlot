@@ -9,7 +9,13 @@ SPHINXPROJ  = UltraPlot
 SOURCEDIR   = .
 BUILDDIR    = _build
 
-.PHONY: help clean Makefile
+.PHONY: help clean html html-exec Makefile
+
+html:
+	@UPLT_DOCS_EXECUTE=$${UPLT_DOCS_EXECUTE:-always} $(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" -E -a $(SPHINXOPTS)
+
+html-exec:
+	@UPLT_DOCS_EXECUTE=always $(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" -E -a $(SPHINXOPTS)
 
 # Put it first so that "make" without argument is like "make help".
 help:

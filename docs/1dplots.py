@@ -55,7 +55,7 @@
 #
 #    By default, when choosing the *x* or *y* axis limits,
 #    UltraPlot ignores out-of-bounds data along the other axis if it was explicitly
-#    fixed by :func:`~matplotlib.axes.Axes.set_xlim` or :func:`~matplotlib.axes.Axes.set_ylim` (or,
+#    fixed by :py:meth:`~matplotlib.axes.Axes.set_xlim` or :py:meth:`~matplotlib.axes.Axes.set_ylim` (or,
 #    equivalently, by passing `xlim` or `ylim` to :func:`ultraplot.axes.CartesianAxes.format`).
 #    This can be useful if you wish to restrict the view along a "dependent" variable
 #    axis within a large dataset. To disable this feature, pass ``inbounds=False`` to
@@ -63,8 +63,9 @@
 #    the :rcraw:`cmap.inbounds` setting and the :ref:`user guide <ug_2dstd>`).
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 N = 5
 state = np.random.RandomState(51423)
@@ -92,8 +93,9 @@ with uplt.rc.context({"axes.prop_cycle": uplt.Cycle("Grays", N=N, left=0.3)}):
     fig.format(xlabel="xlabel", ylabel="ylabel")
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 cycle = uplt.Cycle("davos", right=0.8)
@@ -161,9 +163,9 @@ fig.format(
 #    :func:`~pint.UnitRegistry.setup_matplotlib` so that the axes become unit-aware.
 
 # %%
-import xarray as xr
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 # DataArray
 state = np.random.RandomState(51423)
@@ -230,8 +232,9 @@ ax.plot(df, cycle=cycle, lw=3, legend="t", legend_kw={"frame": False})
 # <https://matplotlib.org/stable/tutorials/intermediate/color_cycle.html#sphx-glr-tutorials-intermediate-color-cycle-py>`__.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 M, N = 50, 5
@@ -282,8 +285,9 @@ with uplt.rc.context({"lines.linewidth": 3}):
 # "positive" lines using ``negpos=True`` (see :ref:`below <ug_negpos>` for details).
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 gs = uplt.GridSpec(nrows=3, ncols=2)
@@ -358,9 +362,10 @@ fig.format(suptitle="Line plots demo", xlabel="xlabel", ylabel="ylabel")
 #    calls :func:`~ultraplot.axes.PlotAxes.scatter` internally.
 
 # %%
-import ultraplot as uplt
 import numpy as np
 import pandas as pd
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -421,9 +426,10 @@ fig.format(suptitle="Scatter plot demo", xlabel="xlabel", ylabel="ylabel")
 # plot with a colorbar indicating the parametric coordinate.
 
 # %%
-import ultraplot as uplt
 import numpy as np
 import pandas as pd
+
+import ultraplot as uplt
 
 gs = uplt.GridSpec(ncols=2, wratios=(2, 1))
 fig = uplt.figure(figwidth="16cm", refaspect=(2, 1), share=False)
@@ -516,9 +522,10 @@ ax.colorbar(m, loc="b", locator=2, label="parametric coordinate")
 #    :func:`~ultraplot.axes.PlotAxes.bar` or :func:`~ultraplot.axes.PlotAxes.barh` internally.
 
 # %%
-import ultraplot as uplt
 import numpy as np
 import pandas as pd
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -555,8 +562,9 @@ fig.format(grid=False, suptitle="Bar plot demo")
 uplt.rc.reset()
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
@@ -611,8 +619,9 @@ uplt.rc.reset()
 # ``negcolor=color`` and ``poscolor=color`` to the :class:`~ultraplot.axes.PlotAxes` commands.
 
 # %%
-import ultraplot as uplt
 import numpy as np
+
+import ultraplot as uplt
 
 # Sample data
 state = np.random.RandomState(51423)
