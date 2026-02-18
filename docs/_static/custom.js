@@ -1,4 +1,345 @@
+function getDirectChildByTag(el, tagName) {
+  return (
+    Array.from(el.children).find((child) => child.tagName === tagName) || null
+  );
+}
+
+function getDirectToggleButton(item) {
+  return (
+    Array.from(item.children).find(
+      (child) =>
+        child.tagName === "BUTTON" &&
+        child.classList.contains("uplt-toc-toggle"),
+    ) || null
+  );
+}
+
+function setTocItemExpanded(item, expanded) {
+  const childList = getDirectChildByTag(item, "UL");
+  const toggle = getDirectToggleButton(item);
+  if (!childList || !toggle) return;
+  childList.hidden = !expanded;
+  childList.style.display = expanded ? "" : "none";
+  toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  toggle.classList.toggle("is-expanded", expanded);
+  toggle.textContent = "";
+}
+
+function localtocHasMeaningfulEntries(localtoc) {
+  const links = Array.from(localtoc.querySelectorAll("a.reference.internal"));
+  return links.some((link) => {
+    const href = (link.getAttribute("href") || "").trim();
+    const text = (link.textContent || "").trim();
+    return text && href && href !== "#";
+  });
+}
+
+function getCodeDetailsBlocks() {
+  return Array.from(document.querySelectorAll("details.uplt-code-details"));
+}
+
+function initScrollChromeFade() {
+  const topBar = document.querySelector(".sy-head");
+  const leftBar = document.querySelector(".sy-lside");
+  if (!topBar && !leftBar) return;
+
+  let lastY = window.scrollY || 0;
+  let ticking = false;
+  const minDelta = 6;
+  const revealThreshold = 96;
+
+  const setHidden = (hidden) => {
+    document.documentElement.classList.toggle("uplt-chrome-hidden", hidden);
+  };
+
+  const update = () => {
+    const y = window.scrollY || 0;
+    const delta = y - lastY;
+    const expanded = (document.body.getAttribute("data-expanded") || "").trim();
+    const isMobileMenuOpen =
+      expanded.includes("head-nav") ||
+      expanded.includes("lside") ||
+      expanded.includes("rside");
+
+    if (window.innerWidth < 768 || isMobileMenuOpen || y < revealThreshold) {
+      setHidden(false);
+    } else if (delta > minDelta) {
+      setHidden(true);
+    } else if (delta < -minDelta) {
+      setHidden(false);
+    }
+
+    lastY = y;
+    ticking = false;
+  };
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    },
+    { passive: true },
+  );
+  window.addEventListener("resize", update, { passive: true });
+  update();
+}
+
+function syncRightTocCodeButtons(localtoc) {
+  if (!localtoc) return;
+  const blocks = getCodeDetailsBlocks();
+  let codeControls =
+    Array.from(localtoc.children).find(
+      (child) =>
+        child.classList && child.classList.contains("uplt-code-controls"),
+    ) || null;
+  if (!blocks.length) {
+    if (codeControls) {
+      codeControls.remove();
+    }
+    return;
+  }
+
+  if (!codeControls) {
+    codeControls = document.createElement("div");
+    codeControls.className = "uplt-code-controls";
+    localtoc.appendChild(codeControls);
+  }
+
+  let collapseCodeBtn = codeControls.querySelector(".uplt-code-collapse");
+  if (!collapseCodeBtn) {
+    collapseCodeBtn = document.createElement("button");
+    collapseCodeBtn.type = "button";
+    collapseCodeBtn.className = "uplt-toc-btn uplt-code-btn uplt-code-collapse";
+    collapseCodeBtn.addEventListener("click", function () {
+      const codeBlocks = getCodeDetailsBlocks();
+      const allCollapsed = codeBlocks.length > 0 && codeBlocks.every((block) => !block.open);
+      if (allCollapsed) {
+        codeBlocks.forEach((block) => {
+          block.open = true;
+        });
+      } else {
+        codeBlocks.forEach((block) => {
+          block.open = false;
+        });
+      }
+      updateCodeButtonLabels();
+    });
+    codeControls.appendChild(collapseCodeBtn);
+  }
+
+  const updateCodeButtonLabels = () => {
+    const codeBlocks = getCodeDetailsBlocks();
+    const allCollapsed = codeBlocks.length > 0 && codeBlocks.every((block) => !block.open);
+    collapseCodeBtn.textContent = allCollapsed ? "Show all code" : "Collapse code";
+  };
+
+  blocks.forEach((block) => {
+    if (block.dataset.upltCodeSync !== "1") {
+      block.addEventListener("toggle", updateCodeButtonLabels);
+      block.dataset.upltCodeSync = "1";
+    }
+  });
+  updateCodeButtonLabels();
+}
+
+function initShibuyaRightToc() {
+  const shibuyaRightToc = document.querySelector(".sy-rside");
+  if (!shibuyaRightToc) return;
+  const path = window.location.pathname || "";
+  const isGalleryIndexPage =
+    /\/gallery\/?$/.test(path) ||
+    /\/gallery\/index(?:_new)?\.html$/.test(path);
+  const forceHideRightToc =
+    document.body.classList.contains("no-right-toc") ||
+    isGalleryIndexPage ||
+    !!document.querySelector(".sphx-glr-thumbcontainer") ||
+    !!document.querySelector(".sphx-glr-thumbnails");
+  if (forceHideRightToc) {
+    shibuyaRightToc.style.display = "none";
+    const overlay = document.querySelector(".rside-overlay");
+    if (overlay) overlay.style.display = "none";
+    return;
+  }
+
+  const localtoc = shibuyaRightToc.querySelector(".localtoc");
+  if (!localtoc) return;
+
+  const overlay = document.querySelector(".rside-overlay");
+  if (!localtocHasMeaningfulEntries(localtoc)) {
+    shibuyaRightToc.style.display = "none";
+    if (overlay) overlay.style.display = "none";
+    return;
+  }
+  shibuyaRightToc.style.display = "";
+  if (overlay) overlay.style.display = "";
+
+  const storageKey = "uplt.rside.hidden";
+  const setRightTocHidden = (hidden) => {
+    document.body.classList.toggle("uplt-rside-hidden", hidden);
+    try {
+      localStorage.setItem(storageKey, hidden ? "1" : "0");
+    } catch (_err) {
+      // Ignore storage errors in private/incognito environments.
+    }
+  };
+
+  if (!document.body.dataset.upltRsideStateInit) {
+    let restoreHidden = false;
+    try {
+      restoreHidden = localStorage.getItem(storageKey) === "1";
+    } catch (_err) {
+      restoreHidden = false;
+    }
+    setRightTocHidden(restoreHidden);
+    document.body.dataset.upltRsideStateInit = "1";
+  }
+
+  let showBtn = document.querySelector(".uplt-rside-show");
+  if (!showBtn) {
+    showBtn = document.createElement("button");
+    showBtn.type = "button";
+    showBtn.className = "uplt-rside-show";
+    showBtn.textContent = "Show contents";
+    showBtn.setAttribute("aria-label", "Show right table of contents");
+    showBtn.addEventListener("click", function () {
+      setRightTocHidden(false);
+    });
+    document.body.appendChild(showBtn);
+  }
+
+  const topList = getDirectChildByTag(localtoc, "UL");
+  if (!topList) return;
+
+  let headRow =
+    Array.from(localtoc.children).find(
+      (child) => child.classList && child.classList.contains("uplt-toc-head"),
+    ) || null;
+  const directHeading = getDirectChildByTag(localtoc, "H3");
+  if (!headRow && directHeading) {
+    headRow = document.createElement("div");
+    headRow.className = "uplt-toc-head";
+    localtoc.insertBefore(headRow, directHeading);
+    headRow.appendChild(directHeading);
+  }
+  if (headRow) {
+    let hideBtn = headRow.querySelector(".uplt-toc-btn-hide");
+    if (!hideBtn) {
+      hideBtn = document.createElement("button");
+      hideBtn.type = "button";
+      hideBtn.className = "uplt-toc-btn uplt-toc-btn-hide";
+      hideBtn.textContent = "Hide";
+      hideBtn.addEventListener("click", function () {
+        setRightTocHidden(true);
+      });
+      headRow.appendChild(hideBtn);
+    }
+  }
+
+  const topItems = Array.from(topList.children).filter(
+    (node) => node.tagName === "LI",
+  );
+  const collapsibleItems = [];
+  const currentHash = (window.location.hash || "").trim();
+
+  topItems.forEach((item) => {
+    const link =
+      Array.from(item.children).find(
+        (child) =>
+          child.tagName === "A" &&
+          child.classList.contains("reference") &&
+          child.classList.contains("internal"),
+      ) || null;
+    const childList = getDirectChildByTag(item, "UL");
+    if (!link || !childList) return;
+
+    item.classList.add("uplt-toc-collapsible");
+    let toggle = getDirectToggleButton(item);
+    if (!toggle) {
+      toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "uplt-toc-toggle";
+      toggle.setAttribute("aria-label", "Toggle section");
+      toggle.textContent = "";
+      toggle.addEventListener("click", function () {
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        setTocItemExpanded(item, !expanded);
+      });
+      item.insertBefore(toggle, link);
+    }
+
+    const hashInChildren =
+      currentHash &&
+      Array.from(childList.querySelectorAll("a.reference.internal")).some(
+        (a) => (a.getAttribute("href") || "").trim() === currentHash,
+      );
+    const hashOnTop = currentHash && (link.getAttribute("href") || "") === currentHash;
+    if (!toggle.hasAttribute("aria-expanded")) {
+      setTocItemExpanded(item, !!(hashOnTop || hashInChildren));
+    } else if (hashOnTop || hashInChildren) {
+      setTocItemExpanded(item, true);
+    }
+
+    collapsibleItems.push(item);
+  });
+
+  let controls =
+    Array.from(localtoc.children).find(
+      (child) =>
+        child.classList && child.classList.contains("uplt-toc-controls"),
+    ) || null;
+  if (!collapsibleItems.length) {
+    if (controls) controls.remove();
+    syncRightTocCodeButtons(localtoc);
+    return;
+  }
+
+  if (!controls) {
+    controls = document.createElement("div");
+    controls.className = "uplt-toc-controls";
+    localtoc.insertBefore(controls, topList);
+  }
+
+  let collapseBtn = controls.querySelector(".uplt-toc-btn-collapse");
+  if (!collapseBtn) {
+    collapseBtn = document.createElement("button");
+    collapseBtn.type = "button";
+    collapseBtn.className = "uplt-toc-btn uplt-toc-btn-collapse";
+    collapseBtn.textContent = "Collapse";
+    collapseBtn.addEventListener("click", function () {
+      collapsibleItems.forEach((item) => setTocItemExpanded(item, false));
+    });
+    controls.appendChild(collapseBtn);
+  }
+
+  let expandBtn = controls.querySelector(".uplt-toc-btn-expand");
+  if (!expandBtn) {
+    expandBtn = document.createElement("button");
+    expandBtn.type = "button";
+    expandBtn.className = "uplt-toc-btn uplt-toc-btn-expand";
+    expandBtn.textContent = "Expand";
+    expandBtn.addEventListener("click", function () {
+      collapsibleItems.forEach((item) => setTocItemExpanded(item, true));
+    });
+    controls.appendChild(expandBtn);
+  }
+
+  syncRightTocCodeButtons(localtoc);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  initScrollChromeFade();
+
+  if (document.querySelector(".sphx-glr-thumbcontainer")) {
+    document.body.classList.add("no-right-toc");
+  }
+
+  // Shibuya theme: right TOC controls and collapsible sub-sections.
+  initShibuyaRightToc();
+  window.addEventListener("hashchange", initShibuyaRightToc);
+
   // Check if current page has opted out of the TOC
   if (document.body.classList.contains("no-right-toc")) {
     return;
@@ -206,6 +547,44 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
+  const wrapWithCodeToggle = (block) => {
+    if (!block || !block.parentNode) return;
+    if (block.closest("details.uplt-code-details")) return;
+    const details = document.createElement("details");
+    details.className = "uplt-code-details";
+    const summary = document.createElement("summary");
+    summary.className = "uplt-code-summary";
+    summary.textContent = "Show code";
+    details.appendChild(summary);
+    block.parentNode.insertBefore(details, block);
+    details.appendChild(block);
+    details.open = false;
+    details.addEventListener("toggle", function () {
+      summary.textContent = details.open ? "Hide code" : "Show code";
+    });
+  };
+
+  // Gallery example pages: collapse source code blocks by default.
+  const galleryExampleCodeBlocks = Array.from(
+    document.querySelectorAll(
+      "section.sphx-glr-example-title div.highlight-Python.notranslate",
+    ),
+  );
+  galleryExampleCodeBlocks.forEach((block) => {
+    wrapWithCodeToggle(block);
+  });
+
+  // Notebook-style tutorial pages: collapse input code cells by default.
+  const notebookInputBlocks = Array.from(
+    document.querySelectorAll("div.nbinput.docutils.container"),
+  );
+  notebookInputBlocks.forEach((block) => {
+    wrapWithCodeToggle(block);
+  });
+
+  // Re-sync right TOC controls now that code wrappers exist.
+  initShibuyaRightToc();
+
   const navLinks = document.querySelectorAll(
     ".wy-menu-vertical a.reference.internal",
   );

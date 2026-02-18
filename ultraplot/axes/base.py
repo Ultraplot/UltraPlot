@@ -84,7 +84,7 @@ ABC_STRING = "abcdefghijklmnopqrstuvwxyz"
 
 # Projection docstring
 _proj_docstring = """
-proj, projection : \\
+proj, projection :
 str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
     The map projection specification(s). If ``'cart'`` or ``'cartesian'``
     (the default), a `~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
@@ -147,13 +147,12 @@ docstring._snippet_manager["axes.colorbar_space"] = _space_docstring.format(
 # Transform docstring
 # Used for text and add_axes
 _transform_docstring = """
-transform : {'data', 'axes', 'figure', 'subfigure'} \\
-or `~matplotlib.transforms.Transform`, optional
+transform : {'data', 'axes', 'figure', 'subfigure'} or `~matplotlib.transforms.Transform`, optional
     The transform used to interpret the bounds. Can be a
-    `~matplotlib.transforms.Transform` instance or a string representing
-    the `~matplotlib.axes.Axes.transData`, `~matplotlib.axes.Axes.transAxes`,
-    `~matplotlib.figure.Figure.transFigure`, or
-    `~matplotlib.figure.Figure.transSubfigure`, transforms.
+    :class:`~matplotlib.transforms.Transform` instance or a string representing
+    the :class:`~matplotlib.axes.Axes.transData`, :class:`~matplotlib.axes.Axes.transAxes`,
+    :class:`~matplotlib.figure.Figure.transFigure`, or
+    :class:`~matplotlib.figure.Figure.transSubfigure`, transforms.
 """
 docstring._snippet_manager["axes.transform"] = _transform_docstring
 
@@ -359,7 +358,7 @@ titleabove : bool, default: :rc:`title.above`
 abctitlepad : float, default: :rc:`abc.titlepad`
     The horizontal padding between a-b-c labels and titles in the same location.
     %(units.pt)s
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional \\
+ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
     Shorthands for the below keywords.
     lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
 lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
@@ -379,7 +378,7 @@ leftlabels, toplabels, rightlabels, bottomlabels : sequence of str, optional
     Labels for the subplots lying along the left, top, right, and
     bottom edges of the figure. The length of each list must match
     the number of subplots along the corresponding edge.
-leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, default\\
+leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, default
 : :rc:`leftlabel.pad`, :rc:`toplabel.pad`, :rc:`rightlabel.pad`, :rc:`bottomlabel.pad`
     The padding between the labels and the axes content.
     %(units.pt)s
@@ -427,37 +426,37 @@ docstring._snippet_manager["figure.format"] = _figure_format_docstring
 
 # Colorbar docstrings
 _colorbar_args_docstring = """
-mappable : mappable, colormap-spec, sequence of color-spec, \\
-or sequence of `~matplotlib.artist.Artist`
-    There are four options here:
+    mappable : mappable, colormap-spec, sequence of color-spec,
+        or sequence of :class:`~matplotlib.artist.Artist`
+        There are four options here:
 
-    1. A `~matplotlib.cm.ScalarMappable` (e.g., an object returned by
-       `~ultraplot.axes.PlotAxes.contourf` or `~ultraplot.axes.PlotAxes.pcolormesh`).
-    2. A `~matplotlib.colors.Colormap` or registered colormap name used to build a
-       `~matplotlib.cm.ScalarMappable` on-the-fly. The colorbar range and ticks depend
-       on the arguments `values`, `vmin`, `vmax`, and `norm`. The default for a
-       :class:`~ultraplot.colors.ContinuousColormap` is ``vmin=0`` and ``vmax=1`` (note that
-       passing `values` will "discretize" the colormap). The default for a
-       :class:`~ultraplot.colors.DiscreteColormap` is ``values=np.arange(0, cmap.N)``.
-    3. A sequence of hex strings, color names, or RGB[A] tuples. A
-       :class:`~ultraplot.colors.DiscreteColormap` will be generated from these colors and
-       used to build a `~matplotlib.cm.ScalarMappable` on-the-fly. The colorbar
-       range and ticks depend on the arguments `values`, `norm`, and
-       `norm_kw`. The default is ``values=np.arange(0, len(mappable))``.
-    4. A sequence of `matplotlib.artist.Artist` instances (e.g., a list of
-       `~matplotlib.lines.Line2D` instances returned by `~ultraplot.axes.PlotAxes.plot`).
-       A colormap will be generated from the colors of these objects (where the
-       color is determined by ``get_color``, if available, or ``get_facecolor``).
-       The colorbar range and ticks depend on the arguments `values`, `norm`, and
-       `norm_kw`. The default is to infer colorbar ticks and tick labels
-       by calling `~matplotlib.artist.Artist.get_label` on each artist.
+        1. A `~matplotlib.cm.ScalarMappable` (e.g., an object returned by
+        `~ultraplot.axes.PlotAxes.contourf` or `~ultraplot.axes.PlotAxes.pcolormesh`).
+        2. A `~matplotlib.colors.Colormap` or registered colormap name used to build a
+        `~matplotlib.cm.ScalarMappable` on-the-fly. The colorbar range and ticks depend
+        on the arguments `values`, `vmin`, `vmax`, and `norm`. The default for a
+        :class:`~ultraplot.colors.ContinuousColormap` is ``vmin=0`` and ``vmax=1`` (note that
+        passing `values` will "discretize" the colormap). The default for a
+        :class:`~ultraplot.colors.DiscreteColormap` is ``values=np.arange(0, cmap.N)``.
+        3. A sequence of hex strings, color names, or RGB[A] tuples. A
+        :class:`~ultraplot.colors.DiscreteColormap` will be generated from these colors and
+        used to build a `~matplotlib.cm.ScalarMappable` on-the-fly. The colorbar
+        range and ticks depend on the arguments `values`, `norm`, and
+        `norm_kw`. The default is ``values=np.arange(0, len(mappable))``.
+        4. A sequence of `matplotlib.artist.Artist` instances (e.g., a list of
+        `~matplotlib.lines.Line2D` instances returned by `~ultraplot.axes.PlotAxes.plot`).
+        A colormap will be generated from the colors of these objects (where the
+        color is determined by ``get_color``, if available, or ``get_facecolor``).
+        The colorbar range and ticks depend on the arguments `values`, `norm`, and
+        `norm_kw`. The default is to infer colorbar ticks and tick labels
+        by calling `~matplotlib.artist.Artist.get_label` on each artist.
 
-values : sequence of float or str, optional
-    Ignored if `mappable` is a `~matplotlib.cm.ScalarMappable`. This maps the colormap
-    colors to numeric values using `~ultraplot.colors.DiscreteNorm`. If the colormap is
-    a :class:`~ultraplot.colors.ContinuousColormap` then its colors will be "discretized".
-    These These can also be strings, in which case the list indices are used for
-    tick locations and the strings are applied as tick labels.
+    values : sequence of float or str, optional
+        Ignored if `mappable` is a `~matplotlib.cm.ScalarMappable`. This maps the colormap
+        colors to numeric values using `~ultraplot.colors.DiscreteNorm`. If the colormap is
+        a :class:`~ultraplot.colors.ContinuousColormap` then its colors will be "discretized".
+        These These can also be strings, in which case the list indices are used for
+        tick locations and the strings are applied as tick labels.
 """
 _colorbar_kwargs_docstring = """
 orientation : {None, 'horizontal', 'vertical'}, optional
@@ -535,17 +534,14 @@ tickwidth : unit-spec, default: `linewidth`
     or :rc:`tick.width` if `linewidth` was not passed.
 tickwidthratio : float, default: :rc:`tick.widthratio`
     Relative scaling of `tickwidth` used to determine minor tick widths.
-ticklabelcolor, ticklabelsize, ticklabelweight \\
-: default: :rc:`tick.labelcolor`, :rc:`tick.labelsize`, :rc:`tick.labelweight`.
+ticklabelcolor, ticklabelsize, ticklabelweight: default: :rc:`tick.labelcolor`, :rc:`tick.labelsize`, :rc:`tick.labelweight`.
     The font color, size, and weight for colorbar tick labels
 labelloc, labellocation : {'bottom', 'top', 'left', 'right'}
     The colorbar label location. Inherits from `tickloc` by default. Default is toward
     the outside of the subplot for outer colorbars and ``'bottom'`` for inset colorbars.
-labelcolor, labelsize, labelweight \\
-: default: :rc:`label.color`, :rc:`label.size`, and :rc:`label.weight`.
+labelcolor, labelsize, labelweight: default: :rc:`label.color`, :rc:`label.size`, and :rc:`label.weight`.
     The font color, size, and weight for the colorbar label.
-a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth : default\\
-: :rc:`colorbar.framealpha`, :rc:`colorbar.framecolor`
+a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth : default: :rc:`colorbar.framealpha`, :rc:`colorbar.framecolor`
     For inset colorbars only. Controls the transparency and color of
     the background frame.
 lw, linewidth, c, color : optional
@@ -601,7 +597,7 @@ labels : list of str, optional
     from the artists in the tuple (if there are multiple unique labels in the tuple
     group of artists, the tuple group is expanded into unique legend entries --
     otherwise, the tuple group elements are drawn on top of eachother). For details
-    on matplotlib legend handlers and tuple groups, see the matplotlib `legend guide \\
+    on matplotlib legend handlers and tuple groups, see the matplotlib `legend guide
 -<https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html>`__.
 """
 _legend_kwargs_docstring = """
@@ -632,14 +628,10 @@ fontsize, fontweight, fontcolor : optional
 titlefontsize, titlefontweight, titlefontcolor : optional
     The font size, weight, and color for the legend title. Font size is interpreted
     by `~ultraplot.utils.units`. The default size is `fontsize`.
-borderpad, borderaxespad, handlelength, handleheight, handletextpad, \\
-labelspacing, columnspacing : unit-spec, optional
+borderpad, borderaxespad, handlelength, handleheight, handletextpad,  labelspacing, columnspacing : unit-spec, optional
     Various matplotlib `~matplotlib.axes.Axes.legend` spacing arguments.
     %(units.em)s
-a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth \\
-: default: :rc:`legend.framealpha`, :rc:`legend.facecolor`, :rc:`legend.edgecolor`, \\
-:rc:`axes.linewidth`
-    The opacity, face color, edge color, and edge width for the legend frame.
+a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth: default: :rc:`legend.framealpha`, :rc:`legend.facecolor`, :rc:`legend.edgecolor`, :rc:`axes.linewidth` The opacity, face color, edge color, and edge width for the legend frame.
 c, color, lw, linewidth, m, marker, ls, linestyle, dashes, ms, markersize : optional
     Properties used to override the legend handles. For example, for a
     legend describing variations in line style ignoring variations
@@ -3343,46 +3335,44 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Parameters
         ----------
         %(axes.colorbar_args)s
-        loc, location : int or str, default: :rc:`colorbar.loc`
-            The colorbar location. Valid location keys are shown in the below table.
+            loc, location : int or str, default: :rc:`colorbar.loc`
+                The colorbar location. Valid location keys are shown in the below table.
 
-            .. _colorbar_table:
+                .. _colorbar_table:
 
-            ==================  =======================================
-            Location            Valid keys
-            ==================  =======================================
-            outer left          ``'left'``, ``'l'``
-            outer right         ``'right'``, ``'r'``
-            outer bottom        ``'bottom'``, ``'b'``
-            outer top           ``'top'``, ``'t'``
-            default inset       ``'best'``, ``'inset'``, ``'i'``, ``0``
-            upper right inset   ``'upper right'``, ``'ur'``, ``1``
-            upper left inset    ``'upper left'``, ``'ul'``, ``2``
-            lower left inset    ``'lower left'``, ``'ll'``, ``3``
-            lower right inset   ``'lower right'``, ``'lr'``, ``4``
-            "filled"            ``'fill'``
-            ==================  =======================================
+                ==================  =======================================
+                Location            Valid keys
+                ==================  =======================================
+                outer left          ``'left'``, ``'l'``
+                outer right         ``'right'``, ``'r'``
+                outer bottom        ``'bottom'``, ``'b'``
+                outer top           ``'top'``, ``'t'``
+                default inset       ``'best'``, ``'inset'``, ``'i'``, ``0``
+                upper right inset   ``'upper right'``, ``'ur'``, ``1``
+                upper left inset    ``'upper left'``, ``'ul'``, ``2``
+                lower left inset    ``'lower left'``, ``'ll'``, ``3``
+                lower right inset   ``'lower right'``, ``'lr'``, ``4``
+                "filled"            ``'fill'``
+                ==================  =======================================
 
-        shrink
-            Alias for `length`. This is included for consistency with
-            `matplotlib.figure.Figure.colorbar`.
-        length \\
-: float or unit-spec, default: :rc:`colorbar.length` or :rc:`colorbar.insetlength`
-            The colorbar length. For outer colorbars, units are relative to the axes
-            width or height (default is :rcraw:`colorbar.length`). For inset
-            colorbars, floats interpreted as em-widths and strings interpreted
-            by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
-        width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth`
-            The colorbar width. For outer colorbars, floats are interpreted as inches
-            (default is :rcraw:`colorbar.width`). For inset colorbars, floats are
-            interpreted as em-widths (default is :rcraw:`colorbar.insetwidth`).
-            Strings are interpreted by `~ultraplot.utils.units`.
-        %(axes.colorbar_space)s
-            Has no visible effect if `length` is ``1``.
-
-        Other parameters
-        ----------------
-        %(axes.colorbar_kwargs)s
+            shrink
+                Alias for `length`. This is included for consistency with
+                `matplotlib.figure.Figure.colorbar`.
+            length : float or unit-spec, default: :rc:`colorbar.length` or :rc:`colorbar.insetlength`
+                The colorbar length. For outer colorbars, units are relative to the axes
+                width or height (default is :rcraw:`colorbar.length`). For inset
+                colorbars, floats interpreted as em-widths and strings interpreted
+                by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
+            width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth`
+                The colorbar width. For outer colorbars, floats are interpreted as inches
+                (default is :rcraw:`colorbar.width`). For inset colorbars, floats are
+                interpreted as em-widths (default is :rcraw:`colorbar.insetwidth`).
+                Strings are interpreted by `~ultraplot.utils.units`.
+            %(axes.colorbar_space)s
+                Has no visible effect if `length` is ``1``.
+            Other parameters
+            ----------------
+            %(axes.colorbar_kwargs)s
 
         See also
         --------
@@ -3682,8 +3672,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         borderinvert : bool, optional
             If ``True``, the text and border colors are swapped.
         borderstyle : {'miter', 'round', 'bevel'}, default: :rc:`text.borderstyle`
-            The `line join style \\
-<https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html>`__
+            The `line join style <https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html>`__
             used for the border.
         bbox : bool, default: False
             Whether to draw a bounding box around text.
@@ -3875,6 +3864,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             obj._annotation = ann
         return obj
 
+    @docstring._snippet_manager
     def curvedtext(
         self,
         x,
@@ -3933,8 +3923,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         min_advance : float, default: :rc:`text.curved.min_advance`
             Minimum additional spacing (pixels) enforced between glyph centers.
         borderstyle : {'miter', 'round', 'bevel'}, default: 'miter'
-            The `line join style \\
-<https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html>`__
+            The `line join style  <https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html>`__
             used for the border.
         bbox : bool, default: False
             Whether to draw a bounding box around text.

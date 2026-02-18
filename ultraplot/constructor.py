@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-T"he constructor functions used to build class instances from simple shorthand arguments.
+The constructor functions used to build class instances from simple shorthand arguments.
 """
 
 # NOTE: These functions used to be in separate files like crs.py and
