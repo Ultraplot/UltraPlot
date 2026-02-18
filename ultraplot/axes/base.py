@@ -3516,6 +3516,21 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         return plegend.UltraLegend(self).catlegend(categories, **kwargs)
 
+    def entrylegend(self, entries, **kwargs):
+        """
+        Build generic semantic legend entries and optionally add a legend.
+
+        Parameters
+        ----------
+        entries
+            Entry specifications as handles, style dictionaries, or ``(label, spec)``
+            pairs.
+        **kwargs
+            Forwarded to `ultraplot.legend.UltraLegend.entrylegend`.
+            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        """
+        return plegend.UltraLegend(self).entrylegend(entries, **kwargs)
+
     def sizelegend(self, levels, **kwargs):
         """
         Build size legend entries and optionally add a legend.

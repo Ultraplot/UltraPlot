@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Iterable, Optional, Tuple, Union
@@ -11,10 +12,6 @@ from matplotlib import colors as mcolors
 from matplotlib import lines as mlines
 from matplotlib import legend as mlegend
 from matplotlib import legend_handler as mhandler
-
-from .config import rc
-from .internals import _not_none, _pop_props, guides, rcsetup
-from .utils import _fontsize_to_pt, units
 
 from .config import rc
 from .internals import _not_none, _pop_props, guides, rcsetup
@@ -835,59 +832,242 @@ def _default_cycle_colors():
     return colors or ["C0"]
 
 
+_ENTRY_STYLE_FROM_COLLECTION = {
+    "colors": "color",
+    "edgecolors": "markeredgecolor",
+    "facecolors": "markerfacecolor",
+    "linestyles": "linestyle",
+    "linewidths": "markeredgewidth",
+    "sizes": "markersize",
+}
+
+
+def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """
+    Pop style properties with line/scatter aliases for LegendEntry objects.
+    """
+    explicit_collection = {}
+    for key in _ENTRY_STYLE_FROM_COLLECTION:
+        if key in kwargs:
+            explicit_collection[key] = kwargs.pop(key)
+    props = _pop_props(kwargs, "line")
+    collection_props = _pop_props(kwargs, "collection")
+    collection_props.update(explicit_collection)
+    for source, target in _ENTRY_STYLE_FROM_COLLECTION.items():
+        value = collection_props.get(source, None)
+        if value is not None and target not in props:
+            props[target] = value
+    return props
+
+
+_NUM_STYLE_FROM_COLLECTION = {
+    "colors": "facecolor",
+    "facecolors": "facecolor",
+    "edgecolors": "edgecolor",
+    "linestyles": "linestyle",
+    "linewidths": "linewidth",
+}
+
+
+def _pop_num_props(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """
+    Pop patch/collection style aliases for numeric semantic legend entries.
+    """
+    explicit_collection = {}
+    for key in _NUM_STYLE_FROM_COLLECTION:
+        if key in kwargs:
+            explicit_collection[key] = kwargs.pop(key)
+    props = _pop_props(kwargs, "patch")
+    collection_props = _pop_props(kwargs, "collection")
+    collection_props.update(explicit_collection)
+    for source, target in _NUM_STYLE_FROM_COLLECTION.items():
+        value = collection_props.get(source, None)
+        if value is not None and target not in props:
+            props[target] = value
+    return props
+
+
+def _resolve_style_values(
+    styles: dict[str, Any],
+    label: Any,
+    index: int,
+) -> dict[str, Any]:
+    """
+    Resolve scalar, mapping, or sequence style values for one legend entry.
+    """
+    output = {}
+    for key, value in styles.items():
+        resolved = _style_lookup(value, label, index, default=None)
+        if resolved is not None:
+            output[key] = resolved
+    return output
+
+
 def _cat_legend_entries(
     categories: Iterable[Any],
     *,
     colors=None,
     markers="o",
-    line: bool = False,
-    linestyle: str = "-",
-    linewidth: float = 2.0,
-    markersize: float = 6.0,
+    line=False,
+    linestyle="-",
+    linewidth=2.0,
+    markersize=6.0,
     alpha=None,
     markeredgecolor=None,
     markeredgewidth=None,
+    markerfacecolor=None,
+    **entry_kwargs,
 ):
     """
     Build categorical semantic legend handles and labels.
     """
     labels = list(dict.fromkeys(categories))
     palette = _default_cycle_colors()
+    base_styles = {
+        "line": line,
+        "linestyle": linestyle,
+        "linewidth": linewidth,
+        "markersize": markersize,
+        "alpha": alpha,
+        "markeredgecolor": markeredgecolor,
+        "markeredgewidth": markeredgewidth,
+        "markerfacecolor": markerfacecolor,
+    }
+    base_styles.update(entry_kwargs)
     handles = []
     for idx, label in enumerate(labels):
+        styles = _resolve_style_values(base_styles, label, idx)
         color = _style_lookup(colors, label, idx, default=palette[idx % len(palette)])
         marker = _style_lookup(markers, label, idx, default="o")
-        if line and marker in (None, ""):
+        line_value = bool(styles.pop("line", False))
+        if line_value and marker in (None, ""):
             marker = None
+        styles.pop("marker", None)
         handles.append(
             LegendEntry(
                 label=str(label),
                 color=color,
-                line=line,
+                line=line_value,
                 marker=marker,
-                linestyle=linestyle,
-                linewidth=linewidth,
-                markersize=markersize,
-                markeredgecolor=markeredgecolor,
-                markeredgewidth=markeredgewidth,
-                alpha=alpha,
+                **styles,
             )
         )
     return handles, [str(label) for label in labels]
+
+
+def _entry_legend_entries(
+    entries: Iterable[Any] | Mapping[Any, Any],
+    *,
+    line: bool,
+    marker,
+    color,
+    linestyle,
+    linewidth,
+    markersize,
+    alpha,
+    markeredgecolor,
+    markeredgewidth,
+    markerfacecolor,
+    styles: dict[str, Any],
+):
+    """
+    Build generic semantic legend handles/labels from mixed entry specifications.
+    """
+    defaults = {
+        "line": line,
+        "marker": marker,
+        "color": color,
+        "linestyle": linestyle,
+        "linewidth": linewidth,
+        "markersize": markersize,
+        "alpha": alpha,
+        "markeredgecolor": markeredgecolor,
+        "markeredgewidth": markeredgewidth,
+        "markerfacecolor": markerfacecolor,
+    }
+    defaults.update(styles)
+    handles = []
+    labels = []
+
+    if isinstance(entries, Mapping):
+        source = list(entries.items())
+    else:
+        source = list(entries)
+
+    for idx, item in enumerate(source):
+        entry_label = None
+        entry_spec = None
+        if isinstance(entries, Mapping):
+            entry_label, entry_spec = item
+        elif hasattr(item, "get_label"):
+            entry_label = item.get_label()
+            entry_spec = item
+        elif isinstance(item, Mapping):
+            entry_spec = dict(item)
+            entry_label = entry_spec.pop("label", entry_spec.pop("name", None))
+            if entry_label is None:
+                raise ValueError(
+                    "entrylegend dict entries must include 'label' or 'name'."
+                )
+        elif isinstance(item, (tuple, list)) and len(item) == 2:
+            first, second = item
+            if hasattr(first, "get_label") and not hasattr(second, "get_label"):
+                entry_label, entry_spec = second, first
+            elif hasattr(second, "get_label") and not hasattr(first, "get_label"):
+                entry_label, entry_spec = first, second
+            else:
+                entry_label, entry_spec = first, second
+        else:
+            entry_label = item
+            entry_spec = {}
+
+        if hasattr(entry_spec, "get_label"):
+            handles.append(entry_spec)
+            labels.append(str(entry_label))
+            continue
+
+        if isinstance(entry_spec, Mapping):
+            entry_style = dict(entry_spec)
+        elif entry_spec is None:
+            entry_style = {}
+        else:
+            entry_style = {"color": entry_spec}
+        entry_style.update(_pop_entry_props(entry_style))
+        entry_label = entry_style.pop("label", entry_label)
+        entry_label = entry_style.pop("name", entry_label)
+
+        values = _resolve_style_values(defaults, entry_label, idx)
+        values.update(entry_style)
+        line_value = bool(values.pop("line", False))
+        marker_value = values.pop("marker", None)
+        if line_value and marker_value in ("", None):
+            marker_value = None
+        handles.append(
+            LegendEntry(
+                label=str(entry_label),
+                line=line_value,
+                marker=marker_value,
+                **values,
+            )
+        )
+        labels.append(str(entry_label))
+    return handles, labels
 
 
 def _size_legend_entries(
     levels: Iterable[float],
     *,
     color="0.35",
-    marker: str = "o",
-    area: bool = True,
-    scale: float = 1.0,
-    minsize: float = 3.0,
+    marker="o",
+    area=True,
+    scale=1.0,
+    minsize=3.0,
     fmt=None,
     alpha=None,
     markeredgecolor=None,
     markeredgewidth=None,
+    markerfacecolor=None,
+    **entry_kwargs,
 ):
     """
     Build size semantic legend handles and labels.
@@ -901,18 +1081,34 @@ def _size_legend_entries(
         ms = np.abs(values)
     ms = np.maximum(ms * scale, minsize)
     labels = [_format_label(value, fmt) for value in values]
-    handles = [
-        LegendEntry.marker(
-            label=label,
-            marker=marker,
-            color=color,
-            markersize=float(size),
-            alpha=alpha,
-            markeredgecolor=markeredgecolor,
-            markeredgewidth=markeredgewidth,
+    base_styles = {
+        "line": False,
+        "alpha": alpha,
+        "markeredgecolor": markeredgecolor,
+        "markeredgewidth": markeredgewidth,
+        "markerfacecolor": markerfacecolor,
+    }
+    base_styles.update(entry_kwargs)
+    handles = []
+    for idx, (value, label, size) in enumerate(zip(values, labels, ms)):
+        styles = _resolve_style_values(base_styles, float(value), idx)
+        color_value = _style_lookup(color, float(value), idx, default="0.35")
+        marker_value = _style_lookup(marker, float(value), idx, default="o")
+        line_value = bool(styles.pop("line", False))
+        if line_value and marker_value in ("", None):
+            marker_value = None
+        marker_value = _not_none(styles.pop("marker", None), marker_value)
+        markersize_value = float(styles.pop("markersize", size))
+        handles.append(
+            LegendEntry(
+                label=label,
+                color=color_value,
+                line=line_value,
+                marker=marker_value,
+                markersize=markersize_value,
+                **styles,
+            )
         )
-        for label, size in zip(labels, ms)
-    ]
     return handles, labels
 
 
@@ -926,8 +1122,11 @@ def _num_legend_entries(
     norm=None,
     fmt=None,
     edgecolor="none",
-    linewidth: float = 0.0,
+    linewidth=0.0,
+    linestyle=None,
     alpha=None,
+    facecolor=None,
+    **entry_kwargs,
 ):
     """
     Build numeric-color semantic legend handles and labels.
@@ -955,16 +1154,27 @@ def _num_legend_entries(
     except Exception:
         cmap_obj = mcm.get_cmap(cmap)
     labels = [_format_label(value, fmt) for value in values]
-    handles = [
-        mpatches.Patch(
-            facecolor=cmap_obj(norm(float(value))),
-            edgecolor=edgecolor,
-            linewidth=linewidth,
-            alpha=alpha,
-            label=label,
+    base_styles = {
+        "edgecolor": edgecolor,
+        "linewidth": linewidth,
+        "linestyle": linestyle,
+        "alpha": alpha,
+        "facecolor": facecolor,
+    }
+    base_styles.update(entry_kwargs)
+    handles = []
+    for idx, (value, label) in enumerate(zip(values, labels)):
+        styles = _resolve_style_values(base_styles, float(value), idx)
+        facecolor_value = styles.pop("facecolor", None)
+        if facecolor_value is None:
+            facecolor_value = cmap_obj(norm(float(value)))
+        handles.append(
+            mpatches.Patch(
+                facecolor=facecolor_value,
+                label=label,
+                **styles,
+            )
         )
-        for value, label in zip(values, labels)
-    ]
     return handles, labels
 
 
@@ -1131,6 +1341,81 @@ class UltraLegend:
                 "Semantic legend labels are derived from the helper inputs."
             )
 
+    def entrylegend(
+        self,
+        entries: Iterable[Any] | Mapping[Any, Any],
+        *,
+        line: Optional[bool] = None,
+        marker=None,
+        color=None,
+        linestyle=None,
+        linewidth: Optional[float] = None,
+        markersize: Optional[float] = None,
+        alpha=None,
+        markeredgecolor=None,
+        markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw: Optional[dict[str, Any]] = None,
+        add: bool = True,
+        **legend_kwargs: Any,
+    ):
+        """
+        Build generic semantic legend entries and optionally draw a legend.
+        """
+        styles = dict(handle_kw or {})
+        styles.update(_pop_entry_props(styles))
+        line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
+        marker = _not_none(marker, styles.pop("marker", None), rc["legend.cat.marker"])
+        color = _not_none(color, styles.pop("color", None))
+        linestyle = _not_none(
+            linestyle,
+            styles.pop("linestyle", None),
+            rc["legend.cat.linestyle"],
+        )
+        linewidth = _not_none(
+            linewidth,
+            styles.pop("linewidth", None),
+            rc["legend.cat.linewidth"],
+        )
+        markersize = _not_none(
+            markersize,
+            styles.pop("markersize", None),
+            rc["legend.cat.markersize"],
+        )
+        alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.cat.alpha"])
+        markeredgecolor = _not_none(
+            markeredgecolor,
+            styles.pop("markeredgecolor", None),
+            rc["legend.cat.markeredgecolor"],
+        )
+        markeredgewidth = _not_none(
+            markeredgewidth,
+            styles.pop("markeredgewidth", None),
+            rc["legend.cat.markeredgewidth"],
+        )
+        markerfacecolor = _not_none(
+            markerfacecolor,
+            styles.pop("markerfacecolor", None),
+        )
+        handles, labels = _entry_legend_entries(
+            entries,
+            line=line,
+            marker=marker,
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            markersize=markersize,
+            alpha=alpha,
+            markeredgecolor=markeredgecolor,
+            markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            styles=styles,
+        )
+        if not add:
+            return handles, labels
+        self._validate_semantic_kwargs("entrylegend", legend_kwargs)
+        return self.axes.legend(handles, labels, **legend_kwargs)
+
     def catlegend(
         self,
         categories: Iterable[Any],
@@ -1144,20 +1429,49 @@ class UltraLegend:
         alpha=None,
         markeredgecolor=None,
         markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
         **legend_kwargs: Any,
     ):
         """
         Build categorical legend entries and optionally draw a legend.
         """
-        line = _not_none(line, rc["legend.cat.line"])
-        markers = _not_none(markers, rc["legend.cat.marker"])
-        linestyle = _not_none(linestyle, rc["legend.cat.linestyle"])
-        linewidth = _not_none(linewidth, rc["legend.cat.linewidth"])
-        markersize = _not_none(markersize, rc["legend.cat.markersize"])
-        alpha = _not_none(alpha, rc["legend.cat.alpha"])
-        markeredgecolor = _not_none(markeredgecolor, rc["legend.cat.markeredgecolor"])
-        markeredgewidth = _not_none(markeredgewidth, rc["legend.cat.markeredgewidth"])
+        styles = dict(handle_kw or {})
+        styles.update(_pop_entry_props(styles))
+        line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
+        colors = _not_none(colors, styles.pop("color", None))
+        markers = _not_none(markers, styles.pop("marker", None), rc["legend.cat.marker"])
+        linestyle = _not_none(
+            linestyle,
+            styles.pop("linestyle", None),
+            rc["legend.cat.linestyle"],
+        )
+        linewidth = _not_none(
+            linewidth,
+            styles.pop("linewidth", None),
+            rc["legend.cat.linewidth"],
+        )
+        markersize = _not_none(
+            markersize,
+            styles.pop("markersize", None),
+            rc["legend.cat.markersize"],
+        )
+        alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.cat.alpha"])
+        markeredgecolor = _not_none(
+            markeredgecolor,
+            styles.pop("markeredgecolor", None),
+            rc["legend.cat.markeredgecolor"],
+        )
+        markeredgewidth = _not_none(
+            markeredgewidth,
+            styles.pop("markeredgewidth", None),
+            rc["legend.cat.markeredgewidth"],
+        )
+        markerfacecolor = _not_none(
+            markerfacecolor,
+            styles.pop("markerfacecolor", None),
+        )
         handles, labels = _cat_legend_entries(
             categories,
             colors=colors,
@@ -1169,6 +1483,8 @@ class UltraLegend:
             alpha=alpha,
             markeredgecolor=markeredgecolor,
             markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            **styles,
         )
         if not add:
             return handles, labels
@@ -1190,21 +1506,37 @@ class UltraLegend:
         alpha=None,
         markeredgecolor=None,
         markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
         **legend_kwargs: Any,
     ):
         """
         Build size legend entries and optionally draw a legend.
         """
-        color = _not_none(color, rc["legend.size.color"])
-        marker = _not_none(marker, rc["legend.size.marker"])
+        styles = dict(handle_kw or {})
+        styles.update(_pop_entry_props(styles))
+        color = _not_none(color, styles.pop("color", None), rc["legend.size.color"])
+        marker = _not_none(marker, styles.pop("marker", None), rc["legend.size.marker"])
         area = _not_none(area, rc["legend.size.area"])
         scale = _not_none(scale, rc["legend.size.scale"])
         minsize = _not_none(minsize, rc["legend.size.minsize"])
         fmt = _not_none(fmt, rc["legend.size.format"])
-        alpha = _not_none(alpha, rc["legend.size.alpha"])
-        markeredgecolor = _not_none(markeredgecolor, rc["legend.size.markeredgecolor"])
-        markeredgewidth = _not_none(markeredgewidth, rc["legend.size.markeredgewidth"])
+        alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.size.alpha"])
+        markeredgecolor = _not_none(
+            markeredgecolor,
+            styles.pop("markeredgecolor", None),
+            rc["legend.size.markeredgecolor"],
+        )
+        markeredgewidth = _not_none(
+            markeredgewidth,
+            styles.pop("markeredgewidth", None),
+            rc["legend.size.markeredgewidth"],
+        )
+        markerfacecolor = _not_none(
+            markerfacecolor,
+            styles.pop("markerfacecolor", None),
+        )
         handles, labels = _size_legend_entries(
             levels,
             color=color,
@@ -1216,6 +1548,8 @@ class UltraLegend:
             alpha=alpha,
             markeredgecolor=markeredgecolor,
             markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            **styles,
         )
         if not add:
             return handles, labels
@@ -1232,20 +1566,36 @@ class UltraLegend:
         cmap=None,
         norm=None,
         fmt=None,
+        facecolor=None,
         edgecolor=None,
         linewidth: Optional[float] = None,
+        linestyle=None,
         alpha=None,
+        handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
         **legend_kwargs: Any,
     ):
         """
         Build numeric-color legend entries and optionally draw a legend.
         """
+        styles = dict(handle_kw or {})
+        styles.update(_pop_num_props(styles))
+        color = styles.pop("color", None)
         n = _not_none(n, rc["legend.num.n"])
         cmap = _not_none(cmap, rc["legend.num.cmap"])
-        edgecolor = _not_none(edgecolor, rc["legend.num.edgecolor"])
-        linewidth = _not_none(linewidth, rc["legend.num.linewidth"])
-        alpha = _not_none(alpha, rc["legend.num.alpha"])
+        facecolor = _not_none(facecolor, styles.pop("facecolor", None), color)
+        edgecolor = _not_none(
+            edgecolor,
+            styles.pop("edgecolor", None),
+            rc["legend.num.edgecolor"],
+        )
+        linewidth = _not_none(
+            linewidth,
+            styles.pop("linewidth", None),
+            rc["legend.num.linewidth"],
+        )
+        linestyle = _not_none(linestyle, styles.pop("linestyle", None))
+        alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.num.alpha"])
         fmt = _not_none(fmt, rc["legend.num.format"])
         handles, labels = _num_legend_entries(
             levels=levels,
@@ -1255,9 +1605,12 @@ class UltraLegend:
             cmap=cmap,
             norm=norm,
             fmt=fmt,
+            facecolor=facecolor,
             edgecolor=edgecolor,
             linewidth=linewidth,
+            linestyle=linestyle,
             alpha=alpha,
+            **styles,
         )
         if not add:
             return handles, labels

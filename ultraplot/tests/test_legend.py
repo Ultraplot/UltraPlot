@@ -327,8 +327,184 @@ def test_legend_entry_with_axes_legend():
     uplt.close(fig)
 
 
+def test_entrylegend_supports_line_and_scatter_aliases():
+    fig, ax = uplt.subplots()
+    leg = ax.entrylegend(
+        [
+            {"label": "Trend", "line": True, "c": "red7", "lw": 2.5, "ls": "--"},
+            {
+                "label": "Samples",
+                "line": False,
+                "m": "s",
+                "ms": 9,
+                "fc": "blue7",
+                "ec": "black",
+                "mew": 1.5,
+                "alpha": 0.7,
+            },
+        ],
+        loc="best",
+    )
+    handles = leg.legend_handles
+    assert len(handles) == 2
+    assert np.allclose(
+        mcolors.to_rgba(handles[0].get_color()),
+        mcolors.to_rgba("red7"),
+    )
+    assert handles[0].get_linewidth() == pytest.approx(2.5)
+    assert handles[0].get_linestyle() in ("--", "dashed")
+    assert handles[1].get_marker() == "s"
+    assert handles[1].get_markersize() == pytest.approx(9.0)
+    assert np.allclose(
+        mcolors.to_rgba(handles[1].get_markerfacecolor()),
+        mcolors.to_rgba("blue7"),
+    )
+    assert np.allclose(
+        mcolors.to_rgba(handles[1].get_markeredgecolor()),
+        mcolors.to_rgba("black"),
+    )
+    assert handles[1].get_markeredgewidth() == pytest.approx(1.5)
+    assert handles[1].get_alpha() == pytest.approx(0.7)
+    uplt.close(fig)
+
+
+def test_entrylegend_handle_kw_with_per_entry_mappings():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.entrylegend(
+        ["A", "B"],
+        add=False,
+        handle_kw={
+            "line": False,
+            "m": {"A": "o", "B": "^"},
+            "ms": [6.0, 10.0],
+            "fc": {"A": "green7", "B": "blue7"},
+            "ec": "black",
+            "linewidths": [0.8, 1.4],
+        },
+    )
+    assert labels == ["A", "B"]
+    assert handles[0].get_marker() == "o"
+    assert handles[1].get_marker() == "^"
+    assert handles[0].get_markersize() == pytest.approx(6.0)
+    assert handles[1].get_markersize() == pytest.approx(10.0)
+    assert np.allclose(
+        mcolors.to_rgba(handles[0].get_markerfacecolor()),
+        mcolors.to_rgba("green7"),
+    )
+    assert np.allclose(
+        mcolors.to_rgba(handles[1].get_markerfacecolor()),
+        mcolors.to_rgba("blue7"),
+    )
+    assert handles[0].get_markeredgewidth() == pytest.approx(0.8)
+    assert handles[1].get_markeredgewidth() == pytest.approx(1.4)
+    uplt.close(fig)
+
+
+def test_catlegend_handle_kw_accepts_line_scatter_aliases():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.catlegend(
+        ["A", "B"],
+        add=False,
+        handle_kw={
+            "line": True,
+            "m": {"A": "o", "B": "s"},
+            "ms": {"A": 5.0, "B": 8.0},
+            "ls": {"A": "-", "B": "--"},
+            "lw": [1.25, 2.5],
+            "fc": {"A": "red7", "B": "blue7"},
+            "ec": "black",
+        },
+    )
+    assert labels == ["A", "B"]
+    assert handles[0].get_marker() == "o"
+    assert handles[1].get_marker() == "s"
+    assert handles[0].get_markersize() == pytest.approx(5.0)
+    assert handles[1].get_markersize() == pytest.approx(8.0)
+    assert handles[0].get_linewidth() == pytest.approx(1.25)
+    assert handles[1].get_linewidth() == pytest.approx(2.5)
+    assert handles[1].get_linestyle() in ("--", "dashed")
+    assert np.allclose(
+        mcolors.to_rgba(handles[0].get_markerfacecolor()),
+        mcolors.to_rgba("red7"),
+    )
+    assert np.allclose(
+        mcolors.to_rgba(handles[1].get_markerfacecolor()),
+        mcolors.to_rgba("blue7"),
+    )
+    uplt.close(fig)
+
+
+def test_sizelegend_handle_kw_accepts_line_scatter_aliases():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.sizelegend(
+        [1.0, 4.0],
+        add=False,
+        handle_kw={
+            "m": ["o", "s"],
+            "fc": ["red7", "blue7"],
+            "ec": "black",
+            "linewidths": [0.6, 1.4],
+            "alpha": [0.55, 0.85],
+        },
+    )
+    assert labels == ["1", "4"]
+    assert handles[0].get_marker() == "o"
+    assert handles[1].get_marker() == "s"
+    assert np.allclose(
+        mcolors.to_rgba(handles[0].get_markerfacecolor()),
+        mcolors.to_rgba("red7"),
+    )
+    assert np.allclose(
+        mcolors.to_rgba(handles[1].get_markerfacecolor()),
+        mcolors.to_rgba("blue7"),
+    )
+    assert np.allclose(
+        mcolors.to_rgba(handles[0].get_markeredgecolor()),
+        mcolors.to_rgba("black"),
+    )
+    assert handles[0].get_markeredgewidth() == pytest.approx(0.6)
+    assert handles[1].get_markeredgewidth() == pytest.approx(1.4)
+    assert handles[0].get_alpha() == pytest.approx(0.55)
+    assert handles[1].get_alpha() == pytest.approx(0.85)
+    uplt.close(fig)
+
+
+def test_numlegend_handle_kw_accepts_patch_aliases():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.numlegend(
+        levels=[0.0, 1.0],
+        add=False,
+        handle_kw={
+            "facecolors": ["red7", "blue7"],
+            "edgecolors": "black",
+            "linewidths": [0.5, 1.25],
+            "linestyles": ["-", "--"],
+            "alpha": [0.6, 0.9],
+        },
+    )
+    assert labels == ["0", "1"]
+    assert np.allclose(
+        mcolors.to_rgba(handles[0].get_facecolor()),
+        mcolors.to_rgba("red7", alpha=0.6),
+    )
+    assert np.allclose(
+        mcolors.to_rgba(handles[1].get_facecolor()),
+        mcolors.to_rgba("blue7", alpha=0.9),
+    )
+    assert np.allclose(
+        mcolors.to_rgba(handles[0].get_edgecolor()),
+        mcolors.to_rgba("black", alpha=0.6),
+    )
+    assert handles[0].get_linewidth() == pytest.approx(0.5)
+    assert handles[1].get_linewidth() == pytest.approx(1.25)
+    assert handles[1].get_linestyle() in ("--", "dashed")
+    assert handles[0].get_alpha() == pytest.approx(0.6)
+    assert handles[1].get_alpha() == pytest.approx(0.9)
+    uplt.close(fig)
+
+
 def test_semantic_helpers_not_public_on_module():
-    for name in ("catlegend", "sizelegend", "numlegend", "geolegend"):
+    for name in ("entrylegend", "catlegend", "sizelegend", "numlegend", "geolegend"):
         assert not hasattr(uplt, name)
 
 
@@ -389,6 +565,7 @@ def test_semantic_legend_loc_shorthand():
 @pytest.mark.parametrize(
     "builder, args, kwargs",
     (
+        ("entrylegend", ([{"label": "A"}],), {}),
         ("catlegend", (["A", "B"],), {}),
         ("sizelegend", ([10, 50],), {}),
         ("numlegend", tuple(), {"vmin": 0, "vmax": 1}),
@@ -406,6 +583,7 @@ def test_semantic_legend_rejects_label_kwarg(builder, args, kwargs):
 @pytest.mark.parametrize(
     "builder, args, kwargs",
     (
+        ("entrylegend", (["A", "B"],), {}),
         ("catlegend", (["A", "B"],), {}),
         ("sizelegend", ([10, 50],), {}),
         ("numlegend", tuple(), {"vmin": 0, "vmax": 1}),
