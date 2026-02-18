@@ -1441,7 +1441,9 @@ class UltraLegend:
         styles.update(_pop_entry_props(styles))
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
         colors = _not_none(colors, styles.pop("color", None))
-        markers = _not_none(markers, styles.pop("marker", None), rc["legend.cat.marker"])
+        markers = _not_none(
+            markers, styles.pop("marker", None), rc["legend.cat.marker"]
+        )
         linestyle = _not_none(
             linestyle,
             styles.pop("linestyle", None),
