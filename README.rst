@@ -140,8 +140,8 @@ If you use UltraPlot in your research, please cite it using the following BibTeX
     :target: https://pepy.tech/project/ultraplot
     :alt: Downloads
 
-.. |build-status| image:: https://github.com/ultraplot/ultraplot/actions/workflows/build-ultraplot.yml/badge.svg
-    :target: https://github.com/ultraplot/ultraplot/actions/workflows/build-ultraplot.yml
+.. |build-status| image:: https://github.com/ultraplot/ultraplot/actions/workflows/test-map.yml/badge.svg
+    :target: https://github.com/ultraplot/ultraplot/actions/workflows/test-map.yml
     :alt: Build Status
 
 .. |coverage| image:: https://codecov.io/gh/Ultraplot/ultraplot/graph/badge.svg?token=C6ZB7Q9II4&style=flat&color=53C334
