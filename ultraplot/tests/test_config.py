@@ -274,3 +274,23 @@ def test_matplotlib_import_before_ultraplot_allows_custom_fontsize_tokens():
         "    uplt.rc[key] = 'med-large'\n"
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_ultraplot_subplots_does_not_force_global_image_interpolation():
+    """
+    Regression test for issue #588: creating UltraPlot figures should not force
+    global raster interpolation defaults used by third-party OffsetImage artists.
+    """
+    result = _run_in_subprocess(
+        "import matplotlib as mpl\n"
+        "from matplotlib.offsetbox import OffsetImage\n"
+        "mpl.rcParams['image.interpolation'] = 'auto'\n"
+        "import ultraplot as uplt\n"
+        "fig, ax = uplt.subplots()\n"
+        "fig.canvas.draw()\n"
+        "uplt.close(fig)\n"
+        "assert mpl.rcParams['image.interpolation'] == 'auto'\n"
+        "img = OffsetImage([[[0, 0, 0, 0]]]).get_children()[0]\n"
+        "assert img.get_interpolation() == 'auto'\n"
+    )
+    assert result.returncode == 0, result.stderr

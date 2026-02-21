@@ -7138,6 +7138,7 @@ class PlotAxes(base.Axes):
         %(plot.pcolorfast)s
         """
         x, y, z, kw = self._parse_2d_args(x, y, z, edges=True, **kwargs)
+        user_interpolation = "interpolation" in kw
         kw.update(_pop_props(kw, "collection"))
         center_levels = kw.pop("center_levels", None)
         kw = self._parse_cmap(
@@ -7148,6 +7149,8 @@ class PlotAxes(base.Axes):
         guide_kw = _pop_params(kw, self._update_guide)
         with self._keep_grid_bools():
             m = self._call_native("pcolorfast", x, y, z, **kw)
+        if isinstance(m, mimage.AxesImage) and not user_interpolation:
+            m.set_interpolation("none")
         if not isinstance(m, mimage.AxesImage):  # NOTE: PcolorImage is derivative
             self._fix_patch_edges(m, **edgefix_kw, **kw)
             self._add_auto_labels(m, **labels_kw)
@@ -7405,6 +7408,7 @@ class PlotAxes(base.Axes):
         %(plot.imshow)s
         """
         kw = kwargs.copy()
+        kw.setdefault("interpolation", "none")
         center_levels = kw.pop("center_levels", None)
         kw = self._parse_cmap(
             z, center_levels=center_levels, default_discrete=False, **kw
@@ -7434,6 +7438,7 @@ class PlotAxes(base.Axes):
         %(plot.spy)s
         """
         kw = kwargs.copy()
+        user_interpolation = "interpolation" in kw
         kw.update(_pop_props(kw, "line"))  # takes valid Line2D properties
         default_cmap = pcolors.DiscreteColormap(["w", "k"], "_no_name")
         center_levels = kw.pop("center_levels", None)
@@ -7442,6 +7447,8 @@ class PlotAxes(base.Axes):
         )
         guide_kw = _pop_params(kw, self._update_guide)
         m = self._call_native("spy", z, **kw)
+        if isinstance(m, mimage.AxesImage) and not user_interpolation:
+            m.set_interpolation("none")
         self._update_guide(m, queue_colorbar=False, **guide_kw)
         return m
 

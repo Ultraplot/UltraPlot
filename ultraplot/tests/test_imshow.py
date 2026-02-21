@@ -103,3 +103,13 @@ def test_colorbar(rng):
     m = axs[2].imshow(data, cmap="oslo", colorbar="b")
     axs[2].format(title="Imshow plot\ndiscrete=False (default)", yformatter="auto")
     return fig
+
+
+def test_imshow_defaults_to_none_when_rc_interpolation_is_auto():
+    with plt.rc.context({"image.interpolation": "auto"}):
+        fig, ax = plt.subplots()
+        m_default = ax.imshow(np.arange(4).reshape(2, 2))
+        m_override = ax.imshow(np.arange(4).reshape(2, 2), interpolation="nearest")
+        assert m_default.get_interpolation() == "none"
+        assert m_override.get_interpolation() == "nearest"
+        plt.close(fig)
