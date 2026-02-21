@@ -5,20 +5,21 @@
 **UltraPlot** is a succinct wrapper around `matplotlib <https://matplotlib.org/>`__
 for creating **beautiful, publication-quality graphics** with ease.
 
-🚀 **Key Features** | Create More, Code Less
-###################
-✔ **Simplified Subplot Management** – Create multi-panel plots effortlessly.
+Key Features
+############
+Build polished figures quickly with pragmatic defaults.
+**Simplified Subplot Management** – Create multi-panel plots effortlessly.
 
-🎨 **Smart Aesthetics** – Optimized colormaps, fonts, and styles out of the box.
+**Smart Aesthetics** – Optimized colormaps, fonts, and styles out of the box.
 
-📊 **Versatile Plot Types** – Cartesian plots, insets, colormaps, and more.
+**Versatile Plot Types** – Cartesian plots, insets, colormaps, and more.
 
-📌 **Get Started** → :doc:`Installation guide <install>` | :doc:`Why UltraPlot? <why>` | :doc:`Usage <usage>` | :doc:`Gallery <gallery/index>`
+**Get Started** → :doc:`Installation guide <install>` | :doc:`Why UltraPlot? <why>` | :doc:`Usage <usage>` | :doc:`Gallery <gallery/index>`
 
 --------------------------------------
 
-**📖 User Guide**
-#################
+User Guide
+##########
 A preview of what UltraPlot can do. For more see the sidebar!
 
 .. grid:: 1 2 3 3
@@ -105,9 +106,8 @@ A preview of what UltraPlot can do. For more see the sidebar!
 
       Use prebuilt colormaps and define your own color cycles.
 
-
-**📚 Reference & More**
-#######################
+Reference & More
+################
 For more details, check the full :doc:`User guide <usage>` and :doc:`API Reference <api>`.
 
 * :ref:`genindex`

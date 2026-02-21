@@ -79,7 +79,7 @@ docs = [
     "sphinx-copybutton",
     "sphinx-design",
     "sphinx-gallery",
-    "sphinx-rtd-light-dark @ git+https://github.com/ultraplot/UltraTheme.git",
+    "shibuya",
     "sphinx-sitemap",
     "typing-extensions"
 ]
