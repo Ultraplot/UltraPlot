@@ -78,6 +78,21 @@ def test_get_renderer_basic():
     assert hasattr(renderer, "draw_path")
 
 
+def test_draw_without_rendering_preserves_dpi():
+    """
+    draw_without_rendering should not mutate figure dpi/bbox.
+    """
+    fig, ax = uplt.subplots(figsize=(4, 3), dpi=101)
+    dpi_before = fig.dpi
+    bbox_before = np.array([fig.bbox.width, fig.bbox.height])
+
+    fig.draw_without_rendering()
+
+    assert np.isclose(fig.dpi, dpi_before)
+    assert np.allclose([fig.bbox.width, fig.bbox.height], bbox_before)
+    uplt.close(fig)
+
+
 def test_figure_sharing_toggle():
     """
     Check if axis sharing and unsharing works

@@ -898,6 +898,18 @@ class Figure(mfigure.Figure):
         self._apply_share_label_groups()
         super().draw(renderer)
 
+    @override
+    def draw_without_rendering(self):
+        """
+        Draw without output while preserving figure dpi state.
+        """
+        dpi = self.dpi
+        try:
+            return super().draw_without_rendering()
+        finally:
+            if self.dpi != dpi:
+                mfigure.Figure.set_dpi(self, dpi)
+
     def _is_auto_share_mode(self, which: str) -> bool:
         """Return whether a given axis uses auto-share mode."""
         if which not in ("x", "y"):
