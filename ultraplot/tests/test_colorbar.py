@@ -97,6 +97,39 @@ def test_inset_colorbar_frame_wraps_label(rng, orientation, labelloc):
     assert frame_bbox.y1 >= label_bbox.y1 - tol
 
 
+def test_inset_colorbar_frame_wraps_label_with_refaspect(rng):
+    """
+    Inset colorbar frame should include the label when figure sizing is refaspect-driven.
+    """
+    from ultraplot.axes.base import _get_axis_for
+
+    fig, ax = uplt.subplots(refaspect=2)
+    data = rng.random((20, 30))
+    m = ax.pcolormesh(data, vmin=0, vmax=1)
+    cb = ax.colorbar(m, loc="ul", label="title", frameon=True)
+    fig.canvas.draw()
+
+    frame = cb.ax._inset_colorbar_frame
+    assert frame is not None
+
+    renderer = fig.canvas.get_renderer()
+    frame_bbox = frame.get_window_extent(renderer)
+    layout = cb.ax._inset_colorbar_layout
+    labelloc = cb.ax._inset_colorbar_labelloc
+    labelloc_layout = (
+        labelloc if isinstance(labelloc, str) else layout["ticklocation"]
+    )
+    label_axis = _get_axis_for(
+        labelloc_layout, layout["loc"], orientation=layout["orientation"], ax=cb
+    )
+    label_bbox = label_axis.label.get_window_extent(renderer)
+    tol = 1.0
+    assert frame_bbox.x0 <= label_bbox.x0 + tol
+    assert frame_bbox.x1 >= label_bbox.x1 - tol
+    assert frame_bbox.y0 <= label_bbox.y0 + tol
+    assert frame_bbox.y1 >= label_bbox.y1 - tol
+
+
 from itertools import product
 
 

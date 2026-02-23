@@ -347,6 +347,7 @@ class UltraColorbar:
             cax._inset_colorbar_obj = obj
             cax._inset_colorbar_labelloc = labelloc
             cax._inset_colorbar_ticklen = ticklen
+            cax._inset_colorbar_needs_reflow = True
             _register_inset_colorbar_reflow(ax.figure)
         kw_outline = {"edgecolor": color, "linewidth": linewidth}
         if obj.outline is not None:
@@ -958,6 +959,7 @@ def _reflow_inset_colorbar_frame(
     *,
     labelloc: Optional[str],
     ticklen: float,
+    renderer=None,
 ):
     cax = colorbar.ax
     layout = getattr(cax, "_inset_colorbar_layout", None)
@@ -995,7 +997,7 @@ def _reflow_inset_colorbar_frame(
         cb_width = width
         cb_height = length
 
-    renderer = cax.figure._get_renderer()
+    renderer = renderer or cax.figure._get_renderer()
     if hasattr(colorbar, "update_ticks"):
         colorbar.update_ticks(manual_only=True)
     bboxes = []

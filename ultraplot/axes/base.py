@@ -3149,7 +3149,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self._colorbar_fill.update_ticks(manual_only=True)  # only if needed
         if self._inset_parent is not None and self._inset_zoom:
             self.indicate_inset_zoom()
-        super().draw(renderer, *args, **kwargs)
         if getattr(self, "_inset_colorbar_obj", None) and getattr(
             self, "_inset_colorbar_needs_reflow", False
         ):
@@ -3160,8 +3159,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 ticklen=getattr(
                     self, "_inset_colorbar_ticklen", units(rc["tick.len"], "pt")
                 ),
+                renderer=renderer,
             )
-            self.figure.canvas.draw_idle()
+        super().draw(renderer, *args, **kwargs)
 
     def get_tightbbox(self, renderer, *args, **kwargs):
         # Perform extra post-processing steps
@@ -4586,6 +4586,7 @@ def _reflow_inset_colorbar_frame(
     *,
     labelloc: str,
     ticklen: float,
+    renderer=None,
 ):
     cax = colorbar.ax
     layout = getattr(cax, "_inset_colorbar_layout", None)
@@ -4623,7 +4624,7 @@ def _reflow_inset_colorbar_frame(
         cb_width = width
         cb_height = length
 
-    renderer = cax.figure._get_renderer()
+    renderer = renderer or cax.figure._get_renderer()
     if hasattr(colorbar, "update_ticks"):
         colorbar.update_ticks(manual_only=True)
     bboxes = []
