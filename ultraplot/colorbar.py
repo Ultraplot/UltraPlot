@@ -347,8 +347,9 @@ class UltraColorbar:
             cax._inset_colorbar_obj = obj
             cax._inset_colorbar_labelloc = labelloc
             cax._inset_colorbar_ticklen = ticklen
-            cax._inset_colorbar_needs_reflow = True
-            _register_inset_colorbar_reflow(ax.figure)
+            has_frame = getattr(cax, "_inset_colorbar_frame", None) is not None
+            if has_frame:
+                _register_inset_colorbar_reflow(ax.figure)
         kw_outline = {"edgecolor": color, "linewidth": linewidth}
         if obj.outline is not None:
             obj.outline.update(kw_outline)

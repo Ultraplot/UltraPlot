@@ -3149,13 +3149,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self._colorbar_fill.update_ticks(manual_only=True)  # only if needed
         if self._inset_parent is not None and self._inset_zoom:
             self.indicate_inset_zoom()
-        needs_inset_reflow = bool(
-            getattr(self, "_inset_colorbar_obj", None)
-            and getattr(self, "_inset_colorbar_needs_reflow", False)
+        needs_inset_reflow = bool(getattr(self, "_inset_colorbar_needs_reflow", False))
+        has_inset_frame = bool(
+            getattr(self, "_inset_colorbar_frame", None) is not None
+            and getattr(self, "_inset_colorbar_obj", None)
         )
         super().draw(renderer, *args, **kwargs)
-        if needs_inset_reflow:
-            self._inset_colorbar_needs_reflow = False
+        if has_inset_frame:
+            if not needs_inset_reflow:
+                needs_inset_reflow = _inset_colorbar_frame_needs_reflow(
+                    self._inset_colorbar_obj,
+                    labelloc=getattr(self, "_inset_colorbar_labelloc", None),
+                    renderer=renderer,
+                )
+        if has_inset_frame and needs_inset_reflow:
             _reflow_inset_colorbar_frame(
                 self._inset_colorbar_obj,
                 labelloc=getattr(self, "_inset_colorbar_labelloc", None),
@@ -3164,6 +3171,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 ),
                 renderer=renderer,
             )
+            self._inset_colorbar_needs_reflow = False
             # Re-draw synchronously so the current render pass sees reflowed bounds.
             super().draw(renderer, *args, **kwargs)
 
@@ -4583,6 +4591,65 @@ def _apply_inset_colorbar_layout(
     }
     if frame is not None and hasattr(frame, "set_bounds"):
         frame.set_bounds(*bounds_frame)
+
+
+def _inset_colorbar_frame_needs_reflow(colorbar, *, labelloc: str, renderer) -> bool:
+    cax = colorbar.ax
+    layout = getattr(cax, "_inset_colorbar_layout", None)
+    frame = getattr(cax, "_inset_colorbar_frame", None)
+    if not layout or frame is None:
+        return False
+
+    orientation = layout["orientation"]
+    loc = layout["loc"]
+    ticklocation = layout["ticklocation"]
+    labelloc_layout = labelloc if isinstance(labelloc, str) else ticklocation
+    bboxes = []
+
+    longaxis = _get_colorbar_long_axis(colorbar)
+    try:
+        bbox = longaxis.get_tightbbox(renderer)
+    except Exception:
+        bbox = None
+    if bbox is not None:
+        bboxes.append(bbox)
+
+    label_axis = _get_axis_for(
+        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    )
+    if label_axis.label.get_text():
+        try:
+            bboxes.append(label_axis.label.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+
+    for artist in (
+        getattr(colorbar, "outline", None),
+        getattr(colorbar, "solids", None),
+        getattr(colorbar, "dividers", None),
+    ):
+        if artist is None:
+            continue
+        try:
+            bboxes.append(artist.get_window_extent(renderer=renderer))
+        except Exception:
+            pass
+
+    if not bboxes:
+        return False
+
+    x0 = min(bbox.x0 for bbox in bboxes)
+    y0 = min(bbox.y0 for bbox in bboxes)
+    x1 = max(bbox.x1 for bbox in bboxes)
+    y1 = max(bbox.y1 for bbox in bboxes)
+    frame_bbox = frame.get_window_extent(renderer=renderer)
+    tol = 1.0
+    return (
+        frame_bbox.x0 > x0 + tol
+        or frame_bbox.y0 > y0 + tol
+        or frame_bbox.x1 < x1 - tol
+        or frame_bbox.y1 < y1 - tol
+    )
 
 
 def _reflow_inset_colorbar_frame(
