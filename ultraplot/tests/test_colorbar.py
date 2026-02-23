@@ -116,9 +116,7 @@ def test_inset_colorbar_frame_wraps_label_with_refaspect(rng):
     frame_bbox = frame.get_window_extent(renderer)
     layout = cb.ax._inset_colorbar_layout
     labelloc = cb.ax._inset_colorbar_labelloc
-    labelloc_layout = (
-        labelloc if isinstance(labelloc, str) else layout["ticklocation"]
-    )
+    labelloc_layout = labelloc if isinstance(labelloc, str) else layout["ticklocation"]
     label_axis = _get_axis_for(
         labelloc_layout, layout["loc"], orientation=layout["orientation"], ax=cb
     )
