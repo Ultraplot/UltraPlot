@@ -931,10 +931,10 @@ def test_rasterize_feature():
 
 def test_check_tricontourf():
     """
-    Ensure that tricontour functions are getting
-    the transform for GeoAxes.
+    Ensure transform defaults are applied only when appropriate for tri-plots.
     """
     import cartopy.crs as ccrs
+    from matplotlib.tri import Triangulation
 
     lon0 = 90
     lon = np.linspace(-180, 180, 10)
@@ -947,6 +947,7 @@ def test_check_tricontourf():
     data[mask_box] = 1.5
 
     lon, lat, data = map(np.ravel, (lon2d, lat2d, data))
+    triangulation = Triangulation(lon, lat)
 
     fig, ax = uplt.subplots(proj="cyl", proj_kw={"lon0": lon0})
     original_func = ax[0]._call_native
@@ -956,10 +957,18 @@ def test_check_tricontourf():
         autospec=True,
         side_effect=original_func,
     ) as mocked:
-        for func in "tricontour tricontourf".split():
-            getattr(ax[0], func)(lon, lat, data)
+        ax[0].tricontourf(lon, lat, data)
         assert "transform" in mocked.call_args.kwargs
         assert isinstance(mocked.call_args.kwargs["transform"], ccrs.PlateCarree)
+
+    with mock.patch.object(
+        ax[0],
+        "_call_native",
+        autospec=True,
+        side_effect=original_func,
+    ) as mocked:
+        ax[0].tricontourf(triangulation, data)
+        assert "transform" not in mocked.call_args.kwargs
     uplt.close(fig)
 
 
