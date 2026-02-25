@@ -16,6 +16,10 @@ try:
     from cartopy.crs import PlateCarree
 except ModuleNotFoundError:
     PlateCarree = object
+try:
+    from matplotlib.tri import Triangulation
+except ModuleNotFoundError:
+    Triangulation = object
 
 
 # Constants
@@ -300,8 +304,16 @@ def _parse_triangulation_with_preprocess(*keys, keywords=None, allow_extra=True)
         # Manually set the name to the original function's name
         triangulation_wrapper.__name__ = func.__name__
 
+        def _tri_cartopy_default(args, kwargs):
+            # If the first parsed argument is already a Triangulation then it may
+            # be in projected coordinates, so skip implicit PlateCarree defaults.
+            return not (args and isinstance(args[0], Triangulation))
+
         final_wrapper = _preprocess_or_redirect(
-            *keys, keywords=keywords, allow_extra=allow_extra
+            *keys,
+            keywords=keywords,
+            allow_extra=allow_extra,
+            cartopy_default_transform=_tri_cartopy_default,
         )(triangulation_wrapper)
 
         # Finally make sure all other metadata is correct
@@ -311,7 +323,9 @@ def _parse_triangulation_with_preprocess(*keys, keywords=None, allow_extra=True)
     return _decorator
 
 
-def _preprocess_or_redirect(*keys, keywords=None, allow_extra=True):
+def _preprocess_or_redirect(
+    *keys, keywords=None, allow_extra=True, cartopy_default_transform=True
+):
     """
     Redirect internal plotting calls to native matplotlib methods. Also convert
     keyword args to positional and pass arguments through 'data' dictionary.
@@ -335,18 +349,6 @@ def _preprocess_or_redirect(*keys, keywords=None, allow_extra=True):
                 func_native = getattr(super(PlotAxes, self), name)
                 return func_native(*args, **kwargs)
             else:
-                # Impose default coordinate system
-                from ..constructor import Proj
-
-                if self._name == "basemap" and name in BASEMAP_FUNCS:
-                    if kwargs.get("latlon", None) is None:
-                        kwargs["latlon"] = True
-                if self._name == "cartopy" and name in CARTOPY_FUNCS:
-                    if kwargs.get("transform", None) is None:
-                        kwargs["transform"] = PlateCarree()
-                    else:
-                        kwargs["transform"] = Proj(kwargs["transform"])
-
                 # Process data args
                 # NOTE: Raises error if there are more args than keys
                 args, kwargs = _kwargs_to_args(
@@ -357,6 +359,25 @@ def _preprocess_or_redirect(*keys, keywords=None, allow_extra=True):
                     args = _from_data(data, *args)
                     for key in set(keywords) & set(kwargs):
                         kwargs[key] = _from_data(data, kwargs[key])
+
+                # Impose default coordinate system using parsed inputs. This keeps
+                # behavior consistent across positional/keyword/data pathways.
+                from ..constructor import Proj
+
+                if self._name == "basemap" and name in BASEMAP_FUNCS:
+                    if kwargs.get("latlon", None) is None:
+                        kwargs["latlon"] = True
+                if self._name == "cartopy" and name in CARTOPY_FUNCS:
+                    if kwargs.get("transform", None) is None:
+                        use_default_transform = cartopy_default_transform
+                        if callable(use_default_transform):
+                            use_default_transform = bool(
+                                use_default_transform(args, kwargs)
+                            )
+                        if use_default_transform:
+                            kwargs["transform"] = PlateCarree()
+                    else:
+                        kwargs["transform"] = Proj(kwargs["transform"])
 
                 # Auto-setup matplotlib with the input unit registry
                 _load_objects()
