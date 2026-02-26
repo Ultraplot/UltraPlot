@@ -318,6 +318,19 @@ def test_contour_levels_default_stretch():
     assert m.norm(5) == pytest.approx(1.0)
 
 
+def test_contour_levels_default_use_discrete_norm():
+    """
+    Line contours should retain DiscreteNorm behavior unless limits are explicit.
+    """
+    data = np.linspace(0, 10, 25).reshape((5, 5))
+    levels = [2, 4, 6]
+    _, ax = uplt.subplots()
+    m = ax.contour(data, levels=levels, cmap="viridis")
+    assert hasattr(m.norm, "_norm")
+    assert m.norm(3) == pytest.approx(0.0)
+    assert m.norm(5) == pytest.approx(1.0)
+
+
 def test_contourf_levels_keep_level_range_with_explicit_vmin_vmax():
     """
     Filled contour bins keep level-based discrete scaling.

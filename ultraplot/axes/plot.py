@@ -4629,6 +4629,7 @@ class PlotAxes(base.Axes):
             return array
 
         # Parse input arguments and resolve incompatibilities
+        explicit_limits = vmin is not None or vmax is not None
         levels = _not_none(N=N, levels=levels, norm_kw_levs=norm_kw.pop("levels", None))
         if positive and negative:
             warnings._warn_ultraplot(
@@ -4724,6 +4725,9 @@ class PlotAxes(base.Axes):
                     norm = _not_none(norm, "segmented")
             if norm in ("segments", "segmented"):
                 norm_kw["levels"] = levels
+            # For line contours, only bypass DiscreteNorm when users explicitly
+            # provide normalization limits (issue #329 behavior).
+            kwargs["preserve_line_limits"] = bool(min_levels == 1 and explicit_limits)
 
         return levels, vmin, vmax, norm, norm_kw, kwargs
 
@@ -4738,6 +4742,7 @@ class PlotAxes(base.Axes):
         discrete_ticks=None,
         discrete_labels=None,
         center_levels=None,
+        preserve_line_limits=False,
         **kwargs,
     ):
         """
@@ -4829,11 +4834,12 @@ class PlotAxes(base.Axes):
                     unique = "neither"
 
         # Generate DiscreteNorm for filled-contour style bins. For line contours
-        # (`min_levels == 1`) levels represent contour values, so keep the
-        # continuous normalizer to preserve one-to-one value->color mapping.
+        # with explicit limits or qualitative color lists, keep the continuous
+        # normalizer to preserve one-to-one value->color mapping.
         center_levels = _not_none(center_levels, rc["colorbar.center_levels"])
+        preserve_line_mapping = preserve_line_limits or (min_levels == 1 and qualitative)
         if (
-            min_levels != 1
+            not preserve_line_mapping
             and not isinstance(norm, mcolors.BoundaryNorm)
             and len(levels) > 1
         ):
