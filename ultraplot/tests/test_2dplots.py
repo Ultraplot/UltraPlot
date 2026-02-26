@@ -294,16 +294,14 @@ def test_levels_with_vmin_vmax(rng):
 
 def test_contour_levels_respect_explicit_vmin_vmax():
     """
-    Explicit `vmin` and `vmax` should be preserved with manual contour levels.
+    Explicit `vmin` and `vmax` should be preserved for line contours.
     """
     data = np.linspace(0, 10, 25).reshape((5, 5))
     levels = [2, 4, 6]
     _, ax = uplt.subplots()
-    m = ax.contourf(data, levels=levels, cmap="viridis", vmin=0, vmax=10)
+    m = ax.contour(data, levels=levels, cmap="viridis", vmin=0, vmax=10)
     assert m.norm.vmin == pytest.approx(0)
     assert m.norm.vmax == pytest.approx(10)
-    assert m.norm._norm.vmin == pytest.approx(0)
-    assert m.norm._norm.vmax == pytest.approx(10)
     assert m.norm(3) == pytest.approx(0.3)
     assert m.norm(5) == pytest.approx(0.5)
 
@@ -316,6 +314,22 @@ def test_contour_levels_default_stretch():
     levels = [2, 4, 6]
     _, ax = uplt.subplots()
     m = ax.contourf(data, levels=levels, cmap="viridis")
+    assert m.norm(3) == pytest.approx(0.0)
+    assert m.norm(5) == pytest.approx(1.0)
+
+
+def test_contourf_levels_keep_level_range_with_explicit_vmin_vmax():
+    """
+    Filled contour bins keep level-based discrete scaling.
+    """
+    data = np.linspace(0, 10, 25).reshape((5, 5))
+    levels = [2, 4, 6]
+    _, ax = uplt.subplots()
+    m = ax.contourf(data, levels=levels, cmap="viridis", vmin=0, vmax=10)
+    assert m.norm.vmin == pytest.approx(2)
+    assert m.norm.vmax == pytest.approx(6)
+    assert m.norm._norm.vmin == pytest.approx(2)
+    assert m.norm._norm.vmax == pytest.approx(6)
     assert m.norm(3) == pytest.approx(0.0)
     assert m.norm(5) == pytest.approx(1.0)
 

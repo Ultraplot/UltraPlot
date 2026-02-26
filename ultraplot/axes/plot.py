@@ -4699,22 +4699,24 @@ class PlotAxes(base.Axes):
             levels = values = None
 
         # Determine default colorbar locator and norm and apply filters
-        # NOTE: Explicit vmin/vmax should override defaults inferred from levels.
+        # NOTE: Preserve explicit vmin/vmax only for line contours, where levels
+        # represent contour values rather than filled bins.
         # NOTE: The level restriction should have no effect if levels were generated
         # automatically. However want to apply these to manual-input levels as well.
         if levels is not None:
+            preserve_limits = min_levels == 1
             levels = _restrict_levels(levels)
             if len(levels) == 0:  # skip
                 pass
             elif len(levels) == 1:  # use central colormap color
-                if vmin is None:
+                if not preserve_limits or vmin is None:
                     vmin = levels[0] - 1
-                if vmax is None:
+                if not preserve_limits or vmax is None:
                     vmax = levels[0] + 1
             else:  # use minimum and maximum
-                if vmin is None:
+                if not preserve_limits or vmin is None:
                     vmin = np.min(levels)
-                if vmax is None:
+                if not preserve_limits or vmax is None:
                     vmax = np.max(levels)
                 if not np.allclose(levels[1] - levels[0], np.diff(levels)):
                     norm = _not_none(norm, "segmented")
