@@ -4141,6 +4141,7 @@ class PlotAxes(base.Axes):
         # NOTE: Unlike xarray, but like matplotlib, vmin and vmax only approximately
         # determine level range. Levels are selected with Locator.tick_values().
         levels = None  # unused
+        preserve_line_limits = False
         isdiverging = False
         if not discrete and not skip_autolev:
             vmin, vmax, kwargs = self._parse_level_lim(
@@ -4150,7 +4151,15 @@ class PlotAxes(base.Axes):
                 if abs(np.sign(vmax) - np.sign(vmin)) == 2:
                     isdiverging = True
         if discrete:
-            levels, vmin, vmax, norm, norm_kw, kwargs = self._parse_level_vals(
+            (
+                levels,
+                vmin,
+                vmax,
+                norm,
+                norm_kw,
+                preserve_line_limits,
+                kwargs,
+            ) = self._parse_level_vals(
                 *args,
                 vmin=vmin,
                 vmax=vmax,
@@ -4199,6 +4208,7 @@ class PlotAxes(base.Axes):
                 center_levels=center_levels,
                 extend=extend,
                 min_levels=min_levels,
+                preserve_line_limits=preserve_line_limits,
                 **kwargs,
             )
         params = _pop_params(kwargs, *self._level_parsers, ignore_internal=True)
@@ -4462,7 +4472,6 @@ class PlotAxes(base.Axes):
         center_levels = _not_none(center_levels, rc["colorbar.center_levels"])
         vmin = _not_none(vmin=vmin, norm_kw_vmin=norm_kw.pop("vmin", None))
         vmax = _not_none(vmax=vmax, norm_kw_vmax=norm_kw.pop("vmax", None))
-        norm = constructor.Norm(norm or "linear", **norm_kw)
         symmetric = _not_none(
             symmetric=symmetric,
             locator_kw_symmetric=locator_kw.pop("symmetric", None),
@@ -4591,6 +4600,9 @@ class PlotAxes(base.Axes):
         -------
         levels : list of float
             The level edges.
+        preserve_line_limits : bool
+            Whether explicit line contour limits should be preserved when routing
+            to normalizer construction.
         **kwargs
             Unused arguments.
         """
@@ -4630,6 +4642,9 @@ class PlotAxes(base.Axes):
 
         # Parse input arguments and resolve incompatibilities
         explicit_limits = vmin is not None or vmax is not None
+        preserve_line_limits = self._use_continuous_line_norm(
+            min_levels, explicit_limits=explicit_limits
+        )
         levels = _not_none(N=N, levels=levels, norm_kw_levs=norm_kw.pop("levels", None))
         if positive and negative:
             warnings._warn_ultraplot(
@@ -4707,29 +4722,34 @@ class PlotAxes(base.Axes):
         # NOTE: The level restriction should have no effect if levels were generated
         # automatically. However want to apply these to manual-input levels as well.
         if levels is not None:
-            preserve_limits = min_levels == 1
             levels = _restrict_levels(levels)
             if len(levels) == 0:  # skip
                 pass
             elif len(levels) == 1:  # use central colormap color
-                if not preserve_limits or vmin is None:
+                if not preserve_line_limits or vmin is None:
                     vmin = levels[0] - 1
-                if not preserve_limits or vmax is None:
+                if not preserve_line_limits or vmax is None:
                     vmax = levels[0] + 1
             else:  # use minimum and maximum
-                if not preserve_limits or vmin is None:
+                if not preserve_line_limits or vmin is None:
                     vmin = np.min(levels)
-                if not preserve_limits or vmax is None:
+                if not preserve_line_limits or vmax is None:
                     vmax = np.max(levels)
                 if not np.allclose(levels[1] - levels[0], np.diff(levels)):
                     norm = _not_none(norm, "segmented")
             if norm in ("segments", "segmented"):
                 norm_kw["levels"] = levels
-            # For line contours, only bypass DiscreteNorm when users explicitly
-            # provide normalization limits (issue #329 behavior).
-            kwargs["preserve_line_limits"] = bool(min_levels == 1 and explicit_limits)
 
-        return levels, vmin, vmax, norm, norm_kw, kwargs
+        return levels, vmin, vmax, norm, norm_kw, preserve_line_limits, kwargs
+
+    @staticmethod
+    def _use_continuous_line_norm(
+        min_levels, *, explicit_limits=False, qualitative=False
+    ):
+        """
+        Whether line contours should keep a continuous normalizer.
+        """
+        return min_levels == 1 and (explicit_limits or qualitative)
 
     @staticmethod
     def _parse_level_norm(
@@ -4840,8 +4860,10 @@ class PlotAxes(base.Axes):
         # with explicit limits or qualitative color lists, keep the continuous
         # normalizer to preserve one-to-one value->color mapping.
         center_levels = _not_none(center_levels, rc["colorbar.center_levels"])
-        preserve_line_mapping = preserve_line_limits or (
-            min_levels == 1 and qualitative
+        preserve_line_mapping = PlotAxes._use_continuous_line_norm(
+            min_levels,
+            explicit_limits=preserve_line_limits,
+            qualitative=qualitative,
         )
         if (
             not preserve_line_mapping

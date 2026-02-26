@@ -9,6 +9,7 @@ import xarray as xr
 from matplotlib.colors import Normalize
 
 import ultraplot as uplt, warnings
+from ultraplot.axes.plot import PlotAxes
 
 
 @pytest.mark.skip("not sure what this does")
@@ -329,6 +330,17 @@ def test_contour_levels_default_use_discrete_norm():
     assert hasattr(m.norm, "_norm")
     assert m.norm(3) == pytest.approx(0.0)
     assert m.norm(5) == pytest.approx(1.0)
+
+
+def test_contour_line_norm_routing_helper():
+    """
+    Route line contour norms to continuous only for explicit limits or qualitative.
+    """
+    helper = PlotAxes._use_continuous_line_norm
+    assert helper(1, explicit_limits=False, qualitative=False) is False
+    assert helper(1, explicit_limits=True, qualitative=False) is True
+    assert helper(1, explicit_limits=False, qualitative=True) is True
+    assert helper(2, explicit_limits=True, qualitative=True) is False
 
 
 def test_contourf_levels_keep_level_range_with_explicit_vmin_vmax():
