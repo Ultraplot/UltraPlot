@@ -2492,8 +2492,9 @@ class DiscreteNorm(mcolors.BoundaryNorm):
             colorbar axis drawn with this normalizer will be reversed.
         norm : `~matplotlib.colors.Normalize`, optional
             The normalizer used to transform `levels` and data values passed to
-            `~DiscreteNorm.__call__` before discretization. The ``vmin`` and ``vmax``
-            of the normalizer are set to the minimum and maximum values in `levels`.
+            `~DiscreteNorm.__call__` before discretization. If the normalizer
+            ``vmin`` and ``vmax`` are unset, they default to the minimum and
+            maximum values in `levels`.
         unique : {'neither', 'both', 'min', 'max'}, optional
             Which out-of-bounds regions should be assigned unique colormap colors.
             Possible values are equivalent to the `extend` values. Internally, ultraplot
@@ -2522,11 +2523,10 @@ class DiscreteNorm(mcolors.BoundaryNorm):
 
         Note
         ----
-        This normalizer makes sure that levels always span the full range of
-        colors in the colormap, whether `extend` is set to ``'min'``, ``'max'``,
-        ``'neither'``, or ``'both'``. In matplotlib, when `extend` is not ``'both'``,
-        the most intense colors are cut off (reserved for "out of bounds" data),
-        even though they are not being used.
+        By default this normalizer makes level bins span the full colormap range,
+        including when `extend` is set to ``'min'``, ``'max'``, ``'neither'``, or
+        ``'both'``. If the input normalizer has explicit ``vmin`` and ``vmax`` that
+        differ from the level bounds, bins instead follow that explicit range.
 
         See also
         --------
@@ -2561,8 +2561,12 @@ class DiscreteNorm(mcolors.BoundaryNorm):
         # Instead user-reversed levels will always get passed here just as
         # they are passed to SegmentedNorm inside plot.py
         levels, descending = _sanitize_levels(levels)
-        vmin = norm.vmin = np.min(levels)
-        vmax = norm.vmax = np.max(levels)
+        level_min = np.min(levels)
+        level_max = np.max(levels)
+        vmin = _not_none(norm.vmin, level_min)
+        vmax = _not_none(norm.vmax, level_max)
+        norm.vmin = vmin
+        norm.vmax = vmax
         bins, _ = _sanitize_levels(norm(levels))
         vcenter = getattr(norm, "vcenter", None)
         mids = np.zeros((levels.size + 1,))
@@ -2582,13 +2586,19 @@ class DiscreteNorm(mcolors.BoundaryNorm):
             mids[0] += step * (mids[1] - mids[2])
         if unique in ("max", "both"):
             mids[-1] += step * (mids[-2] - mids[-3])
-        mmin, mmax = np.min(mids), np.max(mids)
-        if vcenter is None:
-            mids = _interpolate_scalar(mids, mmin, mmax, vmin, vmax)
-        else:
-            mask1, mask2 = mids < vcenter, mids >= vcenter
-            mids[mask1] = _interpolate_scalar(mids[mask1], mmin, vcenter, vmin, vcenter)
-            mids[mask2] = _interpolate_scalar(mids[mask2], vcenter, mmax, vcenter, vmax)
+        stretch = np.isclose(vmin, level_min) and np.isclose(vmax, level_max)
+        if stretch:
+            mmin, mmax = np.min(mids), np.max(mids)
+            if vcenter is None:
+                mids = _interpolate_scalar(mids, mmin, mmax, vmin, vmax)
+            else:
+                mask1, mask2 = mids < vcenter, mids >= vcenter
+                mids[mask1] = _interpolate_scalar(
+                    mids[mask1], mmin, vcenter, vmin, vcenter
+                )
+                mids[mask2] = _interpolate_scalar(
+                    mids[mask2], vcenter, mmax, vcenter, vmax
+                )
 
         # Instance attributes
         # NOTE: If clip is True, we clip values to the centers of the end bins

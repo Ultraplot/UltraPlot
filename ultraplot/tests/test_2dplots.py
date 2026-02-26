@@ -6,6 +6,7 @@ Test 2D plotting overrides.
 import numpy as np
 import pytest
 import xarray as xr
+from matplotlib.colors import Normalize
 
 import ultraplot as uplt, warnings
 
@@ -289,6 +290,50 @@ def test_levels_with_vmin_vmax(rng):
     m = axs.pcolormesh(x, y, data, vmax=1.35123)
     axs.colorbar([m], loc="r")
     return fig
+
+
+def test_contour_levels_respect_explicit_vmin_vmax():
+    """
+    Explicit `vmin` and `vmax` should be preserved with manual contour levels.
+    """
+    data = np.linspace(0, 10, 25).reshape((5, 5))
+    levels = [2, 4, 6]
+    _, ax = uplt.subplots()
+    m = ax.contourf(data, levels=levels, cmap="viridis", vmin=0, vmax=10)
+    assert m.norm.vmin == pytest.approx(0)
+    assert m.norm.vmax == pytest.approx(10)
+    assert m.norm._norm.vmin == pytest.approx(0)
+    assert m.norm._norm.vmax == pytest.approx(10)
+    assert m.norm(3) == pytest.approx(0.3)
+    assert m.norm(5) == pytest.approx(0.5)
+
+
+def test_contour_levels_default_stretch():
+    """
+    Without explicit limits, level bins should continue to span full cmap range.
+    """
+    data = np.linspace(0, 10, 25).reshape((5, 5))
+    levels = [2, 4, 6]
+    _, ax = uplt.subplots()
+    m = ax.contourf(data, levels=levels, cmap="viridis")
+    assert m.norm(3) == pytest.approx(0.0)
+    assert m.norm(5) == pytest.approx(1.0)
+
+
+def test_contour_explicit_colors_match_levels():
+    """
+    Explicit contour line colors should map one-to-one with contour levels.
+    """
+    x = np.linspace(-1, 1, 100)
+    y = np.linspace(-1, 1, 100)
+    X, Y = np.meshgrid(x, y)
+    Z = np.exp(-(X**2 + Y**2))
+    levels = [0.3, 0.6, 0.9]
+    turbo = uplt.Colormap("turbo")
+    colors = turbo(Normalize(vmin=0, vmax=1)(levels))
+    _, ax = uplt.subplots()
+    m = ax.contour(X, Y, Z, levels=levels, colors=colors, linewidths=1)
+    assert np.allclose(np.asarray(m.get_edgecolor()), colors)
 
 
 @pytest.mark.mpl_image_compare
