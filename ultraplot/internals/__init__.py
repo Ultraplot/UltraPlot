@@ -189,6 +189,7 @@ def _get_signature(func):
         # Some callable objects may be unhashable for lru_cache keys.
         return inspect.signature(func)
 
+
 _LAZY_ATTRS = {
     "benchmarks": ("benchmarks", None),
     "context": ("context", None),
