@@ -1988,9 +1988,11 @@ class SubplotGrid(MutableSequence, list):
         elif not isinstance(objs, list):
             objs = [objs]
 
+        # Spanning subplots can appear more than once in the sliced slot grid.
+        # De-duplicate while preserving order so method dispatch does not repeat.
+        objs = list(dict.fromkeys(objs))
         if len(objs) == 1:
             return objs[0]
-        objs = [obj for obj in objs if obj is not None]
         return SubplotGrid(objs)
 
     def __setitem__(self, key, value):

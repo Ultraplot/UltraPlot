@@ -126,3 +126,22 @@ def test_gridspec_slicing():
     # subset_mixed[4] -> Row 1, Col 0 -> Number 5 (since 4 cols per row)
     assert subset_mixed[0].number == 1
     assert subset_mixed[4].number == 5
+
+
+def test_gridspec_spanning_slice_deduplicates_axes():
+    import numpy as np
+
+    fig, axs = uplt.subplots(np.array([[1, 1, 2], [3, 4, 5]]))
+
+    # The first two slots in the top row refer to the same spanning subplot.
+    ax = axs[0, :2]
+    assert isinstance(ax, uplt.axes.Axes)
+    assert ax is axs[0, 0]
+
+    data = np.array([[0.1, 0.2], [0.4, 0.5], [0.7, 0.8]])
+    ax.scatter(data[:, 0], data[:, 1], c="grey", label="data", legend=True)
+    fig.canvas.draw()
+
+    legend = ax.get_legend()
+    assert legend is not None
+    assert [t.get_text() for t in legend.texts] == ["data"]
