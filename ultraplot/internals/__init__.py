@@ -4,6 +4,7 @@ Internal utilities.
 """
 
 # Import statements
+import functools
 import inspect
 from importlib import import_module
 from numbers import Integral, Real
@@ -155,6 +156,40 @@ _alias_maps = {
     },
 }
 
+
+_INTERNAL_POP_PARAMS = frozenset(
+    {
+        "default_cmap",
+        "default_discrete",
+        "inbounds",
+        "plot_contours",
+        "plot_lines",
+        "skip_autolev",
+        "to_centers",
+    }
+)
+
+
+@functools.lru_cache(maxsize=256)
+def _signature_cached(func):
+    """
+    Cache inspect.signature lookups for hot utility paths.
+    """
+    return inspect.signature(func)
+
+
+def _get_signature(func):
+    """
+    Return a signature, normalizing bound methods to their underlying function.
+    """
+    key = getattr(func, "__func__", func)
+    try:
+        return _signature_cached(key)
+    except TypeError:
+        # Some callable objects may be unhashable for lru_cache keys.
+        return inspect.signature(func)
+
+
 _LAZY_ATTRS = {
     "benchmarks": ("benchmarks", None),
     "context": ("context", None),
@@ -224,28 +259,19 @@ def _pop_params(kwargs, *funcs, ignore_internal=False):
     """
     Pop parameters of the input functions or methods.
     """
-    internal_params = {
-        "default_cmap",
-        "default_discrete",
-        "inbounds",
-        "plot_contours",
-        "plot_lines",
-        "skip_autolev",
-        "to_centers",
-    }
     output = {}
     for func in funcs:
         if isinstance(func, inspect.Signature):
             sig = func
         elif callable(func):
-            sig = inspect.signature(func)
+            sig = _get_signature(func)
         elif func is None:
             continue
         else:
             raise RuntimeError(f"Internal error. Invalid function {func!r}.")
         for key in sig.parameters:
             value = kwargs.pop(key, None)
-            if ignore_internal and key in internal_params:
+            if ignore_internal and key in _INTERNAL_POP_PARAMS:
                 continue
             if value is not None:
                 output[key] = value
