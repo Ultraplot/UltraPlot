@@ -1990,15 +1990,19 @@ class SubplotGrid(MutableSequence, list):
 
         # Spanning subplots can appear more than once in the sliced slot grid.
         # De-duplicate while preserving order so method dispatch does not repeat.
-        seen = set()
-        unique = []
-        for obj in objs:
-            obj_id = id(obj)
-            if obj_id in seen:
-                continue
-            seen.add(obj_id)
-            unique.append(obj)
-        objs = unique
+        try:
+            objs = list(dict.fromkeys(objs))
+        except TypeError:
+            # Fallback for any unhashable custom axes-like objects.
+            seen = set()
+            unique = []
+            for obj in objs:
+                obj_id = id(obj)
+                if obj_id in seen:
+                    continue
+                seen.add(obj_id)
+                unique.append(obj)
+            objs = unique
 
         if len(objs) == 1:
             return objs[0]
