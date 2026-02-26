@@ -4765,13 +4765,16 @@ class PlotAxes(base.Axes):
             The colorbar locations to tick.
         discrete_labels : array-like, optional
             The colorbar tick labels.
+        preserve_line_limits : bool, optional
+            Whether to preserve explicit line-contour normalization limits instead
+            of converting to `~ultraplot.colors.DiscreteNorm`.
 
         Returns
         -------
         norm : `~ultraplot.colors.DiscreteNorm` or `~matplotlib.colors.Normalize`
             The discrete normalizer, or the original continuous normalizer when
-            ``min_levels=1`` (e.g. line contours) and the input norm is not a
-            `~matplotlib.colors.BoundaryNorm`.
+            `preserve_line_limits` is `True` (line contours with explicit limits)
+            or for line contours using qualitative color lists.
         cmap : `~matplotlib.colors.Colormap`
             The possibly-modified colormap.
         kwargs
