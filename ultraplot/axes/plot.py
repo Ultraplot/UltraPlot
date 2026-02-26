@@ -4141,6 +4141,7 @@ class PlotAxes(base.Axes):
         # NOTE: Unlike xarray, but like matplotlib, vmin and vmax only approximately
         # determine level range. Levels are selected with Locator.tick_values().
         levels = None  # unused
+        explicit_limits = False
         isdiverging = False
         if not discrete and not skip_autolev:
             vmin, vmax, kwargs = self._parse_level_lim(
@@ -4150,7 +4151,15 @@ class PlotAxes(base.Axes):
                 if abs(np.sign(vmax) - np.sign(vmin)) == 2:
                     isdiverging = True
         if discrete:
-            levels, vmin, vmax, norm, norm_kw, kwargs = self._parse_level_vals(
+            (
+                levels,
+                vmin,
+                vmax,
+                norm,
+                norm_kw,
+                explicit_limits,
+                kwargs,
+            ) = self._parse_level_vals(
                 *args,
                 vmin=vmin,
                 vmax=vmax,
@@ -4199,6 +4208,7 @@ class PlotAxes(base.Axes):
                 center_levels=center_levels,
                 extend=extend,
                 min_levels=min_levels,
+                explicit_limits=explicit_limits,
                 **kwargs,
             )
         params = _pop_params(kwargs, *self._level_parsers, ignore_internal=True)
@@ -4462,7 +4472,6 @@ class PlotAxes(base.Axes):
         center_levels = _not_none(center_levels, rc["colorbar.center_levels"])
         vmin = _not_none(vmin=vmin, norm_kw_vmin=norm_kw.pop("vmin", None))
         vmax = _not_none(vmax=vmax, norm_kw_vmax=norm_kw.pop("vmax", None))
-        norm = constructor.Norm(norm or "linear", **norm_kw)
         symmetric = _not_none(
             symmetric=symmetric,
             locator_kw_symmetric=locator_kw.pop("symmetric", None),
@@ -4555,6 +4564,8 @@ class PlotAxes(base.Axes):
         nozero=False,
         norm=None,
         norm_kw=None,
+        vmin=None,
+        vmax=None,
         skip_autolev=False,
         min_levels=None,
         center_levels=None,
@@ -4577,7 +4588,9 @@ class PlotAxes(base.Axes):
             Whether to remove out non-positive, non-negative, and zero-valued
             levels. The latter is useful for single-color contour plots.
         norm, norm_kw : optional
-            Passed to `Norm`. Used to possbily infer levels or to convert values.
+            Passed to `Norm`. Used to possibly infer levels or to convert values.
+        vmin, vmax : float, optional
+            The user input normalization range.
         skip_autolev : bool, optional
             Whether to skip automatic level generation.
         min_levels : int, optional
@@ -4587,6 +4600,8 @@ class PlotAxes(base.Axes):
         -------
         levels : list of float
             The level edges.
+        explicit_limits : bool
+            Whether the user explicitly provided `vmin` and/or `vmax`.
         **kwargs
             Unused arguments.
         """
@@ -4625,7 +4640,9 @@ class PlotAxes(base.Axes):
             return array
 
         # Parse input arguments and resolve incompatibilities
-        vmin = vmax = None
+        explicit_limits = vmin is not None or vmax is not None
+        line_contours = min_levels == 1
+        keep_explicit_line_limits = line_contours and explicit_limits
         levels = _not_none(N=N, levels=levels, norm_kw_levs=norm_kw.pop("levels", None))
         if positive and negative:
             warnings._warn_ultraplot(
@@ -4684,6 +4701,8 @@ class PlotAxes(base.Axes):
             levels, kwargs = self._parse_level_num(
                 *args,
                 levels=levels,
+                vmin=vmin,
+                vmax=vmax,
                 norm=norm,
                 norm_kw=norm_kw,
                 extend=extend,
@@ -4696,8 +4715,8 @@ class PlotAxes(base.Axes):
             levels = values = None
 
         # Determine default colorbar locator and norm and apply filters
-        # NOTE: DiscreteNorm does not currently support vmin and
-        # vmax different from level list minimum and maximum.
+        # NOTE: Preserve explicit vmin/vmax only for line contours, where levels
+        # represent contour values rather than filled bins.
         # NOTE: The level restriction should have no effect if levels were generated
         # automatically. However want to apply these to manual-input levels as well.
         if levels is not None:
@@ -4705,15 +4724,21 @@ class PlotAxes(base.Axes):
             if len(levels) == 0:  # skip
                 pass
             elif len(levels) == 1:  # use central colormap color
-                vmin, vmax = levels[0] - 1, levels[0] + 1
+                if not keep_explicit_line_limits or vmin is None:
+                    vmin = levels[0] - 1
+                if not keep_explicit_line_limits or vmax is None:
+                    vmax = levels[0] + 1
             else:  # use minimum and maximum
-                vmin, vmax = np.min(levels), np.max(levels)
+                if not keep_explicit_line_limits or vmin is None:
+                    vmin = np.min(levels)
+                if not keep_explicit_line_limits or vmax is None:
+                    vmax = np.max(levels)
                 if not np.allclose(levels[1] - levels[0], np.diff(levels)):
                     norm = _not_none(norm, "segmented")
             if norm in ("segments", "segmented"):
                 norm_kw["levels"] = levels
 
-        return levels, vmin, vmax, norm, norm_kw, kwargs
+        return levels, vmin, vmax, norm, norm_kw, explicit_limits, kwargs
 
     @staticmethod
     def _parse_level_norm(
@@ -4726,6 +4751,7 @@ class PlotAxes(base.Axes):
         discrete_ticks=None,
         discrete_labels=None,
         center_levels=None,
+        explicit_limits=False,
         **kwargs,
     ):
         """
@@ -4748,11 +4774,14 @@ class PlotAxes(base.Axes):
             The colorbar locations to tick.
         discrete_labels : array-like, optional
             The colorbar tick labels.
+        explicit_limits : bool, optional
+            Whether `vmin`/`vmax` were explicitly provided by the user.
 
         Returns
         -------
-        norm : `~ultraplot.colors.DiscreteNorm`
-            The discrete normalizer.
+        norm : `~ultraplot.colors.DiscreteNorm` or `~matplotlib.colors.Normalize`
+            The discrete normalizer, or the original continuous normalizer when
+            line contours have explicit limits or use qualitative color lists.
         cmap : `~matplotlib.colors.Colormap`
             The possibly-modified colormap.
         kwargs
@@ -4814,10 +4843,16 @@ class PlotAxes(base.Axes):
                 elif extend == "max":
                     unique = "neither"
 
-        # Generate DiscreteNorm and update "child" norm with vmin and vmax from
-        # levels. This lets the colorbar set tick locations properly!
+        # Generate DiscreteNorm for filled-contour style bins. For line contours
+        # with explicit limits or qualitative color lists, keep the continuous
+        # normalizer to preserve one-to-one value->color mapping.
         center_levels = _not_none(center_levels, rc["colorbar.center_levels"])
-        if not isinstance(norm, mcolors.BoundaryNorm) and len(levels) > 1:
+        preserve_line_mapping = min_levels == 1 and (explicit_limits or qualitative)
+        if (
+            not preserve_line_mapping
+            and not isinstance(norm, mcolors.BoundaryNorm)
+            and len(levels) > 1
+        ):
             norm = pcolors.DiscreteNorm(
                 levels,
                 norm=norm,
