@@ -9,7 +9,6 @@ import xarray as xr
 from matplotlib.colors import Normalize
 
 import ultraplot as uplt, warnings
-from ultraplot.axes.plot import PlotAxes
 
 
 @pytest.mark.skip("not sure what this does")
@@ -332,17 +331,6 @@ def test_contour_levels_default_use_discrete_norm():
     assert m.norm(5) == pytest.approx(1.0)
 
 
-def test_contour_line_norm_routing_helper():
-    """
-    Route line contour norms to continuous only for explicit limits or qualitative.
-    """
-    helper = PlotAxes._use_continuous_line_norm
-    assert helper(1, explicit_limits=False, qualitative=False) is False
-    assert helper(1, explicit_limits=True, qualitative=False) is True
-    assert helper(1, explicit_limits=False, qualitative=True) is True
-    assert helper(2, explicit_limits=True, qualitative=True) is False
-
-
 def test_contourf_levels_keep_level_range_with_explicit_vmin_vmax():
     """
     Filled contour bins keep level-based discrete scaling.
@@ -372,6 +360,55 @@ def test_contour_explicit_colors_match_levels():
     colors = turbo(Normalize(vmin=0, vmax=1)(levels))
     _, ax = uplt.subplots()
     m = ax.contour(X, Y, Z, levels=levels, colors=colors, linewidths=1)
+    assert np.allclose(np.asarray(m.get_edgecolor()), colors)
+
+
+def test_tricontour_default_use_discrete_norm():
+    """
+    Triangular line contours should default to DiscreteNorm bin mapping.
+    """
+    rng = np.random.default_rng(51423)
+    x = rng.random(40)
+    y = rng.random(40)
+    z = np.sin(3 * x) + np.cos(3 * y)
+    levels = [-1.0, 0.0, 1.0]
+    _, ax = uplt.subplots()
+    m = ax.tricontour(x, y, z, levels=levels, cmap="viridis")
+    assert hasattr(m.norm, "_norm")
+    assert m.norm(-0.5) == pytest.approx(0.0)
+    assert m.norm(0.5) == pytest.approx(1.0)
+
+
+def test_tricontour_levels_respect_explicit_vmin_vmax():
+    """
+    Triangular line contours preserve explicit normalization limits.
+    """
+    rng = np.random.default_rng(51423)
+    x = rng.random(40)
+    y = rng.random(40)
+    z = np.sin(3 * x) + np.cos(3 * y)
+    levels = [-1.0, 0.0, 1.0]
+    _, ax = uplt.subplots()
+    m = ax.tricontour(x, y, z, levels=levels, cmap="viridis", vmin=-2, vmax=2)
+    assert m.norm.vmin == pytest.approx(-2)
+    assert m.norm.vmax == pytest.approx(2)
+    assert m.norm(-0.5) == pytest.approx(0.375)
+    assert m.norm(0.5) == pytest.approx(0.625)
+
+
+def test_tricontour_explicit_colors_match_levels():
+    """
+    Explicit triangular contour colors should map one-to-one with levels.
+    """
+    rng = np.random.default_rng(51423)
+    x = rng.random(40)
+    y = rng.random(40)
+    z = np.sin(3 * x) + np.cos(3 * y)
+    levels = [-1.0, 0.0, 1.0]
+    turbo = uplt.Colormap("turbo")
+    colors = turbo(Normalize(vmin=-2, vmax=2)(levels))
+    _, ax = uplt.subplots()
+    m = ax.tricontour(x, y, z, levels=levels, colors=colors, linewidths=1)
     assert np.allclose(np.asarray(m.get_edgecolor()), colors)
 
 
