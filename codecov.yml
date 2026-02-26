@@ -23,6 +23,8 @@ coverage:
           - "!logo/*"
           - "!docs/*"
           - "!ultraplot/tests/*"
+          - "!ultraplot/demos.py"
+
 
       tests:
         target: 95.0%
