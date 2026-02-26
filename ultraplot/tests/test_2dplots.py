@@ -6,6 +6,7 @@ Test 2D plotting overrides.
 import numpy as np
 import pytest
 import xarray as xr
+from matplotlib.colors import Normalize
 
 import ultraplot as uplt, warnings
 
@@ -289,6 +290,126 @@ def test_levels_with_vmin_vmax(rng):
     m = axs.pcolormesh(x, y, data, vmax=1.35123)
     axs.colorbar([m], loc="r")
     return fig
+
+
+def test_contour_levels_respect_explicit_vmin_vmax():
+    """
+    Explicit `vmin` and `vmax` should be preserved for line contours.
+    """
+    data = np.linspace(0, 10, 25).reshape((5, 5))
+    levels = [2, 4, 6]
+    _, ax = uplt.subplots()
+    m = ax.contour(data, levels=levels, cmap="viridis", vmin=0, vmax=10)
+    assert m.norm.vmin == pytest.approx(0)
+    assert m.norm.vmax == pytest.approx(10)
+    assert m.norm(3) == pytest.approx(0.3)
+    assert m.norm(5) == pytest.approx(0.5)
+
+
+def test_contour_levels_default_stretch():
+    """
+    Without explicit limits, level bins should continue to span full cmap range.
+    """
+    data = np.linspace(0, 10, 25).reshape((5, 5))
+    levels = [2, 4, 6]
+    _, ax = uplt.subplots()
+    m = ax.contourf(data, levels=levels, cmap="viridis")
+    assert m.norm(3) == pytest.approx(0.0)
+    assert m.norm(5) == pytest.approx(1.0)
+
+
+def test_contour_levels_default_use_discrete_norm():
+    """
+    Line contours should retain DiscreteNorm behavior unless limits are explicit.
+    """
+    data = np.linspace(0, 10, 25).reshape((5, 5))
+    levels = [2, 4, 6]
+    _, ax = uplt.subplots()
+    m = ax.contour(data, levels=levels, cmap="viridis")
+    assert hasattr(m.norm, "_norm")
+    assert m.norm(3) == pytest.approx(0.0)
+    assert m.norm(5) == pytest.approx(1.0)
+
+
+def test_contourf_levels_keep_level_range_with_explicit_vmin_vmax():
+    """
+    Filled contour bins keep level-based discrete scaling.
+    """
+    data = np.linspace(0, 10, 25).reshape((5, 5))
+    levels = [2, 4, 6]
+    _, ax = uplt.subplots()
+    m = ax.contourf(data, levels=levels, cmap="viridis", vmin=0, vmax=10)
+    assert m.norm.vmin == pytest.approx(2)
+    assert m.norm.vmax == pytest.approx(6)
+    assert m.norm._norm.vmin == pytest.approx(2)
+    assert m.norm._norm.vmax == pytest.approx(6)
+    assert m.norm(3) == pytest.approx(0.0)
+    assert m.norm(5) == pytest.approx(1.0)
+
+
+def test_contour_explicit_colors_match_levels():
+    """
+    Explicit contour line colors should map one-to-one with contour levels.
+    """
+    x = np.linspace(-1, 1, 100)
+    y = np.linspace(-1, 1, 100)
+    X, Y = np.meshgrid(x, y)
+    Z = np.exp(-(X**2 + Y**2))
+    levels = [0.3, 0.6, 0.9]
+    turbo = uplt.Colormap("turbo")
+    colors = turbo(Normalize(vmin=0, vmax=1)(levels))
+    _, ax = uplt.subplots()
+    m = ax.contour(X, Y, Z, levels=levels, colors=colors, linewidths=1)
+    assert np.allclose(np.asarray(m.get_edgecolor()), colors)
+
+
+def test_tricontour_default_use_discrete_norm():
+    """
+    Triangular line contours should default to DiscreteNorm bin mapping.
+    """
+    rng = np.random.default_rng(51423)
+    x = rng.random(40)
+    y = rng.random(40)
+    z = np.sin(3 * x) + np.cos(3 * y)
+    levels = [-1.0, 0.0, 1.0]
+    _, ax = uplt.subplots()
+    m = ax.tricontour(x, y, z, levels=levels, cmap="viridis")
+    assert hasattr(m.norm, "_norm")
+    assert m.norm(-0.5) == pytest.approx(0.0)
+    assert m.norm(0.5) == pytest.approx(1.0)
+
+
+def test_tricontour_levels_respect_explicit_vmin_vmax():
+    """
+    Triangular line contours preserve explicit normalization limits.
+    """
+    rng = np.random.default_rng(51423)
+    x = rng.random(40)
+    y = rng.random(40)
+    z = np.sin(3 * x) + np.cos(3 * y)
+    levels = [-1.0, 0.0, 1.0]
+    _, ax = uplt.subplots()
+    m = ax.tricontour(x, y, z, levels=levels, cmap="viridis", vmin=-2, vmax=2)
+    assert m.norm.vmin == pytest.approx(-2)
+    assert m.norm.vmax == pytest.approx(2)
+    assert m.norm(-0.5) == pytest.approx(0.375)
+    assert m.norm(0.5) == pytest.approx(0.625)
+
+
+def test_tricontour_explicit_colors_match_levels():
+    """
+    Explicit triangular contour colors should map one-to-one with levels.
+    """
+    rng = np.random.default_rng(51423)
+    x = rng.random(40)
+    y = rng.random(40)
+    z = np.sin(3 * x) + np.cos(3 * y)
+    levels = [-1.0, 0.0, 1.0]
+    turbo = uplt.Colormap("turbo")
+    colors = turbo(Normalize(vmin=-2, vmax=2)(levels))
+    _, ax = uplt.subplots()
+    m = ax.tricontour(x, y, z, levels=levels, colors=colors, linewidths=1)
+    assert np.allclose(np.asarray(m.get_edgecolor()), colors)
 
 
 @pytest.mark.mpl_image_compare
