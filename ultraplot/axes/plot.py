@@ -4759,8 +4759,10 @@ class PlotAxes(base.Axes):
 
         Returns
         -------
-        norm : `~ultraplot.colors.DiscreteNorm`
-            The discrete normalizer.
+        norm : `~ultraplot.colors.DiscreteNorm` or `~matplotlib.colors.Normalize`
+            The discrete normalizer, or the original continuous normalizer when
+            ``min_levels=1`` (e.g. line contours) and the input norm is not a
+            `~matplotlib.colors.BoundaryNorm`.
         cmap : `~matplotlib.colors.Colormap`
             The possibly-modified colormap.
         kwargs
