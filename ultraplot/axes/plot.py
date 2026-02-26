@@ -4837,7 +4837,9 @@ class PlotAxes(base.Axes):
         # with explicit limits or qualitative color lists, keep the continuous
         # normalizer to preserve one-to-one value->color mapping.
         center_levels = _not_none(center_levels, rc["colorbar.center_levels"])
-        preserve_line_mapping = preserve_line_limits or (min_levels == 1 and qualitative)
+        preserve_line_mapping = preserve_line_limits or (
+            min_levels == 1 and qualitative
+        )
         if (
             not preserve_line_mapping
             and not isinstance(norm, mcolors.BoundaryNorm)
