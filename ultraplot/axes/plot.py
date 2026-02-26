@@ -4687,6 +4687,8 @@ class PlotAxes(base.Axes):
             levels, kwargs = self._parse_level_num(
                 *args,
                 levels=levels,
+                vmin=vmin,
+                vmax=vmax,
                 norm=norm,
                 norm_kw=norm_kw,
                 extend=extend,
