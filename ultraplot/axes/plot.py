@@ -4579,7 +4579,7 @@ class PlotAxes(base.Axes):
             Whether to remove out non-positive, non-negative, and zero-valued
             levels. The latter is useful for single-color contour plots.
         norm, norm_kw : optional
-            Passed to `Norm`. Used to possbily infer levels or to convert values.
+            Passed to `Norm`. Used to possibly infer levels or to convert values.
         vmin, vmax : float, optional
             The user input normalization range.
         skip_autolev : bool, optional
