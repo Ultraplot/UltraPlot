@@ -33,3 +33,11 @@ class ThreeAxes(shared._SharedAxes, base.Axes, Axes3D):
 
         kwargs.setdefault("alpha", 0.0)
         super().__init__(*args, **kwargs)
+
+    def graph(self, *args, **kwargs):
+        """
+        Draw network graphs on 3D projections.
+        """
+        from .plot import PlotAxes
+
+        return PlotAxes.graph(self, *args, **kwargs)
