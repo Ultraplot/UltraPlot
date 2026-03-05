@@ -149,6 +149,22 @@ def test_graph_input():
         ax.graph("invalid_input")
 
 
+def test_graph_on_3d_projection():
+    """
+    Ensure graph plotting is available on 3D axes.
+    """
+    import networkx as nx
+
+    g = nx.path_graph(5)
+    _, axs = uplt.subplots(proj="3d")
+    ax = axs[0]
+    nodes, edges, labels = ax.graph(g)
+    assert callable(getattr(ax, "graph", None))
+    assert nodes is not False
+    assert edges is not False
+    assert labels is False
+
+
 def test_graph_layout_input():
     """
     Test if layout is in a [0, 1] x [0, 1] box
