@@ -144,6 +144,8 @@ class SubplotManager:
 
         if name is not None:
             kwargs["projection"] = name
+        elif not isinstance(proj, str):
+            kwargs["projection"] = proj
         return kwargs
 
     def add_subplot(self, *args, **kwargs):
@@ -227,35 +229,9 @@ class SubplotManager:
         kwargs.setdefault("number", 1 + max(self.subplot_dict, default=0))
         kwargs.pop("refwidth", None)  # TODO: remove this
 
-        # Use container approach for external projections to make them
-        # ultraplot-compatible. Skip projections that start with "ultraplot_"
-        # as these are already Ultraplot axes classes.
-        projection_name = kwargs.get("projection")
-        external_axes_class = None
-        external_axes_kwargs = {}
-
-        if projection_name and isinstance(projection_name, str):
-            if not projection_name.startswith("ultraplot_"):
-                try:
-                    proj_class = mproj.get_projection_class(projection_name)
-                    if not issubclass(proj_class, paxes.Axes):
-                        external_axes_class = proj_class
-                        external_axes_kwargs["projection"] = projection_name
-
-                        from .axes.container import create_external_axes_container
-
-                        container_name = f"_ultraplot_container_{projection_name}"
-                        if container_name not in mproj.get_projection_names():
-                            container_class = create_external_axes_container(
-                                proj_class, projection_name=container_name
-                            )
-                            mproj.register_projection(container_class)
-
-                        kwargs["projection"] = container_name
-                        kwargs["external_axes_class"] = external_axes_class
-                        kwargs["external_axes_kwargs"] = external_axes_kwargs
-                except (KeyError, ValueError):
-                    pass
+        # Wrap Matplotlib-native or third-party projection classes so UltraPlot
+        # can preserve its own axes bookkeeping while delegating rendering.
+        kwargs = fig._wrap_external_projection(**kwargs)
 
         kwargs.pop("_subplot_spec", None)
 

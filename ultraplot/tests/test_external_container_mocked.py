@@ -233,6 +233,29 @@ class MockMplternAxes(MockExternalAxes):
         return super().get_tightbbox(renderer)
 
 
+class MockProjectionTransformAxes(MockExternalAxes):
+    """Mock external axes with a projection-aware get_transform API."""
+
+    def __init__(self, fig, *args, transform_id=None, **kwargs):
+        self.transform_id = transform_id
+        self.transform_calls = []
+        super().__init__(fig, *args, **kwargs)
+
+    def get_transform(self, frame=None):
+        self.transform_calls.append(frame)
+        return (self.transform_id, frame)
+
+
+class MockProjectionObject:
+    """Projection-like object resolved by Matplotlib via _as_mpl_axes."""
+
+    def __init__(self, transform_id="mock"):
+        self.transform_id = transform_id
+
+    def _as_mpl_axes(self):
+        return MockProjectionTransformAxes, {"transform_id": self.transform_id}
+
+
 # Tests
 
 
@@ -259,6 +282,36 @@ def test_container_creation_with_external_axes():
     assert ax.has_external_child()
     assert ax.get_external_child() is not None
     assert isinstance(ax.get_external_child(), MockExternalAxes)
+
+
+def test_add_axes_wraps_projection_object_and_delegates_get_transform():
+    """Projection objects should be wrapped and keep custom transform APIs."""
+    fig = uplt.figure()
+    ax = fig.add_axes(
+        [0.1, 0.1, 0.8, 0.8], projection=MockProjectionObject("mock-wcs")
+    )
+
+    assert ax.has_external_child()
+    child = ax.get_external_child()
+    assert isinstance(child, MockProjectionTransformAxes)
+
+    transform = ax.get_transform("icrs")
+    assert transform == ("mock-wcs", "icrs")
+    assert child.transform_calls == ["icrs"]
+
+
+def test_add_subplot_wraps_projection_object_and_delegates_get_transform():
+    """Subplots should also wrap projection objects via the external container."""
+    fig = uplt.figure()
+    ax = fig.add_subplot(111, projection=MockProjectionObject("subplot-wcs"))
+
+    assert ax.has_external_child()
+    child = ax.get_external_child()
+    assert isinstance(child, MockProjectionTransformAxes)
+
+    transform = ax.get_transform("fk5")
+    assert transform == ("subplot-wcs", "fk5")
+    assert child.transform_calls == ["fk5"]
 
 
 def test_external_axes_removed_from_figure_axes():

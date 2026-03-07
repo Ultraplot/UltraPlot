@@ -1733,6 +1733,54 @@ class Figure(mfigure.Figure):
         """Delegate to SubplotManager."""
         return self._subplots.parse_proj(*args, **kwargs)
 
+    def _wrap_external_projection(self, **kwargs):
+        """Wrap non-ultraplot projection classes in an external container."""
+        projection = kwargs.get("projection")
+        if projection is None:
+            return kwargs
+
+        external_axes_class = None
+        external_axes_kwargs = {}
+        if isinstance(projection, str):
+            if projection.startswith("ultraplot_"):
+                return kwargs
+            try:
+                external_axes_class = mproj.get_projection_class(projection)
+            except (KeyError, ValueError):
+                return kwargs
+        elif hasattr(projection, "_as_mpl_axes"):
+            try:
+                external_axes_class, external_axes_kwargs = (
+                    self._process_projection_requirements(projection=projection)
+                )
+            except Exception:
+                return kwargs
+        else:
+            return kwargs
+
+        if issubclass(external_axes_class, paxes.Axes):
+            return kwargs
+
+        from .axes.container import create_external_axes_container
+
+        container_token = (
+            f"{external_axes_class.__module__}_{external_axes_class.__name__}"
+        )
+        container_name = (
+            "_ultraplot_container_"
+            + container_token.replace(".", "_").replace("-", "_").lower()
+        )
+        if container_name not in mproj.get_projection_names():
+            container_class = create_external_axes_container(
+                external_axes_class, projection_name=container_name
+            )
+            mproj.register_projection(container_class)
+
+        kwargs["projection"] = container_name
+        kwargs["external_axes_class"] = external_axes_class
+        kwargs["external_axes_kwargs"] = dict(external_axes_kwargs)
+        return kwargs
+
     def _get_align_axes(self, side):
         """
         Return the main axes along the edge of the figure.
@@ -3251,6 +3299,7 @@ class Figure(mfigure.Figure):
         %(figure.axes)s
         """
         kwargs = self._parse_proj(**kwargs)
+        kwargs = self._wrap_external_projection(**kwargs)
         return super().add_axes(rect, **kwargs)
 
     @docstring._concatenate_inherited
