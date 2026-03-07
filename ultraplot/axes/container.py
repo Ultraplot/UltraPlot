@@ -686,6 +686,21 @@ class ExternalAxesContainer(CartesianAxes):
         """
         return self.get_external_axes()
 
+    def get_transform(self, *args, **kwargs):
+        """
+        Delegate projection-specific transform lookups to the external axes.
+
+        Some external axes classes (for example WCSAxes) accept extra arguments
+        like ``frame`` on ``get_transform()``. Without an explicit override here,
+        the container inherits ``Artist.get_transform()`` and masks that API.
+        """
+        if self._external_axes is not None:
+            ext_get_transform = getattr(type(self._external_axes), "get_transform", None)
+            base_get_transform = getattr(maxes.Axes, "get_transform", None)
+            if args or kwargs or ext_get_transform is not base_get_transform:
+                return self._external_axes.get_transform(*args, **kwargs)
+        return super().get_transform()
+
     def clear(self):
         """Clear the container and mark external axes as stale."""
         # Mark external axes as stale before clearing

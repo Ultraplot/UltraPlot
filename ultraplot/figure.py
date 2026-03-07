@@ -1478,13 +1478,63 @@ class Figure(mfigure.Figure):
                 f"subclasses are:\n{paxes._cls_table}"
             )
 
-        # Only set projection if we found a named projection
-        # Otherwise preserve the original projection (e.g., cartopy Projection objects)
+        # Only set projection if we found a named projection.
+        # Otherwise preserve projection objects that Matplotlib can resolve via
+        # ``_as_mpl_axes()`` so they can be wrapped as external axes later.
         if name is not None:
             kwargs["projection"] = name
-        # If name is None and proj is not a string, it means we have a non-string
-        # projection (e.g., cartopy.crs.Projection object) that should be passed through
-        # The original projection kwarg is already in kwargs, so no action needed
+        elif not isinstance(proj, str):
+            kwargs["projection"] = proj
+        return kwargs
+
+    def _wrap_external_projection(self, **kwargs):
+        """
+        Wrap non-ultraplot projection classes in an external container.
+        """
+        projection = kwargs.get("projection")
+        if projection is None:
+            return kwargs
+
+        external_axes_class = None
+        external_axes_kwargs = {}
+        if isinstance(projection, str):
+            if projection.startswith("ultraplot_"):
+                return kwargs
+            try:
+                external_axes_class = mproj.get_projection_class(projection)
+            except (KeyError, ValueError):
+                return kwargs
+        elif hasattr(projection, "_as_mpl_axes"):
+            try:
+                external_axes_class, external_axes_kwargs = (
+                    self._process_projection_requirements(projection=projection)
+                )
+            except Exception:
+                return kwargs
+        else:
+            return kwargs
+
+        if issubclass(external_axes_class, paxes.Axes):
+            return kwargs
+
+        from .axes.container import create_external_axes_container
+
+        container_token = (
+            f"{external_axes_class.__module__}_{external_axes_class.__name__}"
+        )
+        container_name = (
+            "_ultraplot_container_"
+            + container_token.replace(".", "_").replace("-", "_").lower()
+        )
+        if container_name not in mproj.get_projection_names():
+            container_class = create_external_axes_container(
+                external_axes_class, projection_name=container_name
+            )
+            mproj.register_projection(container_class)
+
+        kwargs["projection"] = container_name
+        kwargs["external_axes_class"] = external_axes_class
+        kwargs["external_axes_kwargs"] = dict(external_axes_kwargs)
         return kwargs
 
     def _get_align_axes(self, side):
@@ -1986,46 +2036,9 @@ class Figure(mfigure.Figure):
         kwargs.setdefault("number", 1 + max(self._subplot_dict, default=0))
         kwargs.pop("refwidth", None)  # TODO: remove this
 
-        # Use container approach for external projections to make them ultraplot-compatible
-        projection_name = kwargs.get("projection")
-        external_axes_class = None
-        external_axes_kwargs = {}
-
-        if projection_name and isinstance(projection_name, str):
-            # Check if this is an external (non-ultraplot) projection
-            # Skip external wrapping for projections that start with "ultraplot_" prefix
-            # as these are already Ultraplot axes classes
-            if not projection_name.startswith("ultraplot_"):
-                try:
-                    # Get the projection class
-                    proj_class = mproj.get_projection_class(projection_name)
-
-                    # Check if it's not a built-in ultraplot axes
-                    # Only wrap if it's NOT a subclass of Ultraplot's Axes
-                    if not issubclass(proj_class, paxes.Axes):
-                        # Store the external axes class and original projection name
-                        external_axes_class = proj_class
-                        external_axes_kwargs["projection"] = projection_name
-
-                        # Create or get the container class for this external axes type
-                        from .axes.container import create_external_axes_container
-
-                        container_name = f"_ultraplot_container_{projection_name}"
-
-                        # Check if container is already registered
-                        if container_name not in mproj.get_projection_names():
-                            container_class = create_external_axes_container(
-                                proj_class, projection_name=container_name
-                            )
-                            mproj.register_projection(container_class)
-
-                        # Use the container projection and pass external axes info
-                        kwargs["projection"] = container_name
-                        kwargs["external_axes_class"] = external_axes_class
-                        kwargs["external_axes_kwargs"] = external_axes_kwargs
-                except (KeyError, ValueError):
-                    # Projection not found, let matplotlib handle the error
-                    pass
+        # Wrap Matplotlib-native or third-party projection classes so UltraPlot
+        # can preserve its own axes bookkeeping while delegating rendering.
+        kwargs = self._wrap_external_projection(**kwargs)
 
         # Remove _subplot_spec from kwargs if present to prevent it from being passed
         # to .set() or other methods that don't accept it.
@@ -2697,6 +2710,7 @@ class Figure(mfigure.Figure):
         %(figure.axes)s
         """
         kwargs = self._parse_proj(**kwargs)
+        kwargs = self._wrap_external_projection(**kwargs)
         return super().add_axes(rect, **kwargs)
 
     @docstring._concatenate_inherited
