@@ -287,9 +287,7 @@ def test_container_creation_with_external_axes():
 def test_add_axes_wraps_projection_object_and_delegates_get_transform():
     """Projection objects should be wrapped and keep custom transform APIs."""
     fig = uplt.figure()
-    ax = fig.add_axes(
-        [0.1, 0.1, 0.8, 0.8], projection=MockProjectionObject("mock-wcs")
-    )
+    ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=MockProjectionObject("mock-wcs"))
 
     assert ax.has_external_child()
     child = ax.get_external_child()
