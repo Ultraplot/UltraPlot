@@ -34,6 +34,42 @@ print(json.dumps(sorted(new & heavy)))
     assert out == "[]"
 
 
+def test_loading_axes_does_not_import_astropy():
+    code = """
+import json
+import sys
+import ultraplot as uplt
+uplt.subplots()
+mods = [name for name in sys.modules if name == "astropy" or name.startswith("astropy.")]
+print(json.dumps(sorted(mods)))
+"""
+    out = _run(code)
+    assert out == "[]"
+
+
+def test_axes_astro_attr_is_lazy_optional():
+    code = """
+import importlib.util
+import json
+import sys
+import ultraplot.axes as paxes
+spec = importlib.util.find_spec("astropy.visualization.wcsaxes")
+astro = paxes.AstroAxes
+mods = [name for name in sys.modules if name == "astropy" or name.startswith("astropy.")]
+print(json.dumps({
+    "available": bool(spec),
+    "astro_is_none": astro is None,
+    "loaded": bool(mods),
+}))
+"""
+    out = json.loads(_run(code))
+    if out["available"]:
+        assert not out["astro_is_none"]
+        assert out["loaded"]
+    else:
+        assert out["astro_is_none"]
+
+
 def test_star_import_exposes_public_api():
     code = """
 from ultraplot import *  # noqa: F403

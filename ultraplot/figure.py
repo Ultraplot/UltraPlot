@@ -974,8 +974,9 @@ class Figure(mfigure.Figure):
             ):
                 return False, "different Geo projection classes"
 
-        ref_astro = paxes.AstroAxes is not None and isinstance(ref, paxes.AstroAxes)
-        other_astro = paxes.AstroAxes is not None and isinstance(other, paxes.AstroAxes)
+        astro_cls = paxes.get_astro_axes_class()
+        ref_astro = astro_cls is not None and isinstance(ref, astro_cls)
+        other_astro = astro_cls is not None and isinstance(other, astro_cls)
         if ref_astro or other_astro:
             if not (ref_astro and other_astro):
                 return False, "astro and non-astro axes cannot be shared"
@@ -1256,8 +1257,9 @@ class Figure(mfigure.Figure):
 
             # Supported axes types
             supported = (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
-            if paxes.AstroAxes is not None:
-                supported = (*supported, paxes.AstroAxes)
+            astro_cls = paxes.get_astro_axes_class()
+            if astro_cls is not None:
+                supported = (*supported, astro_cls)
             if not isinstance(axi, supported):
                 warnings._warn_ultraplot(
                     f"Tick label sharing not implemented for {type(axi)} subplots."

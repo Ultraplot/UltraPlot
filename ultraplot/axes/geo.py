@@ -1481,10 +1481,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
     def _get_ticklabel_state(self, axis: str) -> dict[str, bool]:
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
-        return {
-            f"label{side}": self._is_ticklabel_on(f"label{side}")
-            for side in sides
-        }
+        return {f"label{side}": self._is_ticklabel_on(f"label{side}") for side in sides}
 
     def _set_ticklabel_state(self, axis: str, state: dict) -> None:
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
