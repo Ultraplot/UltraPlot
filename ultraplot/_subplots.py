@@ -14,6 +14,7 @@ from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
 from .internals import _not_none, _pop_params, warnings
+from .internals.projections import resolve_projection_kwargs
 
 if TYPE_CHECKING:
     from .figure import Figure
@@ -86,67 +87,13 @@ class SubplotManager:
         proj = _not_none(proj=proj, projection=projection, default="cartesian")
         proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
         backend = self.parse_backend(backend, basemap)
-        if isinstance(proj, str):
-            proj = proj.lower()
-
-        # Search axes projections
-        name = None
-
-        # Handle cartopy/basemap Projection objects directly
-        # These should be converted to Ultraplot GeoAxes
-        if not isinstance(proj, str):
-            if constructor.Projection is not object and isinstance(
-                proj, constructor.Projection
-            ):
-                name = "ultraplot_cartopy"
-                kwargs["map_projection"] = proj
-            elif constructor.Basemap is not object and isinstance(
-                proj, constructor.Basemap
-            ):
-                name = "ultraplot_basemap"
-                kwargs["map_projection"] = proj
-                constructor._warn_basemap_deprecated()
-
-        if name is None and isinstance(proj, str):
-            try:
-                mproj.get_projection_class("ultraplot_" + proj)
-            except (KeyError, ValueError):
-                pass
-            else:
-                name = "ultraplot_" + proj
-        if name is None and isinstance(proj, str):
-            # Try geographic projections first if cartopy/basemap available
-            if (
-                constructor.Projection is not object
-                or constructor.Basemap is not object
-            ):
-                try:
-                    proj_obj = constructor.Proj(
-                        proj, backend=backend, include_axes=True, **proj_kw
-                    )
-                    name = "ultraplot_" + proj_obj._proj_backend
-                    kwargs["map_projection"] = proj_obj
-                except ValueError:
-                    pass  # not a geographic projection, try matplotlib registry below
-
-            # If not geographic, check if registered globally in matplotlib
-            # (e.g., 'ternary', 'polar', '3d')
-            if name is None and proj in mproj.get_projection_names():
-                name = proj
-
-        if name is None and isinstance(proj, str):
-            raise ValueError(
-                f"Invalid projection name {proj!r}. If you are trying to generate a "
-                "GeoAxes with a cartopy.crs.Projection or mpl_toolkits.basemap.Basemap "
-                "then cartopy or basemap must be installed. Otherwise the known axes "
-                f"subclasses are:\n{paxes._cls_table}"
-            )
-
-        if name is not None:
-            kwargs["projection"] = name
-        elif not isinstance(proj, str):
-            kwargs["projection"] = proj
-        return kwargs
+        return resolve_projection_kwargs(
+            self.figure,
+            proj,
+            proj_kw=proj_kw,
+            backend=backend,
+            kwargs=kwargs,
+        )
 
     def add_subplot(self, *args, **kwargs):
         """

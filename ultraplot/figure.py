@@ -29,6 +29,7 @@ from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
 from .config import rc, rc_matplotlib
+from .internals.projections import finalize_projection_kwargs
 from .internals import (
     _alias_kwargs,
     _not_none,
@@ -1175,6 +1176,14 @@ class Figure(mfigure.Figure):
             ):
                 return False, "different Geo projection classes"
 
+        ref_astro = paxes.AstroAxes is not None and isinstance(ref, paxes.AstroAxes)
+        other_astro = paxes.AstroAxes is not None and isinstance(other, paxes.AstroAxes)
+        if ref_astro or other_astro:
+            if not (ref_astro and other_astro):
+                return False, "astro and non-astro axes cannot be shared"
+            if ref._share_coord_signature(which) != other._share_coord_signature(which):
+                return False, "different Astro coordinate families"
+
         # Polar and non-polar should not share.
         ref_polar = isinstance(ref, paxes.PolarAxes)
         other_polar = isinstance(other, paxes.PolarAxes)
@@ -1182,7 +1191,12 @@ class Figure(mfigure.Figure):
             return False, "polar and non-polar axes cannot be shared"
 
         # Non-geo external axes are generally Cartesian-like in UltraPlot.
-        if not ref_geo and not other_geo and not (ref_external or other_external):
+        if (
+            not ref_geo
+            and not other_geo
+            and not (ref_external or other_external)
+            and not (ref_astro or other_astro)
+        ):
             if not (
                 isinstance(ref, paxes.CartesianAxes)
                 and isinstance(other, paxes.CartesianAxes)
@@ -1597,9 +1611,10 @@ class Figure(mfigure.Figure):
                 return {}, True
 
             # Supported axes types
-            if not isinstance(
-                axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
-            ):
+            supported = (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+            if paxes.AstroAxes is not None:
+                supported = (*supported, paxes.AstroAxes)
+            if not isinstance(axi, supported):
                 warnings._warn_ultraplot(
                     f"Tick label sharing not implemented for {type(axi)} subplots."
                 )
@@ -1615,6 +1630,11 @@ class Figure(mfigure.Figure):
                     key = label_keys[f"label{side}"]
                     if params.get(key):
                         baseline[key] = params[key]
+            elif paxes.AstroAxes is not None and isinstance(axi, paxes.AstroAxes):
+                for side in sides:
+                    key = f"label{side}"
+                    if axi._is_ticklabel_on(key):
+                        baseline[key] = True
             elif isinstance(axi, paxes.GeoAxes):
                 for side in sides:
                     key = f"label{side}"
@@ -1697,6 +1717,19 @@ class Figure(mfigure.Figure):
 
         return level
 
+    def _get_ticklabel_state(self, axi, axis: str):
+        """Read the visible ticklabel sides for cartesian, geo, and astro axes."""
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+        if isinstance(axi, paxes.GeoAxes):
+            return {f"label{side}": axi._is_ticklabel_on(f"label{side}") for side in sides}
+        if paxes.AstroAxes is not None and isinstance(axi, paxes.AstroAxes):
+            return {f"label{side}": axi._is_ticklabel_on(f"label{side}") for side in sides}
+        params = getattr(axi, f"{axis}axis").get_tick_params()
+        return {
+            f"label{side}": params.get(axi._label_key(f"label{side}"), False)
+            for side in sides
+        }
+
     def _set_ticklabel_state(self, axi, axis: str, state: dict):
         """Apply the computed ticklabel state to cartesian or geo axes."""
         if state:
@@ -1704,6 +1737,8 @@ class Figure(mfigure.Figure):
             cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
             if isinstance(axi, paxes.GeoAxes):
                 axi._toggle_gridliner_labels(**cleaned)
+            elif paxes.AstroAxes is not None and isinstance(axi, paxes.AstroAxes):
+                axi._apply_ticklabel_state(axis, cleaned)
             else:
                 getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
 
@@ -1735,51 +1770,7 @@ class Figure(mfigure.Figure):
 
     def _wrap_external_projection(self, **kwargs):
         """Wrap non-ultraplot projection classes in an external container."""
-        projection = kwargs.get("projection")
-        if projection is None:
-            return kwargs
-
-        external_axes_class = None
-        external_axes_kwargs = {}
-        if isinstance(projection, str):
-            if projection.startswith("ultraplot_"):
-                return kwargs
-            try:
-                external_axes_class = mproj.get_projection_class(projection)
-            except (KeyError, ValueError):
-                return kwargs
-        elif hasattr(projection, "_as_mpl_axes"):
-            try:
-                external_axes_class, external_axes_kwargs = (
-                    self._process_projection_requirements(projection=projection)
-                )
-            except Exception:
-                return kwargs
-        else:
-            return kwargs
-
-        if issubclass(external_axes_class, paxes.Axes):
-            return kwargs
-
-        from .axes.container import create_external_axes_container
-
-        container_token = (
-            f"{external_axes_class.__module__}_{external_axes_class.__name__}"
-        )
-        container_name = (
-            "_ultraplot_container_"
-            + container_token.replace(".", "_").replace("-", "_").lower()
-        )
-        if container_name not in mproj.get_projection_names():
-            container_class = create_external_axes_container(
-                external_axes_class, projection_name=container_name
-            )
-            mproj.register_projection(container_class)
-
-        kwargs["projection"] = container_name
-        kwargs["external_axes_class"] = external_axes_class
-        kwargs["external_axes_kwargs"] = dict(external_axes_kwargs)
-        return kwargs
+        return finalize_projection_kwargs(self, kwargs)
 
     def _get_align_axes(self, side):
         """
@@ -2129,31 +2120,24 @@ class Figure(mfigure.Figure):
                 *getattr(ax, f"get_{'y' if side in ('left','right') else 'x'}lim")(),
                 auto=True,
             )
+        filled = kw.get("filled", False)
+        shared_state = None
         # Push main axes tick labels to the outside relative to the added panel
         # Skip this for filled panels (colorbars/legends)
-        if not kw.get("filled", False) and share:
-            if isinstance(ax, paxes.GeoAxes):
-                if side == "top":
-                    ax._toggle_gridliner_labels(labeltop=False)
-                elif side == "bottom":
-                    ax._toggle_gridliner_labels(labelbottom=False)
-                elif side == "left":
-                    ax._toggle_gridliner_labels(labelleft=False)
-                elif side == "right":
-                    ax._toggle_gridliner_labels(labelright=False)
-            else:
-                if side == "top":
-                    ax.xaxis.set_tick_params(**{ax._label_key("labeltop"): False})
-                elif side == "bottom":
-                    ax.xaxis.set_tick_params(**{ax._label_key("labelbottom"): False})
-                elif side == "left":
-                    ax.yaxis.set_tick_params(**{ax._label_key("labelleft"): False})
-                elif side == "right":
-                    ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
+        if not filled and share:
+            shared_axis = "y" if side in ("left", "right") else "x"
+            shared_state = self._get_ticklabel_state(ax, shared_axis)
+            main_state = shared_state.copy()
+            main_state[f"label{side}"] = False
+            self._set_ticklabel_state(ax, shared_axis, main_state)
 
-        # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
+        # Panel labels: for non-sharing panels, keep labels on the outer edges of the
+        # full stack. For shared panels, only propagate the panel-side labels where
+        # the existing sharing logic expects them (top/right).
         if side == "top":
-            if not share:
+            if not share and not filled:
+                ax.xaxis.tick_bottom()
+                ax.xaxis.set_label_position("bottom")
                 pax.xaxis.set_tick_params(
                     **{
                         pax._label_key("labeltop"): True,
@@ -2161,11 +2145,17 @@ class Figure(mfigure.Figure):
                     }
                 )
             else:
-                on = ax.xaxis.get_tick_params()[ax._label_key("labeltop")]
-                pax.xaxis.set_tick_params(**{pax._label_key("labeltop"): on})
-                ax.yaxis.set_tick_params(labeltop=False)
+                on = shared_state is not None and shared_state.get("labeltop", False)
+                pax.xaxis.set_tick_params(
+                    **{
+                        pax._label_key("labeltop"): on,
+                        pax._label_key("labelbottom"): False,
+                    }
+                )
         elif side == "right":
-            if not share:
+            if not share and not filled:
+                ax.yaxis.tick_left()
+                ax.yaxis.set_label_position("left")
                 pax.yaxis.set_tick_params(
                     **{
                         pax._label_key("labelright"): True,
@@ -2173,9 +2163,47 @@ class Figure(mfigure.Figure):
                     }
                 )
             else:
-                on = ax.yaxis.get_tick_params()[ax._label_key("labelright")]
-                pax.yaxis.set_tick_params(**{pax._label_key("labelright"): on})
-                ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
+                on = shared_state is not None and shared_state.get("labelright", False)
+                pax.yaxis.set_tick_params(
+                    **{
+                        pax._label_key("labelright"): on,
+                        pax._label_key("labelleft"): False,
+                    }
+                )
+        elif side == "left" and not share and not filled:
+            ax.yaxis.tick_right()
+            ax.yaxis.set_label_position("right")
+            ax.yaxis.set_tick_params(
+                **{
+                    ax._label_key("labelleft"): False,
+                    ax._label_key("labelright"): True,
+                }
+            )
+            pax.yaxis.tick_left()
+            pax.yaxis.set_label_position("left")
+            pax.yaxis.set_tick_params(
+                **{
+                    pax._label_key("labelleft"): True,
+                    pax._label_key("labelright"): False,
+                }
+            )
+        elif side == "bottom" and not share and not filled:
+            ax.xaxis.tick_top()
+            ax.xaxis.set_label_position("top")
+            ax.xaxis.set_tick_params(
+                **{
+                    ax._label_key("labelbottom"): False,
+                    ax._label_key("labeltop"): True,
+                }
+            )
+            pax.xaxis.tick_bottom()
+            pax.xaxis.set_label_position("bottom")
+            pax.xaxis.set_tick_params(
+                **{
+                    pax._label_key("labelbottom"): True,
+                    pax._label_key("labeltop"): False,
+                }
+            )
 
         return pax
 
@@ -3299,7 +3327,6 @@ class Figure(mfigure.Figure):
         %(figure.axes)s
         """
         kwargs = self._parse_proj(**kwargs)
-        kwargs = self._wrap_external_projection(**kwargs)
         return super().add_axes(rect, **kwargs)
 
     @docstring._concatenate_inherited
