@@ -145,7 +145,8 @@ if WCSAxes is not None:
             if coord is None:
                 return
             if label is None and not any(
-                value is not None for value in (labelpad, labelcolor, labelsize, labelweight)
+                value is not None
+                for value in (labelpad, labelcolor, labelsize, labelweight)
             ):
                 return
             setter = getattr(self, f"set_{axis}label")
@@ -248,8 +249,7 @@ if WCSAxes is not None:
         def _get_ticklabel_state(self, axis: str) -> dict[str, bool]:
             sides = ("top", "bottom") if axis == "x" else ("left", "right")
             return {
-                f"label{side}": self._is_ticklabel_on(f"label{side}")
-                for side in sides
+                f"label{side}": self._is_ticklabel_on(f"label{side}") for side in sides
             }
 
         def _set_ticklabel_state(self, axis: str, state: dict):
@@ -375,7 +375,6 @@ if WCSAxes is not None:
                 label_kw=ylabel_kw,
             )
             return base.Axes.format(self, **kwargs)
-
 
     AstroAxes._format_signatures[AstroAxes] = inspect.signature(CartesianAxes.format)
 else:  # pragma: no cover

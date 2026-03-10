@@ -81,6 +81,11 @@ def _get_axes_module():
     return paxes
 
 
+def _looks_like_astropy_projection(proj):
+    module = getattr(type(proj), "__module__", "")
+    return module.startswith("astropy.")
+
+
 def _prefixed_projection_name(name):
     if name.startswith("ultraplot_"):
         return name if name in mproj.get_projection_names() else None
@@ -148,6 +153,17 @@ def _wrap_external_projection(figure, projection):
 
 
 @register_projection_binding(
+    "astropy_wcs_string",
+    lambda proj, context: isinstance(proj, str)
+    and proj in ("astro", "astropy", "wcs", "ultraplot_astro"),
+)
+def _resolve_astropy_wcs_string(proj, context):
+    if _get_axes_module().get_astro_axes_class(load=True) is None:
+        return ProjectionResolution()
+    return ProjectionResolution(projection="ultraplot_astro")
+
+
+@register_projection_binding(
     "native_ultraplot_string",
     lambda proj, context: isinstance(proj, str)
     and _prefixed_projection_name(proj) is not None,
@@ -160,8 +176,9 @@ def _resolve_native_ultraplot_string(proj, context):
     "astropy_wcs_object",
     lambda proj, context: (
         not isinstance(proj, str)
-        and bool(_get_axes_module().ASTROPY_WCS_TYPES)
-        and isinstance(proj, _get_axes_module().ASTROPY_WCS_TYPES)
+        and _looks_like_astropy_projection(proj)
+        and bool(_get_axes_module().get_astropy_wcs_types(load=True))
+        and isinstance(proj, _get_axes_module().get_astropy_wcs_types())
     ),
 )
 def _resolve_astropy_wcs_object(proj, context):
@@ -221,7 +238,8 @@ def _resolve_geographic_projection_name(proj, context):
 
 @register_projection_binding(
     "registered_matplotlib_string",
-    lambda proj, context: isinstance(proj, str) and proj in mproj.get_projection_names(),
+    lambda proj, context: isinstance(proj, str)
+    and proj in mproj.get_projection_names(),
 )
 def _resolve_registered_matplotlib_string(proj, context):
     return ProjectionResolution(projection=proj)
@@ -257,7 +275,9 @@ def resolve_projection(proj, *, figure, proj_kw=None, backend=None):
     final = _wrap_external_projection(figure, resolution.projection)
     merged_kwargs = dict(resolution.kwargs)
     merged_kwargs.update(final.kwargs)
-    projection = final.projection if final.projection is not None else resolution.projection
+    projection = (
+        final.projection if final.projection is not None else resolution.projection
+    )
     return ProjectionResolution(projection=projection, kwargs=merged_kwargs)
 
 
