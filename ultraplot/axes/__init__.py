@@ -18,6 +18,7 @@ from .plot import PlotAxes  # noqa: F401
 from .polar import PolarAxes
 from .shared import _SharedAxes  # noqa: F401
 from .three import ThreeAxes  # noqa: F401
+from .astro import ASTROPY_WCS_TYPES, AstroAxes
 
 # Prevent importing module names and set order of appearance for objects
 __all__ = [
@@ -29,12 +30,17 @@ __all__ = [
     "ThreeAxes",
     "ExternalAxesContainer",
 ]
+if AstroAxes is not None:
+    __all__.append("AstroAxes")
 
 # Register projections with package prefix to avoid conflicts
 # NOTE: We integrate with cartopy and basemap rather than using matplotlib's
 # native projection system. Therefore axes names are not part of public API.
 _cls_dict = {}  # track valid names
-for _cls in (CartesianAxes, PolarAxes, _CartopyAxes, _BasemapAxes, ThreeAxes):
+_projection_classes = [CartesianAxes, PolarAxes, _CartopyAxes, _BasemapAxes, ThreeAxes]
+if AstroAxes is not None:
+    _projection_classes.append(AstroAxes)
+for _cls in _projection_classes:
     for _name in (_cls._name, *_cls._name_aliases):
         with context._state_context(_cls, name="ultraplot_" + _name):
             mproj.register_projection(_cls)

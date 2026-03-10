@@ -929,6 +929,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if proj is None:
             if self._name in ("cartopy", "basemap"):
                 proj = copy.copy(self.projection)
+            elif self._name == "astro" and getattr(self, "wcs", None) is not None:
+                proj = self.wcs
             else:
                 proj = self._name
         kwargs = self.figure._parse_proj(proj, **kwargs)

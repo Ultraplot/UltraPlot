@@ -691,6 +691,30 @@ def test_panel_ticklabels_all_sides_share_and_no_share(share_panels):
     assert_panel(pax_bottom, "bottom", share_panels)
 
 
+def test_shared_panels_preserve_explicit_top_right_labels():
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    for ax in axs:
+        ax.imshow(np.zeros((10, 10)))
+        ax.xaxis.tick_top()
+        ax.xaxis.set_label_position("top")
+        ax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.yaxis.set_tick_params(labelright=True, labelleft=False)
+
+    pax_top = axs[0].panel("top")
+    pax_right = axs[1].panel("right")
+    fig.canvas.draw()
+
+    assert not axs[0]._is_ticklabel_on("labeltop")
+    assert pax_top._is_ticklabel_on("labeltop")
+    assert not pax_top._is_ticklabel_on("labelbottom")
+
+    assert not axs[1]._is_ticklabel_on("labelright")
+    assert pax_right._is_ticklabel_on("labelright")
+    assert not pax_right._is_ticklabel_on("labelleft")
+
+
 def test_non_rectangular_outside_labels_top():
     """
     Check that non-rectangular layouts work with outside labels.
@@ -773,6 +797,59 @@ def test_panel_share_flag_controls_group_membership():
     ax2[0].panel("top", share=False)
     fig2.canvas.draw()
     assert ax2[0]._panel_sharex_group is False
+
+
+def test_nonsharing_left_panel_moves_main_labels_outside():
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.format(ylabel="main ylabel")
+    pax = ax.panel("left", share=False)
+    pax.format(ylabel="panel ylabel")
+
+    fig.canvas.draw()
+
+    assert not ax._is_ticklabel_on("labelleft")
+    assert ax._is_ticklabel_on("labelright")
+    assert pax._is_ticklabel_on("labelleft")
+    assert not pax._is_ticklabel_on("labelright")
+    assert ax.yaxis.get_label_position() == "right"
+    assert pax.yaxis.get_label_position() == "left"
+
+
+def test_nonsharing_bottom_panel_moves_main_labels_outside():
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.format(xlabel="main xlabel")
+    pax = ax.panel("bottom", share=False)
+    pax.format(xlabel="panel xlabel")
+
+    fig.canvas.draw()
+
+    assert not ax._is_ticklabel_on("labelbottom")
+    assert ax._is_ticklabel_on("labeltop")
+    assert pax._is_ticklabel_on("labelbottom")
+    assert not pax._is_ticklabel_on("labeltop")
+    assert ax.xaxis.get_label_position() == "top"
+    assert pax.xaxis.get_label_position() == "bottom"
+
+
+def test_nonsharing_left_panel_gap_matches_right_panel():
+    def _panel_gap(side):
+        fig, axs = uplt.subplots()
+        ax = axs[0]
+        ax.format(ylabel="main ylabel")
+        pax = ax.panel(side, share=False)
+        pax.format(xlabel="panel xlabel", ylabel="panel ylabel")
+        fig.canvas.draw()
+        main = ax.get_position().bounds
+        panel = pax.get_position().bounds
+        if side == "left":
+            return main[0] - (panel[0] + panel[2])
+        return panel[0] - (main[0] + main[2])
+
+    gap_left = _panel_gap("left")
+    gap_right = _panel_gap("right")
+    assert abs(gap_left - gap_right) < 1e-3
 
 
 def test_ticklabels_with_guides_share_true_cartesian():
