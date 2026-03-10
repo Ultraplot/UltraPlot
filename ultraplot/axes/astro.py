@@ -245,7 +245,14 @@ if WCSAxes is not None:
                 return token == ("b" if axis == "x" else "l")
             return False
 
-        def _apply_ticklabel_state(self, axis: str, state: dict):
+        def _get_ticklabel_state(self, axis: str) -> dict[str, bool]:
+            sides = ("top", "bottom") if axis == "x" else ("left", "right")
+            return {
+                f"label{side}": self._is_ticklabel_on(f"label{side}")
+                for side in sides
+            }
+
+        def _set_ticklabel_state(self, axis: str, state: dict):
             coord = self._get_coord_helper(axis)
             if coord is None:
                 return
@@ -257,6 +264,9 @@ if WCSAxes is not None:
             coord.set_ticklabel_position(position)
             coord.set_axislabel_position(position)
             coord.set_ticklabel_visible(bool(positions))
+
+        def _apply_ticklabel_state(self, axis: str, state: dict):
+            self._set_ticklabel_state(axis, state)
 
         def format(
             self,
