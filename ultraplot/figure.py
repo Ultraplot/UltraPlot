@@ -1193,15 +1193,10 @@ class Figure(mfigure.Figure):
         axes = list(self._iter_axes(panels=True, hidden=False))
         groups = self._group_axes_by_axis(axes, axis)
 
-        # Version-dependent label name mapping for reading back params
-        label_keys = self._label_key_map()
-
         # Process each group independently
         for _, group_axes in groups.items():
             # Build baseline from MAIN axes only (exclude panels)
-            baseline, skip_group = self._compute_baseline_tick_state(
-                group_axes, axis, label_keys
-            )
+            baseline, skip_group = self._compute_baseline_tick_state(group_axes, axis)
             if skip_group:
                 continue
 
@@ -1215,26 +1210,9 @@ class Figure(mfigure.Figure):
                     continue
 
                 # Apply to geo/cartesian appropriately
-                self._set_ticklabel_state(axi, axis, masked)
+                axi._set_ticklabel_state(axis, masked)
 
         self.stale = True
-
-    def _label_key_map(self):
-        """
-        Return a mapping for version-dependent label keys for Matplotlib tick params.
-        """
-        first_axi = next(self._iter_axes(panels=True), None)
-        if first_axi is None:
-            return {
-                "labelleft": "labelleft",
-                "labelright": "labelright",
-                "labeltop": "labeltop",
-                "labelbottom": "labelbottom",
-            }
-        return {
-            name: first_axi._label_key(name)
-            for name in ("labelleft", "labelright", "labeltop", "labelbottom")
-        }
 
     def _group_axes_by_axis(self, axes, axis: str):
         """
@@ -1256,7 +1234,7 @@ class Figure(mfigure.Figure):
             groups[key].append(axi)
         return groups
 
-    def _compute_baseline_tick_state(self, group_axes, axis: str, label_keys):
+    def _compute_baseline_tick_state(self, group_axes, axis: str):
         """
         Build a baseline ticklabel visibility dict from MAIN axes (panels excluded).
         Returns (baseline_dict, skip_group: bool). Emits warnings when encountering
@@ -1290,22 +1268,9 @@ class Figure(mfigure.Figure):
             subplot_types.add(type(axi))
 
             # Collect label visibility state
-            if isinstance(axi, paxes.CartesianAxes):
-                params = getattr(axi, f"{axis}axis").get_tick_params()
-                for side in sides:
-                    key = label_keys[f"label{side}"]
-                    if params.get(key):
-                        baseline[key] = params[key]
-            elif paxes.AstroAxes is not None and isinstance(axi, paxes.AstroAxes):
-                for side in sides:
-                    key = f"label{side}"
-                    if axi._is_ticklabel_on(key):
-                        baseline[key] = True
-            elif isinstance(axi, paxes.GeoAxes):
-                for side in sides:
-                    key = f"label{side}"
-                    if axi._is_ticklabel_on(key):
-                        baseline[key] = axi._is_ticklabel_on(key)
+            for key, value in axi._get_ticklabel_state(axis).items():
+                if value:
+                    baseline[key] = value
 
         if unsupported_found:
             return {}, True
@@ -1324,16 +1289,12 @@ class Figure(mfigure.Figure):
     ):
         """
         Apply figure-border constraints and panel opposite-side suppression.
-        Keeps label key mapping per-axis for cartesian.
         """
         from .axes.cartesian import OPPOSITE_SIDE
 
         masked = baseline.copy()
         for side in sides:
             label = f"label{side}"
-            if isinstance(axi, paxes.CartesianAxes):
-                # Use per-axis version-mapped key when writing
-                label = axi._label_key(label)
 
             # Only keep labels on true figure borders
             if axi not in outer_axes[side]:
@@ -1374,31 +1335,6 @@ class Figure(mfigure.Figure):
                 return 3
 
         return level
-
-    def _get_ticklabel_state(self, axi, axis: str):
-        """Read the visible ticklabel sides for cartesian, geo, and astro axes."""
-        sides = ("top", "bottom") if axis == "x" else ("left", "right")
-        if isinstance(axi, paxes.GeoAxes):
-            return {f"label{side}": axi._is_ticklabel_on(f"label{side}") for side in sides}
-        if paxes.AstroAxes is not None and isinstance(axi, paxes.AstroAxes):
-            return {f"label{side}": axi._is_ticklabel_on(f"label{side}") for side in sides}
-        params = getattr(axi, f"{axis}axis").get_tick_params()
-        return {
-            f"label{side}": params.get(axi._label_key(f"label{side}"), False)
-            for side in sides
-        }
-
-    def _set_ticklabel_state(self, axi, axis: str, state: dict):
-        """Apply the computed ticklabel state to cartesian or geo axes."""
-        if state:
-            # Normalize "x"/"y" values to booleans for both Geo and Cartesian axes
-            cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
-            if isinstance(axi, paxes.GeoAxes):
-                axi._toggle_gridliner_labels(**cleaned)
-            elif paxes.AstroAxes is not None and isinstance(axi, paxes.AstroAxes):
-                axi._apply_ticklabel_state(axis, cleaned)
-            else:
-                getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
 
     def _context_adjusting(self, cache=True):
         """
@@ -1787,10 +1723,10 @@ class Figure(mfigure.Figure):
         # Skip this for filled panels (colorbars/legends)
         if not filled and share:
             shared_axis = "y" if side in ("left", "right") else "x"
-            shared_state = self._get_ticklabel_state(ax, shared_axis)
+            shared_state = ax._get_ticklabel_state(shared_axis)
             main_state = shared_state.copy()
             main_state[f"label{side}"] = False
-            self._set_ticklabel_state(ax, shared_axis, main_state)
+            ax._set_ticklabel_state(shared_axis, main_state)
 
         # Panel labels: for non-sharing panels, keep labels on the outer edges of the
         # full stack. For shared panels, only propagate the panel-side labels where
