@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import subprocess
@@ -9,11 +10,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 try:
-    from radon.complexity import cc_rank, cc_visit
-except Exception as exc:  # pragma: no cover - diagnostic path
-    raise SystemExit(
-        f"radon is required to build the complexity report: {exc}"
-    ) from exc
+    from radon.complexity import cc_rank as _radon_cc_rank
+    from radon.complexity import cc_visit as _radon_cc_visit
+except Exception:  # pragma: no cover - fallback exercised in older CI envs
+    _radon_cc_rank = None
+    _radon_cc_visit = None
 
 
 HUNK_PATTERN = re.compile(
@@ -56,6 +57,185 @@ class FileReport:
     base_touched_blocks: int
     head_touched_blocks: int
     blocks: list[BlockDelta]
+
+
+@dataclass(frozen=True)
+class FallbackBlock:
+    name: str
+    lineno: int
+    endline: int
+    complexity: int
+    closures: list["FallbackBlock"]
+    is_class: bool = False
+
+
+def _fallback_cc_rank(complexity: int) -> str:
+    if complexity <= 5:
+        return "A"
+    if complexity <= 10:
+        return "B"
+    if complexity <= 20:
+        return "C"
+    if complexity <= 30:
+        return "D"
+    if complexity <= 40:
+        return "E"
+    return "F"
+
+
+class _CyclomaticCounter(ast.NodeVisitor):
+    def __init__(self):
+        self.complexity = 1
+
+    def _visit_statements(self, statements):
+        for statement in statements:
+            self.visit(statement)
+
+    def visit_FunctionDef(self, node):
+        return None
+
+    def visit_AsyncFunctionDef(self, node):
+        return None
+
+    def visit_ClassDef(self, node):
+        return None
+
+    def visit_If(self, node):
+        self.complexity += 1
+        self.visit(node.test)
+        self._visit_statements(node.body)
+        self._visit_statements(node.orelse)
+
+    def visit_IfExp(self, node):
+        self.complexity += 1
+        self.visit(node.test)
+        self.visit(node.body)
+        self.visit(node.orelse)
+
+    def visit_For(self, node):
+        self.complexity += 1
+        self.visit(node.target)
+        self.visit(node.iter)
+        self._visit_statements(node.body)
+        self._visit_statements(node.orelse)
+
+    def visit_AsyncFor(self, node):
+        self.visit_For(node)
+
+    def visit_While(self, node):
+        self.complexity += 1
+        self.visit(node.test)
+        self._visit_statements(node.body)
+        self._visit_statements(node.orelse)
+
+    def visit_Try(self, node):
+        self.complexity += len(node.handlers)
+        if node.orelse:
+            self.complexity += 1
+        self._visit_statements(node.body)
+        for handler in node.handlers:
+            self.visit(handler)
+        self._visit_statements(node.orelse)
+        self._visit_statements(node.finalbody)
+
+    def visit_ExceptHandler(self, node):
+        if node.type is not None:
+            self.visit(node.type)
+        self._visit_statements(node.body)
+
+    def visit_With(self, node):
+        self.complexity += 1
+        for item in node.items:
+            if item.context_expr is not None:
+                self.visit(item.context_expr)
+            if item.optional_vars is not None:
+                self.visit(item.optional_vars)
+        self._visit_statements(node.body)
+
+    def visit_AsyncWith(self, node):
+        self.visit_With(node)
+
+    def visit_Assert(self, node):
+        self.complexity += 1
+        self.visit(node.test)
+        if node.msg is not None:
+            self.visit(node.msg)
+
+    def visit_BoolOp(self, node):
+        self.complexity += max(0, len(node.values) - 1)
+        for value in node.values:
+            self.visit(value)
+
+    def visit_comprehension(self, node):
+        self.complexity += 1 + len(node.ifs)
+        self.visit(node.target)
+        self.visit(node.iter)
+        for condition in node.ifs:
+            self.visit(condition)
+
+    def visit_Match(self, node):
+        self.complexity += len(node.cases)
+        self.visit(node.subject)
+        for case in node.cases:
+            self.visit(case)
+
+    def visit_match_case(self, node):
+        if node.guard is not None:
+            self.visit(node.guard)
+        self._visit_statements(node.body)
+
+
+def _fallback_complexity(node: ast.AST) -> int:
+    counter = _CyclomaticCounter()
+    if isinstance(node, ast.ClassDef):
+        statements = node.body
+    else:
+        statements = getattr(node, "body", [])
+    counter._visit_statements(statements)
+    return counter.complexity
+
+
+def _fallback_collect_blocks(nodes: list[ast.stmt]) -> list[FallbackBlock]:
+    blocks: list[FallbackBlock] = []
+    for node in nodes:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            blocks.append(
+                FallbackBlock(
+                    name=node.name,
+                    lineno=node.lineno,
+                    endline=getattr(node, "end_lineno", node.lineno),
+                    complexity=_fallback_complexity(node),
+                    closures=_fallback_collect_blocks(node.body),
+                )
+            )
+        elif isinstance(node, ast.ClassDef):
+            blocks.append(
+                FallbackBlock(
+                    name=node.name,
+                    lineno=node.lineno,
+                    endline=getattr(node, "end_lineno", node.lineno),
+                    complexity=_fallback_complexity(node),
+                    closures=_fallback_collect_blocks(node.body),
+                    is_class=True,
+                )
+            )
+    return blocks
+
+
+def _fallback_cc_visit(source: str):
+    return _fallback_collect_blocks(ast.parse(source).body)
+
+
+def _cc_rank_wrapper(complexity: int) -> str:
+    if _radon_cc_rank is not None:
+        return _radon_cc_rank(complexity)
+    return _fallback_cc_rank(complexity)
+
+
+def _cc_visit_wrapper(source: str):
+    if _radon_cc_visit is not None:
+        return _radon_cc_visit(source)
+    return _fallback_cc_visit(source)
 
 
 def _git(
@@ -101,18 +281,22 @@ def _block_name(block, parent: str | None = None) -> str:
     return block.name
 
 
+def _is_class_block(block) -> bool:
+    return getattr(block, "is_class", False) or type(block).__name__ == "Class"
+
+
 def _flatten_blocks(blocks, parent: str | None = None) -> list[BlockMetric]:
     flattened: list[BlockMetric] = []
     for block in blocks:
         name = _block_name(block, parent=parent)
-        if type(block).__name__ != "Class":
+        if not _is_class_block(block):
             flattened.append(
                 BlockMetric(
                     name=name,
                     lineno=block.lineno,
                     endline=getattr(block, "endline", block.lineno),
                     complexity=block.complexity,
-                    rank=cc_rank(block.complexity),
+                    rank=_cc_rank_wrapper(block.complexity),
                 )
             )
         closures = getattr(block, "closures", [])
@@ -124,7 +308,7 @@ def _flatten_blocks(blocks, parent: str | None = None) -> list[BlockMetric]:
 def _analyze_source(source: str | None) -> dict[str, BlockMetric]:
     if not source:
         return {}
-    blocks = _flatten_blocks(cc_visit(source))
+    blocks = _flatten_blocks(_cc_visit_wrapper(source))
     return {block.name: block for block in blocks}
 
 
