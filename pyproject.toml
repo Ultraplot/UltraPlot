@@ -55,7 +55,10 @@ write_to_template = "__version__ = '{version}'\n"
 
 
 [tool.ruff]
-ignore = ["I001", "I002", "I003", "I004"]
+
+[tool.ruff.lint]
+ignore = ["I001", "I002"]
+external = ["U100"]
 
 [tool.basedpyright]
 exclude = ["**/*.ipynb"]
