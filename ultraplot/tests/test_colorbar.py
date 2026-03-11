@@ -47,6 +47,22 @@ def test_explicit_legend_with_handles_under_external_mode():
     assert "LegendLabel" in labels
 
 
+@pytest.mark.parametrize("kwargs", [{"frame": False}, {"frameon": False}])
+def test_outer_colorbar_frame_alias_controls_outline(kwargs):
+    fig, ax = uplt.subplots()
+    cb = ax.colorbar("magma", loc="r", **kwargs)
+    assert cb.outline is not None
+    assert not cb.outline.get_visible()
+
+
+@pytest.mark.parametrize("kwargs", [{"frame": False}, {"frameon": False}])
+def test_inset_colorbar_frame_alias_still_controls_frame(rng, kwargs):
+    fig, ax = uplt.subplots()
+    m = ax.imshow(rng.random((10, 10)))
+    cb = ax.colorbar(m, loc="ur", **kwargs)
+    assert cb.ax._inset_colorbar_frame is None
+
+
 @pytest.mark.parametrize(
     "orientation, labelloc",
     [
