@@ -4,7 +4,6 @@ import importlib.util
 import re
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = ROOT / "pyproject.toml"
 MAIN_WORKFLOW = ROOT / ".github" / "workflows" / "main.yml"
