@@ -494,6 +494,19 @@ def _patch_joinstyle(value: Any, default: str = _DEFAULT_GEO_JOINSTYLE) -> str:
     return default
 
 
+_PATCH_STYLE_PROP_SPECS = {
+    "facecolor": {"default": "none", "transform": _first_scalar},
+    "edgecolor": {"default": "none", "transform": _first_scalar},
+    "linewidth": {"default": 0.0, "transform": _first_scalar},
+    "linestyle": {"default": None, "transform": _first_scalar},
+    "hatch": {"default": None, "transform": None},
+    "hatch_linewidth": {"default": None, "transform": None},
+    "fill": {"default": None, "transform": None},
+    "alpha": {"default": None, "transform": None},
+    "capstyle": {"default": None, "transform": None},
+}
+
+
 def _copy_patch_style(
     legend_handle: mpatches.Patch,
     orig_handle: Any,
@@ -503,25 +516,17 @@ def _copy_patch_style(
     """
     Copy common patch-style properties from source artist to legend proxy.
     """
-    specs = (
-        ("get_facecolor", "set_facecolor", "none", _first_scalar),
-        ("get_edgecolor", "set_edgecolor", "none", _first_scalar),
-        ("get_linewidth", "set_linewidth", 0.0, _first_scalar),
-        ("get_linestyle", "set_linestyle", None, _first_scalar),
-        ("get_hatch", "set_hatch", None, None),
-        ("get_fill", "set_fill", None, None),
-        ("get_alpha", "set_alpha", None, None),
-        ("get_capstyle", "set_capstyle", None, None),
-    )
-    for getter_name, setter_name, default, transform in specs:
-        getter = getattr(orig_handle, getter_name, None)
-        setter = getattr(legend_handle, setter_name, None)
+    for prop, spec in _PATCH_STYLE_PROP_SPECS.items():
+        getter = getattr(orig_handle, f"get_{prop}", None)
+        setter = getattr(legend_handle, f"set_{prop}", None)
         if not callable(getter) or not callable(setter):
             continue
         try:
             value = getter()
         except Exception:
             continue
+        default = spec["default"]
+        transform = spec["transform"]
         if transform is not None:
             value = transform(value, default=default)
         elif value is None:
