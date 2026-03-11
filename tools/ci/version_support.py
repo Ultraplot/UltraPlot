@@ -21,11 +21,17 @@ PYPROJECT = ROOT / "pyproject.toml"
 
 
 def load_pyproject(path: Path = PYPROJECT) -> dict:
+    """
+    Load the project metadata used to define the supported version contract.
+    """
     with path.open("rb") as fh:
         return tomllib.load(fh)
 
 
 def _expand_half_open_minor_range(spec: str) -> list[str]:
+    """
+    Expand constraints like ``>=3.10,<3.15`` into minor-version strings.
+    """
     min_match = re.search(r">=\s*(\d+\.\d+)", spec)
     max_match = re.search(r"<\s*(\d+\.\d+)", spec)
     if min_match is None or max_match is None:
@@ -41,11 +47,17 @@ def _expand_half_open_minor_range(spec: str) -> list[str]:
 
 
 def supported_python_versions(pyproject: dict | None = None) -> list[str]:
+    """
+    Return the supported Python minors derived from ``requires-python``.
+    """
     pyproject = pyproject or load_pyproject()
     return _expand_half_open_minor_range(pyproject["project"]["requires-python"])
 
 
 def supported_matplotlib_versions(pyproject: dict | None = None) -> list[str]:
+    """
+    Return the supported Matplotlib minors derived from dependencies.
+    """
     pyproject = pyproject or load_pyproject()
     for dep in pyproject["project"]["dependencies"]:
         if dep.startswith("matplotlib"):
@@ -54,6 +66,9 @@ def supported_matplotlib_versions(pyproject: dict | None = None) -> list[str]:
 
 
 def supported_python_classifiers(pyproject: dict | None = None) -> list[str]:
+    """
+    Extract the explicit Python version classifiers from ``pyproject.toml``.
+    """
     pyproject = pyproject or load_pyproject()
     prefix = "Programming Language :: Python :: "
     versions = []
@@ -68,6 +83,12 @@ def supported_python_classifiers(pyproject: dict | None = None) -> list[str]:
 def build_core_test_matrix(
     python_versions: list[str], matplotlib_versions: list[str]
 ) -> list[dict[str, str]]:
+    """
+    Build the representative CI matrix from the supported version bounds.
+
+    We intentionally sample the oldest, midpoint, and newest supported
+    Python/Matplotlib combinations instead of exhaustively testing every pair.
+    """
     midpoint_python = python_versions[len(python_versions) // 2]
     midpoint_mpl = matplotlib_versions[len(matplotlib_versions) // 2]
     candidates = [
@@ -87,6 +108,9 @@ def build_core_test_matrix(
 
 
 def build_version_payload(pyproject: dict | None = None) -> dict:
+    """
+    Bundle the version contract into the shape expected by CI and tests.
+    """
     pyproject = pyproject or load_pyproject()
     python_versions = supported_python_versions(pyproject)
     matplotlib_versions = supported_matplotlib_versions(pyproject)
@@ -98,6 +122,9 @@ def build_version_payload(pyproject: dict | None = None) -> dict:
 
 
 def _emit_github_output(payload: dict) -> str:
+    """
+    Format the derived version payload for ``$GITHUB_OUTPUT`` consumption.
+    """
     return "\n".join(
         (
             f"python-versions={json.dumps(payload['python_versions'], separators=(',', ':'))}",
@@ -108,6 +135,9 @@ def _emit_github_output(payload: dict) -> str:
 
 
 def main() -> int:
+    """
+    CLI entry point used by GitHub Actions and local verification.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--format",
