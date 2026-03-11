@@ -515,9 +515,12 @@ format, formatter, ticklabels : formatter-spec, optional
     constructor function.
 formatter_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Formatter` class.
-frame, frameon : bool, default: :rc:`colorbar.frameon`
-    For inset colorbars only. Indicates whether to draw a "frame",
-    just like `~matplotlib.axes.Axes.legend`.
+frame, frameon : bool, optional
+    For inset colorbars, indicates whether to draw a background "frame",
+    just like `~matplotlib.axes.Axes.legend`. Defaults to
+    :rc:`colorbar.frameon` for inset colorbars. For outer colorbars, this is a
+    backwards-compatible alias for `outline`; when omitted, outer colorbars
+    still default to :rc:`colorbar.outline`.
 tickminor : bool, optional
     Whether to add minor ticks using `~matplotlib.colorbar.ColorbarBase.minorticks_on`.
 tickloc, ticklocation : {'bottom', 'top', 'left', 'right'}, optional
@@ -553,7 +556,9 @@ rasterize : bool, default: :rc:`colorbar.rasterized`
     but ultraplot changes this to ``False`` since rasterization can cause misalignment
     between the color patches and the colorbar outline.
 outline : bool, None default : None
-    Controls the visibility of the frame. When set to False, the spines of the colorbar are hidden. If set to `None` it uses the `rc['colorbar.outline']` value.
+    Controls the visibility of the outer colorbar outline. When set to False,
+    the spines of the colorbar are hidden. If set to `None` it uses the
+    `rc['colorbar.outline']` value.
 labelrotation : str, float, default: None
     Controls the rotation of the colorbar label. When set to None it takes on the value of `rc["colorbar.labelrotation"]`. When set to auto it produces a sensible default where the rotation is adjusted to where the colorbar is located. For example, a horizontal colorbar with a label to the left or right will match the horizontal alignment and rotate the label to 0 degrees. Users can provide a float to rotate to any arbitrary angle.
 
@@ -1132,6 +1137,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         linewidth=None,
         edgefix=None,
         rasterized=None,
+        frame: Optional[bool] = None,
+        frameon: Optional[bool] = None,
         outline: Union[bool, None] = None,
         labelrotation: Union[str, float] = None,
         center_levels=None,
@@ -1193,6 +1200,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             linewidth=linewidth,
             edgefix=edgefix,
             rasterized=rasterized,
+            frame=frame,
+            frameon=frameon,
             outline=outline,
             labelrotation=labelrotation,
             center_levels=center_levels,
@@ -1905,7 +1914,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Return the axes and adjusted keyword args for an inset colorbar.
         """
         # Basic colorbar properties
-        frame = _not_none(frame=frame, frameon=frameon, default=rc["colorbar.frameon"])
+        frame_enabled = _not_none(
+            frame=frame, frameon=frameon, default=rc["colorbar.frameon"]
+        )
         length = _not_none(
             length=length, shrink=shrink, default=rc["colorbar.insetlength"]
         )  # noqa: E501
@@ -1969,8 +1980,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         ax.set_axes_locator(locator)
         self.add_child_axes(ax)
         kw_frame, kwargs = self._parse_frame("colorbar", **kwargs)
-        if frame:
-            frame = self._add_guide_frame(
+        frame_artist = None
+        if frame_enabled:
+            frame_artist = self._add_guide_frame(
                 *bounds_frame, fontsize=tick_fontsize, **kw_frame
             )
         ax._inset_colorbar_layout = {
@@ -1986,7 +1998,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             "pad_raw": pad_raw,
         }
         ax._inset_colorbar_parent = self
-        ax._inset_colorbar_frame = frame
+        ax._inset_colorbar_frame = frame_artist
 
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
         return ax, kwargs
