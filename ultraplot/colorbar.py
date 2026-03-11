@@ -99,6 +99,8 @@ class UltraColorbar:
         linewidth: Optional[Union[float, str]] = None,
         edgefix: Optional[bool] = None,
         rasterized: Optional[bool] = None,
+        frame: Optional[bool] = None,
+        frameon: Optional[bool] = None,
         outline: Union[bool, None] = None,
         labelrotation: Optional[Union[str, float]] = None,
         center_levels: Optional[bool] = None,
@@ -160,7 +162,9 @@ class UltraColorbar:
         # Generate and prepare the colorbar axes
         # NOTE: The inset axes function needs 'label' to know how to pad the box
         # TODO: Use seperate keywords for frame properties vs. colorbar edge properties?
+        frame = _not_none(frame=frame, frameon=frameon)
         if loc in ("fill", "left", "right", "top", "bottom"):
+            outline = _not_none(outline=outline, frame=frame)
             length = _not_none(length, rc["colorbar.length"])  # for _add_guide_panel
             kwargs.update({"align": align, "length": length})
             extendsize = _not_none(extendsize, rc["colorbar.extend"])
@@ -183,6 +187,7 @@ class UltraColorbar:
             extendsize = _not_none(extendsize, rc["colorbar.insetextend"])
             cax, kwargs = ax._parse_colorbar_inset(
                 loc=loc,
+                frame=frame,
                 labelloc=labelloc,
                 labelrotation=labelrotation,
                 labelsize=labelsize,
