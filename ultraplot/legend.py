@@ -539,7 +539,9 @@ def _copy_patch_style(
             value = default
         if value is not None:
             setter(value)
-    legend_handle.set_joinstyle(_patch_joinstyle(orig_handle, default=joinstyle_default))
+    legend_handle.set_joinstyle(
+        _patch_joinstyle(orig_handle, default=joinstyle_default)
+    )
 
 
 def _feature_legend_patch(
