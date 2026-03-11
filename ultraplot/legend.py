@@ -494,6 +494,43 @@ def _patch_joinstyle(value: Any, default: str = _DEFAULT_GEO_JOINSTYLE) -> str:
     return default
 
 
+def _copy_patch_style(
+    legend_handle: mpatches.Patch,
+    orig_handle: Any,
+    *,
+    joinstyle_default: str = _DEFAULT_GEO_JOINSTYLE,
+) -> None:
+    """
+    Copy common patch-style properties from source artist to legend proxy.
+    """
+    specs = (
+        ("get_facecolor", "set_facecolor", "none", _first_scalar),
+        ("get_edgecolor", "set_edgecolor", "none", _first_scalar),
+        ("get_linewidth", "set_linewidth", 0.0, _first_scalar),
+        ("get_linestyle", "set_linestyle", None, _first_scalar),
+        ("get_hatch", "set_hatch", None, None),
+        ("get_fill", "set_fill", None, None),
+        ("get_alpha", "set_alpha", None, None),
+        ("get_capstyle", "set_capstyle", None, None),
+    )
+    for getter_name, setter_name, default, transform in specs:
+        getter = getattr(orig_handle, getter_name, None)
+        setter = getattr(legend_handle, setter_name, None)
+        if not callable(getter) or not callable(setter):
+            continue
+        try:
+            value = getter()
+        except Exception:
+            continue
+        if transform is not None:
+            value = transform(value, default=default)
+        elif value is None:
+            value = default
+        if value is not None:
+            setter(value)
+    legend_handle.set_joinstyle(_patch_joinstyle(orig_handle, default=joinstyle_default))
+
+
 def _feature_legend_patch(
     legend,
     orig_handle,
@@ -579,36 +616,7 @@ class _FeatureArtistLegendHandler(mhandler.HandlerPatch):
         super().__init__(patch_func=_feature_legend_patch)
 
     def update_prop(self, legend_handle, orig_handle, legend):
-        facecolor = _first_scalar(
-            (
-                orig_handle.get_facecolor()
-                if hasattr(orig_handle, "get_facecolor")
-                else None
-            ),
-            default="none",
-        )
-        edgecolor = _first_scalar(
-            (
-                orig_handle.get_edgecolor()
-                if hasattr(orig_handle, "get_edgecolor")
-                else None
-            ),
-            default="none",
-        )
-        linewidth = _first_scalar(
-            (
-                orig_handle.get_linewidth()
-                if hasattr(orig_handle, "get_linewidth")
-                else None
-            ),
-            default=0.0,
-        )
-        legend_handle.set_facecolor(facecolor)
-        legend_handle.set_edgecolor(edgecolor)
-        legend_handle.set_linewidth(linewidth)
-        legend_handle.set_joinstyle(_patch_joinstyle(orig_handle))
-        if hasattr(orig_handle, "get_alpha"):
-            legend_handle.set_alpha(orig_handle.get_alpha())
+        _copy_patch_style(legend_handle, orig_handle)
         legend._set_artist_props(legend_handle)
         legend_handle.set_clip_box(None)
         legend_handle.set_clip_path(None)
