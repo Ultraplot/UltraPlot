@@ -1769,41 +1769,6 @@ class Figure(mfigure.Figure):
                         pax._label_key("labelleft"): False,
                     }
                 )
-        elif side == "left" and not share and not filled:
-            ax.yaxis.tick_right()
-            ax.yaxis.set_label_position("right")
-            ax.yaxis.set_tick_params(
-                **{
-                    ax._label_key("labelleft"): False,
-                    ax._label_key("labelright"): True,
-                }
-            )
-            pax.yaxis.tick_left()
-            pax.yaxis.set_label_position("left")
-            pax.yaxis.set_tick_params(
-                **{
-                    pax._label_key("labelleft"): True,
-                    pax._label_key("labelright"): False,
-                }
-            )
-        elif side == "bottom" and not share and not filled:
-            ax.xaxis.tick_top()
-            ax.xaxis.set_label_position("top")
-            ax.xaxis.set_tick_params(
-                **{
-                    ax._label_key("labelbottom"): False,
-                    ax._label_key("labeltop"): True,
-                }
-            )
-            pax.xaxis.tick_bottom()
-            pax.xaxis.set_label_position("bottom")
-            pax.xaxis.set_tick_params(
-                **{
-                    pax._label_key("labelbottom"): True,
-                    pax._label_key("labeltop"): False,
-                }
-            )
-
         return pax
 
     @_clear_border_cache

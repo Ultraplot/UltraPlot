@@ -53,7 +53,10 @@ import importlib.util
 import json
 import sys
 import ultraplot.axes as paxes
-spec = importlib.util.find_spec("astropy.visualization.wcsaxes")
+try:
+    spec = importlib.util.find_spec("astropy.visualization.wcsaxes")
+except ModuleNotFoundError:
+    spec = None
 error = None
 astro_is_none = None
 try:
