@@ -135,10 +135,10 @@ functionality to existing figure and axes methods.
 Integration features
 ====================
 
-UltraPlot includes *optional* integration features with four external
+UltraPlot includes *optional* integration features with several external
 packages: the `pandas`_ and `xarray`_ packages, used for working with annotated
-tables and arrays, and the `cartopy`_ and `basemap`_ geographic
-plotting packages.
+tables and arrays, the `cartopy`_ and `basemap`_ geographic plotting packages,
+and Astropy WCS axes support for astronomical images.
 
 * The :class:`~ultraplot.axes.GeoAxes` class uses the `cartopy`_ or
   `basemap`_ packages to :ref:`plot geophysical data <ug_geoplot>`,
@@ -147,6 +147,10 @@ plotting packages.
   provides a simpler, cleaner interface than the original `cartopy`_ and `basemap`_
   interfaces. Figures can be filled with :class:`~ultraplot.axes.GeoAxes` by passing the
   `proj` keyword to :func:`~ultraplot.ui.subplots`.
+* UltraPlot can create native Astropy-backed WCS axes for astronomical plots.
+  When Astropy is installed, WCS objects and the ``"wcs"`` / ``"astropy"`` projection
+  aliases resolve to :class:`~ultraplot.axes.AstroAxes`, preserving Astropy
+  transforms like :meth:`~astropy.visualization.wcsaxes.core.WCSAxes.get_transform`.
 * If you pass a :class:`~pandas.Series`, :class:`~pandas.DataFrame`, or :class:`~xarray.DataArray`
   to any plotting command, the axis labels, tick labels, titles, colorbar
   labels, and legend labels are automatically applied from the metadata. If
@@ -157,6 +161,38 @@ plotting packages.
 
 Since these features are optional,
 UltraPlot can be used without installing any of these packages.
+
+.. _ug_astro_axes:
+
+Astropy WCS axes
+----------------
+
+UltraPlot can integrate with Astropy's WCSAxes for astronomical images and
+world-coordinate overlays. Install Astropy only when you need that support:
+
+.. code-block:: bash
+
+   pip install "ultraplot[astro]"
+
+You can then create WCS-aware axes either by passing a WCS object directly or
+by using the ``"wcs"`` projection alias with an explicit ``wcs=...`` argument:
+
+.. code-block:: python
+
+   from astropy.wcs import WCS
+   import ultraplot as uplt
+
+   wcs = WCS(naxis=2)
+   fig, axs = uplt.subplots(ncols=2, proj=[wcs, "wcs"], wcs=wcs)
+   axs[0].imshow(image)
+   axs[1].imshow(image)
+   axs[1].plot(ra, dec, transform=axs[1].get_transform("icrs"))
+
+These axes are represented by :class:`~ultraplot.axes.AstroAxes`, so they
+participate in UltraPlot sharing, panel layout, and figure-level formatting.
+UltraPlot's :meth:`~ultraplot.axes.Axes.format` supports a focused subset of WCS
+label, tick, and grid controls, while Astropy-specific coordinate customization
+is still available directly through ``ax.coords[...]``.
 
 .. _ug_external_axes:
 
