@@ -79,9 +79,7 @@ astropy = [
 ]
 geo = [
     "cartopy",
-]
-cartopy = [
-    "cartopy",
+    "basemap",
 ]
 ternary = [
     "mpltern",
@@ -92,6 +90,7 @@ mpltern = [
 all = [
     "astropy",
     "cartopy",
+    "basemap",
     "mpltern",
 ]
 docs = [
