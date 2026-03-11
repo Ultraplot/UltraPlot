@@ -515,6 +515,12 @@ def _copy_patch_style(
 ) -> None:
     """
     Copy common patch-style properties from source artist to legend proxy.
+
+    Matplotlib does not provide a reliable generic style-transfer API for
+    cross-family artists here. In particular, `Artist.update_from()` is not
+    safe for `Collection -> Patch` copies like `FeatureArtist -> PathPatch`,
+    and `properties()` still leaves us to normalize collection-valued fields.
+    So this helper intentionally copies the shared patch-style surface only.
     """
     for prop, spec in _PATCH_STYLE_PROP_SPECS.items():
         getter = getattr(orig_handle, f"get_{prop}", None)
