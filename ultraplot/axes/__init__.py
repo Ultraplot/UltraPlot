@@ -68,15 +68,20 @@ def _load_astro_axes():
     global _ASTROPY_WCS_TYPES, _ASTRO_AXES_CLASS, _ASTRO_LOADED
     if _ASTRO_LOADED:
         return _ASTRO_AXES_CLASS
-    from .astro import ASTROPY_WCS_TYPES as _types, AstroAxes as _astro_axes
+    try:
+        from .astro import ASTROPY_WCS_TYPES as _types, AstroAxes as _astro_axes
+    except ImportError as exc:
+        raise ImportError(
+            "AstroAxes support requires astropy. Install it with "
+            '`pip install "ultraplot[astro]"` or `pip install astropy`.'
+        ) from exc
 
     _ASTRO_LOADED = True
     _ASTROPY_WCS_TYPES = _types
     _ASTRO_AXES_CLASS = _astro_axes
-    if _ASTRO_AXES_CLASS is not None:
-        if "AstroAxes" not in __all__:
-            __all__.append("AstroAxes")
-        _register_projection_class(_ASTRO_AXES_CLASS)
+    if "AstroAxes" not in __all__:
+        __all__.append("AstroAxes")
+    _register_projection_class(_ASTRO_AXES_CLASS)
     return _ASTRO_AXES_CLASS
 
 

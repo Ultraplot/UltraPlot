@@ -54,11 +54,19 @@ import json
 import sys
 import ultraplot.axes as paxes
 spec = importlib.util.find_spec("astropy.visualization.wcsaxes")
-astro = paxes.AstroAxes
+error = None
+astro_is_none = None
+try:
+    astro = paxes.AstroAxes
+except ImportError as exc:
+    error = str(exc)
+else:
+    astro_is_none = astro is None
 mods = [name for name in sys.modules if name == "astropy" or name.startswith("astropy.")]
 print(json.dumps({
     "available": bool(spec),
-    "astro_is_none": astro is None,
+    "astro_is_none": astro_is_none,
+    "error": error,
     "loaded": bool(mods),
 }))
 """
@@ -67,7 +75,8 @@ print(json.dumps({
         assert not out["astro_is_none"]
         assert out["loaded"]
     else:
-        assert out["astro_is_none"]
+        assert out["error"] is not None
+        assert "requires astropy" in out["error"]
 
 
 def test_star_import_exposes_public_api():

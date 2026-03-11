@@ -158,8 +158,7 @@ def _wrap_external_projection(figure, projection):
     and proj in ("astro", "astropy", "wcs", "ultraplot_astro"),
 )
 def _resolve_astropy_wcs_string(proj, context):
-    if _get_axes_module().get_astro_axes_class(load=True) is None:
-        return ProjectionResolution()
+    _get_axes_module().get_astro_axes_class(load=True)
     return ProjectionResolution(projection="ultraplot_astro")
 
 
