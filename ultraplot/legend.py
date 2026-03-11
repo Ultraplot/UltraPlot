@@ -656,7 +656,7 @@ def _geometry_entry_patch(
         ydescent=ydescent,
         width=width,
         height=height,
-        preserve_aspect=False,
+        preserve_aspect=True,
     )
     return mpatches.PathPatch(path, joinstyle=_DEFAULT_GEO_JOINSTYLE)
 
