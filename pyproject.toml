@@ -66,6 +66,28 @@ filterwarnings = [
 ]
 mpl-default-style = { axes.prop_cycle = "cycler('color', ['#4c72b0ff', '#55a868ff', '#c44e52ff', '#8172b2ff', '#ccb974ff', '#64b5cdff'])" }
 [project.optional-dependencies]
+astro = [
+    "astropy",
+]
+astropy = [
+    "astropy",
+]
+geo = [
+    "cartopy",
+    "basemap",
+]
+ternary = [
+    "mpltern",
+]
+mpltern = [
+    "mpltern",
+]
+all = [
+    "astropy",
+    "cartopy",
+    "basemap",
+    "mpltern",
+]
 docs = [
     "jupyter",
     "jupytext",
