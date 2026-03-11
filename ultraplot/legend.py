@@ -395,6 +395,7 @@ def _fit_path_to_handlebox(
     width: float,
     height: float,
     pad: float = 0.08,
+    preserve_aspect: bool = True,
 ) -> mpath.Path:
     """
     Normalize an arbitrary path into the legend-handle box.
@@ -411,11 +412,15 @@ def _fit_path_to_handlebox(
     py = max(height * pad, 0.0)
     span_x = max(width - 2 * px, 1e-12)
     span_y = max(height - 2 * py, 1e-12)
-    scale = min(span_x / dx, span_y / dy)
     cx = -xdescent + width * 0.5
     cy = -ydescent + height * 0.5
-    verts[finite, 0] = (verts[finite, 0] - (xmin + xmax) * 0.5) * scale + cx
-    verts[finite, 1] = (verts[finite, 1] - (ymin + ymax) * 0.5) * scale + cy
+    if preserve_aspect:
+        scale_x = scale_y = min(span_x / dx, span_y / dy)
+    else:
+        scale_x = span_x / dx
+        scale_y = span_y / dy
+    verts[finite, 0] = (verts[finite, 0] - (xmin + xmax) * 0.5) * scale_x + cx
+    verts[finite, 1] = (verts[finite, 1] - (ymin + ymax) * 0.5) * scale_y + cy
     return mpath.Path(
         verts, None if path.codes is None else np.array(path.codes, copy=True)
     )
@@ -494,9 +499,37 @@ def _patch_joinstyle(value: Any, default: str = _DEFAULT_GEO_JOINSTYLE) -> str:
     return default
 
 
+def _patch_color(
+    orig_handle: Any,
+    prop: str,
+    default: Any = None,
+) -> Any:
+    """
+    Resolve a patch color, preferring the artist's original color spec.
+
+    Collection-like artists often report post-alpha RGBA arrays from
+    `get_facecolor()` / `get_edgecolor()`. If we then also copy `alpha`, the
+    legend proxy ends up visually double-dimmed. Prefer the original color
+    attributes when available so patch proxies can apply alpha once.
+    """
+    original = getattr(orig_handle, f"_original_{prop}", None)
+    if original is not None:
+        value = _first_scalar(original, default=None)
+        if value is not None:
+            return value
+    getter = getattr(orig_handle, f"get_{prop}", None)
+    if not callable(getter):
+        return default
+    try:
+        value = getter()
+    except Exception:
+        return default
+    return _first_scalar(value, default=default)
+
+
 _PATCH_STYLE_PROP_SPECS = {
-    "facecolor": {"default": "none", "transform": _first_scalar},
-    "edgecolor": {"default": "none", "transform": _first_scalar},
+    "facecolor": {"default": "none", "transform": None},
+    "edgecolor": {"default": "none", "transform": None},
     "linewidth": {"default": 0.0, "transform": _first_scalar},
     "linestyle": {"default": None, "transform": _first_scalar},
     "hatch": {"default": None, "transform": None},
@@ -523,20 +556,25 @@ def _copy_patch_style(
     So this helper intentionally copies the shared patch-style surface only.
     """
     for prop, spec in _PATCH_STYLE_PROP_SPECS.items():
-        getter = getattr(orig_handle, f"get_{prop}", None)
         setter = getattr(legend_handle, f"set_{prop}", None)
-        if not callable(getter) or not callable(setter):
-            continue
-        try:
-            value = getter()
-        except Exception:
+        if not callable(setter):
             continue
         default = spec["default"]
-        transform = spec["transform"]
-        if transform is not None:
-            value = transform(value, default=default)
-        elif value is None:
-            value = default
+        if prop in ("facecolor", "edgecolor"):
+            value = _patch_color(orig_handle, prop, default=default)
+        else:
+            getter = getattr(orig_handle, f"get_{prop}", None)
+            if not callable(getter):
+                continue
+            try:
+                value = getter()
+            except Exception:
+                continue
+            transform = spec["transform"]
+            if transform is not None:
+                value = transform(value, default=default)
+            elif value is None:
+                value = default
         if value is not None:
             setter(value)
     legend_handle.set_joinstyle(
@@ -565,6 +603,7 @@ def _feature_legend_patch(
         ydescent=ydescent,
         width=width,
         height=height,
+        preserve_aspect=False,
     )
     return mpatches.PathPatch(path, joinstyle=_DEFAULT_GEO_JOINSTYLE)
 
@@ -594,6 +633,7 @@ def _shapely_geometry_patch(
         ydescent=ydescent,
         width=width,
         height=height,
+        preserve_aspect=False,
     )
     return mpatches.PathPatch(path, joinstyle=_DEFAULT_GEO_JOINSTYLE)
 
@@ -616,6 +656,7 @@ def _geometry_entry_patch(
         ydescent=ydescent,
         width=width,
         height=height,
+        preserve_aspect=False,
     )
     return mpatches.PathPatch(path, joinstyle=_DEFAULT_GEO_JOINSTYLE)
 
@@ -1659,6 +1700,14 @@ class UltraLegend:
     ):
         """
         Build geometry legend entries and optionally draw a legend.
+
+        Notes
+        -----
+        Geometry legend entries use normalized patch proxies inside the legend
+        handle box rather than reusing the original map artist directly. This
+        preserves the general geometry shape and copied patch styling, but very
+        small or high-aspect-ratio handles can still make hatches difficult to
+        read at legend scale.
         """
         facecolor = _not_none(facecolor, rc["legend.geo.facecolor"])
         edgecolor = _not_none(edgecolor, rc["legend.geo.edgecolor"])
