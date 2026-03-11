@@ -772,6 +772,27 @@ def test_geo_axes_add_geometries_auto_legend():
     uplt.close(fig)
 
 
+def test_geo_axes_add_geometries_auto_legend_preserves_hatch():
+    ccrs = pytest.importorskip("cartopy.crs")
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.add_geometries(
+        [sgeom.box(-20, -10, 20, 10)],
+        ccrs.PlateCarree(),
+        facecolor="gray5",
+        edgecolor="red7",
+        alpha=0.2,
+        hatch="/",
+        label="Region",
+    )
+    leg = ax.legend(loc="best")
+    assert len(leg.legend_handles) == 1
+    assert isinstance(leg.legend_handles[0], mpatches.PathPatch)
+    assert leg.legend_handles[0].get_hatch() == "/"
+    uplt.close(fig)
+
+
 def test_geo_legend_defaults_to_bevel_joinstyle():
     fig, ax = uplt.subplots()
     leg = ax.geolegend([("shape", "triangle")], loc="best")
