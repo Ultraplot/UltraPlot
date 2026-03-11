@@ -515,10 +515,12 @@ format, formatter, ticklabels : formatter-spec, optional
     constructor function.
 formatter_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Formatter` class.
-frame, frameon : bool, default: :rc:`colorbar.frameon`
+frame, frameon : bool, optional
     For inset colorbars, indicates whether to draw a background "frame",
-    just like `~matplotlib.axes.Axes.legend`. For outer colorbars, this is a
-    backwards-compatible alias for `outline`.
+    just like `~matplotlib.axes.Axes.legend`. Defaults to
+    :rc:`colorbar.frameon` for inset colorbars. For outer colorbars, this is a
+    backwards-compatible alias for `outline`; when omitted, outer colorbars
+    still default to :rc:`colorbar.outline`.
 tickminor : bool, optional
     Whether to add minor ticks using `~matplotlib.colorbar.ColorbarBase.minorticks_on`.
 tickloc, ticklocation : {'bottom', 'top', 'left', 'right'}, optional
