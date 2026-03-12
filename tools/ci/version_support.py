@@ -38,6 +38,11 @@ def _expand_half_open_minor_range(spec: str) -> list[str]:
         return []
     major_min, minor_min = map(int, min_match.group(1).split("."))
     major_max, minor_max = map(int, max_match.group(1).split("."))
+    if major_min != major_max:
+        raise ValueError(
+            f"Version constraint '{spec}' spans major versions "
+            f"({major_min} -> {major_max}); only single-major ranges are supported."
+        )
     versions = []
     major, minor = major_min, minor_min
     while (major, minor) < (major_max, minor_max):

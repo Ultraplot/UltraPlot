@@ -4,6 +4,8 @@ import importlib.util
 import re
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = ROOT / "pyproject.toml"
 MAIN_WORKFLOW = ROOT / ".github" / "workflows" / "main.yml"
@@ -67,3 +69,12 @@ def test_publish_workflow_python_is_supported():
     match = re.search(r'python-version:\s*"(\d+\.\d+)"', text)
     assert match is not None
     assert match.group(1) in supported
+
+
+def test_expand_half_open_minor_range_rejects_cross_major_constraints():
+    """
+    Cross-major constraints (e.g. ">=3.10,<4.0") must raise ValueError immediately.
+    """
+    version_support = _load_version_support()
+    with pytest.raises(ValueError, match=r"spans major versions \(3 -> 4\)"):
+        version_support._expand_half_open_minor_range(">=3.10,<4.0")
