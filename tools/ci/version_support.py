@@ -89,22 +89,37 @@ def version_satisfies_half_open_minor_range(version: str, spec: str) -> bool:
     return minimum <= current < maximum
 
 
+def select_versions_within_half_open_minor_range(
+    versions: list[str],
+    spec: str,
+) -> list[str]:
+    """
+    Return the candidate versions that fall within the declared range.
+
+    This is the cross-major-safe path because it compares each candidate
+    directly against the range bounds instead of trying to infer every
+    intermediate minor from arithmetic alone.
+    """
+    return [
+        version
+        for version in versions
+        if version_satisfies_half_open_minor_range(version, spec)
+    ]
+
+
 def _validate_versions_against_spec(
     versions: list[str], spec: str, *, label: str
 ) -> list[str]:
     """
     Ensure explicitly configured versions remain inside the declared bounds.
     """
-    invalid = [
-        version
-        for version in versions
-        if not version_satisfies_half_open_minor_range(version, spec)
-    ]
+    valid = select_versions_within_half_open_minor_range(versions, spec)
+    invalid = [version for version in versions if version not in valid]
     if invalid:
         raise ValueError(
             f"Configured {label} versions {invalid!r} fall outside declared range {spec!r}."
         )
-    return versions
+    return valid
 
 
 def supported_python_versions(pyproject: dict | None = None) -> list[str]:
