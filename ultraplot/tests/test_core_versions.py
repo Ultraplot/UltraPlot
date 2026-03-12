@@ -94,6 +94,18 @@ matplotlib = ["3.10", "4.0", "4.1"]
     ]
 
 
+def test_cross_major_range_filter_selects_valid_versions():
+    """
+    Range filtering should work across major boundaries once candidate minors exist.
+    """
+    version_support = _load_version_support()
+    versions = ["3.9", "3.10", "3.11", "4.0", "4.1", "4.2"]
+    assert version_support.select_versions_within_half_open_minor_range(
+        versions,
+        ">=3.10,<4.2",
+    ) == ["3.10", "3.11", "4.0", "4.1"]
+
+
 def test_main_workflow_uses_shared_version_support_script():
     """
     The matrix workflow should consume the shared version helper, not reparse inline.
