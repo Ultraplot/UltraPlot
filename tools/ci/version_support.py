@@ -30,7 +30,11 @@ def load_pyproject(path: Path = PYPROJECT) -> dict:
 
 def _expand_half_open_minor_range(spec: str) -> list[str]:
     """
-    Expand constraints like ``>=3.10,<3.15`` into minor-version strings.
+    Expand same-major constraints like ``>=3.10,<3.15`` into minor versions.
+
+    This fallback is only safe when the lower and upper bounds are within the
+    same major series. Once support crosses a major boundary, the project
+    should declare the supported minors explicitly in ``tool.ultraplot``.
     """
     min_match = re.search(r">=\s*(\d+\.\d+)", spec)
     max_match = re.search(r"<\s*(\d+\.\d+)", spec)
@@ -38,6 +42,11 @@ def _expand_half_open_minor_range(spec: str) -> list[str]:
         return []
     major_min, minor_min = map(int, min_match.group(1).split("."))
     major_max, minor_max = map(int, max_match.group(1).split("."))
+    if major_min != major_max:
+        raise ValueError(
+            f"Cannot infer supported minor versions from cross-major range {spec!r}. "
+            "Declare explicit versions in [tool.ultraplot.core_versions]."
+        )
     versions = []
     major, minor = major_min, minor_min
     while (major, minor) < (major_max, minor_max):
@@ -46,12 +55,68 @@ def _expand_half_open_minor_range(spec: str) -> list[str]:
     return versions
 
 
+def _configured_core_versions(pyproject: dict, key: str) -> list[str]:
+    """
+    Return explicitly configured core versions, or an empty list if omitted.
+    """
+    return list(
+        pyproject.get("tool", {})
+        .get("ultraplot", {})
+        .get("core_versions", {})
+        .get(key, ())
+    )
+
+
+def _parse_half_open_minor_bounds(spec: str) -> tuple[tuple[int, int], tuple[int, int]]:
+    """
+    Parse ``>=X.Y,<A.B`` style bounds into comparable major/minor tuples.
+    """
+    min_match = re.search(r">=\s*(\d+\.\d+)", spec)
+    max_match = re.search(r"<\s*(\d+\.\d+)", spec)
+    if min_match is None or max_match is None:
+        raise ValueError(f"Could not parse half-open minor range {spec!r}.")
+    min_version = tuple(map(int, min_match.group(1).split(".")))
+    max_version = tuple(map(int, max_match.group(1).split(".")))
+    return min_version, max_version
+
+
+def version_satisfies_half_open_minor_range(version: str, spec: str) -> bool:
+    """
+    Return whether a ``major.minor`` version falls within a ``>=,<`` range.
+    """
+    current = tuple(map(int, version.split(".")))
+    minimum, maximum = _parse_half_open_minor_bounds(spec)
+    return minimum <= current < maximum
+
+
+def _validate_versions_against_spec(
+    versions: list[str], spec: str, *, label: str
+) -> list[str]:
+    """
+    Ensure explicitly configured versions remain inside the declared bounds.
+    """
+    invalid = [
+        version
+        for version in versions
+        if not version_satisfies_half_open_minor_range(version, spec)
+    ]
+    if invalid:
+        raise ValueError(
+            f"Configured {label} versions {invalid!r} fall outside declared range {spec!r}."
+        )
+    return versions
+
+
 def supported_python_versions(pyproject: dict | None = None) -> list[str]:
     """
     Return the supported Python minors derived from ``requires-python``.
     """
     pyproject = pyproject or load_pyproject()
-    return _expand_half_open_minor_range(pyproject["project"]["requires-python"])
+    configured = _configured_core_versions(pyproject, "python")
+    spec = pyproject["project"]["requires-python"]
+    if configured:
+        return _validate_versions_against_spec(configured, spec, label="python")
+    return _expand_half_open_minor_range(spec)
 
 
 def supported_matplotlib_versions(pyproject: dict | None = None) -> list[str]:
@@ -59,8 +124,15 @@ def supported_matplotlib_versions(pyproject: dict | None = None) -> list[str]:
     Return the supported Matplotlib minors derived from dependencies.
     """
     pyproject = pyproject or load_pyproject()
+    configured = _configured_core_versions(pyproject, "matplotlib")
     for dep in pyproject["project"]["dependencies"]:
         if dep.startswith("matplotlib"):
+            if configured:
+                return _validate_versions_against_spec(
+                    configured,
+                    dep,
+                    label="matplotlib",
+                )
             return _expand_half_open_minor_range(dep)
     raise AssertionError("matplotlib dependency not found in pyproject.toml")
 
