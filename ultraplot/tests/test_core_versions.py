@@ -17,8 +17,9 @@ def _load_version_support():
     Import the shared version helper directly from the repo checkout.
     """
     spec = importlib.util.spec_from_file_location("version_support", VERSION_SUPPORT)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load 'version_support' module from {VERSION_SUPPORT}")
     module = importlib.util.module_from_spec(spec)
-    assert spec is not None and spec.loader is not None
     spec.loader.exec_module(module)
     return module
 
