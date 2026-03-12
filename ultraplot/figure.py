@@ -6,32 +6,23 @@ The figure class used for all ultraplot figures.
 import functools
 import inspect
 import os
-from numbers import Integral
-
-from packaging import version
 
 try:
-    from typing import List, Optional, Tuple, Union
+    from typing import Optional, Tuple, Union
 except ImportError:
-    from typing_extensions import List, Optional, Tuple, Union
+    from typing_extensions import Optional, Tuple, Union
 
-import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
-import matplotlib.gridspec as mgridspec
-import matplotlib.projections as mproj
-import matplotlib.text as mtext
-import matplotlib.transforms as mtransforms
 import numpy as np
 
 try:
     from typing import override
-except:
+except ImportError:
     from typing_extensions import override
 
 from . import axes as paxes
-from . import constructor
 from . import gridspec as pgridspec
-from .config import rc, rc_matplotlib
+from .config import rc
 from .internals import (
     _not_none,
     _pop_params,
@@ -40,10 +31,22 @@ from .internals import (
     context,
     docstring,
     ic,  # noqa: F401
-    labels,
     warnings,
 )
-from .utils import _Crawler, units
+from .internals.figure_formatting import FigureFormatting
+from .internals.figure_labels import FigureLabels
+from .internals.figure_factory import FigureFactory
+from .internals.figure_guides import FigureGuides
+from .internals.figure_layout import FigureLayout
+from .internals.figure_options import (
+    build_gridspec_params,
+    resolve_share_options,
+    resolve_size_options,
+    resolve_span_align_options,
+    resolve_tight_active,
+)
+from .internals.figure_panels import FigurePanels
+from .internals.figure_sharing import FigureSharing
 
 __all__ = [
     "Figure",
@@ -657,187 +660,96 @@ class Figure(mfigure.Figure):
         ultraplot.ui.subplots
         matplotlib.figure.Figure
         """
-        # Add figure sizing settings
-        # NOTE: We cannot catpure user-input 'figsize' here because it gets
-        # automatically filled by the figure manager. See ui.figure().
-        # NOTE: The figure size is adjusted according to these arguments by the
-        # canvas preprocessor. Although in special case where both 'figwidth' and
-        # 'figheight' were passes we update 'figsize' to limit side effects.
-        refnum = _not_none(refnum=refnum, ref=ref, default=1)  # never None
-        refaspect = _not_none(refaspect=refaspect, aspect=aspect)
-        refwidth = _not_none(refwidth=refwidth, axwidth=axwidth)
-        refheight = _not_none(refheight=refheight, axheight=axheight)
-        figwidth = _not_none(figwidth=figwidth, width=width)
-        figheight = _not_none(figheight=figheight, height=height)
-        messages = []
-        if journal is not None:
-            jwidth, jheight = _get_journal_size(journal)
-            if jwidth is not None and figwidth is not None:
-                messages.append(("journal", journal, "figwidth", figwidth))
-            if jheight is not None and figheight is not None:
-                messages.append(("journal", journal, "figheight", figheight))
-            figwidth = _not_none(jwidth, figwidth)
-            figheight = _not_none(jheight, figheight)
-        if figwidth is not None and refwidth is not None:
-            messages.append(("figwidth", figwidth, "refwidth", refwidth))
-            refwidth = None
-        if figheight is not None and refheight is not None:
-            messages.append(("figheight", figheight, "refheight", refheight))
-            refheight = None
-        if (
-            figwidth is None
-            and figheight is None
-            and refwidth is None
-            and refheight is None
-        ):  # noqa: E501
-            refwidth = rc["subplots.refwidth"]  # always inches
-        if np.iterable(refaspect):
-            refaspect = refaspect[0] / refaspect[1]
-        for key1, val1, key2, val2 in messages:
-            warnings._warn_ultraplot(
-                f"Got conflicting figure size arguments {key1}={val1!r} and "
-                f"{key2}={val2!r}. Ignoring {key2!r}."
-            )
-        self._refnum = refnum
-        self._refaspect = refaspect
+        size_options = resolve_size_options(
+            refnum=refnum,
+            ref=ref,
+            refaspect=refaspect,
+            aspect=aspect,
+            refwidth=refwidth,
+            refheight=refheight,
+            axwidth=axwidth,
+            axheight=axheight,
+            figwidth=figwidth,
+            figheight=figheight,
+            width=width,
+            height=height,
+            journal=journal,
+            journal_size_resolver=_get_journal_size,
+            backend_name=_not_none(rc.backend, ""),
+            warn_interactive_enabled=self._warn_interactive,
+        )
+        self._refnum = size_options.refnum
+        self._refaspect = size_options.refaspect
         self._refaspect_default = 1  # updated for imshow and geographic plots
-        self._refwidth = units(refwidth, "in")
-        self._refheight = units(refheight, "in")
-        self._figwidth = figwidth = units(figwidth, "in")
-        self._figheight = figheight = units(figheight, "in")
-
-        # Add special consideration for interactive backends
-        backend = _not_none(rc.backend, "")
-        backend = backend.lower()
-        interactive = "nbagg" in backend or "ipympl" in backend
-        if not interactive:
-            pass
-        elif figwidth is None or figheight is None:
-            figsize = rc["figure.figsize"]  # modified by ultraplot
-            self._figwidth = figwidth = _not_none(figwidth, figsize[0])
-            self._figheight = figheight = _not_none(figheight, figsize[1])
-            self._refwidth = self._refheight = None  # critical!
-            if self._warn_interactive:
-                Figure._warn_interactive = False  # set class attribute
-                warnings._warn_ultraplot(
-                    "Auto-sized ultraplot figures are not compatible with interactive "
-                    "backends like '%matplotlib widget' and '%matplotlib notebook'. "
-                    f"Reverting to the figure size ({figwidth}, {figheight}). To make "
-                    "auto-sized figures, please consider using the non-interactive "
-                    "(default) backend. This warning message is shown the first time "
-                    "you create a figure without explicitly specifying the size."
-                )
-
-        # Add space settings
-        # NOTE: This is analogous to 'subplotpars' but we don't worry about
-        # user mutability. Think it's perfectly fine to ask users to simply
-        # pass these to uplt.figure() or uplt.subplots(). Also overriding
-        # 'subplots_adjust' would be confusing since we switch to absolute
-        # units and that function is heavily used outside of ultraplot.
-        params = {
-            "left": left,
-            "right": right,
-            "top": top,
-            "bottom": bottom,
-            "wspace": wspace,
-            "hspace": hspace,
-            "space": space,
-            "wequal": wequal,
-            "hequal": hequal,
-            "equal": equal,
-            "wgroup": wgroup,
-            "hgroup": hgroup,
-            "group": group,
-            "wpad": wpad,
-            "hpad": hpad,
-            "pad": pad,
-            "outerpad": outerpad,
-            "innerpad": innerpad,
-            "panelpad": panelpad,
-        }
-        self._gridspec_params = params  # used to initialize the gridspec
-        for key, value in tuple(params.items()):
-            if not isinstance(value, str) and np.iterable(value) and len(value) > 1:
-                raise ValueError(
-                    f"Invalid gridspec parameter {key}={value!r}. Space parameters "
-                    "passed to Figure() must be scalar. For vector spaces use "
-                    "GridSpec() or pass space parameters to subplots()."
-                )
-
-        # Add tight layout setting and ignore native settings
-        pars = kwargs.pop("subplotpars", None)
-        if pars is not None:
+        self._refwidth = size_options.refwidth
+        self._refheight = size_options.refheight
+        self._figwidth = figwidth = size_options.figwidth
+        self._figheight = figheight = size_options.figheight
+        if size_options.interactive_warning:
+            Figure._warn_interactive = False
             warnings._warn_ultraplot(
-                f"Ignoring subplotpars={pars!r}. " + self._space_message
+                "Auto-sized ultraplot figures are not compatible with interactive "
+                "backends like '%matplotlib widget' and '%matplotlib notebook'. "
+                f"Reverting to the figure size ({figwidth}, {figheight}). To make "
+                "auto-sized figures, please consider using the non-interactive "
+                "(default) backend. This warning message is shown the first time "
+                "you create a figure without explicitly specifying the size."
             )
-        if kwargs.pop("tight_layout", None):
-            warnings._warn_ultraplot(
-                "Ignoring tight_layout=True. " + self._tight_message
-            )
-        if kwargs.pop("constrained_layout", None):
-            warnings._warn_ultraplot(
-                "Ignoring constrained_layout=True. " + self._tight_message
-            )
-        if rc_matplotlib.get("figure.autolayout", False):
-            warnings._warn_ultraplot(
-                "Setting rc['figure.autolayout'] to False. " + self._tight_message
-            )
-        if rc_matplotlib.get("figure.constrained_layout.use", False):
-            warnings._warn_ultraplot(
-                "Setting rc['figure.constrained_layout.use'] to False. "
-                + self._tight_message  # noqa: E501
-            )
-        try:
-            rc_matplotlib["figure.autolayout"] = False  # this is rcParams
-        except KeyError:
-            pass
-        try:
-            rc_matplotlib["figure.constrained_layout.use"] = False  # this is rcParams
-        except KeyError:
-            pass
-        self._tight_active = _not_none(tight, rc["subplots.tight"])
 
-        # Translate share settings
-        translate = {"labels": 1, "labs": 1, "limits": 2, "lims": 2, "all": 4}
-        sharex = _not_none(sharex, share, rc["subplots.share"])
-        sharey = _not_none(sharey, share, rc["subplots.share"])
+        self._gridspec_params = build_gridspec_params(
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
+            wspace=wspace,
+            hspace=hspace,
+            space=space,
+            wequal=wequal,
+            hequal=hequal,
+            equal=equal,
+            wgroup=wgroup,
+            hgroup=hgroup,
+            group=group,
+            wpad=wpad,
+            hpad=hpad,
+            pad=pad,
+            outerpad=outerpad,
+            innerpad=innerpad,
+            panelpad=panelpad,
+        )
+        self._tight_active = resolve_tight_active(
+            kwargs,
+            tight=tight,
+            space_message=self._space_message,
+            tight_message=self._tight_message,
+        )
 
-        def _normalize_share(value):
-            auto = isinstance(value, str) and value.lower() == "auto"
-            if auto:
-                return 3, True
-            value = 3 if value is True else translate.get(value, value)
-            if value not in range(5):
-                raise ValueError(
-                    f"Invalid sharing value {value!r}. " + self._share_message
-                )
-            return int(value), False
-
-        sharex, sharex_auto = _normalize_share(sharex)
-        sharey, sharey_auto = _normalize_share(sharey)
-        self._sharex = int(sharex)
-        self._sharey = int(sharey)
-        self._sharex_auto = bool(sharex_auto)
-        self._sharey_auto = bool(sharey_auto)
+        share_options = resolve_share_options(
+            sharex=sharex,
+            sharey=sharey,
+            share=share,
+            share_message=self._share_message,
+        )
+        self._sharex = share_options.sharex
+        self._sharey = share_options.sharey
+        self._sharex_auto = share_options.sharex_auto
+        self._sharey_auto = share_options.sharey_auto
         self._share_incompat_warned = False
 
-        # Translate span and align settings
-        spanx = _not_none(
-            spanx, span, False if not sharex else None, rc["subplots.span"]
-        )  # noqa: E501
-        spany = _not_none(
-            spany, span, False if not sharey else None, rc["subplots.span"]
-        )  # noqa: E501
-        if spanx and (alignx or align):  # only warn when explicitly requested
-            warnings._warn_ultraplot('"alignx" has no effect when spanx=True.')
-        if spany and (aligny or align):
-            warnings._warn_ultraplot('"aligny" has no effect when spany=True.')
-        self._spanx = bool(spanx)
-        self._spany = bool(spany)
-        alignx = _not_none(alignx, align, rc["subplots.align"])
-        aligny = _not_none(aligny, align, rc["subplots.align"])
-        self._alignx = bool(alignx)
-        self._aligny = bool(aligny)
+        span_align = resolve_span_align_options(
+            sharex=self._sharex,
+            sharey=self._sharey,
+            spanx=spanx,
+            spany=spany,
+            span=span,
+            alignx=alignx,
+            aligny=aligny,
+            align=align,
+        )
+        self._spanx = span_align.spanx
+        self._spany = span_align.spany
+        self._alignx = span_align.alignx
+        self._aligny = span_align.aligny
 
         # Initialize the figure
         # NOTE: Super labels are stored inside {axes: text} dictionaries
@@ -851,6 +763,18 @@ class Figure(mfigure.Figure):
         self._layout_dirty = True
         self._skip_autolayout = False
         self._includepanels = None
+        # Figure is the facade and state owner. Helper objects own most policy:
+        # projection/subplot creation, layout queries, guide placement, sharing,
+        # and spanning-label orchestration. Keep cross-module interactions going
+        # through Figure._... methods rather than reaching into helpers directly
+        # unless the caller lives wholly inside the same internal subsystem.
+        self._layout_helper = FigureLayout(self)
+        self._factory_helper = FigureFactory(self)
+        self._guide_helper = FigureGuides(self)
+        self._label_helper = FigureLabels(self)
+        self._panel_helper = FigurePanels(self)
+        self._share_helper = FigureSharing(self)
+        self._format_helper = FigureFormatting(self)
         self._render_context = {}
         rc_kw, rc_mode = _pop_rc(kwargs)
         kw_format = _pop_params(kwargs, self._format_signature)
@@ -893,9 +817,9 @@ class Figure(mfigure.Figure):
         # check which ticks are on for x or y and push the labels to the
         # outer most on a given column or row.
         # we can use get_border_axes for the outermost plots and then collect their outermost panels that are not colorbars
-        self._share_ticklabels(axis="x")
-        self._share_ticklabels(axis="y")
-        self._apply_share_label_groups()
+        self._share_helper.share_ticklabels(axis="x")
+        self._share_helper.share_ticklabels(axis="y")
+        self._label_helper.apply_share_label_groups()
         super().draw(renderer)
 
     @override
@@ -916,203 +840,21 @@ class Figure(mfigure.Figure):
             return False
         return bool(getattr(self, f"_share{which}_auto", False))
 
-    def _axis_unit_signature(self, ax, which: str):
-        """Return a lightweight signature for axis unit/converter compatibility."""
-        axis_obj = getattr(ax, f"{which}axis", None)
-        if axis_obj is None:
-            return None
-        if hasattr(axis_obj, "get_converter"):
-            converter = axis_obj.get_converter()
-        else:
-            converter = getattr(axis_obj, "converter", None)
-        units = getattr(axis_obj, "units", None)
-        if hasattr(axis_obj, "get_units"):
-            units = axis_obj.get_units()
-        if converter is None and units is None:
-            return None
-        if isinstance(units, (str, bytes)):
-            unit_tag = units
-        elif units is not None:
-            unit_tag = type(units).__name__
-        else:
-            unit_tag = None
-        converter_tag = type(converter).__name__ if converter is not None else None
-        return (converter_tag, unit_tag)
-
     def _share_axes_compatible(self, ref, other, which: str):
         """Check whether two axes are compatible for sharing along one axis."""
-        if ref is None or other is None:
-            return False, "missing reference axis"
-        if ref is other:
-            return True, None
-        if which not in ("x", "y"):
-            return True, None
-
-        # External container axes should only share with the same external class.
-        ref_external = hasattr(ref, "has_external_axes") and ref.has_external_axes()
-        other_external = (
-            hasattr(other, "has_external_axes") and other.has_external_axes()
-        )
-        if ref_external or other_external:
-            if not (ref_external and other_external):
-                return False, "external and non-external axes cannot be shared"
-            ref_ext = ref.get_external_axes()
-            other_ext = other.get_external_axes()
-            if type(ref_ext) is not type(other_ext):
-                return False, "different external projection classes"
-
-        # GeoAxes are only share-compatible with same rectilinear projection family.
-        ref_geo = isinstance(ref, paxes.GeoAxes)
-        other_geo = isinstance(other, paxes.GeoAxes)
-        if ref_geo or other_geo:
-            if not (ref_geo and other_geo):
-                return False, "geo and non-geo axes cannot be shared"
-            if not ref._is_rectilinear() or not other._is_rectilinear():
-                return False, "non-rectilinear GeoAxes cannot be shared"
-            if type(getattr(ref, "projection", None)) is not type(
-                getattr(other, "projection", None)
-            ):
-                return False, "different Geo projection classes"
-
-        # Polar and non-polar should not share.
-        ref_polar = isinstance(ref, paxes.PolarAxes)
-        other_polar = isinstance(other, paxes.PolarAxes)
-        if ref_polar != other_polar:
-            return False, "polar and non-polar axes cannot be shared"
-
-        # Non-geo external axes are generally Cartesian-like in UltraPlot.
-        if not ref_geo and not other_geo and not (ref_external or other_external):
-            if not (
-                isinstance(ref, paxes.CartesianAxes)
-                and isinstance(other, paxes.CartesianAxes)
-            ):
-                return False, "different axis families"
-
-        # Scale compatibility along the active axis.
-        get_scale_ref = getattr(ref, f"get_{which}scale", None)
-        get_scale_other = getattr(other, f"get_{which}scale", None)
-        if callable(get_scale_ref) and callable(get_scale_other):
-            if get_scale_ref() != get_scale_other():
-                return False, "different axis scales"
-
-        # Units/converters must match if both are established.
-        uref = self._axis_unit_signature(ref, which)
-        uother = self._axis_unit_signature(other, which)
-        if uref != uother and (uref is not None or uother is not None):
-            return False, "different axis unit domains"
-
-        return True, None
+        return self._share_helper.share_axes_compatible(ref, other, which)
 
     def _warn_incompatible_share(self, which: str, ref, other, reason: str) -> None:
         """Warn once per figure for explicit incompatible sharing."""
-        if self._is_auto_share_mode(which):
-            return
-        if bool(self._share_incompat_warned):
-            return
-        self._share_incompat_warned = True
-        warnings._warn_ultraplot(
-            f"Skipping incompatible {which}-axis sharing for {type(ref).__name__} and {type(other).__name__}: {reason}."
-        )
+        self._share_helper.warn_incompatible_share(which, ref, other, reason)
 
     def _partition_share_axes(self, axes, which: str):
         """Partition a candidate share list into compatible sub-groups."""
-        groups = []
-        for ax in axes:
-            if ax is None:
-                continue
-            placed = False
-            first_mismatch = None
-            for group in groups:
-                ok, reason = self._share_axes_compatible(group[0], ax, which)
-                if ok:
-                    group.append(ax)
-                    placed = True
-                    break
-                if first_mismatch is None:
-                    first_mismatch = (group[0], reason)
-            if not placed:
-                groups.append([ax])
-                if first_mismatch is not None:
-                    ref, reason = first_mismatch
-                    self._warn_incompatible_share(which, ref, ax, reason)
-        return groups
-
-    def _iter_shared_groups(self, which: str, *, panels: bool = True):
-        """Yield unique shared groups for one axis direction."""
-        if which not in ("x", "y"):
-            return
-        get_grouper = f"get_shared_{which}_axes"
-        seen = set()
-        for ax in self._iter_axes(hidden=False, children=False, panels=panels):
-            get_shared = getattr(ax, get_grouper, None)
-            if not callable(get_shared):
-                continue
-            siblings = list(get_shared().get_siblings(ax))
-            if len(siblings) < 2:
-                continue
-            key = frozenset(map(id, siblings))
-            if key in seen:
-                continue
-            seen.add(key)
-            yield siblings
-
-    def _join_shared_group(self, which: str, ref, other) -> None:
-        """Join an axis to a shared group and copy the shared axis state."""
-        ref._shared_axes[which].join(ref, other)
-        axis = getattr(other, f"{which}axis")
-        ref_axis = getattr(ref, f"{which}axis")
-        setattr(other, f"_share{which}", ref)
-        axis.major = ref_axis.major
-        axis.minor = ref_axis.minor
-        if which == "x":
-            lim = ref.get_xlim()
-            other.set_xlim(*lim, emit=False, auto=ref.get_autoscalex_on())
-        else:
-            lim = ref.get_ylim()
-            other.set_ylim(*lim, emit=False, auto=ref.get_autoscaley_on())
-        axis._scale = ref_axis._scale
+        return self._share_helper.partition_share_axes(axes, which)
 
     def _refresh_auto_share(self, which: Optional[str] = None) -> None:
         """Recompute auto-sharing groups after local axis-state changes."""
-        axes = list(self._iter_axes(hidden=False, children=True, panels=True))
-        targets = ("x", "y") if which is None else (which,)
-        for target in targets:
-            if not self._is_auto_share_mode(target):
-                continue
-            for ax in axes:
-                if hasattr(ax, "_unshare"):
-                    ax._unshare(which=target)
-            for ax in self._iter_axes(hidden=False, children=False, panels=False):
-                if hasattr(ax, "_apply_auto_share"):
-                    ax._apply_auto_share()
-            self._autoscale_shared_limits(target)
-
-    def _autoscale_shared_limits(self, which: str) -> None:
-        """Recompute shared data limits for each compatible shared-axis group."""
-        if which not in ("x", "y"):
-            return
-
-        share_level = self._sharex if which == "x" else self._sharey
-        if share_level <= 1:
-            return
-
-        get_auto = f"get_autoscale{which}_on"
-        for siblings in self._iter_shared_groups(which, panels=True):
-            for sib in siblings:
-                relim = getattr(sib, "relim", None)
-                if callable(relim):
-                    relim()
-
-            ref = siblings[0]
-            for sib in siblings:
-                auto = getattr(sib, get_auto, None)
-                if callable(auto) and auto():
-                    ref = sib
-                    break
-
-            autoscale_view = getattr(ref, "autoscale_view", None)
-            if callable(autoscale_view):
-                autoscale_view(scalex=(which == "x"), scaley=(which == "y"))
+        self._share_helper.refresh_auto_share(which)
 
     def _snap_axes_to_pixel_grid(self, renderer) -> None:
         """
@@ -1163,209 +905,6 @@ class Figure(mfigure.Figure):
                 which="both",
             )
 
-    def _share_ticklabels(self, *, axis: str) -> None:
-        """
-        Tick label sharing is determined at the figure level. While
-        each subplot controls the limits, we are dealing with the ticklabels
-        here as the complexity is easier to deal with.
-            axis: str 'x' or 'y', row or columns to update
-        """
-        if not self.stale:
-            return
-
-        outer_axes = self._get_border_axes()
-        sides = ("top", "bottom") if axis == "x" else ("left", "right")
-
-        # Group axes by row (for x) or column (for y)
-        axes = list(self._iter_axes(panels=True, hidden=False))
-        groups = self._group_axes_by_axis(axes, axis)
-
-        # Version-dependent label name mapping for reading back params
-        label_keys = self._label_key_map()
-
-        # Process each group independently
-        for _, group_axes in groups.items():
-            # Build baseline from MAIN axes only (exclude panels)
-            baseline, skip_group = self._compute_baseline_tick_state(
-                group_axes, axis, label_keys
-            )
-            if skip_group:
-                continue
-
-            # Apply baseline to all axes in the group (including panels)
-            for axi in group_axes:
-                # Respect figure border sides and panel opposite sides
-                masked = self._apply_border_mask(axi, baseline, sides, outer_axes)
-
-                # Determine sharing level for this axes
-                if self._effective_share_level(axi, axis, sides) < 3:
-                    continue
-
-                # Apply to geo/cartesian appropriately
-                self._set_ticklabel_state(axi, axis, masked)
-
-        self.stale = True
-
-    def _label_key_map(self):
-        """
-        Return a mapping for version-dependent label keys for Matplotlib tick params.
-        """
-        first_axi = next(self._iter_axes(panels=True), None)
-        if first_axi is None:
-            return {
-                "labelleft": "labelleft",
-                "labelright": "labelright",
-                "labeltop": "labeltop",
-                "labelbottom": "labelbottom",
-            }
-        return {
-            name: first_axi._label_key(name)
-            for name in ("labelleft", "labelright", "labeltop", "labelbottom")
-        }
-
-    def _group_axes_by_axis(self, axes, axis: str):
-        """
-        Group axes by row (x) or column (y). Panels included; invalid subplotspec skipped.
-        """
-        from collections import defaultdict
-
-        def _group_key(ax):
-            ss = ax.get_subplotspec()
-            return ss.rowspan.start if axis == "x" else ss.colspan.start
-
-        groups = defaultdict(list)
-        for axi in axes:
-            try:
-                key = _group_key(axi)
-            except Exception:
-                # If we can't get a subplotspec, skip grouping for this axes
-                continue
-            groups[key].append(axi)
-        return groups
-
-    def _compute_baseline_tick_state(self, group_axes, axis: str, label_keys):
-        """
-        Build a baseline ticklabel visibility dict from MAIN axes (panels excluded).
-        Returns (baseline_dict, skip_group: bool). Emits warnings when encountering
-        unsupported or mixed subplot types.
-        """
-        baseline = {}
-        subplot_types = set()
-        unsupported_found = False
-        sides = ("top", "bottom") if axis == "x" else ("left", "right")
-
-        for axi in group_axes:
-            # Only main axes "vote"
-            if getattr(axi, "_panel_side", None):
-                continue
-
-            # Non-rectilinear GeoAxes should keep independent gridliner labels.
-            if isinstance(axi, paxes.GeoAxes) and not axi._is_rectilinear():
-                return {}, True
-
-            # Supported axes types
-            if not isinstance(
-                axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
-            ):
-                warnings._warn_ultraplot(
-                    f"Tick label sharing not implemented for {type(axi)} subplots."
-                )
-                unsupported_found = True
-                break
-
-            subplot_types.add(type(axi))
-
-            # Collect label visibility state
-            if isinstance(axi, paxes.CartesianAxes):
-                params = getattr(axi, f"{axis}axis").get_tick_params()
-                for side in sides:
-                    key = label_keys[f"label{side}"]
-                    if params.get(key):
-                        baseline[key] = params[key]
-            elif isinstance(axi, paxes.GeoAxes):
-                for side in sides:
-                    key = f"label{side}"
-                    if axi._is_ticklabel_on(key):
-                        baseline[key] = axi._is_ticklabel_on(key)
-
-        if unsupported_found:
-            return {}, True
-
-        # We cannot mix types (yet) within a group
-        if len(subplot_types) > 1:
-            warnings._warn_ultraplot(
-                "Tick label sharing not implemented for mixed subplot types."
-            )
-            return {}, True
-
-        return baseline, False
-
-    def _apply_border_mask(
-        self, axi, baseline: dict, sides: tuple[str, str], outer_axes
-    ):
-        """
-        Apply figure-border constraints and panel opposite-side suppression.
-        Keeps label key mapping per-axis for cartesian.
-        """
-        from .axes.cartesian import OPPOSITE_SIDE
-
-        masked = baseline.copy()
-        for side in sides:
-            label = f"label{side}"
-            if isinstance(axi, paxes.CartesianAxes):
-                # Use per-axis version-mapped key when writing
-                label = axi._label_key(label)
-
-            # Only keep labels on true figure borders
-            if axi not in outer_axes[side]:
-                masked[label] = False
-
-            # For panels, suppress labels on their opposite side
-            if (
-                getattr(axi, "_panel_side", None)
-                and OPPOSITE_SIDE[axi._panel_side] == side
-            ):
-                masked[label] = False
-
-        return masked
-
-    def _effective_share_level(self, axi, axis: str, sides: tuple[str, str]) -> int:
-        """
-        Compute the effective share level for an axes, considering panel groups and
-        adjacent panels. Fixes the original variable leak by checking any relevant side.
-        """
-        level = getattr(self, f"_share{axis}")
-        # If figure-level sharing is disabled (0/False), don't promote due to panels
-        if not level or (isinstance(level, (int, float)) and level < 1):
-            return level
-
-        # Panel group-level sharing
-        if getattr(axi, f"_panel_share{axis}_group", None):
-            return 3
-
-        # Panel member sharing
-        if getattr(axi, "_panel_side", None) and getattr(axi, f"_share{axis}", None):
-            return 3
-
-        # Adjacent panels on any relevant side
-        panel_dict = getattr(axi, "_panel_dict", {})
-        for side in sides:
-            side_panels = panel_dict.get(side) or []
-            if side_panels and getattr(side_panels[0], f"_share{axis}", False):
-                return 3
-
-        return level
-
-    def _set_ticklabel_state(self, axi, axis: str, state: dict):
-        """Apply the computed ticklabel state to cartesian or geo axes."""
-        if state:
-            # Normalize "x"/"y" values to booleans for both Geo and Cartesian axes
-            cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
-            if isinstance(axi, paxes.GeoAxes):
-                axi._toggle_gridliner_labels(**cleaned)
-            else:
-                getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
-
     def _context_adjusting(self, cache=True):
         """
         Prevent re-running auto layout steps due to draws triggered by figure
@@ -1410,300 +949,51 @@ class Figure(mfigure.Figure):
         axes class. Input projection can be a string, `matplotlib.axes.Axes`,
         `cartopy.crs.Projection`, or `mpl_toolkits.basemap.Basemap`.
         """
-        # Parse arguments
-        proj = _not_none(proj=proj, projection=projection, default="cartesian")
-        proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
-        backend = self._parse_backend(backend, basemap)
-        if isinstance(proj, str):
-            proj = proj.lower()
-        if isinstance(self, paxes.Axes):
-            proj = self._name
-        elif isinstance(self, maxes.Axes):
-            raise ValueError("Matplotlib axes cannot be added to ultraplot figures.")
-
-        # Search axes projections
-        name = None
-
-        # Handle cartopy/basemap Projection objects directly
-        # These should be converted to Ultraplot GeoAxes
-        if not isinstance(proj, str):
-            # Check if it's a cartopy or basemap projection object
-            if constructor.Projection is not object and isinstance(
-                proj, constructor.Projection
-            ):
-                # It's a cartopy projection - use cartopy backend
-                name = "ultraplot_cartopy"
-                kwargs["map_projection"] = proj
-            elif constructor.Basemap is not object and isinstance(
-                proj, constructor.Basemap
-            ):
-                # It's a basemap projection
-                name = "ultraplot_basemap"
-                kwargs["map_projection"] = proj
-            # If not recognized, leave name as None and it will pass through
-
-        if name is None and isinstance(proj, str):
-            try:
-                mproj.get_projection_class("ultraplot_" + proj)
-            except (KeyError, ValueError):
-                pass
-            else:
-                name = "ultraplot_" + proj
-        if name is None and isinstance(proj, str):
-            # Try geographic projections first if cartopy/basemap available
-            if (
-                constructor.Projection is not object
-                or constructor.Basemap is not object
-            ):
-                try:
-                    proj_obj = constructor.Proj(
-                        proj, backend=backend, include_axes=True, **proj_kw
-                    )
-                    name = "ultraplot_" + proj_obj._proj_backend
-                    kwargs["map_projection"] = proj_obj
-                except ValueError:
-                    # Not a geographic projection, will try matplotlib registry below
-                    pass
-
-            # If not geographic, check if registered globally in Matplotlib (e.g., 'ternary', 'polar', '3d')
-            if name is None and proj in mproj.get_projection_names():
-                name = proj
-
-        # Helpful error message if still not found
-        if name is None and isinstance(proj, str):
-            raise ValueError(
-                f"Invalid projection name {proj!r}. If you are trying to generate a "
-                "GeoAxes with a cartopy.crs.Projection or mpl_toolkits.basemap.Basemap "
-                "then cartopy or basemap must be installed. Otherwise the known axes "
-                f"subclasses are:\n{paxes._cls_table}"
-            )
-
-        # Only set projection if we found a named projection
-        # Otherwise preserve the original projection (e.g., cartopy Projection objects)
-        if name is not None:
-            kwargs["projection"] = name
-        # If name is None and proj is not a string, it means we have a non-string
-        # projection (e.g., cartopy.crs.Projection object) that should be passed through
-        # The original projection kwarg is already in kwargs, so no action needed
-        return kwargs
+        return self._factory_helper.parse_proj(
+            proj=proj,
+            projection=projection,
+            proj_kw=proj_kw,
+            projection_kw=projection_kw,
+            backend=backend,
+            basemap=basemap,
+            **kwargs,
+        )
 
     def _get_align_axes(self, side):
-        """
-        Return the main axes along the edge of the figure.
-
-        For 'left'/'right': select one extreme axis per row (leftmost/rightmost).
-        For 'top'/'bottom': select one extreme axis per column (topmost/bottommost).
-        """
-        axs = tuple(self._subplot_dict.values())
-        if not axs:
-            return []
-        if side not in ("left", "right", "top", "bottom"):
-            raise ValueError(f"Invalid side {side!r}.")
-        from .utils import _get_subplot_layout
-
-        grid = _get_subplot_layout(
-            self._gridspec, list(self._iter_axes(panels=False, hidden=False))
-        )[0]
-        # From the @side we find the first non-zero
-        # entry in each row or column and collect the axes
-        if side == "left":
-            options = grid
-        elif side == "right":
-            options = grid[:, ::-1]
-        elif side == "top":
-            options = grid.T
-        else:  # bottom
-            options = grid.T[:, ::-1]
-        uids = set()
-        for option in options:
-            idx = np.where(option != None)[0]
-            if idx.size > 0:
-                first = idx.min()
-                number = option[first].number
-                uids.add(number)
-        axs = []
-        # Collect correct axes
-        for axi in self._iter_axes():
-            if axi.number in uids and axi not in axs:
-                axs.append(axi)
-        return axs
+        """Return the main axes along the requested edge of the figure."""
+        return self._layout_helper.get_align_axes(side)
 
     def _get_border_axes(
         self, *, same_type=False, force_recalculate=False
     ) -> dict[str, list[paxes.Axes]]:
-        """
-        Identifies axes located on the outer boundaries of the GridSpec layout.
-
-        Returns a dictionary with keys 'top', 'bottom', 'left', 'right', each
-        containing a list of axes on that border.
-        """
-
-        if hasattr(self, "_cached_border_axes") and not force_recalculate:
-            return self._cached_border_axes
-
-        border_axes = dict(
-            left=[],
-            right=[],
-            top=[],
-            bottom=[],
+        """Return the axes on each outer border of the figure grid."""
+        return self._layout_helper.get_border_axes(
+            same_type=same_type,
+            force_recalculate=force_recalculate,
         )
-        gs = self.gridspec
-        if gs is None:
-            return border_axes
-
-        all_axes = []
-        for axi in self._iter_axes(panels=True):
-            all_axes.append(axi)
-
-        # Handle empty cases
-        nrows, ncols = gs.nrows, gs.ncols
-        if nrows == 0 or ncols == 0 or not all_axes:
-            return border_axes
-        # We cannot use the gridspec on the axes as it
-        # is modified when a colorbar is added. Use self.gridspec
-        # as a reference.
-        # Reconstruct the grid based on axis locations. Note that
-        # spanning axes will fit into one of the boxes. Check
-        # this with unittest to see how empty axes are handles
-
-        gs = self.axes[0].get_gridspec()
-        shape = (gs.nrows_total, gs.ncols_total)
-        grid = np.zeros(shape, dtype=object)
-        grid.fill(None)
-        grid_axis_type = np.zeros(shape, dtype=int)
-        seen_axis_type = dict()
-        ax_type_mapping = dict()
-        for axi in self._iter_axes(panels=True, hidden=True):
-            gs = axi.get_subplotspec()
-            x, y = np.unravel_index(gs.num1, shape)
-            span = gs._get_rows_columns()
-
-            xleft, xright, yleft, yright = span
-            xspan = xright - xleft + 1
-            yspan = yright - yleft + 1
-            number = axi.number
-            axis_type = getattr(axi, "_ultraplot_axis_type", None)
-            if axis_type is None:
-                axis_type = type(axi)
-                if isinstance(axi, (paxes.GeoAxes)):
-                    axis_type = axi.projection
-            if axis_type not in seen_axis_type:
-                seen_axis_type[axis_type] = len(seen_axis_type)
-            type_number = seen_axis_type[axis_type]
-            ax_type_mapping[axi] = type_number
-            if axi.get_visible():
-                grid[x : x + xspan, y : y + yspan] = axi
-            grid_axis_type[x : x + xspan, y : y + yspan] = type_number
-        # We check for all axes is they are a border or not
-        # Note we could also write the crawler in a way where
-        # it find the borders by moving around in the grid, without spawning on each axis point. We may change
-        # this in the future
-        for axi in all_axes:
-            axis_type = ax_type_mapping[axi]
-            number = axi.number
-            if axi.number is None:
-                number = -axi._panel_parent.number
-            crawler = _Crawler(
-                ax=axi,
-                grid=grid,
-                target=number,
-                axis_type=axis_type,
-                grid_axis_type=grid_axis_type,
-            )
-            for direction, is_border in crawler.find_edges():
-                if is_border and axi not in border_axes[direction]:
-                    border_axes[direction].append(axi)
-        self._cached_border_axes = border_axes
-        return border_axes
 
     def _get_align_coord(self, side, axs, align="center", includepanels=False):
-        """
-        Return the figure coordinate for positioning spanning axis labels or super titles.
-
-        Parameters
-        ----------
-        side : str
-            Side of the figure ('top', 'bottom', 'left', 'right').
-        axs : list
-            List of axes to align across.
-        align : str, default 'center'
-            Horizontal alignment for x-axis positioning: 'left', 'center', or 'right'.
-            For y-axis positioning, always centers regardless of this parameter.
-        includepanels : bool, default False
-            Whether to include panel axes in the alignment calculation.
-        """
-        # Get position in figure relative coordinates
-        if not all(isinstance(ax, paxes.Axes) for ax in axs):
-            raise RuntimeError("Axes must be ultraplot axes.")
-        if not all(isinstance(ax, maxes.SubplotBase) for ax in axs):
-            raise RuntimeError("Axes must be subplots.")
-        s = "y" if side in ("left", "right") else "x"
-        axs = [ax._panel_parent or ax for ax in axs]  # deflect to main axes
-        if includepanels:  # include panel short axes?
-            axs = [_ for ax in axs for _ in ax._iter_axes(panels=True, children=False)]
-        ranges = np.array([ax._range_subplotspec(s) for ax in axs])
-        min_, max_ = ranges[:, 0].min(), ranges[:, 1].max()
-        ax_lo = axs[np.where(ranges[:, 0] == min_)[0][0]]
-        ax_hi = axs[np.where(ranges[:, 1] == max_)[0][0]]
-        box_lo = ax_lo.get_subplotspec().get_position(self)
-        box_hi = ax_hi.get_subplotspec().get_position(self)
-        if s == "x":
-            # Calculate horizontal position based on alignment preference
-            if align == "left":
-                pos = box_lo.x0
-            elif align == "right":
-                pos = box_hi.x1
-            else:  # 'center'
-                pos = 0.5 * (box_lo.x0 + box_hi.x1)
-        else:
-            # For vertical positioning, always center between axes
-            pos = 0.5 * (box_lo.y1 + box_hi.y0)  # 'lo' is actually on top of figure
-        ax = axs[(np.argmin(ranges[:, 0]) + np.argmax(ranges[:, 1])) // 2]
-        ax = ax._panel_parent or ax  # always use main subplot for spanning labels
-        return pos, ax
+        """Return the alignment coordinate for spanning labels or super titles."""
+        return self._layout_helper.get_align_coord(
+            side,
+            axs,
+            align=align,
+            includepanels=includepanels,
+        )
 
     def _get_offset_coord(self, side, axs, renderer, *, pad=None, extra=None):
-        """
-        Return the figure coordinate for offsetting super labels and super titles.
-        """
-        s = "x" if side in ("left", "right") else "y"
-        cs = []
-        objs = tuple(
-            _
-            for ax in axs
-            for _ in ax._iter_axes(panels=True, children=True, hidden=True)
-        )  # noqa: E501
-        objs = objs + (extra or ())  # e.g. top super labels
-        for obj in objs:
-            bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
-            attr = s + "max" if side in ("top", "right") else s + "min"
-            c = getattr(bbox, attr)
-            c = (c, 0) if side in ("left", "right") else (0, c)
-            c = self.transFigure.inverted().transform(c)
-            c = c[0] if side in ("left", "right") else c[1]
-            cs.append(c)
-        width, height = self.get_size_inches()
-        if pad is None:
-            pad = self._suplabel_pad[side] / 72
-            pad = pad / width if side in ("left", "right") else pad / height
-        return min(cs) - pad if side in ("left", "bottom") else max(cs) + pad
+        """Return the offset coordinate for super labels and super titles."""
+        return self._layout_helper.get_offset_coord(
+            side,
+            axs,
+            renderer,
+            pad=pad,
+            extra=extra,
+        )
 
     def _get_renderer(self):
-        """
-        Get a renderer at all costs. See matplotlib's tight_layout.py.
-        """
-        if hasattr(self, "_cached_render"):
-            renderer = self._cachedRenderer
-        else:
-            canvas = self.canvas
-            if canvas and hasattr(canvas, "get_renderer"):
-                renderer = canvas.get_renderer()
-            else:
-                from matplotlib.backends.backend_agg import FigureCanvasAgg
-
-                canvas = FigureCanvasAgg(self)
-                renderer = canvas.get_renderer()
-        return renderer
+        """Get a renderer at all costs."""
+        return self._layout_helper.get_renderer()
 
     @_clear_border_cache
     def _add_axes_panel(
@@ -1720,142 +1010,16 @@ class Figure(mfigure.Figure):
         """
         Add an axes panel.
         """
-        # Interpret args
-        # NOTE: Axis sharing not implemented for figure panels, 99% of the
-        # time this is just used as construct for adding global colorbars and
-        # legends, really not worth implementing axis sharing
-        ax = ax._altx_parent or ax
-        ax = ax._alty_parent or ax
-        if not isinstance(ax, paxes.Axes):
-            raise RuntimeError("Cannot add panels to non-ultraplot axes.")
-        if not isinstance(ax, maxes.SubplotBase):
-            raise RuntimeError("Cannot add panels to non-subplot axes.")
-        orig = ax._panel_side
-        if orig is None:
-            pass
-        elif side is None or side == orig:
-            ax, side = ax._panel_parent, orig
-        else:
-            raise RuntimeError(f"Cannot add {side!r} panel to existing {orig!r} panel.")
-        side = _translate_loc(side, "panel", default=_not_none(orig, "right"))
-
-        # Add and setup the panel accounting for index changes
-        # NOTE: Always put tick labels on the 'outside' and permit arbitrary
-        # keyword arguments passed from the user.
-        gs = self.gridspec
-        if not gs:
-            raise RuntimeError("The gridspec must be active.")
-        kw = _pop_params(kwargs, gs._insert_panel_slot)
-
-        # Validate and determine span override from span/row/col/rows/cols parameters
-        span_override = None
-        if side in ("left", "right"):
-            # Vertical panels: should use rows parameter, not cols
-            if _not_none(cols, col) is not None and _not_none(rows, row) is None:
-                raise ValueError(
-                    f"For {side!r} panels (vertical), use 'rows=' or 'row=' "
-                    "to specify span, not 'cols=' or 'col='."
-                )
-            if span is not None and _not_none(rows, row) is None:
-                warnings._warn_ultraplot(
-                    f"For {side!r} panels (vertical), prefer 'rows=' over 'span=' "
-                    "for clarity. Using 'span' as rows."
-                )
-            span_override = _not_none(rows, row, span)
-        else:
-            # Horizontal panels: should use cols parameter, not rows
-            if _not_none(rows, row) is not None and _not_none(cols, col, span) is None:
-                raise ValueError(
-                    f"For {side!r} panels (horizontal), use 'cols=' or 'span=' "
-                    "to specify span, not 'rows=' or 'row='."
-                )
-            span_override = _not_none(cols, col, span)
-
-        # Pass span_override to gridspec if provided
-        if span_override is not None:
-            kw["span_override"] = span_override
-
-        ss, share = gs._insert_panel_slot(side, ax, **kw)
-        # Guard: GeoAxes with non-rectilinear projections cannot share with panels
-        if isinstance(ax, paxes.GeoAxes) and not ax._is_rectilinear():
-            if share:
-                warnings._warn_ultraplot(
-                    "Panel sharing disabled for non-rectilinear GeoAxes projections."
-                )
-            share = False
-        kwargs["autoshare"] = False
-        kwargs.setdefault("number", False)  # power users might number panels
-        pax = self.add_subplot(ss, **kwargs)
-        pax._panel_side = side
-        pax._panel_share = share
-        pax._panel_parent = ax
-        ax._panel_dict[side].append(pax)
-        ax._apply_auto_share()
-        axis = pax.yaxis if side in ("left", "right") else pax.xaxis
-        getattr(axis, "tick_" + side)()  # set tick and tick label position
-        axis.set_label_position(side)  # set label position
-        # Sync limits and formatters with parent when sharing to ensure consistent ticks
-        # Copy limits for the shared axis
-        # Note: for non-geo axes this is handled by auto sharing
-        if share and isinstance(ax, paxes.GeoAxes):
-            # Align with backend: for GeoAxes, use lon/lat degree formatters on panels.
-            # Otherwise, copy the parent's axis formatters.
-            fmt_key = "deglat" if side in ("left", "right") else "deglon"
-            axis.set_major_formatter(constructor.Formatter(fmt_key))
-            # Update limits
-            axis._set_lim(
-                *getattr(ax, f"get_{'y' if side in ('left','right') else 'x'}lim")(),
-                auto=True,
-            )
-        # Push main axes tick labels to the outside relative to the added panel
-        # Skip this for filled panels (colorbars/legends)
-        if not kw.get("filled", False) and share:
-            if isinstance(ax, paxes.GeoAxes):
-                if side == "top":
-                    ax._toggle_gridliner_labels(labeltop=False)
-                elif side == "bottom":
-                    ax._toggle_gridliner_labels(labelbottom=False)
-                elif side == "left":
-                    ax._toggle_gridliner_labels(labelleft=False)
-                elif side == "right":
-                    ax._toggle_gridliner_labels(labelright=False)
-            else:
-                if side == "top":
-                    ax.xaxis.set_tick_params(**{ax._label_key("labeltop"): False})
-                elif side == "bottom":
-                    ax.xaxis.set_tick_params(**{ax._label_key("labelbottom"): False})
-                elif side == "left":
-                    ax.yaxis.set_tick_params(**{ax._label_key("labelleft"): False})
-                elif side == "right":
-                    ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
-
-        # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
-        if side == "top":
-            if not share:
-                pax.xaxis.set_tick_params(
-                    **{
-                        pax._label_key("labeltop"): True,
-                        pax._label_key("labelbottom"): False,
-                    }
-                )
-            else:
-                on = ax.xaxis.get_tick_params()[ax._label_key("labeltop")]
-                pax.xaxis.set_tick_params(**{pax._label_key("labeltop"): on})
-                ax.yaxis.set_tick_params(labeltop=False)
-        elif side == "right":
-            if not share:
-                pax.yaxis.set_tick_params(
-                    **{
-                        pax._label_key("labelright"): True,
-                        pax._label_key("labelleft"): False,
-                    }
-                )
-            else:
-                on = ax.yaxis.get_tick_params()[ax._label_key("labelright")]
-                pax.yaxis.set_tick_params(**{pax._label_key("labelright"): on})
-                ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
-
-        return pax
+        return self._panel_helper.add_axes_panel(
+            ax,
+            side=side,
+            span=span,
+            row=row,
+            col=col,
+            rows=rows,
+            cols=cols,
+            **kwargs,
+        )
 
     @_clear_border_cache
     def _add_figure_panel(
@@ -1905,139 +1069,7 @@ class Figure(mfigure.Figure):
         """
         The driver function for adding single subplots.
         """
-        self._layout_dirty = True
-        # Parse arguments
-        kwargs = self._parse_proj(**kwargs)
-
-        args = args or (1, 1, 1)
-        gs = self.gridspec
-
-        # Integer arg
-        if len(args) == 1 and isinstance(args[0], Integral):
-            if not 111 <= args[0] <= 999:
-                raise ValueError(f"Input {args[0]} must fall between 111 and 999.")
-            args = tuple(map(int, str(args[0])))
-
-        # Subplot spec
-        if len(args) == 1 and isinstance(
-            args[0], (maxes.SubplotBase, mgridspec.SubplotSpec)
-        ):
-            ss = args[0]
-            if isinstance(ss, maxes.SubplotBase):
-                ss = ss.get_subplotspec()
-            if gs is None:
-                gs = ss.get_topmost_subplotspec().get_gridspec()
-            if not isinstance(gs, pgridspec.GridSpec):
-                raise ValueError(
-                    "Input subplotspec must be derived from a ultraplot.GridSpec."
-                )
-            if ss.get_topmost_subplotspec().get_gridspec() is not gs:
-                raise ValueError(
-                    "Input subplotspec must be derived from the active figure gridspec."
-                )
-
-        # Row and column spec
-        # TODO: How to pass spacing parameters to gridspec? Consider overriding
-        # subplots adjust? Or require using gridspec manually?
-        elif (
-            len(args) == 3
-            and all(isinstance(arg, Integral) for arg in args[:2])
-            and all(isinstance(arg, Integral) for arg in np.atleast_1d(args[2]))
-        ):
-            nrows, ncols, num = args
-            i, j = np.resize(num, 2)
-            if gs is None:
-                gs = pgridspec.GridSpec(nrows, ncols)
-            orows, ocols = gs.get_geometry()
-            if orows % nrows:
-                raise ValueError(
-                    f"The input number of rows {nrows} does not divide the "
-                    f"figure gridspec number of rows {orows}."
-                )
-            if ocols % ncols:
-                raise ValueError(
-                    f"The input number of columns {ncols} does not divide the "
-                    f"figure gridspec number of columns {ocols}."
-                )
-            if any(_ < 1 or _ > nrows * ncols for _ in (i, j)):
-                raise ValueError(
-                    "The input subplot indices must fall between "
-                    f"1 and {nrows * ncols}. Instead got {i} and {j}."
-                )
-            rowfact, colfact = orows // nrows, ocols // ncols
-            irow, icol = divmod(i - 1, ncols)  # convert to zero-based
-            jrow, jcol = divmod(j - 1, ncols)
-            irow, icol = irow * rowfact, icol * colfact
-            jrow, jcol = (jrow + 1) * rowfact - 1, (jcol + 1) * colfact - 1
-            ss = gs[irow : jrow + 1, icol : jcol + 1]
-
-        # Otherwise
-        else:
-            raise ValueError(f"Invalid add_subplot positional arguments {args!r}.")
-
-        # Add the subplot
-        # NOTE: Pass subplotspec as keyword arg for mpl >= 3.4 workaround
-        # NOTE: Must assign unique label to each subplot or else subsequent calls
-        # to add_subplot() in mpl < 3.4 may return an already-drawn subplot in the
-        # wrong location due to gridspec override. Is against OO package design.
-        self.gridspec = gs  # trigger layout adjustment
-        self._subplot_counter += 1  # unique label for each subplot
-        kwargs.setdefault("label", f"subplot_{self._subplot_counter}")
-        kwargs.setdefault("number", 1 + max(self._subplot_dict, default=0))
-        kwargs.pop("refwidth", None)  # TODO: remove this
-
-        # Use container approach for external projections to make them ultraplot-compatible
-        projection_name = kwargs.get("projection")
-        external_axes_class = None
-        external_axes_kwargs = {}
-
-        if projection_name and isinstance(projection_name, str):
-            # Check if this is an external (non-ultraplot) projection
-            # Skip external wrapping for projections that start with "ultraplot_" prefix
-            # as these are already Ultraplot axes classes
-            if not projection_name.startswith("ultraplot_"):
-                try:
-                    # Get the projection class
-                    proj_class = mproj.get_projection_class(projection_name)
-
-                    # Check if it's not a built-in ultraplot axes
-                    # Only wrap if it's NOT a subclass of Ultraplot's Axes
-                    if not issubclass(proj_class, paxes.Axes):
-                        # Store the external axes class and original projection name
-                        external_axes_class = proj_class
-                        external_axes_kwargs["projection"] = projection_name
-
-                        # Create or get the container class for this external axes type
-                        from .axes.container import create_external_axes_container
-
-                        container_name = f"_ultraplot_container_{projection_name}"
-
-                        # Check if container is already registered
-                        if container_name not in mproj.get_projection_names():
-                            container_class = create_external_axes_container(
-                                proj_class, projection_name=container_name
-                            )
-                            mproj.register_projection(container_class)
-
-                        # Use the container projection and pass external axes info
-                        kwargs["projection"] = container_name
-                        kwargs["external_axes_class"] = external_axes_class
-                        kwargs["external_axes_kwargs"] = external_axes_kwargs
-                except (KeyError, ValueError):
-                    # Projection not found, let matplotlib handle the error
-                    pass
-
-        # Remove _subplot_spec from kwargs if present to prevent it from being passed
-        # to .set() or other methods that don't accept it.
-        kwargs.pop("_subplot_spec", None)
-
-        # Pass only the SubplotSpec as a positional argument
-        # Don't pass _subplot_spec as a keyword argument to avoid it being
-        # propagated to Axes.set() or other methods that don't accept it
-        ax = super().add_subplot(ss, **kwargs)
-        if ax.number:
-            self._subplot_dict[ax.number] = ax
-        return ax
+        return self._factory_helper.add_subplot(*args, **kwargs)
 
     def _unshare_axes(self):
 
@@ -2070,53 +1102,13 @@ class Figure(mfigure.Figure):
         - children: Whether to include child axes.
         - hidden: Whether to include hidden axes.
         """
-        if which not in ("x", "y", "z", "view"):
-            warnings._warn_ultraplot(
-                f"Attempting to (un)share {which=}. Options are ('x', 'y', 'z', 'view')"
-            )
-            return
-        axes = list(self._iter_axes(hidden=hidden, children=children, panels=panels))
-
-        if which == "x":
-            self._sharex = share
-        elif which == "y":
-            self._sharey = share
-
-        # Unshare first if needed
-        if share == 0:
-            for ax in axes:
-                ax._unshare(which=which)
-            return
-
-        # Grouping logic based on GridSpec
-        def get_key(ax):
-            ss = ax.get_subplotspec()
-            if which == "x":
-                return ss.rowspan.start  # same row
-            elif which == "y":
-                return ss.colspan.start  # same col
-
-        # Create groups of axes that should share
-        groups = {}
-        for ax in axes:
-            key = get_key(ax)
-            groups.setdefault(key, []).append(ax)
-
-        # Re-join axes per compatible subgroup
-        for raw_group in groups.values():
-            if which in ("x", "y"):
-                subgroups = self._partition_share_axes(raw_group, which)
-            else:
-                subgroups = [raw_group]
-            for group in subgroups:
-                if not group:
-                    continue
-                ref = group[0]
-                for other in group[1:]:
-                    if which in ("x", "y"):
-                        self._join_shared_group(which, ref, other)
-                    else:
-                        ref._shared_axes[which].join(ref, other)
+        self._share_helper.toggle_axis_sharing(
+            which=which,
+            share=share,
+            panels=panels,
+            children=children,
+            hidden=hidden,
+        )
 
     def _add_subplots(
         self,
@@ -2135,559 +1127,53 @@ class Figure(mfigure.Figure):
         """
         The driver function for adding multiple subplots.
         """
-
-        # Clunky helper function
-        # TODO: Consider deprecating and asking users to use add_subplot()
-        def _axes_dict(naxs, input, kw=False, default=None):
-            # First build up dictionary
-            if not kw:  # 'string' or {1: 'string1', (2, 3): 'string2'}
-                if np.iterable(input) and not isinstance(input, (str, dict)):
-                    input = {num + 1: item for num, item in enumerate(input)}
-                elif not isinstance(input, dict):
-                    input = {range(1, naxs + 1): input}
-            else:  # {key: value} or {1: {key: value1}, (2, 3): {key: value2}}
-                nested = [isinstance(_, dict) for _ in input.values()]
-                if not any(nested):  # any([]) == False
-                    input = {range(1, naxs + 1): input.copy()}
-                elif not all(nested):
-                    raise ValueError(f"Invalid input {input!r}.")
-            # Unfurl keys that contain multiple axes numbers
-            output = {}
-            for nums, item in input.items():
-                nums = np.atleast_1d(nums)
-                for num in nums.flat:
-                    output[num] = item.copy() if kw else item
-            # Fill with default values
-            for num in range(1, naxs + 1):
-                if num not in output:
-                    output[num] = {} if kw else default
-            if output.keys() != set(range(1, naxs + 1)):
-                raise ValueError(
-                    f"Have {naxs} axes, but {input!r} includes props for the axes: "
-                    + ", ".join(map(repr, sorted(output)))
-                    + "."
-                )
-            return output
-
-        # Build the subplot array
-        # NOTE: Currently this may ignore user-input nrows/ncols without warning
-        if order not in ("C", "F"):  # better error message
-            raise ValueError(f"Invalid order={order!r}. Options are 'C' or 'F'.")
-        gs = None
-        if array is None or isinstance(array, mgridspec.GridSpec):
-            if array is not None:
-                gs, nrows, ncols = array, array.nrows, array.ncols
-            array = np.arange(1, nrows * ncols + 1)[..., None]
-            array = array.reshape((nrows, ncols), order=order)
-        else:
-            array = np.atleast_1d(array)
-            array[array == None] = 0  # None or 0 both valid placeholders  # noqa: E711
-            array = array.astype(int)
-            if array.ndim == 1:  # interpret as single row or column
-                array = array[None, :] if order == "C" else array[:, None]
-            elif array.ndim != 2:
-                raise ValueError(f"Expected 1D or 2D array of integers. Got {array}.")
-
-        # Parse input format, gridspec, and projection arguments
-        # NOTE: Permit figure format keywords for e.g. 'collabels' (more intuitive)
-        nums = np.unique(array[array != 0])
-        naxs = len(nums)
-        if any(num < 0 or not isinstance(num, Integral) for num in nums.flat):
-            raise ValueError(f"Expected array of positive integers. Got {array}.")
-        proj = _not_none(projection=projection, proj=proj)
-        proj = _axes_dict(naxs, proj, kw=False, default="cartesian")
-        proj_kw = _not_none(projection_kw=projection_kw, proj_kw=proj_kw) or {}
-        proj_kw = _axes_dict(naxs, proj_kw, kw=True)
-        backend = self._parse_backend(backend, basemap)
-        backend = _axes_dict(naxs, backend, kw=False)
-        axes_kw = {
-            num: {"proj": proj[num], "proj_kw": proj_kw[num], "backend": backend[num]}
-            for num in proj
-        }
-        for key in ("gridspec_kw", "subplot_kw"):
-            kw = kwargs.pop(key, None)
-            if not kw:
-                continue
-            warnings._warn_ultraplot(
-                f"{key!r} is not necessary in ultraplot. Pass the "
-                "parameters as keyword arguments instead."
-            )
-            kwargs.update(kw or {})
-        figure_kw = _pop_params(kwargs, self._format_signature)
-        gridspec_kw = _pop_params(kwargs, pgridspec.GridSpec._update_params)
-
-        # Create or update the gridspec and add subplots with subplotspecs
-        # NOTE: The gridspec is added to the figure when we pass the subplotspec
-        if gs is None:
-            if "layout_array" not in gridspec_kw:
-                gridspec_kw = {**gridspec_kw, "layout_array": array}
-            gs = pgridspec.GridSpec(*array.shape, **gridspec_kw)
-        else:
-            gs.update(**gridspec_kw)
-        axs = naxs * [None]  # list of axes
-        axids = [np.where(array == i) for i in np.sort(np.unique(array)) if i > 0]
-        axcols = np.array([[x.min(), x.max()] for _, x in axids])
-        axrows = np.array([[y.min(), y.max()] for y, _ in axids])
-        for idx in range(naxs):
-            num = idx + 1
-            x0, x1 = axcols[idx, 0], axcols[idx, 1]
-            y0, y1 = axrows[idx, 0], axrows[idx, 1]
-            ss = gs[y0 : y1 + 1, x0 : x1 + 1]
-            kw = {**kwargs, **axes_kw[num], "number": num}
-            axs[idx] = self.add_subplot(ss, **kw)
-        self.format(skip_axes=True, **figure_kw)
-        return pgridspec.SubplotGrid(axs)
-
-    def _align_axis_label(self, x):
-        """
-        Align *x* and *y* axis labels in the perpendicular and parallel directions.
-        """
-        # NOTE: Always use 'align' if 'span' is True to get correct offset
-        # NOTE: Must trigger axis sharing here so that super label alignment
-        # with tight=False is valid. Kind of kludgey but oh well.
-        seen = set()
-        span = getattr(self, "_span" + x)
-        align = getattr(self, "_align" + x)
-        for ax in self._subplot_dict.values():
-            if isinstance(ax, paxes.CartesianAxes):
-                ax._apply_axis_sharing()  # always!
-            else:
-                continue
-            pos = getattr(ax, x + "axis").get_label_position()
-            if ax in seen or pos not in ("bottom", "left"):
-                continue  # already aligned or cannot align
-            axs = ax._get_span_axes(pos, panels=False)  # returns panel or main axes
-            if self._has_share_label_groups(x) and any(
-                self._is_share_label_group_member(axi, x) for axi in axs
-            ):
-                continue  # explicit label groups override default spanning
-            if any(getattr(ax, "_share" + x) for ax in axs):
-                continue  # nothing to align or axes have parents
-            seen.update(axs)
-            if span or align:
-                if hasattr(self, "_align_label_groups"):
-                    group = self._align_label_groups[x]
-                else:
-                    group = getattr(self, "_align_" + x + "label_grp", None)
-                if group is not None:  # fail silently to avoid fragile API changes
-                    for ax in axs[1:]:
-                        group.join(axs[0], ax)  # add to grouper
-            if span:
-                self._update_axis_label(pos, axs)
-
-        # Apply explicit label-sharing groups for this axis
-        self._apply_share_label_groups(axis=x)
+        return self._factory_helper.add_subplots(
+            array=array,
+            nrows=nrows,
+            ncols=ncols,
+            order=order,
+            proj=proj,
+            projection=projection,
+            proj_kw=proj_kw,
+            projection_kw=projection_kw,
+            backend=backend,
+            basemap=basemap,
+            **kwargs,
+        )
 
     def _register_share_label_group(self, axes, *, target, source=None):
         """
         Register an explicit label-sharing group for a subset of axes.
         """
-        if not axes:
-            return
-        axes = list(axes)
-        axes = [ax for ax in axes if ax is not None and ax.figure is self]
-        if len(axes) < 2:
-            return
-
-        # Preserve order while de-duplicating
-        seen = set()
-        unique = []
-        for ax in axes:
-            ax_id = id(ax)
-            if ax_id in seen:
-                continue
-            seen.add(ax_id)
-            unique.append(ax)
-        axes = unique
-        if len(axes) < 2:
-            return
-
-        # Split by label side if mixed
-        axes_by_side = {}
-        if target == "x":
-            for ax in axes:
-                axes_by_side.setdefault(ax.xaxis.get_label_position(), []).append(ax)
-        else:
-            for ax in axes:
-                axes_by_side.setdefault(ax.yaxis.get_label_position(), []).append(ax)
-        if len(axes_by_side) > 1:
-            for side, side_axes in axes_by_side.items():
-                side_source = source if source in side_axes else None
-                self._register_share_label_group_for_side(
-                    side_axes, target=target, side=side, source=side_source
-                )
-            return
-
-        side, side_axes = next(iter(axes_by_side.items()))
-        self._register_share_label_group_for_side(
-            side_axes, target=target, side=side, source=source
+        self._label_helper.register_share_label_group(
+            axes,
+            target=target,
+            source=source,
         )
-
-    def _register_share_label_group_for_side(self, axes, *, target, side, source=None):
-        """
-        Register a single label-sharing group for a given label side.
-        """
-        if not axes:
-            return
-        axes = [ax for ax in axes if ax is not None and ax.figure is self]
-        if len(axes) < 2:
-            return
-
-        # Prefer label text from the source axes if available
-        label = None
-        if source in axes:
-            candidate = getattr(source, f"{target}axis").label
-            if candidate.get_text().strip():
-                label = candidate
-        if label is None:
-            for ax in axes:
-                candidate = getattr(ax, f"{target}axis").label
-                if candidate.get_text().strip():
-                    label = candidate
-                    break
-
-        text = label.get_text() if label else ""
-        props = None
-        if label is not None:
-            props = {
-                "color": label.get_color(),
-                "fontproperties": label.get_font_properties(),
-                "rotation": label.get_rotation(),
-                "rotation_mode": label.get_rotation_mode(),
-                "ha": label.get_ha(),
-                "va": label.get_va(),
-            }
-
-        group_key = tuple(sorted(id(ax) for ax in axes))
-        groups = self._share_label_groups[target]
-        group = groups.get(group_key)
-        if group is None:
-            groups[group_key] = {
-                "axes": axes,
-                "side": side,
-                "text": text if text.strip() else "",
-                "props": props,
-            }
-        else:
-            group["axes"] = axes
-            group["side"] = side
-            if text.strip():
-                group["text"] = text
-                group["props"] = props
 
     def _is_share_label_group_member(self, ax, axis):
         """
         Return True if the axes belongs to any explicit label-sharing group.
         """
-        groups = self._share_label_groups.get(axis, {})
-        return any(ax in group["axes"] for group in groups.values())
-
-    def _has_share_label_groups(self, axis):
-        """
-        Return True if there are any explicit label-sharing groups for an axis.
-        """
-        return bool(self._share_label_groups.get(axis, {}))
+        return self._label_helper.is_share_label_group_member(ax, axis)
 
     def _clear_share_label_groups(self, axes=None, *, target=None):
         """
         Clear explicit label-sharing groups, optionally filtered by axes.
         """
-        targets = ("x", "y") if target is None else (target,)
-        for axis in targets:
-            groups = self._share_label_groups.get(axis, {})
-            if axes is None:
-                groups.clear()
-                continue
-            axes_set = {ax for ax in axes if ax is not None}
-            for key in list(groups):
-                if any(ax in axes_set for ax in groups[key]["axes"]):
-                    del groups[key]
-            # Clear any existing spanning labels tied to these axes
-            if axis == "x":
-                for ax in axes_set:
-                    if ax in self._supxlabel_dict:
-                        self._supxlabel_dict[ax].set_text("")
-            else:
-                for ax in axes_set:
-                    if ax in self._supylabel_dict:
-                        self._supylabel_dict[ax].set_text("")
-
-    def _apply_share_label_groups(self, axis=None):
-        """
-        Apply explicit label-sharing groups, overriding default label sharing.
-        """
-
-        def _order_axes_for_side(axs, side):
-            if side in ("bottom", "top"):
-                key = (
-                    (lambda ax: ax._range_subplotspec("y")[1])
-                    if side == "bottom"
-                    else (lambda ax: ax._range_subplotspec("y")[0])
-                )
-                reverse = side == "bottom"
-            else:
-                key = (
-                    (lambda ax: ax._range_subplotspec("x")[1])
-                    if side == "right"
-                    else (lambda ax: ax._range_subplotspec("x")[0])
-                )
-                reverse = side == "right"
-            try:
-                return sorted(axs, key=key, reverse=reverse)
-            except Exception:
-                return list(axs)
-
-        axes = (axis,) if axis in ("x", "y") else ("x", "y")
-        for target in axes:
-            groups = self._share_label_groups.get(target, {})
-            for group in groups.values():
-                axs = [
-                    ax for ax in group["axes"] if ax.figure is self and ax.get_visible()
-                ]
-                if len(axs) < 2:
-                    continue
-
-                side = group["side"]
-                ordered_axs = _order_axes_for_side(axs, side)
-
-                # Refresh label text from any axis with non-empty text
-                label = None
-                for ax in ordered_axs:
-                    candidate = getattr(ax, f"{target}axis").label
-                    if candidate.get_text().strip():
-                        label = candidate
-                        break
-                text = group["text"]
-                props = group["props"]
-                if label is not None:
-                    text = label.get_text()
-                    props = {
-                        "color": label.get_color(),
-                        "fontproperties": label.get_font_properties(),
-                        "rotation": label.get_rotation(),
-                        "rotation_mode": label.get_rotation_mode(),
-                        "ha": label.get_ha(),
-                        "va": label.get_va(),
-                    }
-                    group["text"] = text
-                    group["props"] = props
-
-                if not text:
-                    continue
-
-                try:
-                    _, ax = self._get_align_coord(
-                        side, ordered_axs, includepanels=self._includepanels
-                    )
-                except Exception:
-                    continue
-                axlab = getattr(ax, f"{target}axis").label
-                axlab.set_text(text)
-                if props is not None:
-                    axlab.set_color(props["color"])
-                    axlab.set_fontproperties(props["fontproperties"])
-                    axlab.set_rotation(props["rotation"])
-                    axlab.set_rotation_mode(props["rotation_mode"])
-                    axlab.set_ha(props["ha"])
-                    axlab.set_va(props["va"])
-                self._update_axis_label(side, ordered_axs)
-
-    def _align_super_labels(self, side, renderer):
-        """
-        Adjust the position of super labels.
-        """
-        # NOTE: Ensure title is offset only here.
-        for ax in self._subplot_dict.values():
-            ax._apply_title_above()
-        if side not in ("left", "right", "bottom", "top"):
-            raise ValueError(f"Invalid side {side!r}.")
-        labs = self._suplabel_dict[side]
-        axs = tuple(ax for ax, lab in labs.items() if lab.get_text())
-        if not axs:
-            return
-        c = self._get_offset_coord(side, axs, renderer)
-        for lab in labs.values():
-            s = "x" if side in ("left", "right") else "y"
-            lab.update({s: c})
-
-    def _align_super_title(self, renderer):
-        """
-        Adjust the position of the super title based on user alignment preferences.
-
-        Respects horizontal and vertical alignment settings from suptitle_kw parameters,
-        while applying sensible defaults when no custom alignment is provided.
-        """
-        if not self._suptitle.get_text():
-            return
-        axs = self._get_align_axes("top")  # returns outermost panels
-        if not axs:
-            return
-        labs = tuple(t for t in self._suplabel_dict["top"].values() if t.get_text())
-        pad = (self._suptitle_pad / 72) / self.get_size_inches()[1]
-
-        # Get current alignment settings from suptitle (may be set via suptitle_kw)
-        ha = self._suptitle.get_ha()
-        va = self._suptitle.get_va()
-
-        # Use original centering algorithm for horizontal positioning.
-        x, _ = self._get_align_coord(
-            "top",
-            axs,
-            includepanels=self._includepanels,
-            align=ha,
-        )
-        y_target = self._get_offset_coord("top", axs, renderer, pad=pad, extra=labs)
-
-        # Place suptitle so its *bbox bottom* sits at the target offset.
-        # This preserves spacing for all vertical alignments (e.g. va='top').
-        self._suptitle.set_ha(ha)
-        self._suptitle.set_va(va)
-        self._suptitle.set_position((x, 0))
-        bbox = self._suptitle.get_window_extent(renderer)
-        y_bbox = self.transFigure.inverted().transform((0, bbox.ymin))[1]
-        y = y_target - y_bbox
-        self._suptitle.set_position((x, y))
-
-    def _update_axis_label(self, side, axs):
-        """
-        Update the aligned axis label for the input axes.
-        """
-        # Get the central axis and the spanning label (initialize if it does not exist)
-        # NOTE: Previously we secretly used matplotlib axis labels for spanning labels,
-        # offsetting them between two subplots if necessary. Now we track designated
-        # 'super' labels and replace the actual labels with spaces so they still impact
-        # the tight bounding box and thus allocate space for the spanning label.
-        x, y = "xy" if side in ("bottom", "top") else "yx"
-        c, ax = self._get_align_coord(side, axs, includepanels=self._includepanels)
-        axlab = getattr(ax, x + "axis").label  # the central label
-        suplabs = getattr(self, "_sup" + x + "label_dict")  # dict of spanning labels
-        suplab = suplabs.get(ax, None)
-        if suplab is None and not axlab.get_text().strip():
-            return  # nothing to transfer from the normal label
-        if suplab is not None and not suplab.get_text().strip():
-            return  # nothing to update on the super label
-        if suplab is None:
-            props = ("ha", "va", "rotation", "rotation_mode")
-            suplab = suplabs[ax] = self.text(0, 0, "")
-            suplab.update({prop: getattr(axlab, "get_" + prop)() for prop in props})
-        # Spanning labels are positioned manually while regular axis labels are
-        # replaced by space placeholders to reserve bbox space. Exclude these
-        # figure-level labels from tight layout to avoid double counting.
-        suplab.set_in_layout(False)
-
-        # Copy text from the central label to the spanning label
-        # NOTE: Must use spaces rather than newlines, otherwise tight layout
-        # won't make room. Reason is Text implementation (see Text._get_layout())
-        labels._transfer_label(axlab, suplab)  # text, color, and font properties
-        count = 1 + suplab.get_text().count("\n")
-        space = "\n".join(" " * count)
-        for ax in axs:  # includes original 'axis'
-            axis = getattr(ax, x + "axis")
-            axis.label.set_text(space)
-
-        # Update spanning label position then add simple monkey patch
-        # NOTE: Simply using axis._update_label_position() when this is
-        # called is not sufficient. Fails with e.g. inline backend.
-        t = mtransforms.IdentityTransform()  # set in pixels
-        cx, cy = axlab.get_position()
-        if x == "x":
-            trans = mtransforms.blended_transform_factory(self.transFigure, t)
-            coord = (c, cy)
-        else:
-            trans = mtransforms.blended_transform_factory(t, self.transFigure)
-            coord = (cx, c)
-        suplab.set_transform(trans)
-        suplab.set_position(coord)
-        setpos = getattr(mtext.Text, "set_" + y)
-
-        def _set_coord(self, *args, **kwargs):  # noqa: E306
-            setpos(self, *args, **kwargs)
-            setpos(suplab, *args, **kwargs)
-
-        setattr(axlab, "set_" + y, _set_coord.__get__(axlab))
+        self._label_helper.clear_share_label_groups(axes=axes, target=target)
 
     def _update_super_labels(self, side, labels, **kwargs):
         """
         Assign the figure super labels and update settings.
         """
-        # Update the label parameters
-        if side not in ("left", "right", "bottom", "top"):
-            raise ValueError(f"Invalid side {side!r}.")
-        kw = rc.fill(
-            {
-                "color": side + "label.color",
-                "rotation": side + "label.rotation",
-                "size": side + "label.size",
-                "weight": side + "label.weight",
-                "family": "font.family",
-            },
-            context=True,
-        )
-        kw.update(kwargs)  # used when updating *existing* labels
-        props = self._suplabel_props[side]
-        props.update(kw)  # used when creating *new* labels
-
-        # Get the label axes
-        # WARNING: In case users added labels then changed the subplot geometry we
-        # have to remove labels whose axes don't match the current 'align' axes.
-        axs = self._get_align_axes(side)
-        if not axs:
-            return  # occurs if called while adding axes
-        if not labels:
-            labels = [None for _ in axs]  # indicates that text should not be updated
-        if not kw and all(_ is None for _ in labels):
-            return  # nothing to update
-        if len(labels) != len(axs):
-            raise ValueError(
-                f"Got {len(labels)} {side} labels but found {len(axs)} axes "
-                f"along the {side} side of the figure."
-            )
-        src = self._suplabel_dict[side]
-        extra = src.keys() - set(axs)
-        for ax in extra:  # e.g. while adding axes
-            text = src[ax].get_text()
-            if text:
-                warnings._warn_ultraplot(
-                    f"Removing {side} label with text {text!r} from axes {ax.number}."
-                )
-            src[ax].remove()  # remove from the figure
-
-        # Update the label text
-        tf = self.transFigure
-        for ax, label in zip(axs, labels):
-            if ax in src:
-                obj = src[ax]
-            elif side in ("left", "right"):
-                trans = mtransforms.blended_transform_factory(tf, ax.transAxes)
-                obj = src[ax] = self.text(0, 0.5, "", transform=trans)
-                obj.update(props)
-            else:
-                trans = mtransforms.blended_transform_factory(ax.transAxes, tf)
-                obj = src[ax] = self.text(0.5, 0, "", transform=trans)
-                obj.update(props)
-            if kw:
-                obj.update(kw)
-            if label is not None:
-                obj.set_text(label)
+        self._label_helper.update_super_labels(side, labels, **kwargs)
 
     def _update_super_title(self, title, **kwargs):
         """
         Assign the figure super title and update settings.
         """
-        kw = rc.fill(
-            {
-                "size": "suptitle.size",
-                "weight": "suptitle.weight",
-                "color": "suptitle.color",
-                "family": "font.family",
-            },
-            context=True,
-        )
-        kw.update(kwargs)
-        if kw:
-            self._suptitle.update(kw)
-        if title is not None:
-            self._suptitle.set_text(title)
+        self._label_helper.update_super_title(title, **kwargs)
 
     @_clear_border_cache
     @docstring._concatenate_inherited
@@ -2774,10 +1260,10 @@ class Figure(mfigure.Figure):
 
         def _align_content():  # noqa: E306
             for axis in "xy":
-                self._align_axis_label(axis)
+                self._label_helper.align_axis_label(axis)
             for side in ("left", "right", "top", "bottom"):
-                self._align_super_labels(side, renderer)
-            self._align_super_title(renderer)
+                self._label_helper.align_super_labels(side, renderer)
+            self._label_helper.align_super_title(renderer)
 
         # Update the layout
         # WARNING: Tried to avoid two figure resizes but made
@@ -2855,109 +1341,28 @@ class Figure(mfigure.Figure):
         ultraplot.gridspec.SubplotGrid.format
         ultraplot.config.Configurator.context
         """
-        self._layout_dirty = True
-        # Initiate context block
-        axs = axs or self._subplot_dict.values()
-        skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
-        rc_kw, rc_mode = _pop_rc(kwargs)
-        with rc.context(rc_kw, mode=rc_mode):
-            # Update background patch
-            kw = rc.fill({"facecolor": "figure.facecolor"}, context=True)
-            self.patch.update(kw)
-
-            # Update super title and label spacing
-            pad = rc.find("suptitle.pad", context=True)  # super title
-            if pad is not None:
-                self._suptitle_pad = pad
-            for side in tuple(self._suplabel_pad):  # super labels
-                pad = rc.find(side + "label.pad", context=True)
-                if pad is not None:
-                    self._suplabel_pad[side] = pad
-            if includepanels is not None:
-                self._includepanels = includepanels
-
-            # Update super title and labels text and settings
-            suptitle_kw = suptitle_kw or {}
-            leftlabels_kw = leftlabels_kw or {}
-            rightlabels_kw = rightlabels_kw or {}
-            bottomlabels_kw = bottomlabels_kw or {}
-            toplabels_kw = toplabels_kw or {}
-            self._update_super_title(
-                _not_none(figtitle=figtitle, suptitle=suptitle),
-                **suptitle_kw,
-            )
-            self._update_super_labels(
-                "left",
-                _not_none(rowlabels=rowlabels, leftlabels=leftlabels, llabels=llabels),
-                **leftlabels_kw,
-            )
-            self._update_super_labels(
-                "right",
-                _not_none(rightlabels=rightlabels, rlabels=rlabels),
-                **rightlabels_kw,
-            )
-            self._update_super_labels(
-                "bottom",
-                _not_none(bottomlabels=bottomlabels, blabels=blabels),
-                **bottomlabels_kw,
-            )
-            self._update_super_labels(
-                "top",
-                _not_none(collabels=collabels, toplabels=toplabels, tlabels=tlabels),
-                **toplabels_kw,
-            )
-
-        # Update the main axes
-        if skip_axes:  # avoid recursion
-            return
-
-        # Remove all keywords that are not in the allowed signature parameters
-        kws = {
-            cls: _pop_params(kwargs, sig)
-            for cls, sig in paxes.Axes._format_signatures.items()
-        }
-        classes = set()  # track used dictionaries
-
-        def _axis_has_share_label_text(ax, axis):
-            groups = self._share_label_groups.get(axis, {})
-            for group in groups.values():
-                if ax in group["axes"] and str(group.get("text", "")).strip():
-                    return True
-            return False
-
-        def _axis_has_label_text(ax, axis):
-            text = ax.get_xlabel() if axis == "x" else ax.get_ylabel()
-            return bool(text and text.strip())
-
-        for number, ax in enumerate(axs):
-            number = number + 1  # number from 1
-            store_old_number = ax.number
-            if ax.number != number:
-                ax.number = number
-            kw = {
-                key: value
-                for cls, kw in kws.items()
-                for key, value in kw.items()
-                if isinstance(ax, cls) and not classes.add(cls)
-            }
-            if kw.get("xlabel") is not None and self._has_share_label_groups("x"):
-                if _axis_has_share_label_text(ax, "x") or _axis_has_label_text(ax, "x"):
-                    kw.pop("xlabel", None)
-            if kw.get("ylabel") is not None and self._has_share_label_groups("y"):
-                if _axis_has_share_label_text(ax, "y") or _axis_has_label_text(ax, "y"):
-                    kw.pop("ylabel", None)
-            ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
-            ax.number = store_old_number
-        # Warn unused keyword argument(s)
-        kw = {
-            key: value
-            for name in kws.keys() - classes
-            for key, value in kws[name].items()
-        }
-        if kw:
-            warnings._warn_ultraplot(
-                f"Ignoring unused projection-specific format() keyword argument(s): {kw}"  # noqa: E501
-            )
+        return self._format_helper.format(
+            axs=axs,
+            figtitle=figtitle,
+            suptitle=suptitle,
+            suptitle_kw=suptitle_kw,
+            llabels=llabels,
+            leftlabels=leftlabels,
+            leftlabels_kw=leftlabels_kw,
+            rlabels=rlabels,
+            rightlabels=rightlabels,
+            rightlabels_kw=rightlabels_kw,
+            blabels=blabels,
+            bottomlabels=bottomlabels,
+            bottomlabels_kw=bottomlabels_kw,
+            tlabels=tlabels,
+            toplabels=toplabels,
+            toplabels_kw=toplabels_kw,
+            rowlabels=rowlabels,
+            collabels=collabels,
+            includepanels=includepanels,
+            **kwargs,
+        )
 
     @docstring._concatenate_inherited
     @docstring._snippet_manager
@@ -3004,173 +1409,21 @@ class Figure(mfigure.Figure):
         ultraplot.axes.Axes.colorbar
         matplotlib.figure.Figure.colorbar
         """
-        # Backwards compatibility
-        ax = kwargs.pop("ax", None)
-        ref = kwargs.pop("ref", None)
-        loc_ax = ref if ref is not None else ax
-        cax = kwargs.pop("cax", None)
-        if isinstance(values, maxes.Axes):
-            cax = _not_none(cax_positional=values, cax=cax)
-            values = None
-        if isinstance(loc, maxes.Axes):
-            ax = _not_none(ax_positional=loc, ax=ax)
-            loc = None
-        # Helpful warning
-        if kwargs.pop("use_gridspec", None) is not None:
-            warnings._warn_ultraplot(
-                "Ignoring the 'use_gridspec' keyword. ultraplot always allocates "
-                "additional space for colorbars using the figure gridspec "
-                "rather than 'stealing space' from the parent subplot."
-            )
-        # Fill this axes
-        if cax is not None:
-            with context._state_context(cax, _internal_call=True):  # do not wrap pcolor
-                cb = super().colorbar(mappable, cax=cax, **kwargs)
-        # Axes panel colorbar
-        elif loc_ax is not None:
-            # Check if span parameters are provided
-            has_span = _not_none(span, row, col, rows, cols) is not None
-
-            # Infer span from loc_ax if it is a list and no span provided
-            if (
-                not has_span
-                and np.iterable(loc_ax)
-                and not isinstance(loc_ax, (str, maxes.Axes))
-            ):
-                loc_trans = _translate_loc(loc, "colorbar", default=rc["colorbar.loc"])
-                side = (
-                    loc_trans
-                    if loc_trans in ("left", "right", "top", "bottom")
-                    else None
-                )
-
-                if side:
-                    r_min, r_max = float("inf"), float("-inf")
-                    c_min, c_max = float("inf"), float("-inf")
-                    valid_ax = False
-                    for axi in loc_ax:
-                        if not hasattr(axi, "get_subplotspec"):
-                            continue
-                        ss = axi.get_subplotspec()
-                        if ss is None:
-                            continue
-                        ss = ss.get_topmost_subplotspec()
-                        r1, r2, c1, c2 = ss._get_rows_columns()
-                        gs = ss.get_gridspec()
-                        if gs is not None:
-                            try:
-                                r1, r2 = gs._decode_indices(r1, r2, which="h")
-                                c1, c2 = gs._decode_indices(c1, c2, which="w")
-                            except ValueError:
-                                # Non-panel decode can fail for panel or nested specs.
-                                pass
-                        r_min = min(r_min, r1)
-                        r_max = max(r_max, r2)
-                        c_min = min(c_min, c1)
-                        c_max = max(c_max, c2)
-                        valid_ax = True
-
-                    if valid_ax:
-                        if side in ("left", "right"):
-                            rows = (r_min + 1, r_max + 1)
-                        else:
-                            cols = (c_min + 1, c_max + 1)
-                        has_span = True
-
-            # Extract a single axes from array if span is provided
-            # Otherwise, pass the array as-is for normal colorbar behavior
-            if (
-                has_span
-                and np.iterable(loc_ax)
-                and not isinstance(loc_ax, (str, maxes.Axes))
-            ):
-                # Pick the best axis to anchor to based on the colorbar side
-                loc_trans = _translate_loc(loc, "colorbar", default=rc["colorbar.loc"])
-                side = (
-                    loc_trans
-                    if loc_trans in ("left", "right", "top", "bottom")
-                    else None
-                )
-
-                best_ax = None
-                best_coord = float("-inf")
-
-                # If side is determined, search for the edge axis
-                if side:
-                    for axi in loc_ax:
-                        if not hasattr(axi, "get_subplotspec"):
-                            continue
-                        ss = axi.get_subplotspec()
-                        if ss is None:
-                            continue
-                        ss = ss.get_topmost_subplotspec()
-                        r1, r2, c1, c2 = ss._get_rows_columns()
-                        gs = ss.get_gridspec()
-                        if gs is not None:
-                            try:
-                                r1, r2 = gs._decode_indices(r1, r2, which="h")
-                                c1, c2 = gs._decode_indices(c1, c2, which="w")
-                            except ValueError:
-                                # Non-panel decode can fail for panel or nested specs.
-                                pass
-
-                        if side == "right":
-                            val = c2  # Maximize column index
-                        elif side == "left":
-                            val = -c1  # Minimize column index
-                        elif side == "bottom":
-                            val = r2  # Maximize row index
-                        elif side == "top":
-                            val = -r1  # Minimize row index
-                        else:
-                            val = 0
-
-                        if val > best_coord:
-                            best_coord = val
-                            best_ax = axi
-
-                # Fallback to first axis
-                if best_ax is None:
-                    try:
-                        ax_single = next(iter(loc_ax))
-                    except (TypeError, StopIteration):
-                        ax_single = loc_ax
-                else:
-                    ax_single = best_ax
-            else:
-                ax_single = loc_ax
-
-            # Pass span parameters through to axes colorbar
-            cb = ax_single.colorbar(
-                mappable,
-                values,
-                space=space,
-                pad=pad,
-                width=width,
-                loc=loc,
-                span=span,
-                row=row,
-                col=col,
-                rows=rows,
-                cols=cols,
-                **kwargs,
-            )
-        # Figure panel colorbar
-        else:
-            loc = _not_none(loc=loc, location=location, default="r")
-            ax = self._add_figure_panel(
-                loc,
-                row=row,
-                col=col,
-                rows=rows,
-                cols=cols,
-                span=span,
-                width=width,
-                space=space,
-                pad=pad,
-            )
-            cb = ax.colorbar(mappable, values, loc="fill", **kwargs)
-        return cb
+        return self._guide_helper.colorbar(
+            mappable,
+            values,
+            loc=loc,
+            location=location,
+            row=row,
+            col=col,
+            rows=rows,
+            cols=cols,
+            span=span,
+            space=space,
+            pad=pad,
+            width=width,
+            **kwargs,
+        )
 
     @docstring._concatenate_inherited
     @docstring._snippet_manager
@@ -3211,181 +1464,21 @@ class Figure(mfigure.Figure):
         ultraplot.axes.Axes.legend
         matplotlib.axes.Axes.legend
         """
-        ax = kwargs.pop("ax", None)
-        ref = kwargs.pop("ref", None)
-        loc_ax = ref if ref is not None else ax
-
-        # Axes panel legend
-        if loc_ax is not None:
-            content_ax = ax if ax is not None else loc_ax
-            # Check if span parameters are provided
-            has_span = _not_none(span, row, col, rows, cols) is not None
-
-            # Automatically collect handles and labels from content axes if not provided
-            # Case 1: content_ax is a list (we must auto-collect)
-            # Case 2: content_ax != loc_ax (we must auto-collect because loc_ax.legend won't find content_ax handles)
-            must_collect = (
-                np.iterable(content_ax)
-                and not isinstance(content_ax, (str, maxes.Axes))
-            ) or (content_ax is not loc_ax)
-
-            if must_collect and handles is None and labels is None:
-                handles, labels = [], []
-                # Handle list of axes
-                if np.iterable(content_ax) and not isinstance(
-                    content_ax, (str, maxes.Axes)
-                ):
-                    for axi in content_ax:
-                        h, l = axi.get_legend_handles_labels()
-                        handles.extend(h)
-                        labels.extend(l)
-                # Handle single axis
-                else:
-                    handles, labels = content_ax.get_legend_handles_labels()
-
-            # Infer span from loc_ax if it is a list and no span provided
-            if (
-                not has_span
-                and np.iterable(loc_ax)
-                and not isinstance(loc_ax, (str, maxes.Axes))
-            ):
-                loc_trans = _translate_loc(loc, "legend", default=rc["legend.loc"])
-                side = (
-                    loc_trans
-                    if loc_trans in ("left", "right", "top", "bottom")
-                    else None
-                )
-
-                if side:
-                    r_min, r_max = float("inf"), float("-inf")
-                    c_min, c_max = float("inf"), float("-inf")
-                    valid_ax = False
-                    for axi in loc_ax:
-                        if not hasattr(axi, "get_subplotspec"):
-                            continue
-                        ss = axi.get_subplotspec()
-                        if ss is None:
-                            continue
-                        ss = ss.get_topmost_subplotspec()
-                        r1, r2, c1, c2 = ss._get_rows_columns()
-                        gs = ss.get_gridspec()
-                        if gs is not None:
-                            try:
-                                r1, r2 = gs._decode_indices(r1, r2, which="h")
-                                c1, c2 = gs._decode_indices(c1, c2, which="w")
-                            except ValueError:
-                                pass
-                        r_min = min(r_min, r1)
-                        r_max = max(r_max, r2)
-                        c_min = min(c_min, c1)
-                        c_max = max(c_max, c2)
-                        valid_ax = True
-
-                    if valid_ax:
-                        if side in ("left", "right"):
-                            rows = (r_min + 1, r_max + 1)
-                        else:
-                            cols = (c_min + 1, c_max + 1)
-                        has_span = True
-
-            # Extract a single axes from array if span is provided (or if ref is a list)
-            # Otherwise, pass the array as-is for normal legend behavior (only if loc_ax is list)
-            if (
-                has_span
-                and np.iterable(loc_ax)
-                and not isinstance(loc_ax, (str, maxes.Axes))
-            ):
-                # Pick the best axis to anchor to based on the legend side
-                loc_trans = _translate_loc(loc, "legend", default=rc["legend.loc"])
-                side = (
-                    loc_trans
-                    if loc_trans in ("left", "right", "top", "bottom")
-                    else None
-                )
-
-                best_ax = None
-                best_coord = float("-inf")
-
-                # If side is determined, search for the edge axis
-                if side:
-                    for axi in loc_ax:
-                        if not hasattr(axi, "get_subplotspec"):
-                            continue
-                        ss = axi.get_subplotspec()
-                        if ss is None:
-                            continue
-                        ss = ss.get_topmost_subplotspec()
-                        r1, r2, c1, c2 = ss._get_rows_columns()
-                        gs = ss.get_gridspec()
-                        if gs is not None:
-                            try:
-                                r1, r2 = gs._decode_indices(r1, r2, which="h")
-                                c1, c2 = gs._decode_indices(c1, c2, which="w")
-                            except ValueError:
-                                pass
-
-                        if side == "right":
-                            val = c2  # Maximize column index
-                        elif side == "left":
-                            val = -c1  # Minimize column index
-                        elif side == "bottom":
-                            val = r2  # Maximize row index
-                        elif side == "top":
-                            val = -r1  # Minimize row index
-                        else:
-                            val = 0
-
-                        if val > best_coord:
-                            best_coord = val
-                            best_ax = axi
-
-                # Fallback to first axis if no best axis found (or side is None)
-                if best_ax is None:
-                    try:
-                        ax_single = next(iter(loc_ax))
-                    except (TypeError, StopIteration):
-                        ax_single = loc_ax
-                else:
-                    ax_single = best_ax
-
-            else:
-                ax_single = loc_ax
-                if isinstance(ax_single, list):
-                    try:
-                        ax_single = pgridspec.SubplotGrid(ax_single)
-                    except ValueError:
-                        ax_single = ax_single[0]
-
-            leg = ax_single.legend(
-                handles,
-                labels,
-                loc=loc,
-                space=space,
-                pad=pad,
-                width=width,
-                span=span,
-                row=row,
-                col=col,
-                rows=rows,
-                cols=cols,
-                **kwargs,
-            )
-        # Figure panel legend
-        else:
-            loc = _not_none(loc=loc, location=location, default="r")
-            ax = self._add_figure_panel(
-                loc,
-                row=row,
-                col=col,
-                rows=rows,
-                cols=cols,
-                span=span,
-                width=width,
-                space=space,
-                pad=pad,
-            )
-            leg = ax.legend(handles, labels, loc="fill", **kwargs)
-        return leg
+        return self._guide_helper.legend(
+            handles,
+            labels,
+            loc=loc,
+            location=location,
+            row=row,
+            col=col,
+            rows=rows,
+            cols=cols,
+            span=span,
+            space=space,
+            pad=pad,
+            width=width,
+            **kwargs,
+        )
 
     @docstring._snippet_manager
     def save(self, filename, **kwargs):
@@ -3458,12 +1551,7 @@ class Figure(mfigure.Figure):
         """
         Test if the figure size is unchanged up to some tolerance in inches.
         """
-        eps = _not_none(eps, 0.01)
-        figsize_active = self.get_size_inches()
-        if figsize is None:  # e.g. GridSpec._calc_figsize() returned None
-            return True
-        else:
-            return np.all(np.isclose(figsize, figsize_active, rtol=0, atol=eps))
+        return self._layout_helper.is_same_size(figsize, eps)
 
     @docstring._concatenate_inherited
     def set_size_inches(self, w, h=None, *, forward=True, internal=False, eps=None):
@@ -3488,38 +1576,13 @@ class Figure(mfigure.Figure):
         --------
         matplotlib.figure.Figure.set_size_inches
         """
-        # Parse input args
-        figsize = w if h is None else (w, h)
-        if not np.all(np.isfinite(figsize)):
-            raise ValueError(f"Figure size must be finite, not {figsize}.")
-
-        # Fix the figure size if this is a user action from an interactive backend
-        # NOTE: If we fail to detect 'user' resize from the user, not only will
-        # result be incorrect, but qt backend will crash because it detects a
-        # recursive size change, since preprocessor size will differ.
-        # NOTE: Bitmap renderers calculate the figure size in inches from
-        # int(Figure.bbox.[width|height]) which rounds to whole pixels. When
-        # renderer calls set_size_inches, size may be effectively the same, but
-        # slightly changed due to roundoff error! Therefore only compare approx size.
-        attrs = ("_is_idle_drawing", "_is_drawing", "_draw_pending")
-        backend = any(getattr(self.canvas, attr, None) for attr in attrs)
-        internal = internal or self._is_adjusting
-        samesize = self._is_same_size(figsize, eps)
-        ctx = context._empty_context()  # context not necessary most of the time
-        if not backend and not internal and not samesize:
-            ctx = self._context_adjusting()  # do not trigger layout solver
-            self._figwidth, self._figheight = figsize
-            self._refwidth = self._refheight = None  # critical!
-
-        # Apply the figure size
-        # NOTE: If size changes we always update the gridspec to enforce fixed spaces
-        # and panel widths (necessary since axes use figure relative coords)
-        with ctx:  # avoid recursion
-            super().set_size_inches(figsize, forward=forward)
-        if not samesize:  # gridspec positions will resolve differently
-            self.gridspec.update()
-            if not backend and not internal:
-                self._layout_dirty = True
+        self._layout_helper.set_size_inches(
+            w,
+            h,
+            forward=forward,
+            internal=internal,
+            eps=eps,
+        )
 
     def _iter_axes(self, hidden=False, children=False, panels=True):
         """
@@ -3535,24 +1598,11 @@ class Figure(mfigure.Figure):
         panels : bool or str or sequence of str, optional
             Whether to include panels or the panels to include.
         """
-        # Parse panels
-        if panels is False:
-            panels = ()
-        elif panels is True or panels is None:
-            panels = ("left", "right", "bottom", "top")
-        elif isinstance(panels, str):
-            panels = (panels,)
-        if not set(panels) <= {"left", "right", "bottom", "top"}:
-            raise ValueError(f"Invalid sides {panels!r}.")
-        # Iterate
-        axs = (
-            *self._subplot_dict.values(),
-            *(ax for side in panels for ax in self._panel_dict[side]),
+        yield from self._layout_helper.iter_axes(
+            hidden=hidden,
+            children=children,
+            panels=panels,
         )
-        for ax in axs:
-            if not hidden and ax._panel_hidden:
-                continue  # ignore hidden panel and its colorbar/legend child
-            yield from ax._iter_axes(hidden=hidden, children=children, panels=panels)
 
     @property
     def gridspec(self):

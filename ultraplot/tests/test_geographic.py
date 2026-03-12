@@ -1010,10 +1010,12 @@ def test_panels_geo():
     uplt.close(fig)
 
 
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(tolerance=4)
 def test_geo_with_panels(rng):
     """
-    We are allowed to add panels in GeoPlots
+    We are allowed to add panels in GeoPlots.
+
+    The top colorbar/panel band shows a small antialiasing drift on mpl3.9.
     """
     # Define coordinates
     lat = np.linspace(-90, 90, 180)

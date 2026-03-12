@@ -385,7 +385,7 @@ def test_full_grid_clears_share_label_groups():
 
     fig.canvas.draw()
 
-    assert not fig._has_share_label_groups("x")
+    assert not fig._label_helper.has_share_label_groups("x")
     assert not any(
         lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values()
     )

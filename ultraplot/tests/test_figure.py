@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import numpy as np
 import pytest
 import ultraplot as uplt
+from ultraplot import gridspec as pgridspec
+from ultraplot.internals.figure_guides import resolve_guide_placement
 
 
 def test_unsharing_after_creation(rng):
@@ -76,6 +78,60 @@ def test_get_renderer_basic():
     # Renderer should not be None and should have draw_path method
     assert renderer is not None
     assert hasattr(renderer, "draw_path")
+
+
+def test_get_renderer_uses_cached_renderer():
+    """
+    _get_renderer should prefer an existing cached renderer when available.
+    """
+    fig, ax = uplt.subplots()
+    sentinel = object()
+    fig._cachedRenderer = sentinel
+    assert fig._get_renderer() is sentinel
+
+
+def test_resolve_guide_placement_infers_span_and_anchor():
+    """
+    Guide placement should infer span metadata and pick the correct edge axes.
+    """
+    fig, axs = uplt.subplots(ncols=2)
+    placement = resolve_guide_placement(
+        [axs[0], axs[1]],
+        loc="right",
+        guide="legend",
+        default_loc="right",
+    )
+    assert placement.has_span is True
+    assert placement.rows == (1, 1)
+    assert placement.anchor_axes is axs[1]
+
+
+def test_resolve_guide_placement_normalizes_legend_axes_without_span():
+    """
+    Legend guide placement should preserve multi-axes anchors when no span is inferred.
+    """
+    fig, axs = uplt.subplots(ncols=2)
+    placement = resolve_guide_placement(
+        [axs[0], axs[1]],
+        guide="legend",
+        default_loc="best",
+    )
+    assert placement.has_span is False
+    assert isinstance(placement.anchor_axes, pgridspec.SubplotGrid)
+
+
+def test_get_border_axes_same_type_treats_mixed_families_as_contiguous():
+    """
+    same_type=True should prevent mixed axis families from being treated as borders.
+    """
+    fig, axs = uplt.subplots([[1, 2], [3, 4]], proj=(None, None, None, "cyl"))
+    mixed = fig._get_border_axes(force_recalculate=True)
+    same = fig._get_border_axes(same_type=True, force_recalculate=True)
+
+    assert axs[3] in mixed["top"]
+    assert axs[1] in mixed["bottom"]
+    assert axs[3] not in same["top"]
+    assert axs[1] not in same["bottom"]
 
 
 def test_draw_without_rendering_preserves_dpi():
@@ -404,8 +460,8 @@ def test_auto_share_splits_mixed_x_unit_domains_after_refresh():
     fig._refresh_auto_share("x")
     fig.canvas.draw()
 
-    sig0 = fig._axis_unit_signature(axs[0], "x")
-    sig1 = fig._axis_unit_signature(axs[1], "x")
+    sig0 = fig._share_helper.axis_unit_signature(axs[0], "x")
+    sig1 = fig._share_helper.axis_unit_signature(axs[1], "x")
     assert sig0 != sig1
     assert _share_sibling_count(axs[0], "x") == 1
     assert _share_sibling_count(axs[1], "x") == 1
