@@ -906,7 +906,9 @@ _rc_matplotlib_default = {
     "hatch.color": BLACK,
     "hatch.linewidth": LINEWIDTH,
     "image.cmap": CMAPSEQ,
-    "image.interpolation": "none",
+    # Keep matplotlib default globally to avoid affecting third-party raster artists.
+    # UltraPlot image methods apply their own interpolation defaults locally.
+    "image.interpolation": "auto",
     "lines.linestyle": "-",
     "lines.linewidth": 1.5,
     "lines.markersize": 6.0,
