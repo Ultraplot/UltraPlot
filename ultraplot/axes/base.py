@@ -4168,8 +4168,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         artists : sequence of `~matplotlib.text.Text`, optional
             The artists to stagger. Defaults to visible axes text and annotation
             artists added with `text` or `annotate`.
-        direction : {'x', 'y', 'both', 'horizontal', 'vertical'}, default: 'y'
-            The staggering direction.
+        direction : {'x', 'y', 'both', 'xy', '2d', 'horizontal', 'vertical'}, \
+default: 'y'
+            The staggering direction. Use ``'both'``, ``'xy'``, or ``'2d'``
+            to search in both horizontal and vertical directions.
         step : float or unit-spec, default: '0.8em'
             The offset increment applied while searching for a non-overlapping
             position.

@@ -2999,7 +2999,9 @@ class Figure(mfigure.Figure):
             The axes whose text artists should be staggered. Defaults to the
             numbered subplots in the figure.
         direction, step, pad, max_steps, renderer
-            Passed to `~ultraplot.axes.Axes.stagger_text`.
+            Passed to `~ultraplot.axes.Axes.stagger_text`. This includes the
+            ``'both'``, ``'xy'``, and ``'2d'`` direction aliases for
+            two-dimensional staggering.
 
         Returns
         -------
