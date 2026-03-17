@@ -3963,7 +3963,17 @@ class PlotAxes(base.Axes):
         zs = tuple(map(inputs._to_numpy_array, zs))
         return (x, y, *zs, kwargs)
 
-    def _parse_color(self, x, y, c, *, apply_cycle=True, infer_rgb=False, **kwargs):
+    def _parse_color(
+        self,
+        x,
+        y,
+        c,
+        *,
+        apply_cycle=True,
+        infer_rgb=False,
+        force_cmap=False,
+        **kwargs,
+    ):
         """
         Parse either a colormap or color cycler. Colormap will be discrete and fade
         to subwhite luminance by default. Returns a HEX string if needed so we don't
@@ -3972,7 +3982,7 @@ class PlotAxes(base.Axes):
         # NOTE: This function is positioned above the _parse_cmap and _parse_cycle
         # functions and helper functions.
         parsers = (self._parse_cmap, *self._level_parsers)
-        if c is None or mcolors.is_color_like(c):
+        if c is None or (mcolors.is_color_like(c) and not force_cmap):
             if infer_rgb and c is not None and (isinstance(c, str) and c != "none"):
                 c = pcolors.to_hex(c)  # avoid scatter() ambiguous color warning
             if apply_cycle:  # False for scatter() so we can wait to get correct 'N'
@@ -3999,6 +4009,30 @@ class PlotAxes(base.Axes):
         if pop:
             warnings._warn_ultraplot(f"Ignoring unused keyword arg(s): {pop}")
         return (c, kwargs)
+
+    def _scatter_c_is_scalar_data(self, x, y, c) -> bool:
+        """
+        Return whether scatter ``c=`` should be treated as scalar data.
+
+        Matplotlib treats 1D numeric arrays matching the point count as values to
+        be colormapped, even though short float sequences can also look like an
+        RGBA tuple to ``is_color_like``. Preserve explicit RGB/RGBA arrays via the
+        existing ``N x 3``/``N x 4`` path and reserve this override for the 1D
+        numeric case only.
+        """
+        if c is None or isinstance(c, str):
+            return False
+        values = np.asarray(c)
+        if values.ndim != 1 or values.size <= 1:
+            return False
+        if not np.issubdtype(values.dtype, np.number):
+            return False
+        x = np.atleast_1d(inputs._to_numpy_array(x))
+        y = np.atleast_1d(inputs._to_numpy_array(y))
+        point_count = x.shape[0]
+        if y.shape[0] != point_count:
+            return False
+        return values.shape[0] == point_count
 
     @warnings._rename_kwargs("0.6.0", centers="values")
     def _parse_cmap(
@@ -5527,6 +5561,7 @@ class PlotAxes(base.Axes):
         # Only parse color if explicitly provided
         infer_rgb = True
         if cc is not None:
+            force_cmap = self._scatter_c_is_scalar_data(xs, ys, cc)
             if not isinstance(cc, str):
                 test = np.atleast_1d(cc)
                 if (
@@ -5542,6 +5577,7 @@ class PlotAxes(base.Axes):
                 inbounds=inbounds,
                 apply_cycle=False,
                 infer_rgb=infer_rgb,
+                force_cmap=force_cmap,
                 **kw,
             )
         # Create the cycler object by manually cycling and sanitzing the inputs
