@@ -11,7 +11,7 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from numbers import Integral, Number
-from typing import Any, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Iterable, Mapping, Optional, Sequence, TypeAlias, Union
 
 import matplotlib as mpl
 import matplotlib.artist as martist
@@ -29,6 +29,7 @@ import matplotlib.pyplot as mplt
 import matplotlib.ticker as mticker
 import numpy as np
 import numpy.ma as ma
+from numpy.typing import ArrayLike
 from packaging import version
 
 from .. import colors as pcolors
@@ -63,6 +64,12 @@ __all__ = ["PlotAxes"]
 # NOTE: Increased from native linewidth of 0.25 matplotlib uses for grid box edges.
 # This is half of rc['patch.linewidth'] of 0.6. Half seems like a nice default.
 EDGEWIDTH = 0.3
+
+DataInput: TypeAlias = ArrayLike
+ColorTupleRGB: TypeAlias = tuple[float, float, float]
+ColorTupleRGBA: TypeAlias = tuple[float, float, float, float]
+ColorInput: TypeAlias = DataInput | str | ColorTupleRGB | ColorTupleRGBA | None
+ParsedColor: TypeAlias = DataInput | list[str] | str | None
 
 # Data argument docstrings
 _args_1d_docstring = """
@@ -3968,15 +3975,15 @@ class PlotAxes(base.Axes):
 
     def _parse_color(
         self,
-        x: Any,
-        y: Any,
-        c: Any,
+        x: DataInput,
+        y: DataInput,
+        c: ColorInput,
         *,
         apply_cycle: bool = True,
         infer_rgb: bool = False,
         force_cmap: bool = False,
         **kwargs: Any,
-    ) -> tuple[Any, dict[str, Any]]:
+    ) -> tuple[ParsedColor, dict[str, Any]]:
         """
         Parse either a colormap or color cycler. Colormap will be discrete and fade
         to subwhite luminance by default. Returns a HEX string if needed so we don't
@@ -4013,7 +4020,9 @@ class PlotAxes(base.Axes):
             warnings._warn_ultraplot(f"Ignoring unused keyword arg(s): {pop}")
         return (c, kwargs)
 
-    def _scatter_c_is_scalar_data(self, x: Any, y: Any, c: Any) -> bool:
+    def _scatter_c_is_scalar_data(
+        self, x: DataInput, y: DataInput, c: ColorInput
+    ) -> bool:
         """
         Return whether scatter ``c=`` should be treated as scalar data.
 
