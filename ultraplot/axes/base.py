@@ -4101,14 +4101,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Reset a staggered artist back to its stored base position.
         """
         if isinstance(artist, mtext.Annotation):
-            base_position = getattr(artist, "_stagger_base_position", artist.xyann)
-            artist._stagger_base_position = tuple(base_position)
+            base_position = getattr(
+                artist,
+                "_ultraplot_stagger_base_position",
+                artist.xyann,
+            )
+            artist._ultraplot_stagger_base_position = tuple(base_position)
             artist.set_position(base_position)
         else:
             base_transform = getattr(
-                artist, "_stagger_base_transform", artist.get_transform()
+                artist,
+                "_ultraplot_stagger_base_transform",
+                artist.get_transform(),
             )
-            artist._stagger_base_transform = base_transform
+            artist._ultraplot_stagger_base_transform = base_transform
             artist.set_transform(base_transform)
         artist.stale = True
 
