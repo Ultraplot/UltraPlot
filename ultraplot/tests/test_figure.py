@@ -152,7 +152,7 @@ def test_figure_stagger_text_accepts_single_subplot():
     assert _text_bbox(right[0], renderer).overlaps(_text_bbox(right[1], renderer))
 
 
-def test_figure_stagger_text_passes_both_direction():
+def test_figure_stagger_text_supports_both_directions():
     fig, axs = uplt.subplots(ncols=2)
     artists = [
         axs[1].text(
