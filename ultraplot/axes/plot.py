@@ -3965,15 +3965,15 @@ class PlotAxes(base.Axes):
 
     def _parse_color(
         self,
-        x,
-        y,
-        c,
+        x: Any,
+        y: Any,
+        c: Any,
         *,
-        apply_cycle=True,
-        infer_rgb=False,
-        force_cmap=False,
-        **kwargs,
-    ):
+        apply_cycle: bool = True,
+        infer_rgb: bool = False,
+        force_cmap: bool = False,
+        **kwargs: Any,
+    ) -> tuple[Any, dict[str, Any]]:
         """
         Parse either a colormap or color cycler. Colormap will be discrete and fade
         to subwhite luminance by default. Returns a HEX string if needed so we don't
@@ -4010,7 +4010,7 @@ class PlotAxes(base.Axes):
             warnings._warn_ultraplot(f"Ignoring unused keyword arg(s): {pop}")
         return (c, kwargs)
 
-    def _scatter_c_is_scalar_data(self, x, y, c) -> bool:
+    def _scatter_c_is_scalar_data(self, x: Any, y: Any, c: Any) -> bool:
         """
         Return whether scatter ``c=`` should be treated as scalar data.
 
