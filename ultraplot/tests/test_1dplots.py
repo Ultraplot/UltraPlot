@@ -377,6 +377,8 @@ def test_scatter_edgecolor_single_row():
         len(result3.get_edgecolors()) == 0
     ), "Single row without alpha should have no edges"
 
+    return fig
+
 
 def test_scatter_numeric_c_honors_cmap():
     """
