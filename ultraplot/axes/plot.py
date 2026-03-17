@@ -993,7 +993,10 @@ c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors \
 : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
     the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
-    this should be a valid matplotlib color.
+    this should be a valid matplotlib color. To pass explicit RGB(A) colors,
+    use an ``N x 3`` or ``N x 4`` array, or pass a single color with `color=`.
+    One-dimensional numeric arrays matching the point count are interpreted as
+    scalar values for colormapping.
 smin, smax : float, optional
     The minimum and maximum marker size area in units ``points ** 2``. Ignored
     if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
