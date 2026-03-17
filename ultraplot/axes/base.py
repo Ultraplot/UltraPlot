@@ -4051,19 +4051,50 @@ class Axes(_ExternalModeMixin, maxes.Axes):
     @staticmethod
     def _pad_stagger_bbox(
         bbox: Optional[mtransforms.Bbox],
-        pad_px: float,
+        pad_x_px: float,
+        pad_y_px: float,
     ) -> Optional[mtransforms.Bbox]:
         """
         Expand a bbox by the requested display-space padding.
         """
-        if bbox is None or pad_px <= 0:
+        if bbox is None or (pad_x_px <= 0 and pad_y_px <= 0):
             return bbox
         return mtransforms.Bbox.from_extents(
-            bbox.x0 - pad_px,
-            bbox.y0 - pad_px,
-            bbox.x1 + pad_px,
-            bbox.y1 + pad_px,
+            bbox.x0 - pad_x_px,
+            bbox.y0 - pad_y_px,
+            bbox.x1 + pad_x_px,
+            bbox.y1 + pad_y_px,
         )
+
+    @staticmethod
+    def _iter_stagger_offsets(
+        mode: str,
+        step_x_px: float,
+        step_y_px: float,
+        max_steps: int,
+    ) -> list[tuple[float, float]]:
+        """
+        Build a deterministic list of display-space stagger offsets.
+        """
+        offsets = [(0.0, 0.0)]
+        if mode == "x":
+            for level in range(1, max_steps + 1):
+                delta = level * step_x_px
+                offsets.extend(((delta, 0.0), (-delta, 0.0)))
+            return offsets
+        if mode == "y":
+            for level in range(1, max_steps + 1):
+                delta = level * step_y_px
+                offsets.extend(((0.0, delta), (0.0, -delta)))
+            return offsets
+
+        for level in range(1, max_steps + 1):
+            for ix in range(-level, level + 1):
+                for iy in range(-level, level + 1):
+                    if max(abs(ix), abs(iy)) != level:
+                        continue
+                    offsets.append((ix * step_x_px, iy * step_y_px))
+        return offsets
 
     def _reset_stagger_text_artist(self, artist: mtext.Text) -> None:
         """
@@ -4131,7 +4162,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         artists : sequence of `~matplotlib.text.Text`, optional
             The artists to stagger. Defaults to visible axes text and annotation
             artists added with `text` or `annotate`.
-        direction : {'x', 'y', 'horizontal', 'vertical'}, default: 'y'
+        direction : {'x', 'y', 'both', 'horizontal', 'vertical'}, default: 'y'
             The staggering direction.
         step : float or unit-spec, default: '0.8em'
             The offset increment applied while searching for a non-overlapping
@@ -4161,9 +4192,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             return []
         match direction.lower():
             case "x" | "horizontal":
-                axis = "x"
+                mode = "x"
             case "y" | "vertical":
-                axis = "y"
+                mode = "y"
+            case "both" | "xy" | "2d":
+                mode = "both"
             case _:
                 raise ValueError(f"Invalid stagger direction {direction!r}.")
         if max_steps < 0:
@@ -4171,27 +4204,23 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         figure = self.figure
         renderer = _not_none(renderer, figure._get_renderer())
-        step_px = float(
-            units(step, "pt", "px", figure=figure, axes=self, width=axis == "x")
+        step_x_px = float(units(step, "pt", "px", figure=figure, axes=self, width=True))
+        step_y_px = float(
+            units(step, "pt", "px", figure=figure, axes=self, width=False)
         )
-        pad_px = float(
-            units(pad, "pt", "px", figure=figure, axes=self, width=axis == "x")
-        )
-        deltas = [0.0]
-        for level in range(1, max_steps + 1):
-            delta = level * step_px
-            deltas.extend((delta, -delta))
+        pad_x_px = float(units(pad, "pt", "px", figure=figure, axes=self, width=True))
+        pad_y_px = float(units(pad, "pt", "px", figure=figure, axes=self, width=False))
+        offsets = self._iter_stagger_offsets(mode, step_x_px, step_y_px, max_steps)
 
         placed_bboxes: list[mtransforms.Bbox] = []
         for artist in artists:
             bbox = None
-            for delta in deltas:
-                dx_px = delta if axis == "x" else 0.0
-                dy_px = delta if axis == "y" else 0.0
+            for dx_px, dy_px in offsets:
                 self._apply_stagger_text_offset(artist, renderer, dx_px, dy_px)
                 bbox = self._pad_stagger_bbox(
                     self._get_stagger_text_bbox(artist, renderer),
-                    pad_px,
+                    pad_x_px,
+                    pad_y_px,
                 )
                 if bbox is None or not any(
                     bbox.overlaps(prev) for prev in placed_bboxes

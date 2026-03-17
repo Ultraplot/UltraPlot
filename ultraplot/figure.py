@@ -2959,6 +2959,73 @@ class Figure(mfigure.Figure):
                 f"Ignoring unused projection-specific format() keyword argument(s): {kw}"  # noqa: E501
             )
 
+    def _iter_selected_axes(self, axs=None, *, panels=False):
+        """
+        Yield axes from a nested selection or default to the figure subplots.
+        """
+        if axs is None:
+            yield from self._iter_axes(hidden=False, children=False, panels=panels)
+            return
+        if isinstance(axs, maxes.Axes):
+            if getattr(axs, "figure", None) is not self:
+                raise ValueError("Expected axes belonging to this figure.")
+            yield axs
+            return
+        if isinstance(axs, (str, bytes)):
+            raise TypeError("Expected an axes or iterable of axes, not a string.")
+        try:
+            iterator = iter(axs)
+        except TypeError as exc:
+            raise TypeError("Expected an axes or iterable of axes.") from exc
+        for obj in iterator:
+            yield from self._iter_selected_axes(obj, panels=panels)
+
+    def stagger_text(
+        self,
+        axs=None,
+        *,
+        direction="y",
+        step="0.8em",
+        pad="0.15em",
+        max_steps=20,
+        renderer=None,
+    ):
+        """
+        Call `stagger_text` on selected axes.
+
+        Parameters
+        ----------
+        axs : axes or sequence of axes, optional
+            The axes whose text artists should be staggered. Defaults to the
+            numbered subplots in the figure.
+        direction, step, pad, max_steps, renderer
+            Passed to `~ultraplot.axes.Axes.stagger_text`.
+
+        Returns
+        -------
+        list of `~matplotlib.text.Text`
+            The staggered artists from all selected axes.
+
+        Notes
+        -----
+        Staggering is applied independently within each selected axes. Pass
+        `axs` to target a single subplot or subplot selection.
+        """
+        artists = []
+        for ax in self._iter_selected_axes(axs, panels=False):
+            if not hasattr(ax, "stagger_text"):
+                raise TypeError("Expected UltraPlot axes with stagger_text().")
+            artists.extend(
+                ax.stagger_text(
+                    direction=direction,
+                    step=step,
+                    pad=pad,
+                    max_steps=max_steps,
+                    renderer=renderer,
+                )
+            )
+        return artists
+
     @docstring._concatenate_inherited
     @docstring._snippet_manager
     def colorbar(

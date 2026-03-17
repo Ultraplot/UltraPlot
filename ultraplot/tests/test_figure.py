@@ -3,6 +3,7 @@ import os
 import warnings
 from datetime import datetime, timedelta
 
+import matplotlib.text as mtext
 import numpy as np
 import pytest
 import ultraplot as uplt
@@ -76,6 +77,115 @@ def test_get_renderer_basic():
     # Renderer should not be None and should have draw_path method
     assert renderer is not None
     assert hasattr(renderer, "draw_path")
+
+
+def _text_bbox(artist, renderer):
+    patch = artist.get_bbox_patch()
+    if patch is not None and patch.get_visible():
+        return patch.get_window_extent(renderer)
+    if isinstance(artist, mtext.Annotation):
+        return mtext.Text.get_window_extent(artist, renderer)
+    return artist.get_window_extent(renderer)
+
+
+def test_figure_stagger_text_defaults_to_subplots():
+    fig, axs = uplt.subplots(ncols=2)
+    groups = []
+    for ax in axs:
+        groups.append(
+            [
+                ax.text(
+                    0.5, 0.5, "alpha", ha="center", va="center", bbox={"facecolor": "w"}
+                ),
+                ax.text(
+                    0.5, 0.5, "beta", ha="center", va="center", bbox={"facecolor": "w"}
+                ),
+            ]
+        )
+
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    assert all(
+        _text_bbox(a, renderer).overlaps(_text_bbox(b, renderer)) for a, b in groups
+    )
+
+    artists = fig.stagger_text(direction="y", step="12pt")
+    assert len(artists) == 4
+
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    assert all(
+        not _text_bbox(a, renderer).overlaps(_text_bbox(b, renderer)) for a, b in groups
+    )
+
+
+def test_figure_stagger_text_accepts_single_subplot():
+    fig, axs = uplt.subplots(ncols=2)
+    left = [
+        axs[0].text(
+            0.5, 0.5, "alpha", ha="center", va="center", bbox={"facecolor": "w"}
+        ),
+        axs[0].text(
+            0.5, 0.5, "beta", ha="center", va="center", bbox={"facecolor": "w"}
+        ),
+    ]
+    right = [
+        axs[1].text(
+            0.5, 0.5, "alpha", ha="center", va="center", bbox={"facecolor": "w"}
+        ),
+        axs[1].text(
+            0.5, 0.5, "beta", ha="center", va="center", bbox={"facecolor": "w"}
+        ),
+    ]
+
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    assert _text_bbox(left[0], renderer).overlaps(_text_bbox(left[1], renderer))
+    assert _text_bbox(right[0], renderer).overlaps(_text_bbox(right[1], renderer))
+
+    artists = fig.stagger_text(axs=axs[0], direction="y", step="12pt")
+    assert len(artists) == 2
+
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    assert not _text_bbox(left[0], renderer).overlaps(_text_bbox(left[1], renderer))
+    assert _text_bbox(right[0], renderer).overlaps(_text_bbox(right[1], renderer))
+
+
+def test_figure_stagger_text_passes_both_direction():
+    fig, axs = uplt.subplots(ncols=2)
+    artists = [
+        axs[1].text(
+            0.5, 0.5, "alpha", ha="center", va="center", bbox={"facecolor": "w"}
+        ),
+        axs[1].text(
+            0.5, 0.5, "beta", ha="center", va="center", bbox={"facecolor": "w"}
+        ),
+        axs[1].text(
+            0.5, 0.5, "gamma", ha="center", va="center", bbox={"facecolor": "w"}
+        ),
+    ]
+
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    before = [_text_bbox(artist, renderer) for artist in artists]
+    assert any(
+        bbox1.overlaps(bbox2)
+        for i, bbox1 in enumerate(before)
+        for bbox2 in before[i + 1 :]
+    )
+
+    out = fig.stagger_text(axs=axs[1], direction="both", step="12pt")
+    assert len(out) == 3
+
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    bboxes = [_text_bbox(artist, renderer) for artist in artists]
+    assert not any(
+        bbox1.overlaps(bbox2)
+        for i, bbox1 in enumerate(bboxes)
+        for bbox2 in bboxes[i + 1 :]
+    )
 
 
 def test_draw_without_rendering_preserves_dpi():
