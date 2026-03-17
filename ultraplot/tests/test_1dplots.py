@@ -3,6 +3,8 @@
 Test 1D plotting overrides.
 """
 
+import warnings
+
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
@@ -376,6 +378,26 @@ def test_scatter_edgecolor_single_row():
     ), "Single row without alpha should have no edges"
 
     return fig
+
+
+def test_scatter_numeric_c_honors_cmap():
+    """
+    Numeric 1D ``c`` arrays should be treated as scalar data for colormapping.
+    """
+    fig, ax = uplt.subplots()
+    values = np.array([0.1, 0.2, 0.3, 0.4])
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        obj = ax.scatter(
+            [1.0, 2.0, 3.0, 4.0],
+            [1.0, 2.0, 3.0, 4.0],
+            c=values,
+            cmap="turbo",
+        )
+    messages = [str(item.message) for item in caught]
+    assert not any("Ignoring unused keyword arg(s)" in message for message in messages)
+    assert "turbo" in obj.get_cmap().name
+    np.testing.assert_allclose(obj.get_array(), values)
 
 
 @pytest.mark.mpl_image_compare
