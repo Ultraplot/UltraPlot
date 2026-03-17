@@ -4133,7 +4133,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             return
         figure = self.figure
         if isinstance(artist, mtext.Annotation):
-            base_position = artist._stagger_base_position
+            base_position = getattr(
+                artist,
+                "_ultraplot_stagger_base_position",
+                artist.xyann,
+            )
             transform = artist._get_xy_transform(renderer, artist.anncoords)
             base_display = transform.transform(base_position)
             staggered = transform.inverted().transform(
@@ -4141,12 +4145,17 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             )
             artist.set_position(tuple(map(float, staggered)))
         else:
+            base_transform = getattr(
+                artist,
+                "_ultraplot_stagger_base_transform",
+                artist.get_transform(),
+            )
             offset = mtransforms.ScaledTranslation(
                 dx_px / figure.dpi,
                 dy_px / figure.dpi,
                 figure.dpi_scale_trans,
             )
-            artist.set_transform(artist._stagger_base_transform + offset)
+            artist.set_transform(base_transform + offset)
         artist.stale = True
 
     @docstring._concatenate_inherited
