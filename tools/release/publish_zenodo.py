@@ -6,9 +6,13 @@ import json
 import mimetypes
 import os
 import sys
-import tomllib
 from pathlib import Path
 from urllib import error, parse, request
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
 
 try:
     import yaml

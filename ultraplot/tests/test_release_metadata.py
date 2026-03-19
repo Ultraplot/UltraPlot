@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 import re
 import subprocess
-import tomllib
 from pathlib import Path
 
 import pytest
@@ -87,8 +86,7 @@ def test_zenodo_release_metadata_is_built_from_repository_sources():
     """
     publish_zenodo = _load_publish_zenodo()
     citation = yaml.safe_load(CITATION_CFF.read_text(encoding="utf-8"))
-    with PYPROJECT.open("rb") as handle:
-        pyproject = tomllib.load(handle)
+    pyproject = publish_zenodo.load_pyproject(PYPROJECT)
     metadata = publish_zenodo.build_metadata(citation, pyproject)
     assert metadata["title"] == citation["title"]
     assert metadata["upload_type"] == "software"
