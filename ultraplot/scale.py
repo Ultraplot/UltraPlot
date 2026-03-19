@@ -686,7 +686,7 @@ class InvertedMercatorLatitudeTransform(mtransforms.Transform):
 
     def transform_non_affine(self, a):
         with np.errstate(divide="ignore", invalid="ignore"):
-            return np.rad2deg(np.arctan2(1, np.sinh(a)))
+            return np.rad2deg(np.arctan(np.sinh(a)))
 
 
 class SineLatitudeScale(_Scale, mscale.ScaleBase):
@@ -853,7 +853,8 @@ class CutoffTransform(mtransforms.Transform):
         with np.errstate(divide="ignore", invalid="ignore"):
             dists = np.concatenate((threshs[:1], dists / scales[:-1]))
             if zero_dists is not None:
-                dists[scales[:-1] == 0] = zero_dists
+                zero_idx = np.flatnonzero(scales[:-1] == 0) + 1
+                dists[zero_idx] = zero_dists
             self._dists = dists
 
     def inverted(self):
