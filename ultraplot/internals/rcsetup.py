@@ -356,7 +356,7 @@ def _validate_color(value, alternative=None):
 def _validate_bool_or_iterable(value):
     if isinstance(value, bool):
         return _validate_bool(value)
-    elif np.isiterable(value):
+    elif np.iterable(value):
         return value
     raise ValueError(f"{value!r} is not a valid bool or iterable of node labels.")
 
@@ -460,7 +460,7 @@ def _validate_float_or_iterable(value):
     try:
         return _validate_float(value)
     except Exception:
-        if np.isiterable(value) and not isinstance(value, (str, bytes)):
+        if np.iterable(value) and not isinstance(value, (str, bytes)):
             return tuple(_validate_float(item) for item in value)
     raise ValueError(f"{value!r} is not a valid float or iterable of floats.")
 
@@ -468,7 +468,7 @@ def _validate_float_or_iterable(value):
 def _validate_string_or_iterable(value):
     if isinstance(value, str):
         return _validate_string(value)
-    if np.isiterable(value) and not isinstance(value, (str, bytes)):
+    if np.iterable(value) and not isinstance(value, (str, bytes)):
         values = tuple(value)
         if all(isinstance(item, str) for item in values):
             return values
@@ -601,6 +601,8 @@ def _yaml_table(rcdict, comment=True, description=False):
 
     # Generate string
     string = ""
+    if not data:
+        return string
     keylen = len(max(rcdict, key=len))
     vallen = len(max((tup[1] for tup in data), key=len))
     for key, value, descrip in data:
@@ -1731,6 +1733,24 @@ _rc_ultraplot_table = {
         _validate_bool,
         "If ``True`` (the default), polar `~ultraplot.axes.GeoAxes` like ``'npstere'`` "
         "and ``'spstere'`` are bounded with circles rather than squares.",
+    ),
+    "geo.choropleth.country_reso": (
+        "110m",
+        _validate_belongs("10m", "50m", "110m"),
+        "Default Natural Earth resolution used by `GeoAxes.choropleth` when "
+        "country identifiers are resolved to polygons.",
+    ),
+    "geo.choropleth.country_territories": (
+        False,
+        _validate_bool,
+        "Whether `GeoAxes.choropleth` keeps distant territories when resolving "
+        "country identifiers into Natural Earth geometries.",
+    ),
+    "geo.choropleth.zorder": (
+        None,
+        _validate_or_none(_validate_float),
+        "Default z-order for `GeoAxes.choropleth`. When ``None``, the choropleth "
+        "is drawn just above the land feature.",
     ),
     # Graphs
     "graph.draw_nodes": (

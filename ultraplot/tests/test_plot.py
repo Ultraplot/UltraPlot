@@ -149,6 +149,22 @@ def test_graph_input():
         ax.graph("invalid_input")
 
 
+def test_graph_on_3d_projection():
+    """
+    Ensure graph plotting is available on 3D axes.
+    """
+    import networkx as nx
+
+    g = nx.path_graph(5)
+    _, axs = uplt.subplots(proj="3d")
+    ax = axs[0]
+    nodes, edges, labels = ax.graph(g)
+    assert callable(getattr(ax, "graph", None))
+    assert nodes is not False
+    assert edges is not False
+    assert labels is False
+
+
 def test_graph_layout_input():
     """
     Test if layout is in a [0, 1] x [0, 1] box
@@ -285,6 +301,27 @@ def test_boxplot_mpl_versions(
                 assert "vert" not in kwargs
             else:
                 assert "orientation" not in kwargs
+
+
+def test_boxplot_shared_x_axes_do_not_duplicate_tick_labels():
+    data = [np.random.random(size=j * 50) for j in range(1, 11)]
+    fig, axs = uplt.subplots(
+        nrows=2,
+        ncols=2,
+        sharex=2,
+        sharey=False,
+        xrotation=45,
+        xminorlocator="null",
+        grid=False,
+    )
+    for ax in axs:
+        ax.boxplot(data, showfliers=False, lw=0.5)
+
+    expected = [str(i) for i in range(len(data))]
+    for ax in axs:
+        labels = [tick.get_text() for tick in ax.xaxis.get_ticklabels()]
+        assert labels == expected
+    uplt.close(fig)
 
 
 def test_quiver_discrete_colors(rng):

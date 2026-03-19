@@ -12,12 +12,16 @@ jobs:
       run: ${{ (github.event_name == 'push' && github.ref_name == 'main') && 'true' || steps.filter.outputs.python }}
     steps:
       - uses: actions/checkout@v6
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
             python:
               - 'ultraplot/**'
+              - 'pyproject.toml'
+              - 'environment.yml'
+              - '.github/workflows/**'
+              - 'tools/ci/**'
 
   select-tests:
     runs-on: ubuntu-latest
@@ -52,7 +56,7 @@ jobs:
           init-shell: bash
           create-args: >-
             --verbose
-            python=3.11
+            python=3.10
             matplotlib=3.9
           cache-environment: true
           cache-downloads: false
@@ -126,107 +130,63 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: pip install tomli
-
       - id: set-versions
         run: |
-          # Create a Python script to read and parse versions
-          cat > get_versions.py << 'EOF'
-          import tomli
-          import re
-          import json
+          OUTPUT=$(python tools/ci/version_support.py)
+          echo "Detected Python versions: $(echo "$OUTPUT" | jq -c '.python_versions')"
+          echo "Detected Matplotlib versions: $(echo "$OUTPUT" | jq -c '.matplotlib_versions')"
+          echo "Detected test matrix: $(echo "$OUTPUT" | jq -c '.test_matrix')"
+          python tools/ci/version_support.py --format github-output >> $GITHUB_OUTPUT
 
-          # Read pyproject.toml
-          with open("pyproject.toml", "rb") as f:
-              data = tomli.load(f)
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs:
+      - run-if-changes
+    if: always() && needs.run-if-changes.outputs.run == 'true' && github.event_name == 'pull_request'
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
 
-          # Get Python version requirement
-          python_req = data["project"]["requires-python"]
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-          # Parse min and max versions
-          min_version = re.search(r">=(\d+\.\d+)", python_req)
-          max_version = re.search(r"<(\d+\.\d+)", python_req)
+      - uses: mamba-org/setup-micromamba@v2.0.7
+        with:
+          environment-file: ./environment.yml
+          init-shell: bash
+          condarc-file: ./.github/micromamba-condarc.yml
+          post-cleanup: none
+          create-args: >-
+            --verbose
+            python=3.10
+            matplotlib=3.9
+          cache-environment: true
+          cache-downloads: false
 
-          python_versions = []
-          if min_version and max_version:
-              # Convert version strings to tuples
-              min_v = tuple(map(int, min_version.group(1).split(".")))
-              max_v = tuple(map(int, max_version.group(1).split(".")))
+      - name: Build Ultraplot
+        run: |
+          pip install --no-build-isolation --no-deps .
 
-              # Generate version list
-              current = min_v
-              while current < max_v:
-                  python_versions.append(".".join(map(str, current)))
-                  current = (current[0], current[1] + 1)
+      - name: Run full coverage suite
+        run: |
+          pytest -q --tb=short --disable-warnings -n auto -p pytest_cov \
+            --cov=ultraplot --cov-branch --cov-context=test \
+            --cov-report=xml:coverage.xml --cov-report= \
+            ultraplot/tests
 
-
-          # parse MPL versions
-          mpl_req = None
-          for d in data["project"]["dependencies"]:
-            if d.startswith("matplotlib"):
-              mpl_req = d
-              break
-          assert mpl_req is not None, "matplotlib version not found in dependencies"
-          min_version = re.search(r">=(\d+\.\d+)", mpl_req)
-          max_version = re.search(r"<(\d+\.\d+)", mpl_req)
-
-          mpl_versions = []
-          if min_version and max_version:
-              # Convert version strings to tuples
-              min_v = tuple(map(int, min_version.group(1).split(".")))
-              max_v = tuple(map(int, max_version.group(1).split(".")))
-
-              # Generate version list
-              current = min_v
-              while current < max_v:
-                  mpl_versions.append(".".join(map(str, current)))
-                  current = (current[0], current[1] + 1)
-
-          # If no versions found, default to 3.9
-          if not mpl_versions:
-              mpl_versions = ["3.9"]
-
-          # Create output dictionary
-          midpoint_python = python_versions[len(python_versions) // 2]
-          midpoint_mpl = mpl_versions[len(mpl_versions) // 2]
-          matrix_candidates = [
-              (python_versions[0], mpl_versions[0]),  # lowest + lowest
-              (midpoint_python, midpoint_mpl),        # midpoint + midpoint
-              (python_versions[-1], mpl_versions[-1]) # latest + latest
-          ]
-          test_matrix = []
-          seen = set()
-          for py_ver, mpl_ver in matrix_candidates:
-              key = (py_ver, mpl_ver)
-              if key in seen:
-                  continue
-              seen.add(key)
-              test_matrix.append(
-                  {"python-version": py_ver, "matplotlib-version": mpl_ver}
-              )
-
-          output = {
-              "python_versions": python_versions,
-              "matplotlib_versions": mpl_versions,
-              "test_matrix": test_matrix,
-          }
-
-          # Print as JSON
-          print(json.dumps(output))
-          EOF
-
-          # Run the script and capture output
-          OUTPUT=$(python3 get_versions.py)
-          PYTHON_VERSIONS=$(echo $OUTPUT | jq -r '.python_versions')
-          MPL_VERSIONS=$(echo $OUTPUT | jq -r '.matplotlib_versions')
-
-          echo "Detected Python versions: ${PYTHON_VERSIONS}"
-          echo "Detected Matplotlib versions: ${MPL_VERSIONS}"
-          echo "Detected test matrix: $(echo $OUTPUT | jq -c '.test_matrix')"
-          echo "python-versions=$(echo $PYTHON_VERSIONS | jq -c)" >> $GITHUB_OUTPUT
-          echo "matplotlib-versions=$(echo $MPL_VERSIONS | jq -c)" >> $GITHUB_OUTPUT
-          echo "test-matrix=$(echo $OUTPUT | jq -c '.test_matrix')" >> $GITHUB_OUTPUT
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          name: codecov-pr-python3.10-mpl3.9
 
   build:
     needs:
