@@ -6284,6 +6284,20 @@ class PlotAxes(base.Axes):
         tick_labels = kw.get("tick_labels", kw.get("labels"))
         manage_ticks = kw.pop("manage_ticks", True)
         axis_name = "x" if vert else "y"
+        # Matplotlib's boxplot tick manager appends onto an existing
+        # FixedLocator/FixedFormatter pair. UltraPlot's stronger sharex/sharey
+        # modes currently share ticker state across sibling axes, so repeated
+        # boxplot calls in one shared group can duplicate tick labels.
+        #
+        # For now, avoid the native tick-manager path only for shared axes and
+        # install the intended fixed ticks ourselves. This keeps the fix narrow
+        # to the reported regression instead of changing global axis-sharing
+        # behavior in a bugfix PR.
+        #
+        # TODO: Revisit the shared ticker design more broadly. A deeper fix may
+        # be to stop aliasing ticker containers across shared axes, or to make
+        # the statistical-plot tick management path deduplicate shared fixed
+        # locators/formatters after the native call.
         native_manage_ticks = manage_ticks and not self._boxplot_has_shared_tick_axis(
             axis_name
         )
