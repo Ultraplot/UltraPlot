@@ -317,7 +317,7 @@ def test_boxplot_shared_x_axes_do_not_duplicate_tick_labels():
     for ax in axs:
         ax.boxplot(data, showfliers=False, lw=0.5)
 
-    expected = [str(i) for i in range(10)]
+    expected = [str(i) for i in range(len(data))]
     for ax in axs:
         labels = [tick.get_text() for tick in ax.xaxis.get_ticklabels()]
         assert labels == expected
