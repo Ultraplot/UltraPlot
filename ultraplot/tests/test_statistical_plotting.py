@@ -482,3 +482,19 @@ def test_ridgeline_continuous_auto_height(rng):
     artists = ax.ridgeline([data[0]], positions=[0])
     assert len(artists) == 1
     uplt.close(fig)
+
+
+def test_boxplot_shared_x_does_not_duplicate_ticks(rng):
+    data = [rng.random(size=j * 50) for j in range(1, 11)]
+    fig, axs = uplt.subplots(nrows=2, ncols=2, sharex=2, sharey=False)
+
+    for ax in axs:
+        ax.boxplot(data, showfliers=False, lw=0.5)
+
+    fig.canvas.draw()
+
+    for ax in axs:
+        ticks = [int(t) for t in ax.get_xticks()]
+        assert ticks == list(range(10))
+
+    uplt.close(fig)

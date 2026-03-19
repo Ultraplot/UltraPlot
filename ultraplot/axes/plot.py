@@ -6279,6 +6279,14 @@ class PlotAxes(base.Axes):
             # Use vert parameter
             artists = self._call_native("boxplot", y, vert=vert, **kw)
 
+        if kw.get("manage_ticks", True):
+            getter = self.get_xticks if vert else self.get_yticks
+            setter = self.set_xticks if vert else self.set_yticks
+            ticks = getter()
+            unique_ticks = list(dict.fromkeys(ticks))
+            if len(unique_ticks) != len(ticks):
+                setter(unique_ticks)
+
         artists = artists or {}  # necessary?
         artists = {
             key: cbook.silent_list(type(objs[0]).__name__, objs) if objs else objs
