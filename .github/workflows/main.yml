@@ -176,7 +176,7 @@ jobs:
 
       - name: Run full coverage suite
         run: |
-          pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov \
+          pytest -q --tb=short --disable-warnings -n auto -p pytest_cov \
             --cov=ultraplot --cov-branch --cov-context=test \
             --cov-report=xml:coverage.xml --cov-report= \
             ultraplot/tests
