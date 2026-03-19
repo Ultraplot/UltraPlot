@@ -256,23 +256,24 @@ be carried out as follows:
 #. Create a new branch ``release-vX.Y.Z`` with the version for the release.
 
 #. Make sure to update ``CHANGELOG.rst`` and that all new changes are reflected
-   in the documentation:
+   in the documentation. Before tagging, also sync ``CITATION.cff`` and
+   ``.zenodo.json`` to the release version and date:
 
    .. code-block:: bash
 
-      git add CHANGELOG.rst
-      git commit -m 'Update changelog'
+      git add CHANGELOG.rst CITATION.cff .zenodo.json
+      git commit -m 'Prepare release metadata'
 
-#. Open a new pull request for this branch targeting ``master``.
+#. Open a new pull request for this branch targeting ``main``.
 
 #. After all tests pass and the pull request has been approved, merge into
-   ``master``.
+   ``main``.
 
-#. Get the latest version of the master branch:
+#. Get the latest version of the ``main`` branch:
 
    .. code-block:: bash
 
-      git checkout master
+      git switch main
       git pull
 
 #. Tag the current commit and push to github:
@@ -280,20 +281,14 @@ be carried out as follows:
    .. code-block:: bash
 
       git tag -a vX.Y.Z -m "Version X.Y.Z"
-      git push origin master --tags
+      git push origin main --tags
 
-#. Build and publish release on PyPI:
+   Pushing a ``vX.Y.Z`` tag triggers the release workflow, which publishes the
+   package and creates the corresponding GitHub release. Zenodo archives GitHub
+   releases, not bare git tags.
 
-   .. code-block:: bash
-
-      # Remove previous build products and build the package
-      rm -r dist build *.egg-info
-      python setup.py sdist bdist_wheel
-      # Check the source and upload to the test repository
-      twine check dist/*
-      twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-      # Go to https://test.pypi.org/project/ultraplot/ and make sure everything looks ok
-      # Then make sure the package is installable
-      pip install --index-url https://test.pypi.org/simple/ ultraplot
-      # Register and push to pypi
-      twine upload dist/*
+#. After the workflow completes, confirm that the repository "Cite this
+   repository" panel reflects ``CITATION.cff``, that the release is available
+   on TestPyPI and PyPI, and that Zenodo created a new release record. If
+   Zenodo does not create a new version, reconnect the repository in Zenodo
+   and re-run the GitHub release workflow.

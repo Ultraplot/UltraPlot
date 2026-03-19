@@ -125,16 +125,10 @@ To install a development version of UltraPlot, you can use
 or clone the repository and run ``pip install -e .``
 inside the ``ultraplot`` folder.
 
-If you use UltraPlot in your research, please cite it using the following BibTeX entry::
-
-    @software{vanElteren2025,
-      author       = {Casper van Elteren and Matthew R. Becker},
-      title        = {UltraPlot: A succinct wrapper for Matplotlib},
-      year         = {2025},
-      version      = {1.57.1},
-      publisher    = {GitHub},
-      url          = {https://github.com/Ultraplot/UltraPlot}
-    }
+If you use UltraPlot in your research, please cite the latest release metadata in
+``CITATION.cff``. GitHub can export this metadata as BibTeX from the
+repository's "Cite this repository" panel, and the Zenodo badge below points to
+the project DOI across releases.
 
 .. |downloads| image:: https://static.pepy.tech/personalized-badge/UltraPlot?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
     :target: https://pepy.tech/project/ultraplot
