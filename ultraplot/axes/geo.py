@@ -18,10 +18,10 @@ except ImportError:
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import Any, Optional, Protocol
 
-import matplotlib.collections as mcollections
 import matplotlib.axis as maxis
-import matplotlib.path as mpath
+import matplotlib.collections as mcollections
 import matplotlib.patches as mpatches
+import matplotlib.path as mpath
 import matplotlib.text as mtext
 import matplotlib.ticker as mticker
 import matplotlib.transforms as mtransforms
@@ -227,6 +227,56 @@ labelweight : str, default: :rc:`grid.labelweight`
     The font weight for the gridline labels (`gridlabelweight` is also allowed).
 """
 docstring._snippet_manager["geo.format"] = _format_docstring
+
+_choropleth_docstring = """
+Draw polygon geometries colored by numeric values.
+
+Parameters
+----------
+geometries
+    Sequence of polygon-like shapely geometries. Typical inputs include
+    GeoPandas ``geometry`` arrays or lists of shapely polygons in
+    longitude-latitude coordinates. When `country=True`, this can also
+    be a sequence of country codes/names or a mapping of country
+    identifiers to values.
+values
+    Numeric values mapped to colors. Must have the same length as
+    `geometries`. Optional when `country=True` and `geometries` is a
+    mapping of country identifiers to values.
+transform : cartopy CRS, optional
+    The input coordinate system for `geometries`. By default, cartopy
+    backends assume `~cartopy.crs.PlateCarree` and basemap backends
+    assume longitude-latitude input.
+country : bool, optional
+    Interpret `geometries` as country identifiers and resolve them to
+    Natural Earth polygons before plotting.
+country_reso : {'110m', '50m', '10m'}, optional
+    The Natural Earth country resolution used when `country=True`.
+    Defaults to :rc:`geo.choropleth.country_reso`.
+country_territories : bool, optional
+    Whether to keep distant territories for multi-part country
+    geometries when `country=True`. Defaults to
+    :rc:`geo.choropleth.country_territories`.
+colorbar, colorbar_kw
+    Passed to `~ultraplot.axes.Axes.colorbar`.
+missing_kw : dict-like, optional
+    Style applied to geometries whose values are missing or non-finite.
+    If omitted, missing geometries are skipped.
+
+Other parameters
+----------------
+cmap, cmap_kw, norm, norm_kw, vmin, vmax, levels, values
+    Standard UltraPlot colormap arguments.
+edgecolor, linewidth, alpha, hatch, rasterized, zorder, label, ...
+    Collection styling arguments passed to the polygon collection.
+
+Returns
+-------
+matplotlib.collections.PatchCollection
+    The scalar-mappable collection for finite-valued polygons.
+"""
+
+docstring._snippet_manager["geo.choropleth"] = _choropleth_costring
 
 
 class _GeoLabel(object):
@@ -2213,6 +2263,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # Parent format method
         super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
 
+    @docstring._snippet_manager
     def choropleth(
         self,
         geometries: Sequence[Any],
@@ -2228,51 +2279,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         **kwargs: Any,
     ) -> mcollections.PatchCollection:
         """
-        Draw polygon geometries colored by numeric values.
-
-        Parameters
-        ----------
-        geometries
-            Sequence of polygon-like shapely geometries. Typical inputs include
-            GeoPandas ``geometry`` arrays or lists of shapely polygons in
-            longitude-latitude coordinates. When `country=True`, this can also
-            be a sequence of country codes/names or a mapping of country
-            identifiers to values.
-        values
-            Numeric values mapped to colors. Must have the same length as
-            `geometries`. Optional when `country=True` and `geometries` is a
-            mapping of country identifiers to values.
-        transform : cartopy CRS, optional
-            The input coordinate system for `geometries`. By default, cartopy
-            backends assume `~cartopy.crs.PlateCarree` and basemap backends
-            assume longitude-latitude input.
-        country : bool, optional
-            Interpret `geometries` as country identifiers and resolve them to
-            Natural Earth polygons before plotting.
-        country_reso : {'110m', '50m', '10m'}, optional
-            The Natural Earth country resolution used when `country=True`.
-            Defaults to :rc:`geo.choropleth.country_reso`.
-        country_territories : bool, optional
-            Whether to keep distant territories for multi-part country
-            geometries when `country=True`. Defaults to
-            :rc:`geo.choropleth.country_territories`.
-        colorbar, colorbar_kw
-            Passed to `~ultraplot.axes.Axes.colorbar`.
-        missing_kw : dict-like, optional
-            Style applied to geometries whose values are missing or non-finite.
-            If omitted, missing geometries are skipped.
-
-        Other parameters
-        ----------------
-        cmap, cmap_kw, norm, norm_kw, vmin, vmax, levels, values
-            Standard UltraPlot colormap arguments.
-        edgecolor, linewidth, alpha, hatch, rasterized, zorder, label, ...
-            Collection styling arguments passed to the polygon collection.
-
-        Returns
-        -------
-        matplotlib.collections.PatchCollection
-            The scalar-mappable collection for finite-valued polygons.
+        %(geo.choropleth)s
         """
         country_reso = _not_none(
             country_reso,
