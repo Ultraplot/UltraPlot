@@ -256,12 +256,12 @@ be carried out as follows:
 #. Create a new branch ``release-vX.Y.Z`` with the version for the release.
 
 #. Make sure to update ``CHANGELOG.rst`` and that all new changes are reflected
-   in the documentation. Before tagging, also sync ``CITATION.cff`` and
-   ``.zenodo.json`` to the release version and date:
+   in the documentation. Before tagging, sync ``CITATION.cff`` to the release
+   version and date:
 
    .. code-block:: bash
 
-      git add CHANGELOG.rst CITATION.cff .zenodo.json
+      git add CHANGELOG.rst CITATION.cff
       git commit -m 'Prepare release metadata'
 
 #. Open a new pull request for this branch targeting ``main``.
@@ -284,11 +284,16 @@ be carried out as follows:
       git push origin main --tags
 
    Pushing a ``vX.Y.Z`` tag triggers the release workflow, which publishes the
-   package and creates the corresponding GitHub release. Zenodo archives GitHub
-   releases, not bare git tags.
+   package, creates the corresponding GitHub release, and uploads the same
+   ``dist/`` artifacts to Zenodo through the Zenodo deposit API.
 
 #. After the workflow completes, confirm that the repository "Cite this
    repository" panel reflects ``CITATION.cff``, that the release is available
-   on TestPyPI and PyPI, and that Zenodo created a new release record. If
-   Zenodo does not create a new version, reconnect the repository in Zenodo
-   and re-run the GitHub release workflow.
+   on TestPyPI and PyPI, and that Zenodo created a new release record.
+
+   The Zenodo release job uses ``CITATION.cff`` as the maintained metadata
+   source and requires a GitHub Actions secret named
+   ``ZENODO_ACCESS_TOKEN`` with the Zenodo scopes ``deposit:write`` and
+   ``deposit:actions``. To avoid duplicate Zenodo records, disable the
+   repository's Zenodo GitHub auto-archiving integration once the API-based
+   workflow is enabled.
