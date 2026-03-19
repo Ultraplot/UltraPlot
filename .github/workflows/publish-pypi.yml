@@ -1,8 +1,6 @@
 name: Publish to PyPI
 on:
   pull_request:
-  release:
-    types: [published]
   push:
     tags: ["v*"]
 
@@ -88,9 +86,7 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           verbose: true
-          # releases generate both release and tag events so
-          # we get a race condition if we don't skip existing
-          skip-existing: ${{ (github.event_name == 'release' || github.event_name == 'push') && 'true' || 'false' }}
+          skip-existing: true
 
   publish-pypi:
     name: Publish to PyPI
@@ -99,7 +95,7 @@ jobs:
       name: prod
       url: https://pypi.org/project/ultraplot/
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    if: github.event_name == 'push'
     permissions:
       id-token: write
       contents: read
@@ -119,3 +115,17 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
+          skip-existing: true
+
+  publish-github-release:
+    name: Publish GitHub release
+    needs: publish-pypi
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    permissions:
+      contents: write
+    steps:
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
