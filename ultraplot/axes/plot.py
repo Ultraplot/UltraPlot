@@ -6191,6 +6191,32 @@ class PlotAxes(base.Axes):
             edgecolor = edgecolor[0]
         return fillcolor, fillalpha, edgecolor, kw
 
+    def _boxplot_has_shared_tick_axis(self, axis_name: str) -> bool:
+        """
+        Return whether the boxplot tick axis is shared with sibling axes.
+        """
+        shared = (
+            self.get_shared_x_axes() if axis_name == "x" else self.get_shared_y_axes()
+        )
+        return len(shared.get_siblings(self)) > 1
+
+    def _apply_boxplot_tick_manager(
+        self,
+        axis_name: str,
+        positions: Iterable[Any],
+        tick_labels: Optional[Iterable[Any]] = None,
+    ) -> None:
+        """
+        Apply fixed tick locations/labels without appending duplicates on shared axes.
+        """
+        axis = self._axis_map[axis_name]
+        locator_positions = np.asarray(axis.convert_units(positions))
+        label_values = positions if tick_labels is None else tick_labels
+        axis.set_major_locator(mticker.FixedLocator(locator_positions))
+        axis.set_major_formatter(
+            mticker.FixedFormatter([str(label) for label in label_values])
+        )
+
     def _apply_boxplot(
         self,
         x,
@@ -6255,6 +6281,13 @@ class PlotAxes(base.Axes):
 
         # Plot boxes
         kw.setdefault("positions", x)
+        tick_labels = kw.get("tick_labels", kw.get("labels"))
+        manage_ticks = kw.pop("manage_ticks", True)
+        axis_name = "x" if vert else "y"
+        native_manage_ticks = manage_ticks and not self._boxplot_has_shared_tick_axis(
+            axis_name
+        )
+        kw["manage_ticks"] = native_manage_ticks
         if means:
             kw["showmeans"] = kw["meanline"] = True
         y = inputs._dist_clean(y)
@@ -6278,6 +6311,13 @@ class PlotAxes(base.Axes):
             # For older matplotlib versions:
             # Use vert parameter
             artists = self._call_native("boxplot", y, vert=vert, **kw)
+
+        if manage_ticks and not native_manage_ticks:
+            self._apply_boxplot_tick_manager(
+                axis_name,
+                kw["positions"],
+                tick_labels=tick_labels,
+            )
 
         artists = artists or {}  # necessary?
         artists = {
