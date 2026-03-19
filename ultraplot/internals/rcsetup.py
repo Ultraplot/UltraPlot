@@ -1732,6 +1732,24 @@ _rc_ultraplot_table = {
         "If ``True`` (the default), polar `~ultraplot.axes.GeoAxes` like ``'npstere'`` "
         "and ``'spstere'`` are bounded with circles rather than squares.",
     ),
+    "geo.choropleth.country_reso": (
+        "110m",
+        _validate_belongs("10m", "50m", "110m"),
+        "Default Natural Earth resolution used by `GeoAxes.choropleth` when "
+        "country identifiers are resolved to polygons.",
+    ),
+    "geo.choropleth.country_territories": (
+        False,
+        _validate_bool,
+        "Whether `GeoAxes.choropleth` keeps distant territories when resolving "
+        "country identifiers into Natural Earth geometries.",
+    ),
+    "geo.choropleth.zorder": (
+        None,
+        _validate_or_none(_validate_float),
+        "Default z-order for `GeoAxes.choropleth`. When ``None``, the choropleth "
+        "is drawn just above the land feature.",
+    ),
     # Graphs
     "graph.draw_nodes": (
         True,

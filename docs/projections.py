@@ -325,6 +325,35 @@ for globe in (False, True):
     )
 
 
+# %%
+import shapely.geometry as sgeom
+
+fig, ax = uplt.subplots(proj="cyl", refwidth=3.5)
+ax.choropleth(
+    [
+        sgeom.box(-20, -10, -5, 5),
+        sgeom.box(0, -5, 15, 10),
+        sgeom.box(20, -8, 35, 8),
+    ],
+    [1.2, 2.4, 0.7],
+    cmap="Blues",
+    edgecolor="white",
+    linewidth=0.8,
+    colorbar="r",
+    colorbar_kw={"label": "value"},
+)
+ax.format(
+    title="Polygon choropleth",
+    land=True,
+    coast=True,
+    lonlim=(-30, 40),
+    latlim=(-20, 20),
+    labels=True,
+    lonlines=10,
+    latlines=10,
+)
+
+
 # %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_geoformat:
 #
