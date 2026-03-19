@@ -1157,9 +1157,7 @@ def _size_legend_entries(
     else:
         label_list = [str(label) for label in labels]
         if len(label_list) != len(values):
-            raise ValueError(
-                "sizelegend labels must have the same length as levels."
-            )
+            raise ValueError("sizelegend labels must have the same length as levels.")
     base_styles = {
         "line": False,
         "alpha": alpha,
