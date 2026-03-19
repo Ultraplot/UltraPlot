@@ -303,6 +303,27 @@ def test_boxplot_mpl_versions(
                 assert "orientation" not in kwargs
 
 
+def test_boxplot_shared_x_axes_do_not_duplicate_tick_labels():
+    data = [np.random.random(size=j * 50) for j in range(1, 11)]
+    fig, axs = uplt.subplots(
+        nrows=2,
+        ncols=2,
+        sharex=2,
+        sharey=False,
+        xrotation=45,
+        xminorlocator="null",
+        grid=False,
+    )
+    for ax in axs:
+        ax.boxplot(data, showfliers=False, lw=0.5)
+
+    expected = [str(i) for i in range(len(data))]
+    for ax in axs:
+        labels = [tick.get_text() for tick in ax.xaxis.get_ticklabels()]
+        assert labels == expected
+    uplt.close(fig)
+
+
 def test_quiver_discrete_colors(rng):
     """
     Edge case where colors are discrete for quiver plots
