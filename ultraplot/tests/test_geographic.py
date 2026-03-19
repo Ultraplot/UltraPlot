@@ -995,6 +995,34 @@ def test_choropleth_country_mapping_resolves_codes(monkeypatch, backend):
 
 
 @pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_country_defaults_respect_rc(monkeypatch, backend):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    calls = []
+
+    def _fake_country(code, resolution="110m", include_far=False):
+        calls.append((str(code).upper(), resolution, bool(include_far)))
+        return sgeom.box(110, -45, 155, -10)
+
+    monkeypatch.setattr(plegend, "_resolve_country_geometry", _fake_country)
+
+    with uplt.rc.context(
+        {
+            "geo.choropleth.country_reso": "50m",
+            "geo.choropleth.country_territories": True,
+        }
+    ):
+        fig, ax = uplt.subplots(proj="cyl", backend=backend)
+        coll = ax[0].choropleth({"AUS": 1.0}, country=True)
+        fig.canvas.draw()
+
+    assert np.allclose(np.asarray(coll.get_array()), [1.0])
+    assert calls == [("AUS", "50m", True)]
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
 def test_choropleth_default_zorder_above_land(backend):
     sgeom = pytest.importorskip("shapely.geometry")
 
@@ -1010,6 +1038,18 @@ def test_choropleth_default_zorder_above_land(backend):
     else:
         land_zorder = land.get_zorder()
     assert coll.get_zorder() > land_zorder
+    uplt.close(fig)
+
+
+def test_choropleth_zorder_respects_rc():
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    with uplt.rc.context({"geo.choropleth.zorder": 5.5}):
+        fig, ax = uplt.subplots(proj="cyl")
+        coll = ax[0].choropleth([sgeom.box(-20, -10, 20, 10)], [1.0])
+        fig.canvas.draw()
+
+    assert coll.get_zorder() == pytest.approx(5.5)
     uplt.close(fig)
 
 

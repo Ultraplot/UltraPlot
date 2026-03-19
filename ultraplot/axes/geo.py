@@ -2220,8 +2220,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         *,
         transform: Any = None,
         country: bool = False,
-        country_reso: str = "110m",
-        country_territories: bool = False,
+        country_reso: str | None = None,
+        country_territories: bool | None = None,
         colorbar: Any = None,
         colorbar_kw: MutableMapping[str, Any] | None = None,
         missing_kw: MutableMapping[str, Any] | None = None,
@@ -2251,9 +2251,11 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             Natural Earth polygons before plotting.
         country_reso : {'110m', '50m', '10m'}, optional
             The Natural Earth country resolution used when `country=True`.
+            Defaults to :rc:`geo.choropleth.country_reso`.
         country_territories : bool, optional
             Whether to keep distant territories for multi-part country
-            geometries when `country=True`.
+            geometries when `country=True`. Defaults to
+            :rc:`geo.choropleth.country_territories`.
         colorbar, colorbar_kw
             Passed to `~ultraplot.axes.Axes.colorbar`.
         missing_kw : dict-like, optional
@@ -2272,6 +2274,14 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         matplotlib.collections.PatchCollection
             The scalar-mappable collection for finite-valued polygons.
         """
+        country_reso = _not_none(
+            country_reso,
+            rc.find("geo.choropleth.country_reso", context=True),
+        )
+        country_territories = _not_none(
+            country_territories,
+            rc.find("geo.choropleth.country_territories", context=True),
+        )
         if country:
             geometries, values, transform = _choropleth_country_inputs(
                 geometries,
@@ -2299,7 +2309,12 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         kw = kwargs.copy()
         kw.update(_pop_props(kw, "collection"))
         center_levels = kw.pop("center_levels", None)
-        kw.setdefault("zorder", rc["land.zorder"] + 0.1)
+        zorder = _not_none(
+            kw.get("zorder", None),
+            rc.find("geo.choropleth.zorder", context=True),
+            rc["land.zorder"] + 0.1,
+        )
+        kw["zorder"] = zorder
 
         invalid_face_keys = ("color", "colors", "facecolor", "facecolors")
         ignored = {key: kw.pop(key) for key in invalid_face_keys if key in kw}
