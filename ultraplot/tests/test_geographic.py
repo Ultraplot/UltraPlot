@@ -929,6 +929,120 @@ def test_rasterize_feature():
     uplt.close(fig)
 
 
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_draws_patch_collection_and_missing_polygons(backend):
+    if backend == "cartopy":
+        pytest.importorskip("cartopy.crs")
+    sgeom = pytest.importorskip("shapely.geometry")
+    from matplotlib import collections as mcollections
+
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    geo = ax[0]
+    coll = geo.choropleth(
+        [
+            sgeom.box(-20, -10, -5, 5),
+            sgeom.box(0, -5, 15, 10),
+            sgeom.box(20, -5, 35, 10),
+        ],
+        [1.0, np.nan, 3.0],
+        edgecolor="k",
+        linewidth=0.5,
+        colorbar="r",
+        missing_kw={"facecolor": "gray8", "hatch": "//"},
+    )
+    fig.canvas.draw()
+
+    assert isinstance(coll, mcollections.PatchCollection)
+    assert np.allclose(np.asarray(coll.get_array()), [1.0, 3.0])
+    assert len(coll.get_paths()) == 2
+    assert len(geo.collections) == 2
+    assert geo.collections[1].get_hatch() == "//"
+    assert len(fig.axes) == 2
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_country_mapping_resolves_codes(monkeypatch, backend):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    calls = []
+    country_geoms = {
+        "AUS": sgeom.box(110, -45, 155, -10),
+        "NZL": sgeom.box(166, -48, 179, -34),
+    }
+
+    def _fake_country(code, resolution="110m", include_far=False):
+        key = str(code).upper()
+        calls.append((key, resolution, bool(include_far)))
+        return country_geoms[key]
+
+    monkeypatch.setattr(plegend, "_resolve_country_geometry", _fake_country)
+
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    coll = ax[0].choropleth(
+        {"AUS": 1.0, "NZL": 2.0},
+        country=True,
+        country_reso="50m",
+        country_territories=True,
+    )
+    fig.canvas.draw()
+
+    assert np.allclose(np.asarray(coll.get_array()), [1.0, 2.0])
+    assert len(coll.get_paths()) == 2
+    assert calls == [("AUS", "50m", True), ("NZL", "50m", True)]
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_default_zorder_above_land(backend):
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    geo = ax[0]
+    coll = geo.choropleth([sgeom.box(-20, -10, 20, 10)], [1.0])
+    geo.format(land=True)
+    fig.canvas.draw()
+
+    land = getattr(geo, "_land_feature")
+    if isinstance(land, (tuple, list)):
+        land_zorder = land[0].get_zorder()
+    else:
+        land_zorder = land.get_zorder()
+    assert coll.get_zorder() > land_zorder
+    uplt.close(fig)
+
+
+def test_choropleth_length_mismatch_raises():
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="same length"):
+        ax[0].choropleth([sgeom.box(-10, -10, 10, 10)], [1.0, 2.0])
+    uplt.close(fig)
+
+
+def test_choropleth_basemap_rejects_non_platecarree_transform():
+    ccrs = pytest.importorskip("cartopy.crs")
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    fig, ax = uplt.subplots(proj="cyl", backend="basemap")
+    with pytest.raises(ValueError, match="Basemap choropleth"):
+        ax[0].choropleth(
+            [sgeom.box(-10, -10, 10, 10)],
+            [1.0],
+            transform=ccrs.Mercator(),
+        )
+    uplt.close(fig)
+
+
+def test_choropleth_country_mapping_with_explicit_values_raises():
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="does not accept both a mapping input"):
+        ax[0].choropleth({"AUS": 1.0}, [1.0], country=True)
+    uplt.close(fig)
+
+
 def test_check_tricontourf():
     """
     Ensure transform defaults are applied only when appropriate for tri-plots.
