@@ -955,8 +955,8 @@ def test_choropleth_draws_patch_collection_and_missing_polygons(backend):
     assert isinstance(coll, mcollections.PatchCollection)
     assert np.allclose(np.asarray(coll.get_array()), [1.0, 3.0])
     assert len(coll.get_paths()) == 2
-    assert len(geo.collections) == 2
-    assert geo.collections[1].get_hatch() == "//"
+    missing = [other for other in geo.collections if other.get_hatch() == "//"]
+    assert len(missing) == 1
     assert len(fig.axes) == 2
     uplt.close(fig)
 
@@ -1038,6 +1038,39 @@ def test_choropleth_default_zorder_above_land(backend):
     else:
         land_zorder = land.get_zorder()
     assert coll.get_zorder() > land_zorder
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_edgecolor_overlays_borders(backend):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from matplotlib import colors as mcolors
+
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    geo = ax[0]
+    coll = geo.choropleth(
+        [sgeom.box(-20, -10, 20, 10)],
+        [1.0],
+        edgecolor="red",
+        linewidth=2,
+    )
+    geo.format(borders=True)
+    fig.canvas.draw()
+
+    borders = getattr(geo, "_borders_feature")
+    if isinstance(borders, (tuple, list)):
+        borders_zorder = borders[0].get_zorder()
+    else:
+        borders_zorder = borders.get_zorder()
+    edge = next(
+        other
+        for other in geo.collections
+        if other is not coll
+        and len(other.get_paths()) == len(coll.get_paths())
+        and np.allclose(np.asarray(other.get_edgecolor())[0], mcolors.to_rgba("red"))
+    )
+    assert edge.get_zorder() > borders_zorder
+    assert np.allclose(np.asarray(edge.get_edgecolor())[0], mcolors.to_rgba("red"))
     uplt.close(fig)
 
 

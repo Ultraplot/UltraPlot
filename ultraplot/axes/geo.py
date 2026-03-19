@@ -2316,6 +2316,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         kw = kwargs.copy()
         kw.update(_pop_props(kw, "collection"))
         center_levels = kw.pop("center_levels", None)
+        explicit_zorder = "zorder" in kwargs
         zorder = _not_none(
             kw.get("zorder", None),
             rc.find("geo.choropleth.zorder", context=True),
@@ -2371,10 +2372,23 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         collection.set_array(valid_values)
         collection.update(kw)
         self.add_collection(collection)
+        edge_kw = _choropleth_edge_collection_kw(
+            kw,
+            zorder=collection.get_zorder(),
+            explicit_zorder=explicit_zorder,
+        )
+        if edge_kw is not None:
+            edge_collection = mcollections.PatchCollection(
+                valid_patches,
+                match_original=False,
+            )
+            edge_collection.update(edge_kw)
+            self.add_collection(edge_collection)
 
         if missing_patches and missing_kw is not None:
             miss_kw = dict(missing_kw)
             miss_kw.update(_pop_props(miss_kw, "collection"))
+            missing_explicit_zorder = "zorder" in missing_kw
             if not any(key in miss_kw for key in invalid_face_keys):
                 miss_kw["facecolor"] = "none"
             missing = mcollections.PatchCollection(
@@ -2383,6 +2397,18 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             )
             missing.update(miss_kw)
             self.add_collection(missing)
+            miss_edge_kw = _choropleth_edge_collection_kw(
+                miss_kw,
+                zorder=missing.get_zorder(),
+                explicit_zorder=missing_explicit_zorder,
+            )
+            if miss_edge_kw is not None:
+                missing_edge = mcollections.PatchCollection(
+                    missing_patches,
+                    match_original=False,
+                )
+                missing_edge.update(miss_edge_kw)
+                self.add_collection(missing_edge)
 
         self.autoscale_view()
         self._update_guide(collection, queue_colorbar=False, **guide_kw)
@@ -3755,6 +3781,47 @@ def _choropleth_country_inputs(
         for key in keys
     ]
     return geometries, values, transform
+
+
+def _choropleth_edge_collection_kw(
+    kw: Mapping[str, Any],
+    *,
+    zorder: float,
+    explicit_zorder: bool = False,
+) -> dict[str, Any] | None:
+    """
+    Return edge-only collection settings when polygon outlines should overlay features.
+    """
+    edge_keys = (
+        "edgecolor",
+        "edgecolors",
+        "linewidth",
+        "linewidths",
+        "linestyle",
+        "linestyles",
+    )
+    if not any(key in kw for key in edge_keys):
+        return None
+    edge_kw = {
+        key: value
+        for key, value in kw.items()
+        if key not in ("color", "colors", "facecolor", "facecolors", "hatch", "label")
+    }
+    if explicit_zorder:
+        edge_kw["zorder"] = zorder
+    else:
+        edge_kw["zorder"] = (
+            max(
+                zorder,
+                *(
+                    rc.find(f"{name}.zorder", context=True)
+                    for name in ("coast", "rivers", "borders", "innerborders")
+                ),
+            )
+            + 0.1
+        )
+    edge_kw["facecolor"] = "none"
+    return edge_kw
 
 
 # Apply signature obfuscation after storing previous signature
