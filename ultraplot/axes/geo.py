@@ -276,7 +276,7 @@ matplotlib.collections.PatchCollection
     The scalar-mappable collection for finite-valued polygons.
 """
 
-docstring._snippet_manager["geo.choropleth"] = _choropleth_costring
+docstring._snippet_manager["geo.choropleth"] = _choropleth_docstring
 
 
 class _GeoLabel(object):
