@@ -42,9 +42,17 @@ jobs:
         run: |
           mkdir -p .ci
           pytest -q --tb=short --disable-warnings -n 0 -p pytest_cov \
-            --cov=ultraplot --cov-branch --cov-context=test --cov-report= \
+            --cov=ultraplot --cov-branch --cov-context=test \
+            --cov-report=xml:coverage.xml --cov-report= \
             ultraplot/tests
           python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          name: codecov-test-map
 
       - name: Cache test map
         uses: actions/cache@v5
