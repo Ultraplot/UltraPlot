@@ -3555,6 +3555,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             Numeric levels used to generate marker-size entries.
         **kwargs
             Forwarded to `ultraplot.legend.UltraLegend.sizelegend`.
+            Pass ``labels=[...]`` or ``labels={level: label}`` to override the
+            generated labels.
             Pass ``add=False`` to return ``(handles, labels)`` without drawing.
         """
         return plegend.UltraLegend(self).sizelegend(levels, **kwargs)
