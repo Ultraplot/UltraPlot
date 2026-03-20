@@ -1119,6 +1119,7 @@ def _entry_legend_entries(
 def _size_legend_entries(
     levels: Iterable[float],
     *,
+    labels=None,
     color="0.35",
     marker="o",
     area=True,
@@ -1142,7 +1143,21 @@ def _size_legend_entries(
     else:
         ms = np.abs(values)
     ms = np.maximum(ms * scale, minsize)
-    labels = [_format_label(value, fmt) for value in values]
+    if labels is None:
+        label_list = [_format_label(value, fmt) for value in values]
+    elif isinstance(labels, Mapping):
+        label_list = []
+        for value in values:
+            key = float(value)
+            if key not in labels:
+                raise ValueError(
+                    "sizelegend labels mapping must include a label for every level."
+                )
+            label_list.append(str(labels[key]))
+    else:
+        label_list = [str(label) for label in labels]
+        if len(label_list) != len(values):
+            raise ValueError("sizelegend labels must have the same length as levels.")
     base_styles = {
         "line": False,
         "alpha": alpha,
@@ -1152,7 +1167,7 @@ def _size_legend_entries(
     }
     base_styles.update(entry_kwargs)
     handles = []
-    for idx, (value, label, size) in enumerate(zip(values, labels, ms)):
+    for idx, (value, label, size) in enumerate(zip(values, label_list, ms)):
         styles = _resolve_style_values(base_styles, float(value), idx)
         color_value = _style_lookup(color, float(value), idx, default="0.35")
         marker_value = _style_lookup(marker, float(value), idx, default="o")
@@ -1171,7 +1186,7 @@ def _size_legend_entries(
                 **styles,
             )
         )
-    return handles, labels
+    return handles, label_list
 
 
 def _num_legend_entries(
@@ -1561,6 +1576,7 @@ class UltraLegend:
         self,
         levels: Iterable[float],
         *,
+        labels=None,
         color=None,
         marker=None,
         area: Optional[bool] = None,
@@ -1603,6 +1619,7 @@ class UltraLegend:
         )
         handles, labels = _size_legend_entries(
             levels,
+            labels=labels,
             color=color,
             marker=marker,
             area=area,

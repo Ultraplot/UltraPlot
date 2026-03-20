@@ -7,10 +7,11 @@ Build legends from semantic mappings rather than existing artists.
 Why UltraPlot here?
 -------------------
 UltraPlot adds semantic legend helpers directly on axes:
-``catlegend``, ``sizelegend``, ``numlegend``, and ``geolegend``.
-These are useful when you want legend meaning decoupled from plotted handles.
+``entrylegend``, ``catlegend``, ``sizelegend``, ``numlegend``, and ``geolegend``.
+These are useful when you want legend meaning decoupled from plotted handles, or
+when you want a standalone semantic key that describes an encoding directly.
 
-Key functions: :py:meth:`ultraplot.axes.Axes.catlegend`, :py:meth:`ultraplot.axes.Axes.sizelegend`, :py:meth:`ultraplot.axes.Axes.numlegend`, :py:meth:`ultraplot.axes.Axes.geolegend`.
+Key functions: :py:meth:`ultraplot.axes.Axes.entrylegend`, :py:meth:`ultraplot.axes.Axes.catlegend`, :py:meth:`ultraplot.axes.Axes.sizelegend`, :py:meth:`ultraplot.axes.Axes.numlegend`, :py:meth:`ultraplot.axes.Axes.geolegend`.
 
 See also
 --------
@@ -19,21 +20,35 @@ See also
 
 # %%
 import cartopy.crs as ccrs
-import numpy as np
 import shapely.geometry as sg
-from matplotlib.path import Path
 
 import ultraplot as uplt
 
-np.random.seed(0)
-data = np.random.randn(2, 100)
-sizes = np.random.randint(10, 512, data.shape[1])
-colors = np.random.rand(data.shape[1])
-
-fig, ax = uplt.subplots()
-ax.scatter(*data, color=colors, s=sizes, cmap="viko")
+fig, ax = uplt.subplots(refwidth=5.0)
 ax.format(title="Semantic legend helpers")
 
+ax.entrylegend(
+    [
+        {
+            "label": "Observed samples",
+            "line": False,
+            "marker": "o",
+            "markersize": 8,
+            "markerfacecolor": "blue7",
+            "markeredgecolor": "black",
+        },
+        {
+            "label": "Model fit",
+            "line": True,
+            "color": "black",
+            "linewidth": 2.5,
+            "linestyle": "--",
+        },
+    ],
+    loc="l",
+    title="Entry styles",
+    frameon=False,
+)
 ax.catlegend(
     ["A", "B", "C"],
     colors={"A": "red7", "B": "green7", "C": "blue7"},
@@ -43,6 +58,7 @@ ax.catlegend(
 )
 ax.sizelegend(
     [10, 50, 200],
+    labels=["Small", "Medium", "Large"],
     loc="upper right",
     title="Population",
     ncols=1,
@@ -88,4 +104,5 @@ ax.geolegend(
     frameon=False,
     country_reso="10m",
 )
+ax.axis("off")
 fig.show()
