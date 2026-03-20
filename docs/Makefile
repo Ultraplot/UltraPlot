@@ -12,7 +12,7 @@ BUILDDIR    = _build
 .PHONY: help clean html html-exec Makefile
 
 html:
-	@UPLT_DOCS_EXECUTE=$${UPLT_DOCS_EXECUTE:-always} $(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" -E -a $(SPHINXOPTS)
+	@UPLT_DOCS_EXECUTE=$${UPLT_DOCS_EXECUTE:-auto} $(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" $(SPHINXOPTS)
 
 html-exec:
 	@UPLT_DOCS_EXECUTE=always $(SPHINXBUILD) -b html "$(SOURCEDIR)" "$(BUILDDIR)/html" -E -a $(SPHINXOPTS)

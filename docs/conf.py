@@ -403,6 +403,8 @@ napoleon_type_aliases = {
     "color-spec": ":py:func:`color-spec <matplotlib.colors.is_color_like>`",
     "artist": ":py:func:`artist <matplotlib.artist.Artist>`",
 }
+# Keep autodoc aliases stable across builds so incremental Sphinx caching works.
+autodoc_type_aliases = dict(napoleon_type_aliases)
 
 # Fail on error. Note nbsphinx compiles all notebooks in docs unless excluded
 nbsphinx_allow_errors = False
@@ -410,8 +412,10 @@ nbsphinx_allow_errors = False
 # Give *lots* of time for cell execution
 nbsphinx_timeout = 300
 
-# Add jupytext support to nbsphinx
-nbsphinx_custom_formats = {".py": ["jupytext.reads", {"fmt": "py:percent"}]}
+# Add jupytext support to nbsphinx with conversion cache.
+nbsphinx_custom_formats = {
+    ".py": ["sphinxext.jupytext_cache.reads_cached", {"fmt": "py:percent"}]
+}
 
 # Keep notebook output backgrounds theme-adaptive.
 nbsphinx_execute_arguments = [
