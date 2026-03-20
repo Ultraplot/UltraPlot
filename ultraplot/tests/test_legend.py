@@ -469,6 +469,44 @@ def test_sizelegend_handle_kw_accepts_line_scatter_aliases():
     uplt.close(fig)
 
 
+def test_sizelegend_supports_custom_labels_sequence():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.sizelegend(
+        [10, 50, 200],
+        labels=["small", "medium", "large"],
+        add=False,
+    )
+    assert labels == ["small", "medium", "large"]
+    assert [handle.get_label() for handle in handles] == labels
+    uplt.close(fig)
+
+
+def test_sizelegend_supports_custom_labels_mapping():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.sizelegend(
+        [10, 50, 200],
+        labels={10: "small", 50: "medium", 200: "large"},
+        add=False,
+    )
+    assert labels == ["small", "medium", "large"]
+    assert [handle.get_label() for handle in handles] == labels
+    uplt.close(fig)
+
+
+def test_sizelegend_custom_labels_validate_length():
+    fig, ax = uplt.subplots()
+    with pytest.raises(ValueError, match="same length as levels"):
+        ax.sizelegend([10, 50], labels=["small"], add=False)
+    uplt.close(fig)
+
+
+def test_sizelegend_custom_labels_mapping_must_cover_levels():
+    fig, ax = uplt.subplots()
+    with pytest.raises(ValueError, match="include a label for every level"):
+        ax.sizelegend([10, 50], labels={10: "small"}, add=False)
+    uplt.close(fig)
+
+
 def test_numlegend_handle_kw_accepts_patch_aliases():
     fig, ax = uplt.subplots()
     handles, labels = ax.numlegend(
@@ -585,7 +623,6 @@ def test_semantic_legend_rejects_label_kwarg(builder, args, kwargs):
     (
         ("entrylegend", (["A", "B"],), {}),
         ("catlegend", (["A", "B"],), {}),
-        ("sizelegend", ([10, 50],), {}),
         ("numlegend", tuple(), {"vmin": 0, "vmax": 1}),
     ),
 )
