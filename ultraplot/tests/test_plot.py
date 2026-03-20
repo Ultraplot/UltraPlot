@@ -99,6 +99,45 @@ def test_error_shading_explicit_label_external():
     assert "Band" in labels
 
 
+def test_patch_linewidth_rc_controls_patch_edgefix() -> None:
+    """
+    Patch-style artists should honor rc patch linewidth even when edge-fix is active.
+    """
+    expected = 3.5
+    with uplt.rc.context({"patch.linewidth": expected}):
+        fig, axs = uplt.subplots(ncols=4)
+
+        bar = axs[0].bar([1, 2], [3, 4])
+        fill = axs[1].fill_between([0, 1, 2], [1, 2, 1])
+        hist = axs[2].hist(np.arange(5))
+        pie = axs[3].pie([1, 2, 3])
+
+        assert [patch.get_linewidth() for patch in bar.patches] == pytest.approx(
+            [expected, expected]
+        )
+        assert np.atleast_1d(fill.get_linewidths()) == pytest.approx([expected])
+        assert [patch.get_linewidth() for patch in hist[2]] == pytest.approx(
+            [expected] * len(hist[2])
+        )
+        assert [wedge.get_linewidth() for wedge in pie[0]] == pytest.approx(
+            [expected] * len(pie[0])
+        )
+
+    uplt.close(fig)
+
+
+def test_patch_linewidth_rc_does_not_override_collection_edgefix() -> None:
+    """
+    Collection-style 2D artists keep their dedicated edge-fix linewidth.
+    """
+    with uplt.rc.context({"patch.linewidth": 3.5}):
+        fig, ax = uplt.subplots()
+        mesh = ax.pcolormesh(np.arange(9).reshape(3, 3))
+        assert np.atleast_1d(mesh.get_linewidth()) == pytest.approx([0.3])
+
+    uplt.close(fig)
+
+
 def test_graph_nodes_kw():
     """Test the graph method by setting keywords for nodes"""
     import networkx as nx
