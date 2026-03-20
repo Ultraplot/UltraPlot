@@ -39,7 +39,7 @@ reproduces the issue. This is critical for contributors to fix the bug quickly.
 If you can figure out how to fix the bug yourself, feel free to submit
 a pull request.
 
-.. _contrib_tets:
+.. _contrib_tests:
 
 Write tests
 ===========
@@ -152,7 +152,7 @@ Here is a quick guide for submitting pull requests:
       git clone git@github.com:YOUR_GITHUB_USERNAME/ultraplot.git
       cd ultraplot
       git remote add upstream git@github.com:ultraplot/ultraplot.git
-      git checkout -b your-branch-name master
+      git checkout -b your-branch-name main
 
    If you need some help with git, follow the
    `quick start guide <https://git.wiki.kernel.org/index.php/QuickStart>`__.
@@ -164,7 +164,7 @@ Here is a quick guide for submitting pull requests:
       pip install -e .
 
    This way ``import ultraplot`` imports your local copy,
-   rather than the stable version you last downloaded from PyPi.
+   rather than the stable version you last downloaded from PyPI.
    You can ``import ultraplot; print(ultraplot.__file__)`` to verify your
    local copy has been imported.
 
@@ -203,8 +203,8 @@ Here is a quick guide for submitting pull requests:
    ..
       #. Run all the tests. Now running tests is as simple as issuing this command:
          .. code-block:: bash
-            coverage run --source ultraplot -m py.test
-         This command will run tests via the ``pytest`` tool against Python 3.7.
+            coverage run --source ultraplot -m pytest
+         This command will run tests via the ``pytest`` tool.
 
 #. If you intend to make changes or add examples to the user guide, you may want to
    open the ``docs/*.py`` files as
@@ -235,7 +235,7 @@ Here is a quick guide for submitting pull requests:
       compare: your-branch-name
 
       base-fork: ultraplot/ultraplot
-      base: master
+      base: main
 
 Note that you can create the pull request before you're finished with your
 feature addition or bug fix. The PR will update as you add more commits. UltraPlot
@@ -249,8 +249,8 @@ Ultraplot follows EffVer (`Effectual Versioning <https://jacobtomlinson.dev/effv
 
 While version 1.0 has been released, we are still in the process of ensuring proplot is fully replaced by ultraplot as we continue development under the ultraplot name. During this transition, the versioning scheme reflects both our commitment to stable APIs and the ongoing work to complete this transition. The minor version number is incremented when changes require user attention (like deprecations or style changes), and the patch number is incremented for additions and fixes that users can safely adopt.
 
-For now, `Casper van Eltern <https://github.com/cvanelteren>`__ is the only one who can
-publish releases on PyPi, but this will change in the future. Releases should
+For now, `Casper van Elteren <https://github.com/cvanelteren>`__ is the only one who can
+publish releases on PyPI, but this will change in the future. Releases should
 be carried out as follows:
 
 #. Create a new branch ``release-vX.Y.Z`` with the version for the release.
