@@ -16,23 +16,30 @@ import warnings
 #     assert uplt.rc["image.cmap"] == uplt.rc["cmap.sequential"] == "_magma_copy_r"
 
 
-@pytest.mark.skip(reason="This is failing on github but not locally")
 def test_ignored_keywords():
     """
     Test ignored keywords and functions.
     """
     with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
         fig, ax = uplt.subplots(
             gridspec_kw={"left": 3},
             subplot_kw={"proj": "cart"},
             subplotpars={"left": 0.2},
         )
-    # only capture ultraplot warnings not general mpl warnings, e.g. deprecation warnings
-    record = [r for r in record if "UltraPlotWarning" in str(r)]
-    assert len(record) == 3
+    # Filter to only UltraPlotWarning to avoid environment-specific noise
+    uplt_warnings = [r for r in record if issubclass(r.category, uplt.warnings.UltraPlotWarning)]
+    messages = [str(w.message) for w in uplt_warnings]
+    assert any("gridspec_kw" in m for m in messages), f"Expected gridspec_kw warning, got: {messages}"
+    assert any("subplot_kw" in m for m in messages), f"Expected subplot_kw warning, got: {messages}"
+    assert any("subplotpars" in m for m in messages), f"Expected subplotpars warning, got: {messages}"
+
     with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
         fig.subplots_adjust(left=0.2)
-    assert len(record) == 1
+    uplt_warnings = [r for r in record if issubclass(r.category, uplt.warnings.UltraPlotWarning)]
+    messages = [str(w.message) for w in uplt_warnings]
+    assert any("subplots_adjust" in m for m in messages), f"Expected subplots_adjust warning, got: {messages}"
 
 
 @pytest.mark.mpl_image_compare
