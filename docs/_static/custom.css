@@ -26,6 +26,9 @@
     --uplt-color-accent-shadow-soft: rgba(15, 118, 110, 0.1);
     --uplt-color-plot-panel-bg: #f2f4f6;
     --uplt-color-plot-panel-border: #d9dde2;
+    --uplt-color-gallery-plot-bg: #ffffff;
+    --uplt-color-gallery-plot-border: #d9dde2;
+    --uplt-color-gallery-plot-shadow: rgba(15, 23, 42, 0.08);
 
     /* Scrollbar */
     --uplt-color-scrollbar-track: #f1f1f1;
@@ -34,6 +37,7 @@
 
     --uplt-color-code-bg: var(--uplt-color-sidebar-bg); /* same as page */
     --uplt-color-code-fg: #6a6a6a; /* gray code text (light) */
+    --uplt-color-inset-highlight: rgba(255, 255, 255, 0.5);
     --code-block-background: var(--uplt-color-code-bg);
     --sy-c-link: var(--uplt-color-accent);
     --sy-c-link-hover: #0b5f59;
@@ -310,6 +314,16 @@ html.dark-theme .sy-head .sy-head-links a[aria-current="page"],
 html.dark,
 html.dark-theme,
 [data-color-mode="dark"] {
+    --uplt-color-panel-bg: #181b1e;
+    --uplt-color-sidebar-bg: #20252a;
+    --uplt-color-card-bg: #20252a;
+    --uplt-color-border-muted: #333b43;
+    --uplt-color-button-border: #45515d;
+    --uplt-color-shadow: rgba(0, 0, 0, 0.45);
+    --uplt-color-text-main: #d8dee5;
+    --uplt-color-text-strong: #f2f5f7;
+    --uplt-color-text-secondary: #b7c0c8;
+    --uplt-color-text-muted: #97a3ad;
     --uplt-color-accent: #1aa89a;
     --uplt-color-accent-hover: rgba(26, 168, 154, 0.14);
     --uplt-color-accent-active: rgba(26, 168, 154, 0.22);
@@ -319,9 +333,13 @@ html.dark-theme,
     --uplt-color-accent-shadow-soft: rgba(26, 168, 154, 0.14);
     --uplt-color-plot-panel-bg: #1b2024;
     --uplt-color-plot-panel-border: #313940;
+    --uplt-color-gallery-plot-bg: #ffffff;
+    --uplt-color-gallery-plot-border: #d5dbe3;
+    --uplt-color-gallery-plot-shadow: rgba(15, 23, 42, 0.12);
     --sy-c-link: #58d5c9;
     --sy-c-link-hover: #84e8df;
-    --uplt-color-panel-bg: #202020;
+    --uplt-color-code-bg: #141414;
+    --uplt-color-inset-highlight: rgba(255, 255, 255, 0.04);
     --code-block-background: #141414;
     --syntax-dark-background: #141414;
     --syntax-dark-highlight: #2a2f2f;
@@ -330,7 +348,18 @@ html.dark-theme,
 
 @media (prefers-color-scheme: dark) {
     html:not(.light):not(.light-theme):not([data-color-mode="light"]) {
-        --uplt-color-panel-bg: #202020;
+        --uplt-color-panel-bg: #181b1e;
+        --uplt-color-sidebar-bg: #20252a;
+        --uplt-color-card-bg: #20252a;
+        --uplt-color-border-muted: #333b43;
+        --uplt-color-button-border: #45515d;
+        --uplt-color-shadow: rgba(0, 0, 0, 0.45);
+        --uplt-color-text-main: #d8dee5;
+        --uplt-color-text-strong: #f2f5f7;
+        --uplt-color-text-secondary: #b7c0c8;
+        --uplt-color-text-muted: #97a3ad;
+        --uplt-color-code-bg: #141414;
+        --uplt-color-inset-highlight: rgba(255, 255, 255, 0.04);
         --code-block-background: #141414;
         --syntax-dark-background: #141414;
         --syntax-dark-highlight: #2a2f2f;
@@ -603,16 +632,27 @@ html.dark-theme .card-with-bottom-text .sd-card-header,
 
 .gallery-filter-controls {
     margin: 1rem 0 2rem;
-    padding: 1rem 1.2rem;
-    border-radius: 16px;
-    background: linear-gradient(
-        135deg,
-        var(--uplt-color-accent-grad-start),
-        var(--uplt-color-accent-grad-end)
-    );
+    padding: 1rem 1.2rem 1.25rem;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    background: var(--uplt-color-panel-bg);
+    border: 1px solid var(--uplt-color-border-muted);
     box-shadow:
-        0 10px 24px var(--uplt-color-accent-shadow-strong),
-        0 2px 6px var(--uplt-color-accent-shadow-soft);
+        0 14px 34px var(--uplt-color-shadow),
+        0 2px 8px var(--uplt-color-accent-shadow-soft);
+}
+
+.gallery-filter-controls::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(
+        90deg,
+        var(--uplt-color-accent),
+        #0a5f58
+    );
 }
 
 .gallery-filter-bar {
@@ -620,26 +660,81 @@ html.dark-theme .card-with-bottom-text .sd-card-header,
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: 1rem;
+    padding: 0.9rem;
+    border-radius: 14px;
+    background: var(--uplt-color-sidebar-bg);
+    border: 1px solid var(--uplt-color-border-muted);
+    box-shadow: inset 0 1px 0 var(--uplt-color-inset-highlight);
 }
 
 .gallery-filter-button {
     border: 1px solid var(--uplt-color-button-border);
-    background-color: var(--uplt-color-white);
+    background-color: var(--uplt-color-panel-bg);
     color: var(--uplt-color-text-strong);
     padding: 0.35rem 0.85rem;
     border-radius: 999px;
     font-size: 0.9em;
+    font-weight: 600;
     cursor: pointer;
+    box-shadow: 0 1px 3px var(--uplt-color-shadow);
     transition:
         background-color 0.2s ease,
         color 0.2s ease,
-        border-color 0.2s ease;
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.gallery-filter-button:hover {
+    transform: translateY(-1px);
+    border-color: var(--uplt-color-accent);
+    box-shadow: 0 6px 14px var(--uplt-color-accent-shadow-soft);
 }
 
 .gallery-filter-button.is-active {
     background-color: var(--uplt-color-accent);
     border-color: var(--uplt-color-accent);
     color: var(--uplt-color-white);
+    box-shadow: 0 8px 18px var(--uplt-color-accent-shadow-strong);
+}
+
+.gallery-filter-controls .gallery-unified {
+    position: relative;
+    z-index: 1;
+}
+
+.sy-main .yue .sphx-glr-thumbnails .sphx-glr-thumbcontainer > img {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.9rem 0.9rem 0.55rem;
+    background: var(--uplt-color-gallery-plot-bg);
+    border-bottom: 1px solid var(--uplt-color-gallery-plot-border);
+    box-shadow: inset 0 0 0 1px var(--uplt-color-gallery-plot-shadow);
+}
+
+.gallery-filter-controls .gallery-unified .sphx-glr-thumbcontainer {
+    background: var(--uplt-color-panel-bg);
+    border: 1px solid var(--uplt-color-border-muted);
+    border-radius: 18px;
+    box-shadow: 0 10px 24px var(--uplt-color-shadow);
+    overflow: hidden;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.gallery-filter-controls .gallery-unified .sphx-glr-thumbcontainer:hover {
+    transform: translateY(-3px);
+    border-color: var(--uplt-color-accent);
+    box-shadow: 0 16px 30px var(--uplt-color-accent-shadow-soft);
+}
+
+.gallery-filter-controls .gallery-unified .sphx-glr-thumbnail-title {
+    padding: 0.2rem 0.95rem 1rem;
+    color: var(--uplt-color-text-strong);
+    font-weight: 600;
 }
 
 .gallery-section-hidden {
