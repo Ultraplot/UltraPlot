@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Additional branch coverage for constructor helpers."""
 
+import importlib
+
 import cycler
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
@@ -165,6 +167,16 @@ def test_norm_locator_formatter_and_scale_branches():
         constructor.Scale("not-a-scale")
     with pytest.raises(ValueError, match="Invalid scale name"):
         constructor.Scale(object())
+
+
+def test_formatter_registry_refreshes_after_ticker_reload():
+    import ultraplot.ticker
+
+    importlib.reload(ultraplot.ticker)
+
+    assert constructor.FORMATTERS["sigfig"] is pticker.SigFigFormatter
+    formatter = constructor.Formatter(("sigfig", 3))
+    assert isinstance(formatter, pticker.SigFigFormatter)
 
 
 def test_proj_constructor_branches():
