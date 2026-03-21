@@ -252,6 +252,115 @@ def test_annotate_curve_xy_uses_rc_defaults():
     assert np.isclose(obj._min_advance, 1.5)
 
 
+def _text_bbox(artist, renderer):
+    patch = artist.get_bbox_patch()
+    if patch is not None and patch.get_visible():
+        return patch.get_window_extent(renderer)
+    if isinstance(artist, mtext.Annotation):
+        return mtext.Text.get_window_extent(artist, renderer)
+    return artist.get_window_extent(renderer)
+
+
+def test_stagger_text_vertical_avoids_overlap():
+    fig, ax = uplt.subplots()
+    artists = [
+        ax.text(0.5, 0.5, "alpha", ha="center", va="center", bbox={"facecolor": "w"}),
+        ax.text(0.5, 0.5, "beta", ha="center", va="center", bbox={"facecolor": "w"}),
+    ]
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    before = [_text_bbox(artist, renderer) for artist in artists]
+    assert before[0].overlaps(before[1])
+
+    ax.stagger_text(direction="y", step="12pt")
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    after = [_text_bbox(artist, renderer) for artist in artists]
+    assert not after[0].overlaps(after[1])
+
+
+def test_stagger_text_horizontal_works_for_annotations():
+    fig, ax = uplt.subplots()
+    artists = [
+        ax.annotate(
+            "left",
+            xy=(0.25, 0.3),
+            xytext=(0.5, 0.5),
+            textcoords="axes fraction",
+            ha="center",
+            va="center",
+            bbox={"facecolor": "w"},
+        ),
+        ax.annotate(
+            "right",
+            xy=(0.75, 0.7),
+            xytext=(0.5, 0.5),
+            textcoords="axes fraction",
+            ha="center",
+            va="center",
+            bbox={"facecolor": "w"},
+        ),
+    ]
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    before = [_text_bbox(artist, renderer) for artist in artists]
+    assert before[0].overlaps(before[1])
+
+    ax.stagger_text(direction="x", step="12pt")
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    after = [_text_bbox(artist, renderer) for artist in artists]
+    assert not after[0].overlaps(after[1])
+
+
+def test_stagger_text_both_direction_is_supported():
+    fig, ax = uplt.subplots()
+    artists = [
+        ax.text(0.5, 0.5, "alpha", ha="center", va="center", bbox={"facecolor": "w"}),
+        ax.text(0.5, 0.5, "beta", ha="center", va="center", bbox={"facecolor": "w"}),
+        ax.text(0.5, 0.5, "gamma", ha="center", va="center", bbox={"facecolor": "w"}),
+    ]
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    before = [_text_bbox(artist, renderer) for artist in artists]
+    assert any(
+        bbox1.overlaps(bbox2)
+        for i, bbox1 in enumerate(before)
+        for bbox2 in before[i + 1 :]
+    )
+
+    ax.stagger_text(direction="both", step="12pt")
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    after = [_text_bbox(artist, renderer) for artist in artists]
+    assert not any(
+        bbox1.overlaps(bbox2)
+        for i, bbox1 in enumerate(after)
+        for bbox2 in after[i + 1 :]
+    )
+
+
+def test_stagger_text_is_idempotent():
+    fig, ax = uplt.subplots()
+    artists = [
+        ax.text(0.5, 0.5, "alpha", ha="center", va="center", bbox={"facecolor": "w"}),
+        ax.text(0.5, 0.5, "beta", ha="center", va="center", bbox={"facecolor": "w"}),
+    ]
+
+    fig.canvas.draw()
+    ax.stagger_text(direction="y", step="12pt")
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    first = [_text_bbox(artist, renderer).bounds for artist in artists]
+
+    ax.stagger_text(direction="y", step="12pt")
+    fig.canvas.draw()
+    renderer = fig._get_renderer()
+    second = [_text_bbox(artist, renderer).bounds for artist in artists]
+
+    assert np.allclose(first, second)
+
+
 def _get_text_stroke_joinstyle(text):
     for effect in text.get_path_effects():
         if isinstance(effect, mpatheffects.Stroke):

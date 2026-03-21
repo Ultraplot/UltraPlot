@@ -11,7 +11,7 @@ import sys
 import types
 from collections.abc import Iterable as IterableType
 from numbers import Integral, Number
-from typing import Any, Iterable, MutableMapping, Optional, Tuple, Union
+from typing import Any, Iterable, MutableMapping, Optional, Sequence, Tuple, Union
 
 try:
     # From python 3.12
@@ -4012,6 +4012,246 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             }
         )
         return obj
+
+    def _iter_stagger_text_artists(
+        self,
+        artists: Optional[Sequence[mtext.Text]] = None,
+    ) -> list[mtext.Text]:
+        """
+        Return visible text or annotation artists eligible for staggering.
+        """
+        from ..text import CurvedText
+
+        if artists is None:
+            artists = tuple(self.texts)
+        return [
+            artist
+            for artist in artists
+            if isinstance(artist, mtext.Text)
+            and not isinstance(artist, CurvedText)
+            and artist.axes is self
+            and artist.get_visible()
+            and artist.get_text()
+        ]
+
+    @staticmethod
+    def _get_stagger_text_bbox(
+        artist: mtext.Text,
+        renderer: Any,
+    ) -> Optional[mtransforms.Bbox]:
+        """
+        Return the text box bbox used for overlap checks.
+        """
+        patch = artist.get_bbox_patch()
+        if patch is not None and patch.get_visible():
+            artist.update_bbox_position_size(renderer)
+            return patch.get_window_extent(renderer)
+        if isinstance(artist, mtext.Annotation):
+            return mtext.Text.get_window_extent(artist, renderer)
+        return artist.get_window_extent(renderer)
+
+    @staticmethod
+    def _pad_stagger_bbox(
+        bbox: Optional[mtransforms.Bbox],
+        pad_x_px: float,
+        pad_y_px: float,
+    ) -> Optional[mtransforms.Bbox]:
+        """
+        Expand a bbox by the requested display-space padding.
+        """
+        if bbox is None or (pad_x_px <= 0 and pad_y_px <= 0):
+            return bbox
+        return mtransforms.Bbox.from_extents(
+            bbox.x0 - pad_x_px,
+            bbox.y0 - pad_y_px,
+            bbox.x1 + pad_x_px,
+            bbox.y1 + pad_y_px,
+        )
+
+    @staticmethod
+    def _iter_stagger_offsets(
+        mode: str,
+        step_x_px: float,
+        step_y_px: float,
+        max_steps: int,
+    ) -> list[tuple[float, float]]:
+        """
+        Build a deterministic list of display-space stagger offsets.
+        """
+        offsets = [(0.0, 0.0)]
+        if mode == "x":
+            for level in range(1, max_steps + 1):
+                delta = level * step_x_px
+                offsets.extend(((delta, 0.0), (-delta, 0.0)))
+            return offsets
+        if mode == "y":
+            for level in range(1, max_steps + 1):
+                delta = level * step_y_px
+                offsets.extend(((0.0, delta), (0.0, -delta)))
+            return offsets
+
+        for level in range(1, max_steps + 1):
+            for ix in range(-level, level + 1):
+                for iy in range(-level, level + 1):
+                    if max(abs(ix), abs(iy)) != level:
+                        continue
+                    offsets.append((ix * step_x_px, iy * step_y_px))
+        return offsets
+
+    def _reset_stagger_text_artist(self, artist: mtext.Text) -> None:
+        """
+        Reset a staggered artist back to its stored base position.
+        """
+        if isinstance(artist, mtext.Annotation):
+            base_position = getattr(
+                artist,
+                "_ultraplot_stagger_base_position",
+                artist.xyann,
+            )
+            artist._ultraplot_stagger_base_position = tuple(base_position)
+            artist.set_position(base_position)
+        else:
+            base_transform = getattr(
+                artist,
+                "_ultraplot_stagger_base_transform",
+                artist.get_transform(),
+            )
+            artist._ultraplot_stagger_base_transform = base_transform
+            artist.set_transform(base_transform)
+        artist.stale = True
+
+    def _apply_stagger_text_offset(
+        self,
+        artist: mtext.Text,
+        renderer: Any,
+        dx_px: float,
+        dy_px: float,
+    ) -> None:
+        """
+        Apply a display-space offset to a text or annotation artist.
+        """
+        self._reset_stagger_text_artist(artist)
+        if not dx_px and not dy_px:
+            return
+        figure = self.figure
+        if isinstance(artist, mtext.Annotation):
+            base_position = getattr(
+                artist,
+                "_ultraplot_stagger_base_position",
+                artist.xyann,
+            )
+            transform = artist._get_xy_transform(renderer, artist.anncoords)
+            base_display = transform.transform(base_position)
+            staggered = transform.inverted().transform(
+                base_display + np.array([dx_px, dy_px])
+            )
+            artist.set_position(tuple(map(float, staggered)))
+        else:
+            base_transform = getattr(
+                artist,
+                "_ultraplot_stagger_base_transform",
+                artist.get_transform(),
+            )
+            offset = mtransforms.ScaledTranslation(
+                dx_px / figure.dpi,
+                dy_px / figure.dpi,
+                figure.dpi_scale_trans,
+            )
+            artist.set_transform(base_transform + offset)
+        artist.stale = True
+
+    @docstring._concatenate_inherited
+    def stagger_text(
+        self,
+        artists: Optional[Sequence[mtext.Text]] = None,
+        *,
+        direction: str = "y",
+        step: Union[str, float] = "0.8em",
+        pad: Union[str, float] = "0.15em",
+        max_steps: int = 20,
+        renderer: Any = None,
+    ) -> list[mtext.Text]:
+        """
+        Stagger text and annotation artists to reduce overlapping boxes.
+
+        Parameters
+        ----------
+        artists : sequence of `~matplotlib.text.Text`, optional
+            The artists to stagger. Defaults to visible axes text and annotation
+            artists added with `text` or `annotate`.
+        direction : {'x', 'y', 'both', 'xy', '2d', 'horizontal', 'vertical'}, \
+default: 'y'
+            The staggering direction. Use ``'both'``, ``'xy'``, or ``'2d'``
+            to search in both horizontal and vertical directions.
+        step : float or unit-spec, default: '0.8em'
+            The offset increment applied while searching for a non-overlapping
+            position.
+        pad : float or unit-spec, default: '0.15em'
+            Extra bbox padding used when deciding whether two labels overlap.
+        max_steps : int, default: 20
+            The maximum number of stagger steps searched on each side of the
+            original position.
+        renderer : optional
+            The renderer used for bbox calculations. If omitted, UltraPlot uses
+            the figure renderer.
+
+        Returns
+        -------
+        list of `~matplotlib.text.Text`
+            The staggered artists.
+
+        Notes
+        -----
+        This operates on existing `text` and `annotate` artists. It is
+        intentionally explicit instead of automatic, so UltraPlot does not
+        silently change text placement during later draws or layout updates.
+        """
+        artists = self._iter_stagger_text_artists(artists)
+        if not artists:
+            return []
+        match direction.lower():
+            case "x" | "horizontal":
+                mode = "x"
+            case "y" | "vertical":
+                mode = "y"
+            case "both" | "xy" | "2d":
+                mode = "both"
+            case _:
+                raise ValueError(f"Invalid stagger direction {direction!r}.")
+        if max_steps < 0:
+            raise ValueError("max_steps must be non-negative.")
+
+        figure = self.figure
+        renderer = _not_none(renderer, figure._get_renderer())
+        step_x_px = float(units(step, "pt", "px", figure=figure, axes=self, width=True))
+        step_y_px = float(
+            units(step, "pt", "px", figure=figure, axes=self, width=False)
+        )
+        pad_x_px = float(units(pad, "pt", "px", figure=figure, axes=self, width=True))
+        pad_y_px = float(units(pad, "pt", "px", figure=figure, axes=self, width=False))
+        offsets = self._iter_stagger_offsets(mode, step_x_px, step_y_px, max_steps)
+
+        placed_bboxes: list[mtransforms.Bbox] = []
+        for artist in artists:
+            bbox = None
+            for dx_px, dy_px in offsets:
+                self._apply_stagger_text_offset(artist, renderer, dx_px, dy_px)
+                bbox = self._pad_stagger_bbox(
+                    self._get_stagger_text_bbox(artist, renderer),
+                    pad_x_px,
+                    pad_y_px,
+                )
+                if bbox is None or not any(
+                    bbox.overlaps(prev) for prev in placed_bboxes
+                ):
+                    break
+            if bbox is not None:
+                placed_bboxes.append(bbox)
+            artist.stale = True
+        self.stale = True
+        if figure is not None:
+            figure.stale = True
+        return artists
 
     def _toggle_spines(self, spines: Union[bool, Iterable, str]):
         """
