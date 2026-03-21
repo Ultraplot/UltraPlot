@@ -1663,7 +1663,9 @@ class Figure(mfigure.Figure):
         ax = ax._panel_parent or ax  # always use main subplot for spanning labels
         return pos, ax
 
-    def _get_offset_coord(self, side, axs, renderer, *, pad=None, extra=None):
+    def _get_offset_coord(
+        self, side, axs, renderer, *, pad=None, extra=None, include_subset_titles=True
+    ):
         """
         Return the figure coordinate for offsetting super labels and super titles.
         """
@@ -1676,7 +1678,12 @@ class Figure(mfigure.Figure):
         )  # noqa: E501
         objs = objs + (extra or ())  # e.g. top super labels
         for obj in objs:
-            bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
+            if isinstance(obj, paxes.Axes):
+                bbox = obj.get_tightbbox(
+                    renderer, include_subset_titles=include_subset_titles
+                )
+            else:
+                bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
             attr = s + "max" if side in ("top", "right") else s + "min"
             c = getattr(bbox, attr)
             c = (c, 0) if side in ("left", "right") else (0, c)
@@ -2619,10 +2626,15 @@ class Figure(mfigure.Figure):
             kw.update(fontdict)
         kw.update(kwargs)
         align = _translate_loc(loc, "text")
-        if align not in ("left", "center", "right"):
-            raise ValueError(
-                "Shared subplot titles only support loc='left', 'center', or 'right'."
-            )
+        match align:
+            case "left" | "outer left" | "upper left" | "lower left":
+                align = "left"
+            case "center" | "upper center" | "lower center":
+                align = "center"
+            case "right" | "outer right" | "upper right" | "lower right":
+                align = "right"
+            case _:
+                raise ValueError(f"Invalid shared subplot title location {loc!r}.")
         if group is None:
             artist = self.text(
                 0.5,
@@ -2630,7 +2642,7 @@ class Figure(mfigure.Figure):
                 "",
                 transform=self.transFigure,
                 ha=align,
-                va="bottom",
+                va="baseline",
                 zorder=3.5,
             )
             group = {"axes": axes, "artist": artist, "pad": None, "y": None}
@@ -2641,11 +2653,35 @@ class Figure(mfigure.Figure):
         group["pad"] = pad
         group["y"] = y
         artist.set_ha(align)
+        artist.set_va("baseline")
         if title is not None:
             artist.set_text(title)
         if kw:
             artist.update(kw)
         return artist
+
+    def _get_subset_title_bbox(
+        self, ax: paxes.Axes, renderer
+    ) -> mtransforms.Bbox | None:
+        """
+        Return the union bbox for shared titles covering the given axes.
+        """
+        ax = ax._panel_parent or ax
+        bboxes = []
+        for group in self._subset_title_dict.values():
+            artist = group["artist"]
+            if not artist.get_visible() or not artist.get_text():
+                continue
+            axs = [
+                group_ax._panel_parent or group_ax
+                for group_ax in group["axes"]
+                if group_ax is not None
+                and group_ax.figure is self
+                and group_ax.get_visible()
+            ]
+            if ax in axs:
+                bboxes.append(artist.get_window_extent(renderer))
+        return mtransforms.Bbox.union(bboxes) if bboxes else None
 
     def _align_subset_titles(self, renderer):
         """
@@ -2686,12 +2722,14 @@ class Figure(mfigure.Figure):
             if pad is not None:
                 pad = units(pad, "pt") / (72 * self.get_size_inches()[1])
             y_target = self._get_offset_coord(
-                "top", axs, renderer, pad=pad, extra=top_labels
+                "top",
+                axs,
+                renderer,
+                pad=pad,
+                extra=top_labels,
+                include_subset_titles=False,
             )
-            artist.set_y(0)
-            bbox = artist.get_window_extent(renderer)
-            y_bbox = self.transFigure.inverted().transform((0, bbox.ymin))[1]
-            artist.set_y(y_target - y_bbox)
+            artist.set_y(y_target)
 
     def _update_axis_label(self, side, axs):
         """
