@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 import ultraplot as uplt
 from ultraplot.gridspec import SubplotGrid
@@ -145,3 +146,33 @@ def test_gridspec_spanning_slice_deduplicates_axes():
     legend = ax.get_legend()
     assert legend is not None
     assert [t.get_text() for t in legend.texts] == ["data"]
+
+
+def test_subplotgrid_format_title_creates_shared_subset_title():
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+
+    subset = axs[:, 0]
+    subset.format(title="Shared title")
+    fig.canvas.draw()
+
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    assert title.get_text() == "Shared title"
+    assert all(not ax.get_title() for ax in subset)
+
+    x_expected, _ = fig._get_align_coord("top", list(subset), align="center")
+    bbox = title.get_window_extent(fig._get_renderer()).transformed(
+        fig.transFigure.inverted()
+    )
+    top = max(ax.get_position().y1 for ax in subset)
+    assert np.isclose(title.get_position()[0], x_expected)
+    assert bbox.y0 > top
+
+
+def test_subplotgrid_set_title_still_applies_per_axes():
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+
+    titles = axs[:].set_title("Shared title")
+
+    assert isinstance(titles, tuple)
+    assert len(titles) == 2
+    assert [ax.get_title() for ax in axs] == ["Shared title", "Shared title"]

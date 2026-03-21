@@ -2083,9 +2083,20 @@ class SubplotGrid(MutableSequence, list):
         share_ylabels = kwargs.get("share_ylabels", None)
         xlabel = kwargs.get("xlabel", None)
         ylabel = kwargs.get("ylabel", None)
+        title = kwargs.get("title", None)
         axes = [ax for ax in self if ax is not None]
         all_axes = set(self.figure._subplot_dict.values())
         is_subset = bool(axes) and all_axes and set(axes) != all_axes
+        shared_subset_title = len(self) > 1 and is_subset and isinstance(title, str)
+        shared_title_kw = kwargs.pop("title_kw", None) if shared_subset_title else None
+        if shared_subset_title:
+            kwargs.pop("title", None)
+            shared_title_loc = kwargs.pop("titleloc", None)
+            shared_title_pad = kwargs.pop("titlepad", None)
+            kwargs.pop("titleabove", None)
+        else:
+            shared_title_loc = None
+            shared_title_pad = None
         if len(self) > 1:
             if share_xlabels is False:
                 self.figure._clear_share_label_groups(self, target="x")
@@ -2100,6 +2111,14 @@ class SubplotGrid(MutableSequence, list):
             if is_subset and share_ylabels is None and ylabel is not None:
                 self.figure._register_share_label_group(self, target="y")
         self.figure.format(axs=self, **kwargs)
+        if shared_subset_title:
+            self.figure._update_subset_title(
+                self,
+                title,
+                loc=shared_title_loc,
+                pad=shared_title_pad,
+                **(shared_title_kw or {}),
+            )
         # Refresh groups after labels are set
         if len(self) > 1:
             if is_subset and share_xlabels is None and xlabel is not None:
