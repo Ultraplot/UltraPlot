@@ -138,6 +138,56 @@ jobs:
           echo "Detected test matrix: $(echo "$OUTPUT" | jq -c '.test_matrix')"
           python tools/ci/version_support.py --format github-output >> $GITHUB_OUTPUT
 
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs:
+      - run-if-changes
+    if: always() && needs.run-if-changes.outputs.run == 'true' && github.event_name == 'pull_request'
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: mamba-org/setup-micromamba@v2.0.7
+        with:
+          environment-file: ./environment.yml
+          init-shell: bash
+          condarc-file: ./.github/micromamba-condarc.yml
+          post-cleanup: none
+          create-args: >-
+            --verbose
+            python=3.10
+            matplotlib=3.9
+          cache-environment: true
+          cache-downloads: false
+
+      - name: Build Ultraplot
+        run: |
+          pip install --no-build-isolation --no-deps .
+
+      - name: Run full coverage suite
+        run: |
+          pytest -q --tb=short --disable-warnings -n auto -p pytest_cov \
+            --cov=ultraplot --cov-branch --cov-context=test \
+            --cov-report=xml:coverage.xml --cov-report= \
+            ultraplot/tests
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          name: codecov-pr-python3.10-mpl3.9
+
   build:
     needs:
       - get-versions

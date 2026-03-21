@@ -3509,7 +3509,9 @@ class PlotAxes(base.Axes):
                 edges.extend(convert((min_, max_)))
 
     @staticmethod
-    def _fix_patch_edges(obj, edgefix=None, **kwargs):
+    def _fix_patch_edges(
+        obj, edgefix=None, default_linewidth: float | None = None, **kwargs
+    ):
         """
         Fix white lines between between filled patches and fix issues
         with colormaps that are transparent. If keyword args passed by user
@@ -3520,7 +3522,11 @@ class PlotAxes(base.Axes):
         # See: https://github.com/jklymak/contourfIssues
         # See: https://stackoverflow.com/q/15003353/4970632
         edgefix = _not_none(edgefix, rc.edgefix, True)
-        linewidth = EDGEWIDTH if edgefix is True else 0 if edgefix is False else edgefix
+        linewidth = (
+            _not_none(default_linewidth, EDGEWIDTH)
+            if edgefix is True
+            else 0 if edgefix is False else edgefix
+        )
         if not linewidth:
             return
         keys = ("linewidth", "linestyle", "edgecolor")  # patches and collections
@@ -3557,7 +3563,9 @@ class PlotAxes(base.Axes):
             obj.set_edgecolor(obj.get_facecolor())
         elif np.iterable(obj):  # e.g. silent_list of BarContainer
             for element in obj:
-                PlotAxes._fix_patch_edges(element, edgefix=edgefix)
+                PlotAxes._fix_patch_edges(
+                    element, edgefix=edgefix, default_linewidth=default_linewidth
+                )
         else:
             warnings._warn_ultraplot(
                 f"Unexpected obj {obj} passed to _fix_patch_edges."
@@ -5756,7 +5764,9 @@ class PlotAxes(base.Axes):
             # No synthetic tagging or seaborn-based label overrides
 
             # Patch edge fixes
-            self._fix_patch_edges(obj, **edgefix_kw, **kw)
+            self._fix_patch_edges(
+                obj, default_linewidth=rc["patch.linewidth"], **edgefix_kw, **kw
+            )
 
             # Track sides for sticky edges
             xsides.append(x)
@@ -6039,7 +6049,9 @@ class PlotAxes(base.Axes):
                 if isinstance(obj, mcontainer.BarContainer):
                     self._add_bar_labels(obj, orientation=orientation, **bar_labels_kw)
 
-            self._fix_patch_edges(obj, **edgefix_kw, **kw)
+            self._fix_patch_edges(
+                obj, default_linewidth=rc["patch.linewidth"], **edgefix_kw, **kw
+            )
             for y in (b, b + h):
                 self._inbounds_xylim(extents, x, y, orientation=orientation)
 
@@ -6162,7 +6174,9 @@ class PlotAxes(base.Axes):
             **kw,
         )
         objs = tuple(cbook.silent_list(type(seq[0]).__name__, seq) for seq in objs)
-        self._fix_patch_edges(objs[0], **edgefix_kw, **wedge_kw)
+        self._fix_patch_edges(
+            objs[0], default_linewidth=rc["patch.linewidth"], **edgefix_kw, **wedge_kw
+        )
         return objs
 
     @staticmethod
@@ -7074,7 +7088,9 @@ class PlotAxes(base.Axes):
         kw = self._parse_cycle(n, **kw)
         obj = self._call_native("hist", xs, orientation=orientation, **kw)
         if histtype.startswith("bar"):
-            self._fix_patch_edges(obj[2], **edgefix_kw, **kw)
+            self._fix_patch_edges(
+                obj[2], default_linewidth=rc["patch.linewidth"], **edgefix_kw, **kw
+            )
         # Revert to mpl < 3.3 behavior where silent_list was always returned for
         # non-bar-type histograms. Because consistency.
         res = obj[2]
