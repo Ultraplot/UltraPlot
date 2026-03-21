@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import matplotlib.colors as mcolors
 
 import ultraplot as uplt
 from ultraplot.gridspec import SubplotGrid
@@ -166,6 +167,30 @@ def test_subplotgrid_format_title_creates_shared_subset_title():
     top = max(ax.get_position().y1 for ax in subset)
     assert np.isclose(title.get_position()[0], x_expected)
     assert bbox.y0 > top
+
+
+def test_subplotgrid_format_title_uses_rc_defaults():
+    with uplt.rc.context({"title.loc": "left"}):
+        fig, axs = uplt.subplots(nrows=2, ncols=2)
+        subset = axs[:, 0]
+        subset.format(title="Shared title")
+        fig.canvas.draw()
+
+        title = next(iter(fig._subset_title_dict.values()))["artist"]
+        x_expected, _ = fig._get_align_coord("top", list(subset), align="left")
+        assert title.get_ha() == "left"
+        assert np.isclose(title.get_position()[0], x_expected)
+
+
+def test_subplotgrid_format_title_uses_format_rc_settings():
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    subset = axs[:, 0]
+    subset.format(title="Shared title", titlesize=22, titlecolor="red")
+    fig.canvas.draw()
+
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    assert title.get_fontsize() == 22
+    assert np.allclose(mcolors.to_rgba(title.get_color()), mcolors.to_rgba("red"))
 
 
 def test_subplotgrid_set_title_still_applies_per_axes():

@@ -2569,6 +2569,20 @@ class Figure(mfigure.Figure):
         """
         Create or update a title spanning a subset of subplots.
         """
+        fontdict = _not_none(fontdict, kwargs.pop("fontdict", None))
+        loc = _not_none(
+            loc,
+            kwargs.pop("loc", None),
+            rc.find("title.loc", context=True),
+            rc["title.loc"],
+        )
+        pad = _not_none(
+            pad,
+            kwargs.pop("pad", None),
+            rc.find("title.pad", context=True),
+            rc["title.pad"],
+        )
+        y = _not_none(y, kwargs.pop("y", None))
         axes = [ax for ax in axes if ax is not None and ax.figure is self]
         if not axes:
             raise ValueError("Need at least one axes to create a shared subplot title.")
@@ -2604,7 +2618,7 @@ class Figure(mfigure.Figure):
         if fontdict:
             kw.update(fontdict)
         kw.update(kwargs)
-        align = _translate_loc(loc or "center", "text")
+        align = _translate_loc(loc, "text")
         if align not in ("left", "center", "right"):
             raise ValueError(
                 "Shared subplot titles only support loc='left', 'center', or 'right'."
