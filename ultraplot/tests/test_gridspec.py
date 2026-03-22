@@ -231,6 +231,26 @@ def test_subplotgrid_format_title_matches_axes_title_top_gap():
     assert np.isclose(single_gap, shared_gap)
 
 
+def test_subplotgrid_format_title_across_rows_does_not_inflate_hspace():
+    fig_plain, axs_plain = uplt.subplots(ncols=4, nrows=2, refwidth=1)
+    fig_plain.canvas.draw()
+    plain_hspace = fig_plain.gridspec.hspace_total[0]
+
+    fig, axs = uplt.subplots(ncols=4, nrows=2, refwidth=1)
+    subset = axs[:, :3]
+    subset.format(title="A test title")
+    fig.canvas.draw()
+
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    bbox = title.get_window_extent(fig._get_renderer()).transformed(
+        fig.transFigure.inverted()
+    )
+    top = max(ax.get_position().y1 for ax in subset[:3])
+
+    assert bbox.y0 > top
+    assert fig.gridspec.hspace_total[0] < plain_hspace + 0.2
+
+
 def test_subplotgrid_format_title_allows_vertical_alignment_override():
     fig, axs = uplt.subplots(nrows=2, ncols=2)
     subset = axs[:, 0]

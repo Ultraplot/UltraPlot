@@ -2665,6 +2665,11 @@ class Figure(mfigure.Figure):
     ) -> mtransforms.Bbox | None:
         """
         Return the union bbox for shared titles covering the given axes.
+
+        Shared subset titles live above the subset's top edge, so they should
+        only contribute to the tight bounding boxes for axes that actually touch
+        that top boundary. Otherwise, multi-row subsets can incorrectly claim
+        the title as extra inter-row spacing.
         """
         ax = ax._panel_parent or ax
         bboxes = []
@@ -2679,7 +2684,10 @@ class Figure(mfigure.Figure):
                 and group_ax.figure is self
                 and group_ax.get_visible()
             ]
-            if ax in axs:
+            if not axs or ax not in axs:
+                continue
+            top = min(group_ax._range_subplotspec("y")[0] for group_ax in axs)
+            if ax._range_subplotspec("y")[0] == top:
                 bboxes.append(artist.get_window_extent(renderer))
         return mtransforms.Bbox.union(bboxes) if bboxes else None
 
