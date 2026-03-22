@@ -22,6 +22,13 @@ def test_auto_legend(rng):
     ix = ax.inset_axes((-0.2, 0.8, 0.5, 0.5), zoom=False)
     ix.line(rng.random((5, 2)), labels=list("pq"))
     ax.legend(loc="b", order="F", edgecolor="red9", edgewidth=3)
+    # Test lw
+    leg = ax.legend(frameon=True, lw=5)
+    assert leg.get_frame().get_linewidth() == 5
+
+    # Test lw alias
+    leg2 = ax.legend(frameon=True, lw=3)
+    assert leg2.get_frame().get_linewidth() == 3
     return fig
 
 
