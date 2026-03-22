@@ -1940,12 +1940,12 @@ class UltraLegend:
                 "fontsize": inputs.fontsize,
                 "handler_map": inputs.handler_map,
                 "title_fontsize": inputs.titlefontsize,
-            }
+             }
         )
         if multi:
             objs = lax._parse_legend_centered(pairs, kw_frame=kw_frame, **kwargs)
         else:
-            kwargs.update({key: kw_frame.pop(key) for key in ("shadow", "fancybox")})
+            kwargs.update({key: kw_frame[key] for key in ("shadow", "fancybox")if key in kw_frame})
             objs = [
                 lax._parse_legend_aligned(
                     pairs, ncol=inputs.ncol, order=inputs.order, **kwargs
