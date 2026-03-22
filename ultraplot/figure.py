@@ -11,9 +11,9 @@ from numbers import Integral
 from packaging import version
 
 try:
-    from typing import List, Optional, Tuple, Union
+    from typing import Any, Iterable, List, Optional, Tuple, Union
 except ImportError:
-    from typing_extensions import List, Optional, Tuple, Union
+    from typing_extensions import Any, Iterable, List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
@@ -868,6 +868,7 @@ class Figure(mfigure.Figure):
         self._supylabel_dict = {}  # an axes: label mapping
         self._suplabel_dict = {"left": {}, "right": {}, "bottom": {}, "top": {}}
         self._share_label_groups = {"x": {}, "y": {}}  # explicit label-sharing groups
+        self._subset_title_dict = {}
         self._suptitle_pad = rc["suptitle.pad"]
         d = self._suplabel_props = {}  # store the super label props
         d["left"] = {"va": "center", "ha": "right"}
@@ -1662,7 +1663,9 @@ class Figure(mfigure.Figure):
         ax = ax._panel_parent or ax  # always use main subplot for spanning labels
         return pos, ax
 
-    def _get_offset_coord(self, side, axs, renderer, *, pad=None, extra=None):
+    def _get_offset_coord(
+        self, side, axs, renderer, *, pad=None, extra=None, include_subset_titles=True
+    ):
         """
         Return the figure coordinate for offsetting super labels and super titles.
         """
@@ -1675,7 +1678,12 @@ class Figure(mfigure.Figure):
         )  # noqa: E501
         objs = objs + (extra or ())  # e.g. top super labels
         for obj in objs:
-            bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
+            if isinstance(obj, paxes.Axes):
+                bbox = obj.get_tightbbox(
+                    renderer, include_subset_titles=include_subset_titles
+                )
+            else:
+                bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
             attr = s + "max" if side in ("top", "right") else s + "min"
             c = getattr(bbox, attr)
             c = (c, 0) if side in ("left", "right") else (0, c)
@@ -2523,6 +2531,12 @@ class Figure(mfigure.Figure):
         if not axs:
             return
         labs = tuple(t for t in self._suplabel_dict["top"].values() if t.get_text())
+        subset_titles = tuple(
+            group["artist"]
+            for group in self._subset_title_dict.values()
+            if group["artist"].get_text()
+        )
+        labs = labs + subset_titles
         pad = (self._suptitle_pad / 72) / self.get_size_inches()[1]
 
         # Get current alignment settings from suptitle (may be set via suptitle_kw)
@@ -2547,6 +2561,183 @@ class Figure(mfigure.Figure):
         y_bbox = self.transFigure.inverted().transform((0, bbox.ymin))[1]
         y = y_target - y_bbox
         self._suptitle.set_position((x, y))
+
+    def _update_subset_title(
+        self,
+        axes: Iterable[paxes.Axes],
+        title: str | None,
+        *,
+        fontdict: dict[str, Any] | None = None,
+        loc: str | None = None,
+        pad: float | str | None = None,
+        y: float | None = None,
+        **kwargs: Any,
+    ) -> mtext.Text:
+        """
+        Create or update a title spanning a subset of subplots.
+        """
+        fontdict = _not_none(fontdict, kwargs.pop("fontdict", None))
+        loc = _not_none(
+            loc,
+            kwargs.pop("loc", None),
+            rc.find("title.loc", context=True),
+            rc["title.loc"],
+        )
+        pad = _not_none(
+            pad,
+            kwargs.pop("pad", None),
+            rc.find("title.pad", context=True),
+            rc["title.pad"],
+        )
+        y = _not_none(y, kwargs.pop("y", None))
+        axes = [ax for ax in axes if ax is not None and ax.figure is self]
+        if not axes:
+            raise ValueError("Need at least one axes to create a shared subplot title.")
+
+        seen = set()
+        unique_axes = []
+        for ax in axes:
+            ax = ax._panel_parent or ax
+            ax_id = id(ax)
+            if ax_id in seen:
+                continue
+            seen.add(ax_id)
+            unique_axes.append(ax)
+        axes = unique_axes
+        if len(axes) < 2:
+            return axes[0].set_title(
+                title, fontdict=fontdict, loc=loc, pad=pad, y=y, **kwargs
+            )
+
+        key = tuple(sorted(id(ax) for ax in axes))
+        group = self._subset_title_dict.get(key)
+        kw = rc.fill(
+            {
+                "size": "title.size",
+                "weight": "title.weight",
+                "color": "title.color",
+                "family": "font.family",
+            },
+            context=True,
+        )
+        if "color" in kw and kw["color"] == "auto":
+            del kw["color"]
+        if fontdict:
+            kw.update(fontdict)
+        kw.update(kwargs)
+        align = _translate_loc(loc, "text")
+        match align:
+            case "left" | "outer left" | "upper left" | "lower left":
+                align = "left"
+            case "center" | "upper center" | "lower center":
+                align = "center"
+            case "right" | "outer right" | "upper right" | "lower right":
+                align = "right"
+            case _:
+                raise ValueError(f"Invalid shared subplot title location {loc!r}.")
+        if group is None:
+            artist = self.text(
+                0.5,
+                0.0,
+                "",
+                transform=self.transFigure,
+                ha=align,
+                va="baseline",
+                zorder=3.5,
+            )
+            group = {"axes": axes, "artist": artist, "pad": None, "y": None}
+            self._subset_title_dict[key] = group
+        else:
+            artist = group["artist"]
+            group["axes"] = axes
+        group["pad"] = pad
+        group["y"] = y
+        artist.set_ha(align)
+        artist.set_va("baseline")
+        if title is not None:
+            artist.set_text(title)
+        if kw:
+            artist.update(kw)
+        return artist
+
+    def _get_subset_title_bbox(
+        self, ax: paxes.Axes, renderer
+    ) -> mtransforms.Bbox | None:
+        """
+        Return the union bbox for shared titles covering the given axes.
+
+        Shared subset titles live above the subset's top edge, so they should
+        only contribute to the tight bounding boxes for axes that actually touch
+        that top boundary. Otherwise, multi-row subsets can incorrectly claim
+        the title as extra inter-row spacing.
+        """
+        ax = ax._panel_parent or ax
+        bboxes = []
+        for group in self._subset_title_dict.values():
+            artist = group["artist"]
+            if not artist.get_visible() or not artist.get_text():
+                continue
+            axs = [
+                group_ax._panel_parent or group_ax
+                for group_ax in group["axes"]
+                if group_ax is not None
+                and group_ax.figure is self
+                and group_ax.get_visible()
+            ]
+            if not axs or ax not in axs:
+                continue
+            top = min(group_ax._range_subplotspec("y")[0] for group_ax in axs)
+            if ax._range_subplotspec("y")[0] == top:
+                bboxes.append(artist.get_window_extent(renderer))
+        return mtransforms.Bbox.union(bboxes) if bboxes else None
+
+    def _align_subset_titles(self, renderer):
+        """
+        Update the positions of titles spanning subplot subsets.
+        """
+        for key in list(self._subset_title_dict):
+            group = self._subset_title_dict[key]
+            artist = group["artist"]
+            axs = [
+                ax
+                for ax in group["axes"]
+                if ax is not None and ax.figure is self and ax.get_visible()
+            ]
+            if not axs:
+                artist.remove()
+                del self._subset_title_dict[key]
+                continue
+            if not artist.get_text():
+                continue
+            align = artist.get_ha()
+            x, _ = self._get_align_coord(
+                "top",
+                axs,
+                includepanels=self._includepanels,
+                align=align,
+            )
+            top_labels = tuple(
+                lab
+                for ax, lab in self._suplabel_dict["top"].items()
+                if lab.get_text() and ax in axs
+            )
+            artist.set_x(x)
+            manual_y = group["y"]
+            if manual_y is not None:
+                artist.set_y(manual_y)
+                continue
+            pad = group["pad"]
+            if pad is not None:
+                pad = units(pad, "pt") / (72 * self.get_size_inches()[1])
+            y_target = self._get_offset_coord(
+                "top",
+                axs,
+                renderer,
+                pad=pad,
+                extra=top_labels,
+                include_subset_titles=False,
+            )
+            artist.set_y(y_target)
 
     def _update_axis_label(self, side, axs):
         """
@@ -2777,6 +2968,7 @@ class Figure(mfigure.Figure):
                 self._align_axis_label(axis)
             for side in ("left", "right", "top", "bottom"):
                 self._align_super_labels(side, renderer)
+            self._align_subset_titles(renderer)
             self._align_super_title(renderer)
 
         # Update the layout
