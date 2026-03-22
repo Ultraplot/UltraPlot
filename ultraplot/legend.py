@@ -1957,13 +1957,19 @@ class UltraLegend:
                     pairs, ncol=inputs.ncol, order=inputs.order, **kwargs
                 )
             ]
-            objs[0].legendPatch.update(kw_frame)
-        for obj in objs:
+            frame = objs[0].legendPatch
+frame.update(kw_frame)
+
+if "linewidth" in kw_frame:
+    frame.set_linewidth(kw_frame["linewidth"])
+elif "lw" in kw_frame:
+    frame.set_linewidth(kw_frame["lw"])
+for obj in objs:
             if hasattr(lax, "legend_") and lax.legend_ is None:
                 lax.legend_ = obj
             else:
                 lax.add_artist(obj)
-        return objs
+return objs
 
     def _apply_handle_styles(self, objs, *, kw_text, kw_handle):
         """
