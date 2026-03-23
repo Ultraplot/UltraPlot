@@ -2098,5 +2098,7 @@ class UltraLegend:
             kwargs=kwargs,
         )
 
-        self._apply_handle_styles(objs, kw_text=kw_text, kw_title=kw_title, kw_handle=kw_handle)
+        self._apply_handle_styles(
+            objs, kw_text=kw_text, kw_title=kw_title, kw_handle=kw_handle
+        )
         return self._finalize(objs, loc=inputs.loc, align=inputs.align)
