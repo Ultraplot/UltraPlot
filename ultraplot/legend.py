@@ -1835,7 +1835,7 @@ class UltraLegend:
             pad=pad,
             space=space,
             frameon=frameon,
-            linewidth=kwargs.get("linewidth", None), 
+            linewidth=kwargs.get("linewidth", None),
             ncol=ncol,
             order=order,
             label=label,
