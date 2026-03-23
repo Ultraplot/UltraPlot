@@ -1437,3 +1437,50 @@ def test_legend_best_axis_fallback_empty_iterable_ref():
 
     leg = fig.legend(ref=proxy, loc="upper left", rows=1)
     assert leg is not None
+
+
+def test_legend_title_kw():
+    """
+    Test that title_kw passes arbitrary Text properties to the legend title.
+    """
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1], label="data")
+    leg = ax.legend(title="My Legend", title_kw={"style": "italic", "color": "red"})
+    title = leg.get_title()
+    assert title.get_style() == "italic"
+    assert title.get_color() == "red"
+
+
+def test_legend_titlefontweight():
+    """
+    Test that titlefontweight is applied to the legend title text object.
+    """
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1], label="data")
+    leg = ax.legend(title="My Legend", titlefontweight="bold")
+    assert leg.get_title().get_fontweight() == "bold"
+
+
+def test_legend_titlefontcolor():
+    """
+    Test that titlefontcolor is applied to the legend title text object.
+    """
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1], label="data")
+    leg = ax.legend(title="My Legend", titlefontcolor="blue")
+    assert leg.get_title().get_color() == "blue"
+
+
+def test_legend_title_kw_overrides_titlefont():
+    """
+    Test that title_kw values override titlefontweight/titlefontcolor when both
+    are specified, since title_kw is merged last.
+    """
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1], label="data")
+    leg = ax.legend(
+        title="My Legend",
+        titlefontcolor="blue",
+        title_kw={"color": "green"},
+    )
+    assert leg.get_title().get_color() == "green"
