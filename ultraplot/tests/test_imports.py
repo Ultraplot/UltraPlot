@@ -3,6 +3,8 @@ import json
 import os
 import subprocess
 import sys
+import ast
+from pathlib import Path
 
 import pytest
 
@@ -146,3 +148,56 @@ def test_docstring_missing_triggers_lazy_import():
         docstring._snippet_manager["ticker.not_a_real_key"]
     with pytest.raises(KeyError):
         docstring._snippet_manager["does_not_exist.key"]
+
+
+def _collect_type_checking_names():
+    root = Path(__file__).resolve().parents[2]
+    init_path = root / "ultraplot" / "__init__.py"
+    tree = ast.parse(init_path.read_text(encoding="utf-8"), filename=str(init_path))
+    for node in tree.body:
+        if isinstance(node, ast.If) and isinstance(node.test, ast.Name):
+            if node.test.id != "TYPE_CHECKING":
+                continue
+            names = set()
+            for child in ast.walk(node):
+                if isinstance(child, ast.Import):
+                    for alias in child.names:
+                        names.add(alias.asname or alias.name.split(".")[0])
+                elif isinstance(child, ast.ImportFrom):
+                    for alias in child.names:
+                        names.add(alias.asname or alias.name)
+                elif isinstance(child, ast.AnnAssign) and isinstance(
+                    child.target, ast.Name
+                ):
+                    names.add(child.target.id)
+            return names
+    raise AssertionError("Missing TYPE_CHECKING export block in ultraplot.__init__")
+
+
+def test_type_checking_block_exposes_core_lazy_api():
+    names = _collect_type_checking_names()
+    expected = {
+        "Figure",
+        "colormaps",
+        "figure",
+        "pyplot",
+        "rc",
+        "show_colors",
+        "subplot",
+        "subplots",
+    }
+    assert expected.issubset(names)
+
+
+def test_package_marks_itself_typed():
+    import ultraplot as uplt
+
+    typed_marker = Path(uplt.__file__).resolve().with_name("py.typed")
+    assert typed_marker.is_file()
+
+
+def test_pyproject_includes_typed_marker():
+    root = Path(__file__).resolve().parents[2]
+    text = (root / "pyproject.toml").read_text(encoding="utf-8")
+    assert '[tool.setuptools.package-data]' in text
+    assert 'ultraplot = ["py.typed"]' in text

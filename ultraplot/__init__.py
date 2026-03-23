@@ -7,11 +7,310 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from ._lazy import LazyLoader, install_module_proxy
 
 name = "ultraplot"
+
+if TYPE_CHECKING:
+    import matplotlib.pyplot as pyplot
+
+    try:
+        import cartopy as cartopy
+        from cartopy.crs import (
+            AlbersEqualArea,
+            AzimuthalEquidistant,
+            EckertI,
+            EckertII,
+            EckertIII,
+            EckertIV,
+            EckertV,
+            EckertVI,
+            EqualEarth,
+            EquidistantConic,
+            EuroPP,
+            Geostationary,
+            Gnomonic,
+            InterruptedGoodeHomolosine,
+            LambertAzimuthalEqualArea,
+            LambertConformal,
+            LambertCylindrical,
+            Mercator,
+            Miller,
+            Mollweide,
+            NearsidePerspective,
+            NorthPolarStereo,
+            OSGB,
+            OSNI,
+            Orthographic,
+            PlateCarree,
+            Robinson,
+            RotatedPole,
+            Sinusoidal,
+            SouthPolarStereo,
+            Stereographic,
+            TransverseMercator,
+            UTM,
+        )
+    except ModuleNotFoundError:
+        cartopy: Any
+        AlbersEqualArea: Any
+        AzimuthalEquidistant: Any
+        EckertI: Any
+        EckertII: Any
+        EckertIII: Any
+        EckertIV: Any
+        EckertV: Any
+        EckertVI: Any
+        EqualEarth: Any
+        EquidistantConic: Any
+        EuroPP: Any
+        Geostationary: Any
+        Gnomonic: Any
+        InterruptedGoodeHomolosine: Any
+        LambertAzimuthalEqualArea: Any
+        LambertConformal: Any
+        LambertCylindrical: Any
+        Mercator: Any
+        Miller: Any
+        Mollweide: Any
+        NearsidePerspective: Any
+        NorthPolarStereo: Any
+        OSGB: Any
+        OSNI: Any
+        Orthographic: Any
+        PlateCarree: Any
+        Robinson: Any
+        RotatedPole: Any
+        Sinusoidal: Any
+        SouthPolarStereo: Any
+        Stereographic: Any
+        TransverseMercator: Any
+        UTM: Any
+
+    try:
+        import mpl_toolkits.basemap as basemap
+    except ImportError:
+        basemap: Any
+
+    from matplotlib import rcParams as rc_matplotlib
+    from matplotlib.colors import (
+        LogNorm,
+        NoNorm,
+        Normalize,
+        PowerNorm,
+        SymLogNorm,
+        TwoSlopeNorm,
+    )
+    from matplotlib.dates import (
+        AutoDateFormatter,
+        AutoDateLocator,
+        ConciseDateFormatter,
+        DateFormatter,
+        DayLocator,
+        HourLocator,
+        MicrosecondLocator,
+        MinuteLocator,
+        MonthLocator,
+        SecondLocator,
+        WeekdayLocator,
+        YearLocator,
+    )
+    from matplotlib.projections.polar import ThetaFormatter, ThetaLocator
+    from matplotlib.scale import AsinhScale, FuncScaleLog
+    from matplotlib.ticker import (
+        AutoLocator,
+        AutoMinorLocator,
+        EngFormatter,
+        FixedLocator,
+        FormatStrFormatter,
+        FuncFormatter,
+        LinearLocator,
+        LogFormatterMathtext,
+        LogFormatterSciNotation,
+        LogLocator,
+        LogitFormatter,
+        LogitLocator,
+        MaxNLocator,
+        MultipleLocator,
+        NullFormatter,
+        NullLocator,
+        PercentFormatter,
+        ScalarFormatter,
+        StrMethodFormatter,
+        SymmetricalLogLocator,
+    )
+
+    from . import (
+        axes,
+        colorbar,
+        colors,
+        config,
+        constructor,
+        demos,
+        externals,
+        gridspec,
+        internals,
+        legend,
+        proj,
+        scale,
+        tests,
+        text,
+        ticker,
+        ui,
+        ultralayout,
+        utils,
+    )
+    from .axes.base import Axes
+    from .axes.cartesian import CartesianAxes
+    from .axes.container import ExternalAxesContainer
+    from .axes.geo import GeoAxes
+    from .axes.plot import PlotAxes
+    from .axes.polar import PolarAxes
+    from .axes.three import ThreeAxes
+    from .colors import (
+        ColorDatabase,
+        ColormapDatabase,
+        ContinuousColormap,
+        DiscreteColormap,
+        DiscreteNorm,
+        DivergingNorm,
+        PerceptualColormap,
+        SegmentedNorm,
+        _cmap_database as colormaps,
+    )
+    from .config import (
+        Configurator,
+        config_inline_backend,
+        rc,
+        register_cmaps,
+        register_colors,
+        register_cycles,
+        register_fonts,
+        use_style,
+    )
+    from .constructor import (
+        FORMATTERS,
+        LOCATORS,
+        NORMS,
+        PROJS,
+        SCALES,
+        Colormap,
+        Cycle,
+        Formatter,
+        Locator,
+        Norm,
+        Proj,
+        Scale,
+    )
+    from .demos import (
+        show_channels,
+        show_cmaps,
+        show_colors,
+        show_colorspaces,
+        show_cycles,
+        show_fonts,
+    )
+    from .figure import Figure
+    from .gridspec import GridSpec, SubplotGrid
+    from .internals import rcsetup, warnings
+    from .internals.rcsetup import rc_ultraplot
+    from .internals.warnings import (
+        LinearSegmentedColormap,
+        LinearSegmentedNorm,
+        ListedColormap,
+        PerceptuallyUniformColormap,
+        RcConfigurator,
+        inline_backend_fmt,
+        saturate,
+        shade,
+    )
+    from .legend import GeometryEntry, Legend, LegendEntry
+    from .proj import (
+        Aitoff,
+        Hammer,
+        KavrayskiyVII,
+        NorthPolarAzimuthalEquidistant,
+        NorthPolarGnomonic,
+        NorthPolarLambertAzimuthalEqualArea,
+        SouthPolarAzimuthalEquidistant,
+        SouthPolarGnomonic,
+        SouthPolarLambertAzimuthalEqualArea,
+        WinkelTripel,
+    )
+    from . import proj as crs
+    from .scale import (
+        CutoffScale,
+        ExpScale,
+        FuncScale,
+        InverseScale,
+        LinearScale,
+        LogScale,
+        LogitScale,
+        MercatorLatitudeScale,
+        PowerScale,
+        SineLatitudeScale,
+        SymmetricalLogScale,
+    )
+    from .text import CurvedText
+    from .ticker import (
+        AutoCFDatetimeFormatter,
+        AutoCFDatetimeLocator,
+        AutoFormatter,
+        CFDatetimeFormatter,
+        DegreeFormatter,
+        DegreeLocator,
+        DiscreteLocator,
+        FracFormatter,
+        IndexFormatter,
+        IndexLocator,
+        LatitudeFormatter,
+        LatitudeLocator,
+        LongitudeFormatter,
+        LongitudeLocator,
+        SciFormatter,
+        SigFigFormatter,
+        SimpleFormatter,
+    )
+    from .ui import (
+        close,
+        figure,
+        ioff,
+        ion,
+        isinteractive,
+        show,
+        subplot,
+        subplots,
+        switch_backend,
+    )
+    from .ultralayout import (
+        ColorbarLayoutSolver,
+        UltraLayoutSolver,
+        compute_ultra_positions,
+        get_grid_positions_ultra,
+        is_orthogonal_layout,
+    )
+    from .utils import (
+        arange,
+        check_for_update,
+        edges,
+        edges2d,
+        get_colors,
+        scale_luminance,
+        scale_saturation,
+        set_alpha,
+        set_hue,
+        set_luminance,
+        set_saturation,
+        shift_hue,
+        to_hex,
+        to_rgb,
+        to_rgba,
+        to_xyz,
+        to_xyza,
+        units,
+    )
 
 try:
     from ._version import __version__

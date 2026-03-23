@@ -49,6 +49,9 @@ dynamic = ["version"]
 packages = {find = {exclude=["docs*", "baseline*", "logo*"]}}
 include-package-data = true
 
+[tool.setuptools.package-data]
+ultraplot = ["py.typed"]
+
 [tool.setuptools_scm]
 write_to = "ultraplot/_version.py"
 write_to_template = "__version__ = '{version}'\n"
