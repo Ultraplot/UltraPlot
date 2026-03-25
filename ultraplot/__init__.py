@@ -40,13 +40,17 @@ if TYPE_CHECKING:
     from .colors import PerceptuallyUniformColormap as PerceptuallyUniformColormap
     from .colors import SegmentedNorm as SegmentedNorm
     from .colors import _cmap_database as colormaps
+    from .config import config_inline_backend as config_inline_backend
     from .config import Configurator as Configurator
     from .config import rc as rc
     from .config import rc_matplotlib as rc_matplotlib
     from .config import rc_ultraplot as rc_ultraplot
+    from .config import register_cmaps as register_cmaps
+    from .config import register_colors as register_colors
+    from .config import register_cycles as register_cycles
+    from .config import register_fonts as register_fonts
     from .config import use_style as use_style
     from .constructor import Colormap as Colormap
-    from .constructor import Colors as Colors
     from .constructor import Cycle as Cycle
     from .constructor import Formatter as Formatter
     from .constructor import FORMATTERS as FORMATTERS
@@ -67,15 +71,22 @@ if TYPE_CHECKING:
     from .figure import Figure as Figure
     from .gridspec import GridSpec as GridSpec
     from .gridspec import SubplotGrid as SubplotGrid
+    from .legend import GeometryEntry as GeometryEntry
+    from .legend import Legend as Legend
+    from .legend import LegendEntry as LegendEntry
     from .proj import Aitoff as Aitoff
     from .proj import Hammer as Hammer
     from .proj import KavrayskiyVII as KavrayskiyVII
     from .proj import NorthPolarAzimuthalEquidistant as NorthPolarAzimuthalEquidistant
     from .proj import NorthPolarGnomonic as NorthPolarGnomonic
-    from .proj import NorthPolarLambertAzimuthalEqualArea as NorthPolarLambertAzimuthalEqualArea
+    from .proj import (
+        NorthPolarLambertAzimuthalEqualArea as NorthPolarLambertAzimuthalEqualArea,
+    )
     from .proj import SouthPolarAzimuthalEquidistant as SouthPolarAzimuthalEquidistant
     from .proj import SouthPolarGnomonic as SouthPolarGnomonic
-    from .proj import SouthPolarLambertAzimuthalEqualArea as SouthPolarLambertAzimuthalEqualArea
+    from .proj import (
+        SouthPolarLambertAzimuthalEqualArea as SouthPolarLambertAzimuthalEqualArea,
+    )
     from .proj import WinkelTripel as WinkelTripel
     from .scale import CutoffScale as CutoffScale
     from .scale import ExpScale as ExpScale
@@ -89,6 +100,11 @@ if TYPE_CHECKING:
     from .scale import SineLatitudeScale as SineLatitudeScale
     from .scale import SymmetricalLogScale as SymmetricalLogScale
     from .text import CurvedText as CurvedText
+    from .ultralayout import ColorbarLayoutSolver as ColorbarLayoutSolver
+    from .ultralayout import compute_ultra_positions as compute_ultra_positions
+    from .ultralayout import get_grid_positions_ultra as get_grid_positions_ultra
+    from .ultralayout import is_orthogonal_layout as is_orthogonal_layout
+    from .ultralayout import UltraLayoutSolver as UltraLayoutSolver
     from .ticker import AutoCFDatetimeFormatter as AutoCFDatetimeFormatter
     from .ticker import AutoCFDatetimeLocator as AutoCFDatetimeLocator
     from .ticker import AutoFormatter as AutoFormatter

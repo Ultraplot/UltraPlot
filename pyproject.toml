@@ -63,6 +63,7 @@ ignore = ["I001", "I002", "I003", "I004"]
 
 [tool.basedpyright]
 exclude = ["**/*.ipynb"]
+stubPath = ""
 
 [tool.pytest.ini_options]
 filterwarnings = [
