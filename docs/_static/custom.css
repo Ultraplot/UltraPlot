@@ -84,6 +84,12 @@
     gap: 0.5rem;
     padding: 0.2rem 0.04rem 0.2rem;
     line-height: 1.25;
+    /* Shibuya's .sy-head-blur sibling uses -webkit-backdrop-filter: blur().
+       On iOS Safari, backdrop-filter on any element in the same stacking
+       context breaks -webkit-background-clip: text in descendants, making
+       the brand text invisible. isolation: isolate creates a new stacking
+       context here so the gradient clip composites independently. */
+    isolation: isolate;
 }
 
 .sy-head .sy-head-brand strong {
