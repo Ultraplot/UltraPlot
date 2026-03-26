@@ -100,6 +100,7 @@
     padding: 0.2rem 0.04rem 0.2rem;
     line-height: 1.25;
     isolation: isolate;
+    transform: translateZ(0);
 }
 
 .sy-breadcrumbs-inner {
@@ -113,6 +114,7 @@
     text-transform: uppercase;
     line-height: 1.25;
     color: #138a73;
+    transform: translateZ(0);
     background-image: linear-gradient(
         90deg,
         #0f6d5f 0%,
