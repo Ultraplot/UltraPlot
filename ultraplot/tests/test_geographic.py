@@ -1137,9 +1137,9 @@ def test_choropleth_antimeridian_no_horizontal_artifacts():
     assert len(paths) >= 1
     codes = paths[0].codes
     moveto_count = (codes == 1).sum()  # Path.MOVETO == 1
-    assert moveto_count >= 2, (
-        "Antimeridian-crossing polygon should be split into multiple sub-paths"
-    )
+    assert (
+        moveto_count >= 2
+    ), "Antimeridian-crossing polygon should be split into multiple sub-paths"
     uplt.close(fig)
 
 
@@ -1163,9 +1163,9 @@ def test_choropleth_project_geometry_non_cylindrical():
         # Verify no inf/nan in projected vertices
         for path in paths:
             verts = path.vertices
-            assert np.all(np.isfinite(verts)), (
-                f"Projected path has non-finite vertices on {proj!r} projection"
-            )
+            assert np.all(
+                np.isfinite(verts)
+            ), f"Projected path has non-finite vertices on {proj!r} projection"
         uplt.close(fig)
 
 
@@ -1182,9 +1182,9 @@ def test_choropleth_country_antimeridian_renders():
 
         for path in coll.get_paths():
             verts = path.vertices
-            assert np.all(np.isfinite(verts)), (
-                f"Russia choropleth path has non-finite vertices on {proj!r}"
-            )
+            assert np.all(
+                np.isfinite(verts)
+            ), f"Russia choropleth path has non-finite vertices on {proj!r}"
         uplt.close(fig)
 
 
