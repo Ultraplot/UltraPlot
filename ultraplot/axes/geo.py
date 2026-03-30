@@ -3725,6 +3725,22 @@ def _choropleth_geometry_path(
     """
     Convert a polygon geometry to a projected matplotlib path.
     """
+    if ax._name == "cartopy":
+        src = transform
+        if src is None:
+            if ccrs is None:
+                raise RuntimeError("choropleth() requires cartopy for cartopy GeoAxes.")
+            src = ccrs.PlateCarree()
+        projected_geom = ax.projection.project_geometry(geometry, src)
+        paths = []
+        for ring in _choropleth_iter_rings(projected_geom):
+            path = _choropleth_close_path(np.asarray(ring, dtype=float))
+            if path is not None:
+                paths.append(path)
+        if not paths:
+            return None
+        return mpath.Path.make_compound_path(*paths)
+
     paths = []
     for ring in _choropleth_iter_rings(geometry):
         projected = _choropleth_project_vertices(ax, ring, transform=transform)
