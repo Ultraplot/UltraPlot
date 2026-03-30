@@ -1116,6 +1116,78 @@ def test_choropleth_country_mapping_with_explicit_values_raises():
     uplt.close(fig)
 
 
+def test_choropleth_antimeridian_no_horizontal_artifacts():
+    """
+    Polygons crossing the antimeridian (e.g. Russia) must be split by
+    project_geometry so that no path vertex jumps across the map.
+    """
+    sgeom = pytest.importorskip("shapely.geometry")
+    ccrs = pytest.importorskip("cartopy.crs")
+
+    # A box that crosses the antimeridian: 170E to 190E (= 170W)
+    box = sgeom.box(170, 50, 190, 70)
+    fig, ax = uplt.subplots(proj="robin")
+    geo = ax[0]
+    coll = geo.choropleth([box], [1.0])
+    fig.canvas.draw()
+
+    # After project_geometry splits the box, the compound path should
+    # have multiple sub-paths (MOVETO codes) rather than one continuous ring
+    paths = coll.get_paths()
+    assert len(paths) >= 1
+    codes = paths[0].codes
+    moveto_count = (codes == 1).sum()  # Path.MOVETO == 1
+    assert moveto_count >= 2, (
+        "Antimeridian-crossing polygon should be split into multiple sub-paths"
+    )
+    uplt.close(fig)
+
+
+def test_choropleth_project_geometry_non_cylindrical():
+    """
+    Choropleth on non-cylindrical projections (Robinson, Mollweide, etc.)
+    should render without errors for geometries that span wide longitudes.
+    """
+    sgeom = pytest.importorskip("shapely.geometry")
+    pytest.importorskip("cartopy.crs")
+
+    # Wide-spanning box (like Russia or Canada)
+    box = sgeom.box(-170, 40, 170, 75)
+    for proj in ("robin", "moll", "merc"):
+        fig, ax = uplt.subplots(proj=proj)
+        coll = ax[0].choropleth([box], [42.0])
+        fig.canvas.draw()
+
+        paths = coll.get_paths()
+        assert len(paths) >= 1
+        # Verify no inf/nan in projected vertices
+        for path in paths:
+            verts = path.vertices
+            assert np.all(np.isfinite(verts)), (
+                f"Projected path has non-finite vertices on {proj!r} projection"
+            )
+        uplt.close(fig)
+
+
+def test_choropleth_country_antimeridian_renders():
+    """
+    Country-level choropleth for Russia (crosses antimeridian) should
+    produce valid paths with finite vertices on multiple projections.
+    """
+    pytest.importorskip("cartopy.crs")
+    for proj in ("robin", "merc", "moll"):
+        fig, ax = uplt.subplots(proj=proj)
+        coll = ax[0].choropleth({"Russia": 1.0}, country=True, cmap="Glacial")
+        fig.canvas.draw()
+
+        for path in coll.get_paths():
+            verts = path.vertices
+            assert np.all(np.isfinite(verts)), (
+                f"Russia choropleth path has non-finite vertices on {proj!r}"
+            )
+        uplt.close(fig)
+
+
 def test_check_tricontourf():
     """
     Ensure transform defaults are applied only when appropriate for tri-plots.
