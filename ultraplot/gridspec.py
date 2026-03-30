@@ -1992,7 +1992,7 @@ class SubplotGrid(MutableSequence, list):
         # De-duplicate while preserving order so method dispatch does not repeat.
         objs = list(dict.fromkeys(objs))
         if len(objs) == 1:
-            return objs[0]
+            return SubplotGrid(objs[0])
         return SubplotGrid(objs)
 
     def __setitem__(self, key, value):

@@ -1355,29 +1355,33 @@ def test_legend_span_inference_with_multi_panels(
 def test_legend_best_axis_selection_right_left():
     fig, axs = uplt.subplots(nrows=1, ncols=3)
     axs.plot([0, 1], [0, 1], label="line")
-    ref = [axs[0, 0], axs[0, 2]]
+    left = _anchor_axis(axs[0, 0])
+    right = _anchor_axis(axs[0, 2])
+    ref = [left, right]
 
     fig.legend(ref=ref, loc="r", rows=1)
-    assert len(axs[0, 2]._panel_dict["right"]) == 1
-    assert len(axs[0, 0]._panel_dict["right"]) == 0
+    assert len(right._panel_dict["right"]) == 1
+    assert len(left._panel_dict["right"]) == 0
 
     fig.legend(ref=ref, loc="l", rows=1)
-    assert len(axs[0, 0]._panel_dict["left"]) == 1
-    assert len(axs[0, 2]._panel_dict["left"]) == 0
+    assert len(left._panel_dict["left"]) == 1
+    assert len(right._panel_dict["left"]) == 0
 
 
 def test_legend_best_axis_selection_top_bottom():
     fig, axs = uplt.subplots(nrows=2, ncols=1)
     axs.plot([0, 1], [0, 1], label="line")
-    ref = [axs[0, 0], axs[1, 0]]
+    top = _anchor_axis(axs[0, 0])
+    bottom = _anchor_axis(axs[1, 0])
+    ref = [top, bottom]
 
     fig.legend(ref=ref, loc="t", cols=1)
-    assert len(axs[0, 0]._panel_dict["top"]) == 1
-    assert len(axs[1, 0]._panel_dict["top"]) == 0
+    assert len(top._panel_dict["top"]) == 1
+    assert len(bottom._panel_dict["top"]) == 0
 
     fig.legend(ref=ref, loc="b", cols=1)
-    assert len(axs[1, 0]._panel_dict["bottom"]) == 1
-    assert len(axs[0, 0]._panel_dict["bottom"]) == 0
+    assert len(bottom._panel_dict["bottom"]) == 1
+    assert len(top._panel_dict["bottom"]) == 0
 
 
 def test_legend_span_decode_fallback(monkeypatch):
