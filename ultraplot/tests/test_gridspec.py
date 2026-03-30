@@ -145,3 +145,15 @@ def test_gridspec_spanning_slice_deduplicates_axes():
     legend = ax.get_legend()
     assert legend is not None
     assert [t.get_text() for t in legend.texts] == ["data"]
+
+
+def test_return_type_after_indexing():
+    """
+    Inexing should always return a SubplotGrid even if we have 1 element
+    """
+    fig, axs = uplt.subplots(ncols=2, nrows=2)
+    assert axs[1, 0:] is uplt.SubplotGrid
+    assert len(axs[1, 0:]) == 2
+
+    assert axs[1, 1:] is uplt.SubplotGrid
+    assert len(axs[1, 1:]) == 1
