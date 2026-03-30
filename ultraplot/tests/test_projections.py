@@ -58,6 +58,11 @@ def test_cartopy_labels_not_shared_for_non_rectilinear():
     assert axs[1]._is_ticklabel_on("labelleft")
 
 
+def test_cartopy_cyl_projection_is_rectilinear():
+    fig, axs = uplt.subplots(ncols=1, proj="cyl")
+    assert axs[0]._is_rectilinear()
+
+
 @pytest.mark.mpl_image_compare
 def test_cartopy_contours(rng):
     """
@@ -186,11 +191,22 @@ def test_sharing_axes_different_projections():
         lonlim=(-10, 10),  # make small to plot quicker
         latlim=(-10, 10),
     )
-    lims = [ax[0].get_xlim(), ax[0].get_ylim()]
-    for axi in ax[1:]:
-        assert axi._sharex is None
-        assert axi._sharey is None
-        test_lims = [axi.get_xlim(), axi.get_ylim()]
-        for this, other in zip(lims, test_lims):
-            L = np.linalg.norm(np.array(this) - np.array(other))
-            assert not np.allclose(L, 0)
+    # The incompatible cylindrical subplot should stay isolated, while the two
+    # compatible Mercator subplots can still share with each other.
+    assert ax[0]._sharex is None
+    assert ax[0]._sharey is None
+    assert ax[1]._sharey is None
+    assert ax[2]._sharey is None
+    assert len(list(ax[0]._shared_axes["x"].get_siblings(ax[0]))) == 1
+    assert len(list(ax[1]._shared_axes["x"].get_siblings(ax[1]))) == 2
+    assert len(list(ax[2]._shared_axes["x"].get_siblings(ax[2]))) == 2
+
+    cyl_lims = [ax[0].get_xlim(), ax[0].get_ylim()]
+    merc_lims = [ax[1].get_xlim(), ax[1].get_ylim()]
+    for this, other in zip(cyl_lims, merc_lims):
+        delta = np.linalg.norm(np.array(this) - np.array(other))
+        assert not np.allclose(delta, 0)
+
+    for this, other in zip(merc_lims, [ax[2].get_xlim(), ax[2].get_ylim()]):
+        delta = np.linalg.norm(np.array(this) - np.array(other))
+        assert np.allclose(delta, 0)
