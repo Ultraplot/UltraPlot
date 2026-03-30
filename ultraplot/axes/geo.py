@@ -3831,10 +3831,35 @@ GeoAxes.format = docstring._obfuscate_kwargs(GeoAxes.format)
 
 def _is_rectilinear_projection(ax: Any) -> bool:
     """Check if the axis has a flat projection (works with Cartopy)."""
+    rectilinear_basemap = {
+        "cyl",
+        "merc",
+        "mill",
+        "rect",
+        "rectilinear",
+        "unknown",
+    }
+
     # Determine what the projection function is
     # Create a square and determine if the lengths are preserved
     # For geoaxes projc is always set in format, and thus is not None
     proj = getattr(ax, "projection", None)
+
+    # Prefer explicit projection identifiers for known cylindrical projections.
+    # Numerical transform checks can be slightly lossy for cartopy projections
+    # like PlateCarree, which incorrectly makes a rectilinear projection look
+    # curved due to floating point noise in projected coordinates.
+    if ccrs is not None and isinstance(proj, ccrs.Projection):
+        rectilinear_cartopy = (
+            ccrs.PlateCarree,
+            ccrs.Mercator,
+            ccrs.LambertCylindrical,
+            ccrs.Miller,
+        )
+        return isinstance(proj, rectilinear_cartopy)
+    if hasattr(proj, "projection") and proj.projection is not None:
+        return proj.projection.lower() in rectilinear_basemap
+
     transform = None
     if hasattr(proj, "transform_point"):  # cartopy
         if proj.transform_point is not None:
@@ -3867,27 +3892,5 @@ def _is_rectilinear_projection(ax: Any) -> bool:
 
         # If slopes are equal (within a small tolerance), the projection preserves straight lines
         return np.allclose(slope1 - slope2, 0)
-    # Cylindrical projections are generally rectilinear
-    rectilinear_projections = {
-        # Cartopy projections
-        "platecarree",
-        "mercator",
-        "lambertcylindrical",
-        "miller",
-        # Basemap projections
-        "cyl",
-        "merc",
-        "mill",
-        "rect",
-        "rectilinear",
-        "unknown",
-    }
-
-    # For Cartopy
-    if hasattr(proj, "name"):
-        return proj.name.lower() in rectilinear_projections
-    # For Basemap
-    elif hasattr(proj, "projection"):
-        return proj.projection.lower() in rectilinear_projections
     # If we can't determine, assume it's not rectilinear
     return False

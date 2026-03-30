@@ -4607,6 +4607,53 @@ def _apply_inset_colorbar_layout(
         frame.set_bounds(*bounds_frame)
 
 
+def _has_finite_bbox(bbox) -> bool:
+    return bbox is not None and np.all(
+        np.isfinite((bbox.x0, bbox.y0, bbox.x1, bbox.y1))
+    )
+
+
+def _collect_inset_colorbar_bboxes(
+    colorbar, *, labelloc_layout: str, loc: str, orientation: str, renderer
+):
+    bboxes = []
+
+    longaxis = _get_colorbar_long_axis(colorbar)
+    try:
+        bbox = longaxis.get_tightbbox(renderer)
+    except Exception:
+        bbox = None
+    if _has_finite_bbox(bbox):
+        bboxes.append(bbox)
+
+    label_axis = _get_axis_for(
+        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    )
+    if label_axis.label.get_text():
+        try:
+            bbox = label_axis.label.get_window_extent(renderer=renderer)
+        except Exception:
+            bbox = None
+        if _has_finite_bbox(bbox):
+            bboxes.append(bbox)
+
+    for artist in (
+        getattr(colorbar, "outline", None),
+        getattr(colorbar, "solids", None),
+        getattr(colorbar, "dividers", None),
+    ):
+        if artist is None:
+            continue
+        try:
+            bbox = artist.get_window_extent(renderer=renderer)
+        except Exception:
+            bbox = None
+        if _has_finite_bbox(bbox):
+            bboxes.append(bbox)
+
+    return bboxes
+
+
 def _inset_colorbar_frame_needs_reflow(colorbar, *, labelloc: str, renderer) -> bool:
     cax = colorbar.ax
     layout = getattr(cax, "_inset_colorbar_layout", None)
@@ -4618,36 +4665,13 @@ def _inset_colorbar_frame_needs_reflow(colorbar, *, labelloc: str, renderer) -> 
     loc = layout["loc"]
     ticklocation = layout["ticklocation"]
     labelloc_layout = labelloc if isinstance(labelloc, str) else ticklocation
-    bboxes = []
-
-    longaxis = _get_colorbar_long_axis(colorbar)
-    try:
-        bbox = longaxis.get_tightbbox(renderer)
-    except Exception:
-        bbox = None
-    if bbox is not None:
-        bboxes.append(bbox)
-
-    label_axis = _get_axis_for(
-        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    bboxes = _collect_inset_colorbar_bboxes(
+        colorbar,
+        labelloc_layout=labelloc_layout,
+        loc=loc,
+        orientation=orientation,
+        renderer=renderer,
     )
-    if label_axis.label.get_text():
-        try:
-            bboxes.append(label_axis.label.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
-
-    for artist in (
-        getattr(colorbar, "outline", None),
-        getattr(colorbar, "solids", None),
-        getattr(colorbar, "dividers", None),
-    ):
-        if artist is None:
-            continue
-        try:
-            bboxes.append(artist.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
 
     if not bboxes:
         return False
@@ -4712,37 +4736,13 @@ def _reflow_inset_colorbar_frame(
     renderer = renderer or cax.figure._get_renderer()
     if hasattr(colorbar, "update_ticks"):
         colorbar.update_ticks(manual_only=True)
-    bboxes = []
-    longaxis = _get_colorbar_long_axis(colorbar)
-    try:
-        bbox = longaxis.get_tightbbox(renderer)
-    except Exception:
-        bbox = None
-    if bbox is not None:
-        bboxes.append(bbox)
-    label_axis = _get_axis_for(
-        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    bboxes = _collect_inset_colorbar_bboxes(
+        colorbar,
+        labelloc_layout=labelloc_layout,
+        loc=loc,
+        orientation=orientation,
+        renderer=renderer,
     )
-    if label_axis.label.get_text():
-        try:
-            bboxes.append(label_axis.label.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
-    if colorbar.outline is not None:
-        try:
-            bboxes.append(colorbar.outline.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
-    if getattr(colorbar, "solids", None) is not None:
-        try:
-            bboxes.append(colorbar.solids.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
-    if getattr(colorbar, "dividers", None) is not None:
-        try:
-            bboxes.append(colorbar.dividers.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
     if not bboxes:
         return
     x0 = min(b.x0 for b in bboxes)
