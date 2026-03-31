@@ -120,8 +120,7 @@ def test_zenodo_uploads_use_octet_stream(tmp_path, monkeypatch):
     assert len(calls) == 2
     assert all(method == "PUT" for method, _, _ in calls)
     assert all(
-        kwargs["content_type"] == "application/octet-stream"
-        for _, _, kwargs in calls
+        kwargs["content_type"] == "application/octet-stream" for _, _, kwargs in calls
     )
 
 
