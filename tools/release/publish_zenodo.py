@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import mimetypes
 import os
 import sys
 from pathlib import Path
@@ -244,14 +243,15 @@ def upload_dist_files(draft: dict, token: str, dist_dir: Path) -> None:
     for path in sorted(dist_dir.iterdir()):
         if not path.is_file():
             continue
-        content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         with path.open("rb") as handle:
             api_request(
                 "PUT",
                 f"{bucket_url}/{parse.quote(path.name)}",
                 token=token,
                 data=handle.read(),
-                content_type=content_type,
+                # Zenodo bucket uploads reject extension-specific types like
+                # application/gzip for source tarballs and require raw bytes.
+                content_type="application/octet-stream",
             )
         print(f"Uploaded {path.name} to Zenodo draft {draft['id']}.")
 
