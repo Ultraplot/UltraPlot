@@ -96,6 +96,35 @@ def test_zenodo_release_metadata_is_built_from_repository_sources():
     assert metadata["creators"][0]["orcid"] == "0000-0001-9862-8936"
 
 
+def test_zenodo_uploads_use_octet_stream(tmp_path, monkeypatch):
+    """
+    Zenodo bucket uploads should use a generic binary content type.
+    """
+    publish_zenodo = _load_publish_zenodo()
+    calls = []
+
+    def fake_api_request(method, url, **kwargs):
+        calls.append((method, url, kwargs))
+        return None
+
+    monkeypatch.setattr(publish_zenodo, "api_request", fake_api_request)
+    (tmp_path / "ultraplot-2.1.5.tar.gz").write_bytes(b"sdist")
+    (tmp_path / "ultraplot-2.1.5-py3-none-any.whl").write_bytes(b"wheel")
+
+    publish_zenodo.upload_dist_files(
+        {"id": 18492463, "links": {"bucket": "https://zenodo.example/files/bucket"}},
+        "token",
+        tmp_path,
+    )
+
+    assert len(calls) == 2
+    assert all(method == "PUT" for method, _, _ in calls)
+    assert all(
+        kwargs["content_type"] == "application/octet-stream"
+        for _, _, kwargs in calls
+    )
+
+
 def test_zenodo_json_is_not_committed():
     """
     Zenodo metadata should no longer be duplicated in a separate committed file.
