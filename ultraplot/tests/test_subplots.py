@@ -698,6 +698,30 @@ def test_panel_ticklabels_all_sides_share_and_no_share(share_panels):
     assert_panel(pax_bottom, "bottom", share_panels)
 
 
+def test_shared_panels_preserve_explicit_top_right_labels():
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    for ax in axs:
+        ax.imshow(np.zeros((10, 10)))
+        ax.xaxis.tick_top()
+        ax.xaxis.set_label_position("top")
+        ax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.yaxis.set_tick_params(labelright=True, labelleft=False)
+
+    pax_top = axs[0].panel("top")
+    pax_right = axs[1].panel("right")
+    fig.canvas.draw()
+
+    assert not axs[0]._is_ticklabel_on("labeltop")
+    assert pax_top._is_ticklabel_on("labeltop")
+    assert not pax_top._is_ticklabel_on("labelbottom")
+
+    assert not axs[1]._is_ticklabel_on("labelright")
+    assert pax_right._is_ticklabel_on("labelright")
+    assert not pax_right._is_ticklabel_on("labelleft")
+
+
 def test_non_rectangular_outside_labels_top():
     """
     Check that non-rectangular layouts work with outside labels.

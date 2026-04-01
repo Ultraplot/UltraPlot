@@ -1533,6 +1533,16 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             return False
         return adapter.is_label_on(side)
 
+    def _get_ticklabel_state(self, axis: str) -> dict[str, bool]:
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+        return {f"label{side}": self._is_ticklabel_on(f"label{side}") for side in sides}
+
+    def _set_ticklabel_state(self, axis: str, state: dict) -> None:
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+        self._toggle_gridliner_labels(
+            **{f"label{side}": state.get(f"label{side}", False) for side in sides}
+        )
+
     def _clear_edge_lon_labels(self) -> None:
         for label in self._edge_lon_labels:
             try:

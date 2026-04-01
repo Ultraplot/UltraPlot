@@ -18,7 +18,6 @@ except ImportError:
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
 import matplotlib.gridspec as mgridspec
-import matplotlib.projections as mproj
 import matplotlib.text as mtext
 import matplotlib.transforms as mtransforms
 import numpy as np
@@ -32,6 +31,7 @@ from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
 from .config import rc, rc_matplotlib
+from .internals.projections import finalize_projection_kwargs, resolve_projection_kwargs
 from .internals import (
     _not_none,
     _pop_params,
@@ -974,6 +974,15 @@ class Figure(mfigure.Figure):
             ):
                 return False, "different Geo projection classes"
 
+        astro_cls = paxes.get_astro_axes_class()
+        ref_astro = astro_cls is not None and isinstance(ref, astro_cls)
+        other_astro = astro_cls is not None and isinstance(other, astro_cls)
+        if ref_astro or other_astro:
+            if not (ref_astro and other_astro):
+                return False, "astro and non-astro axes cannot be shared"
+            if ref._share_coord_signature(which) != other._share_coord_signature(which):
+                return False, "different Astro coordinate families"
+
         # Polar and non-polar should not share.
         ref_polar = isinstance(ref, paxes.PolarAxes)
         other_polar = isinstance(other, paxes.PolarAxes)
@@ -981,7 +990,12 @@ class Figure(mfigure.Figure):
             return False, "polar and non-polar axes cannot be shared"
 
         # Non-geo external axes are generally Cartesian-like in UltraPlot.
-        if not ref_geo and not other_geo and not (ref_external or other_external):
+        if (
+            not ref_geo
+            and not other_geo
+            and not (ref_external or other_external)
+            and not (ref_astro or other_astro)
+        ):
             if not (
                 isinstance(ref, paxes.CartesianAxes)
                 and isinstance(other, paxes.CartesianAxes)
@@ -1180,15 +1194,10 @@ class Figure(mfigure.Figure):
         axes = list(self._iter_axes(panels=True, hidden=False))
         groups = self._group_axes_by_axis(axes, axis)
 
-        # Version-dependent label name mapping for reading back params
-        label_keys = self._label_key_map()
-
         # Process each group independently
         for _, group_axes in groups.items():
             # Build baseline from MAIN axes only (exclude panels)
-            baseline, skip_group = self._compute_baseline_tick_state(
-                group_axes, axis, label_keys
-            )
+            baseline, skip_group = self._compute_baseline_tick_state(group_axes, axis)
             if skip_group:
                 continue
 
@@ -1202,26 +1211,9 @@ class Figure(mfigure.Figure):
                     continue
 
                 # Apply to geo/cartesian appropriately
-                self._set_ticklabel_state(axi, axis, masked)
+                axi._set_ticklabel_state(axis, masked)
 
         self.stale = True
-
-    def _label_key_map(self):
-        """
-        Return a mapping for version-dependent label keys for Matplotlib tick params.
-        """
-        first_axi = next(self._iter_axes(panels=True), None)
-        if first_axi is None:
-            return {
-                "labelleft": "labelleft",
-                "labelright": "labelright",
-                "labeltop": "labeltop",
-                "labelbottom": "labelbottom",
-            }
-        return {
-            name: first_axi._label_key(name)
-            for name in ("labelleft", "labelright", "labeltop", "labelbottom")
-        }
 
     def _group_axes_by_axis(self, axes, axis: str):
         """
@@ -1243,7 +1235,7 @@ class Figure(mfigure.Figure):
             groups[key].append(axi)
         return groups
 
-    def _compute_baseline_tick_state(self, group_axes, axis: str, label_keys):
+    def _compute_baseline_tick_state(self, group_axes, axis: str):
         """
         Build a baseline ticklabel visibility dict from MAIN axes (panels excluded).
         Returns (baseline_dict, skip_group: bool). Emits warnings when encountering
@@ -1264,9 +1256,11 @@ class Figure(mfigure.Figure):
                 return {}, True
 
             # Supported axes types
-            if not isinstance(
-                axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
-            ):
+            supported = (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+            astro_cls = paxes.get_astro_axes_class()
+            if astro_cls is not None:
+                supported = (*supported, astro_cls)
+            if not isinstance(axi, supported):
                 warnings._warn_ultraplot(
                     f"Tick label sharing not implemented for {type(axi)} subplots."
                 )
@@ -1276,17 +1270,9 @@ class Figure(mfigure.Figure):
             subplot_types.add(type(axi))
 
             # Collect label visibility state
-            if isinstance(axi, paxes.CartesianAxes):
-                params = getattr(axi, f"{axis}axis").get_tick_params()
-                for side in sides:
-                    key = label_keys[f"label{side}"]
-                    if params.get(key):
-                        baseline[key] = params[key]
-            elif isinstance(axi, paxes.GeoAxes):
-                for side in sides:
-                    key = f"label{side}"
-                    if axi._is_ticklabel_on(key):
-                        baseline[key] = axi._is_ticklabel_on(key)
+            for key, value in axi._get_ticklabel_state(axis).items():
+                if value:
+                    baseline[key] = value
 
         if unsupported_found:
             return {}, True
@@ -1305,16 +1291,12 @@ class Figure(mfigure.Figure):
     ):
         """
         Apply figure-border constraints and panel opposite-side suppression.
-        Keeps label key mapping per-axis for cartesian.
         """
         from .axes.cartesian import OPPOSITE_SIDE
 
         masked = baseline.copy()
         for side in sides:
             label = f"label{side}"
-            if isinstance(axi, paxes.CartesianAxes):
-                # Use per-axis version-mapped key when writing
-                label = axi._label_key(label)
 
             # Only keep labels on true figure borders
             if axi not in outer_axes[side]:
@@ -1355,16 +1337,6 @@ class Figure(mfigure.Figure):
                 return 3
 
         return level
-
-    def _set_ticklabel_state(self, axi, axis: str, state: dict):
-        """Apply the computed ticklabel state to cartesian or geo axes."""
-        if state:
-            # Normalize "x"/"y" values to booleans for both Geo and Cartesian axes
-            cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
-            if isinstance(axi, paxes.GeoAxes):
-                axi._toggle_gridliner_labels(**cleaned)
-            else:
-                getattr(axi, f"{axis}axis").set_tick_params(**cleaned)
 
     def _context_adjusting(self, cache=True):
         """
@@ -1410,82 +1382,22 @@ class Figure(mfigure.Figure):
         axes class. Input projection can be a string, `matplotlib.axes.Axes`,
         `cartopy.crs.Projection`, or `mpl_toolkits.basemap.Basemap`.
         """
-        # Parse arguments
         proj = _not_none(proj=proj, projection=projection, default="cartesian")
         proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
         backend = self._parse_backend(backend, basemap)
-        if isinstance(proj, str):
-            proj = proj.lower()
-        if isinstance(self, paxes.Axes):
-            proj = self._name
-        elif isinstance(self, maxes.Axes):
-            raise ValueError("Matplotlib axes cannot be added to ultraplot figures.")
+        return resolve_projection_kwargs(
+            self,
+            proj,
+            proj_kw=proj_kw,
+            backend=backend,
+            kwargs=kwargs,
+        )
 
-        # Search axes projections
-        name = None
-
-        # Handle cartopy/basemap Projection objects directly
-        # These should be converted to Ultraplot GeoAxes
-        if not isinstance(proj, str):
-            # Check if it's a cartopy or basemap projection object
-            if constructor.Projection is not object and isinstance(
-                proj, constructor.Projection
-            ):
-                # It's a cartopy projection - use cartopy backend
-                name = "ultraplot_cartopy"
-                kwargs["map_projection"] = proj
-            elif constructor.Basemap is not object and isinstance(
-                proj, constructor.Basemap
-            ):
-                # It's a basemap projection
-                name = "ultraplot_basemap"
-                kwargs["map_projection"] = proj
-            # If not recognized, leave name as None and it will pass through
-
-        if name is None and isinstance(proj, str):
-            try:
-                mproj.get_projection_class("ultraplot_" + proj)
-            except (KeyError, ValueError):
-                pass
-            else:
-                name = "ultraplot_" + proj
-        if name is None and isinstance(proj, str):
-            # Try geographic projections first if cartopy/basemap available
-            if (
-                constructor.Projection is not object
-                or constructor.Basemap is not object
-            ):
-                try:
-                    proj_obj = constructor.Proj(
-                        proj, backend=backend, include_axes=True, **proj_kw
-                    )
-                    name = "ultraplot_" + proj_obj._proj_backend
-                    kwargs["map_projection"] = proj_obj
-                except ValueError:
-                    # Not a geographic projection, will try matplotlib registry below
-                    pass
-
-            # If not geographic, check if registered globally in Matplotlib (e.g., 'ternary', 'polar', '3d')
-            if name is None and proj in mproj.get_projection_names():
-                name = proj
-
-        # Helpful error message if still not found
-        if name is None and isinstance(proj, str):
-            raise ValueError(
-                f"Invalid projection name {proj!r}. If you are trying to generate a "
-                "GeoAxes with a cartopy.crs.Projection or mpl_toolkits.basemap.Basemap "
-                "then cartopy or basemap must be installed. Otherwise the known axes "
-                f"subclasses are:\n{paxes._cls_table}"
-            )
-
-        # Only set projection if we found a named projection
-        # Otherwise preserve the original projection (e.g., cartopy Projection objects)
-        if name is not None:
-            kwargs["projection"] = name
-        # If name is None and proj is not a string, it means we have a non-string
-        # projection (e.g., cartopy.crs.Projection object) that should be passed through
-        # The original projection kwarg is already in kwargs, so no action needed
-        return kwargs
+    def _wrap_external_projection(self, **kwargs):
+        """
+        Wrap non-ultraplot projection classes in an external container.
+        """
+        return finalize_projection_kwargs(self, kwargs)
 
     def _get_align_axes(self, side):
         """
@@ -1807,31 +1719,24 @@ class Figure(mfigure.Figure):
                 *getattr(ax, f"get_{'y' if side in ('left','right') else 'x'}lim")(),
                 auto=True,
             )
+        filled = kw.get("filled", False)
+        shared_state = None
         # Push main axes tick labels to the outside relative to the added panel
         # Skip this for filled panels (colorbars/legends)
-        if not kw.get("filled", False) and share:
-            if isinstance(ax, paxes.GeoAxes):
-                if side == "top":
-                    ax._toggle_gridliner_labels(labeltop=False)
-                elif side == "bottom":
-                    ax._toggle_gridliner_labels(labelbottom=False)
-                elif side == "left":
-                    ax._toggle_gridliner_labels(labelleft=False)
-                elif side == "right":
-                    ax._toggle_gridliner_labels(labelright=False)
-            else:
-                if side == "top":
-                    ax.xaxis.set_tick_params(**{ax._label_key("labeltop"): False})
-                elif side == "bottom":
-                    ax.xaxis.set_tick_params(**{ax._label_key("labelbottom"): False})
-                elif side == "left":
-                    ax.yaxis.set_tick_params(**{ax._label_key("labelleft"): False})
-                elif side == "right":
-                    ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
+        if not filled and share:
+            shared_axis = "y" if side in ("left", "right") else "x"
+            shared_state = ax._get_ticklabel_state(shared_axis)
+            main_state = shared_state.copy()
+            main_state[f"label{side}"] = False
+            ax._set_ticklabel_state(shared_axis, main_state)
 
-        # Panel labels: prefer outside only for non-sharing top/right; otherwise keep off
+        # Panel labels: for non-sharing panels, keep labels on the outer edges of the
+        # full stack. For shared panels, only propagate the panel-side labels where
+        # the existing sharing logic expects them (top/right).
         if side == "top":
-            if not share:
+            if not share and not filled:
+                ax.xaxis.tick_bottom()
+                ax.xaxis.set_label_position("bottom")
                 pax.xaxis.set_tick_params(
                     **{
                         pax._label_key("labeltop"): True,
@@ -1839,11 +1744,17 @@ class Figure(mfigure.Figure):
                     }
                 )
             else:
-                on = ax.xaxis.get_tick_params()[ax._label_key("labeltop")]
-                pax.xaxis.set_tick_params(**{pax._label_key("labeltop"): on})
-                ax.yaxis.set_tick_params(labeltop=False)
+                on = shared_state is not None and shared_state.get("labeltop", False)
+                pax.xaxis.set_tick_params(
+                    **{
+                        pax._label_key("labeltop"): on,
+                        pax._label_key("labelbottom"): False,
+                    }
+                )
         elif side == "right":
-            if not share:
+            if not share and not filled:
+                ax.yaxis.tick_left()
+                ax.yaxis.set_label_position("left")
                 pax.yaxis.set_tick_params(
                     **{
                         pax._label_key("labelright"): True,
@@ -1851,10 +1762,13 @@ class Figure(mfigure.Figure):
                     }
                 )
             else:
-                on = ax.yaxis.get_tick_params()[ax._label_key("labelright")]
-                pax.yaxis.set_tick_params(**{pax._label_key("labelright"): on})
-                ax.yaxis.set_tick_params(**{ax._label_key("labelright"): False})
-
+                on = shared_state is not None and shared_state.get("labelright", False)
+                pax.yaxis.set_tick_params(
+                    **{
+                        pax._label_key("labelright"): on,
+                        pax._label_key("labelleft"): False,
+                    }
+                )
         return pax
 
     @_clear_border_cache
@@ -1985,47 +1899,6 @@ class Figure(mfigure.Figure):
         kwargs.setdefault("label", f"subplot_{self._subplot_counter}")
         kwargs.setdefault("number", 1 + max(self._subplot_dict, default=0))
         kwargs.pop("refwidth", None)  # TODO: remove this
-
-        # Use container approach for external projections to make them ultraplot-compatible
-        projection_name = kwargs.get("projection")
-        external_axes_class = None
-        external_axes_kwargs = {}
-
-        if projection_name and isinstance(projection_name, str):
-            # Check if this is an external (non-ultraplot) projection
-            # Skip external wrapping for projections that start with "ultraplot_" prefix
-            # as these are already Ultraplot axes classes
-            if not projection_name.startswith("ultraplot_"):
-                try:
-                    # Get the projection class
-                    proj_class = mproj.get_projection_class(projection_name)
-
-                    # Check if it's not a built-in ultraplot axes
-                    # Only wrap if it's NOT a subclass of Ultraplot's Axes
-                    if not issubclass(proj_class, paxes.Axes):
-                        # Store the external axes class and original projection name
-                        external_axes_class = proj_class
-                        external_axes_kwargs["projection"] = projection_name
-
-                        # Create or get the container class for this external axes type
-                        from .axes.container import create_external_axes_container
-
-                        container_name = f"_ultraplot_container_{projection_name}"
-
-                        # Check if container is already registered
-                        if container_name not in mproj.get_projection_names():
-                            container_class = create_external_axes_container(
-                                proj_class, projection_name=container_name
-                            )
-                            mproj.register_projection(container_class)
-
-                        # Use the container projection and pass external axes info
-                        kwargs["projection"] = container_name
-                        kwargs["external_axes_class"] = external_axes_class
-                        kwargs["external_axes_kwargs"] = external_axes_kwargs
-                except (KeyError, ValueError):
-                    # Projection not found, let matplotlib handle the error
-                    pass
 
         # Remove _subplot_spec from kwargs if present to prevent it from being passed
         # to .set() or other methods that don't accept it.

@@ -934,6 +934,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         if proj is None:
             if self._name in ("cartopy", "basemap"):
                 proj = copy.copy(self.projection)
+            elif self._name == "astro" and getattr(self, "wcs", None) is not None:
+                proj = self.wcs
             else:
                 proj = self._name
         kwargs = self.figure._parse_proj(proj, **kwargs)
@@ -3297,6 +3299,26 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             label = "label2"
 
         return axis.get_tick_params().get(self._label_key(side), False)
+
+    def _get_ticklabel_state(self, axis: str) -> dict[str, bool]:
+        """
+        Return visible ticklabel sides for one logical axis.
+        """
+        sides = ("top", "bottom") if axis == "x" else ("left", "right")
+        return {f"label{side}": self._is_ticklabel_on(f"label{side}") for side in sides}
+
+    def _set_ticklabel_state(self, axis: str, state: dict) -> None:
+        """
+        Apply logical ticklabel visibility to one logical axis.
+        """
+        cleaned = {k: (True if v in ("x", "y") else v) for k, v in state.items()}
+        mapped = {
+            self._label_key(key): value
+            for key, value in cleaned.items()
+            if key.startswith("label")
+        }
+        if mapped:
+            getattr(self, f"{axis}axis").set_tick_params(**mapped)
 
     @docstring._snippet_manager
     def inset(self, *args, **kwargs):

@@ -37,6 +37,15 @@ except ImportError:
 __all__ = ["GridSpec", "SubplotGrid"]
 
 
+class _GridCommandResult(tuple):
+    """
+    Tuple subclass marking one result per axes from `SubplotGrid` dispatch.
+    """
+
+    def __new__(cls, values):
+        return super().__new__(cls, values)
+
+
 # Gridspec vector arguments
 # Valid for figure() and GridSpec()
 _shared_docstring = """
@@ -1890,11 +1899,20 @@ class SubplotGrid(MutableSequence, list):
             return objs[0] if len(self) == 1 else objs
         elif all(map(callable, objs)):
 
+            def _dispatch_value(obj, idx):
+                if isinstance(obj, _GridCommandResult):
+                    return obj[idx]
+                return obj
+
             @functools.wraps(objs[0])
             def _iterate_subplots(*args, **kwargs):
                 result = []
-                for func in objs:
-                    result.append(func(*args, **kwargs))
+                for idx, func in enumerate(objs):
+                    iargs = tuple(_dispatch_value(arg, idx) for arg in args)
+                    ikwargs = {
+                        key: _dispatch_value(val, idx) for key, val in kwargs.items()
+                    }
+                    result.append(func(*iargs, **ikwargs))
                 if len(self) == 1:
                     return result[0]
                 elif all(res is None for res in result):
@@ -1902,7 +1920,7 @@ class SubplotGrid(MutableSequence, list):
                 elif all(isinstance(res, paxes.Axes) for res in result):
                     return SubplotGrid(result, n=self._n, order=self._order)
                 else:
-                    return tuple(result)
+                    return _GridCommandResult(result)
 
             _iterate_subplots.__doc__ = inspect.getdoc(objs[0])
             return _iterate_subplots
