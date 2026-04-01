@@ -50,7 +50,7 @@ jobs:
 
       - name: Build test map on cache miss
         if: steps.restore-map.outputs.cache-hit != 'true'
-        uses: mamba-org/setup-micromamba@v2.0.7
+        uses: mamba-org/setup-micromamba@v3.0.0
         with:
           environment-file: ./environment.yml
           init-shell: bash
@@ -157,7 +157,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: mamba-org/setup-micromamba@v2.0.7
+      - uses: mamba-org/setup-micromamba@v3.0.0
         with:
           environment-file: ./environment.yml
           init-shell: bash
@@ -182,7 +182,7 @@ jobs:
             ultraplot/tests
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
