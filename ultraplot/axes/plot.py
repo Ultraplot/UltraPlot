@@ -3497,6 +3497,8 @@ class PlotAxes(base.Axes):
         Fix sticky edges for the input artists using the minimum and maximum of the
         input coordinates. This is used to copy `bar` behavior to `area` and `lines`.
         """
+        if not rc["plot.sticky"]:
+            return
         for array in args:
             min_, max_ = inputs._safe_range(array)
             if min_ is None or max_ is None:
