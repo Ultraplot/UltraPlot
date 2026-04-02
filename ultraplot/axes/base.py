@@ -633,6 +633,10 @@ fontsize, fontweight, fontcolor : optional
 titlefontsize, titlefontweight, titlefontcolor : optional
     The font size, weight, and color for the legend title. Font size is interpreted
     by `~ultraplot.utils.units`. The default size is `fontsize`.
+title_kw : dict-like, optional
+    Additional properties passed to the legend title text object, e.g.
+    ``title_kw={'style': 'italic'}``. This can be used to set any
+    `~matplotlib.text.Text` property on the legend title.
 borderpad, borderaxespad, handlelength, handleheight, handletextpad,  labelspacing, columnspacing : unit-spec, optional
     Various matplotlib `~matplotlib.axes.Axes.legend` spacing arguments.
     %(units.em)s
@@ -1231,6 +1235,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         titlefontsize=None,
         titlefontweight=None,
         titlefontcolor=None,
+        title_kw=None,
         handle_kw=None,
         handler_map=None,
         span: Optional[Union[int, Tuple[int, int]]] = None,
@@ -1263,6 +1268,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             titlefontsize=titlefontsize,
             titlefontweight=titlefontweight,
             titlefontcolor=titlefontcolor,
+            title_kw=title_kw,
             handle_kw=handle_kw,
             handler_map=handler_map,
             span=span,

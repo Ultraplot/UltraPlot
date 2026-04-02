@@ -1318,6 +1318,7 @@ class _LegendInputs:
     titlefontsize: float
     titlefontweight: Any
     titlefontcolor: Any
+    title_kw: Any
     handle_kw: Any
     handler_map: Any
     span: Optional[Union[int, Tuple[int, int]]]
@@ -1794,6 +1795,7 @@ class UltraLegend:
         titlefontsize=None,
         titlefontweight=None,
         titlefontcolor=None,
+        title_kw=None,
         handle_kw=None,
         handler_map=None,
         span: Optional[Union[int, Tuple[int, int]]] = None,
@@ -1844,6 +1846,7 @@ class UltraLegend:
             titlefontsize=titlefontsize,
             titlefontweight=titlefontweight,
             titlefontcolor=titlefontcolor,
+            title_kw=title_kw,
             handle_kw=handle_kw,
             handler_map=handler_map,
             span=span,
@@ -1896,6 +1899,9 @@ class UltraLegend:
         lax,
         fontcolor,
         fontweight,
+        titlefontweight,
+        titlefontcolor,
+        title_kw,
         handle_kw,
         kwargs,
     ):
@@ -1908,10 +1914,16 @@ class UltraLegend:
             kw_text["color"] = fontcolor
         if fontweight is not None:
             kw_text["weight"] = fontweight
+        kw_title = {}
+        if titlefontweight is not None:
+            kw_title["weight"] = titlefontweight
+        if titlefontcolor is not None:
+            kw_title["color"] = titlefontcolor
+        kw_title.update(title_kw or {})
         kw_handle = _pop_props(kwargs, "line")
         kw_handle.setdefault("solid_capstyle", "butt")
         kw_handle.update(handle_kw or {})
-        return kw_frame, kw_text, kw_handle, kwargs
+        return kw_frame, kw_text, kw_title, kw_handle, kwargs
 
     def _build_legends(
         self,
@@ -1959,12 +1971,14 @@ class UltraLegend:
                 lax.add_artist(obj)
         return objs
 
-    def _apply_handle_styles(self, objs, *, kw_text, kw_handle):
+    def _apply_handle_styles(self, objs, *, kw_text, kw_title, kw_handle):
         """
         Apply per-handle styling overrides to legend artists.
         """
         for obj in objs:
             obj.set_clip_on(False)
+            if kw_title:
+                obj.get_title().update(kw_title)
             box = getattr(obj, "_legend_handle_box", None)
             for child in guides._iter_children(box):
                 if isinstance(child, mtext.Text):
@@ -2015,6 +2029,7 @@ class UltraLegend:
         titlefontsize=None,
         titlefontweight=None,
         titlefontcolor=None,
+        title_kw=None,
         handle_kw=None,
         handler_map=None,
         span: Optional[Union[int, Tuple[int, int]]] = None,
@@ -2050,6 +2065,7 @@ class UltraLegend:
             titlefontsize=titlefontsize,
             titlefontweight=titlefontweight,
             titlefontcolor=titlefontcolor,
+            title_kw=title_kw,
             handle_kw=handle_kw,
             handler_map=handler_map,
             span=span,
@@ -2062,10 +2078,13 @@ class UltraLegend:
 
         lax, kwargs = self._resolve_axes_layout(inputs)
 
-        kw_frame, kw_text, kw_handle, kwargs = self._resolve_style_kwargs(
+        kw_frame, kw_text, kw_title, kw_handle, kwargs = self._resolve_style_kwargs(
             lax=lax,
             fontcolor=inputs.fontcolor,
             fontweight=inputs.fontweight,
+            titlefontweight=inputs.titlefontweight,
+            titlefontcolor=inputs.titlefontcolor,
+            title_kw=inputs.title_kw,
             handle_kw=inputs.handle_kw,
             kwargs=kwargs,
         )
@@ -2079,5 +2098,7 @@ class UltraLegend:
             kwargs=kwargs,
         )
 
-        self._apply_handle_styles(objs, kw_text=kw_text, kw_handle=kw_handle)
+        self._apply_handle_styles(
+            objs, kw_text=kw_text, kw_title=kw_title, kw_handle=kw_handle
+        )
         return self._finalize(objs, loc=inputs.loc, align=inputs.align)
