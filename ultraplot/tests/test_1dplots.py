@@ -116,13 +116,19 @@ def test_column_iteration(rng):
     return fig
 
 
-@pytest.mark.skip("TODO")
 @pytest.mark.mpl_image_compare
-def test_bar_stack():
+def test_bar_stack(rng):
     """
     Test bar and area stacking.
     """
-    # TODO: Add test here
+    fig, axs = uplt.subplots(ncols=2, nrows=2)
+    x = np.arange(5)
+    y = rng.random((5, 3))
+    axs[0].bar(x, y, stack=False)
+    axs[1].bar(x, y, stack=True)
+    axs[2].area(x, y, stack=False)
+    axs[3].area(x, y, stack=True)
+    return fig
 
 
 @pytest.mark.mpl_image_compare
