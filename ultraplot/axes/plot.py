@@ -1927,11 +1927,7 @@ class PlotAxes(base.Axes):
         The implementation of this function is based on the `dfm_tools` repository.
         Original file: https://github.com/Deltares/dfm_tools/blob/829e76f48ebc42460aae118cc190147a595a5f26/dfm_tools/modplot.py
         """
-        from .plot_types.curved_quiver import (
-            CurvedQuiverSet,
-            CurvedQuiverSolver,
-            _CurvedQuiverTerminateTrajectory,
-        )
+        from .plot_types.curved_quiver import CurvedQuiverSet, CurvedQuiverSolver
 
         # Parse inputs
         arrowsize = _not_none(arrowsize, rc["curved_quiver.arrowsize"])
@@ -2059,17 +2055,8 @@ class PlotAxes(base.Axes):
                     continue
 
                 arrow_tail = (tx[-1], ty[-1])
-
-                # Extrapolate to find arrow head
-                xg, yg = solver.domain_map.data2grid(
-                    tx[-1] - solver.grid.x_origin, ty[-1] - solver.grid.y_origin
-                )
-
-                try:
-                    ui = solver.interpgrid(u, xg, yg)
-                    vi = solver.interpgrid(v, xg, yg)
-                except _CurvedQuiverTerminateTrajectory:
-                    continue
+                ui = tx[-1] - tx[-2]
+                vi = ty[-1] - ty[-2]
 
                 norm_v = np.sqrt(ui**2 + vi**2)
                 if norm_v > 0:
