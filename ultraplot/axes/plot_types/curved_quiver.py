@@ -20,6 +20,14 @@ class CurvedQuiverSet(StreamplotSet):
     arrows: object
 
 
+@dataclass
+class _CurvedQuiverTrajectory:
+    x: list[float]
+    y: list[float]
+    hit_edge: bool
+    end_direction: tuple[float, float] | None
+
+
 class _DomainMap(object):
     """Map representing different coordinate systems.
 
@@ -197,7 +205,7 @@ class CurvedQuiverSolver:
         minlength: float,
         resolution: float,
         magnitude: np.ndarray,
-    ) -> Callable[[float, float], tuple[tuple[list[float], list[float]], bool] | None]:
+    ) -> Callable[[float, float], _CurvedQuiverTrajectory | None]:
         # rescale velocity onto grid-coordinates for integrations.
         u, v = self.domain_map.data2grid(u, v)
 
@@ -215,9 +223,7 @@ class CurvedQuiverSolver:
             vi = self.interpgrid(v, xi, yi)
             return ui * dt_ds, vi * dt_ds
 
-        def integrate(
-            x0: float, y0: float
-        ) -> tuple[tuple[list[float], list[float], bool]] | None:
+        def integrate(x0: float, y0: float) -> _CurvedQuiverTrajectory | None:
             """Return x, y grid-coordinates of trajectory based on starting point.
 
             Integrate both forward and backward in time from starting point
@@ -226,15 +232,26 @@ class CurvedQuiverSolver:
             occupied cell in the StreamMask. The resulting trajectory is
             None if it is shorter than `minlength`.
             """
-            stotal, x_traj, y_traj = 0.0, [], []
             self.domain_map.start_trajectory(x0, y0)
             self.domain_map.reset_start_point(x0, y0)
-            stotal, x_traj, y_traj, m_total, hit_edge = self.integrate_rk12(
+            x_traj, y_traj, hit_edge = self.integrate_rk12(
                 x0, y0, forward_time, resolution, magnitude
             )
 
             if len(x_traj) > 1:
-                return (x_traj, y_traj), hit_edge
+                end_dx = x_traj[-1] - x_traj[-2]
+                end_dy = y_traj[-1] - y_traj[-2]
+                end_direction = (
+                    None
+                    if end_dx == 0 and end_dy == 0
+                    else self.domain_map.grid2data(end_dx, end_dy)
+                )
+                return _CurvedQuiverTrajectory(
+                    x=x_traj,
+                    y=y_traj,
+                    hit_edge=hit_edge,
+                    end_direction=end_direction,
+                )
             else:
                 # reject short trajectories
                 self.domain_map.undo_trajectory()
@@ -249,7 +266,7 @@ class CurvedQuiverSolver:
         f: Callable[[float, float], tuple[float, float]],
         resolution: float,
         magnitude: np.ndarray,
-    ) -> tuple[float, list[float], list[float], list[float], bool]:
+    ) -> tuple[list[float], list[float], bool]:
         """2nd-order Runge-Kutta algorithm with adaptive step size.
 
         This method is also referred to as the improved Euler's method, or
@@ -351,7 +368,7 @@ class CurvedQuiverSolver:
             else:
                 ds = min(maxds, 0.85 * ds * (maxerror / error) ** 0.5)
 
-        return stotal, xf_traj, yf_traj, m_total, hit_edge
+        return xf_traj, yf_traj, hit_edge
 
     def euler_step(self, xf_traj, yf_traj, f):
         """Simple Euler integration step that extends streamline to boundary."""

@@ -764,8 +764,8 @@ def test_generate_start_points():
 
 def test_calculate_trajectories():
     """
-    Test that CurvedQuiverSolver.get_integrator returns callable for each seed point
-    and returns lists of trajectories and edges of correct length.
+    Test that CurvedQuiverSolver.get_integrator returns trajectory objects for each
+    seed point with the expected rendering metadata.
     """
     from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver
 
@@ -781,6 +781,17 @@ def test_calculate_trajectories():
     seeds = solver.gen_starting_points(x, y, grains=2)
     results = [integrator(pt[0], pt[1]) for pt in seeds]
     assert len(results) == seeds.shape[0]
+    trajectories = [result for result in results if result is not None]
+    assert trajectories
+    for trajectory in trajectories:
+        assert len(trajectory.x) == len(trajectory.y)
+        assert isinstance(trajectory.hit_edge, bool)
+        if trajectory.end_direction is not None:
+            expected = solver.domain_map.grid2data(
+                trajectory.x[-1] - trajectory.x[-2],
+                trajectory.y[-1] - trajectory.y[-2],
+            )
+            assert np.allclose(trajectory.end_direction, expected)
 
 
 @pytest.mark.mpl_image_compare

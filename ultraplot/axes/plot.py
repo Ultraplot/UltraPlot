@@ -1991,7 +1991,6 @@ class PlotAxes(base.Axes):
 
         integrate = solver.get_integrator(u, v, minlength, resolution, magnitude)
         trajectories = []
-        edges = []
 
         if start_points is None:
             start_points = solver.gen_starting_points(x, y, grains)
@@ -2027,18 +2026,19 @@ class PlotAxes(base.Axes):
 
         for xs, ys in sp2:
             xg, yg = solver.domain_map.data2grid(xs, ys)
-            t = integrate(xg, yg)
-            if t is not None:
-                trajectories.append(t[0])
-                edges.append(t[1])
+            trajectory = integrate(xg, yg)
+            if trajectory is not None:
+                trajectories.append(trajectory)
         streamlines = []
         arrows = []
-        for t, edge in zip(trajectories, edges):
-            tgx = np.array(t[0])
-            tgy = np.array(t[1])
+        for trajectory in trajectories:
+            tgx = np.array(trajectory.x)
+            tgy = np.array(trajectory.y)
 
             # Rescale from grid-coordinates to data-coordinates.
-            tx, ty = solver.domain_map.grid2data(*np.array(t))
+            tx, ty = solver.domain_map.grid2data(
+                *np.array([trajectory.x, trajectory.y])
+            )
             tx += solver.grid.x_origin
             ty += solver.grid.y_origin
 
@@ -2055,8 +2055,9 @@ class PlotAxes(base.Axes):
                     continue
 
                 arrow_tail = (tx[-1], ty[-1])
-                ui = tx[-1] - tx[-2]
-                vi = ty[-1] - ty[-2]
+                if trajectory.end_direction is None:
+                    continue
+                ui, vi = trajectory.end_direction
 
                 norm_v = np.sqrt(ui**2 + vi**2)
                 if norm_v > 0:
@@ -2091,7 +2092,7 @@ class PlotAxes(base.Axes):
                 line_colors.append(color_values)
                 arrow_kw["color"] = cmap(norm(color_values[n]))
 
-            if not edge:
+            if not trajectory.hit_edge:
                 p = mpatches.FancyArrowPatch(
                     arrow_tail, arrow_head, transform=transform, **arrow_kw
                 )
