@@ -298,6 +298,8 @@ def test_subplotgrid_set_title_still_applies_per_axes():
     assert isinstance(titles, tuple)
     assert len(titles) == 2
     assert [ax.get_title() for ax in axs] == ["Shared title", "Shared title"]
+
+
 def test_return_type_after_indexing():
     """
     Inexing should always return a SubplotGrid even if we have 1 element
