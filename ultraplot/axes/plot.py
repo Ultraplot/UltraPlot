@@ -193,6 +193,8 @@ linewidth : float or 2D array, optional
     Width of streamlines.
 cmap, norm : optional
     Colormap and normalization for array colors.
+colorbar, colorbar_kw : optional
+    Add a colorbar for array-valued streamline colors.
 arrowsize : float, optional
     Arrow size scaling.
 arrowstyle : str, optional
@@ -1918,6 +1920,8 @@ class PlotAxes(base.Axes):
         grains: Optional[int] = None,
         density: Optional[int] = None,
         arrow_at_end: Optional[bool] = None,
+        colorbar: Optional[str] = None,
+        colorbar_kw: Optional[dict[str, Any]] = None,
     ):
         """
         %(plot.curved_quiver)s
@@ -1935,6 +1939,7 @@ class PlotAxes(base.Axes):
         zorder = _not_none(zorder, mlines.Line2D.zorder)
         transform = _not_none(transform, self.transData)
         color = _not_none(color, self._get_lines.get_next_color())
+        colorbar_kw = colorbar_kw or {}
         linewidth = _not_none(linewidth, rc["lines.linewidth"])
         scale = _not_none(scale, rc["curved_quiver.scale"])
         grains = _not_none(grains, rc["curved_quiver.grains"])
@@ -1968,6 +1973,7 @@ class PlotAxes(base.Axes):
                 raise ValueError(
                     "If 'linewidth' is given, must have the shape of 'Grid(x,y)'"
                 )
+            linewidth = np.ma.masked_invalid(linewidth)
             line_kw["linewidth"] = []
         else:
             line_kw["linewidth"] = linewidth
@@ -1990,7 +1996,6 @@ class PlotAxes(base.Axes):
 
         integrate = solver.get_integrator(u, v, minlength, resolution, magnitude)
         trajectories = []
-        edges = []
 
         if start_points is None:
             start_points = solver.gen_starting_points(x, y, grains)
@@ -2026,18 +2031,19 @@ class PlotAxes(base.Axes):
 
         for xs, ys in sp2:
             xg, yg = solver.domain_map.data2grid(xs, ys)
-            t = integrate(xg, yg)
-            if t is not None:
-                trajectories.append(t[0])
-                edges.append(t[1])
+            trajectory = integrate(xg, yg)
+            if trajectory is not None:
+                trajectories.append(trajectory)
         streamlines = []
         arrows = []
-        for t, edge in zip(trajectories, edges):
-            tgx = np.array(t[0])
-            tgy = np.array(t[1])
+        for trajectory in trajectories:
+            tgx = np.array(trajectory.x)
+            tgy = np.array(trajectory.y)
 
             # Rescale from grid-coordinates to data-coordinates.
-            tx, ty = solver.domain_map.grid2data(*np.array(t))
+            tx, ty = solver.domain_map.grid2data(
+                *np.array([trajectory.x, trajectory.y])
+            )
             tx += solver.grid.x_origin
             ty += solver.grid.y_origin
 
@@ -2054,14 +2060,9 @@ class PlotAxes(base.Axes):
                     continue
 
                 arrow_tail = (tx[-1], ty[-1])
-
-                # Extrapolate to find arrow head
-                xg, yg = solver.domain_map.data2grid(
-                    tx[-1] - solver.grid.x_origin, ty[-1] - solver.grid.y_origin
-                )
-
-                ui = solver.interpgrid(u, xg, yg)
-                vi = solver.interpgrid(v, xg, yg)
+                if trajectory.end_direction is None:
+                    continue
+                ui, vi = trajectory.end_direction
 
                 norm_v = np.sqrt(ui**2 + vi**2)
                 if norm_v > 0:
@@ -2087,6 +2088,8 @@ class PlotAxes(base.Axes):
             if isinstance(linewidth, np.ndarray):
                 line_widths = solver.interpgrid(linewidth, tgx, tgy)[:-1]
                 line_kw["linewidth"].extend(line_widths)
+                if np.ma.is_masked(line_widths[n]):
+                    continue
                 arrow_kw["linewidth"] = line_widths[n]
 
             if use_multicolor_lines:
@@ -2094,7 +2097,7 @@ class PlotAxes(base.Axes):
                 line_colors.append(color_values)
                 arrow_kw["color"] = cmap(norm(color_values[n]))
 
-            if not edge:
+            if not trajectory.hit_edge:
                 p = mpatches.FancyArrowPatch(
                     arrow_tail, arrow_head, transform=transform, **arrow_kw
                 )
@@ -2125,6 +2128,12 @@ class PlotAxes(base.Axes):
             lc.set_array(np.ma.hstack(line_colors))
             lc.set_cmap(cmap)
             lc.set_norm(norm)
+            self._update_guide(
+                lc,
+                colorbar=colorbar,
+                colorbar_kw=colorbar_kw,
+                queue_colorbar=False,
+            )
 
         self.add_collection(lc)
         self.autoscale_view()
