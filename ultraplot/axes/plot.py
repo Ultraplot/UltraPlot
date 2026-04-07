@@ -1927,7 +1927,11 @@ class PlotAxes(base.Axes):
         The implementation of this function is based on the `dfm_tools` repository.
         Original file: https://github.com/Deltares/dfm_tools/blob/829e76f48ebc42460aae118cc190147a595a5f26/dfm_tools/modplot.py
         """
-        from .plot_types.curved_quiver import CurvedQuiverSet, CurvedQuiverSolver
+        from .plot_types.curved_quiver import (
+            CurvedQuiverSet,
+            CurvedQuiverSolver,
+            _CurvedQuiverTerminateTrajectory,
+        )
 
         # Parse inputs
         arrowsize = _not_none(arrowsize, rc["curved_quiver.arrowsize"])
@@ -1968,6 +1972,7 @@ class PlotAxes(base.Axes):
                 raise ValueError(
                     "If 'linewidth' is given, must have the shape of 'Grid(x,y)'"
                 )
+            linewidth = np.ma.masked_invalid(linewidth)
             line_kw["linewidth"] = []
         else:
             line_kw["linewidth"] = linewidth
@@ -2060,8 +2065,11 @@ class PlotAxes(base.Axes):
                     tx[-1] - solver.grid.x_origin, ty[-1] - solver.grid.y_origin
                 )
 
-                ui = solver.interpgrid(u, xg, yg)
-                vi = solver.interpgrid(v, xg, yg)
+                try:
+                    ui = solver.interpgrid(u, xg, yg)
+                    vi = solver.interpgrid(v, xg, yg)
+                except _CurvedQuiverTerminateTrajectory:
+                    continue
 
                 norm_v = np.sqrt(ui**2 + vi**2)
                 if norm_v > 0:
@@ -2087,6 +2095,8 @@ class PlotAxes(base.Axes):
             if isinstance(linewidth, np.ndarray):
                 line_widths = solver.interpgrid(linewidth, tgx, tgy)[:-1]
                 line_kw["linewidth"].extend(line_widths)
+                if np.ma.is_masked(line_widths[n]):
+                    continue
                 arrow_kw["linewidth"] = line_widths[n]
 
             if use_multicolor_lines:

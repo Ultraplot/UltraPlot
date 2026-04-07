@@ -296,9 +296,14 @@ class CurvedQuiverSolver:
         hit_edge = False
 
         while self.domain_map.grid.within_grid(xi, yi):
+            try:
+                current_magnitude = self.interpgrid(magnitude, xi, yi)
+            except _CurvedQuiverTerminateTrajectory:
+                break
+
             xf_traj.append(xi)
             yf_traj.append(yi)
-            m_total.append(self.interpgrid(magnitude, xi, yi))
+            m_total.append(current_magnitude)
 
             try:
                 k1x, k1y = f(xi, yi)
@@ -324,8 +329,15 @@ class CurvedQuiverSolver:
 
             # Only save step if within error tolerance
             if error < maxerror:
-                xi += dx2
-                yi += dy2
+                next_xi = xi + dx2
+                next_yi = yi + dy2
+                if self.domain_map.grid.within_grid(next_xi, next_yi):
+                    try:
+                        self.interpgrid(magnitude, next_xi, next_yi)
+                    except _CurvedQuiverTerminateTrajectory:
+                        break
+                xi = next_xi
+                yi = next_yi
                 self.domain_map.update_trajectory(xi, yi)
                 if not self.domain_map.grid.within_grid(xi, yi):
                     hit_edge = True
@@ -400,7 +412,7 @@ class CurvedQuiverSolver:
 
         if not isinstance(xi, np.ndarray):
             if np.ma.is_masked(ai):
-                raise _CurvedQuiverTerminateTrajectory
+                raise _CurvedQuiverTerminateTrajectory()
         return ai
 
     def gen_starting_points(self, x, y, grains):

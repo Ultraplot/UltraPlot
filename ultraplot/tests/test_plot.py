@@ -671,6 +671,32 @@ def test_curved_quiver(rng):
     return fig
 
 
+def test_curved_quiver_integrator_skips_nan_seed():
+    """
+    Test that masked seed points terminate cleanly instead of escaping the solver.
+    """
+    from ultraplot.axes.plot_types.curved_quiver import CurvedQuiverSolver
+
+    x = np.linspace(0, 1, 5)
+    y = np.linspace(0, 1, 5)
+    u = np.ones((5, 5))
+    v = np.ones((5, 5))
+    u[2, 2] = np.nan
+    v[2, 2] = np.nan
+    u = np.ma.masked_invalid(u)
+    v = np.ma.masked_invalid(v)
+    magnitude = np.sqrt(u**2 + v**2)
+    magnitude /= np.max(magnitude)
+
+    solver = CurvedQuiverSolver(x, y, density=5)
+    integrator = solver.get_integrator(
+        u, v, minlength=0.1, resolution=1.0, magnitude=magnitude
+    )
+
+    assert integrator(2.0, 2.0) is None
+    assert not solver.mask._mask.any()
+
+
 def test_validate_vector_shapes_pass():
     """
     Test that vector shapes match the grid shape using CurvedQuiverSolver.
@@ -777,6 +803,33 @@ def test_curved_quiver_multicolor_lines():
     assert m.lines.get_array().size > 0  # we have colors set
     assert m.lines.get_cmap() is not None
     return fig
+
+
+def test_curved_quiver_nan_vectors():
+    """
+    Test that curved_quiver skips NaN vector regions without failing.
+    """
+    x = np.linspace(-1, 1, 21)
+    y = np.linspace(-1, 1, 21)
+    X, Y = np.meshgrid(x, y)
+    U = -Y.copy()
+    V = X.copy()
+    speed = np.sqrt(U**2 + V**2)
+    invalid = (np.abs(X) < 0.2) & (np.abs(Y) < 0.2)
+    U[invalid] = np.nan
+    V[invalid] = np.nan
+    speed[invalid] = np.nan
+
+    fig, ax = uplt.subplots()
+    m = ax.curved_quiver(
+        X, Y, U, V, color=speed, arrow_at_end=True, scale=2.0, grains=10
+    )
+
+    segments = m.lines.get_segments()
+    assert segments
+    assert all(np.isfinite(segment).all() for segment in segments)
+    assert len(ax.patches) > 0
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
