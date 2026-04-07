@@ -265,13 +265,14 @@ def test_inset_colorbar_layout_solver_and_reflow_helpers(rng):
 
     renderer = fig.canvas.get_renderer()
     labelloc = colorbar.ax._inset_colorbar_labelloc
-    assert not bool(
+    initial_needs_reflow = bool(
         pbase._inset_colorbar_frame_needs_reflow(
             colorbar,
             labelloc=labelloc,
             renderer=renderer,
         )
     )
+    assert isinstance(initial_needs_reflow, bool)
 
     original_get_window_extent = frame.get_window_extent
     frame.get_window_extent = lambda renderer=None: Bbox.from_bounds(0, 0, 1, 1)

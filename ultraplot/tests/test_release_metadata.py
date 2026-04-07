@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib.util
 import re
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -13,6 +12,7 @@ CITATION_CFF = ROOT / "CITATION.cff"
 README = ROOT / "README.rst"
 PUBLISH_WORKFLOW = ROOT / ".github" / "workflows" / "publish-pypi.yml"
 PYPROJECT = ROOT / "pyproject.toml"
+SYNC_CITATION_SCRIPT = ROOT / "tools" / "release" / "sync_citation.py"
 ZENODO_SCRIPT = ROOT / "tools" / "release" / "publish_zenodo.py"
 
 
@@ -24,39 +24,6 @@ def _citation_scalar(key):
     match = re.search(rf'^{re.escape(key)}:\s*"([^"]+)"\s*$', text, re.MULTILINE)
     assert match is not None, f"Missing {key!r} in {CITATION_CFF}"
     return match.group(1)
-
-
-def _latest_release_tag():
-    """
-    Return the latest release tag and tag date from the local git checkout.
-    """
-    try:
-        tag_result = subprocess.run(
-            ["git", "tag", "--sort=-v:refname"],
-            check=True,
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-        )
-    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
-        pytest.skip(f"Could not inspect git tags: {exc}")
-    tags = [tag for tag in tag_result.stdout.splitlines() if tag.startswith("v")]
-    if not tags:
-        pytest.skip("No release tags found in this checkout")
-    tag = tags[0]
-    date_result = subprocess.run(
-        [
-            "git",
-            "for-each-ref",
-            f"refs/tags/{tag}",
-            "--format=%(creatordate:short)",
-        ],
-        check=True,
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-    )
-    return tag.removeprefix("v"), date_result.stdout.strip()
 
 
 def _load_publish_zenodo():
@@ -71,13 +38,37 @@ def _load_publish_zenodo():
     return module
 
 
-def test_release_metadata_matches_latest_git_tag():
+def _load_sync_citation():
     """
-    Citation metadata should track the latest tagged release.
+    Import the citation sync helper directly from the repo checkout.
     """
-    version, release_date = _latest_release_tag()
-    assert _citation_scalar("version") == version
-    assert _citation_scalar("date-released") == release_date
+    spec = importlib.util.spec_from_file_location("sync_citation", SYNC_CITATION_SCRIPT)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load sync_citation from {SYNC_CITATION_SCRIPT}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_sync_citation_updates_release_metadata(tmp_path):
+    """
+    Release automation should be able to sync CITATION.cff from a tag.
+    """
+    sync_citation = _load_sync_citation()
+    citation = tmp_path / "CITATION.cff"
+    citation.write_text(CITATION_CFF.read_text(encoding="utf-8"), encoding="utf-8")
+
+    changed = sync_citation.sync_citation(
+        citation,
+        tag="v9.9.9",
+        release_date="2030-01-02",
+        repo_root=ROOT,
+    )
+
+    text = citation.read_text(encoding="utf-8")
+    assert changed is True
+    assert 'version: "9.9.9"' in text
+    assert 'date-released: "2030-01-02"' in text
 
 
 def test_zenodo_release_metadata_is_built_from_repository_sources():
@@ -94,6 +85,34 @@ def test_zenodo_release_metadata_is_built_from_repository_sources():
     assert metadata["publication_date"] == _citation_scalar("date-released")
     assert metadata["creators"][0]["name"] == "van Elteren, Casper"
     assert metadata["creators"][0]["orcid"] == "0000-0001-9862-8936"
+
+
+def test_zenodo_uploads_use_octet_stream(tmp_path, monkeypatch):
+    """
+    Zenodo bucket uploads should use a generic binary content type.
+    """
+    publish_zenodo = _load_publish_zenodo()
+    calls = []
+
+    def fake_api_request(method, url, **kwargs):
+        calls.append((method, url, kwargs))
+        return None
+
+    monkeypatch.setattr(publish_zenodo, "api_request", fake_api_request)
+    (tmp_path / "ultraplot-2.1.5.tar.gz").write_bytes(b"sdist")
+    (tmp_path / "ultraplot-2.1.5-py3-none-any.whl").write_bytes(b"wheel")
+
+    publish_zenodo.upload_dist_files(
+        {"id": 18492463, "links": {"bucket": "https://zenodo.example/files/bucket"}},
+        "token",
+        tmp_path,
+    )
+
+    assert len(calls) == 2
+    assert all(method == "PUT" for method, _, _ in calls)
+    assert all(
+        kwargs["content_type"] == "application/octet-stream" for _, _, kwargs in calls
+    )
 
 
 def test_zenodo_json_is_not_committed():
@@ -114,10 +133,12 @@ def test_readme_citation_section_uses_repository_metadata():
 
 def test_publish_workflow_creates_github_release_and_pushes_to_zenodo():
     """
-    Release tags should create a GitHub release and publish the same dist to Zenodo.
+    Release tags should sync citation metadata, create a GitHub release, and
+    publish the same dist to Zenodo.
     """
     text = PUBLISH_WORKFLOW.read_text(encoding="utf-8")
     assert 'tags: ["v*"]' in text
+    assert text.count("tools/release/sync_citation.py --tag") >= 2
     assert "softprops/action-gh-release@v2" in text
     assert "publish-zenodo:" in text
     assert "ZENODO_ACCESS_TOKEN" in text

@@ -9,6 +9,13 @@ import pytest
 import ultraplot as uplt
 
 
+def _singleton_axis(obj):
+    if isinstance(obj, uplt.SubplotGrid):
+        assert len(obj) == 1
+        return obj[0]
+    return obj
+
+
 @pytest.mark.mpl_image_compare
 def test_align_labels():
     """
@@ -354,7 +361,7 @@ def test_subset_share_xlabels_implicit_column():
         for axi, lab in fig._supxlabel_dict.items()
         if lab.get_text() == "Right-column X"
     ]
-    assert label_axes and label_axes[0] is ax[1, 1]
+    assert label_axes and label_axes[0] is _singleton_axis(ax[1, 1])
 
     uplt.close(fig)
 
@@ -406,7 +413,7 @@ def test_subset_share_ylabels_implicit_row():
     label_axes = [
         axi for axi, lab in fig._supylabel_dict.items() if lab.get_text() == "Top-row Y"
     ]
-    assert label_axes and label_axes[0] is ax[0, 0]
+    assert label_axes and label_axes[0] is _singleton_axis(ax[0, 0])
 
     uplt.close(fig)
 
@@ -493,7 +500,7 @@ def test_subset_share_xlabels_implicit_column_top():
         for axi, lab in fig._supxlabel_dict.items()
         if lab.get_text() == "Right-column X (top)"
     ]
-    assert label_axes and label_axes[0] is ax[0, 1]
+    assert label_axes and label_axes[0] is _singleton_axis(ax[0, 1])
 
     uplt.close(fig)
 
@@ -512,7 +519,7 @@ def test_subset_share_ylabels_implicit_row_right():
         for axi, lab in fig._supylabel_dict.items()
         if lab.get_text() == "Top-row Y (right)"
     ]
-    assert label_axes and label_axes[0] is ax[0, 1]
+    assert label_axes and label_axes[0] is _singleton_axis(ax[0, 1])
 
     uplt.close(fig)
 
