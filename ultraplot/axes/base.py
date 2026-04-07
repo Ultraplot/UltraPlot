@@ -3191,13 +3191,31 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # Perform extra post-processing steps
         # NOTE: This should be updated alongside draw(). We also cache the resulting
         # bounding box to speed up tight layout calculations (see _range_tightbbox).
+        include_subset_titles = kwargs.pop("include_subset_titles", True)
         self._add_queued_guides()
         self._apply_title_above()
         if self._colorbar_fill:
             self._colorbar_fill.update_ticks(manual_only=True)  # only if needed
         if self._inset_parent is not None and self._inset_zoom:
             self.indicate_inset_zoom()
-        self._tight_bbox = super().get_tightbbox(renderer, *args, **kwargs)
+        bbox = super().get_tightbbox(renderer, *args, **kwargs)
+        fig = self.figure
+        if (
+            bbox is not None
+            and fig is not None
+            and self._panel_parent is None
+            and include_subset_titles
+            and hasattr(fig, "_get_subset_title_bbox")
+        ):
+            title_bbox = fig._get_subset_title_bbox(self, renderer)
+            if title_bbox is not None:
+                bbox = mtransforms.Bbox.from_extents(
+                    bbox.xmin,
+                    min(bbox.ymin, title_bbox.ymin),
+                    bbox.xmax,
+                    max(bbox.ymax, title_bbox.ymax),
+                )
+        self._tight_bbox = bbox
         return self._tight_bbox
 
     def get_default_bbox_extra_artists(self):

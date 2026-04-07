@@ -447,6 +447,22 @@ def test_suptitle_vertical_alignment_preserves_top_spacing(va):
     uplt.close("all")
 
 
+def test_suptitle_clears_shared_subset_titles():
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    axs[0, :].format(title="Row title")
+    fig.format(suptitle="Figure title")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+
+    subset_title = next(iter(fig._subset_title_dict.values()))["artist"]
+    subset_bbox = subset_title.get_window_extent(renderer)
+    suptitle_bbox = fig._suptitle.get_window_extent(renderer)
+
+    assert subset_bbox.y1 <= suptitle_bbox.y0
+
+    uplt.close("all")
+
+
 def test_subplots_pixelsnap_aligns_axes_bounds():
     with uplt.rc.context({"subplots.pixelsnap": True}):
         fig, axs = uplt.subplots(ncols=2, nrows=2)
