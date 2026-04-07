@@ -193,6 +193,8 @@ linewidth : float or 2D array, optional
     Width of streamlines.
 cmap, norm : optional
     Colormap and normalization for array colors.
+colorbar, colorbar_kw : optional
+    Add a colorbar for array-valued streamline colors.
 arrowsize : float, optional
     Arrow size scaling.
 arrowstyle : str, optional
@@ -1918,6 +1920,8 @@ class PlotAxes(base.Axes):
         grains: Optional[int] = None,
         density: Optional[int] = None,
         arrow_at_end: Optional[bool] = None,
+        colorbar: Optional[str] = None,
+        colorbar_kw: Optional[dict[str, Any]] = None,
     ):
         """
         %(plot.curved_quiver)s
@@ -1935,6 +1939,7 @@ class PlotAxes(base.Axes):
         zorder = _not_none(zorder, mlines.Line2D.zorder)
         transform = _not_none(transform, self.transData)
         color = _not_none(color, self._get_lines.get_next_color())
+        colorbar_kw = colorbar_kw or {}
         linewidth = _not_none(linewidth, rc["lines.linewidth"])
         scale = _not_none(scale, rc["curved_quiver.scale"])
         grains = _not_none(grains, rc["curved_quiver.grains"])
@@ -2123,6 +2128,12 @@ class PlotAxes(base.Axes):
             lc.set_array(np.ma.hstack(line_colors))
             lc.set_cmap(cmap)
             lc.set_norm(norm)
+            self._update_guide(
+                lc,
+                colorbar=colorbar,
+                colorbar_kw=colorbar_kw,
+                queue_colorbar=False,
+            )
 
         self.add_collection(lc)
         self.autoscale_view()

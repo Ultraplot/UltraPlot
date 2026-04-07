@@ -843,6 +843,35 @@ def test_curved_quiver_nan_vectors():
     uplt.close(fig)
 
 
+def test_curved_quiver_colorbar_argument():
+    """
+    Test that curved_quiver forwards array colors to the shared colorbar guide path.
+    """
+    x = np.linspace(-1, 1, 11)
+    y = np.linspace(-1, 1, 11)
+    X, Y = np.meshgrid(x, y)
+    U = -Y
+    V = X
+    speed = np.sqrt(U**2 + V**2)
+
+    fig, ax = uplt.subplots()
+    m = ax.curved_quiver(
+        X,
+        Y,
+        U,
+        V,
+        color=speed,
+        colorbar="r",
+        colorbar_kw={"label": "speed"},
+    )
+
+    assert ("right", "center") in ax[0]._colorbar_dict
+    cbar = ax[0]._colorbar_dict[("right", "center")]
+    assert cbar.mappable is m.lines
+    assert cbar.ax.get_ylabel() == "speed"
+    uplt.close(fig)
+
+
 @pytest.mark.mpl_image_compare
 @pytest.mark.parametrize(
     "cmap",
