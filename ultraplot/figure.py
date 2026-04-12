@@ -1164,6 +1164,85 @@ class Figure(mfigure.Figure):
                 which="both",
             )
 
+    def _align_aspect_constrained_axes(self, *, tol: float = 1e-9) -> None:
+        """
+        Propagate aspect-constrained spanning axes boxes across sibling rows/columns.
+
+        When a fixed-aspect subplot spans multiple rows or columns, matplotlib shrinks
+        just that axes inside its gridspec slot. In layouts like ``[[1, 2], [1, 3]]``
+        this leaves the adjacent stack slightly taller or wider than the spanning axes.
+        Here we remap the sibling subplot slots onto the aspect-constrained box so the
+        overall geometry stays aligned.
+        """
+        axes = list(self._iter_axes(hidden=False, children=False, panels=False))
+        if not axes:
+            return
+
+        spans = []
+        for ax in axes:
+            try:
+                aspect = ax.get_aspect()
+                if aspect == "auto":
+                    continue
+                ax.apply_aspect()
+                ss = ax.get_subplotspec().get_topmost_subplotspec()
+                row1, row2, col1, col2 = ss._get_rows_columns()
+                slot = ss.get_position(self)
+                pos = ax.get_position(original=False)
+            except Exception:
+                continue
+
+            if row2 > row1 and (
+                abs(pos.y0 - slot.y0) > tol
+                or abs((pos.y0 + pos.height) - (slot.y0 + slot.height)) > tol
+            ):
+                spans.append(("y", row1, row2, slot, pos, ax))
+            if col2 > col1 and (
+                abs(pos.x0 - slot.x0) > tol
+                or abs((pos.x0 + pos.width) - (slot.x0 + slot.width)) > tol
+            ):
+                spans.append(("x", col1, col2, slot, pos, ax))
+
+        for axis, start, stop, slot, pos, ref_ax in spans:
+            slot0 = slot.y0 if axis == "y" else slot.x0
+            slotsize = slot.height if axis == "y" else slot.width
+            pos0 = pos.y0 if axis == "y" else pos.x0
+            possize = pos.height if axis == "y" else pos.width
+            if slotsize <= tol or possize <= tol:
+                continue
+
+            for ax in axes:
+                if ax is ref_ax:
+                    continue
+                try:
+                    if ax.get_aspect() != "auto":
+                        continue
+                    ss = ax.get_subplotspec().get_topmost_subplotspec()
+                    row1, row2, col1, col2 = ss._get_rows_columns()
+                    if axis == "y":
+                        if row1 < start or row2 > stop:
+                            continue
+                    else:
+                        if col1 < start or col2 > stop:
+                            continue
+                    old = ss.get_position(self)
+                except Exception:
+                    continue
+
+                if axis == "y":
+                    rel0 = (old.y0 - slot0) / slotsize
+                    rel1 = (old.y0 + old.height - slot0) / slotsize
+                    new0 = pos0 + rel0 * possize
+                    new1 = pos0 + rel1 * possize
+                    bounds = [old.x0, new0, old.width, new1 - new0]
+                else:
+                    rel0 = (old.x0 - slot0) / slotsize
+                    rel1 = (old.x0 + old.width - slot0) / slotsize
+                    new0 = pos0 + rel0 * possize
+                    new1 = pos0 + rel1 * possize
+                    bounds = [new0, old.y0, new1 - new0, old.height]
+                ax.set_position(bounds, which="both")
+
     def _share_ticklabels(self, *, axis: str) -> None:
         """
         Tick label sharing is determined at the figure level. While
@@ -2979,9 +3058,11 @@ class Figure(mfigure.Figure):
             return
         if aspect:
             gs._auto_layout_aspect()
+            self._align_aspect_constrained_axes()
         _align_content()
         if tight:
             gs._auto_layout_tight(renderer)
+            self._align_aspect_constrained_axes()
         _align_content()
 
     @warnings._rename_kwargs(
