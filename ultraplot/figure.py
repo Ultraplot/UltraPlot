@@ -1164,7 +1164,9 @@ class Figure(mfigure.Figure):
                 which="both",
             )
 
-    def _find_aspect_constrained_spans(self, axes, *, tol=1e-9):
+    def _find_aspect_constrained_spans(
+        self, axes: List[paxes.Axes], *, tol: float = 1e-9
+    ) -> List[Tuple[str, int, int, mtransforms.Bbox, mtransforms.Bbox, paxes.Axes]]:
         """
         Identify spanning axes whose aspect constraint caused matplotlib to
         shrink them inside their gridspec slot.
@@ -1198,7 +1200,13 @@ class Figure(mfigure.Figure):
                 spans.append(("x", col1, col2, slot, pos, ax))
         return spans
 
-    def _remap_axes_to_span(self, axes, spans, *, tol=1e-9):
+    def _remap_axes_to_span(
+        self,
+        axes: List[paxes.Axes],
+        spans: List[Tuple[str, int, int, mtransforms.Bbox, mtransforms.Bbox, paxes.Axes]],
+        *,
+        tol: float = 1e-9,
+    ) -> None:
         """
         Remap auto-aspect sibling axes so they align with the
         aspect-constrained bounds described by *spans*.
@@ -2658,7 +2666,7 @@ class Figure(mfigure.Figure):
         self._suptitle.set_position((x, y))
 
     @staticmethod
-    def _deduplicate_axes(axes):
+    def _deduplicate_axes(axes: Iterable[paxes.Axes]) -> List[paxes.Axes]:
         """
         Resolve panel parents and remove duplicates, preserving order.
         """
@@ -2673,7 +2681,7 @@ class Figure(mfigure.Figure):
         return unique
 
     @staticmethod
-    def _normalize_title_alignment(loc):
+    def _normalize_title_alignment(loc: str) -> str:
         """
         Convert a *loc* string to a horizontal alignment for ``Text.set_ha``.
         """
@@ -2689,7 +2697,9 @@ class Figure(mfigure.Figure):
                 raise ValueError(f"Invalid shared subplot title location {loc!r}.")
 
     @staticmethod
-    def _resolve_title_props(fontdict, kwargs):
+    def _resolve_title_props(
+        fontdict: dict[str, Any] | None, kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Build the property dict for a title from rc defaults, *fontdict*,
         and extra *kwargs*.
@@ -2778,7 +2788,7 @@ class Figure(mfigure.Figure):
             artist.update(kw)
         return artist
 
-    def _visible_subset_group_axes(self, group):
+    def _visible_subset_group_axes(self, group: dict[str, Any]) -> List[paxes.Axes]:
         """
         Return visible axes from a subset-title group that belong to this figure.
         """
@@ -2813,7 +2823,7 @@ class Figure(mfigure.Figure):
                 bboxes.append(artist.get_window_extent(renderer))
         return mtransforms.Bbox.union(bboxes) if bboxes else None
 
-    def _align_subset_titles(self, renderer):
+    def _align_subset_titles(self, renderer: Any) -> None:
         """
         Update the positions of titles spanning subplot subsets.
         """
