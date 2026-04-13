@@ -184,6 +184,26 @@ def test_ultralayout_panel_alignment_matches_parent():
     uplt.close(fig)
 
 
+@pytest.mark.parametrize("ultra_layout", [False, True])
+def test_fixed_aspect_spanning_axes_keeps_adjacent_stack_aligned(ultra_layout):
+    """Fixed-aspect spanning axes should keep adjacent subplot stacks aligned."""
+    if ultra_layout:
+        pytest.importorskip("kiwisolver")
+
+    fig, axs = uplt.subplots(array=[[1, 2], [1, 3]], ultra_layout=ultra_layout)
+    axs[0].plot([0, 1], [0, 1])
+    axs[0].format(aspect="equal")
+    fig.canvas.draw()
+
+    left = axs[0].get_position()
+    top_right = axs[1].get_position()
+    bottom_right = axs[2].get_position()
+
+    assert np.isclose(top_right.y1, left.y1)
+    assert np.isclose(bottom_right.y0, left.y0)
+    uplt.close(fig)
+
+
 def test_subplots_with_orthogonal_layout():
     """Test creating subplots with orthogonal layout (should work as before)."""
     layout = [[1, 2], [3, 4]]
