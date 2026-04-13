@@ -1203,7 +1203,9 @@ class Figure(mfigure.Figure):
     def _remap_axes_to_span(
         self,
         axes: List[paxes.Axes],
-        spans: List[Tuple[str, int, int, mtransforms.Bbox, mtransforms.Bbox, paxes.Axes]],
+        spans: List[
+            Tuple[str, int, int, mtransforms.Bbox, mtransforms.Bbox, paxes.Axes]
+        ],
         *,
         tol: float = 1e-9,
     ) -> None:
