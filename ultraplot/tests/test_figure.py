@@ -479,3 +479,405 @@ def test_subplots_pixelsnap_aligns_axes_bounds():
                 [bbox.x0 * width, bbox.y0 * height, bbox.x1 * width, bbox.y1 * height]
             )
             assert np.allclose(coords, np.round(coords), atol=1e-8)
+
+
+
+def test_figure_repr():
+    fig, axs = uplt.subplots(ncols=2, nrows=3)
+    r = repr(fig)
+    assert "Figure(" in r
+    assert "nrows=3" in r
+    assert "ncols=2" in r
+    uplt.close(fig)
+
+
+
+class TestShareLabelGroups:
+    def test_register_share_label_group_basic(self):
+        fig, axs = uplt.subplots(ncols=3)
+        axs[0].set_xlabel("shared x")
+        axs[1].set_xlabel("also x")
+        fig._register_share_label_group(
+            [axs[0], axs[1]], target="x", source=axs[0]
+        )
+        assert fig._has_share_label_groups("x")
+        assert fig._is_share_label_group_member(axs[0], "x")
+        assert fig._is_share_label_group_member(axs[1], "x")
+        assert not fig._is_share_label_group_member(axs[2], "x")
+        uplt.close(fig)
+
+    def test_register_share_label_group_y(self):
+        fig, axs = uplt.subplots(nrows=3)
+        axs[0].set_ylabel("shared y")
+        axs[1].set_ylabel("also y")
+        fig._register_share_label_group(
+            [axs[0], axs[1]], target="y", source=axs[0]
+        )
+        assert fig._has_share_label_groups("y")
+        assert fig._is_share_label_group_member(axs[0], "y")
+        uplt.close(fig)
+
+    def test_register_empty_and_single_axes(self):
+        fig, axs = uplt.subplots(ncols=2)
+        fig._register_share_label_group([], target="x")
+        assert not fig._has_share_label_groups("x")
+        fig._register_share_label_group([axs[0]], target="x")
+        assert not fig._has_share_label_groups("x")
+        uplt.close(fig)
+
+    def test_register_deduplicates(self):
+        fig, axs = uplt.subplots(ncols=2)
+        axs[0].set_xlabel("x")
+        fig._register_share_label_group(
+            [axs[0], axs[0], axs[1]], target="x"
+        )
+        assert fig._has_share_label_groups("x")
+        uplt.close(fig)
+
+    def test_clear_share_label_groups_all(self):
+        fig, axs = uplt.subplots(ncols=3)
+        axs[0].set_xlabel("x")
+        fig._register_share_label_group([axs[0], axs[1]], target="x")
+        fig._register_share_label_group([axs[0], axs[1]], target="y")
+        assert fig._has_share_label_groups("x")
+        fig._clear_share_label_groups()
+        assert not fig._has_share_label_groups("x")
+        assert not fig._has_share_label_groups("y")
+        uplt.close(fig)
+
+    def test_clear_share_label_groups_by_axes(self):
+        fig, axs = uplt.subplots(ncols=3)
+        axs[0].set_xlabel("x0")
+        axs[2].set_xlabel("x2")
+        fig._register_share_label_group([axs[0], axs[1]], target="x")
+        fig._clear_share_label_groups(axes=[axs[0]], target="x")
+        assert not fig._has_share_label_groups("x")
+        uplt.close(fig)
+
+    def test_clear_share_label_groups_with_spanning_labels(self):
+        fig, axs = uplt.subplots(ncols=3)
+        axs[0].set_xlabel("shared x")
+        axs[1].set_xlabel("shared x")
+        fig._register_share_label_group(
+            [axs[0], axs[1]], target="x", source=axs[0]
+        )
+        fig.canvas.draw()
+        fig._clear_share_label_groups(axes=[axs[0], axs[1]], target="x")
+        assert not fig._has_share_label_groups("x")
+        uplt.close(fig)
+
+    def test_apply_share_label_groups(self):
+        fig, axs = uplt.subplots(ncols=3, share=False)
+        axs[0].set_xlabel("shared label")
+        axs[1].set_xlabel("")
+        fig._register_share_label_group(
+            [axs[0], axs[1]], target="x", source=axs[0]
+        )
+        fig.canvas.draw()
+        uplt.close(fig)
+
+    def test_apply_share_label_groups_y(self):
+        fig, axs = uplt.subplots(nrows=3, share=False)
+        axs[0].set_ylabel("shared label")
+        axs[1].set_ylabel("")
+        fig._register_share_label_group(
+            [axs[0], axs[1]], target="y", source=axs[0]
+        )
+        fig.canvas.draw()
+        uplt.close(fig)
+
+    def test_register_for_side_updates_existing_group(self):
+        fig, axs = uplt.subplots(ncols=3)
+        axs[0].set_xlabel("original")
+        fig._register_share_label_group(
+            [axs[0], axs[1]], target="x", source=axs[0]
+        )
+        axs[0].set_xlabel("updated")
+        fig._register_share_label_group(
+            [axs[0], axs[1]], target="x", source=axs[0]
+        )
+        fig.canvas.draw()
+        uplt.close(fig)
+
+    def test_mixed_label_position_splits(self):
+        fig, axs = uplt.subplots(ncols=3, share=False)
+        axs[0].set_xlabel("bottom")
+        axs[1].xaxis.set_label_position("top")
+        axs[1].set_xlabel("top")
+        axs[2].set_xlabel("bottom")
+        fig._register_share_label_group(
+            [axs[0], axs[1], axs[2]], target="x"
+        )
+        fig.canvas.draw()
+        uplt.close(fig)
+
+
+
+class TestSubsetTitleHelpers:
+    def test_deduplicate_axes(self):
+        fig, axs = uplt.subplots(ncols=3)
+        result = fig._deduplicate_axes([axs[0], axs[0], axs[1]])
+        assert len(result) == 2
+        uplt.close(fig)
+
+    def test_normalize_title_alignment_left(self):
+        from ultraplot.figure import Figure
+
+        assert Figure._normalize_title_alignment("left") == "left"
+
+    def test_normalize_title_alignment_center(self):
+        from ultraplot.figure import Figure
+
+        assert Figure._normalize_title_alignment("center") == "center"
+
+    def test_normalize_title_alignment_right(self):
+        from ultraplot.figure import Figure
+
+        assert Figure._normalize_title_alignment("right") == "right"
+
+    def test_normalize_title_alignment_invalid(self):
+        from ultraplot.figure import Figure
+
+        with pytest.raises((ValueError, KeyError)):
+            Figure._normalize_title_alignment("invalid_loc_xyz")
+
+    def test_resolve_title_props_defaults(self):
+        from ultraplot.figure import Figure
+
+        kw = Figure._resolve_title_props(None, {})
+        assert isinstance(kw, dict)
+
+    def test_resolve_title_props_with_fontdict(self):
+        from ultraplot.figure import Figure
+
+        kw = Figure._resolve_title_props({"size": 20}, {"weight": "bold"})
+        assert kw["size"] == 20
+        assert kw["weight"] == "bold"
+
+    def test_visible_subset_group_axes(self):
+        fig, axs = uplt.subplots(ncols=3)
+        group = {"axes": list(axs), "artist": None}
+        result = fig._visible_subset_group_axes(group)
+        assert len(result) == 3
+        uplt.close(fig)
+
+    def test_update_subset_title_single_axes_delegates(self):
+        fig, axs = uplt.subplots(ncols=3)
+        artist = fig._update_subset_title([axs[0]], "Solo title")
+        assert artist.get_text() == "Solo title"
+        uplt.close(fig)
+
+    def test_update_subset_title_empty_raises(self):
+        fig, axs = uplt.subplots(ncols=2)
+        with pytest.raises(ValueError, match="Need at least one"):
+            fig._update_subset_title([], "No axes")
+        uplt.close(fig)
+
+    def test_update_subset_title_creates_group(self):
+        fig, axs = uplt.subplots(ncols=3)
+        artist = fig._update_subset_title(
+            [axs[0], axs[1]], "Two-panel title"
+        )
+        assert artist.get_text() == "Two-panel title"
+        assert len(fig._subset_title_dict) == 1
+        uplt.close(fig)
+
+    def test_update_subset_title_update_existing(self):
+        fig, axs = uplt.subplots(ncols=3)
+        fig._update_subset_title([axs[0], axs[1]], "First")
+        fig._update_subset_title([axs[0], axs[1]], "Updated")
+        assert len(fig._subset_title_dict) == 1
+        group = next(iter(fig._subset_title_dict.values()))
+        assert group["artist"].get_text() == "Updated"
+        uplt.close(fig)
+
+    def test_get_subset_title_bbox_returns_none_when_empty(self):
+        fig, axs = uplt.subplots(ncols=2)
+        renderer = fig._get_renderer()
+        assert fig._get_subset_title_bbox(axs[0], renderer) is None
+        uplt.close(fig)
+
+    def test_get_subset_title_bbox_for_top_row_only(self):
+        fig, axs = uplt.subplots(nrows=2, ncols=2)
+        fig._update_subset_title([axs[0], axs[1]], "Top row title")
+        fig.canvas.draw()
+        renderer = fig._get_renderer()
+        bbox_top = fig._get_subset_title_bbox(axs[0], renderer)
+        bbox_bottom = fig._get_subset_title_bbox(axs[2], renderer)
+        assert bbox_top is not None
+        assert bbox_bottom is None
+        uplt.close(fig)
+
+    def test_align_subset_titles_removes_orphaned(self):
+        fig, axs = uplt.subplots(ncols=3)
+        fig._update_subset_title([axs[0], axs[1]], "Will be orphaned")
+        # Artificially remove the axes from the figure
+        key = next(iter(fig._subset_title_dict))
+        fig._subset_title_dict[key]["axes"] = []
+        renderer = fig._get_renderer()
+        fig._align_subset_titles(renderer)
+        assert len(fig._subset_title_dict) == 0
+        uplt.close(fig)
+
+    def test_align_subset_titles_with_manual_y(self):
+        fig, axs = uplt.subplots(ncols=3)
+        fig._update_subset_title(
+            [axs[0], axs[1]], "Manual Y", y=0.95
+        )
+        fig.canvas.draw()
+        key = next(iter(fig._subset_title_dict))
+        artist = fig._subset_title_dict[key]["artist"]
+        assert np.isclose(artist.get_position()[1], 0.95)
+        uplt.close(fig)
+
+    def test_subset_title_left_alignment(self):
+        fig, axs = uplt.subplots(ncols=3)
+        fig._update_subset_title(
+            [axs[0], axs[1]], "Left title", loc="left"
+        )
+        key = next(iter(fig._subset_title_dict))
+        artist = fig._subset_title_dict[key]["artist"]
+        assert artist.get_ha() == "left"
+        uplt.close(fig)
+
+    def test_subset_title_right_alignment(self):
+        fig, axs = uplt.subplots(ncols=3)
+        fig._update_subset_title(
+            [axs[0], axs[1]], "Right title", loc="right"
+        )
+        key = next(iter(fig._subset_title_dict))
+        artist = fig._subset_title_dict[key]["artist"]
+        assert artist.get_ha() == "right"
+        uplt.close(fig)
+
+
+
+class TestAspectConstrainedHelpers:
+    def test_find_spans_empty(self):
+        fig, axs = uplt.subplots(ncols=2)
+        spans = fig._find_aspect_constrained_spans([])
+        assert spans == []
+        uplt.close(fig)
+
+    def test_find_spans_no_aspect(self):
+        fig, axs = uplt.subplots(ncols=2)
+        axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
+        spans = fig._find_aspect_constrained_spans(axes)
+        assert spans == []
+        uplt.close(fig)
+
+    def test_remap_with_empty_spans(self):
+        fig, axs = uplt.subplots(ncols=2)
+        axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
+        fig._remap_axes_to_span(axes, [])  # should be a no-op
+        uplt.close(fig)
+
+    def test_align_aspect_constrained_no_axes(self):
+        fig = uplt.figure()
+        fig._align_aspect_constrained_axes()  # should not raise
+        uplt.close(fig)
+
+    def test_aspect_row_spanning_layout(self):
+        fig, axs = uplt.subplots([[1, 2], [1, 3]])
+        axs[0].set_aspect("equal")
+        axs[0].plot([0, 1], [0, 1])
+        axs[1].plot([0, 1], [0, 1])
+        axs[2].plot([0, 1], [0, 1])
+        fig.canvas.draw()
+        axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
+        spans = fig._find_aspect_constrained_spans(axes)
+        assert len(spans) >= 1
+        assert any(s[0] == "y" for s in spans)
+        uplt.close(fig)
+
+    def test_aspect_col_spanning_layout(self):
+        fig, axs = uplt.subplots([[1, 1], [2, 3]])
+        axs[0].set_aspect("equal")
+        axs[0].plot([0, 1], [0, 1])
+        axs[1].plot([0, 1], [0, 1])
+        axs[2].plot([0, 1], [0, 1])
+        fig.canvas.draw()
+        axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
+        spans = fig._find_aspect_constrained_spans(axes)
+        assert len(spans) >= 1
+        assert any(s[0] == "x" for s in spans)
+        uplt.close(fig)
+
+    def test_full_align_aspect_row_spanning(self):
+        fig, axs = uplt.subplots([[1, 2], [1, 3]])
+        axs[0].set_aspect("equal")
+        axs[0].plot([0, 1], [0, 1])
+        axs[1].plot([0, 1], [0, 1])
+        axs[2].plot([0, 1], [0, 1])
+        fig.canvas.draw()
+        pos0 = axs[0].get_position()
+        pos1 = axs[1].get_position()
+        pos2 = axs[2].get_position()
+        assert pos1.y0 + pos1.height <= pos0.y0 + pos0.height + 0.01
+        uplt.close(fig)
+
+
+
+def test_add_subplot_three_integer_args():
+    fig = uplt.figure()
+    ax = fig.add_subplot(2, 2, 1)
+    assert ax is not None
+    ax2 = fig.add_subplot(2, 2, (3, 4))
+    assert ax2 is not None
+    uplt.close(fig)
+
+
+
+def test_explicit_figwidth_figheight():
+    fig, axs = uplt.subplots(figwidth=6, figheight=4)
+    w, h = fig.get_size_inches()
+    assert np.isclose(w, 6, atol=0.1)
+    assert np.isclose(h, 4, atol=0.1)
+    uplt.close(fig)
+
+
+def test_figwidth_overrides_refwidth():
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        fig, axs = uplt.subplots(figwidth=6, refwidth=3)
+    conflict_warnings = [
+        w for w in record if "conflicting" in str(w.message).lower()
+    ]
+    assert len(conflict_warnings) >= 1
+    uplt.close(fig)
+
+
+def test_figheight_overrides_refheight():
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        fig, axs = uplt.subplots(figheight=4, refheight=2)
+    conflict_warnings = [
+        w for w in record if "conflicting" in str(w.message).lower()
+    ]
+    assert len(conflict_warnings) >= 1
+    uplt.close(fig)
+
+
+def test_journal_size():
+    fig, axs = uplt.subplots(journal="ams1")
+    fig.canvas.draw()
+    uplt.close(fig)
+
+
+def test_subplots_with_gridspec_kw_warns():
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        fig, axs = uplt.subplots(
+            [[1, 2], [3, 4]], gridspec_kw={"hspace": 0.5}
+        )
+    kw_warnings = [
+        w for w in record if "not necessary" in str(w.message).lower()
+    ]
+    assert len(kw_warnings) >= 1
+    uplt.close(fig)
+
+
+def test_refaspect_as_tuple():
+    fig, axs = uplt.subplots(refaspect=(16, 9))
+    fig.canvas.draw()
+    uplt.close(fig)

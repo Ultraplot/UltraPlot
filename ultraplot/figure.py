@@ -1164,20 +1164,14 @@ class Figure(mfigure.Figure):
                 which="both",
             )
 
-    def _align_aspect_constrained_axes(self, *, tol: float = 1e-9) -> None:
+    def _find_aspect_constrained_spans(self, axes, *, tol=1e-9):
         """
-        Propagate aspect-constrained spanning axes boxes across sibling rows/columns.
+        Identify spanning axes whose aspect constraint caused matplotlib to
+        shrink them inside their gridspec slot.
 
-        When a fixed-aspect subplot spans multiple rows or columns, matplotlib shrinks
-        just that axes inside its gridspec slot. In layouts like ``[[1, 2], [1, 3]]``
-        this leaves the adjacent stack slightly taller or wider than the spanning axes.
-        Here we remap the sibling subplot slots onto the aspect-constrained box so the
-        overall geometry stays aligned.
+        Returns a list of ``(axis, start, stop, slot, pos, ref_ax)`` tuples
+        where *axis* is ``'y'`` for row-spanning or ``'x'`` for column-spanning.
         """
-        axes = list(self._iter_axes(hidden=False, children=False, panels=False))
-        if not axes:
-            return
-
         spans = []
         for ax in axes:
             try:
@@ -1189,7 +1183,7 @@ class Figure(mfigure.Figure):
                 row1, row2, col1, col2 = ss._get_rows_columns()
                 slot = ss.get_position(self)
                 pos = ax.get_position(original=False)
-            except Exception:
+            except (AttributeError, TypeError):
                 continue
 
             if row2 > row1 and (
@@ -1202,7 +1196,13 @@ class Figure(mfigure.Figure):
                 or abs((pos.x0 + pos.width) - (slot.x0 + slot.width)) > tol
             ):
                 spans.append(("x", col1, col2, slot, pos, ax))
+        return spans
 
+    def _remap_axes_to_span(self, axes, spans, *, tol=1e-9):
+        """
+        Remap auto-aspect sibling axes so they align with the
+        aspect-constrained bounds described by *spans*.
+        """
         for axis, start, stop, slot, pos, ref_ax in spans:
             slot0 = slot.y0 if axis == "y" else slot.x0
             slotsize = slot.height if axis == "y" else slot.width
@@ -1226,7 +1226,7 @@ class Figure(mfigure.Figure):
                         if col1 < start or col2 > stop:
                             continue
                     old = ss.get_position(self)
-                except Exception:
+                except (AttributeError, TypeError):
                     continue
 
                 if axis == "y":
@@ -1242,6 +1242,22 @@ class Figure(mfigure.Figure):
                     new1 = pos0 + rel1 * possize
                     bounds = [new0, old.y0, new1 - new0, old.height]
                 ax.set_position(bounds, which="both")
+
+    def _align_aspect_constrained_axes(self, *, tol: float = 1e-9) -> None:
+        """
+        Propagate aspect-constrained spanning axes boxes across sibling rows/columns.
+
+        When a fixed-aspect subplot spans multiple rows or columns, matplotlib shrinks
+        just that axes inside its gridspec slot. In layouts like ``[[1, 2], [1, 3]]``
+        this leaves the adjacent stack slightly taller or wider than the spanning axes.
+        Here we remap the sibling subplot slots onto the aspect-constrained box so the
+        overall geometry stays aligned.
+        """
+        axes = list(self._iter_axes(hidden=False, children=False, panels=False))
+        if not axes:
+            return
+        spans = self._find_aspect_constrained_spans(axes, tol=tol)
+        self._remap_axes_to_span(axes, spans, tol=tol)
 
     def _share_ticklabels(self, *, axis: str) -> None:
         """
@@ -2641,6 +2657,59 @@ class Figure(mfigure.Figure):
         y = y_target - y_bbox
         self._suptitle.set_position((x, y))
 
+    @staticmethod
+    def _deduplicate_axes(axes):
+        """
+        Resolve panel parents and remove duplicates, preserving order.
+        """
+        seen = set()
+        unique = []
+        for ax in axes:
+            ax = ax._panel_parent or ax
+            ax_id = id(ax)
+            if ax_id not in seen:
+                seen.add(ax_id)
+                unique.append(ax)
+        return unique
+
+    @staticmethod
+    def _normalize_title_alignment(loc):
+        """
+        Convert a *loc* string to a horizontal alignment for ``Text.set_ha``.
+        """
+        align = _translate_loc(loc, "text")
+        match align:
+            case "left" | "outer left" | "upper left" | "lower left":
+                return "left"
+            case "center" | "upper center" | "lower center":
+                return "center"
+            case "right" | "outer right" | "upper right" | "lower right":
+                return "right"
+            case _:
+                raise ValueError(f"Invalid shared subplot title location {loc!r}.")
+
+    @staticmethod
+    def _resolve_title_props(fontdict, kwargs):
+        """
+        Build the property dict for a title from rc defaults, *fontdict*,
+        and extra *kwargs*.
+        """
+        kw = rc.fill(
+            {
+                "size": "title.size",
+                "weight": "title.weight",
+                "color": "title.color",
+                "family": "font.family",
+            },
+            context=True,
+        )
+        if "color" in kw and kw["color"] == "auto":
+            del kw["color"]
+        if fontdict:
+            kw.update(fontdict)
+        kw.update(kwargs)
+        return kw
+
     def _update_subset_title(
         self,
         axes: Iterable[paxes.Axes],
@@ -2673,16 +2742,7 @@ class Figure(mfigure.Figure):
         if not axes:
             raise ValueError("Need at least one axes to create a shared subplot title.")
 
-        seen = set()
-        unique_axes = []
-        for ax in axes:
-            ax = ax._panel_parent or ax
-            ax_id = id(ax)
-            if ax_id in seen:
-                continue
-            seen.add(ax_id)
-            unique_axes.append(ax)
-        axes = unique_axes
+        axes = self._deduplicate_axes(axes)
         if len(axes) < 2:
             return axes[0].set_title(
                 title, fontdict=fontdict, loc=loc, pad=pad, y=y, **kwargs
@@ -2690,30 +2750,9 @@ class Figure(mfigure.Figure):
 
         key = tuple(sorted(id(ax) for ax in axes))
         group = self._subset_title_dict.get(key)
-        kw = rc.fill(
-            {
-                "size": "title.size",
-                "weight": "title.weight",
-                "color": "title.color",
-                "family": "font.family",
-            },
-            context=True,
-        )
-        if "color" in kw and kw["color"] == "auto":
-            del kw["color"]
-        if fontdict:
-            kw.update(fontdict)
-        kw.update(kwargs)
-        align = _translate_loc(loc, "text")
-        match align:
-            case "left" | "outer left" | "upper left" | "lower left":
-                align = "left"
-            case "center" | "upper center" | "lower center":
-                align = "center"
-            case "right" | "outer right" | "upper right" | "lower right":
-                align = "right"
-            case _:
-                raise ValueError(f"Invalid shared subplot title location {loc!r}.")
+        kw = self._resolve_title_props(fontdict, kwargs)
+        align = self._normalize_title_alignment(loc)
+
         if group is None:
             artist = self.text(
                 0.5,
@@ -2739,6 +2778,16 @@ class Figure(mfigure.Figure):
             artist.update(kw)
         return artist
 
+    def _visible_subset_group_axes(self, group):
+        """
+        Return visible axes from a subset-title group that belong to this figure.
+        """
+        return [
+            ax
+            for ax in group["axes"]
+            if ax is not None and ax.figure is self and ax.get_visible()
+        ]
+
     def _get_subset_title_bbox(
         self, ax: paxes.Axes, renderer
     ) -> mtransforms.Bbox | None:
@@ -2757,15 +2806,12 @@ class Figure(mfigure.Figure):
             if not artist.get_visible() or not artist.get_text():
                 continue
             axs = [
-                group_ax._panel_parent or group_ax
-                for group_ax in group["axes"]
-                if group_ax is not None
-                and group_ax.figure is self
-                and group_ax.get_visible()
+                a._panel_parent or a
+                for a in self._visible_subset_group_axes(group)
             ]
             if not axs or ax not in axs:
                 continue
-            top = min(group_ax._range_subplotspec("y")[0] for group_ax in axs)
+            top = min(a._range_subplotspec("y")[0] for a in axs)
             if ax._range_subplotspec("y")[0] == top:
                 bboxes.append(artist.get_window_extent(renderer))
         return mtransforms.Bbox.union(bboxes) if bboxes else None
@@ -2777,11 +2823,7 @@ class Figure(mfigure.Figure):
         for key in list(self._subset_title_dict):
             group = self._subset_title_dict[key]
             artist = group["artist"]
-            axs = [
-                ax
-                for ax in group["axes"]
-                if ax is not None and ax.figure is self and ax.get_visible()
-            ]
+            axs = self._visible_subset_group_axes(group)
             if not axs:
                 artist.remove()
                 del self._subset_title_dict[key]
