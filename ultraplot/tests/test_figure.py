@@ -748,7 +748,7 @@ def test_subset_title_right_alignment():
 
 def test_find_aspect_spans_empty():
     fig, axs = uplt.subplots(ncols=2)
-    spans = fig._find_aspect_constrained_spans([])
+    spans = fig._find_misaligned_spans([])
     assert spans == []
     uplt.close(fig)
 
@@ -756,7 +756,7 @@ def test_find_aspect_spans_empty():
 def test_find_aspect_spans_no_aspect():
     fig, axs = uplt.subplots(ncols=2)
     axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
-    spans = fig._find_aspect_constrained_spans(axes)
+    spans = fig._find_misaligned_spans(axes)
     assert spans == []
     uplt.close(fig)
 
@@ -768,9 +768,9 @@ def test_remap_axes_with_empty_spans():
     uplt.close(fig)
 
 
-def test_align_aspect_constrained_no_axes():
+def test_align_spanning_axes_no_axes():
     fig = uplt.figure()
-    fig._align_aspect_constrained_axes()
+    fig._align_spanning_axes()
     uplt.close(fig)
 
 
@@ -782,7 +782,7 @@ def test_aspect_row_spanning_layout():
     axs[2].plot([0, 1], [0, 1])
     fig.canvas.draw()
     axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
-    spans = fig._find_aspect_constrained_spans(axes)
+    spans = fig._find_misaligned_spans(axes)
     assert len(spans) >= 1
     assert any(s[0] == "y" for s in spans)
     uplt.close(fig)
@@ -796,7 +796,7 @@ def test_aspect_col_spanning_layout():
     axs[2].plot([0, 1], [0, 1])
     fig.canvas.draw()
     axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
-    spans = fig._find_aspect_constrained_spans(axes)
+    spans = fig._find_misaligned_spans(axes)
     assert len(spans) >= 1
     assert any(s[0] == "x" for s in spans)
     uplt.close(fig)

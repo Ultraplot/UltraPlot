@@ -1164,12 +1164,12 @@ class Figure(mfigure.Figure):
                 which="both",
             )
 
-    def _find_aspect_constrained_spans(
+    def _find_misaligned_spans(
         self, axes: List[paxes.Axes], *, tol: float = 1e-9
     ) -> List[Tuple[str, int, int, mtransforms.Bbox, mtransforms.Bbox, paxes.Axes]]:
         """
-        Identify spanning axes whose aspect constraint caused matplotlib to
-        shrink them inside their gridspec slot.
+        Identify spanning axes whose actual position differs from their
+        gridspec slot (e.g. because of an aspect constraint).
 
         Returns a list of ``(axis, start, stop, slot, pos, ref_ax)`` tuples
         where *axis* is ``'y'`` for row-spanning or ``'x'`` for column-spanning.
@@ -1177,9 +1177,6 @@ class Figure(mfigure.Figure):
         spans = []
         for ax in axes:
             try:
-                aspect = ax.get_aspect()
-                if aspect == "auto":
-                    continue
                 ax.apply_aspect()
                 ss = ax.get_subplotspec().get_topmost_subplotspec()
                 row1, row2, col1, col2 = ss._get_rows_columns()
@@ -1210,8 +1207,9 @@ class Figure(mfigure.Figure):
         tol: float = 1e-9,
     ) -> None:
         """
-        Remap auto-aspect sibling axes so they align with the
-        aspect-constrained bounds described by *spans*.
+        Remap sibling axes so they align with the actual bounds of
+        spanning axes described by *spans*.  Siblings with their own
+        fixed aspect are skipped since they have independent constraints.
         """
         for axis, start, stop, slot, pos, ref_ax in spans:
             slot0 = slot.y0 if axis == "y" else slot.x0
@@ -1253,20 +1251,20 @@ class Figure(mfigure.Figure):
                     bounds = [new0, old.y0, new1 - new0, old.height]
                 ax.set_position(bounds, which="both")
 
-    def _align_aspect_constrained_axes(self, *, tol: float = 1e-9) -> None:
+    def _align_spanning_axes(self, *, tol: float = 1e-9) -> None:
         """
-        Propagate aspect-constrained spanning axes boxes across sibling rows/columns.
+        Align sibling subplots to spanning axes whose actual position
+        differs from their gridspec slot.
 
-        When a fixed-aspect subplot spans multiple rows or columns, matplotlib shrinks
-        just that axes inside its gridspec slot. In layouts like ``[[1, 2], [1, 3]]``
-        this leaves the adjacent stack slightly taller or wider than the spanning axes.
-        Here we remap the sibling subplot slots onto the aspect-constrained box so the
-        overall geometry stays aligned.
+        When a subplot spans multiple rows or columns and is shrunk inside
+        its slot (e.g. by a fixed aspect ratio), the adjacent subplots keep
+        their full extent and visibly stick out.  This method detects the
+        mismatch and remaps the sibling positions proportionally.
         """
         axes = list(self._iter_axes(hidden=False, children=False, panels=False))
         if not axes:
             return
-        spans = self._find_aspect_constrained_spans(axes, tol=tol)
+        spans = self._find_misaligned_spans(axes, tol=tol)
         self._remap_axes_to_span(axes, spans, tol=tol)
 
     def _share_ticklabels(self, *, axis: str) -> None:
@@ -3109,11 +3107,11 @@ class Figure(mfigure.Figure):
             return
         if aspect:
             gs._auto_layout_aspect()
-            self._align_aspect_constrained_axes()
+            self._align_spanning_axes()
         _align_content()
         if tight:
             gs._auto_layout_tight(renderer)
-            self._align_aspect_constrained_axes()
+            self._align_spanning_axes()
         _align_content()
 
     @warnings._rename_kwargs(
