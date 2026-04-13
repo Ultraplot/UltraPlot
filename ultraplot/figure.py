@@ -2805,10 +2805,7 @@ class Figure(mfigure.Figure):
             artist = group["artist"]
             if not artist.get_visible() or not artist.get_text():
                 continue
-            axs = [
-                a._panel_parent or a
-                for a in self._visible_subset_group_axes(group)
-            ]
+            axs = [a._panel_parent or a for a in self._visible_subset_group_axes(group)]
             if not axs or ax not in axs:
                 continue
             top = min(a._range_subplotspec("y")[0] for a in axs)

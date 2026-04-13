@@ -481,7 +481,6 @@ def test_subplots_pixelsnap_aligns_axes_bounds():
             assert np.allclose(coords, np.round(coords), atol=1e-8)
 
 
-
 def test_figure_repr():
     fig, axs = uplt.subplots(ncols=2, nrows=3)
     r = repr(fig)
@@ -491,15 +490,12 @@ def test_figure_repr():
     uplt.close(fig)
 
 
-
 class TestShareLabelGroups:
     def test_register_share_label_group_basic(self):
         fig, axs = uplt.subplots(ncols=3)
         axs[0].set_xlabel("shared x")
         axs[1].set_xlabel("also x")
-        fig._register_share_label_group(
-            [axs[0], axs[1]], target="x", source=axs[0]
-        )
+        fig._register_share_label_group([axs[0], axs[1]], target="x", source=axs[0])
         assert fig._has_share_label_groups("x")
         assert fig._is_share_label_group_member(axs[0], "x")
         assert fig._is_share_label_group_member(axs[1], "x")
@@ -510,9 +506,7 @@ class TestShareLabelGroups:
         fig, axs = uplt.subplots(nrows=3)
         axs[0].set_ylabel("shared y")
         axs[1].set_ylabel("also y")
-        fig._register_share_label_group(
-            [axs[0], axs[1]], target="y", source=axs[0]
-        )
+        fig._register_share_label_group([axs[0], axs[1]], target="y", source=axs[0])
         assert fig._has_share_label_groups("y")
         assert fig._is_share_label_group_member(axs[0], "y")
         uplt.close(fig)
@@ -528,9 +522,7 @@ class TestShareLabelGroups:
     def test_register_deduplicates(self):
         fig, axs = uplt.subplots(ncols=2)
         axs[0].set_xlabel("x")
-        fig._register_share_label_group(
-            [axs[0], axs[0], axs[1]], target="x"
-        )
+        fig._register_share_label_group([axs[0], axs[0], axs[1]], target="x")
         assert fig._has_share_label_groups("x")
         uplt.close(fig)
 
@@ -558,9 +550,7 @@ class TestShareLabelGroups:
         fig, axs = uplt.subplots(ncols=3)
         axs[0].set_xlabel("shared x")
         axs[1].set_xlabel("shared x")
-        fig._register_share_label_group(
-            [axs[0], axs[1]], target="x", source=axs[0]
-        )
+        fig._register_share_label_group([axs[0], axs[1]], target="x", source=axs[0])
         fig.canvas.draw()
         fig._clear_share_label_groups(axes=[axs[0], axs[1]], target="x")
         assert not fig._has_share_label_groups("x")
@@ -570,9 +560,7 @@ class TestShareLabelGroups:
         fig, axs = uplt.subplots(ncols=3, share=False)
         axs[0].set_xlabel("shared label")
         axs[1].set_xlabel("")
-        fig._register_share_label_group(
-            [axs[0], axs[1]], target="x", source=axs[0]
-        )
+        fig._register_share_label_group([axs[0], axs[1]], target="x", source=axs[0])
         fig.canvas.draw()
         uplt.close(fig)
 
@@ -580,22 +568,16 @@ class TestShareLabelGroups:
         fig, axs = uplt.subplots(nrows=3, share=False)
         axs[0].set_ylabel("shared label")
         axs[1].set_ylabel("")
-        fig._register_share_label_group(
-            [axs[0], axs[1]], target="y", source=axs[0]
-        )
+        fig._register_share_label_group([axs[0], axs[1]], target="y", source=axs[0])
         fig.canvas.draw()
         uplt.close(fig)
 
     def test_register_for_side_updates_existing_group(self):
         fig, axs = uplt.subplots(ncols=3)
         axs[0].set_xlabel("original")
-        fig._register_share_label_group(
-            [axs[0], axs[1]], target="x", source=axs[0]
-        )
+        fig._register_share_label_group([axs[0], axs[1]], target="x", source=axs[0])
         axs[0].set_xlabel("updated")
-        fig._register_share_label_group(
-            [axs[0], axs[1]], target="x", source=axs[0]
-        )
+        fig._register_share_label_group([axs[0], axs[1]], target="x", source=axs[0])
         fig.canvas.draw()
         uplt.close(fig)
 
@@ -605,12 +587,9 @@ class TestShareLabelGroups:
         axs[1].xaxis.set_label_position("top")
         axs[1].set_xlabel("top")
         axs[2].set_xlabel("bottom")
-        fig._register_share_label_group(
-            [axs[0], axs[1], axs[2]], target="x"
-        )
+        fig._register_share_label_group([axs[0], axs[1], axs[2]], target="x")
         fig.canvas.draw()
         uplt.close(fig)
-
 
 
 class TestSubsetTitleHelpers:
@@ -675,9 +654,7 @@ class TestSubsetTitleHelpers:
 
     def test_update_subset_title_creates_group(self):
         fig, axs = uplt.subplots(ncols=3)
-        artist = fig._update_subset_title(
-            [axs[0], axs[1]], "Two-panel title"
-        )
+        artist = fig._update_subset_title([axs[0], axs[1]], "Two-panel title")
         assert artist.get_text() == "Two-panel title"
         assert len(fig._subset_title_dict) == 1
         uplt.close(fig)
@@ -721,9 +698,7 @@ class TestSubsetTitleHelpers:
 
     def test_align_subset_titles_with_manual_y(self):
         fig, axs = uplt.subplots(ncols=3)
-        fig._update_subset_title(
-            [axs[0], axs[1]], "Manual Y", y=0.95
-        )
+        fig._update_subset_title([axs[0], axs[1]], "Manual Y", y=0.95)
         fig.canvas.draw()
         key = next(iter(fig._subset_title_dict))
         artist = fig._subset_title_dict[key]["artist"]
@@ -732,9 +707,7 @@ class TestSubsetTitleHelpers:
 
     def test_subset_title_left_alignment(self):
         fig, axs = uplt.subplots(ncols=3)
-        fig._update_subset_title(
-            [axs[0], axs[1]], "Left title", loc="left"
-        )
+        fig._update_subset_title([axs[0], axs[1]], "Left title", loc="left")
         key = next(iter(fig._subset_title_dict))
         artist = fig._subset_title_dict[key]["artist"]
         assert artist.get_ha() == "left"
@@ -742,14 +715,11 @@ class TestSubsetTitleHelpers:
 
     def test_subset_title_right_alignment(self):
         fig, axs = uplt.subplots(ncols=3)
-        fig._update_subset_title(
-            [axs[0], axs[1]], "Right title", loc="right"
-        )
+        fig._update_subset_title([axs[0], axs[1]], "Right title", loc="right")
         key = next(iter(fig._subset_title_dict))
         artist = fig._subset_title_dict[key]["artist"]
         assert artist.get_ha() == "right"
         uplt.close(fig)
-
 
 
 class TestAspectConstrainedHelpers:
@@ -817,7 +787,6 @@ class TestAspectConstrainedHelpers:
         uplt.close(fig)
 
 
-
 def test_add_subplot_three_integer_args():
     fig = uplt.figure()
     ax = fig.add_subplot(2, 2, 1)
@@ -825,7 +794,6 @@ def test_add_subplot_three_integer_args():
     ax2 = fig.add_subplot(2, 2, (3, 4))
     assert ax2 is not None
     uplt.close(fig)
-
 
 
 def test_explicit_figwidth_figheight():
@@ -840,9 +808,7 @@ def test_figwidth_overrides_refwidth():
     with warnings.catch_warnings(record=True) as record:
         warnings.simplefilter("always")
         fig, axs = uplt.subplots(figwidth=6, refwidth=3)
-    conflict_warnings = [
-        w for w in record if "conflicting" in str(w.message).lower()
-    ]
+    conflict_warnings = [w for w in record if "conflicting" in str(w.message).lower()]
     assert len(conflict_warnings) >= 1
     uplt.close(fig)
 
@@ -851,9 +817,7 @@ def test_figheight_overrides_refheight():
     with warnings.catch_warnings(record=True) as record:
         warnings.simplefilter("always")
         fig, axs = uplt.subplots(figheight=4, refheight=2)
-    conflict_warnings = [
-        w for w in record if "conflicting" in str(w.message).lower()
-    ]
+    conflict_warnings = [w for w in record if "conflicting" in str(w.message).lower()]
     assert len(conflict_warnings) >= 1
     uplt.close(fig)
 
@@ -867,12 +831,8 @@ def test_journal_size():
 def test_subplots_with_gridspec_kw_warns():
     with warnings.catch_warnings(record=True) as record:
         warnings.simplefilter("always")
-        fig, axs = uplt.subplots(
-            [[1, 2], [3, 4]], gridspec_kw={"hspace": 0.5}
-        )
-    kw_warnings = [
-        w for w in record if "not necessary" in str(w.message).lower()
-    ]
+        fig, axs = uplt.subplots([[1, 2], [3, 4]], gridspec_kw={"hspace": 0.5})
+    kw_warnings = [w for w in record if "not necessary" in str(w.message).lower()]
     assert len(kw_warnings) >= 1
     uplt.close(fig)
 
