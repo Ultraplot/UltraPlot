@@ -19,10 +19,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-        shell: bash
-
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
