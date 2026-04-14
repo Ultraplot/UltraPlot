@@ -20,7 +20,16 @@ def parse_args() -> argparse.Namespace:
         "--citation",
         type=Path,
         default=Path("CITATION.cff"),
-        help="Path to the repository CITATION.cff file.",
+        help="Path to the source CITATION.cff file.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help=(
+            "Optional output path for the synced citation file. "
+            "Defaults to overwriting --citation."
+        ),
     )
     parser.add_argument(
         "--date",
@@ -78,21 +87,40 @@ def replace_scalar(text: str, key: str, value: str) -> str:
     return updated
 
 
-def sync_citation(
+def build_synced_citation(
     citation_path: Path,
     *,
     tag: str,
     release_date: str | None = None,
     repo_root: Path | None = None,
-    check: bool = False,
-) -> bool:
+) -> tuple[str, str, bool]:
     repo_root = repo_root or citation_path.resolve().parent
     version = tag_version(tag)
     release_date = release_date or resolve_release_date(tag, repo_root)
+
     original = citation_path.read_text(encoding="utf-8")
     updated = replace_scalar(original, "version", version)
     updated = replace_scalar(updated, "date-released", release_date)
     changed = updated != original
+    return original, updated, changed
+
+
+def sync_citation(
+    citation_path: Path,
+    *,
+    tag: str,
+    output_path: Path | None = None,
+    release_date: str | None = None,
+    repo_root: Path | None = None,
+    check: bool = False,
+) -> bool:
+    original, updated, changed = build_synced_citation(
+        citation_path,
+        tag=tag,
+        release_date=release_date,
+        repo_root=repo_root,
+    )
+
     if check:
         if changed:
             raise SystemExit(
@@ -100,22 +128,40 @@ def sync_citation(
                 "Run tools/release/sync_citation.py before releasing."
             )
         return False
-    citation_path.write_text(updated, encoding="utf-8")
+
+    destination = output_path or citation_path
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(updated, encoding="utf-8")
     return changed
 
 
 def main() -> int:
     args = parse_args()
+    destination = args.output or args.citation
+
     changed = sync_citation(
         args.citation,
         tag=args.tag,
+        output_path=args.output,
         release_date=args.date,
         repo_root=Path.cwd(),
         check=args.check,
     )
-    action = "Validated" if args.check else "Updated"
-    print(f"{action} {args.citation} for {normalize_tag(args.tag)}.")
-    return 0 if (args.check or changed or not changed) else 0
+
+    if args.check:
+        print(f"Validated {args.citation} for {normalize_tag(args.tag)}.")
+    else:
+        source = args.citation.resolve()
+        dest = destination.resolve()
+        if source == dest:
+            print(f"Updated {args.citation} for {normalize_tag(args.tag)}.")
+        else:
+            print(
+                f"Wrote synced citation metadata from {args.citation} "
+                f"to {destination} for {normalize_tag(args.tag)}."
+            )
+
+    return 0
 
 
 if __name__ == "__main__":

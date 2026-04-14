@@ -43,6 +43,12 @@ def parse_args() -> argparse.Namespace:
         help="Path to the repository CITATION.cff file.",
     )
     parser.add_argument(
+        "--citation-file",
+        type=Path,
+        default=Path("CITATION.cff"),
+        help="Path to the citation metadata file to upload.",
+    )
+    parser.add_argument(
         "--pyproject",
         type=Path,
         default=Path("pyproject.toml"),
