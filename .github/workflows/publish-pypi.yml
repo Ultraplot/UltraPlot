@@ -1,11 +1,13 @@
 name: Publish to PyPI
+
 on:
   pull_request:
   push:
-    tags: ["v*"]
+    tags:
+      - "v*"
 
 concurrency:
-  group: publish-pypi-{{ github.sha }}
+  group: publish-pypi-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -17,28 +19,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-        shell: bash
-
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      - name: Sync citation metadata for release tags
-        if: github.event_name == 'push'
+      - name: Ensure clean tree before build
         run: |
-          python tools/release/sync_citation.py --tag "${GITHUB_REF_NAME}"
+          git diff --quiet || (git status --short && git diff && exit 1)
         shell: bash
 
       - name: Build package
         run: |
-          python -m pip install --upgrade pip wheel setuptools setuptools_scm build twine
+          python -m pip install --upgrade pip
+          python -m pip install wheel setuptools setuptools_scm build twine
           python -m build --sdist --wheel . --outdir dist
+        shell: bash
 
       - name: Check files
         run: |
-          ls dist
+          ls -lah dist
         shell: bash
 
       - name: Test wheels
@@ -84,7 +83,7 @@ jobs:
 
       - name: Check files
         run: |
-          ls dist
+          ls -lah dist
         shell: bash
 
       - name: Publish to TestPyPI
@@ -97,11 +96,11 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: publish-pypi-test
+    if: github.event_name == 'push'
     environment:
       name: prod
       url: https://pypi.org/project/ultraplot/
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     permissions:
       id-token: write
       contents: read
@@ -114,7 +113,7 @@ jobs:
 
       - name: Check files
         run: |
-          ls dist
+          ls -lah dist
         shell: bash
 
       - name: Publish to PyPI
@@ -150,17 +149,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-        shell: bash
-
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install release tooling
         run: |
-          python -m pip install --upgrade pip PyYAML
+          python -m pip install --upgrade pip
+          python -m pip install PyYAML
         shell: bash
 
       - name: Download artifacts
@@ -169,12 +165,21 @@ jobs:
           name: dist-${{ github.sha }}-${{ github.run_id }}-${{ github.run_number }}
           path: dist
 
-      - name: Sync citation metadata for release tags
+      - name: Generate release citation metadata
         run: |
-          python tools/release/sync_citation.py --tag "${GITHUB_REF_NAME}"
+          python tools/release/sync_citation.py \
+            --tag "${GITHUB_REF_NAME}" \
+            --output "${RUNNER_TEMP}/CITATION.cff"
+        shell: bash
+
+      - name: Check tree stayed clean
+        run: |
+          git diff --quiet || (git status --short && git diff && exit 1)
         shell: bash
 
       - name: Publish to Zenodo
         run: |
-          python tools/release/publish_zenodo.py --dist-dir dist
+          python tools/release/publish_zenodo.py \
+            --dist-dir dist \
+            --citation-file "${RUNNER_TEMP}/CITATION.cff"
         shell: bash
