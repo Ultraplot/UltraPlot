@@ -926,3 +926,59 @@ def test_colorbar_multiple_sides_with_span():
     assert cb_top is not None
     assert cb_right is not None
     assert cb_left is not None
+
+
+def test_colorbar_span_position_matches_target_columns():
+    """Regression: UltraLayout must not clip span panels to parent width.
+
+    The _reposition_subplot UltraLayout block used parent_bbox for the
+    "along" dimension, overriding the SubplotSpec span. Verify the drawn
+    panel actually spans the requested columns/rows.
+    """
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Bottom colorbar anchored to axs[0,:] spanning columns 1-2
+    cb = fig.colorbar(cm, ax=axs[0, :], span=(1, 2), loc="bottom")
+    fig.canvas.draw()
+
+    panel_pos = cb.ax.get_position()
+    col0_pos = axs[0, 0].get_position()
+    col1_pos = axs[0, 1].get_position()
+
+    # Panel must start at column 0's left edge and end at column 1's right edge
+    assert (
+        abs(panel_pos.x0 - col0_pos.x0) < 0.02
+    ), f"Panel x0={panel_pos.x0:.3f} != col0 x0={col0_pos.x0:.3f}"
+    assert (
+        abs(panel_pos.x1 - col1_pos.x1) < 0.02
+    ), f"Panel x1={panel_pos.x1:.3f} != col1 x1={col1_pos.x1:.3f}"
+    # Sanity: panel must be wider than a single column
+    assert panel_pos.width > col0_pos.width * 1.5
+
+
+def test_colorbar_span_position_matches_target_rows():
+    """Regression: right colorbar with rows= must span the requested rows."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Right colorbar anchored to axs[:,0] spanning rows 1-2
+    cb = fig.colorbar(cm, ax=axs[:, 0], rows=(1, 2), loc="right")
+    fig.canvas.draw()
+
+    panel_pos = cb.ax.get_position()
+    row0_pos = axs[0, 0].get_position()
+    row1_pos = axs[1, 0].get_position()
+
+    # Panel must start at row 1's bottom and end at row 0's top
+    # (row 0 is top, row 1 is below it)
+    assert (
+        abs(panel_pos.y1 - row0_pos.y1) < 0.02
+    ), f"Panel y1={panel_pos.y1:.3f} != row0 y1={row0_pos.y1:.3f}"
+    assert (
+        abs(panel_pos.y0 - row1_pos.y0) < 0.02
+    ), f"Panel y0={panel_pos.y0:.3f} != row1 y0={row1_pos.y0:.3f}"
+    # Sanity: panel must be taller than a single row
+    assert panel_pos.height > row0_pos.height * 1.5

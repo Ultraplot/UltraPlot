@@ -2459,6 +2459,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 ncols=gs.ncols_total
             )
 
+            # Use SubplotSpec position for the "along" dimension so that
+            # span overrides (e.g. span=(1,3) on a bottom colorbar) are
+            # respected instead of being clipped to the parent's extent.
+            ss_bbox = ss.get_position(self.figure)
+
             if side in ("right", "left"):
                 boundary = None
                 width = sum(gs._wratios_total[col1 : col2 + 1]) / figwidth
@@ -2480,7 +2485,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 else:
                     x0 = anchor_bbox.x0 - pad - width
                 bbox = mtransforms.Bbox.from_bounds(
-                    x0, parent_bbox.y0, width, parent_bbox.height
+                    x0, ss_bbox.y0, width, ss_bbox.height
                 )
             else:
                 boundary = None
@@ -2502,7 +2507,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 else:
                     y0 = anchor_bbox.y0 - pad - height
                 bbox = mtransforms.Bbox.from_bounds(
-                    parent_bbox.x0, y0, parent_bbox.width, height
+                    ss_bbox.x0, y0, ss_bbox.width, height
                 )
             setter(bbox)
 
