@@ -288,19 +288,70 @@ def validate_inputs(dist_dir: Path, access_token: str | None) -> None:
         raise SystemExit(f"Distribution directory {dist_dir} does not contain files.")
 
 
+def find_existing_draft(api_url: str, token: str, record_id: int) -> dict | None:
+    record = api_request("GET", f"{api_url}/records/{record_id}", token=token)
+    conceptrecid = str(record.get("conceptrecid") or record.get("id"))
+
+    page = 1
+    while True:
+        payload = api_request(
+            "GET",
+            f"{api_url}/deposit/depositions?page={page}&size=100",
+            token=token,
+        )
+
+        if not payload:
+            break
+
+        for dep in payload:
+            if str(dep.get("conceptrecid")) != conceptrecid:
+                continue
+            if dep.get("submitted"):
+                continue
+
+            print(f"Found existing draft deposition {dep['id']}")
+            return dep
+
+        if len(payload) < 100:
+            break
+
+        page += 1
+
+    return None
+
+
+def get_or_create_draft(api_url: str, token: str, record_id: int) -> dict:
+    try:
+        return create_new_version(api_url, token, record_id)
+    except RuntimeError as exc:
+        message = str(exc)
+        if "files.enabled" not in message:
+            raise
+
+        draft = find_existing_draft(api_url, token, record_id)
+        if draft is None:
+            raise
+        print(f"Reusing existing Zenodo draft {draft['id']}.")
+        return draft
+
+
 def main() -> int:
     args = parse_args()
     validate_inputs(args.dist_dir, args.access_token)
-    citation = load_citation(args.citation)
+
+    citation = load_citation(args.citation_file)
     pyproject = load_pyproject(args.pyproject)
     metadata = build_metadata(citation, pyproject)
+
     conceptrecid = resolve_concept_recid(args.api_url, citation["doi"])
     record_id = latest_record_id(args.api_url, conceptrecid)
-    draft = create_new_version(args.api_url, args.access_token, record_id)
+
+    draft = get_or_create_draft(args.api_url, args.access_token, record_id)
     clear_draft_files(draft, args.access_token)
     upload_dist_files(draft, args.access_token, args.dist_dir)
     draft = update_metadata(draft, args.access_token, metadata)
     published = publish_draft(draft, args.access_token)
+
     doi = published.get("doi") or published.get("metadata", {}).get("doi")
     print(
         f"Published Zenodo release record {published['id']} for "
