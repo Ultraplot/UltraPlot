@@ -2459,12 +2459,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 ncols=gs.ncols_total
             )
 
-            # Use SubplotSpec position for the "along" dimension so that
-            # span overrides (e.g. span=(1,3) on a bottom colorbar) are
-            # respected instead of being clipped to the parent's extent.
-            ss_bbox = ss.get_position(self.figure)
+            # Check if the panel has a span override (spans more columns/rows
+            # than its parent). When it does, use the SubplotSpec position for
+            # the "along" dimension so the span is respected. Otherwise use
+            # parent_bbox which correctly tracks aspect-ratio adjustments.
+            parent_ss = self._panel_parent.get_subplotspec().get_topmost_subplotspec()
+            p_row1, p_row2, p_col1, p_col2 = parent_ss._get_rows_columns(
+                ncols=gs.ncols_total
+            )
 
             if side in ("right", "left"):
+                has_span_override = (row1 < p_row1) or (row2 > p_row2)
+                along_bbox = (
+                    ss.get_position(self.figure) if has_span_override else parent_bbox
+                )
                 boundary = None
                 width = sum(gs._wratios_total[col1 : col2 + 1]) / figwidth
                 if a_col2 < col1:
@@ -2485,9 +2493,13 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 else:
                     x0 = anchor_bbox.x0 - pad - width
                 bbox = mtransforms.Bbox.from_bounds(
-                    x0, ss_bbox.y0, width, ss_bbox.height
+                    x0, along_bbox.y0, width, along_bbox.height
                 )
             else:
+                has_span_override = (col1 < p_col1) or (col2 > p_col2)
+                along_bbox = (
+                    ss.get_position(self.figure) if has_span_override else parent_bbox
+                )
                 boundary = None
                 height = sum(gs._hratios_total[row1 : row2 + 1]) / figheight
                 if a_row2 < row1:
@@ -2507,7 +2519,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 else:
                     y0 = anchor_bbox.y0 - pad - height
                 bbox = mtransforms.Bbox.from_bounds(
-                    ss_bbox.x0, y0, ss_bbox.width, height
+                    along_bbox.x0, y0, along_bbox.width, height
                 )
             setter(bbox)
 
