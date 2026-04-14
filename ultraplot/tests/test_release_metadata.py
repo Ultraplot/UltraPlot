@@ -138,8 +138,12 @@ def test_publish_workflow_creates_github_release_and_pushes_to_zenodo():
     """
     text = PUBLISH_WORKFLOW.read_text(encoding="utf-8")
     assert 'tags: ["v*"]' in text
-    assert text.count("tools/release/sync_citation.py --tag") >= 2
+    assert "tools/release/sync_citation.py" in text
+    assert "--tag" in text
+    assert "--output" in text
     assert "softprops/action-gh-release@v2" in text
     assert "publish-zenodo:" in text
     assert "ZENODO_ACCESS_TOKEN" in text
-    assert "tools/release/publish_zenodo.py --dist-dir dist" in text
+    assert "tools/release/publish_zenodo.py" in text
+    assert "--dist-dir dist" in text
+    assert '--citation-file "${RUNNER_TEMP}/CITATION.cff"' in text
