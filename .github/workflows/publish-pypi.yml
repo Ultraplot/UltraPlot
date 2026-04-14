@@ -32,6 +32,8 @@ jobs:
         shell: bash
 
       - name: Build package
+        env:
+          SETUPTOOLS_SCM_LOCAL_SCHEME: no-local-version
         run: |
           python -m pip install --upgrade pip wheel setuptools setuptools_scm build twine
           python -m build --sdist --wheel . --outdir dist
