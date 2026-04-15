@@ -670,18 +670,37 @@ class Figure(mfigure.Figure):
             refnum, refaspect, refwidth, refheight, figwidth, figheight, journal
         )
         self._init_gridspec_params(
-            left=left, right=right, top=top, bottom=bottom,
-            wspace=wspace, hspace=hspace, space=space,
-            wequal=wequal, hequal=hequal, equal=equal,
-            wgroup=wgroup, hgroup=hgroup, group=group,
-            wpad=wpad, hpad=hpad, pad=pad,
-            outerpad=outerpad, innerpad=innerpad, panelpad=panelpad,
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
+            wspace=wspace,
+            hspace=hspace,
+            space=space,
+            wequal=wequal,
+            hequal=hequal,
+            equal=equal,
+            wgroup=wgroup,
+            hgroup=hgroup,
+            group=group,
+            wpad=wpad,
+            hpad=hpad,
+            pad=pad,
+            outerpad=outerpad,
+            innerpad=innerpad,
+            panelpad=panelpad,
         )
         self._init_tight_layout(tight, kwargs)
         self._init_sharing(
-            sharex=sharex, sharey=sharey, share=share,
-            spanx=spanx, spany=spany, span=span,
-            alignx=alignx, aligny=aligny, align=align,
+            sharex=sharex,
+            sharey=sharey,
+            share=share,
+            spanx=spanx,
+            spany=spany,
+            span=span,
+            alignx=alignx,
+            aligny=aligny,
+            align=align,
         )
         self._init_figure_state(figwidth, figheight, kwargs)
 
