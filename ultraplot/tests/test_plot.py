@@ -612,6 +612,19 @@ def test_pie_labeled_series_in_dataframes():
     uplt.close(fig)
 
 
+def test_string_norm_with_vmin_vmax(rng):
+    """
+    When norm is a string (e.g. 'log'), vmin and vmax should be forwarded
+    to the normalizer constructor instead of raising ValueError.
+    Regression test for https://github.com/Ultraplot/UltraPlot/issues/689
+    """
+    data = 11 ** (0.25 * np.cumsum(rng.random((20, 20)), axis=0))
+    fig, ax = uplt.subplots()
+    m = ax.pcolormesh(data, cmap="magma", norm="log", vmin=1e-2)
+    assert m.norm.vmin == pytest.approx(1e-2)
+    uplt.close(fig)
+
+
 def test_color_parsing_for_none():
     """
     Ensure that none is not parsed to white

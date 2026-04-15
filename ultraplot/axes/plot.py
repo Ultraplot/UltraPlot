@@ -4120,8 +4120,10 @@ class PlotAxes(base.Axes):
         # Parse keyword args
         cmap_kw = cmap_kw or {}
         norm_kw = norm_kw or {}
-        # If norm is given we use it to set vmin and vmax
-        if (vmin is not None or vmax is not None) and norm is not None:
+        # If norm is an already-instantiated Normalize, extract vmin/vmax from it.
+        # When norm is a string or tuple it will be constructed later with the
+        # supplied vmin/vmax, so we must not reject them here.
+        if (vmin is not None or vmax is not None) and isinstance(norm, mcolors.Normalize):
             raise ValueError("If 'norm' is given, 'vmin' and 'vmax' must not be set.")
         if isinstance(norm, mcolors.Normalize):
             vmin = norm.vmin
