@@ -2482,9 +2482,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                         oss = oss.get_topmost_subplotspec()
                         if oss.get_gridspec() is not gs:
                             continue
-                        o_r1, o_r2, _, _ = oss._get_rows_columns(
-                            ncols=gs.ncols_total
-                        )
+                        o_r1, o_r2, _, _ = oss._get_rows_columns(ncols=gs.ncols_total)
                         if o_r1 >= row1 and o_r2 <= row2:
                             opos = other.get_position()
                             vmin = min(vmin, opos.y0)
@@ -2515,9 +2513,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     x0 = anchor_bbox.x1 + pad
                 else:
                     x0 = anchor_bbox.x0 - pad - width
-                bbox = mtransforms.Bbox.from_bounds(
-                    x0, along_y0, width, along_h
-                )
+                bbox = mtransforms.Bbox.from_bounds(x0, along_y0, width, along_h)
             else:
                 has_span_override = (col1 < p_col1) or (col2 > p_col2)
                 if has_span_override:
@@ -2531,9 +2527,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                         oss = oss.get_topmost_subplotspec()
                         if oss.get_gridspec() is not gs:
                             continue
-                        _, _, o_c1, o_c2 = oss._get_rows_columns(
-                            ncols=gs.ncols_total
-                        )
+                        _, _, o_c1, o_c2 = oss._get_rows_columns(ncols=gs.ncols_total)
                         if o_c1 >= col1 and o_c2 <= col2:
                             opos = other.get_position()
                             vmin = min(vmin, opos.x0)
@@ -2563,9 +2557,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     y0 = anchor_bbox.y1 + pad
                 else:
                     y0 = anchor_bbox.y0 - pad - height
-                bbox = mtransforms.Bbox.from_bounds(
-                    along_x0, y0, along_w, height
-                )
+                bbox = mtransforms.Bbox.from_bounds(along_x0, y0, along_w, height)
             setter(bbox)
 
     def _update_abc(self, **kwargs):

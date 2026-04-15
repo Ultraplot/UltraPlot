@@ -954,9 +954,7 @@ def test_colorbar_span_mixed_geo_and_cartesian_right(rng):
     """Right colorbar on mixed npstere+Cartesian grid aligns with axes extent."""
     import cartopy.crs as ccrs
 
-    fig, axs = uplt.subplots(
-        nrows=2, ncols=2, proj=["npstere", None, "cyl", "cyl"]
-    )
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj=["npstere", None, "cyl", "cyl"])
     data = rng.random((100, 100))
     lon = np.linspace(-180, 180, 100)
     lat = np.linspace(30, 90, 100)
