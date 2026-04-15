@@ -81,10 +81,8 @@ def _update_label(text, props=None, **kwargs):
         text.set_path_effects(
             [mpatheffects.Stroke(**kw), mpatheffects.Normal()],
         )
-    # ISSUE: interfers with adding path effects when we border is False but we do apply path effects
-    elif border is False and not text.get_path_effects():
+    elif border is False:
         text.set_path_effects(None)
-    # print(props.get("path_effects", []))
 
     # Update bounding box
     # NOTE: We use '_title_pad' and '_title_above' for both titles and a-b-c
