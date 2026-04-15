@@ -1426,6 +1426,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
                 # Check if panel has a span override (extends beyond parent)
                 has_span_override = False
+                span_extent = None  # (min, max) visual extent along the span axis
                 if p_c1 is not None:
                     try:
                         panel_ss = panel.get_subplotspec().get_topmost_subplotspec()
@@ -1439,6 +1440,38 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     except Exception:
                         pass
 
+                # For span overrides, compute the visual extent from all axes
+                # that fall within the panel's span range, so the panel aligns
+                # with the actual (aspect-adjusted) axes, not the grid slots.
+                if has_span_override:
+                    vmin, vmax = float("inf"), float("-inf")
+                    for other_ax in self.figure.axes:
+                        if getattr(other_ax, "_panel_side", None):
+                            continue
+                        try:
+                            oss = other_ax.get_subplotspec()
+                            if oss is None:
+                                continue
+                            oss = oss.get_topmost_subplotspec()
+                            if oss.get_gridspec() is not gs:
+                                continue
+                            o_r1, o_r2, o_c1, o_c2 = oss._get_rows_columns(
+                                ncols=gs.ncols_total
+                            )
+                        except Exception:
+                            continue
+                        opos = other_ax.get_position()
+                        if side in ("left", "right"):
+                            if o_r1 >= s_r1 and o_r2 <= s_r2:
+                                vmin = min(vmin, opos.y0)
+                                vmax = max(vmax, opos.y1)
+                        else:
+                            if o_c1 >= s_c1 and o_c2 <= s_c2:
+                                vmin = min(vmin, opos.x0)
+                                vmax = max(vmax, opos.x1)
+                    if vmin < vmax:
+                        span_extent = (vmin, vmax)
+
                 # Use _set_position when available to avoid layoutbox side effects
                 # from public set_position() on newer matplotlib versions.
                 setter = getattr(panel, "_set_position", panel.set_position)
@@ -1448,8 +1481,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     gap = original_pos.x0 - (panel_pos.x0 + panel_pos.width)
                     # Position panel to the left of the adjusted main axes
                     new_x0 = main_pos.x0 - panel_pos.width - gap
-                    if has_span_override:
-                        new_y0, new_h = panel_pos.y0, panel_pos.height
+                    if span_extent is not None:
+                        new_y0, new_h = span_extent[0], span_extent[1] - span_extent[0]
                     elif py0 <= oy0 + tol and py1 >= oy1 - tol:
                         new_y0, new_h = my0, main_pos.height
                     else:
@@ -1461,8 +1494,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     gap = panel_pos.x0 - (original_pos.x0 + original_pos.width)
                     # Position panel to the right of the adjusted main axes
                     new_x0 = main_pos.x0 + main_pos.width + gap
-                    if has_span_override:
-                        new_y0, new_h = panel_pos.y0, panel_pos.height
+                    if span_extent is not None:
+                        new_y0, new_h = span_extent[0], span_extent[1] - span_extent[0]
                     elif py0 <= oy0 + tol and py1 >= oy1 - tol:
                         new_y0, new_h = my0, main_pos.height
                     else:
@@ -1474,8 +1507,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     gap = panel_pos.y0 - (original_pos.y0 + original_pos.height)
                     # Position panel above the adjusted main axes
                     new_y0 = main_pos.y0 + main_pos.height + gap
-                    if has_span_override:
-                        new_x0, new_w = panel_pos.x0, panel_pos.width
+                    if span_extent is not None:
+                        new_x0, new_w = span_extent[0], span_extent[1] - span_extent[0]
                     elif px0 <= ox0 + tol and px1 >= ox1 - tol:
                         new_x0, new_w = mx0, main_pos.width
                     else:
@@ -1487,8 +1520,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     gap = original_pos.y0 - (panel_pos.y0 + panel_pos.height)
                     # Position panel below the adjusted main axes
                     new_y0 = main_pos.y0 - panel_pos.height - gap
-                    if has_span_override:
-                        new_x0, new_w = panel_pos.x0, panel_pos.width
+                    if span_extent is not None:
+                        new_x0, new_w = span_extent[0], span_extent[1] - span_extent[0]
                     elif px0 <= ox0 + tol and px1 >= ox1 - tol:
                         new_x0, new_w = mx0, main_pos.width
                     else:

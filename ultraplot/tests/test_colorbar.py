@@ -950,6 +950,173 @@ def test_colorbar_span_bottom_mixed_projections(rng):
     assert panel_pos.y0 > row1_col0_pos.y1
 
 
+def test_colorbar_span_mixed_projections_bottom_and_right(rng):
+    """Bottom + right colorbars on mixed npstere/cyl grid align with axes."""
+    import cartopy.crs as ccrs
+
+    fig, axs = uplt.subplots(
+        nrows=2, ncols=2, proj=["npstere", "npstere", "cyl", "cyl"]
+    )
+    data = rng.random((100, 100))
+    lon = np.linspace(-180, 180, 100)
+    lat = np.linspace(30, 90, 100)
+    Lon, Lat = np.meshgrid(lon, lat)
+
+    cm = axs[0, 0].pcolormesh(Lon, Lat, data, transform=ccrs.PlateCarree())
+    cb_bot = fig.colorbar(cm, loc="b", ax=axs[0, :], span=(1, 2))
+    cb_right = fig.colorbar(cm, loc="r", ax=axs[0], ref=axs[:, 1])
+
+    fig.canvas.draw()
+
+    # Bottom colorbar should span both columns
+    bot_pos = cb_bot.ax.get_position()
+    assert bot_pos.width > axs[0, 0].get_position().width * 1.5
+
+    # Right colorbar should align with the visual extent of axs[:,1]
+    right_pos = cb_right.ax.get_position()
+    top_ax = axs[0, 1].get_position()
+    bot_ax = axs[1, 1].get_position()
+    tol = 0.05
+    assert abs(right_pos.y1 - top_ax.y1) < tol
+    assert abs(right_pos.y0 - bot_ax.y0) < tol
+    assert right_pos.x0 >= top_ax.x1 - tol
+
+
+def test_colorbar_span_right_non_rectilinear_geo_axes(rng):
+    """Right colorbar with row span on npstere should preserve span height."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj="npstere")
+    cm = axs[0, 0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="r", ax=axs[:, 1], rows=(1, 2))
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    row0_pos = axs[0, 1].get_position()
+    row1_pos = axs[1, 1].get_position()
+
+    # Panel must span both rows vertically
+    assert panel_pos.y1 >= row0_pos.y1 - 0.05
+    assert panel_pos.y0 <= row1_pos.y0 + 0.05
+    assert panel_pos.height > row0_pos.height * 1.5
+    # Panel must be to the right of column 1
+    assert panel_pos.x0 >= row0_pos.x1 - 0.05
+
+
+def test_colorbar_span_left_non_rectilinear_geo_axes(rng):
+    """Left colorbar with row span on npstere should preserve span height."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj="npstere")
+    cm = axs[0, 0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="l", ax=axs[:, 0], rows=(1, 2))
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    row0_pos = axs[0, 0].get_position()
+    row1_pos = axs[1, 0].get_position()
+
+    # Panel must span both rows vertically
+    assert panel_pos.y1 >= row0_pos.y1 - 0.05
+    assert panel_pos.y0 <= row1_pos.y0 + 0.05
+    assert panel_pos.height > row0_pos.height * 1.5
+    # Panel must be to the left of column 0
+    assert panel_pos.x1 <= row0_pos.x0 + 0.05
+
+
+def test_colorbar_span_top_non_rectilinear_geo_axes(rng):
+    """Top colorbar with col span on npstere should preserve span width."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj="npstere")
+    cm = axs[0, 0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="t", ax=axs[0, :], span=(1, 2))
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    col0_pos = axs[0, 0].get_position()
+    col1_pos = axs[0, 1].get_position()
+
+    # Panel must span both columns
+    assert abs(panel_pos.x0 - col0_pos.x0) < 0.05
+    assert abs(panel_pos.x1 - col1_pos.x1) < 0.05
+    assert panel_pos.width > col0_pos.width * 1.5
+    # Panel must be above row 0
+    assert panel_pos.y0 >= col0_pos.y1 - 0.05
+
+
+def test_colorbar_no_span_override_geo_axes_bottom(rng):
+    """Bottom colorbar without span override clips to parent on npstere."""
+    fig, axs = uplt.subplots(nrows=1, ncols=2, proj="npstere")
+    cm = axs[0].imshow(rng.random((20, 20)))
+
+    # Single-axis colorbar, no span override
+    cb = fig.colorbar(cm, loc="b", ax=axs[0])
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    parent_pos = axs[0].get_position()
+
+    # Panel should be below the parent and not wider than parent
+    assert panel_pos.y1 < parent_pos.y0 + 0.05
+    assert panel_pos.x0 >= parent_pos.x0 - 0.05
+    assert panel_pos.x1 <= parent_pos.x1 + 0.05
+
+
+def test_colorbar_no_span_override_geo_axes_right(rng):
+    """Right colorbar without span override clips to parent on npstere."""
+    fig, axs = uplt.subplots(nrows=2, ncols=1, proj="npstere")
+    cm = axs[0].imshow(rng.random((20, 20)))
+
+    # Single-axis colorbar, no span override
+    cb = fig.colorbar(cm, loc="r", ax=axs[0])
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    parent_pos = axs[0].get_position()
+
+    # Panel should be to the right and not taller than parent
+    assert panel_pos.x0 >= parent_pos.x1 - 0.05
+    assert panel_pos.y0 >= parent_pos.y0 - 0.05
+    assert panel_pos.y1 <= parent_pos.y1 + 0.05
+
+
+def test_colorbar_no_span_override_geo_axes_left(rng):
+    """Left colorbar without span override clips to parent on npstere."""
+    fig, axs = uplt.subplots(nrows=2, ncols=1, proj="npstere")
+    cm = axs[0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="l", ax=axs[0])
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    parent_pos = axs[0].get_position()
+
+    assert panel_pos.x1 <= parent_pos.x0 + 0.05
+    assert panel_pos.y0 >= parent_pos.y0 - 0.05
+    assert panel_pos.y1 <= parent_pos.y1 + 0.05
+
+
+def test_colorbar_no_span_override_geo_axes_top(rng):
+    """Top colorbar without span override clips to parent on npstere."""
+    fig, axs = uplt.subplots(nrows=1, ncols=2, proj="npstere")
+    cm = axs[0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="t", ax=axs[0])
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    parent_pos = axs[0].get_position()
+
+    assert panel_pos.y0 >= parent_pos.y1 - 0.05
+    assert panel_pos.x0 >= parent_pos.x0 - 0.05
+    assert panel_pos.x1 <= parent_pos.x1 + 0.05
+
+
 def test_colorbar_column_without_span():
     """Test that colorbar on column without span spans entire column."""
     fig, axs = uplt.subplots(nrows=3, ncols=2)
