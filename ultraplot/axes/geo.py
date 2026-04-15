@@ -1507,9 +1507,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 # Use the panel subplot-spec box as the baseline (not its current
                 # original position) to avoid accumulated adjustments.
                 ss = getattr(panel, "get_subplotspec", lambda: None)()
-                panel_pos = (
-                    ss.get_position(panel.figure) if ss is not None else None
-                )
+                panel_pos = ss.get_position(panel.figure) if ss is not None else None
                 if panel_pos is None:
                     panel_pos = panel.get_position(original=True)
 
@@ -1517,8 +1515,14 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     side, panel, gs, p_r1, p_r2, p_c1, p_c2
                 )
                 new_pos = self._compute_adjusted_panel_pos(
-                    side, panel_pos, span_extent,
-                    original_pos, main_pos, sx, sy, tol,
+                    side,
+                    panel_pos,
+                    span_extent,
+                    original_pos,
+                    main_pos,
+                    sx,
+                    sy,
+                    tol,
                 )
                 if new_pos is None:
                     continue
