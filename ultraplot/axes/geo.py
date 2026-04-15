@@ -1397,6 +1397,14 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         )
         mx0, my0 = main_pos.x0, main_pos.y0
 
+        # Detect span overrides by comparing SubplotSpec extents of parent vs panels
+        try:
+            parent_ss = self.get_subplotspec().get_topmost_subplotspec()
+            gs = parent_ss.get_gridspec()
+            p_r1, p_r2, p_c1, p_c2 = parent_ss._get_rows_columns(ncols=gs.ncols_total)
+        except Exception:
+            p_r1 = p_r2 = p_c1 = p_c2 = None
+
         for side, panels in self._panel_dict.items():
             for panel in panels:
                 # Use the panel subplot-spec box as the baseline (not its current
@@ -1416,6 +1424,21 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     panel_pos.y0 + panel_pos.height,
                 )
 
+                # Check if panel has a span override (extends beyond parent)
+                has_span_override = False
+                if p_c1 is not None:
+                    try:
+                        panel_ss = panel.get_subplotspec().get_topmost_subplotspec()
+                        s_r1, s_r2, s_c1, s_c2 = panel_ss._get_rows_columns(
+                            ncols=gs.ncols_total
+                        )
+                        if side in ("bottom", "top"):
+                            has_span_override = s_c1 < p_c1 or s_c2 > p_c2
+                        elif side in ("left", "right"):
+                            has_span_override = s_r1 < p_r1 or s_r2 > p_r2
+                    except Exception:
+                        pass
+
                 # Use _set_position when available to avoid layoutbox side effects
                 # from public set_position() on newer matplotlib versions.
                 setter = getattr(panel, "_set_position", panel.set_position)
@@ -1425,7 +1448,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     gap = original_pos.x0 - (panel_pos.x0 + panel_pos.width)
                     # Position panel to the left of the adjusted main axes
                     new_x0 = main_pos.x0 - panel_pos.width - gap
-                    if py0 <= oy0 + tol and py1 >= oy1 - tol:
+                    if has_span_override:
+                        new_y0, new_h = panel_pos.y0, panel_pos.height
+                    elif py0 <= oy0 + tol and py1 >= oy1 - tol:
                         new_y0, new_h = my0, main_pos.height
                     else:
                         new_y0 = my0 + (panel_pos.y0 - oy0) * sy
@@ -1436,7 +1461,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     gap = panel_pos.x0 - (original_pos.x0 + original_pos.width)
                     # Position panel to the right of the adjusted main axes
                     new_x0 = main_pos.x0 + main_pos.width + gap
-                    if py0 <= oy0 + tol and py1 >= oy1 - tol:
+                    if has_span_override:
+                        new_y0, new_h = panel_pos.y0, panel_pos.height
+                    elif py0 <= oy0 + tol and py1 >= oy1 - tol:
                         new_y0, new_h = my0, main_pos.height
                     else:
                         new_y0 = my0 + (panel_pos.y0 - oy0) * sy
@@ -1447,7 +1474,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     gap = panel_pos.y0 - (original_pos.y0 + original_pos.height)
                     # Position panel above the adjusted main axes
                     new_y0 = main_pos.y0 + main_pos.height + gap
-                    if px0 <= ox0 + tol and px1 >= ox1 - tol:
+                    if has_span_override:
+                        new_x0, new_w = panel_pos.x0, panel_pos.width
+                    elif px0 <= ox0 + tol and px1 >= ox1 - tol:
                         new_x0, new_w = mx0, main_pos.width
                     else:
                         new_x0 = mx0 + (panel_pos.x0 - ox0) * sx
@@ -1458,7 +1487,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     gap = original_pos.y0 - (panel_pos.y0 + panel_pos.height)
                     # Position panel below the adjusted main axes
                     new_y0 = main_pos.y0 - panel_pos.height - gap
-                    if px0 <= ox0 + tol and px1 >= ox1 - tol:
+                    if has_span_override:
+                        new_x0, new_w = panel_pos.x0, panel_pos.width
+                    elif px0 <= ox0 + tol and px1 >= ox1 - tol:
                         new_x0, new_w = mx0, main_pos.width
                     else:
                         new_x0 = mx0 + (panel_pos.x0 - ox0) * sx

@@ -899,6 +899,57 @@ def test_colorbar_row_without_span():
     assert cb is not None
 
 
+def test_colorbar_span_bottom_non_rectilinear_geo_axes(rng):
+    """Spanning bottom colorbar should stay under row 1 and honor cols."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj=["npstere", "npstere", None, None])
+    data = rng.random((20, 20))
+    cm = axs[0, 0].imshow(data)
+
+    cb = fig.colorbar(cm, ax=axs[0, :], span=(1, 2), loc="bottom")
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    row0_col0_pos = axs[0, 0].get_position()
+    row0_col1_pos = axs[0, 1].get_position()
+    row1_col0_pos = axs[1, 0].get_position()
+
+    tol = 0.05
+    assert abs(panel_pos.x0 - row0_col0_pos.x0) < tol
+    assert abs(panel_pos.x1 - row0_col1_pos.x1) < tol
+    assert panel_pos.width > row0_col0_pos.width * 1.5
+    assert abs(panel_pos.y1 - row0_col0_pos.y0) < 0.08
+    assert panel_pos.y0 > row1_col0_pos.y1
+
+
+def test_colorbar_span_bottom_mixed_projections(rng):
+    """Spanning bottom colorbar across mixed projections (npstere + cyl)."""
+    import cartopy.crs as ccrs
+
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj=["npstere", "cyl", None, None])
+    data = rng.random((100, 100))
+    lon = np.linspace(-180, 180, 100)
+    lat = np.linspace(30, 90, 100)
+    Lon, Lat = np.meshgrid(lon, lat)
+
+    cm = axs[0, 0].pcolormesh(Lon, Lat, data, transform=ccrs.PlateCarree())
+    cb = fig.colorbar(cm, loc="b", ax=axs[0, :], span=(1, 2))
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    row0_col0_pos = axs[0, 0].get_position()
+    row0_col1_pos = axs[0, 1].get_position()
+    row1_col0_pos = axs[1, 0].get_position()
+
+    tol = 0.05
+    assert abs(panel_pos.x0 - row0_col0_pos.x0) < tol
+    assert abs(panel_pos.x1 - row0_col1_pos.x1) < tol
+    assert panel_pos.width > row0_col0_pos.width * 1.5
+    assert panel_pos.y1 < row0_col0_pos.y0 + 0.08
+    assert panel_pos.y0 > row1_col0_pos.y1
+
+
 def test_colorbar_column_without_span():
     """Test that colorbar on column without span spans entire column."""
     fig, axs = uplt.subplots(nrows=3, ncols=2)
