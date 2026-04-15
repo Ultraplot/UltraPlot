@@ -657,18 +657,66 @@ class Figure(mfigure.Figure):
         ultraplot.ui.subplots
         matplotlib.figure.Figure
         """
-        # Add figure sizing settings
-        # NOTE: We cannot catpure user-input 'figsize' here because it gets
-        # automatically filled by the figure manager. See ui.figure().
-        # NOTE: The figure size is adjusted according to these arguments by the
-        # canvas preprocessor. Although in special case where both 'figwidth' and
-        # 'figheight' were passes we update 'figsize' to limit side effects.
-        refnum = _not_none(refnum=refnum, ref=ref, default=1)  # never None
+        # Resolve aliases
+        refnum = _not_none(refnum=refnum, ref=ref, default=1)
         refaspect = _not_none(refaspect=refaspect, aspect=aspect)
         refwidth = _not_none(refwidth=refwidth, axwidth=axwidth)
         refheight = _not_none(refheight=refheight, axheight=axheight)
         figwidth = _not_none(figwidth=figwidth, width=width)
         figheight = _not_none(figheight=figheight, height=height)
+
+        # Initialize sections
+        figwidth, figheight = self._init_figure_size(
+            refnum, refaspect, refwidth, refheight, figwidth, figheight, journal
+        )
+        self._init_gridspec_params(
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
+            wspace=wspace,
+            hspace=hspace,
+            space=space,
+            wequal=wequal,
+            hequal=hequal,
+            equal=equal,
+            wgroup=wgroup,
+            hgroup=hgroup,
+            group=group,
+            wpad=wpad,
+            hpad=hpad,
+            pad=pad,
+            outerpad=outerpad,
+            innerpad=innerpad,
+            panelpad=panelpad,
+        )
+        self._init_tight_layout(tight, kwargs)
+        self._init_sharing(
+            sharex=sharex,
+            sharey=sharey,
+            share=share,
+            spanx=spanx,
+            spany=spany,
+            span=span,
+            alignx=alignx,
+            aligny=aligny,
+            align=align,
+        )
+        self._init_figure_state(figwidth, figheight, kwargs)
+
+    def _init_figure_size(
+        self, refnum, refaspect, refwidth, refheight, figwidth, figheight, journal
+    ):
+        """
+        Resolve figure sizing from reference dimensions, journal presets,
+        and explicit figure dimensions. Sets sizing attributes on self and
+        returns the resolved (figwidth, figheight).
+        """
+        # NOTE: We cannot capture user-input 'figsize' here because it gets
+        # automatically filled by the figure manager. See ui.figure().
+        # NOTE: The figure size is adjusted according to these arguments by the
+        # canvas preprocessor. Although in special case where both 'figwidth' and
+        # 'figheight' were passed we update 'figsize' to limit side effects.
         messages = []
         if journal is not None:
             jwidth, jheight = _get_journal_size(journal)
@@ -689,7 +737,7 @@ class Figure(mfigure.Figure):
             and figheight is None
             and refwidth is None
             and refheight is None
-        ):  # noqa: E501
+        ):
             refwidth = rc["subplots.refwidth"]  # always inches
         if np.iterable(refaspect):
             refaspect = refaspect[0] / refaspect[1]
@@ -706,7 +754,7 @@ class Figure(mfigure.Figure):
         self._figwidth = figwidth = units(figwidth, "in")
         self._figheight = figheight = units(figheight, "in")
 
-        # Add special consideration for interactive backends
+        # Handle interactive backends
         backend = _not_none(rc.backend, "")
         backend = backend.lower()
         interactive = "nbagg" in backend or "ipympl" in backend
@@ -727,35 +775,13 @@ class Figure(mfigure.Figure):
                     "(default) backend. This warning message is shown the first time "
                     "you create a figure without explicitly specifying the size."
                 )
+        return figwidth, figheight
 
-        # Add space settings
-        # NOTE: This is analogous to 'subplotpars' but we don't worry about
-        # user mutability. Think it's perfectly fine to ask users to simply
-        # pass these to uplt.figure() or uplt.subplots(). Also overriding
-        # 'subplots_adjust' would be confusing since we switch to absolute
-        # units and that function is heavily used outside of ultraplot.
-        params = {
-            "left": left,
-            "right": right,
-            "top": top,
-            "bottom": bottom,
-            "wspace": wspace,
-            "hspace": hspace,
-            "space": space,
-            "wequal": wequal,
-            "hequal": hequal,
-            "equal": equal,
-            "wgroup": wgroup,
-            "hgroup": hgroup,
-            "group": group,
-            "wpad": wpad,
-            "hpad": hpad,
-            "pad": pad,
-            "outerpad": outerpad,
-            "innerpad": innerpad,
-            "panelpad": panelpad,
-        }
-        self._gridspec_params = params  # used to initialize the gridspec
+    def _init_gridspec_params(self, **params):
+        """
+        Validate and store gridspec spacing parameters.
+        """
+        self._gridspec_params = params
         for key, value in tuple(params.items()):
             if not isinstance(value, str) and np.iterable(value) and len(value) > 1:
                 raise ValueError(
@@ -764,7 +790,10 @@ class Figure(mfigure.Figure):
                     "GridSpec() or pass space parameters to subplots()."
                 )
 
-        # Add tight layout setting and ignore native settings
+    def _init_tight_layout(self, tight, kwargs):
+        """
+        Configure tight layout, suppressing native matplotlib layout engines.
+        """
         pars = kwargs.pop("subplotpars", None)
         if pars is not None:
             warnings._warn_ultraplot(
@@ -785,50 +814,58 @@ class Figure(mfigure.Figure):
         if rc_matplotlib.get("figure.constrained_layout.use", False):
             warnings._warn_ultraplot(
                 "Setting rc['figure.constrained_layout.use'] to False. "
-                + self._tight_message  # noqa: E501
+                + self._tight_message
             )
         try:
-            rc_matplotlib["figure.autolayout"] = False  # this is rcParams
+            rc_matplotlib["figure.autolayout"] = False
         except KeyError:
             pass
         try:
-            rc_matplotlib["figure.constrained_layout.use"] = False  # this is rcParams
+            rc_matplotlib["figure.constrained_layout.use"] = False
         except KeyError:
             pass
         self._tight_active = _not_none(tight, rc["subplots.tight"])
 
-        # Translate share settings
+    @staticmethod
+    def _normalize_share(value):
+        """
+        Normalize a share setting to an integer level and auto flag.
+        """
         translate = {"labels": 1, "labs": 1, "limits": 2, "lims": 2, "all": 4}
+        auto = isinstance(value, str) and value.lower() == "auto"
+        if auto:
+            return 3, True
+        value = 3 if value is True else translate.get(value, value)
+        if value not in range(5):
+            raise ValueError(
+                f"Invalid sharing value {value!r}. " + Figure._share_message
+            )
+        return int(value), False
+
+    def _init_sharing(
+        self, *, sharex, sharey, share, spanx, spany, span, alignx, aligny, align
+    ):
+        """
+        Resolve share, span, and align settings.
+        """
         sharex = _not_none(sharex, share, rc["subplots.share"])
         sharey = _not_none(sharey, share, rc["subplots.share"])
-
-        def _normalize_share(value):
-            auto = isinstance(value, str) and value.lower() == "auto"
-            if auto:
-                return 3, True
-            value = 3 if value is True else translate.get(value, value)
-            if value not in range(5):
-                raise ValueError(
-                    f"Invalid sharing value {value!r}. " + self._share_message
-                )
-            return int(value), False
-
-        sharex, sharex_auto = _normalize_share(sharex)
-        sharey, sharey_auto = _normalize_share(sharey)
+        sharex, sharex_auto = self._normalize_share(sharex)
+        sharey, sharey_auto = self._normalize_share(sharey)
         self._sharex = int(sharex)
         self._sharey = int(sharey)
         self._sharex_auto = bool(sharex_auto)
         self._sharey_auto = bool(sharey_auto)
         self._share_incompat_warned = False
 
-        # Translate span and align settings
+        # Span and align settings
         spanx = _not_none(
             spanx, span, False if not sharex else None, rc["subplots.span"]
-        )  # noqa: E501
+        )
         spany = _not_none(
             spany, span, False if not sharey else None, rc["subplots.span"]
-        )  # noqa: E501
-        if spanx and (alignx or align):  # only warn when explicitly requested
+        )
+        if spanx and (alignx or align):
             warnings._warn_ultraplot('"alignx" has no effect when spanx=True.')
         if spany and (aligny or align):
             warnings._warn_ultraplot('"aligny" has no effect when spany=True.')
@@ -839,12 +876,15 @@ class Figure(mfigure.Figure):
         self._alignx = bool(alignx)
         self._aligny = bool(aligny)
 
-        # Initialize the figure
-        # NOTE: Super labels are stored inside {axes: text} dictionaries
+    def _init_figure_state(self, figwidth, figheight, kwargs):
+        """
+        Initialize internal state, call matplotlib's Figure.__init__,
+        set up super labels, and apply initial formatting.
+        """
         self._gridspec = None
         self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
-        self._subplot_dict = {}  # subplots indexed by number
-        self._subplot_counter = 0  # avoid add_subplot() returning an existing subplot
+        self._subplot_dict = {}
+        self._subplot_counter = 0
         self._is_adjusting = False
         self._is_authorized = False
         self._layout_initialized = False
@@ -859,30 +899,26 @@ class Figure(mfigure.Figure):
         with self._context_authorized():
             super().__init__(**kwargs)
 
-        # Super labels. We don't rely on private matplotlib _suptitle attribute and
-        # _align_axis_labels supports arbitrary spanning labels for subplot groups.
-        # NOTE: Don't use 'anchor' rotation mode otherwise switching to horizontal
-        # left and right super labels causes overlap. Current method is fine.
+        # Super labels
         self._suptitle = self.text(0.5, 0.95, "", ha="center", va="bottom")
-        self._supxlabel_dict = {}  # an axes: label mapping
-        self._supylabel_dict = {}  # an axes: label mapping
+        self._supxlabel_dict = {}
+        self._supylabel_dict = {}
         self._suplabel_dict = {"left": {}, "right": {}, "bottom": {}, "top": {}}
-        self._share_label_groups = {"x": {}, "y": {}}  # explicit label-sharing groups
+        self._share_label_groups = {"x": {}, "y": {}}
         self._subset_title_dict = {}
         self._suptitle_pad = rc["suptitle.pad"]
-        d = self._suplabel_props = {}  # store the super label props
+        d = self._suplabel_props = {}
         d["left"] = {"va": "center", "ha": "right"}
         d["right"] = {"va": "center", "ha": "left"}
         d["bottom"] = {"va": "top", "ha": "center"}
         d["top"] = {"va": "bottom", "ha": "center"}
-        d = self._suplabel_pad = {}  # store the super label padding
+        d = self._suplabel_pad = {}
         d["left"] = rc["leftlabel.pad"]
         d["right"] = rc["rightlabel.pad"]
         d["bottom"] = rc["bottomlabel.pad"]
         d["top"] = rc["toplabel.pad"]
 
-        # Format figure
-        # NOTE: This ignores user-input rc_mode.
+        # Apply initial formatting (ignores user-input rc_mode)
         self.format(rc_kw=rc_kw, rc_mode=1, skip_axes=True, **kw_format)
 
     @override
