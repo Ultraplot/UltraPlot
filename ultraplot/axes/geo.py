@@ -1352,12 +1352,116 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self.apply_aspect()
         self._adjust_panel_positions(tol=tol)
 
+    def _compute_span_extent(self, side, panel, gs, p_r1, p_r2, p_c1, p_c2):
+        """
+        If the panel spans beyond the parent's SubplotSpec, compute the visual
+        extent (min, max) along the span axis from all non-panel axes in range.
+        Returns None if not a span override or no valid extent found.
+        """
+        # NOTE: This will move to a layout composer in a future refactor.
+        ss = getattr(panel, "get_subplotspec", lambda: None)()
+        if ss is None or p_c1 is None:
+            return None
+
+        panel_ss = ss.get_topmost_subplotspec()
+        s_r1, s_r2, s_c1, s_c2 = panel_ss._get_rows_columns(ncols=gs.ncols_total)
+
+        if side in ("bottom", "top"):
+            has_span_override = s_c1 < p_c1 or s_c2 > p_c2
+        elif side in ("left", "right"):
+            has_span_override = s_r1 < p_r1 or s_r2 > p_r2
+        else:
+            return None
+
+        if not has_span_override:
+            return None
+
+        vmin, vmax = float("inf"), float("-inf")
+        for other_ax in self.figure.axes:
+            if getattr(other_ax, "_panel_side", None):
+                continue
+            oss = getattr(other_ax, "get_subplotspec", lambda: None)()
+            if oss is None:
+                continue
+            oss = oss.get_topmost_subplotspec()
+            if oss.get_gridspec() is not gs:
+                continue
+            o_r1, o_r2, o_c1, o_c2 = oss._get_rows_columns(ncols=gs.ncols_total)
+            opos = other_ax.get_position()
+            if side in ("left", "right"):
+                if o_r1 >= s_r1 and o_r2 <= s_r2:
+                    vmin = min(vmin, opos.y0)
+                    vmax = max(vmax, opos.y1)
+            else:
+                if o_c1 >= s_c1 and o_c2 <= s_c2:
+                    vmin = min(vmin, opos.x0)
+                    vmax = max(vmax, opos.x1)
+
+        return (vmin, vmax) if vmin < vmax else None
+
+    @staticmethod
+    def _compute_adjusted_panel_pos(
+        side, panel_pos, span_extent, original_pos, main_pos, sx, sy, tol
+    ):
+        """
+        Compute the new [x0, y0, width, height] for a panel on the given side,
+        accounting for aspect-adjusted main axes and optional span extent.
+        Returns the new position list, or None for unknown sides.
+        """
+        # NOTE: This will move to a layout composer in a future refactor.
+        ox0, oy0 = original_pos.x0, original_pos.y0
+        ox1, oy1 = original_pos.x1, original_pos.y1
+        mx0, my0 = main_pos.x0, main_pos.y0
+        px0, py0 = panel_pos.x0, panel_pos.y0
+        px1, py1 = panel_pos.x1, panel_pos.y1
+
+        if side in ("left", "right"):
+            # Compute vertical extent
+            if span_extent is not None:
+                along_y0 = span_extent[0]
+                along_h = span_extent[1] - span_extent[0]
+            elif py0 <= oy0 + tol and py1 >= oy1 - tol:
+                along_y0, along_h = my0, main_pos.height
+            else:
+                along_y0 = my0 + (panel_pos.y0 - oy0) * sy
+                along_h = panel_pos.height * sy
+
+            if side == "left":
+                gap = original_pos.x0 - (panel_pos.x0 + panel_pos.width)
+                new_x0 = main_pos.x0 - panel_pos.width - gap
+            else:
+                gap = panel_pos.x0 - (original_pos.x0 + original_pos.width)
+                new_x0 = main_pos.x0 + main_pos.width + gap
+            return [new_x0, along_y0, panel_pos.width, along_h]
+
+        elif side in ("top", "bottom"):
+            # Compute horizontal extent
+            if span_extent is not None:
+                along_x0 = span_extent[0]
+                along_w = span_extent[1] - span_extent[0]
+            elif px0 <= ox0 + tol and px1 >= ox1 - tol:
+                along_x0, along_w = mx0, main_pos.width
+            else:
+                along_x0 = mx0 + (panel_pos.x0 - ox0) * sx
+                along_w = panel_pos.width * sx
+
+            if side == "top":
+                gap = panel_pos.y0 - (original_pos.y0 + original_pos.height)
+                new_y0 = main_pos.y0 + main_pos.height + gap
+            else:
+                gap = original_pos.y0 - (panel_pos.y0 + panel_pos.height)
+                new_y0 = main_pos.y0 - panel_pos.height - gap
+            return [along_x0, new_y0, along_w, panel_pos.height]
+
+        return None
+
     def _adjust_panel_positions(self, *, tol: float = 1e-9) -> None:
         """
         Adjust panel positions to align with the aspect-constrained main axes.
         After apply_aspect() shrinks the main axes, panels should flank the actual
         map boundaries rather than the full gridspec allocation.
         """
+        # NOTE: This will move to a layout composer in a future refactor.
         if not getattr(self, "_panel_dict", None):
             return  # no panels to adjust
 
@@ -1366,11 +1470,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
         # Subplot-spec position before apply_aspect(). This is the true "gridspec slot"
         # and remains well-defined even if we temporarily modify axes positions.
-        try:
-            ss = self.get_subplotspec()
-            original_pos = ss.get_position(self.figure) if ss is not None else None
-        except Exception:
-            original_pos = None
+        ss = getattr(self, "get_subplotspec", lambda: None)()
+        original_pos = ss.get_position(self.figure) if ss is not None else None
         if original_pos is None:
             original_pos = getattr(
                 self, "_originalPosition", None
@@ -1390,151 +1491,42 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # panel, so span overrides across subplot rows/cols are preserved).
         sx = main_pos.width / original_pos.width if original_pos.width else 1.0
         sy = main_pos.height / original_pos.height if original_pos.height else 1.0
-        ox0, oy0 = original_pos.x0, original_pos.y0
-        ox1, oy1 = (
-            original_pos.x0 + original_pos.width,
-            original_pos.y0 + original_pos.height,
-        )
-        mx0, my0 = main_pos.x0, main_pos.y0
 
         # Detect span overrides by comparing SubplotSpec extents of parent vs panels
-        try:
-            parent_ss = self.get_subplotspec().get_topmost_subplotspec()
+        parent_ss = getattr(self, "get_subplotspec", lambda: None)()
+        if parent_ss is not None:
+            parent_ss = parent_ss.get_topmost_subplotspec()
             gs = parent_ss.get_gridspec()
             p_r1, p_r2, p_c1, p_c2 = parent_ss._get_rows_columns(ncols=gs.ncols_total)
-        except Exception:
+        else:
+            gs = None
             p_r1 = p_r2 = p_c1 = p_c2 = None
 
         for side, panels in self._panel_dict.items():
             for panel in panels:
                 # Use the panel subplot-spec box as the baseline (not its current
                 # original position) to avoid accumulated adjustments.
-                try:
-                    ss = panel.get_subplotspec()
-                    panel_pos = (
-                        ss.get_position(panel.figure) if ss is not None else None
-                    )
-                except Exception:
-                    panel_pos = None
+                ss = getattr(panel, "get_subplotspec", lambda: None)()
+                panel_pos = (
+                    ss.get_position(panel.figure) if ss is not None else None
+                )
                 if panel_pos is None:
                     panel_pos = panel.get_position(original=True)
-                px0, py0 = panel_pos.x0, panel_pos.y0
-                px1, py1 = (
-                    panel_pos.x0 + panel_pos.width,
-                    panel_pos.y0 + panel_pos.height,
+
+                span_extent = self._compute_span_extent(
+                    side, panel, gs, p_r1, p_r2, p_c1, p_c2
                 )
-
-                # Check if panel has a span override (extends beyond parent)
-                has_span_override = False
-                span_extent = None  # (min, max) visual extent along the span axis
-                if p_c1 is not None:
-                    try:
-                        panel_ss = panel.get_subplotspec().get_topmost_subplotspec()
-                        s_r1, s_r2, s_c1, s_c2 = panel_ss._get_rows_columns(
-                            ncols=gs.ncols_total
-                        )
-                        if side in ("bottom", "top"):
-                            has_span_override = s_c1 < p_c1 or s_c2 > p_c2
-                        elif side in ("left", "right"):
-                            has_span_override = s_r1 < p_r1 or s_r2 > p_r2
-                    except Exception:
-                        pass
-
-                # For span overrides, compute the visual extent from all axes
-                # that fall within the panel's span range, so the panel aligns
-                # with the actual (aspect-adjusted) axes, not the grid slots.
-                if has_span_override:
-                    vmin, vmax = float("inf"), float("-inf")
-                    for other_ax in self.figure.axes:
-                        if getattr(other_ax, "_panel_side", None):
-                            continue
-                        try:
-                            oss = other_ax.get_subplotspec()
-                            if oss is None:
-                                continue
-                            oss = oss.get_topmost_subplotspec()
-                            if oss.get_gridspec() is not gs:
-                                continue
-                            o_r1, o_r2, o_c1, o_c2 = oss._get_rows_columns(
-                                ncols=gs.ncols_total
-                            )
-                        except Exception:
-                            continue
-                        opos = other_ax.get_position()
-                        if side in ("left", "right"):
-                            if o_r1 >= s_r1 and o_r2 <= s_r2:
-                                vmin = min(vmin, opos.y0)
-                                vmax = max(vmax, opos.y1)
-                        else:
-                            if o_c1 >= s_c1 and o_c2 <= s_c2:
-                                vmin = min(vmin, opos.x0)
-                                vmax = max(vmax, opos.x1)
-                    if vmin < vmax:
-                        span_extent = (vmin, vmax)
-
-                # Use _set_position when available to avoid layoutbox side effects
-                # from public set_position() on newer matplotlib versions.
-                setter = getattr(panel, "_set_position", panel.set_position)
-
-                if side == "left":
-                    # Calculate original gap between panel and main axes
-                    gap = original_pos.x0 - (panel_pos.x0 + panel_pos.width)
-                    # Position panel to the left of the adjusted main axes
-                    new_x0 = main_pos.x0 - panel_pos.width - gap
-                    if span_extent is not None:
-                        new_y0, new_h = span_extent[0], span_extent[1] - span_extent[0]
-                    elif py0 <= oy0 + tol and py1 >= oy1 - tol:
-                        new_y0, new_h = my0, main_pos.height
-                    else:
-                        new_y0 = my0 + (panel_pos.y0 - oy0) * sy
-                        new_h = panel_pos.height * sy
-                    new_pos = [new_x0, new_y0, panel_pos.width, new_h]
-                elif side == "right":
-                    # Calculate original gap
-                    gap = panel_pos.x0 - (original_pos.x0 + original_pos.width)
-                    # Position panel to the right of the adjusted main axes
-                    new_x0 = main_pos.x0 + main_pos.width + gap
-                    if span_extent is not None:
-                        new_y0, new_h = span_extent[0], span_extent[1] - span_extent[0]
-                    elif py0 <= oy0 + tol and py1 >= oy1 - tol:
-                        new_y0, new_h = my0, main_pos.height
-                    else:
-                        new_y0 = my0 + (panel_pos.y0 - oy0) * sy
-                        new_h = panel_pos.height * sy
-                    new_pos = [new_x0, new_y0, panel_pos.width, new_h]
-                elif side == "top":
-                    # Calculate original gap
-                    gap = panel_pos.y0 - (original_pos.y0 + original_pos.height)
-                    # Position panel above the adjusted main axes
-                    new_y0 = main_pos.y0 + main_pos.height + gap
-                    if span_extent is not None:
-                        new_x0, new_w = span_extent[0], span_extent[1] - span_extent[0]
-                    elif px0 <= ox0 + tol and px1 >= ox1 - tol:
-                        new_x0, new_w = mx0, main_pos.width
-                    else:
-                        new_x0 = mx0 + (panel_pos.x0 - ox0) * sx
-                        new_w = panel_pos.width * sx
-                    new_pos = [new_x0, new_y0, new_w, panel_pos.height]
-                elif side == "bottom":
-                    # Calculate original gap
-                    gap = original_pos.y0 - (panel_pos.y0 + panel_pos.height)
-                    # Position panel below the adjusted main axes
-                    new_y0 = main_pos.y0 - panel_pos.height - gap
-                    if span_extent is not None:
-                        new_x0, new_w = span_extent[0], span_extent[1] - span_extent[0]
-                    elif px0 <= ox0 + tol and px1 >= ox1 - tol:
-                        new_x0, new_w = mx0, main_pos.width
-                    else:
-                        new_x0 = mx0 + (panel_pos.x0 - ox0) * sx
-                        new_w = panel_pos.width * sx
-                    new_pos = [new_x0, new_y0, new_w, panel_pos.height]
-                else:
-                    # Unknown side, skip adjustment
+                new_pos = self._compute_adjusted_panel_pos(
+                    side, panel_pos, span_extent,
+                    original_pos, main_pos, sx, sy, tol,
+                )
+                if new_pos is None:
                     continue
 
                 # Panels typically have aspect='auto', which causes matplotlib to
                 # reset their *active* position to their *original* position inside
                 # apply_aspect()/get_position(). Update both so the change persists.
+                setter = getattr(panel, "_set_position", panel.set_position)
                 try:
                     setter(new_pos, which="both")
                 except TypeError:  # older matplotlib

@@ -2417,6 +2417,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         Reposition the subplot axes.
         """
+        # NOTE: The panel span override logic here will move to a layout
+        # composer in a future refactor.
         # WARNING: In later versions self.numRows, self.numCols, and self.figbox
         # are @property definitions that never go stale but in mpl < 3.4 they are
         # attributes that must be updated explicitly with update_params().
