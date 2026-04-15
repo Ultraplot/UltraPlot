@@ -2460,9 +2460,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             )
 
             # Check if the panel has a span override (spans more columns/rows
-            # than its parent). When it does, use the SubplotSpec position for
-            # the "along" dimension so the span is respected. Otherwise use
-            # parent_bbox which correctly tracks aspect-ratio adjustments.
+            # than its parent). When it does, compute the visual extent from
+            # actual axes positions so the panel aligns with aspect-adjusted
+            # axes rather than raw grid slots. Otherwise use parent_bbox.
             parent_ss = self._panel_parent.get_subplotspec().get_topmost_subplotspec()
             p_row1, p_row2, p_col1, p_col2 = parent_ss._get_rows_columns(
                 ncols=gs.ncols_total
@@ -2470,9 +2470,32 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
             if side in ("right", "left"):
                 has_span_override = (row1 < p_row1) or (row2 > p_row2)
-                along_bbox = (
-                    ss.get_position(self.figure) if has_span_override else parent_bbox
-                )
+                if has_span_override:
+                    # Compute visual extent from all axes in the span range
+                    vmin, vmax = float("inf"), float("-inf")
+                    for other in self.figure.axes:
+                        if getattr(other, "_panel_side", None):
+                            continue
+                        oss = getattr(other, "get_subplotspec", lambda: None)()
+                        if oss is None:
+                            continue
+                        oss = oss.get_topmost_subplotspec()
+                        if oss.get_gridspec() is not gs:
+                            continue
+                        o_r1, o_r2, _, _ = oss._get_rows_columns(
+                            ncols=gs.ncols_total
+                        )
+                        if o_r1 >= row1 and o_r2 <= row2:
+                            opos = other.get_position()
+                            vmin = min(vmin, opos.y0)
+                            vmax = max(vmax, opos.y1)
+                    if vmin < vmax:
+                        along_y0, along_h = vmin, vmax - vmin
+                    else:
+                        slot = ss.get_position(self.figure)
+                        along_y0, along_h = slot.y0, slot.height
+                else:
+                    along_y0, along_h = parent_bbox.y0, parent_bbox.height
                 boundary = None
                 width = sum(gs._wratios_total[col1 : col2 + 1]) / figwidth
                 if a_col2 < col1:
@@ -2493,13 +2516,35 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 else:
                     x0 = anchor_bbox.x0 - pad - width
                 bbox = mtransforms.Bbox.from_bounds(
-                    x0, along_bbox.y0, width, along_bbox.height
+                    x0, along_y0, width, along_h
                 )
             else:
                 has_span_override = (col1 < p_col1) or (col2 > p_col2)
-                along_bbox = (
-                    ss.get_position(self.figure) if has_span_override else parent_bbox
-                )
+                if has_span_override:
+                    vmin, vmax = float("inf"), float("-inf")
+                    for other in self.figure.axes:
+                        if getattr(other, "_panel_side", None):
+                            continue
+                        oss = getattr(other, "get_subplotspec", lambda: None)()
+                        if oss is None:
+                            continue
+                        oss = oss.get_topmost_subplotspec()
+                        if oss.get_gridspec() is not gs:
+                            continue
+                        _, _, o_c1, o_c2 = oss._get_rows_columns(
+                            ncols=gs.ncols_total
+                        )
+                        if o_c1 >= col1 and o_c2 <= col2:
+                            opos = other.get_position()
+                            vmin = min(vmin, opos.x0)
+                            vmax = max(vmax, opos.x1)
+                    if vmin < vmax:
+                        along_x0, along_w = vmin, vmax - vmin
+                    else:
+                        slot = ss.get_position(self.figure)
+                        along_x0, along_w = slot.x0, slot.width
+                else:
+                    along_x0, along_w = parent_bbox.x0, parent_bbox.width
                 boundary = None
                 height = sum(gs._hratios_total[row1 : row2 + 1]) / figheight
                 if a_row2 < row1:
@@ -2519,7 +2564,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 else:
                     y0 = anchor_bbox.y0 - pad - height
                 bbox = mtransforms.Bbox.from_bounds(
-                    along_bbox.x0, y0, along_bbox.width, height
+                    along_x0, y0, along_w, height
                 )
             setter(bbox)
 

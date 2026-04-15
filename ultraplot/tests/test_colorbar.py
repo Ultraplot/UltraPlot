@@ -950,6 +950,34 @@ def test_colorbar_span_bottom_mixed_projections(rng):
     assert panel_pos.y0 > row1_col0_pos.y1
 
 
+def test_colorbar_span_mixed_geo_and_cartesian_right(rng):
+    """Right colorbar on mixed npstere+Cartesian grid aligns with axes extent."""
+    import cartopy.crs as ccrs
+
+    fig, axs = uplt.subplots(
+        nrows=2, ncols=2, proj=["npstere", None, "cyl", "cyl"]
+    )
+    data = rng.random((100, 100))
+    lon = np.linspace(-180, 180, 100)
+    lat = np.linspace(30, 90, 100)
+    Lon, Lat = np.meshgrid(lon, lat)
+
+    cm = axs[0, 0].pcolormesh(Lon, Lat, data, transform=ccrs.PlateCarree())
+    fig.colorbar(cm, loc="b", ax=axs[0, :], span=(1, 2))
+    cb_right = fig.colorbar(cm, loc="r", ax=axs[0], ref=axs[:, 1])
+
+    fig.canvas.draw()
+
+    right_pos = cb_right.ax.get_position()
+    top_ax = axs[0, 1].get_position()
+    bot_ax = axs[1, 1].get_position()
+    tol = 0.05
+    # Right colorbar should align with actual axes, not grid slots
+    assert abs(right_pos.y1 - top_ax.y1) < tol
+    assert abs(right_pos.y0 - bot_ax.y0) < tol
+    assert right_pos.x0 >= top_ax.x1 - tol
+
+
 def test_colorbar_span_mixed_projections_bottom_and_right(rng):
     """Bottom + right colorbars on mixed npstere/cyl grid align with axes."""
     import cartopy.crs as ccrs
