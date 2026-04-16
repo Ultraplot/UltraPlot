@@ -1228,16 +1228,34 @@ def test_colorbar_span_position_matches_target_rows():
     assert panel_pos.height > row0_pos.height * 1.5
 
 
-def test_colorbar_norm_str_with_limits():
-    """ "
-    Should allow to pass vmin or vmax when we are passing a str formatter
+@pytest.mark.parametrize(
+    "norm",
+    ["linear", ["linear"], ("linear",)],
+)
+def test_colorbar_norm_str_with_limits(norm):
+    """
+    Should allow to pass vmin or vmax when we are passing a norm specification
+    as a string, list, or tuple (per the ``constructor.Norm`` contract).
     """
     data = np.random.rand(10, 10)
     fig, ax = uplt.subplots()
-    cm = ax.pcolormesh(data, vmin=0.1, norm="linear", vmax=1)
+    cm = ax.pcolormesh(data, vmin=0.1, norm=norm, vmax=1)
     assert cm.norm.vmin == pytest.approx(0.1)
     assert cm.norm.vmax == pytest.approx(1)
-    return fig
+
+
+@pytest.mark.parametrize("norm", [("linear", 0.1, 1), ["linear", 0.1, 1]])
+def test_colorbar_norm_tuple_positional_limits(norm):
+    """
+    Tuple / list form ``(name, vmin, vmax)`` should construct the normalizer
+    with the positional arguments and not collide with implicit vmin/vmax
+    kwargs when the user does not separately specify them.
+    """
+    data = np.random.rand(10, 10)
+    fig, ax = uplt.subplots()
+    cm = ax.pcolormesh(data, norm=norm)
+    assert cm.norm.vmin == pytest.approx(0.1)
+    assert cm.norm.vmax == pytest.approx(1)
 
 
 def test_colorbar_norm_with_limits():
