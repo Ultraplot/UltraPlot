@@ -1234,7 +1234,9 @@ def test_colorbar_norm_str_with_limits():
     """
     data = np.random.rand(10, 10)
     fig, ax = uplt.subplots()
-    ax.pcolormesh(data, vmin=0.1, norm="log", vmax=1)
+    cm = ax.pcolormesh(data, vmin=0.1, norm="linear", vmax=1)
+    assert cm.norm.vmin == pytest.approx(0.1)
+    assert cm.norm.vmax == pytest.approx(1)
     return fig
 
 
