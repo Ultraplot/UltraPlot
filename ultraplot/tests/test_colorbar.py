@@ -982,3 +982,27 @@ def test_colorbar_span_position_matches_target_rows():
     ), f"Panel y0={panel_pos.y0:.3f} != row1 y0={row1_pos.y0:.3f}"
     # Sanity: panel must be taller than a single row
     assert panel_pos.height > row0_pos.height * 1.5
+
+
+def test_colorbar_norm_str_with_limits():
+    """ "
+    Should allow to pass vmin or vmax when we are passing a str formatter
+    """
+    data = np.random.rand(10, 10)
+    fig, ax = uplt.subplots()
+    ax.pcolormesh(data, vmin=0.1, norm="log", vmax=1)
+    return fig
+
+
+def test_colorbar_norm_with_limits():
+    """ "
+    Should allow to pass vmin or vmax when we are passing a str formatter
+    """
+    data = np.random.rand(10, 10)
+    fig = None
+    with pytest.raises(ValueError):
+        fig, ax = uplt.subplots()
+        ax.pcolormesh(
+            data, vmin=0, norm=uplt.colors.mcolors.Normalize(vmin=0, vmax=1), vmax=1
+        )
+    return fig
