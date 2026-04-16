@@ -1244,7 +1244,9 @@ def test_colorbar_norm_str_with_limits(norm):
     assert cm.norm.vmax == pytest.approx(1)
 
 
-@pytest.mark.parametrize("norm", [("linear", 0.1, 1), ["linear", 0.1, 1]])
+@pytest.mark.parametrize(
+    "norm", [("linear", 0.1, 1), ["linear", 0.1, 1], ("linear", 0.1, 1, False)]
+)
 def test_colorbar_norm_tuple_positional_limits(norm):
     """
     Tuple / list form ``(name, vmin, vmax)`` should construct the normalizer
