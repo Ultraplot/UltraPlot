@@ -1,135 +1,147 @@
 """
-Dynamically build what's new page based on github releases
+Dynamically build the "What's new?" page from the GitHub releases feed.
+
+The release notes on GitHub are written in Markdown and frequently mix raw
+HTML (``<details><summary>`` blocks wrapping fenced code samples). The
+previous implementation converted the body to RST via ``m2r2``, which left
+the inner Markdown code fences inside ``.. raw:: html`` directives — Sphinx
+then rendered them as literal text. This module instead converts each
+release body to HTML (so fences become ``<pre><code>`` elements) and emits
+a single ``.. raw:: html`` block per release wrapped in a styling hook
+``div.uplt-whats-new-release-body``.
 """
+
+from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Iterable
 
+import markdown
 import requests
-from m2r2 import convert
 
 GITHUB_REPO = "ultraplot/ultraplot"
 OUTPUT_RST = Path("whats_new.rst")
-
-
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases"
 
+# Markdown extensions: fenced code (for ```python blocks), tables, attribute
+# lists for class hooks, and md_in_html so block-level HTML such as
+# ``<details>`` correctly contains parsed Markdown children.
+_MD_EXTENSIONS = ("fenced_code", "tables", "attr_list", "md_in_html")
 
-def format_release_body(text):
-    """Formats GitHub release notes for better RST readability."""
-    # Convert Markdown to RST using m2r2
-    formatted_text = convert(text)
+# Strip the trailing "by @user in PR_URL" attribution that GitHub auto-adds
+# to release notes. Keep the PR link in parentheses so credit/traceability
+# remains while removing the contributor handles from rendered output.
+# GitHub author handles can include ``[bot]`` suffixes (``@dependabot[bot]``,
+# ``@pre-commit-ci[bot]``); ``\w`` alone misses the brackets.
+_PR_ATTRIBUTION = re.compile(
+    r" by @[\w.\-]+(?:\[bot\])? in (https://github\.com/[^\s]+)"
+)
 
-    formatted_text = _downgrade_headings(formatted_text)
-    formatted_text = formatted_text.replace("→", "->")
-    formatted_text = re.sub(r"^\\s*`\\s*$", "", formatted_text, flags=re.MULTILINE)
-
-    # Convert PR references (remove "by @user in ..." but keep the link)
-    formatted_text = re.sub(
-        r" by @\w+ in (https://github.com/[^\s]+)", r" (\1)", formatted_text
-    )
-
-    return formatted_text.strip()
+# Match a leading run of ``#`` characters at the start of a line (ATX
+# headings), capturing it so we can downgrade by one level. The page
+# itself already provides the H1 ("What's new?") and each release
+# contributes a per-release RST H2, so body headings should start at H2.
+_ATX_HEADING = re.compile(r"^(#{1,5})(?=\s)", flags=re.MULTILINE)
 
 
-def _downgrade_headings(text):
+def _strip_pr_attribution(text: str) -> str:
+    return _PR_ATTRIBUTION.sub(r" (\1)", text)
+
+
+def _downgrade_headings(text: str) -> str:
+    """Demote every Markdown ATX heading by one level (``#`` → ``##``, etc.)."""
+    return _ATX_HEADING.sub(lambda m: "#" + m.group(1), text)
+
+
+def _normalize_unicode(text: str) -> str:
+    return text.replace("→", "->")
+
+
+def _indent_html(html: str, indent: str = "   ") -> str:
+    """Indent every line of ``html`` by ``indent`` for inclusion under ``.. raw:: html``."""
+    return "\n".join(indent + line if line else line for line in html.splitlines())
+
+
+def format_release_body(text: str) -> str:
     """
-    Downgrade all heading levels by one to avoid H1/H2 collisions in the TOC.
+    Convert a GitHub release body (Markdown + embedded HTML) into an RST
+    ``.. raw:: html`` block wrapped in ``div.uplt-whats-new-release-body``.
+
+    Parameters
+    ----------
+    text : str
+        Raw Markdown release body as returned by the GitHub releases API.
+
+    Returns
+    -------
+    str
+        Indented RST snippet ready to be appended to ``whats_new.rst``.
     """
-    adornment_map = {
-        "=": "-",
-        "-": "~",
-        "~": "^",
-        "^": '"',
-        '"': "'",
-        "'": "`",
-    }
-    lines = text.splitlines()
-    for idx in range(len(lines) - 1):
-        title = lines[idx]
-        underline = lines[idx + 1]
-        if not title.strip():
-            continue
-        if not underline:
-            continue
-        char = underline[0]
-        if char not in adornment_map:
-            continue
-        if underline.strip(char):
-            continue
-        lines[idx + 1] = adornment_map[char] * len(underline)
-    return "\n".join(lines)
+    cleaned = _downgrade_headings(
+        _normalize_unicode(_strip_pr_attribution(text or ""))
+    ).strip()
+    html_body = markdown.markdown(cleaned, extensions=list(_MD_EXTENSIONS))
+    wrapped = f'<div class="uplt-whats-new-release-body">\n{html_body}\n</div>'
+    return ".. raw:: html\n\n" + _indent_html(wrapped) + "\n"
 
 
-def fetch_all_releases():
-    """Fetches all GitHub releases across multiple pages."""
-    releases = []
+def _format_release_title(release: dict) -> str:
+    """
+    Build the per-release section title in ``"<tag>: <name>"`` form,
+    de-duplicating the tag if it is already a prefix of the release name.
+    """
+    tag = release["tag_name"].lower()
+    title = (release.get("name") or "").strip()
+    if title.lower().startswith(tag):
+        title = title[len(tag) :].lstrip(" :-—–")
+    return f"{tag}: {title}" if title else tag
+
+
+def fetch_all_releases() -> list[dict]:
+    """Fetch every GitHub release across paginated responses."""
+    releases: list[dict] = []
     page = 1
-
     while True:
         response = requests.get(GITHUB_API_URL, params={"per_page": 30, "page": page})
         if response.status_code != 200:
             print(f"Error fetching releases: {response.status_code}")
             break
-
         page_data = response.json()
-        # If the page is empty, stop fetching
         if not page_data:
             break
-
         releases.extend(page_data)
         page += 1
-
     return releases
 
 
-def fetch_releases():
-    """Fetches the latest releases from GitHub and formats them as RST."""
+def _render_releases(releases: Iterable[dict]) -> str:
+    """Render an iterable of release dicts to the full ``whats_new.rst`` body."""
+    header = "What's new?"
+    out = f".. _whats_new:\n\n{header}\n{'=' * len(header)}\n\n"
+    for release in releases:
+        title = _format_release_title(release)
+        date = release["published_at"][:10]
+        heading = f"{title} ({date})"
+        out += f"{heading}\n{'-' * len(heading)}\n\n"
+        out += format_release_body(release.get("body") or "") + "\n"
+    return out
+
+
+def fetch_releases() -> str:
+    """Fetch the latest releases from GitHub and format them as RST."""
     releases = fetch_all_releases()
     if not releases:
-        print(f"Error fetching releases!")
+        print("Error fetching releases!")
         return ""
-
-    header = "What's new?"
-    rst_content = f".. _whats_new:\n\n{header}\n{'=' * len(header)}\n\n"  # H1
-
-    for release in releases:
-        # ensure title is formatted as {tag}: {title}
-        tag = release["tag_name"].lower()
-        title = release["name"]
-        if title.startswith(tag):
-            title = title[len(tag) :]
-            while title:
-                if not title[0].isalpha():
-                    title = title[1:]
-                    title = title.strip()
-                else:
-                    title = title.strip()
-                    break
-
-        if title:
-            title = f"{tag}: {title}"
-        else:
-            title = tag
-
-        date = release["published_at"][:10]
-        body = format_release_body(release["body"] or "")
-
-        # Version header (H2)
-        rst_content += f"{title} ({date})\n{'-' * (len(title) + len(date) + 3)}\n\n"
-
-        # Process body content
-        rst_content += f"{body}\n\n"
-
-    return rst_content
+    return _render_releases(releases)
 
 
-def write_rst():
-    """Writes fetched releases to an RST file."""
+def write_rst() -> None:
+    """Write fetched releases to ``whats_new.rst``."""
     content = fetch_releases()
     if content:
-        with open(OUTPUT_RST, "w", encoding="utf-8") as f:
-            f.write(content)
+        OUTPUT_RST.write_text(content, encoding="utf-8")
         print(f"Updated {OUTPUT_RST}")
     else:
         print("No updates to write.")
