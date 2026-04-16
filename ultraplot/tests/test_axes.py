@@ -277,6 +277,37 @@ def test_text_borderstyle_overrides_rc():
     assert _get_text_stroke_joinstyle(txt) == "bevel"
 
 
+def test_titleborder_false_clears_path_effects():
+    """Ensure titleborder=False removes stroke effects on inner titles."""
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    # Default rc has title.border=True, so inner title gets Stroke
+    ax.format(title="Test", titleloc="upper left")
+    t = ax._title_dict["upper left"]
+    assert t.get_path_effects(), "expected default border path effects"
+    # Now disable — path effects should be cleared
+    ax.format(titleborder=False)
+    assert not t.get_path_effects(), "titleborder=False did not clear path effects"
+
+
+def test_titleborder_false_at_creation():
+    """Ensure titleborder=False works when passed during subplot creation."""
+    fig, ax = uplt.subplot(title="Test", titleloc="upper left", titleborder=False)
+    t = ax._title_dict["upper left"]
+    assert not t.get_path_effects()
+
+
+def test_abcborder_false_clears_path_effects():
+    """Ensure abcborder=False removes stroke effects on inner abc labels."""
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.format(abc="A", abcloc="upper left", abcborder=True)
+    t = ax._title_dict["abc"]
+    assert t.get_path_effects(), "expected border path effects after abcborder=True"
+    ax.format(abcborder=False)
+    assert not t.get_path_effects(), "abcborder=False did not clear path effects"
+
+
 def test_dualx_log_transform_is_finite():
     """
     Ensure dualx transforms remain finite on log axes.
