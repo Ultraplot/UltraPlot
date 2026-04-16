@@ -129,6 +129,26 @@ def test_fetch_releases_returns_empty_string_when_api_returns_nothing(monkeypatc
     assert module.fetch_releases() == ""
 
 
+def test_format_release_body_recognises_indented_atx_headings():
+    """Some GitHub release bodies (e.g. v2.0.1) indent whole sections by two
+    spaces in the source Markdown. python-markdown won't parse ``  ### Foo``
+    as an ATX heading, so without normalisation those headings render as
+    paragraphs (literal ``###`` text). The script must strip up to three
+    leading spaces from heading lines before parsing."""
+    module = _load_module()
+    body = (
+        "  ### Layout, Rendering, and Geo Improvements\n\n"
+        "  - Bullet one\n"
+        "  - Bullet two\n"
+    )
+
+    rendered = module.format_release_body(body)
+
+    assert "<h4>Layout, Rendering, and Geo Improvements</h4>" in rendered
+    assert "### Layout" not in rendered
+    assert "<p>### " not in rendered
+
+
 def test_format_release_body_strips_bot_attribution():
     """``@dependabot[bot]`` and ``@pre-commit-ci[bot]`` style handles must be
     stripped along with regular ``@user`` ones; only the PR URL should

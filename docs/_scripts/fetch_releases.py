@@ -38,11 +38,14 @@ _PR_ATTRIBUTION = re.compile(
     r" by @[\w.\-]+(?:\[bot\])? in (https://github\.com/[^\s]+)"
 )
 
-# Match a leading run of ``#`` characters at the start of a line (ATX
-# headings), capturing it so we can downgrade by one level. The page
-# itself already provides the H1 ("What's new?") and each release
-# contributes a per-release RST H2, so body headings should start at H2.
-_ATX_HEADING = re.compile(r"^(#{1,5})(?=\s)", flags=re.MULTILINE)
+# Match an ATX heading line, tolerating up-to-3 leading spaces. Authors
+# occasionally indent whole sections by two spaces in the GitHub release
+# editor (e.g. v2.0.1's "### Layout, Rendering, and Geo Improvements"),
+# which python-markdown then parses as a paragraph rather than a heading.
+# We capture the ``#`` run so we can both strip the indent and downgrade
+# one level — the page already provides the H1 ("What's new?") and each
+# release contributes a per-release RST H2, so body headings start at H2.
+_ATX_HEADING = re.compile(r"^[ ]{0,3}(#{1,5})(?=\s)", flags=re.MULTILINE)
 
 
 def _strip_pr_attribution(text: str) -> str:
