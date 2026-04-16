@@ -1487,10 +1487,18 @@ class Figure(mfigure.Figure):
         if getattr(axi, "_panel_side", None) and getattr(axi, f"_share{axis}", None):
             return 3
 
-        # Adjacent panels on any relevant side
+        # Adjacent panels on any relevant side. Ignore hidden filled panels
+        # (e.g. those created for outer legends/colorbars via ``loc='r'``);
+        # they do not participate in axis sharing and must not promote the
+        # parent axes' tick-label sharing level (see issue #694).
         panel_dict = getattr(axi, "_panel_dict", {})
         for side in sides:
-            side_panels = panel_dict.get(side) or []
+            side_panels = [
+                p
+                for p in (panel_dict.get(side) or [])
+                if not getattr(p, "_panel_hidden", False)
+                and getattr(p, "_panel_share", False)
+            ]
             if side_panels and getattr(side_panels[0], f"_share{axis}", False):
                 return 3
 
