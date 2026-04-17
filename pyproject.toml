@@ -74,7 +74,7 @@ docs = [
     "jupyter",
     "jupytext",
     "lxml-html-clean",
-    "m2r2",
+    "markdown",
     "mpltern",
     "nbsphinx",
     "sphinx",
