@@ -21,5 +21,6 @@ dependencies:
   - pyarrow
   - cftime
   - markdown
+  - requests
   - pip:
       - pycirclize
