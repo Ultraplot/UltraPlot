@@ -1265,7 +1265,6 @@ def test_normalize_types(norm):
     data = np.random.rand(10, 10)
     target = norm
 
-    print(norm)
     if norm is uplt.DiscreteNorm:
         norm = uplt.DiscreteNorm(levels=[0, 1])
         discrete = True
