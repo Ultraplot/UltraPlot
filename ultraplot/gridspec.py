@@ -1197,7 +1197,7 @@ class GridSpec(mgridspec.GridSpec):
         fig = self.figure
         if not fig:
             return
-        ax = fig._subplot_dict.get(fig._refnum, None)
+        ax = fig._subplots.subplot_dict.get(fig._refnum, None)
         if ax is None:
             return
 
@@ -1302,7 +1302,7 @@ class GridSpec(mgridspec.GridSpec):
         fig = self.figure
         if fig is None:  # drawing before subplots are added?
             return
-        ax = fig._subplot_dict.get(fig._refnum, None)
+        ax = fig._subplots.subplot_dict.get(fig._refnum, None)
         if ax is None:  # drawing before subplots are added?
             return
         ss = ax.get_subplotspec().get_topmost_subplotspec()
@@ -2086,7 +2086,7 @@ class SubplotGrid(MutableSequence, list):
         ylabel = kwargs.get("ylabel", None)
         title = kwargs.get("title", None)
         axes = [ax for ax in self if ax is not None]
-        all_axes = set(self.figure._subplot_dict.values())
+        all_axes = set(self.figure._subplots.subplot_dict.values())
         is_subset = bool(axes) and all_axes and set(axes) != all_axes
         shared_subset_title = len(self) > 1 and is_subset and isinstance(title, str)
         shared_title_kw = (
