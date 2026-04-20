@@ -1258,7 +1258,25 @@ def test_colorbar_norm_tuple_positional_limits(norm):
     cm = ax.pcolormesh(data, norm=norm)
     assert cm.norm.vmin == pytest.approx(0.1)
     assert cm.norm.vmax == pytest.approx(1)
-    assert isinstance(cm.norm, uplt.DiscreteNorm)
+
+
+@pytest.mark.parametrize("norm", [uplt.DiscreteNorm, uplt.colors.mcolors.Normalize])
+def test_normalize_types(norm):
+    data = np.random.rand(10, 10)
+    target = norm
+
+    print(norm)
+    if norm is uplt.DiscreteNorm:
+        norm = uplt.DiscreteNorm(levels=[0, 1])
+        discrete = True
+    elif norm is uplt.colors.mcolors.Normalize:
+        norm = uplt.colors.mcolors.Normalize(vmin=0, vmax=1)
+        discrete = False
+    else:
+        raise ValueError("Norm not understood.")
+    fig, ax = uplt.subplots()
+    cm = ax.pcolormesh(data, norm=norm, discrete=discrete)
+    assert isinstance(cm.norm, target)
 
 
 def test_colorbar_norm_with_limits():
