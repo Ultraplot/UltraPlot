@@ -1258,6 +1258,7 @@ def test_colorbar_norm_tuple_positional_limits(norm):
     cm = ax.pcolormesh(data, norm=norm)
     assert cm.norm.vmin == pytest.approx(0.1)
     assert cm.norm.vmax == pytest.approx(1)
+    assert isinstance(cm.norm, uplt.DiscreteNorm)
 
 
 def test_colorbar_norm_with_limits():
