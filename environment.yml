@@ -20,5 +20,7 @@ dependencies:
   - networkx
   - pyarrow
   - cftime
+  - markdown
+  - requests
   - pip:
       - pycirclize
