@@ -9,7 +9,6 @@ import ultraplot as uplt
 from ultraplot._subplots import SubplotManager
 from ultraplot import gridspec as pgridspec
 
-
 # ---------------------------------------------------------------------------
 # gridspec property
 # ---------------------------------------------------------------------------
