@@ -4120,9 +4120,30 @@ class PlotAxes(base.Axes):
         # Parse keyword args
         cmap_kw = cmap_kw or {}
         norm_kw = norm_kw or {}
-        # If norm is given we use it to set vmin and vmax
-        if (vmin is not None or vmax is not None) and norm is not None:
-            raise ValueError("If 'norm' is given, 'vmin' and 'vmax' must not be set.")
+        # Tuple/list specs like ``('linear', 0, 1)`` pack positional args for
+        # ``constructor.Norm``. Build the Normalize now so downstream code can
+        # treat it uniformly with pre-constructed Normalize instances instead
+        # of risking a positional/kwarg collision when vmin/vmax are forwarded.
+        if (
+            np.iterable(norm)
+            and not isinstance(norm, str)
+            and not isinstance(norm, mcolors.Normalize)
+            and len(norm) > 1
+        ):
+            norm = constructor.Norm(norm, **norm_kw)
+            norm_kw = {}
+        # A ``Normalize`` instance already carries vmin/vmax, so combining it
+        # with explicit vmin/vmax is ambiguous. String / single-element list or
+        # tuple specs are just names for ``constructor.Norm`` and accept
+        # vmin/vmax as kwargs.
+        if (vmin is not None or vmax is not None) and isinstance(
+            norm, mcolors.Normalize
+        ):
+            raise ValueError(
+                "If 'norm' is a Normalize instance, 'vmin' and 'vmax' must not be "
+                "set. Pass them through the Normalize constructor, or specify "
+                "'norm' as a string / list / tuple to let vmin and vmax apply."
+            )
         if isinstance(norm, mcolors.Normalize):
             vmin = norm.vmin
             vmax = norm.vmax
