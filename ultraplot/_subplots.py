@@ -39,9 +39,6 @@ class SubplotManager:
         self.counter: int = 0
         self._gridspec = None
 
-    # ---------------------------------------------------------------
-    # Gridspec property
-    # ---------------------------------------------------------------
     @property
     def gridspec(self):
         """The single GridSpec used for all subplots in the figure."""
@@ -367,9 +364,6 @@ class SubplotManager:
         fig.format(skip_axes=True, **figure_kw)
         return pgridspec.SubplotGrid(axs)
 
-    # ---------------------------------------------------------------
-    # Convenience accessors
-    # ---------------------------------------------------------------
     @property
     def subplotgrid(self):
         """A SubplotGrid of numbered subplots sorted by number."""
