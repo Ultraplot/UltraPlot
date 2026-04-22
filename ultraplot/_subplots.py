@@ -76,6 +76,7 @@ class SubplotManager:
         """
         Translate user-input projection into a registered matplotlib axes class.
         """
+        # Parse arguments
         proj = _not_none(proj=proj, projection=projection, default="cartesian")
         proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
         backend = self.parse_backend(backend, basemap)
@@ -86,9 +87,11 @@ class SubplotManager:
         elif isinstance(self.figure, maxes.Axes):
             raise ValueError("Matplotlib axes cannot be added to ultraplot figures.")
 
+        # Search axes projections
         name = None
 
         # Handle cartopy/basemap Projection objects directly
+        # These should be converted to Ultraplot GeoAxes
         if not isinstance(proj, str):
             if constructor.Projection is not object and isinstance(
                 proj, constructor.Projection
@@ -109,6 +112,7 @@ class SubplotManager:
             else:
                 name = "ultraplot_" + proj
         if name is None and isinstance(proj, str):
+            # Try geographic projections first if cartopy/basemap available
             if (
                 constructor.Projection is not object
                 or constructor.Basemap is not object
@@ -120,8 +124,10 @@ class SubplotManager:
                     name = "ultraplot_" + proj_obj._proj_backend
                     kwargs["map_projection"] = proj_obj
                 except ValueError:
-                    pass
+                    pass  # not a geographic projection, try matplotlib registry below
 
+            # If not geographic, check if registered globally in matplotlib
+            # (e.g., 'ternary', 'polar', '3d')
             if name is None and proj in mproj.get_projection_names():
                 name = proj
 
@@ -199,7 +205,7 @@ class SubplotManager:
                     f"1 and {nrows * ncols}. Instead got {i} and {j}."
                 )
             rowfact, colfact = orows // nrows, ocols // ncols
-            irow, icol = divmod(i - 1, ncols)
+            irow, icol = divmod(i - 1, ncols)  # convert to zero-based
             jrow, jcol = divmod(j - 1, ncols)
             irow, icol = irow * rowfact, icol * colfact
             jrow, jcol = (jrow + 1) * rowfact - 1, (jcol + 1) * colfact - 1
@@ -209,13 +215,18 @@ class SubplotManager:
             raise ValueError(f"Invalid add_subplot positional arguments {args!r}.")
 
         # Add the subplot
+        # NOTE: Must assign unique label to each subplot or else subsequent calls
+        # to add_subplot() in mpl < 3.4 may return an already-drawn subplot in the
+        # wrong location due to gridspec override.
         self.gridspec = gs  # trigger layout adjustment
         self.counter += 1
         kwargs.setdefault("label", f"subplot_{self.counter}")
         kwargs.setdefault("number", 1 + max(self.subplot_dict, default=0))
         kwargs.pop("refwidth", None)  # TODO: remove this
 
-        # Use container approach for external projections
+        # Use container approach for external projections to make them
+        # ultraplot-compatible. Skip projections that start with "ultraplot_"
+        # as these are already Ultraplot axes classes.
         projection_name = kwargs.get("projection")
         external_axes_class = None
         external_axes_kwargs = {}
@@ -245,7 +256,10 @@ class SubplotManager:
 
         kwargs.pop("_subplot_spec", None)
 
-        # Call matplotlib's Figure.add_subplot directly
+        # NOTE: We call mfigure.Figure.add_subplot directly (unbound) rather
+        # than fig.add_subplot because SubplotManager is not a Figure subclass
+        # and cannot use super(). This bypasses any Figure.add_subplot override,
+        # which is acceptable because Figure._add_subplot is the real entry point.
         ax = mfigure.Figure.add_subplot(fig, ss, **kwargs)
         if ax.number:
             self.subplot_dict[ax.number] = ax
@@ -270,23 +284,27 @@ class SubplotManager:
         """
         fig = self.figure
 
+        # Helper to normalize per-axes arguments into {num: value} dicts.
+        # Accepts 'string', {1: 'string1', (2, 3): 'string2'}, or lists.
         def _axes_dict(naxs, input, kw=False, default=None):
-            if not kw:
+            if not kw:  # 'string' or {1: 'string1', (2, 3): 'string2'}
                 if np.iterable(input) and not isinstance(input, (str, dict)):
                     input = {num + 1: item for num, item in enumerate(input)}
                 elif not isinstance(input, dict):
                     input = {range(1, naxs + 1): input}
-            else:
+            else:  # {key: value} or {1: {key: value1}, (2, 3): {key: value2}}
                 nested = [isinstance(_, dict) for _ in input.values()]
-                if not any(nested):
+                if not any(nested):  # any([]) == False
                     input = {range(1, naxs + 1): input.copy()}
                 elif not all(nested):
                     raise ValueError(f"Invalid input {input!r}.")
+            # Unfurl keys that contain multiple axes numbers
             output = {}
             for nums, item in input.items():
                 nums = np.atleast_1d(nums)
                 for num in nums.flat:
                     output[num] = item.copy() if kw else item
+            # Fill with default values
             for num in range(1, naxs + 1):
                 if num not in output:
                     output[num] = {} if kw else default
@@ -299,7 +317,8 @@ class SubplotManager:
             return output
 
         # Build the subplot array
-        if order not in ("C", "F"):
+        # NOTE: Currently this may ignore user-input nrows/ncols without warning
+        if order not in ("C", "F"):  # better error message
             raise ValueError(f"Invalid order={order!r}. Options are 'C' or 'F'.")
         gs = None
         if array is None or isinstance(array, mgridspec.GridSpec):
@@ -309,14 +328,15 @@ class SubplotManager:
             array = array.reshape((nrows, ncols), order=order)
         else:
             array = np.atleast_1d(array)
-            array[array == None] = 0  # noqa: E711
+            array[array == None] = 0  # None or 0 both valid placeholders  # noqa: E711
             array = array.astype(int)
-            if array.ndim == 1:
+            if array.ndim == 1:  # interpret as single row or column
                 array = array[None, :] if order == "C" else array[:, None]
             elif array.ndim != 2:
                 raise ValueError(f"Expected 1D or 2D array of integers. Got {array}.")
 
         # Parse input format, gridspec, and projection arguments
+        # NOTE: Permit figure format keywords for e.g. 'collabels' (more intuitive)
         nums = np.unique(array[array != 0])
         naxs = len(nums)
         if any(num < 0 or not isinstance(num, Integral) for num in nums.flat):
@@ -344,13 +364,14 @@ class SubplotManager:
         gridspec_kw = _pop_params(kwargs, pgridspec.GridSpec._update_params)
 
         # Create or update the gridspec and add subplots with subplotspecs
+        # NOTE: The gridspec is added to the figure when we pass the subplotspec
         if gs is None:
             if "layout_array" not in gridspec_kw:
                 gridspec_kw = {**gridspec_kw, "layout_array": array}
             gs = pgridspec.GridSpec(*array.shape, **gridspec_kw)
         else:
             gs.update(**gridspec_kw)
-        axs = naxs * [None]
+        axs = naxs * [None]  # list of axes
         axids = [np.where(array == i) for i in np.sort(np.unique(array)) if i > 0]
         axcols = np.array([[x.min(), x.max()] for _, x in axids])
         axrows = np.array([[y.min(), y.max()] for y, _ in axids])

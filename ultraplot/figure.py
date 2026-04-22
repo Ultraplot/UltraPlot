@@ -1546,7 +1546,7 @@ class Figure(mfigure.Figure):
         For 'left'/'right': select one extreme axis per row (leftmost/rightmost).
         For 'top'/'bottom': select one extreme axis per column (topmost/bottommost).
         """
-        axs = tuple(self._subplots.subplot_dict.values())
+        axs = tuple(self._iter_subplots())
         if not axs:
             return []
         if side not in ("left", "right", "top", "bottom"):
@@ -2082,7 +2082,7 @@ class Figure(mfigure.Figure):
         seen = set()
         span = getattr(self, "_span" + x)
         align = getattr(self, "_align" + x)
-        for ax in self._subplots.subplot_dict.values():
+        for ax in self._iter_subplots():
             if isinstance(ax, paxes.CartesianAxes):
                 ax._apply_axis_sharing()  # always!
             else:
@@ -2331,7 +2331,7 @@ class Figure(mfigure.Figure):
         Adjust the position of super labels.
         """
         # NOTE: Ensure title is offset only here.
-        for ax in self._subplots.subplot_dict.values():
+        for ax in self._iter_subplots():
             ax._apply_title_above()
         if side not in ("left", "right", "bottom", "top"):
             raise ValueError(f"Invalid side {side!r}.")
@@ -2902,7 +2902,7 @@ class Figure(mfigure.Figure):
         """
         self._layout_dirty = True
         # Initiate context block
-        axs = axs or self._subplots.subplot_dict.values()
+        axs = axs or self._iter_subplots()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         rc_kw, rc_mode = _pop_rc(kwargs)
         with rc.context(rc_kw, mode=rc_mode):
@@ -3591,7 +3591,7 @@ class Figure(mfigure.Figure):
             raise ValueError(f"Invalid sides {panels!r}.")
         # Iterate
         axs = (
-            *self._subplots.subplot_dict.values(),
+            *self._iter_subplots(),
             *(ax for side in panels for ax in self._panel_dict[side]),
         )
         for ax in axs:
@@ -3616,6 +3616,14 @@ class Figure(mfigure.Figure):
     @gridspec.setter
     def gridspec(self, gs):
         self._subplots.gridspec = gs
+
+    def _get_subplot(self, number: int):
+        """Return the subplot with the given *number*, or ``None``."""
+        return self._subplots.subplot_dict.get(number, None)
+
+    def _iter_subplots(self):
+        """Iterate over all numbered subplots."""
+        return self._subplots.subplot_dict.values()
 
     @property
     def subplotgrid(self):
