@@ -6,12 +6,8 @@ import numpy as np
 import pytest
 
 import ultraplot as uplt
-from ultraplot._subplots import SubplotManager
 from ultraplot import gridspec as pgridspec
-
-# ---------------------------------------------------------------------------
-# gridspec property
-# ---------------------------------------------------------------------------
+from ultraplot._subplots import SubplotManager
 
 
 def test_gridspec_setter_rejects_non_ultraplot():
@@ -30,11 +26,6 @@ def test_gridspec_setter_accepts_ultraplot():
     uplt.close(fig)
 
 
-# ---------------------------------------------------------------------------
-# parse_backend
-# ---------------------------------------------------------------------------
-
-
 def test_parse_backend_basemap_warns():
     """parse_backend emits a deprecation warning for basemap."""
     with pytest.warns(match="basemap"):
@@ -45,11 +36,6 @@ def test_parse_backend_passthrough():
     """parse_backend returns backend unchanged for non-basemap values."""
     assert SubplotManager.parse_backend(backend="cartopy") == "cartopy"
     assert SubplotManager.parse_backend(backend=None) is None
-
-
-# ---------------------------------------------------------------------------
-# add_subplot — integer arg form
-# ---------------------------------------------------------------------------
 
 
 def test_add_subplot_integer_arg():
@@ -67,11 +53,6 @@ def test_add_subplot_integer_arg_invalid():
     with pytest.raises(ValueError, match="must fall between 111 and 999"):
         fig.add_subplot(10)
     uplt.close(fig)
-
-
-# ---------------------------------------------------------------------------
-# add_subplot — row/col validation errors
-# ---------------------------------------------------------------------------
 
 
 def test_add_subplot_row_mismatch():
@@ -108,11 +89,6 @@ def test_add_subplot_invalid_args():
     uplt.close(fig)
 
 
-# ---------------------------------------------------------------------------
-# add_subplot — subplotspec validation
-# ---------------------------------------------------------------------------
-
-
 def test_add_subplot_non_ultraplot_gridspec_raises():
     """SubplotSpec from a plain matplotlib GridSpec is rejected."""
     import matplotlib.gridspec as mgridspec
@@ -147,11 +123,6 @@ def test_add_subplot_with_subplotspec():
     uplt.close(fig)
 
 
-# ---------------------------------------------------------------------------
-# add_subplot — external projection wrapping (e.g. '3d')
-# ---------------------------------------------------------------------------
-
-
 def test_add_subplot_3d_projection():
     """External projection like '3d' gets wrapped in a container."""
     fig = uplt.figure()
@@ -161,22 +132,12 @@ def test_add_subplot_3d_projection():
     uplt.close(fig)
 
 
-# ---------------------------------------------------------------------------
-# add_subplot — projection parsing errors
-# ---------------------------------------------------------------------------
-
-
 def test_parse_proj_invalid_name():
     """Invalid projection name raises a helpful ValueError."""
     fig = uplt.figure()
     with pytest.raises(ValueError, match="Invalid projection"):
         fig.add_subplot(111, proj="totally_nonexistent_proj_xyz")
     uplt.close(fig)
-
-
-# ---------------------------------------------------------------------------
-# add_subplots — order / array validation
-# ---------------------------------------------------------------------------
 
 
 def test_add_subplots_invalid_order():
@@ -219,11 +180,6 @@ def test_add_subplots_negative_indices_raises():
     uplt.close(fig)
 
 
-# ---------------------------------------------------------------------------
-# add_subplots — deprecated keyword warnings
-# ---------------------------------------------------------------------------
-
-
 def test_add_subplots_gridspec_kw_warns():
     """Passing gridspec_kw emits a deprecation warning."""
     fig = uplt.figure()
@@ -238,11 +194,6 @@ def test_add_subplots_subplot_kw_warns():
     with pytest.warns(match="subplot_kw"):
         axs = fig.add_subplots(nrows=1, ncols=2, subplot_kw={"facecolor": "red"})
     uplt.close(fig)
-
-
-# ---------------------------------------------------------------------------
-# add_subplots — per-axes projection dicts
-# ---------------------------------------------------------------------------
 
 
 def test_add_subplots_per_axes_proj():
@@ -269,22 +220,12 @@ def test_add_subplots_proj_as_list():
     uplt.close(fig)
 
 
-# ---------------------------------------------------------------------------
-# add_subplots — array with None placeholders
-# ---------------------------------------------------------------------------
-
-
 def test_add_subplots_none_placeholder():
     """None in the array is treated as an empty slot."""
     fig = uplt.figure()
     axs = fig.add_subplots(array=[[1, None], [2, 3]])
     assert len(axs) == 3
     uplt.close(fig)
-
-
-# ---------------------------------------------------------------------------
-# subplotgrid property
-# ---------------------------------------------------------------------------
 
 
 def test_subplotgrid_sorted_by_number():
@@ -294,11 +235,6 @@ def test_subplotgrid_sorted_by_number():
     numbers = [ax.number for ax in grid]
     assert numbers == sorted(numbers)
     uplt.close(fig)
-
-
-# ---------------------------------------------------------------------------
-# Figure accessors (_get_subplot, _iter_subplots)
-# ---------------------------------------------------------------------------
 
 
 def test_get_subplot_returns_correct_axes():
@@ -326,22 +262,12 @@ def test_iter_subplots_yields_all():
     uplt.close(fig)
 
 
-# ---------------------------------------------------------------------------
-# parse_proj — matplotlib-registered projection (e.g. 'polar')
-# ---------------------------------------------------------------------------
-
-
 def test_parse_proj_polar():
     """'polar' is found via matplotlib's projection registry."""
     fig = uplt.figure()
     ax = fig.add_subplot(111, proj="polar")
     assert ax is not None
     uplt.close(fig)
-
-
-# ---------------------------------------------------------------------------
-# _axes_dict edge cases
-# ---------------------------------------------------------------------------
 
 
 def test_add_subplots_proj_kw_mixed_nested_raises():
@@ -366,11 +292,6 @@ def test_add_subplots_proj_dict_wrong_keys_raises():
             proj={1: "cartesian", 2: "cartesian", 3: "polar"},
         )
     uplt.close(fig)
-
-
-# ---------------------------------------------------------------------------
-# External projection container wrapping
-# ---------------------------------------------------------------------------
 
 
 def test_add_subplot_external_projection_wrapped():
