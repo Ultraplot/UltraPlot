@@ -54,9 +54,6 @@ class SubplotManager:
         self._gridspec = gs
         gs.figure = self.figure  # gridspec.figure should reference the real Figure
 
-    # ---------------------------------------------------------------
-    # Projection parsing
-    # ---------------------------------------------------------------
     @staticmethod
     def parse_backend(backend=None, basemap=None):
         """
@@ -143,9 +140,6 @@ class SubplotManager:
             kwargs["projection"] = name
         return kwargs
 
-    # ---------------------------------------------------------------
-    # Subplot creation
-    # ---------------------------------------------------------------
     def add_subplot(self, *args, **kwargs):
         """
         The driver function for adding single subplots.
@@ -379,6 +373,4 @@ class SubplotManager:
     @property
     def subplotgrid(self):
         """A SubplotGrid of numbered subplots sorted by number."""
-        return pgridspec.SubplotGrid(
-            [s for _, s in sorted(self.subplot_dict.items())]
-        )
+        return pgridspec.SubplotGrid([s for _, s in sorted(self.subplot_dict.items())])
