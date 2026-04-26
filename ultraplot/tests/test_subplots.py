@@ -284,6 +284,30 @@ def test_subset_share_xlabels_override():
     uplt.close(fig)
 
 
+def test_panel_subset_keeps_orthogonal_axis_labels_local():
+    fig, axs = uplt.subplots(ncols=2, sharey=0)
+    bottom = axs.panel_axes("bottom")
+    right = axs.panel_axes("right")
+
+    axs.format(xlabel="main x", ylabel="main y")
+    bottom.format(ylabel="bottom y")
+    right.format(xlabel="right x")
+    fig.canvas.draw()
+
+    assert not fig._supylabel_dict
+    assert not fig._supxlabel_dict
+    for ax in axs:
+        assert ax.get_ylabel() == "main y"
+    for pax in bottom:
+        assert pax.get_ylabel() == "bottom y"
+        assert pax.yaxis.label.get_visible()
+    for pax in right:
+        assert pax.get_xlabel() == "right x"
+        assert pax.xaxis.label.get_visible()
+
+    uplt.close(fig)
+
+
 def test_spanning_labels_excluded_from_tight_layout_bbox():
     """
     Spanning x/y labels should not be counted twice by tight layout.
