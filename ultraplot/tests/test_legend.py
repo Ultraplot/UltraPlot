@@ -1,12 +1,16 @@
 import numpy as np
 import pandas as pd
 import pytest
+from matplotlib import collections as mcollections
 from matplotlib import colors as mcolors
+from matplotlib import container as mcontainer
 from matplotlib import legend_handler as mhandler
+from matplotlib import lines as mlines
 from matplotlib import patches as mpatches
 
 import ultraplot as uplt
 from ultraplot.axes import Axes as UAxes
+from ultraplot.internals import guides
 
 
 @pytest.mark.mpl_image_compare
@@ -181,6 +185,28 @@ def test_tuple_handles(rng):
             handler_map={tuple: legend_handler.HandlerTuple(pad=0, ndivide=3)},
         )
     return fig
+
+
+@pytest.mark.parametrize("kwarg", ["barstd", "boxstd"])
+def test_mean_errorbar_handles_are_preserved_in_legends(kwarg, rng):
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    data = rng.random((10, 4)).cumsum(axis=0)
+
+    handles = ax.plot(data, means=True, label="label", **{kwarg: 1})
+    handles, labels = ax._parse_legend_group(handles, None)
+
+    assert labels == ["label"]
+    assert len(handles) == 1
+    assert isinstance(handles[0], tuple)
+    assert any(isinstance(obj, mcontainer.ErrorbarContainer) for obj in handles[0])
+
+    leg = ax.legend(handles)
+    legend_children = list(guides._iter_children(leg._legend_handle_box))
+    assert any(isinstance(obj, mcollections.LineCollection) for obj in legend_children)
+    assert any(isinstance(obj, mlines.Line2D) for obj in legend_children)
+
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
