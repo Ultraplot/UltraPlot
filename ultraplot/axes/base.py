@@ -2127,14 +2127,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # Helper function. Translate handles in the input tuple group. Extracts
         # legend handles from contour sets and extracts labeled elements from
         # matplotlib containers (important for histogram plots).
-        ignore = (mcontainer.ErrorbarContainer,)
         containers = (cbook.silent_list, mcontainer.Container)
 
         def _legend_tuple(*objs):  # noqa: E306
             handles = []
             for obj in objs:
-                if isinstance(obj, ignore) and not _legend_label(obj):
-                    continue
                 if hasattr(obj, "update_scalarmappable"):  # for e.g. pcolor
                     obj.update_scalarmappable()
                 if isinstance(obj, mcontour.ContourSet):  # extract single element
@@ -2143,7 +2140,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     if hs:  # non-empty
                         obj = hs[len(hs) // 2]
                         obj.set_label(label)
-                if isinstance(obj, containers):  # extract labeled elements
+                if isinstance(obj, mcontainer.ErrorbarContainer):
+                    handles.append(obj)
+                elif isinstance(obj, containers):  # extract labeled elements
                     hs = (obj, *guides._iter_iterables(obj))
                     hs = tuple(filter(_legend_label, hs))
                     if hs:
