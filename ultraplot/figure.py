@@ -31,6 +31,7 @@ except:
 from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
+from . import legend as plegend
 from .config import rc, rc_matplotlib
 from .internals import (
     _not_none,
@@ -3051,6 +3052,249 @@ class Figure(mfigure.Figure):
             self._suptitle.update(kw)
         if title is not None:
             self._suptitle.set_text(title)
+
+    @staticmethod
+    def _iter_semantic_legend_axes(candidate):
+        """
+        Yield axes objects from nested axis containers.
+        """
+        if candidate is None or isinstance(candidate, str):
+            return
+        if isinstance(candidate, maxes.Axes):
+            yield candidate
+            return
+        if np.iterable(candidate):
+            for item in candidate:
+                yield from Figure._iter_semantic_legend_axes(item)
+
+    def _semantic_legend_axes(self, ax=None, ref=None):
+        """
+        Pick an axes instance for semantic legend handle generation.
+        """
+        for candidate in (ax, ref, self.axes):
+            for axis in self._iter_semantic_legend_axes(candidate):
+                return axis
+        raise RuntimeError(
+            "Figure semantic legend helpers require an existing axes. "
+            "Create an axes first or pass ax=... or ref=...."
+        )
+
+    def entrylegend(
+        self,
+        entries,
+        *,
+        line=None,
+        marker=None,
+        color=None,
+        linestyle=None,
+        linewidth=None,
+        markersize=None,
+        alpha=None,
+        markeredgecolor=None,
+        markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        Build generic semantic legend entries and optionally add a figure legend.
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).entrylegend(
+            entries,
+            line=line,
+            marker=marker,
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            markersize=markersize,
+            alpha=alpha,
+            markeredgecolor=markeredgecolor,
+            markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            handle_kw=handle_kw,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
+    def catlegend(
+        self,
+        categories,
+        *,
+        colors=None,
+        markers=None,
+        line=None,
+        linestyle=None,
+        linewidth=None,
+        markersize=None,
+        alpha=None,
+        markeredgecolor=None,
+        markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        Build categorical legend entries and optionally add a figure legend.
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).catlegend(
+            categories,
+            colors=colors,
+            markers=markers,
+            line=line,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            markersize=markersize,
+            alpha=alpha,
+            markeredgecolor=markeredgecolor,
+            markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            handle_kw=handle_kw,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
+    def sizelegend(
+        self,
+        levels,
+        *,
+        labels=None,
+        color=None,
+        marker=None,
+        area=None,
+        scale=None,
+        minsize=None,
+        fmt=None,
+        alpha=None,
+        markeredgecolor=None,
+        markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        Build size legend entries and optionally add a figure legend.
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).sizelegend(
+            levels,
+            labels=labels,
+            color=color,
+            marker=marker,
+            area=area,
+            scale=scale,
+            minsize=minsize,
+            fmt=fmt,
+            alpha=alpha,
+            markeredgecolor=markeredgecolor,
+            markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            handle_kw=handle_kw,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
+    def numlegend(
+        self,
+        levels=None,
+        *,
+        vmin=None,
+        vmax=None,
+        n=None,
+        cmap=None,
+        norm=None,
+        fmt=None,
+        facecolor=None,
+        edgecolor=None,
+        linewidth=None,
+        linestyle=None,
+        alpha=None,
+        handle_kw=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        Build numeric-color legend entries and optionally add a figure legend.
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).numlegend(
+            levels=levels,
+            vmin=vmin,
+            vmax=vmax,
+            n=n,
+            cmap=cmap,
+            norm=norm,
+            fmt=fmt,
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            linewidth=linewidth,
+            linestyle=linestyle,
+            alpha=alpha,
+            handle_kw=handle_kw,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
+    def geolegend(
+        self,
+        entries,
+        labels=None,
+        *,
+        country_reso=None,
+        country_territories=None,
+        country_proj=None,
+        handlesize=None,
+        facecolor=None,
+        edgecolor=None,
+        linewidth=None,
+        alpha=None,
+        fill=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        Build geometry legend entries and optionally add a figure legend.
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).geolegend(
+            entries,
+            labels=labels,
+            country_reso=country_reso,
+            country_territories=country_territories,
+            country_proj=country_proj,
+            handlesize=handlesize,
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            linewidth=linewidth,
+            alpha=alpha,
+            fill=fill,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
 
     @_clear_border_cache
     @docstring._concatenate_inherited
