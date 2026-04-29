@@ -412,6 +412,124 @@ docstring._snippet_manager["figure.colorbar_space"] = _space_docstring.format(
 )  # noqa: E501
 
 
+# Figure semantic legend helpers
+_figure_semantic_legend_common_docstring = """
+**legend_kwargs
+    Placement and legend styling keywords forwarded to
+    `~ultraplot.figure.Figure.legend` when ``add=True``. This includes figure legend
+    placement keywords like ``loc=``, ``ref=``, ``ax=``, ``rows=``, ``cols=``, and
+    ``span=``. Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+"""
+docstring._snippet_manager["figure.semantic_legend_common"] = (
+    _figure_semantic_legend_common_docstring
+)
+
+_figure_entrylegend_docstring = """
+Build generic semantic legend entries and optionally add a figure legend.
+
+Parameters
+----------
+entries
+    Entry specifications as handles, style dictionaries, or ``(label, spec)``
+    pairs.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.entrylegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+"""
+docstring._snippet_manager["figure.entrylegend"] = _figure_entrylegend_docstring
+
+_figure_catlegend_docstring = """
+Build categorical legend entries and optionally add a figure legend.
+
+Parameters
+----------
+categories
+    Category labels used to generate legend handles.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.catlegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+"""
+docstring._snippet_manager["figure.catlegend"] = _figure_catlegend_docstring
+
+_figure_sizelegend_docstring = """
+Build size legend entries and optionally add a figure legend.
+
+Parameters
+----------
+levels
+    Numeric levels used to generate marker-size entries.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.sizelegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+
+Pass ``labels=[...]`` or ``labels={level: label}`` to override the generated labels.
+"""
+docstring._snippet_manager["figure.sizelegend"] = _figure_sizelegend_docstring
+
+_figure_numlegend_docstring = """
+Build numeric-color legend entries and optionally add a figure legend.
+
+Parameters
+----------
+levels
+    Numeric levels or number of levels.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.numlegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+"""
+docstring._snippet_manager["figure.numlegend"] = _figure_numlegend_docstring
+
+_figure_geolegend_docstring = """
+Build geometry legend entries and optionally add a figure legend.
+
+Parameters
+----------
+entries
+    Geometry entries (mapping, ``(label, geometry)`` pairs, or geometries).
+labels
+    Optional labels for geometry sequences.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.geolegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+"""
+docstring._snippet_manager["figure.geolegend"] = _figure_geolegend_docstring
+
+
 # Save docstring
 _save_docstring = """
 Save the figure.
@@ -3079,6 +3197,7 @@ class Figure(mfigure.Figure):
             "Create an axes first or pass ax=... or ref=...."
         )
 
+    @docstring._snippet_manager
     def entrylegend(
         self,
         entries,
@@ -3098,7 +3217,7 @@ class Figure(mfigure.Figure):
         **legend_kwargs,
     ):
         """
-        Build generic semantic legend entries and optionally add a figure legend.
+        %(figure.entrylegend)s
         """
         axes = self._semantic_legend_axes(
             ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
@@ -3122,6 +3241,7 @@ class Figure(mfigure.Figure):
             return handles, labels
         return self.legend(handles, labels, **legend_kwargs)
 
+    @docstring._snippet_manager
     def catlegend(
         self,
         categories,
@@ -3141,7 +3261,7 @@ class Figure(mfigure.Figure):
         **legend_kwargs,
     ):
         """
-        Build categorical legend entries and optionally add a figure legend.
+        %(figure.catlegend)s
         """
         axes = self._semantic_legend_axes(
             ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
@@ -3165,6 +3285,7 @@ class Figure(mfigure.Figure):
             return handles, labels
         return self.legend(handles, labels, **legend_kwargs)
 
+    @docstring._snippet_manager
     def sizelegend(
         self,
         levels,
@@ -3185,7 +3306,7 @@ class Figure(mfigure.Figure):
         **legend_kwargs,
     ):
         """
-        Build size legend entries and optionally add a figure legend.
+        %(figure.sizelegend)s
         """
         axes = self._semantic_legend_axes(
             ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
@@ -3210,6 +3331,7 @@ class Figure(mfigure.Figure):
             return handles, labels
         return self.legend(handles, labels, **legend_kwargs)
 
+    @docstring._snippet_manager
     def numlegend(
         self,
         levels=None,
@@ -3230,7 +3352,7 @@ class Figure(mfigure.Figure):
         **legend_kwargs,
     ):
         """
-        Build numeric-color legend entries and optionally add a figure legend.
+        %(figure.numlegend)s
         """
         axes = self._semantic_legend_axes(
             ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
@@ -3255,6 +3377,7 @@ class Figure(mfigure.Figure):
             return handles, labels
         return self.legend(handles, labels, **legend_kwargs)
 
+    @docstring._snippet_manager
     def geolegend(
         self,
         entries,
@@ -3273,7 +3396,7 @@ class Figure(mfigure.Figure):
         **legend_kwargs,
     ):
         """
-        Build geometry legend entries and optionally add a figure legend.
+        %(figure.geolegend)s
         """
         axes = self._semantic_legend_axes(
             ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
