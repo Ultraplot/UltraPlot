@@ -2927,10 +2927,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                         if base_x >= ax1 + abc_title_sep:
                             max_width = base_x - (ax1 + abc_title_sep)
                     elif ha == "center":
+                        # Keep the requested font size for centered titles and
+                        # resolve collisions by shifting the title away from the
+                        # abc label, matching the overflow-tolerant behavior of
+                        # left/right titles in practice.
                         if base_x >= ax1 + abc_title_sep:
-                            max_width = 2 * (base_x - (ax1 + abc_title_sep))
+                            shift = (ax1 + abc_title_sep) - tx0
+                            if shift > 0:
+                                title_obj.set_x(base_x + shift)
                         elif base_x <= ax0 - abc_title_sep:
-                            max_width = 2 * ((ax0 - abc_title_sep) - base_x)
+                            shift = (ax0 - abc_title_sep) - tx1
+                            if shift < 0:
+                                title_obj.set_x(base_x + shift)
                     if 0 < max_width < title_bbox.width:
                         scale = max_width / title_bbox.width
                         title_obj.set_fontsize(title_obj.get_fontsize() * scale)
