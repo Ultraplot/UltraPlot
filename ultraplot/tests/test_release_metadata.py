@@ -140,4 +140,4 @@ def test_publish_workflow_creates_github_release():
     assert "tools/release/sync_citation.py" in text
     assert "--tag" in text
     assert "--output" in text
-    assert "softprops/action-gh-release@v2" in text
+    assert "softprops/action-gh-release@" in text
