@@ -686,7 +686,7 @@ def _meta_coords(*args, which="x", **kwargs):
         if data.ndim > 1:
             raise ValueError("Non-1D string coordinate input is unsupported.")
         ticks = np.arange(len(data))
-        labels = list(map(str, data))
+        labels = list(map(str, _to_numpy_array(data)))
         kwargs.setdefault(which + "locator", Locator(ticks))
         kwargs.setdefault(which + "formatter", Formatter(labels, index=True))
         kwargs.setdefault(which + "minorlocator", Locator("null"))
