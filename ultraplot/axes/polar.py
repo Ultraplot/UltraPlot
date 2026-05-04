@@ -82,6 +82,13 @@ thetalabels, rlabels : optional
 thetaformatter_kw, rformatter_kw : dict-like, optional
     The azimuthal and radial label formatter settings. Passed to
     `~ultraplot.constructor.Formatter`.
+xlabel, ylabel : str, optional
+    The x and y axis labels. Applied with `~matplotlib.axes.Axes.set_xlabel`
+    and `~matplotlib.axes.Axes.set_ylabel`.
+xlabel_kw, ylabel_kw : dict-like, optional
+    Additional axis label settings applied with `~matplotlib.axes.Axes.set_xlabel`
+    and `~matplotlib.axes.Axes.set_ylabel`. See also `labelpad`, `labelcolor`,
+    `labelsize`, and `labelweight`.
 color : color-spec, default: :rc:`meta.color`
     Color for the axes edge. Propagates to `labelcolor` unless specified
     otherwise (similar to :func:`~ultraplot.axes.CartesianAxes.format`).
@@ -212,6 +219,23 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
             else:
                 axis.set_minor_locator(loc)
 
+    def _update_labels(self, x, *args, **kwargs):
+        """
+        Apply axis labels via `set_xlabel` / `set_ylabel`.
+        """
+        # NOTE: Critical to test whether arguments are None or else this
+        # will set isDefault_label to False every time format() is called.
+        kwargs = rc._get_label_props(**kwargs)
+        no_args = all(a is None for a in args)
+        no_kwargs = all(v is None for v in kwargs.values())
+        if no_args and no_kwargs:
+            return
+        setter = getattr(self, f"set_{x}label")
+        getter = getattr(self, f"get_{x}label")
+        if no_args:  # otherwise label text is reset!
+            args = (getter(),)
+        setter(*args, **kwargs)
+
     @docstring._snippet_manager
     def format(
         self,
@@ -256,6 +280,10 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         labelsize=None,
         labelcolor=None,
         labelweight=None,
+        xlabel=None,
+        ylabel=None,
+        xlabel_kw=None,
+        ylabel_kw=None,
         **kwargs,
     ):
         """
@@ -335,6 +363,8 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 formatter_kw,
                 minorlocator,
                 minorlocator_kw,
+                label,
+                label_kw,
             ) in zip(
                 ("x", "y"),
                 (thetamin, rmin),
@@ -349,6 +379,8 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 (thetaformatter_kw, rformatter_kw),
                 (thetaminorlocator, rminorlocator),
                 (thetaminorlocator_kw, rminorlocator_kw),
+                (xlabel, ylabel),
+                (xlabel_kw, ylabel_kw),
             ):
                 # Axis limits
                 self._update_limits(x, min_=min_, max_=max_, lim=lim)
@@ -381,6 +413,16 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 self._update_formatter(
                     x, formatter=formatter, formatter_kw=formatter_kw
                 )
+
+                # Axis label
+                kw = dict(
+                    labelpad=labelpad,
+                    color=labelcolor,
+                    size=labelsize,
+                    weight=labelweight,
+                )
+                kw.update(label_kw or {})
+                self._update_labels(x, label, **kw)
 
         # Parent format method
         super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
