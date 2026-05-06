@@ -1325,6 +1325,15 @@ class Figure(mfigure.Figure):
 
         # Process each group independently
         for _, group_axes in groups.items():
+            # Nothing to share if the group is too small or sharing is disabled —
+            # avoids unsupported-type warnings (e.g. PolarAxes) for those cases.
+            if len(group_axes) < 2:
+                continue
+            if all(
+                self._effective_share_level(axi, axis, sides) < 3 for axi in group_axes
+            ):
+                continue
+
             # Build baseline from MAIN axes only (exclude panels)
             baseline, skip_group = self._compute_baseline_tick_state(
                 group_axes, axis, label_keys
