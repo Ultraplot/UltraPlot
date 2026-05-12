@@ -241,6 +241,39 @@ Note that you can create the pull request before you're finished with your
 feature addition or bug fix. The PR will update as you add more commits. UltraPlot
 developers and contributors can then review your code and offer suggestions.
 
+.. _contrib_ai:
+
+AI policy
+=========
+
+UltraPlot welcomes contributions from developers at all skill levels, including
+those who use AI tools as part of their workflow. To keep contributions
+meaningful and to help new contributors genuinely learn the codebase, we ask
+that you follow these guidelines.
+
+**Good first issues must be written by humans.**
+Issues labelled *good first issue* are intentionally kept for people who want
+to get familiar with the backend. These issues should be scoped, described, and
+solved by a human — not generated or resolved wholesale by an AI assistant.
+Working through them yourself is how you build the mental model of the code
+that makes future contributions easier.
+
+**AI-assisted contributions are welcome for other issues**, provided that:
+
+* You understand and can explain every change you submit. Maintainers may ask
+  questions during review; if you cannot answer them the PR will be closed.
+* You disclose AI assistance in the PR description (a one-line note is fine).
+* The code meets the same quality bar as any other contribution — correct,
+  tested, and consistent with the existing style.
+
+**AI must not be used to bulk-generate issues, comments, or spam.**
+Automated issue creation or low-effort AI-generated content will be removed and
+may result in being blocked from the repository.
+
+The spirit of this policy is simple: AI is a tool, not a substitute for
+understanding. We want contributions that improve UltraPlot *and* grow the
+contributor.
+
 .. _contrib_release:
 
 Release procedure
