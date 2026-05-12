@@ -660,6 +660,77 @@ def test_semantic_legend_rejects_labels_kwarg(builder, args, kwargs):
     uplt.close(fig)
 
 
+@pytest.mark.parametrize(
+    "builder, args, kwargs",
+    (
+        (
+            "entrylegend",
+            ([{"label": "Trend", "line": True}, {"label": "Samples", "line": False}],),
+            {},
+        ),
+        ("catlegend", (["A", "B"],), {"colors": ["red7", "blue7"]}),
+        (
+            "sizelegend",
+            ([10, 50],),
+            {"labels": ["small", "large"], "color": "gray6"},
+        ),
+        ("numlegend", tuple(), {"levels": [0, 1], "cmap": "viridis"}),
+        (
+            "geolegend",
+            ([("Triangle", "triangle"), ("Hex", "hexagon")],),
+            {},
+        ),
+    ),
+)
+def test_figure_semantic_legend_helpers(builder, args, kwargs):
+    fig, axs = uplt.subplots(ncols=2)
+    ax = axs[0]
+    figure_method = getattr(fig, builder)
+    axes_method = getattr(ax, builder)
+
+    expected_handles, expected_labels = axes_method(*args, add=False, **kwargs)
+    leg = figure_method(*args, ref=axs, loc="bottom", title=builder, **kwargs)
+
+    assert leg is not None
+    assert [text.get_text() for text in leg.get_texts()] == expected_labels
+    assert leg.get_title().get_text() == builder
+    assert len(leg.legend_handles) == len(expected_handles)
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize(
+    "builder, args, kwargs",
+    (
+        ("entrylegend", ([{"label": "Trend", "line": True}],), {}),
+        ("catlegend", (["A", "B"],), {}),
+        ("sizelegend", ([10, 50],), {"labels": ["small", "large"]}),
+        ("numlegend", tuple(), {"levels": [0, 1]}),
+        ("geolegend", (["triangle"], ["Triangle"]), {}),
+    ),
+)
+def test_figure_semantic_legend_add_false_matches_axes(builder, args, kwargs):
+    fig, ax = uplt.subplots()
+    figure_method = getattr(fig, builder)
+    axes_method = getattr(ax, builder)
+
+    fig_handles, fig_labels = figure_method(*args, add=False, **kwargs)
+    ax_handles, ax_labels = axes_method(*args, add=False, **kwargs)
+
+    assert fig_labels == ax_labels
+    assert len(fig_handles) == len(ax_handles)
+    assert [handle.get_label() for handle in fig_handles] == [
+        handle.get_label() for handle in ax_handles
+    ]
+    uplt.close(fig)
+
+
+def test_figure_semantic_legend_without_axes_raises():
+    fig = uplt.figure()
+    with pytest.raises(RuntimeError, match="require an existing axes"):
+        fig.catlegend(["A"], loc="right")
+    uplt.close(fig)
+
+
 def test_geo_legend_handlesize_scales_handle_box():
     fig, ax = uplt.subplots()
     leg = ax.geolegend([("shape", "triangle")], loc="best", handlesize=2.0)
