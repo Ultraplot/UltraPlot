@@ -154,6 +154,54 @@ def test_polar_projections():
     return fig
 
 
+def test_taylor_projection_labels_and_defaults():
+    fig, axs = uplt.subplots(proj="taylor")
+    ax = axs[0]
+
+    assert ax._name == "taylor"
+    ax.format(xlabel="STD X", ylabel="STD Y")
+    fig.canvas.draw()
+
+    assert ax.get_xlabel() == "STD X"
+    assert ax.get_ylabel() == "STD Y"
+    assert not ax.xaxis.label.get_visible()
+    assert not ax.yaxis.label.get_visible()
+    assert ax._taylor_xlabel_artist.get_text() == "STD X"
+    assert ax._taylor_ylabel_artist.get_text() == "STD Y"
+    assert ax._taylor_corrlabel_artist.get_text() == "Correlation"
+    assert np.allclose(np.rad2deg(ax.get_xlim()), (0.0, 90.0))
+    assert ax.get_rlabel_position() == pytest.approx(135.0)
+    assert [label.get_text() for label in ax.get_xticklabels()] == [
+        "1.00",
+        "0.95",
+        "0.90",
+        "0.80",
+        "0.60",
+        "0.40",
+        "0.20",
+        "0.00",
+    ]
+
+
+def test_taylor_projection_thetaunit_deg():
+    fig, axs = uplt.subplots(proj="taylor")
+    ax = axs[0]
+    ax.format(thetaunit="deg")
+    fig.canvas.draw()
+
+    labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
+    assert labels
+    assert any("°" in label for label in labels)
+
+
+def test_taylor_projection_via_figure_format_dispatch():
+    fig, axs = uplt.subplots(ncols=2, proj="taylor")
+    axs.format(xlabel="Common X", ylabel="Common Y")
+    for ax in axs:
+        assert ax.get_xlabel() == "Common X"
+        assert ax.get_ylabel() == "Common Y"
+
+
 def test_sharing_axes():
     """
     Test sharing axes for GeoAxes

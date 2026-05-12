@@ -1393,6 +1393,16 @@ class Figure(mfigure.Figure):
         subplot_types = set()
         unsupported_found = False
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
+        main_axes = [axi for axi in group_axes if not getattr(axi, "_panel_side", None)]
+        if len(main_axes) < 2:
+            supported = all(
+                isinstance(
+                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+                )
+                for axi in main_axes
+            )
+            if not supported:
+                return {}, True
 
         for axi in group_axes:
             # Only main axes "vote"
@@ -3277,11 +3287,19 @@ class Figure(mfigure.Figure):
         if skip_axes:  # avoid recursion
             return
 
-        # Remove all keywords that are not in the allowed signature parameters
+        # Collect each class's matching kwargs without popping so subclass-
+        # specific parameters can coexist with overlapping base-class
+        # parameters in the routing table.
         kws = {
-            cls: _pop_params(kwargs, sig)
+            cls: {
+                key: kwargs[key]
+                for key in sig.parameters
+                if kwargs.get(key) is not None
+            }
             for cls, sig in paxes.Axes._format_signatures.items()
         }
+        for key in {key for cls_kw in kws.values() for key in cls_kw}:
+            kwargs.pop(key, None)
         classes = set()  # track used dictionaries
 
         def _axis_has_share_label_text(ax, axis):
@@ -3314,11 +3332,14 @@ class Figure(mfigure.Figure):
                     kw.pop("ylabel", None)
             ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
             ax.number = store_old_number
-        # Warn unused keyword argument(s)
+        # Warn unused keyword argument(s). Shared parameters are considered used
+        # if any matched class consumed them.
+        used_keys = {key for cls in classes for key in kws[cls]}
         kw = {
             key: value
             for name in kws.keys() - classes
             for key, value in kws[name].items()
+            if key not in used_keys
         }
         if kw:
             warnings._warn_ultraplot(
