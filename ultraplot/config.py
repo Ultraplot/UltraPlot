@@ -1296,6 +1296,13 @@ class Configurator(MutableMapping, dict):
         context = not rebuild and (native or self._context_mode == 2)
         kwticks = self.category(f"{axis}tick.{which}", context=context)
         kwticks.pop("visible", None)
+
+        # NOTE: We pop visibility properties from the styling dictionary so that
+        # stylistic updates (like applying a dark_background theme) do not override
+        # the tick visibility logic strictly managed by ax._update_locs() and alternate axes.
+        for key in ("bottom", "top", "left", "right"):
+            kwticks.pop(key, None)
+
         for key in ("color", "direction"):
             value = self.find(f"{axis}tick.{key}", context=context)
             if value is not None:
