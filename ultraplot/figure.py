@@ -1325,9 +1325,19 @@ class Figure(mfigure.Figure):
 
         # Process each group independently
         for _, group_axes in groups.items():
-            # Nothing to share if the group is too small or sharing is disabled —
-            # avoids unsupported-type warnings (e.g. PolarAxes) for those cases.
-            if len(group_axes) < 2:
+            # Singleton groups can still need border masking reapplied for
+            # supported axes (e.g. GeoAxes split by guides), but unsupported
+            # singleton groups like a single PolarAxes should not warn.
+            main_axes = [
+                axi for axi in group_axes if not getattr(axi, "_panel_side", None)
+            ]
+            supported_main_axes = any(
+                isinstance(
+                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+                )
+                for axi in main_axes
+            )
+            if len(group_axes) < 2 and not supported_main_axes:
                 continue
             if all(
                 self._effective_share_level(axi, axis, sides) < 3 for axi in group_axes
