@@ -63,6 +63,50 @@ __all__ = [
 # Constants
 COLORS_KEEP = ("red", "green", "blue", "cyan", "yellow", "magenta", "white", "black")
 
+_ULTRAPLOT_STYLES = {
+    "poster": {
+        "font.size": 14,
+        "axes.titlesize": 18,
+        "axes.labelsize": 16,
+        "xtick.labelsize": 13,
+        "ytick.labelsize": 13,
+        "legend.fontsize": 13,
+        "figure.titlesize": 20,
+        "lines.linewidth": 2.0,
+        "lines.markersize": 6,
+        "figure.facecolor": "none",
+        "savefig.facecolor": "none",
+        "savefig.edgecolor": "none",
+    },
+    "dark_background": {
+        "figure.facecolor": "#111827",
+        "figure.edgecolor": "#111827",
+        "axes.facecolor": "#111827",
+        "axes.edgecolor": "#cbd5e1",
+        "axes.labelcolor": "#f8fafc",
+        "text.color": "#f8fafc",
+        "xtick.color": "#cbd5e1",
+        "ytick.color": "#cbd5e1",
+        "grid.color": "#475569",
+        "grid.alpha": 0.35,
+        "legend.facecolor": "#0f172a",
+        "legend.edgecolor": "#475569",
+        "savefig.facecolor": "#111827",
+        "savefig.edgecolor": "#111827",
+        "axes.prop_cycle": cycler.cycler(
+            color=(
+                "#60a5fa",
+                "#f59e0b",
+                "#34d399",
+                "#f472b6",
+                "#a78bfa",
+                "#f87171",
+            )
+        ),
+    },
+}
+_ULTRAPLOT_STYLES["dark"] = _ULTRAPLOT_STYLES["dark_background"]
+
 # Configurator docstrings
 _rc_docstring = """
 local : bool, default: True
@@ -305,6 +349,7 @@ def _get_style_dict(style, filter=True):
     #    copying the entire rcParams dict we just track the keys that were changed.
     style_aliases = {
         "538": "fivethirtyeight",
+        "dark": "dark_background",
         "mpl20": "default",
         "mpl15": "classic",
         "original": mpl.matplotlib_fname(),
@@ -333,7 +378,9 @@ def _get_style_dict(style, filter=True):
             kw = style
         elif isinstance(style, str):
             style = style_aliases.get(style, style)
-            if style in mstyle.library:
+            if style in _ULTRAPLOT_STYLES:
+                kw = _ULTRAPLOT_STYLES[style]
+            elif style in mstyle.library:
                 kw = mstyle.library[style]
             else:
                 try:
