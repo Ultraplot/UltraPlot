@@ -30,7 +30,7 @@ def test_style_dict_and_inference_helpers():
     assert poster_style["font.size"] > config._get_style_dict("default")["font.size"]
 
     dark_style = config._get_style_dict("dark_background")
-    assert dark_style["axes.facecolor"] == "#111827"
+    assert dark_style["axes.facecolor"] == "#000000"
     assert dark_style["text.color"] == "#f8fafc"
 
     dark_alias_style = config._get_style_dict("dark")
@@ -87,7 +87,7 @@ def test_configurator_validation_item_dicts_and_context(tmp_path):
     assert kw_ultraplot["grid.labelcolor"] == "red"
 
     kw_ultraplot, kw_matplotlib = cfg._get_item_dicts("style", "dark_background")
-    assert kw_matplotlib["axes.facecolor"] == "#111827"
+    assert kw_matplotlib["axes.facecolor"] == "#000000"
     assert kw_ultraplot["grid.labelcolor"] == "#f8fafc"
 
     kw_ultraplot, kw_matplotlib = cfg._get_item_dicts("font.size", 12)
