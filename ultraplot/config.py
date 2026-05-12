@@ -79,9 +79,9 @@ _ULTRAPLOT_STYLES = {
         "savefig.edgecolor": "none",
     },
     "dark_background": {
-        "figure.facecolor": "#111827",
-        "figure.edgecolor": "#111827",
-        "axes.facecolor": "#111827",
+        "figure.facecolor": "#000000",
+        "figure.edgecolor": "#000000",
+        "axes.facecolor": "#000000",
         "axes.edgecolor": "#cbd5e1",
         "axes.labelcolor": "#f8fafc",
         "text.color": "#f8fafc",
@@ -89,10 +89,10 @@ _ULTRAPLOT_STYLES = {
         "ytick.color": "#cbd5e1",
         "grid.color": "#475569",
         "grid.alpha": 0.35,
-        "legend.facecolor": "#0f172a",
+        "legend.facecolor": "#000000",
         "legend.edgecolor": "#475569",
-        "savefig.facecolor": "#111827",
-        "savefig.edgecolor": "#111827",
+        "savefig.facecolor": "#000000",
+        "savefig.edgecolor": "#000000",
         "axes.prop_cycle": cycler.cycler(
             color=(
                 "#60a5fa",
