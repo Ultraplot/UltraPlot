@@ -354,6 +354,56 @@ def test_explicit_share_warns_for_mixed_cartesian_polar():
     assert len(incompatible) == 1
 
 
+def test_share_zero_polar_emits_no_warnings(recwarn):
+    fig, axs = uplt.subplots(proj="polar", ncols=2, nrows=3, share=0)
+    fig.canvas.draw()
+
+    ultra = [
+        w
+        for w in recwarn
+        if issubclass(w.category, uplt.internals.warnings.UltraPlotWarning)
+    ]
+    assert ultra == [], [str(w.message) for w in ultra]
+
+
+def test_share_zero_mixed_cartesian_polar_emits_no_warnings(recwarn):
+    fig, axs = uplt.subplots(ncols=2, proj=("cart", "polar"), share=0)
+    fig.canvas.draw()
+
+    ultra = [
+        w
+        for w in recwarn
+        if issubclass(w.category, uplt.internals.warnings.UltraPlotWarning)
+    ]
+    assert ultra == [], [str(w.message) for w in ultra]
+
+
+def test_share_default_single_polar_emits_no_warnings(recwarn):
+    """A single polar axis has nothing to share — must not warn at default share."""
+    fig, ax = uplt.subplots(proj="polar")
+    fig.canvas.draw()
+
+    ultra = [
+        w
+        for w in recwarn
+        if issubclass(w.category, uplt.internals.warnings.UltraPlotWarning)
+    ]
+    assert ultra == [], [str(w.message) for w in ultra]
+
+
+def test_share_default_single_polar_subplot_singular_emits_no_warnings(recwarn):
+    """``uplt.subplot(proj='polar')`` (singular) has nothing to share either."""
+    fig, ax = uplt.subplot(proj="polar")
+    fig.canvas.draw()
+
+    ultra = [
+        w
+        for w in recwarn
+        if issubclass(w.category, uplt.internals.warnings.UltraPlotWarning)
+    ]
+    assert ultra == [], [str(w.message) for w in ultra]
+
+
 def test_auto_share_local_yscale_change_splits_group():
     fig, axs = uplt.subplots(ncols=2, share="auto")
     fig.canvas.draw()

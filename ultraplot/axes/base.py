@@ -1347,22 +1347,24 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         # External axes sharing, sometimes overrides panel axes sharing
         # Share x axes within compatible groups
-        axes_x = self._get_share_axes("x")
-        for group in self.figure._partition_share_axes(axes_x, "x"):
-            if not group:
-                continue
-            parent, *children = group
-            for child in children:
-                child._sharex_setup(parent)
+        if self.figure._sharex > 0:
+            axes_x = self._get_share_axes("x")
+            for group in self.figure._partition_share_axes(axes_x, "x"):
+                if not group:
+                    continue
+                parent, *children = group
+                for child in children:
+                    child._sharex_setup(parent)
 
         # Share y axes within compatible groups
-        axes_y = self._get_share_axes("y")
-        for group in self.figure._partition_share_axes(axes_y, "y"):
-            if not group:
-                continue
-            parent, *children = group
-            for child in children:
-                child._sharey_setup(parent)
+        if self.figure._sharey > 0:
+            axes_y = self._get_share_axes("y")
+            for group in self.figure._partition_share_axes(axes_y, "y"):
+                if not group:
+                    continue
+                parent, *children = group
+                for child in children:
+                    child._sharey_setup(parent)
 
         # Global sharing, use the reference subplot where compatible
         ref = self.figure._subplot_dict.get(self.figure._refnum, None)
