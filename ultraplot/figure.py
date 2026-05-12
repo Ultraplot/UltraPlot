@@ -496,6 +496,12 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
 
         skip_autolayout = getattr(fig, "_skip_autolayout", False)
         layout_dirty = getattr(fig, "_layout_dirty", False)
+        saving_frame_count = getattr(fig, "_saving_frame_count", 0)
+        lock_tight_during_save = (
+            getattr(self, "_is_saving", False)
+            and saving_frame_count > 0
+            and getattr(fig, "_tight_active", False)
+        )
         if (
             skip_autolayout
             and getattr(fig, "_layout_initialized", False)
@@ -514,14 +520,20 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         with ctx1, ctx2, ctx3:
             needs_post_layout = False
             if not fig._layout_initialized or layout_dirty:
-                fig.auto_layout()
+                fig.auto_layout(tight=False if lock_tight_during_save else None)
                 fig._layout_initialized = True
                 fig._layout_dirty = False
-                needs_post_layout = _needs_post_tight_layout(fig)
+                needs_post_layout = (
+                    not lock_tight_during_save and _needs_post_tight_layout(fig)
+                )
             result = func(self, *args, **kwargs)
             if needs_post_layout:
                 fig.auto_layout()
                 result = func(self, *args, **kwargs)
+            if method == "print_figure" and getattr(self, "_is_saving", False):
+                fig._saving_frame_count = saving_frame_count + 1
+            elif not getattr(self, "_is_saving", False):
+                fig._saving_frame_count = 0
             return result
 
     # Add preprocessor

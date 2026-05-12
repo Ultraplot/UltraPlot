@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+import matplotlib
 import numpy as np
 import pytest
 from matplotlib.animation import FuncAnimation
@@ -58,3 +59,51 @@ def test_layout_array_no_crash():
     ani = FuncAnimation(fig, update, frames=10)
     # The test passes if no exception is raised
     fig.canvas.draw()
+
+
+def test_animation_save_only_tightens_first_frame(tmp_path):
+    """
+    Saving an animation should not rerun tight layout on every frame after the
+    first saved frame, or frame geometry can shift between outputs.
+    """
+    matplotlib.use("Agg")
+    state = np.random.RandomState(51423)
+
+    fig, axs = uplt.subplots(nrows=1, ncols=2, width="14cm")
+    mappables = []
+    for ax in axs:
+        m = ax.heatmap(state.rand(10, 10), cmap="dusk")
+        ax.colorbar(m, loc="t", tickdir="out", label="Axes Colorbars")
+        mappables.append(m)
+
+    axs.format(
+        abc="(a)",
+        abcloc="ul",
+        xlabel="xlabel",
+        ylabel="ylabel",
+        toplabels=("Left Axes", "Right Axes"),
+        urtitle="1",
+        suptitle="Test Animation",
+    )
+
+    auto_layout_calls = []
+    original_auto_layout = fig.auto_layout
+
+    def wrapped_auto_layout(*args, **kwargs):
+        auto_layout_calls.append(kwargs.get("tight", None))
+        return original_auto_layout(*args, **kwargs)
+
+    fig.auto_layout = wrapped_auto_layout
+
+    def update(frame):
+        for m in mappables:
+            m.set_array(state.rand(10, 10))
+        axs.format(urtitle=f"{frame + 1}")
+        return mappables
+
+    ani = FuncAnimation(fig, update, frames=3, interval=150)
+    ani.save(tmp_path / "test_animation.gif", writer="pillow")
+
+    assert auto_layout_calls
+    assert auto_layout_calls[0] is not False
+    assert auto_layout_calls[1:] == [False] * (len(auto_layout_calls) - 1)
