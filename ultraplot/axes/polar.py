@@ -296,8 +296,14 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         ticks = axis_obj.get_major_ticks()
         if ticks:
             tick = ticks[0]
-            size_pt = max(tick.tick1line.get_markersize(), tick.tick2line.get_markersize())
-            pad_pt = tick.get_pad() if hasattr(tick, "get_pad") else getattr(tick, "_pad", pad_pt)
+            size_pt = max(
+                tick.tick1line.get_markersize(), tick.tick2line.get_markersize()
+            )
+            pad_pt = (
+                tick.get_pad()
+                if hasattr(tick, "get_pad")
+                else getattr(tick, "_pad", pad_pt)
+            )
             label_pt = max(tick.label1.get_size(), tick.label2.get_size(), label_pt)
         labels = axis_obj.get_ticklabels()
         if labels:
@@ -351,7 +357,9 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         edge = self.transData.transform(np.array([np.deg2rad(rpos), rmid]))
         inside = self.transData.transform(np.array([np.deg2rad(inside_theta), rmid]))
         normal = self._get_rlabel_right_normal(np.deg2rad(rpos))
-        return -1.0 if np.dot(np.asarray(inside) - np.asarray(edge), normal) > 0.0 else 1.0
+        return (
+            -1.0 if np.dot(np.asarray(inside) - np.asarray(edge), normal) > 0.0 else 1.0
+        )
 
     def _resolve_rlabel_geometry(self, loc, rlabelpos):
         """
@@ -426,7 +434,9 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         if kind == "theta":
             x, y, transform = self._build_thetalabel_curve(loc, total_pad_in)
         else:
-            x, y, transform = self._build_rlabel_curve(loc, pad_in, state.get("rlabelpos"))
+            x, y, transform = self._build_rlabel_curve(
+                loc, pad_in, state.get("rlabelpos")
+            )
         artist.set_curve(x, y)
         artist.set_transform(transform)
 

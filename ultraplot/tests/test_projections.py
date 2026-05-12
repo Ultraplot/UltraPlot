@@ -398,7 +398,9 @@ def test_polar_rlabel_offset_stays_perpendicular_under_theta_transform():
         axs,
         ({}, {"theta0": "N", "thetadir": -1}),
     ):
-        ax.format(thetalim=(0, 180), rlim=(0.2, 1), rlabel="rlabel", rlabelpos=135, **kwargs)
+        ax.format(
+            thetalim=(0, 180), rlim=(0.2, 1), rlabel="rlabel", rlabelpos=135, **kwargs
+        )
     fig.canvas.draw()
     for ax in axs:
         rmid = 0.5 * (ax.get_rmin() + ax.get_rmax())
@@ -406,9 +408,9 @@ def test_polar_rlabel_offset_stays_perpendicular_under_theta_transform():
         base = ax.transData.transform(point)
         disp = ax._rlabel_artist.get_transform().transform(point)
         offset = disp - base
-        tangent = ax.transData.transform((np.deg2rad(135.0), ax.get_rmax())) - ax.transData.transform(
-            (np.deg2rad(135.0), ax.get_rmin())
-        )
+        tangent = ax.transData.transform(
+            (np.deg2rad(135.0), ax.get_rmax())
+        ) - ax.transData.transform((np.deg2rad(135.0), ax.get_rmin()))
         tangent /= np.linalg.norm(tangent)
         assert np.isclose(np.dot(offset, tangent), 0.0, atol=1e-6)
 
@@ -453,7 +455,11 @@ def test_polar_labels_refresh_after_plot_draw():
     assert np.isclose(ry1[-1], ax.get_rmax())
     assert np.allclose(ty1, ty1[0])
     assert ty1[0] >= ax.get_rmax()
-    assert not np.allclose(ty0, ty1) or not np.allclose(ry0, ry1) or not np.allclose(tx0, tx1)
+    assert (
+        not np.allclose(ty0, ty1)
+        or not np.allclose(ry0, ry1)
+        or not np.allclose(tx0, tx1)
+    )
 
 
 def test_polar_labels_refresh_for_tightbbox():
@@ -472,7 +478,11 @@ def test_polar_labels_refresh_for_tightbbox():
     assert np.isclose(ry1[-1], ax.get_rmax())
     assert np.allclose(ty1, ty1[0])
     assert ty1[0] >= ax.get_rmax()
-    assert not np.allclose(ty0, ty1) or not np.allclose(ry0, ry1) or not np.allclose(tx0, tx1)
+    assert (
+        not np.allclose(ty0, ty1)
+        or not np.allclose(ry0, ry1)
+        or not np.allclose(tx0, tx1)
+    )
 
 
 def test_sharing_axes():
