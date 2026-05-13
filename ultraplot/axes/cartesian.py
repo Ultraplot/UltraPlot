@@ -4,6 +4,7 @@ The standard Cartesian axes used for most ultraplot figures.
 """
 
 import copy
+import functools
 import inspect
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple, Union
@@ -29,53 +30,14 @@ from ..internals import (
     warnings,
 )
 from ..utils import units
+from ._formatting import (
+    CARTESIAN_PARENT_FILTER_KEYS,
+    get_axis_style_fields,
+    pop_axis_format_kwargs,
+)
 from . import plot, shared
 
 __all__ = ["CartesianAxes"]
-
-
-_GENERIC_AXIS_FORMAT_KEYS = (
-    "loc",
-    "spineloc",
-    "tickloc",
-    "ticklabelloc",
-    "labelloc",
-    "offsetloc",
-    "wraprange",
-    "reverse",
-    "lim",
-    "scale",
-    "bounds",
-    "margin",
-    "rotation",
-    "formatter",
-    "ticklabels",
-    "ticks",
-    "locator",
-    "minorticks",
-    "minorlocator",
-    "tickdir",
-    "tickminor",
-    "tickrange",
-    "tickcolor",
-    "ticklen",
-    "ticklenratio",
-    "tickwidth",
-    "tickwidthratio",
-    "ticklabeldir",
-    "ticklabelpad",
-    "ticklabelcolor",
-    "ticklabelsize",
-    "ticklabelweight",
-    "label",
-    "labelpad",
-    "labelcolor",
-    "labelsize",
-    "labelweight",
-    "grid",
-    "gridminor",
-    "gridcolor",
-)
 
 
 # Tuple of date converters
@@ -500,81 +462,19 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         """
         return getattr(self, f"_{axis}axis_style_state")
 
-    def _get_axis_style_fields(self, axis):
-        """
-        Return the parameter names used to store explicit style overrides.
-        """
-        return {
-            "color": (f"{axis}color", "color"),
-            "linewidth": (f"{axis}linewidth", "linewidth"),
-            "rotation": (f"{axis}rotation", "rotation"),
-            "spineloc": (f"{axis}spineloc", f"{axis}loc"),
-            "tickloc": (f"{axis}tickloc",),
-            "ticklabelloc": (f"{axis}ticklabelloc",),
-            "labelloc": (f"{axis}labelloc",),
-            "offsetloc": (f"{axis}offsetloc",),
-            "grid": (f"{axis}grid",),
-            "gridminor": (f"{axis}gridminor",),
-            "gridcolor": (f"{axis}gridcolor", "gridcolor"),
-            "tickdir": (f"{axis}tickdir", "tickdir"),
-            "tickcolor": (f"{axis}tickcolor", "tickcolor"),
-            "ticklen": (f"{axis}ticklen", "ticklen"),
-            "ticklenratio": (f"{axis}ticklenratio", "ticklenratio"),
-            "tickwidth": (f"{axis}tickwidth", "tickwidth"),
-            "tickwidthratio": (f"{axis}tickwidthratio", "tickwidthratio"),
-            "ticklabeldir": (f"{axis}ticklabeldir", "ticklabeldir"),
-            "ticklabelpad": (f"{axis}ticklabelpad",),
-            "ticklabelcolor": (f"{axis}ticklabelcolor", "ticklabelcolor"),
-            "ticklabelsize": (f"{axis}ticklabelsize", "ticklabelsize"),
-            "ticklabelweight": (f"{axis}ticklabelweight", "ticklabelweight"),
-            "labelpad": (f"{axis}labelpad",),
-            "labelcolor": (f"{axis}labelcolor", "labelcolor"),
-            "labelsize": (f"{axis}labelsize", "labelsize"),
-            "labelweight": (f"{axis}labelweight", "labelweight"),
-        }
-
     def _merge_axis_style_state(self, axis, params):
         """
         Merge the current explicit style overrides with the cached overrides.
         """
         state = self._get_axis_style_state(axis).copy()
         explicit_keys = set(params.get("_explicit_format_keys", ()))
-        for field, names in self._get_axis_style_fields(axis).items():
+        for field, names in get_axis_style_fields(axis).items():
             if any(name in explicit_keys for name in names) and all(
                 params.get(name, None) is None for name in names
             ):
                 state.pop(field, None)
                 continue
             value = _not_none(*(params.get(name) for name in names))
-            if value is not None:
-                state[field] = value
-        # Figure/SubplotGrid formatting can route generic style aliases through
-        # kwargs in ways that bypass the axis-specific names above. Preserve them
-        # explicitly so broader styles remain sticky until overridden.
-        generic_fields = {
-            "color": "color",
-            "linewidth": "linewidth",
-            "rotation": "rotation",
-            "gridcolor": "gridcolor",
-            "tickdir": "tickdir",
-            "tickcolor": "tickcolor",
-            "ticklen": "ticklen",
-            "ticklenratio": "ticklenratio",
-            "tickwidth": "tickwidth",
-            "tickwidthratio": "tickwidthratio",
-            "ticklabeldir": "ticklabeldir",
-            "ticklabelcolor": "ticklabelcolor",
-            "ticklabelsize": "ticklabelsize",
-            "ticklabelweight": "ticklabelweight",
-            "labelcolor": "labelcolor",
-            "labelsize": "labelsize",
-            "labelweight": "labelweight",
-        }
-        for field, name in generic_fields.items():
-            if name in explicit_keys and params.get(name, None) is None:
-                state.pop(field, None)
-                continue
-            value = params.get(name, None)
             if value is not None:
                 state[field] = value
         return state
@@ -1799,65 +1699,17 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         """
         explicit_format_keys = set(kwargs)
         explicit_format_keys.update(kwargs.pop("_explicit_format_keys", ()))
-        generic_axis_kwargs = {
-            key: kwargs.pop(key)
-            for key in tuple(kwargs)
-            if key in _GENERIC_AXIS_FORMAT_KEYS
-        }
+        signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
+            kwargs, self._format_signatures[CartesianAxes]
+        )
+        explicit_format_keys.update(signature_axis_kwargs)
         explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
+        kwargs.update(signature_axis_kwargs)
         kwargs.update(generic_axis_kwargs)
         base_kwargs = kwargs.copy()
         _pop_params(base_kwargs, self._format_signatures[CartesianAxes])
-        for key in (
-            "color",
-            "linewidth",
-            "loc",
-            "spineloc",
-            "tickloc",
-            "ticklabelloc",
-            "labelloc",
-            "offsetloc",
-            "wraprange",
-            "reverse",
-            "lim",
-            "scale",
-            "bounds",
-            "margin",
-            "rotation",
-            "formatter",
-            "ticklabels",
-            "ticks",
-            "locator",
-            "minorticks",
-            "minorlocator",
-            "tickdir",
-            "tickminor",
-            "tickrange",
-            "tickcolor",
-            "ticklen",
-            "ticklenratio",
-            "tickwidth",
-            "tickwidthratio",
-            "ticklabeldir",
-            "ticklabelpad",
-            "ticklabelcolor",
-            "ticklabelsize",
-            "ticklabelweight",
-            "label",
-            "labelpad",
-            "labelcolor",
-            "labelsize",
-            "labelweight",
-            "grid",
-            "gridminor",
-            "gridcolor",
-            "label_kw",
-            "scale_kw",
-            "locator_kw",
-            "formatter_kw",
-            "minorlocator_kw",
-        ):
+        for key in CARTESIAN_PARENT_FILTER_KEYS:
             base_kwargs.pop(key, None)
 
         with rc.context(rc_kw, mode=rc_mode):
@@ -1975,13 +1827,11 @@ def _capture_explicit_format_keys(func):
     Preserve raw keyword names before Python binds them to the format signature.
     """
 
+    @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         kwargs.setdefault("_explicit_format_keys", set(kwargs))
         return func(self, *args, **kwargs)
 
-    wrapper.__name__ = func.__name__
-    wrapper.__qualname__ = func.__qualname__
-    wrapper.__doc__ = func.__doc__
     return wrapper
 
 

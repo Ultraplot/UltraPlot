@@ -29,6 +29,7 @@ except:
     from typing_extensions import override
 
 from . import axes as paxes
+from .axes._formatting import pop_axis_format_kwargs
 from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
@@ -673,50 +674,6 @@ def _clear_border_cache(func):
         return result
 
     return wrapper
-
-
-_GENERIC_AXIS_FORMAT_KEYS = (
-    "loc",
-    "spineloc",
-    "tickloc",
-    "ticklabelloc",
-    "labelloc",
-    "offsetloc",
-    "wraprange",
-    "reverse",
-    "lim",
-    "scale",
-    "bounds",
-    "margin",
-    "rotation",
-    "formatter",
-    "ticklabels",
-    "ticks",
-    "locator",
-    "minorticks",
-    "minorlocator",
-    "tickdir",
-    "tickminor",
-    "tickrange",
-    "tickcolor",
-    "ticklen",
-    "ticklenratio",
-    "tickwidth",
-    "tickwidthratio",
-    "ticklabeldir",
-    "ticklabelpad",
-    "ticklabelcolor",
-    "ticklabelsize",
-    "ticklabelweight",
-    "label",
-    "labelpad",
-    "labelcolor",
-    "labelsize",
-    "labelweight",
-    "grid",
-    "gridminor",
-    "gridcolor",
-)
 
 
 class Figure(mfigure.Figure):
@@ -3668,15 +3625,13 @@ class Figure(mfigure.Figure):
         axs = axs or self._subplot_dict.values()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         explicit_format_keys = set(kwargs)
-        generic_axis_kwargs = {
-            key: kwargs.pop(key)
-            for key in tuple(kwargs)
-            if key in _GENERIC_AXIS_FORMAT_KEYS
-        }
+        signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
+            kwargs, *paxes.Axes._format_signatures.values()
+        )
+        explicit_format_keys.update(signature_axis_kwargs)
         explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
-        for key in axis_param_names & original_kwargs.keys():
-            kwargs.setdefault(key, original_kwargs[key])
+        kwargs.update(signature_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
             kw = rc.fill({"facecolor": "figure.facecolor"}, context=True)

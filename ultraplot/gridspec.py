@@ -17,6 +17,7 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 
 from . import axes as paxes
+from .axes._formatting import pop_axis_format_kwargs
 from .config import rc
 from .internals import (
     _not_none,
@@ -36,50 +37,6 @@ except ImportError:
     ULTRA_AVAILABLE = False
 
 __all__ = ["GridSpec", "SubplotGrid"]
-
-
-_GENERIC_AXIS_FORMAT_KEYS = (
-    "loc",
-    "spineloc",
-    "tickloc",
-    "ticklabelloc",
-    "labelloc",
-    "offsetloc",
-    "wraprange",
-    "reverse",
-    "lim",
-    "scale",
-    "bounds",
-    "margin",
-    "rotation",
-    "formatter",
-    "ticklabels",
-    "ticks",
-    "locator",
-    "minorticks",
-    "minorlocator",
-    "tickdir",
-    "tickminor",
-    "tickrange",
-    "tickcolor",
-    "ticklen",
-    "ticklenratio",
-    "tickwidth",
-    "tickwidthratio",
-    "ticklabeldir",
-    "ticklabelpad",
-    "ticklabelcolor",
-    "ticklabelsize",
-    "ticklabelweight",
-    "label",
-    "labelpad",
-    "labelcolor",
-    "labelsize",
-    "labelweight",
-    "grid",
-    "gridminor",
-    "gridcolor",
-)
 
 
 # Gridspec vector arguments
@@ -2158,12 +2115,11 @@ class SubplotGrid(MutableSequence, list):
         else:
             shared_title_loc = None
             shared_title_pad = None
-        generic_axis_kwargs = {
-            key: kwargs.pop(key)
-            for key in tuple(kwargs)
-            if key in _GENERIC_AXIS_FORMAT_KEYS
-        }
+        signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
+            kwargs, *paxes.Axes._format_signatures.values()
+        )
         rc_kw, rc_mode = _pop_rc(kwargs)
+        kwargs.update(signature_axis_kwargs)
         kwargs.update(generic_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             implicit_share_xlabels = (
