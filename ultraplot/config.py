@@ -63,6 +63,50 @@ __all__ = [
 # Constants
 COLORS_KEEP = ("red", "green", "blue", "cyan", "yellow", "magenta", "white", "black")
 
+_ULTRAPLOT_STYLES = {
+    "poster": {
+        "font.size": 14,
+        "axes.titlesize": 18,
+        "axes.labelsize": 16,
+        "xtick.labelsize": 13,
+        "ytick.labelsize": 13,
+        "legend.fontsize": 13,
+        "figure.titlesize": 20,
+        "lines.linewidth": 2.0,
+        "lines.markersize": 6,
+        "figure.facecolor": "none",
+        "savefig.facecolor": "none",
+        "savefig.edgecolor": "none",
+    },
+    "dark_background": {
+        "figure.facecolor": "#000000",
+        "figure.edgecolor": "#000000",
+        "axes.facecolor": "#000000",
+        "axes.edgecolor": "#cbd5e1",
+        "axes.labelcolor": "#f8fafc",
+        "text.color": "#f8fafc",
+        "xtick.color": "#cbd5e1",
+        "ytick.color": "#cbd5e1",
+        "grid.color": "#475569",
+        "grid.alpha": 0.35,
+        "legend.facecolor": "#000000",
+        "legend.edgecolor": "#475569",
+        "savefig.facecolor": "#000000",
+        "savefig.edgecolor": "#000000",
+        "axes.prop_cycle": cycler.cycler(
+            color=(
+                "#60a5fa",
+                "#f59e0b",
+                "#34d399",
+                "#f472b6",
+                "#a78bfa",
+                "#f87171",
+            )
+        ),
+    },
+}
+_ULTRAPLOT_STYLES["dark"] = _ULTRAPLOT_STYLES["dark_background"]
+
 # Configurator docstrings
 _rc_docstring = """
 local : bool, default: True
@@ -305,6 +349,7 @@ def _get_style_dict(style, filter=True):
     #    copying the entire rcParams dict we just track the keys that were changed.
     style_aliases = {
         "538": "fivethirtyeight",
+        "dark": "dark_background",
         "mpl20": "default",
         "mpl15": "classic",
         "original": mpl.matplotlib_fname(),
@@ -333,7 +378,9 @@ def _get_style_dict(style, filter=True):
             kw = style
         elif isinstance(style, str):
             style = style_aliases.get(style, style)
-            if style in mstyle.library:
+            if style in _ULTRAPLOT_STYLES:
+                kw = _ULTRAPLOT_STYLES[style]
+            elif style in mstyle.library:
                 kw = mstyle.library[style]
             else:
                 try:
@@ -1249,6 +1296,13 @@ class Configurator(MutableMapping, dict):
         context = not rebuild and (native or self._context_mode == 2)
         kwticks = self.category(f"{axis}tick.{which}", context=context)
         kwticks.pop("visible", None)
+
+        # NOTE: We pop visibility properties from the styling dictionary so that
+        # stylistic updates (like applying a dark_background theme) do not override
+        # the tick visibility logic strictly managed by ax._update_locs() and alternate axes.
+        for key in ("bottom", "top", "left", "right"):
+            kwticks.pop(key, None)
+
         for key in ("color", "direction"):
             value = self.find(f"{axis}tick.{key}", context=context)
             if value is not None:
@@ -1260,15 +1314,19 @@ class Configurator(MutableMapping, dict):
         Return the tick label properties, optionally filtering the output dictionary
         based on the context.
         """
-        # NOTE: 'tick.label' properties are now synonyms of 'grid.label' properties
+        # Geographic gridline labels use the ultraplot-only grid.label* settings,
+        # while native matplotlib tick labels use x/y tick rcParams.
         sprefix = axis or ""
         cprefix = sprefix if _version_mpl >= "3.4" else ""  # new settings
         context = not rebuild and (native or self._context_mode == 2)
+        color_key = f"{cprefix}tick.labelcolor" if native else "grid.labelcolor"
+        size_key = f"{sprefix}tick.labelsize" if native else "grid.labelsize"
+        weight_key = "tick.labelweight" if native else "grid.labelweight"
         kwtext = self.fill(
             {
-                "color": f"{cprefix}tick.labelcolor",  # native setting sometimes avail
-                "size": f"{sprefix}tick.labelsize",  # native setting always avail
-                "weight": "tick.labelweight",  # native setting never avail
+                "color": color_key,  # native setting sometimes avail
+                "size": size_key,
+                "weight": weight_key,  # native setting never avail
                 "family": "font.family",  # apply manually
             },
             context=context,

@@ -188,6 +188,35 @@ def test_geoticks_label_shorthand_lb_no_warning(recwarn):
     uplt.close(fig)
 
 
+def test_geo_labelsize_updates_gridliner_labels():
+    fig, ax = uplt.subplots(proj="cyl")
+    ax = ax[0]
+    ax.format(labels=True, lonlines=30, latlines=30, labelsize=30)
+    fig.canvas.draw()
+
+    labels = (
+        ax.gridlines_major.bottom_label_artists + ax.gridlines_major.left_label_artists
+    )
+    assert labels
+    assert {label.get_fontsize() for label in labels} == {30}
+    uplt.close(fig)
+
+
+def test_subplotgrid_geo_labelsize_updates_gridliner_labels():
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.format(labels=True, lonlines=30, latlines=30, labelsize=30)
+    fig.canvas.draw()
+
+    geo = ax[0]
+    labels = (
+        geo.gridlines_major.bottom_label_artists
+        + geo.gridlines_major.left_label_artists
+    )
+    assert labels
+    assert {label.get_fontsize() for label in labels} == {30}
+    uplt.close(fig)
+
+
 def test_toggle_ticks_supports_bool_and_sequence_specs():
     fig, ax = uplt.subplots(proj="cyl")
     geo = ax[0]

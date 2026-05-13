@@ -6,12 +6,12 @@ Build legends from semantic mappings rather than existing artists.
 
 Why UltraPlot here?
 -------------------
-UltraPlot adds semantic legend helpers directly on axes:
+UltraPlot adds semantic legend helpers on both axes and figures:
 ``entrylegend``, ``catlegend``, ``sizelegend``, ``numlegend``, and ``geolegend``.
 These are useful when you want legend meaning decoupled from plotted handles, or
 when you want a standalone semantic key that describes an encoding directly.
 
-Key functions: :py:meth:`ultraplot.axes.Axes.entrylegend`, :py:meth:`ultraplot.axes.Axes.catlegend`, :py:meth:`ultraplot.axes.Axes.sizelegend`, :py:meth:`ultraplot.axes.Axes.numlegend`, :py:meth:`ultraplot.axes.Axes.geolegend`.
+Key functions: :py:meth:`ultraplot.axes.Axes.entrylegend`, :py:meth:`ultraplot.axes.Axes.catlegend`, :py:meth:`ultraplot.axes.Axes.sizelegend`, :py:meth:`ultraplot.axes.Axes.numlegend`, :py:meth:`ultraplot.axes.Axes.geolegend`, :py:meth:`ultraplot.figure.Figure.entrylegend`, :py:meth:`ultraplot.figure.Figure.catlegend`, :py:meth:`ultraplot.figure.Figure.sizelegend`, :py:meth:`ultraplot.figure.Figure.numlegend`, :py:meth:`ultraplot.figure.Figure.geolegend`.
 
 See also
 --------
@@ -105,4 +105,30 @@ ax.geolegend(
     country_reso="10m",
 )
 ax.axis("off")
+fig.show()
+
+# %%
+fig, axs = uplt.subplots(ncols=2, refwidth=2.8, share=False)
+axs[0].scatter([0, 1, 2], [3, 1, 2], c=[0.2, 0.5, 0.8], s=[40, 120, 260])
+axs[1].scatter([0, 1, 2], [2, 3, 1], c=[0.8, 0.4, 0.1], s=[60, 90, 220])
+axs.format(title="Figure semantic legend helpers")
+
+fig.catlegend(
+    ["Control", "Treatment"],
+    colors={"Control": "blue7", "Treatment": "red7"},
+    markers={"Control": "o", "Treatment": "^"},
+    ref=axs,
+    loc="bottom",
+    title="Group",
+    frameon=False,
+)
+fig.sizelegend(
+    [40, 120, 260],
+    labels=["Small", "Medium", "Large"],
+    color="gray6",
+    ref=axs,
+    loc="right",
+    title="Size scale",
+    frameon=False,
+)
 fig.show()
