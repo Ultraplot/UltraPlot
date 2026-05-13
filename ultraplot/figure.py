@@ -675,6 +675,50 @@ def _clear_border_cache(func):
     return wrapper
 
 
+_GENERIC_AXIS_FORMAT_KEYS = (
+    "loc",
+    "spineloc",
+    "tickloc",
+    "ticklabelloc",
+    "labelloc",
+    "offsetloc",
+    "wraprange",
+    "reverse",
+    "lim",
+    "scale",
+    "bounds",
+    "margin",
+    "rotation",
+    "formatter",
+    "ticklabels",
+    "ticks",
+    "locator",
+    "minorticks",
+    "minorlocator",
+    "tickdir",
+    "tickminor",
+    "tickrange",
+    "tickcolor",
+    "ticklen",
+    "ticklenratio",
+    "tickwidth",
+    "tickwidthratio",
+    "ticklabeldir",
+    "ticklabelpad",
+    "ticklabelcolor",
+    "ticklabelsize",
+    "ticklabelweight",
+    "label",
+    "labelpad",
+    "labelcolor",
+    "labelsize",
+    "labelweight",
+    "grid",
+    "gridminor",
+    "gridcolor",
+)
+
+
 class Figure(mfigure.Figure):
     """
     The `~matplotlib.figure.Figure` subclass used by ultraplot.
@@ -3623,6 +3667,13 @@ class Figure(mfigure.Figure):
         # Initiate context block
         axs = axs or self._subplot_dict.values()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
+        explicit_format_keys = set(kwargs)
+        generic_axis_kwargs = {
+            key: kwargs.pop(key)
+            for key in tuple(kwargs)
+            if key in _GENERIC_AXIS_FORMAT_KEYS
+        }
+        explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
@@ -3710,7 +3761,18 @@ class Figure(mfigure.Figure):
             if kw.get("ylabel") is not None and self._has_share_label_groups("y"):
                 if _axis_has_share_label_text(ax, "y") or _axis_has_label_text(ax, "y"):
                     kw.pop("ylabel", None)
-            ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
+            explicit_kw = {}
+            if isinstance(ax, paxes.CartesianAxes):
+                explicit_kw["_explicit_format_keys"] = explicit_format_keys
+            ax.format(
+                rc_kw=rc_kw,
+                rc_mode=rc_mode,
+                skip_figure=True,
+                **explicit_kw,
+                **kw,
+                **kwargs,
+                **generic_axis_kwargs,
+            )
             ax.number = store_old_number
         # Warn unused keyword argument(s)
         kw = {

@@ -38,6 +38,50 @@ except ImportError:
 __all__ = ["GridSpec", "SubplotGrid"]
 
 
+_GENERIC_AXIS_FORMAT_KEYS = (
+    "loc",
+    "spineloc",
+    "tickloc",
+    "ticklabelloc",
+    "labelloc",
+    "offsetloc",
+    "wraprange",
+    "reverse",
+    "lim",
+    "scale",
+    "bounds",
+    "margin",
+    "rotation",
+    "formatter",
+    "ticklabels",
+    "ticks",
+    "locator",
+    "minorticks",
+    "minorlocator",
+    "tickdir",
+    "tickminor",
+    "tickrange",
+    "tickcolor",
+    "ticklen",
+    "ticklenratio",
+    "tickwidth",
+    "tickwidthratio",
+    "ticklabeldir",
+    "ticklabelpad",
+    "ticklabelcolor",
+    "ticklabelsize",
+    "ticklabelweight",
+    "label",
+    "labelpad",
+    "labelcolor",
+    "labelsize",
+    "labelweight",
+    "grid",
+    "gridminor",
+    "gridcolor",
+)
+
+
 # Gridspec vector arguments
 # Valid for figure() and GridSpec()
 _shared_docstring = """
@@ -2114,7 +2158,13 @@ class SubplotGrid(MutableSequence, list):
         else:
             shared_title_loc = None
             shared_title_pad = None
+        generic_axis_kwargs = {
+            key: kwargs.pop(key)
+            for key in tuple(kwargs)
+            if key in _GENERIC_AXIS_FORMAT_KEYS
+        }
         rc_kw, rc_mode = _pop_rc(kwargs)
+        kwargs.update(generic_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             implicit_share_xlabels = (
                 is_subset

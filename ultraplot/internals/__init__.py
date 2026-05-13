@@ -340,6 +340,17 @@ def _pop_rc(src, *, ignore_conflicts=True):
         "tight",
         "span",
     )
+
+    format_conflicts = set()
+    if ignore_conflicts:
+        try:
+            from .. import axes as paxes
+
+            for sig in paxes.Axes._format_signatures.values():
+                format_conflicts.update(sig.parameters)
+        except Exception:
+            format_conflicts = set()
+
     kw = src.pop("rc_kw", None) or {}
     if "mode" in src:
         src["rc_mode"] = src.pop("mode")
@@ -350,7 +361,7 @@ def _pop_rc(src, *, ignore_conflicts=True):
     mode = _not_none(mode, 2)  # only apply updated params by default
     for key, value in tuple(src.items()):
         name = rcsetup._rc_nodots.get(key, None)
-        if ignore_conflicts and name in conflict_params:
+        if ignore_conflicts and (name in conflict_params or key in format_conflicts):
             name = None  # former renamed settings
         if name is not None:
             kw[name] = src.pop(key)

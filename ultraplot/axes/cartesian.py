@@ -20,6 +20,7 @@ from .. import ticker as pticker
 from ..config import rc
 from ..internals import (
     _not_none,
+    _pop_params,
     _pop_rc,
     _version_mpl,
     docstring,
@@ -31,6 +32,50 @@ from ..utils import units
 from . import plot, shared
 
 __all__ = ["CartesianAxes"]
+
+
+_GENERIC_AXIS_FORMAT_KEYS = (
+    "loc",
+    "spineloc",
+    "tickloc",
+    "ticklabelloc",
+    "labelloc",
+    "offsetloc",
+    "wraprange",
+    "reverse",
+    "lim",
+    "scale",
+    "bounds",
+    "margin",
+    "rotation",
+    "formatter",
+    "ticklabels",
+    "ticks",
+    "locator",
+    "minorticks",
+    "minorlocator",
+    "tickdir",
+    "tickminor",
+    "tickrange",
+    "tickcolor",
+    "ticklen",
+    "ticklenratio",
+    "tickwidth",
+    "tickwidthratio",
+    "ticklabeldir",
+    "ticklabelpad",
+    "ticklabelcolor",
+    "ticklabelsize",
+    "ticklabelweight",
+    "label",
+    "labelpad",
+    "labelcolor",
+    "labelsize",
+    "labelweight",
+    "grid",
+    "gridminor",
+    "gridcolor",
+)
 
 
 # Tuple of date converters
@@ -431,6 +476,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._yaxis_current_rotation = "horizontal"
         self._xaxis_isdefault_rotation = True  # whether to auto rotate the axis
         self._yaxis_isdefault_rotation = True
+        self._xaxis_style_state = {}
+        self._yaxis_style_state = {}
         super().__init__(*args, **kwargs)
 
         # Apply default formatter
@@ -446,6 +493,99 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._dualx_prevstate = None  # prevent excess _dualy_scale calls
         self._dualy_funcscale = None
         self._dualy_prevstate = None
+
+    def _get_axis_style_state(self, axis):
+        """
+        Return the cached explicit style overrides for this axis.
+        """
+        return getattr(self, f"_{axis}axis_style_state")
+
+    def _get_axis_style_fields(self, axis):
+        """
+        Return the parameter names used to store explicit style overrides.
+        """
+        return {
+            "color": (f"{axis}color", "color"),
+            "linewidth": (f"{axis}linewidth", "linewidth"),
+            "rotation": (f"{axis}rotation", "rotation"),
+            "spineloc": (f"{axis}spineloc", f"{axis}loc"),
+            "tickloc": (f"{axis}tickloc",),
+            "ticklabelloc": (f"{axis}ticklabelloc",),
+            "labelloc": (f"{axis}labelloc",),
+            "offsetloc": (f"{axis}offsetloc",),
+            "grid": (f"{axis}grid",),
+            "gridminor": (f"{axis}gridminor",),
+            "gridcolor": (f"{axis}gridcolor", "gridcolor"),
+            "tickdir": (f"{axis}tickdir", "tickdir"),
+            "tickcolor": (f"{axis}tickcolor", "tickcolor"),
+            "ticklen": (f"{axis}ticklen", "ticklen"),
+            "ticklenratio": (f"{axis}ticklenratio", "ticklenratio"),
+            "tickwidth": (f"{axis}tickwidth", "tickwidth"),
+            "tickwidthratio": (f"{axis}tickwidthratio", "tickwidthratio"),
+            "ticklabeldir": (f"{axis}ticklabeldir", "ticklabeldir"),
+            "ticklabelpad": (f"{axis}ticklabelpad",),
+            "ticklabelcolor": (f"{axis}ticklabelcolor", "ticklabelcolor"),
+            "ticklabelsize": (f"{axis}ticklabelsize", "ticklabelsize"),
+            "ticklabelweight": (f"{axis}ticklabelweight", "ticklabelweight"),
+            "labelpad": (f"{axis}labelpad",),
+            "labelcolor": (f"{axis}labelcolor", "labelcolor"),
+            "labelsize": (f"{axis}labelsize", "labelsize"),
+            "labelweight": (f"{axis}labelweight", "labelweight"),
+        }
+
+    def _merge_axis_style_state(self, axis, params):
+        """
+        Merge the current explicit style overrides with the cached overrides.
+        """
+        state = self._get_axis_style_state(axis).copy()
+        explicit_keys = set(params.get("_explicit_format_keys", ()))
+        for field, names in self._get_axis_style_fields(axis).items():
+            if any(name in explicit_keys for name in names) and all(
+                params.get(name, None) is None for name in names
+            ):
+                state.pop(field, None)
+                continue
+            value = _not_none(*(params.get(name) for name in names))
+            if value is not None:
+                state[field] = value
+        # Figure/SubplotGrid formatting can route generic style aliases through
+        # kwargs in ways that bypass the axis-specific names above. Preserve them
+        # explicitly so broader styles remain sticky until overridden.
+        generic_fields = {
+            "color": "color",
+            "linewidth": "linewidth",
+            "rotation": "rotation",
+            "gridcolor": "gridcolor",
+            "tickdir": "tickdir",
+            "tickcolor": "tickcolor",
+            "ticklen": "ticklen",
+            "ticklenratio": "ticklenratio",
+            "tickwidth": "tickwidth",
+            "tickwidthratio": "tickwidthratio",
+            "ticklabeldir": "ticklabeldir",
+            "ticklabelcolor": "ticklabelcolor",
+            "ticklabelsize": "ticklabelsize",
+            "ticklabelweight": "ticklabelweight",
+            "labelcolor": "labelcolor",
+            "labelsize": "labelsize",
+            "labelweight": "labelweight",
+        }
+        for field, name in generic_fields.items():
+            if name in explicit_keys and params.get(name, None) is None:
+                state.pop(field, None)
+                continue
+            value = params.get(name, None)
+            if value is not None:
+                state[field] = value
+        return state
+
+    def _set_axis_style_state(self, axis, params):
+        """
+        Cache the explicit style overrides for this axis.
+        """
+        setattr(
+            self, f"_{axis}axis_style_state", self._merge_axis_style_state(axis, params)
+        )
 
     def _apply_axis_sharing(self):
         """
@@ -1204,13 +1344,12 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             self.margins(**{s: config.margin})
 
         # Axis spine settings
-        # NOTE: This sets spine-specific color and linewidth settings. For
-        # non-specific settings _update_background is called in Axes.format()
         self._update_spines(s, loc=config.spineloc, bounds=config.bounds)
-        self._update_background(
+        self._update_frame(
             s,
             edgecolor=config.color,
             linewidth=config.linewidth,
+            tickcolor=config.tickcolor,
             tickwidth=tickwidth,
             tickwidthratio=config.tickwidthratio,
         )
@@ -1297,27 +1436,84 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         Resolve formatting parameters for a single axis (x or y).
         """
         p = params
-
-        # Color resolution
-        color = p.get("color")
-        axis_color = _not_none(p.get(f"{axis}color"), color)
+        prev = self._merge_axis_style_state(axis, p)
 
         # Helper to get axis-specific or generic param
         def get(name):
-            return p.get(f"{axis}{name}")
+            return _not_none(p.get(f"{axis}{name}"), p.get(name))
+
+        # Color resolution
+        axis_color_arg = prev.get("color", None)
+        axis_color = _not_none(
+            axis_color_arg,
+            rc.find("axes.edgecolor", context=True),
+            rc["axes.edgecolor"],
+        )
+        linewidth = _not_none(
+            prev.get("linewidth", None),
+            rc.find("axes.linewidth", context=True),
+            rc["axes.linewidth"],
+        )
 
         # Resolve colors
         tickcolor = get("tickcolor")
         if "tick.color" not in rc_kw:
-            tickcolor = _not_none(tickcolor, axis_color)
+            tickcolor = _not_none(
+                prev.get("tickcolor", None),
+                axis_color_arg,
+                rc.find(f"{axis}tick.color", context=True),
+                rc[f"{axis}tick.color"],
+            )
 
         ticklabelcolor = get("ticklabelcolor")
         if "tick.labelcolor" not in rc_kw:
-            ticklabelcolor = _not_none(ticklabelcolor, axis_color)
+            ticklabelcolor = _not_none(
+                prev.get("ticklabelcolor", None),
+                axis_color_arg,
+            )
 
         labelcolor = get("labelcolor")
         if "label.color" not in rc_kw:
-            labelcolor = _not_none(labelcolor, axis_color)
+            labelcolor = _not_none(
+                prev.get("labelcolor", None),
+                axis_color_arg,
+            )
+
+        ticklen = _not_none(
+            get("ticklen"),
+            prev.get("ticklen", None),
+            rc.find("tick.len", context=True),
+            rc["tick.len"],
+        )
+        ticklenratio = _not_none(
+            get("ticklenratio"),
+            prev.get("ticklenratio", None),
+            rc.find("tick.lenratio", context=True),
+            rc["tick.lenratio"],
+        )
+        tickwidth = get("tickwidth")
+        tickwidth = _not_none(
+            prev.get("tickwidth", None),
+            prev.get("linewidth", None),
+            rc.find("tick.width", context=True),
+            rc["tick.width"],
+        )
+        tickwidthratio = _not_none(
+            get("tickwidthratio"),
+            prev.get("tickwidthratio", None),
+            rc.find("tick.widthratio", context=True),
+            rc["tick.widthratio"],
+        )
+        ticklabelsize = prev.get("ticklabelsize", None)
+        ticklabelweight = prev.get("ticklabelweight", None)
+        labelsize = prev.get("labelsize", None)
+        labelweight = prev.get("labelweight", None)
+        grid = prev.get("grid", None)
+        gridminor = prev.get("gridminor", None)
+        gridcolor = prev.get("gridcolor", None)
+        rotation = prev.get("rotation", None)
+        ticklabelpad = prev.get("ticklabelpad", None)
+        labelpad = prev.get("labelpad", None)
 
         # Flexible keyword args
         margin = _not_none(
@@ -1325,7 +1521,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         )
 
         tickdir = _not_none(
-            get("tickdir"), rc.find(f"{axis}tick.direction", context=True)
+            prev.get("tickdir", None),
+            rc.find(f"{axis}tick.direction", context=True),
         )
 
         locator = _not_none(get("locator"), p.get(f"{axis}ticks"))
@@ -1345,31 +1542,32 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         tickminor = _not_none(
             tickminor,
+            prev.get("tickminor", None),
             tickminor_default,
             rc.find(f"{axis}tick.minor.visible", context=True),
         )
 
         # Tick label dir logic
-        ticklabeldir = p.get("ticklabeldir")
+        ticklabeldir = prev.get("ticklabeldir", None)
         axis_ticklabeldir = _not_none(get("ticklabeldir"), ticklabeldir)
         tickdir = _not_none(tickdir, axis_ticklabeldir)
 
         # Spine locations
         loc = get("loc")
-        spineloc = get("spineloc")
+        spineloc = prev.get("spineloc", None)
         spineloc = _not_none(loc, spineloc)
 
         # Spine side inference
         side = self._get_spine_side(axis, spineloc)
 
-        tickloc = get("tickloc")
+        tickloc = prev.get("tickloc", None)
         if side is not None and side not in ("zero", "center", "both"):
             tickloc = _not_none(tickloc, side)
 
         # Infer other locations
-        ticklabelloc = get("ticklabelloc")
-        labelloc = get("labelloc")
-        offsetloc = get("offsetloc")
+        ticklabelloc = prev.get("ticklabelloc", None)
+        labelloc = prev.get("labelloc", None)
+        offsetloc = prev.get("offsetloc", None)
 
         if tickloc != "both":
             ticklabelloc = _not_none(ticklabelloc, tickloc)
@@ -1396,16 +1594,42 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                     val = p.get(f"{axis}max")
                 case "color":
                     val = axis_color
+                case "linewidth":
+                    val = linewidth
                 case "tickcolor":
                     val = tickcolor
+                case "ticklen":
+                    val = ticklen
+                case "ticklenratio":
+                    val = ticklenratio
+                case "tickwidth":
+                    val = tickwidth
+                case "tickwidthratio":
+                    val = tickwidthratio
                 case "ticklabelcolor":
                     val = ticklabelcolor
+                case "ticklabelsize":
+                    val = ticklabelsize
+                case "ticklabelweight":
+                    val = ticklabelweight
                 case "labelcolor":
                     val = labelcolor
+                case "labelsize":
+                    val = labelsize
+                case "labelweight":
+                    val = labelweight
                 case "margin":
                     val = margin
                 case "tickdir":
                     val = tickdir
+                case "grid":
+                    val = grid
+                case "gridminor":
+                    val = gridminor
+                case "gridcolor":
+                    val = gridcolor
+                case "rotation":
+                    val = rotation
                 case "locator":
                     val = locator
                 case "minorlocator":
@@ -1416,6 +1640,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                     val = tickminor
                 case "ticklabeldir":
                     val = axis_ticklabeldir
+                case "ticklabelpad":
+                    val = ticklabelpad
                 case "spineloc":
                     val = spineloc
                 case "tickloc":
@@ -1426,6 +1652,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                     val = labelloc
                 case "offsetloc":
                     val = offsetloc
+                case "labelpad":
+                    val = labelpad
                 case _:
                     # Direct mapping (e.g. xlinewidth -> linewidth)
                     val = get(field)
@@ -1569,11 +1797,74 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         or `datetime.datetime` array as the x or y axis coordinate, the axis ticks
         and tick labels will be automatically formatted as dates.
         """
+        explicit_format_keys = set(kwargs)
+        explicit_format_keys.update(kwargs.pop("_explicit_format_keys", ()))
+        generic_axis_kwargs = {
+            key: kwargs.pop(key)
+            for key in tuple(kwargs)
+            if key in _GENERIC_AXIS_FORMAT_KEYS
+        }
+        explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
+        kwargs.update(generic_axis_kwargs)
+        base_kwargs = kwargs.copy()
+        _pop_params(base_kwargs, self._format_signatures[CartesianAxes])
+        for key in (
+            "color",
+            "linewidth",
+            "loc",
+            "spineloc",
+            "tickloc",
+            "ticklabelloc",
+            "labelloc",
+            "offsetloc",
+            "wraprange",
+            "reverse",
+            "lim",
+            "scale",
+            "bounds",
+            "margin",
+            "rotation",
+            "formatter",
+            "ticklabels",
+            "ticks",
+            "locator",
+            "minorticks",
+            "minorlocator",
+            "tickdir",
+            "tickminor",
+            "tickrange",
+            "tickcolor",
+            "ticklen",
+            "ticklenratio",
+            "tickwidth",
+            "tickwidthratio",
+            "ticklabeldir",
+            "ticklabelpad",
+            "ticklabelcolor",
+            "ticklabelsize",
+            "ticklabelweight",
+            "label",
+            "labelpad",
+            "labelcolor",
+            "labelsize",
+            "labelweight",
+            "grid",
+            "gridminor",
+            "gridcolor",
+            "label_kw",
+            "scale_kw",
+            "locator_kw",
+            "formatter_kw",
+            "minorlocator_kw",
+        ):
+            base_kwargs.pop(key, None)
+
         with rc.context(rc_kw, mode=rc_mode):
             # Resolve parameters for x and y axes
             # We capture locals() to pass all named arguments to the helper
             params = locals()
+            params["_explicit_format_keys"] = explicit_format_keys
             params.update(kwargs)  # Include any extras in kwargs
 
             x_config = self._resolve_axis_format("x", params, rc_kw)
@@ -1582,6 +1873,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             # Format axes
             self._format_axis("x", x_config, fixticks=fixticks)
             self._format_axis("y", y_config, fixticks=fixticks)
+            self._set_axis_style_state("x", params)
+            self._set_axis_style_state("y", params)
 
         if rc.find("formatter.log", context=True):
             if (
@@ -1603,10 +1896,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             ):
                 self._update_formatter("y", "log")
 
-        # Parent format method
         if aspect is not None:
             self.set_aspect(aspect)
-        super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
+        super().format(rc_kw=rc_kw, rc_mode=rc_mode, **base_kwargs)
 
     @docstring._snippet_manager
     def altx(self, **kwargs):
@@ -1678,10 +1970,26 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         return super().get_tightbbox(renderer, *args, **kwargs)
 
 
+def _capture_explicit_format_keys(func):
+    """
+    Preserve raw keyword names before Python binds them to the format signature.
+    """
+
+    def wrapper(self, *args, **kwargs):
+        kwargs.setdefault("_explicit_format_keys", set(kwargs))
+        return func(self, *args, **kwargs)
+
+    wrapper.__name__ = func.__name__
+    wrapper.__qualname__ = func.__qualname__
+    wrapper.__doc__ = func.__doc__
+    return wrapper
+
+
 # tmp
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__, altx, and alty
 CartesianAxes._format_signatures[CartesianAxes] = inspect.signature(
     CartesianAxes.format
 )  # noqa: E501
+CartesianAxes.format = _capture_explicit_format_keys(CartesianAxes.format)
 CartesianAxes.format = docstring._obfuscate_kwargs(CartesianAxes.format)
