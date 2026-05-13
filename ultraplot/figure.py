@@ -3675,6 +3675,8 @@ class Figure(mfigure.Figure):
         }
         explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
+        for key in axis_param_names & original_kwargs.keys():
+            kwargs.setdefault(key, original_kwargs[key])
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
             kw = rc.fill({"facecolor": "figure.facecolor"}, context=True)
