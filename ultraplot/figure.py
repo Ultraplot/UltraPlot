@@ -3623,7 +3623,19 @@ class Figure(mfigure.Figure):
         # Initiate context block
         axs = axs or self._subplot_dict.values()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
+        # Preserve explicit projection-specific format keywords that also happen to
+        # be valid rc aliases (e.g. GeoAxes/PolarAxes `labelsize`). Otherwise
+        # `_pop_rc()` removes them before the per-axes format dispatch below.
+        original_kwargs = kwargs.copy()
+        axis_param_names = set()
+        for ax in axs:
+            for cls, sig in paxes.Axes._format_signatures.items():
+                if isinstance(ax, cls):
+                    axis_param_names.update(sig.parameters)
+        axis_param_names.discard("self")
         rc_kw, rc_mode = _pop_rc(kwargs)
+        for key in axis_param_names & original_kwargs.keys():
+            kwargs.setdefault(key, original_kwargs[key])
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
             kw = rc.fill({"facecolor": "figure.facecolor"}, context=True)

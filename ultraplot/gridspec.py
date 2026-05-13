@@ -2114,7 +2114,19 @@ class SubplotGrid(MutableSequence, list):
         else:
             shared_title_loc = None
             shared_title_pad = None
+        # Preserve explicit projection-specific format keywords that also happen to
+        # be valid rc aliases (e.g. GeoAxes/PloarAxes `labelsize`). Otherwise
+        # `_pop_rc()` removes them before Figure.format() can delegate to axes.
+        original_kwargs = kwargs.copy()
+        axis_param_names = set()
+        for ax in axes:
+            for cls, sig in paxes.Axes._format_signatures.items():
+                if isinstance(ax, cls):
+                    axis_param_names.update(sig.parameters)
+        axis_param_names.discard("self")
         rc_kw, rc_mode = _pop_rc(kwargs)
+        for key in axis_param_names & original_kwargs.keys():
+            kwargs.setdefault(key, original_kwargs[key])
         with rc.context(rc_kw, mode=rc_mode):
             implicit_share_xlabels = (
                 is_subset

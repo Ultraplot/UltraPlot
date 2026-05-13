@@ -1314,15 +1314,19 @@ class Configurator(MutableMapping, dict):
         Return the tick label properties, optionally filtering the output dictionary
         based on the context.
         """
-        # NOTE: 'tick.label' properties are now synonyms of 'grid.label' properties
+        # Geographic gridline labels use the ultraplot-only grid.label* settings,
+        # while native matplotlib tick labels use x/y tick rcParams.
         sprefix = axis or ""
         cprefix = sprefix if _version_mpl >= "3.4" else ""  # new settings
         context = not rebuild and (native or self._context_mode == 2)
+        color_key = f"{cprefix}tick.labelcolor" if native else "grid.labelcolor"
+        size_key = f"{sprefix}tick.labelsize" if native else "grid.labelsize"
+        weight_key = "tick.labelweight" if native else "grid.labelweight"
         kwtext = self.fill(
             {
-                "color": f"{cprefix}tick.labelcolor",  # native setting sometimes avail
-                "size": f"{sprefix}tick.labelsize",  # native setting always avail
-                "weight": "tick.labelweight",  # native setting never avail
+                "color": color_key,  # native setting sometimes avail
+                "size": size_key,
+                "weight": weight_key,  # native setting never avail
                 "family": "font.family",  # apply manually
             },
             context=context,
