@@ -1701,7 +1701,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             alpha=("a", "framealpha", "facealpha"),
             facecolor=("fc", "framecolor", "facecolor"),
             edgecolor=("ec",),
-            edgewidth=("ew",),
+            edgewidth=("ew", "linewidth", "lw"),
         )
         _kw_frame_default = {
             "alpha": f"{guide}.framealpha",
