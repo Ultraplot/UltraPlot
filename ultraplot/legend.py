@@ -1583,7 +1583,6 @@ class UltraLegend:
             markerfacecolor=markerfacecolor,
             styles=styles,
         )
-
         if not add:
             return handles, labels
         self._validate_semantic_kwargs("entrylegend", kwargs)
@@ -1639,10 +1638,8 @@ class UltraLegend:
             markerfacecolor=markerfacecolor,
             **styles,
         )
-
         if not add:
             return handles, labels
-
         # Handle Patch styles and plural aliases
         self._validate_semantic_kwargs("catlegend", kwargs)
         return self.axes.legend(handles, labels, **kwargs)
@@ -1664,7 +1661,6 @@ class UltraLegend:
     ):
         styles = dict(handle_kw or {})
         styles.update(_pop_entry_props(kwargs))
-
         color = _not_none(color, styles.pop("color", None), rc["legend.size.color"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.size.marker"])
         area = _not_none(area, rc["legend.size.area"])
@@ -1679,7 +1675,6 @@ class UltraLegend:
             styles.pop("markeredgewidth", None), rc["legend.size.markeredgewidth"]
         )
         markerfacecolor = _not_none(styles.pop("markerfacecolor", None), None)
-
         handles, labels = _size_legend_entries(
             levels,
             labels=labels,
@@ -1695,7 +1690,6 @@ class UltraLegend:
             markerfacecolor=markerfacecolor,
             **styles,
         )
-
         if not add:
             return handles, labels
         self._validate_semantic_kwargs("sizelegend", kwargs)
@@ -1807,10 +1801,8 @@ class UltraLegend:
             fill=fill,
             **styles,   # Additional Patch properties
         )
-
         if not add:
             return handles, labels
-
         self._validate_semantic_kwargs("geolegend", kwargs)
         if handlesize is not None:
             handlesize = float(handlesize)
