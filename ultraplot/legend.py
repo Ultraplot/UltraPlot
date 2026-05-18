@@ -1554,7 +1554,9 @@ class UltraLegend:
         add: bool = True,
         **kwargs: Any,
     ):
-        styles = dict(handle_kw or {})
+        styles = {}
+        if handle_kw:
+            styles.update(_pop_entry_props(handle_kw))  # Handle explicit handle_kw first
         styles.update(_pop_entry_props(kwargs))
 
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
@@ -1606,7 +1608,9 @@ class UltraLegend:
         Build categorical legend entries and optionally draw a legend.
         """
         # Merge handle_kw with auto-extracted styles
-        styles = dict(handle_kw or {})
+        styles = {}
+        if handle_kw:
+            styles.update(_pop_entry_props(handle_kw))  # Handle explicit handle_kw first
         styles.update(_pop_entry_props(kwargs))   # Alias-to-full-name conversion happens here
 
         # Apply rc default values
@@ -1662,7 +1666,9 @@ class UltraLegend:
         add: bool = True,
         **kwargs: Any,
     ):
-        styles = dict(handle_kw or {})
+        styles = {}
+        if handle_kw:
+            styles.update(_pop_entry_props(handle_kw))  # Handle explicit handle_kw first
         styles.update(_pop_entry_props(kwargs))
         color = _not_none(color, styles.pop("color", None), rc["legend.size.color"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.size.marker"])
@@ -1717,7 +1723,9 @@ class UltraLegend:
         add: bool = True,
         **kwargs: Any,
     ):
-        styles = dict(handle_kw or {})
+        styles = {}
+        if handle_kw:
+            styles.update(_pop_num_props(handle_kw))  # Handle explicit handle_kw first
         styles.update(_pop_num_props(kwargs))   # Handle Patch styles and plural aliases
 
         color = styles.pop("color", None)
