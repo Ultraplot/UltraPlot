@@ -864,17 +864,23 @@ def _is_color_like(value):
     """
     Determine whether a value can be interpreted as a color (including RGBA tuples).
 
-    For tuple/list, if its length is 3 or 4 and each element is a number between 0 and 1,
-    it is treated as a color rather than a style list.
+    For tuple/list, if its length is 3 or 4 and each element is a number
+    strictly in the range [0, 1], it is treated as a color rather than a style list.
     """
     if value is None:
         return False
     # matplotlib's is_color_like can already handle tuples like (1, 0, 0.5)
-    # But for better precision, we additionally check the special case of tuple/list
-    if isinstance(value, (tuple, list)):
-        # Numeric sequences of length 3 or 4 are treated as colors
-        if len(value) in (3, 4) and all(isinstance(v, (int, float)) for v in value):
-            return True
+    # But we additionally check for numeric sequences with values in [0, 1]
+    # to avoid misidentifying coordinate pairs or other numeric lists as colors.
+    if isinstance(value, tuple):
+        if len(value) in (3, 4):
+            # Ensure all elements are numbers within [0, 1]
+            if all(
+                isinstance(v, (int, float)) and 0.0 <= v <= 1.0
+                for v in value
+            ):
+                print(f"Tuple {value} treated as a single color. Pass a list to apply per entry.")
+                return True
     return _mpl_is_color_like(value)
 
 
