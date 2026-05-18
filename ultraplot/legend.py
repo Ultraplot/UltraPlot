@@ -881,6 +881,9 @@ def _is_color_like(value):
             ):
                 print(f"Tuple {value} treated as a single color. Pass a list to apply per entry.")
                 return True
+    # List shouldn't be converted to color, to prevent confusion.
+    if isinstance(value, list):
+        return False
     return _mpl_is_color_like(value)
 
 
