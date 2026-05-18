@@ -934,21 +934,16 @@ def _style_lookup(style, key, index, default=None, *, prop=None):
 
     if check_color and _is_color_like(style):
         return style
-
     if isinstance(style, dict):
         return style.get(key, default)
-
     if isinstance(style, str):
         return style
-
     try:
         values = list(style)
     except TypeError:
         return style
-
     if not values:
         return default
-
     val = values[index % len(values)]
     if check_color and _is_color_like(val):
         return val
