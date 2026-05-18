@@ -9,6 +9,7 @@ import matplotlib.text as mtext
 import numpy as np
 from matplotlib import cm as mcm
 from matplotlib import colors as mcolors
+from matplotlib.colors import is_color_like as _mpl_is_color_like
 from matplotlib import lines as mlines
 from matplotlib import legend as mlegend
 from matplotlib import legend_handler as mhandler
@@ -851,23 +852,101 @@ def _geo_legend_entries(
     return handles, label_list
 
 
-def _style_lookup(style, key, index, default=None):
+
+# _is_color_like should only check the following args
+_COLOR_KEYS = {
+    'color', 'facecolor', 'edgecolor',
+    'markerfacecolor', 'markeredgecolor', 'markerfacecoloralt',
+}
+
+
+def _is_color_like(value):
     """
-    Resolve style values from scalar, mapping, or sequence inputs.
+    判断一个值是否可被解释为颜色（包括 RGBA 元组）。
+    
+    对于 tuple/list，若其长度为 3 或 4 且每个元素都是 0-1 之间的数字，
+    则视为颜色而非样式列表。
+    """
+    if value is None:
+        return False
+    # matplotlib 的 is_color_like 本身就能处理 (1, 0, 0.5) 这样的 tuple
+    # 但为了更精确，我们额外检查 tuple/list 的特殊情况
+    if isinstance(value, (tuple, list)):
+        # 长度为 3 或 4 的数字序列视为颜色
+        if len(value) in (3, 4) and all(isinstance(v, (int, float)) for v in value):
+            return True
+    return _mpl_is_color_like(value)
+
+
+# Line2D / LegendEntry 别名映射
+_LINE_ALIAS_MAP = {
+    "c": "color",
+    "m": "marker",
+    "ms": "markersize",
+    "ls": "linestyle",
+    "lw": "linewidth",
+    "mec": "markeredgecolor",
+    "mew": "markeredgewidth",
+    "mfc": "markerfacecolor",
+    "mfcalt": "markerfacecoloralt",
+    "aa": "antialiased",
+    "fs": "fillstyle",
+    # "ec": "markeredgecolor",      # 兼容 Line2D 上下文中的 ec
+    # "fc": "markerfacecolor",      # 兼容 Line2D 上下文中的 fc
+}
+
+# Patch 别名映射
+_PATCH_ALIAS_MAP = {
+    "c": "color",
+    "fc": "facecolor",
+    "ec": "edgecolor",
+    "ls": "linestyle",
+    "lw": "linewidth",
+    "aa": "antialiased",
+}
+
+
+
+def _style_lookup(style, key, index, default=None, *, prop=None):
+    """
+    Resolve a style value from scalar, mapping, or sequence inputs.
+
+    Parameters
+    ----------
+    style : the style value (scalar, list, dict)
+    key : dict key when `style` is a mapping (typically a label)
+    index : list index when `style` is a sequence
+    default : fallback value
+    prop : optional attribute name; if it belongs to _COLOR_KEYS,
+           the function treats color-like sequences as single colors.
     """
     if style is None:
         return default
+
+    # Only perform color detection for known color properties
+    check_color = (prop is not None and prop in _COLOR_KEYS)
+
+    if check_color and _is_color_like(style):
+        return style
+
     if isinstance(style, dict):
         return style.get(key, default)
+
     if isinstance(style, str):
         return style
+
     try:
         values = list(style)
     except TypeError:
         return style
+
     if not values:
         return default
-    return values[index % len(values)]
+
+    val = values[index % len(values)]
+    if check_color and _is_color_like(val):
+        return val
+    return val
 
 
 def _format_label(value, fmt):
@@ -901,24 +980,47 @@ _ENTRY_STYLE_FROM_COLLECTION = {
     "linestyles": "linestyle",
     "linewidths": "markeredgewidth",
     "sizes": "markersize",
+    "size": "markersize",
 }
 
 
 def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     """
-    Pop style properties with line/scatter aliases for LegendEntry objects.
+    从 kwargs 中提取 LegendEntry 样式属性。
+    支持：
+    - 别名（如 'c', 'ls', 'lw', 'mec' 等）自动转换为全名
+    - 复数形式的集合参数（如 'colors', 'edgecolors'）转换为单数
+    - 全名参数优先级高于别名
     """
+    # 1. 提取并解析别名（弹出别名键，映射为全名）
+    resolved_aliases = {}
+    for alias in list(kwargs.keys()):
+        if alias in _LINE_ALIAS_MAP:
+            full_key = _LINE_ALIAS_MAP[alias]
+            resolved_aliases[full_key] = kwargs.pop(alias)
+
+    # 2. 提取显式的集合类复数参数（如 'colors', 'edgecolors'）
     explicit_collection = {}
     for key in _ENTRY_STYLE_FROM_COLLECTION:
         if key in kwargs:
             explicit_collection[key] = kwargs.pop(key)
+
+    # 3. 用 ultraplot 内部的 _pop_props 提取 'line' 和 'collection' 分类属性
     props = _pop_props(kwargs, "line")
     collection_props = _pop_props(kwargs, "collection")
     collection_props.update(explicit_collection)
+
+    # 4. 将集合类复数参数映射到单数属性名（仅当单数名尚未设置时）
     for source, target in _ENTRY_STYLE_FROM_COLLECTION.items():
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
+
+    # 5. 合并别名解析结果（别名优先级最低，不覆盖已存在的全名参数）
+    for full_key, value in resolved_aliases.items():
+        if full_key not in props:
+            props[full_key] = value
+
     return props
 
 
@@ -935,6 +1037,13 @@ def _pop_num_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     """
     Pop patch/collection style aliases for numeric semantic legend entries.
     """
+    # 先解析别名
+    resolved = {}
+    for key in list(kwargs.keys()):
+        if key in _PATCH_ALIAS_MAP:
+            full_key = _PATCH_ALIAS_MAP[key]
+            resolved[full_key] = kwargs.pop(key)
+
     explicit_collection = {}
     for key in _NUM_STYLE_FROM_COLLECTION:
         if key in kwargs:
@@ -946,6 +1055,11 @@ def _pop_num_props(kwargs: dict[str, Any]) -> dict[str, Any]:
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
+
+    for full_key, value in resolved.items():
+        if full_key not in props:
+            props[full_key] = value
+
     return props
 
 
@@ -959,17 +1073,17 @@ def _resolve_style_values(
     """
     output = {}
     for key, value in styles.items():
-        resolved = _style_lookup(value, label, index, default=None)
+        resolved = _style_lookup(value, label, index, default=None, prop=key)
         if resolved is not None:
             output[key] = resolved
     return output
 
 
 def _cat_legend_entries(
-    categories: Iterable[Any],
+    categories,
     *,
-    colors=None,
-    markers="o",
+    color=None,
+    marker="o",
     line=False,
     linestyle="-",
     linewidth=2.0,
@@ -980,9 +1094,6 @@ def _cat_legend_entries(
     markerfacecolor=None,
     **entry_kwargs,
 ):
-    """
-    Build categorical semantic legend handles and labels.
-    """
     labels = list(dict.fromkeys(categories))
     palette = _default_cycle_colors()
     base_styles = {
@@ -999,18 +1110,26 @@ def _cat_legend_entries(
     handles = []
     for idx, label in enumerate(labels):
         styles = _resolve_style_values(base_styles, label, idx)
-        color = _style_lookup(colors, label, idx, default=palette[idx % len(palette)])
-        marker = _style_lookup(markers, label, idx, default="o")
         line_value = bool(styles.pop("line", False))
-        if line_value and marker in (None, ""):
-            marker = None
-        styles.pop("marker", None)
+        linestyle_value = styles.pop("linestyle", "-")
+        marker_value = styles.pop("marker", None)
+
+        # 如果 line=False 但用户提供了非默认线型，自动启用 line=True
+        if not line_value and linestyle_value not in (None, "-", "none", "None"):
+            line_value = True
+
+        color_val = _style_lookup(color, label, idx, default=palette[idx % len(palette)], prop="color")
+        marker_val = _style_lookup(marker, label, idx, default="o", prop="marker")
+        if line_value and marker_val in (None, ""):
+            marker_val = None
+
         handles.append(
             LegendEntry(
                 label=str(label),
-                color=color,
+                color=color_val,
                 line=line_value,
-                marker=marker,
+                marker=marker_val,
+                linestyle=linestyle_value,
                 **styles,
             )
         )
@@ -1169,8 +1288,8 @@ def _size_legend_entries(
     handles = []
     for idx, (value, label, size) in enumerate(zip(values, label_list, ms)):
         styles = _resolve_style_values(base_styles, float(value), idx)
-        color_value = _style_lookup(color, float(value), idx, default="0.35")
-        marker_value = _style_lookup(marker, float(value), idx, default="o")
+        color_value = _style_lookup(color, float(value), idx, default="0.35", prop="color")
+        marker_value = _style_lookup(marker, float(value), idx, default="o", prop="marker")
         line_value = bool(styles.pop("line", False))
         if line_value and marker_value in ("", None):
             marker_value = None
@@ -1425,55 +1544,28 @@ class UltraLegend:
         line: Optional[bool] = None,
         marker=None,
         color=None,
-        linestyle=None,
-        linewidth: Optional[float] = None,
-        markersize: Optional[float] = None,
-        alpha=None,
-        markeredgecolor=None,
-        markeredgewidth=None,
-        markerfacecolor=None,
         handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
-        **legend_kwargs: Any,
+        **kwargs: Any,
     ):
-        """
-        Build generic semantic legend entries and optionally draw a legend.
-        """
         styles = dict(handle_kw or {})
-        styles.update(_pop_entry_props(styles))
+        styles.update(_pop_entry_props(kwargs))
+
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.cat.marker"])
         color = _not_none(color, styles.pop("color", None))
-        linestyle = _not_none(
-            linestyle,
-            styles.pop("linestyle", None),
-            rc["legend.cat.linestyle"],
-        )
-        linewidth = _not_none(
-            linewidth,
-            styles.pop("linewidth", None),
-            rc["legend.cat.linewidth"],
-        )
-        markersize = _not_none(
-            markersize,
-            styles.pop("markersize", None),
-            rc["legend.cat.markersize"],
-        )
-        alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.cat.alpha"])
+        linestyle = _not_none(styles.pop("linestyle", None), rc["legend.cat.linestyle"])
+        linewidth = _not_none(styles.pop("linewidth", None), rc["legend.cat.linewidth"])
+        markersize = _not_none(styles.pop("markersize", None), rc["legend.cat.markersize"])
+        alpha = _not_none(styles.pop("alpha", None), rc["legend.cat.alpha"])
         markeredgecolor = _not_none(
-            markeredgecolor,
-            styles.pop("markeredgecolor", None),
-            rc["legend.cat.markeredgecolor"],
+            styles.pop("markeredgecolor", None), rc["legend.cat.markeredgecolor"]
         )
         markeredgewidth = _not_none(
-            markeredgewidth,
-            styles.pop("markeredgewidth", None),
-            rc["legend.cat.markeredgewidth"],
+            styles.pop("markeredgewidth", None), rc["legend.cat.markeredgewidth"]
         )
-        markerfacecolor = _not_none(
-            markerfacecolor,
-            styles.pop("markerfacecolor", None),
-        )
+        markerfacecolor = _not_none(styles.pop("markerfacecolor", None), None)
+
         handles, labels = _entry_legend_entries(
             entries,
             line=line,
@@ -1488,73 +1580,51 @@ class UltraLegend:
             markerfacecolor=markerfacecolor,
             styles=styles,
         )
+
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("entrylegend", legend_kwargs)
-        return self.axes.legend(handles, labels, **legend_kwargs)
+        self._validate_semantic_kwargs("entrylegend", kwargs)
+        return self.axes.legend(handles, labels, **kwargs)
 
     def catlegend(
         self,
         categories: Iterable[Any],
         *,
-        colors=None,
-        markers=None,
+        color=None,          # 原 colors，单数形式
+        marker=None,         # 原 markers，单数形式
         line: Optional[bool] = None,
-        linestyle=None,
-        linewidth: Optional[float] = None,
-        markersize: Optional[float] = None,
-        alpha=None,
-        markeredgecolor=None,
-        markeredgewidth=None,
-        markerfacecolor=None,
         handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
-        **legend_kwargs: Any,
+        **kwargs: Any,
     ):
         """
         Build categorical legend entries and optionally draw a legend.
         """
+        # 合并 handle_kw 与自动提取的样式
         styles = dict(handle_kw or {})
-        styles.update(_pop_entry_props(styles))
+        styles.update(_pop_entry_props(kwargs))   # 此处完成别名→全名转换
+
+        # 应用 rc 默认值
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
-        colors = _not_none(colors, styles.pop("color", None))
-        markers = _not_none(
-            markers, styles.pop("marker", None), rc["legend.cat.marker"]
-        )
-        linestyle = _not_none(
-            linestyle,
-            styles.pop("linestyle", None),
-            rc["legend.cat.linestyle"],
-        )
-        linewidth = _not_none(
-            linewidth,
-            styles.pop("linewidth", None),
-            rc["legend.cat.linewidth"],
-        )
-        markersize = _not_none(
-            markersize,
-            styles.pop("markersize", None),
-            rc["legend.cat.markersize"],
-        )
-        alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.cat.alpha"])
+        color = _not_none(color, styles.pop("color", None))
+        marker = _not_none(marker, styles.pop("marker", None), rc["legend.cat.marker"])
+        linestyle = _not_none(styles.pop("linestyle", None), rc["legend.cat.linestyle"])
+        linewidth = _not_none(styles.pop("linewidth", None), rc["legend.cat.linewidth"])
+        markersize = _not_none(styles.pop("markersize", None), rc["legend.cat.markersize"])
+        alpha = _not_none(styles.pop("alpha", None), rc["legend.cat.alpha"])
         markeredgecolor = _not_none(
-            markeredgecolor,
-            styles.pop("markeredgecolor", None),
-            rc["legend.cat.markeredgecolor"],
+            styles.pop("markeredgecolor", None), rc["legend.cat.markeredgecolor"]
         )
         markeredgewidth = _not_none(
-            markeredgewidth,
-            styles.pop("markeredgewidth", None),
-            rc["legend.cat.markeredgewidth"],
+            styles.pop("markeredgewidth", None), rc["legend.cat.markeredgewidth"]
         )
-        markerfacecolor = _not_none(
-            markerfacecolor,
-            styles.pop("markerfacecolor", None),
-        )
+        markerfacecolor = _not_none(styles.pop("markerfacecolor", None), None)
+
+        # 剩余 styles 会作为额外 entry 属性（如 'markerfacecoloralt'）传入 _cat_legend_entries
         handles, labels = _cat_legend_entries(
             categories,
-            colors=colors,
-            markers=markers,
+            color=color,
+            marker=marker,
             line=line,
             linestyle=linestyle,
             linewidth=linewidth,
@@ -1565,12 +1635,13 @@ class UltraLegend:
             markerfacecolor=markerfacecolor,
             **styles,
         )
+
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("catlegend", legend_kwargs)
-        # Route through Axes.legend so location shorthands (e.g. 'r', 'b')
-        # and queued guide keyword handling behave exactly like the public API.
-        return self.axes.legend(handles, labels, **legend_kwargs)
+
+        # 确保没有冲突的整体 legend 参数
+        self._validate_semantic_kwargs("catlegend", kwargs)
+        return self.axes.legend(handles, labels, **kwargs)
 
     def sizelegend(
         self,
@@ -1583,40 +1654,28 @@ class UltraLegend:
         scale: Optional[float] = None,
         minsize: Optional[float] = None,
         fmt=None,
-        alpha=None,
-        markeredgecolor=None,
-        markeredgewidth=None,
-        markerfacecolor=None,
         handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
-        **legend_kwargs: Any,
+        **kwargs: Any,
     ):
-        """
-        Build size legend entries and optionally draw a legend.
-        """
         styles = dict(handle_kw or {})
-        styles.update(_pop_entry_props(styles))
+        styles.update(_pop_entry_props(kwargs))
+
         color = _not_none(color, styles.pop("color", None), rc["legend.size.color"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.size.marker"])
         area = _not_none(area, rc["legend.size.area"])
         scale = _not_none(scale, rc["legend.size.scale"])
         minsize = _not_none(minsize, rc["legend.size.minsize"])
         fmt = _not_none(fmt, rc["legend.size.format"])
-        alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.size.alpha"])
+        alpha = _not_none(styles.pop("alpha", None), rc["legend.size.alpha"])
         markeredgecolor = _not_none(
-            markeredgecolor,
-            styles.pop("markeredgecolor", None),
-            rc["legend.size.markeredgecolor"],
+            styles.pop("markeredgecolor", None), rc["legend.size.markeredgecolor"]
         )
         markeredgewidth = _not_none(
-            markeredgewidth,
-            styles.pop("markeredgewidth", None),
-            rc["legend.size.markeredgewidth"],
+            styles.pop("markeredgewidth", None), rc["legend.size.markeredgewidth"]
         )
-        markerfacecolor = _not_none(
-            markerfacecolor,
-            styles.pop("markerfacecolor", None),
-        )
+        markerfacecolor = _not_none(styles.pop("markerfacecolor", None), None)
+
         handles, labels = _size_legend_entries(
             levels,
             labels=labels,
@@ -1632,10 +1691,11 @@ class UltraLegend:
             markerfacecolor=markerfacecolor,
             **styles,
         )
+
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("sizelegend", legend_kwargs)
-        return self.axes.legend(handles, labels, **legend_kwargs)
+        self._validate_semantic_kwargs("sizelegend", kwargs)
+        return self.axes.legend(handles, labels, **kwargs)
 
     def numlegend(
         self,
@@ -1654,30 +1714,26 @@ class UltraLegend:
         alpha=None,
         handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
-        **legend_kwargs: Any,
+        **kwargs: Any,
     ):
-        """
-        Build numeric-color legend entries and optionally draw a legend.
-        """
         styles = dict(handle_kw or {})
-        styles.update(_pop_num_props(styles))
+        styles.update(_pop_num_props(kwargs))   # 处理 Patch 样式及复数别名
+
         color = styles.pop("color", None)
         n = _not_none(n, rc["legend.num.n"])
         cmap = _not_none(cmap, rc["legend.num.cmap"])
         facecolor = _not_none(facecolor, styles.pop("facecolor", None), color)
         edgecolor = _not_none(
-            edgecolor,
-            styles.pop("edgecolor", None),
-            rc["legend.num.edgecolor"],
+            edgecolor, styles.pop("edgecolor", None), rc["legend.num.edgecolor"]
         )
         linewidth = _not_none(
-            linewidth,
-            styles.pop("linewidth", None),
-            rc["legend.num.linewidth"],
+            linewidth, styles.pop("linewidth", None), rc["legend.num.linewidth"]
         )
         linestyle = _not_none(linestyle, styles.pop("linestyle", None))
         alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.num.alpha"])
         fmt = _not_none(fmt, rc["legend.num.format"])
+
+        # 剩余 styles 可包含 'hatch', 'joinstyle', 'capstyle', 'fill' 等
         handles, labels = _num_legend_entries(
             levels=levels,
             vmin=vmin,
@@ -1693,10 +1749,11 @@ class UltraLegend:
             alpha=alpha,
             **styles,
         )
+
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("numlegend", legend_kwargs)
-        return self.axes.legend(handles, labels, **legend_kwargs)
+        self._validate_semantic_kwargs("numlegend", kwargs)
+        return self.axes.legend(handles, labels, **kwargs)
 
     def geolegend(
         self,
@@ -1712,20 +1769,14 @@ class UltraLegend:
         linewidth: Optional[float] = None,
         alpha: Optional[float] = None,
         fill: Optional[bool] = None,
+        handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
-        **legend_kwargs: Any,
+        **kwargs: Any,
     ):
-        """
-        Build geometry legend entries and optionally draw a legend.
+        # 几何图例可接收 Patch 样式（linestyle, hatch 等），与 numlegend 类似
+        styles = dict(handle_kw or {})
+        styles.update(_pop_num_props(kwargs))
 
-        Notes
-        -----
-        Geometry legend entries use normalized patch proxies inside the legend
-        handle box rather than reusing the original map artist directly. This
-        preserves the general geometry shape and copied patch styling, but very
-        small or high-aspect-ratio handles can still make hatches difficult to
-        read at legend scale.
-        """
         facecolor = _not_none(facecolor, rc["legend.geo.facecolor"])
         edgecolor = _not_none(edgecolor, rc["legend.geo.edgecolor"])
         linewidth = _not_none(linewidth, rc["legend.geo.linewidth"])
@@ -1737,6 +1788,8 @@ class UltraLegend:
         )
         country_proj = _not_none(country_proj, rc["legend.geo.country_proj"])
         handlesize = _not_none(handlesize, rc["legend.geo.handlesize"])
+
+        # 额外样式（如 linestyle, hatch, joinstyle）合并到后面
         handles, labels = _geo_legend_entries(
             entries,
             labels=labels,
@@ -1748,19 +1801,22 @@ class UltraLegend:
             linewidth=linewidth,
             alpha=alpha,
             fill=fill,
+            **styles,   # 额外的 Patch 属性
         )
+
         if not add:
             return handles, labels
-        self._validate_semantic_kwargs("geolegend", legend_kwargs)
+
+        self._validate_semantic_kwargs("geolegend", kwargs)
         if handlesize is not None:
             handlesize = float(handlesize)
             if handlesize <= 0:
                 raise ValueError("geolegend handlesize must be positive.")
-            if "handlelength" not in legend_kwargs:
-                legend_kwargs["handlelength"] = rc["legend.handlelength"] * handlesize
-            if "handleheight" not in legend_kwargs:
-                legend_kwargs["handleheight"] = rc["legend.handleheight"] * handlesize
-        return self.axes.legend(handles, labels, **legend_kwargs)
+            if "handlelength" not in kwargs:
+                kwargs["handlelength"] = rc["legend.handlelength"] * handlesize
+            if "handleheight" not in kwargs:
+                kwargs["handleheight"] = rc["legend.handleheight"] * handlesize
+        return self.axes.legend(handles, labels, **kwargs)
 
     @staticmethod
     def _align_map() -> dict[Optional[str], dict[str, str]]:
