@@ -1042,6 +1042,9 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
             props[full_key] = value
     # NEW: grab any remaining kwargs that are valid Line2D setters
     for key in list(kwargs.keys()):
+        # without this, line 645 of test_legend.py won't pass
+        if key in ("labels", "label"):
+            continue
         if key.startswith('_'):
             continue
         if hasattr(mlines.Line2D, 'set_' + key):
