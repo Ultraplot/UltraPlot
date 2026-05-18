@@ -13,6 +13,7 @@ from matplotlib.colors import is_color_like as _mpl_is_color_like
 from matplotlib import lines as mlines
 from matplotlib import legend as mlegend
 from matplotlib import legend_handler as mhandler
+from matplotlib.markers import MarkerStyle
 
 from .config import rc
 from .internals import _not_none, _pop_props, guides, rcsetup
@@ -92,8 +93,21 @@ class LegendEntry(mlines.Line2D):
         markeredgecolor=None,
         markeredgewidth=None,
         alpha=None,
+        marker_capstyle=None,
+        marker_joinstyle=None,
+        marker_transform=None,
         **kwargs,
     ):
+        if marker_capstyle is not None or marker_joinstyle is not None or marker_transform is not None:
+            if not isinstance(marker, MarkerStyle):
+                marker_kw = {}
+                if marker_capstyle is not None:
+                    marker_kw['capstyle'] = marker_capstyle
+                if marker_joinstyle is not None:
+                    marker_kw['joinstyle'] = marker_joinstyle
+                if marker_transform is not None:
+                    marker_kw['transform'] = marker_transform
+                marker = MarkerStyle(marker, **marker_kw)        
         marker = "o" if marker is None and not line else marker
         linestyle = "none" if not line else linestyle
         if markerfacecolor is None and color is not None:
@@ -1026,7 +1040,15 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     for full_key, value in resolved_aliases.items():
         if full_key not in props:
             props[full_key] = value
-
+    # NEW: grab any remaining kwargs that are valid Line2D setters
+    for key in list(kwargs.keys()):
+        if key.startswith('_'):
+            continue
+        if hasattr(mlines.Line2D, 'set_' + key):
+            props[key] = kwargs.pop(key)
+    for key in ('marker_capstyle', 'marker_joinstyle', 'marker_transform'):
+            if key in kwargs:
+                props[key] = kwargs.pop(key)
     return props
 
 
