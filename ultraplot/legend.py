@@ -862,23 +862,23 @@ _COLOR_KEYS = {
 
 def _is_color_like(value):
     """
-    判断一个值是否可被解释为颜色（包括 RGBA 元组）。
-    
-    对于 tuple/list，若其长度为 3 或 4 且每个元素都是 0-1 之间的数字，
-    则视为颜色而非样式列表。
+    Determine whether a value can be interpreted as a color (including RGBA tuples).
+
+    For tuple/list, if its length is 3 or 4 and each element is a number between 0 and 1,
+    it is treated as a color rather than a style list.
     """
     if value is None:
         return False
-    # matplotlib 的 is_color_like 本身就能处理 (1, 0, 0.5) 这样的 tuple
-    # 但为了更精确，我们额外检查 tuple/list 的特殊情况
+    # matplotlib's is_color_like can already handle tuples like (1, 0, 0.5)
+    # But for better precision, we additionally check the special case of tuple/list
     if isinstance(value, (tuple, list)):
-        # 长度为 3 或 4 的数字序列视为颜色
+        # Numeric sequences of length 3 or 4 are treated as colors
         if len(value) in (3, 4) and all(isinstance(v, (int, float)) for v in value):
             return True
     return _mpl_is_color_like(value)
 
 
-# Line2D / LegendEntry 别名映射
+# Line2D / LegendEntry alias mapping
 _LINE_ALIAS_MAP = {
     "c": "color",
     "m": "marker",
@@ -891,11 +891,11 @@ _LINE_ALIAS_MAP = {
     "mfcalt": "markerfacecoloralt",
     "aa": "antialiased",
     "fs": "fillstyle",
-    # "ec": "markeredgecolor",      # 兼容 Line2D 上下文中的 ec
-    # "fc": "markerfacecolor",      # 兼容 Line2D 上下文中的 fc
+    # "ec": "markeredgecolor",      # Compatible with 'ec' in Line2D context
+    # "fc": "markerfacecolor",      # Compatible with 'fc' in Line2D context
 }
 
-# Patch 别名映射
+# Patch alias mapping
 _PATCH_ALIAS_MAP = {
     "c": "color",
     "fc": "facecolor",
@@ -986,37 +986,39 @@ _ENTRY_STYLE_FROM_COLLECTION = {
 
 def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     """
-    从 kwargs 中提取 LegendEntry 样式属性。
-    支持：
-    - 别名（如 'c', 'ls', 'lw', 'mec' 等）自动转换为全名
-    - 复数形式的集合参数（如 'colors', 'edgecolors'）转换为单数
-    - 全名参数优先级高于别名
+    Extract LegendEntry style properties from kwargs.
+    Supports:
+    - Aliases (like 'c', 'ls', 'lw', 'mec', etc.) are automatically converted to full names
+    - Plural collection parameters (like 'colors', 'edgecolors') are converted to singular
+    - Full name parameters take precedence over aliases
     """
-    # 1. 提取并解析别名（弹出别名键，映射为全名）
+    # 1. Extract and resolve aliases (pop alias keys, map to full names)
     resolved_aliases = {}
     for alias in list(kwargs.keys()):
         if alias in _LINE_ALIAS_MAP:
             full_key = _LINE_ALIAS_MAP[alias]
             resolved_aliases[full_key] = kwargs.pop(alias)
 
-    # 2. 提取显式的集合类复数参数（如 'colors', 'edgecolors'）
+    # 2. Extract explicit collection-style plural parameters (like 'colors', 'edgecolors')
     explicit_collection = {}
     for key in _ENTRY_STYLE_FROM_COLLECTION:
         if key in kwargs:
             explicit_collection[key] = kwargs.pop(key)
 
-    # 3. 用 ultraplot 内部的 _pop_props 提取 'line' 和 'collection' 分类属性
+    # 3. Use ultraplot's internal _pop_props to extract 'line' and 'collection' category properties
     props = _pop_props(kwargs, "line")
     collection_props = _pop_props(kwargs, "collection")
     collection_props.update(explicit_collection)
 
-    # 4. 将集合类复数参数映射到单数属性名（仅当单数名尚未设置时）
+    # 4. Map collection plural parameters to singular property names 
+    # only if the singular name is not already set)
     for source, target in _ENTRY_STYLE_FROM_COLLECTION.items():
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
 
-    # 5. 合并别名解析结果（别名优先级最低，不覆盖已存在的全名参数）
+    # 5. Merge resolved aliases (aliases have lowest priority, 
+    # do not overwrite existing full-name parameters)
     for full_key, value in resolved_aliases.items():
         if full_key not in props:
             props[full_key] = value
@@ -1037,7 +1039,7 @@ def _pop_num_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     """
     Pop patch/collection style aliases for numeric semantic legend entries.
     """
-    # 先解析别名
+    # Resolve aliases first
     resolved = {}
     for key in list(kwargs.keys()):
         if key in _PATCH_ALIAS_MAP:
@@ -1114,7 +1116,7 @@ def _cat_legend_entries(
         linestyle_value = styles.pop("linestyle", "-")
         marker_value = styles.pop("marker", None)
 
-        # 如果 line=False 但用户提供了非默认线型，自动启用 line=True
+        # If line=False but user provides a non-default linestyle, automatically enable line=True
         if not line_value and linestyle_value not in (None, "-", "none", "None"):
             line_value = True
 
@@ -1590,8 +1592,8 @@ class UltraLegend:
         self,
         categories: Iterable[Any],
         *,
-        color=None,          # 原 colors，单数形式
-        marker=None,         # 原 markers，单数形式
+        color=None,          # Originally 'colors', change to singular form
+        marker=None,         # Originally 'markers', change to singular form
         line: Optional[bool] = None,
         handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
@@ -1600,11 +1602,11 @@ class UltraLegend:
         """
         Build categorical legend entries and optionally draw a legend.
         """
-        # 合并 handle_kw 与自动提取的样式
+        # Merge handle_kw with auto-extracted styles
         styles = dict(handle_kw or {})
-        styles.update(_pop_entry_props(kwargs))   # 此处完成别名→全名转换
+        styles.update(_pop_entry_props(kwargs))   # Alias-to-full-name conversion happens here
 
-        # 应用 rc 默认值
+        # Apply rc default values
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
         color = _not_none(color, styles.pop("color", None))
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.cat.marker"])
@@ -1620,7 +1622,8 @@ class UltraLegend:
         )
         markerfacecolor = _not_none(styles.pop("markerfacecolor", None), None)
 
-        # 剩余 styles 会作为额外 entry 属性（如 'markerfacecoloralt'）传入 _cat_legend_entries
+        # Remaining styles are passed as additional entry properties 
+        # (e.g., 'markerfacecoloralt') to _cat_legend_entries
         handles, labels = _cat_legend_entries(
             categories,
             color=color,
@@ -1639,7 +1642,7 @@ class UltraLegend:
         if not add:
             return handles, labels
 
-        # 确保没有冲突的整体 legend 参数
+        # Handle Patch styles and plural aliases
         self._validate_semantic_kwargs("catlegend", kwargs)
         return self.axes.legend(handles, labels, **kwargs)
 
@@ -1717,7 +1720,7 @@ class UltraLegend:
         **kwargs: Any,
     ):
         styles = dict(handle_kw or {})
-        styles.update(_pop_num_props(kwargs))   # 处理 Patch 样式及复数别名
+        styles.update(_pop_num_props(kwargs))   # Handle Patch styles and plural aliases
 
         color = styles.pop("color", None)
         n = _not_none(n, rc["legend.num.n"])
@@ -1733,7 +1736,7 @@ class UltraLegend:
         alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.num.alpha"])
         fmt = _not_none(fmt, rc["legend.num.format"])
 
-        # 剩余 styles 可包含 'hatch', 'joinstyle', 'capstyle', 'fill' 等
+        # Remaining styles may include 'hatch', 'joinstyle', 'capstyle', 'fill', etc.
         handles, labels = _num_legend_entries(
             levels=levels,
             vmin=vmin,
@@ -1773,7 +1776,7 @@ class UltraLegend:
         add: bool = True,
         **kwargs: Any,
     ):
-        # 几何图例可接收 Patch 样式（linestyle, hatch 等），与 numlegend 类似
+        # Geolegend can accept Patch styles (linestyle, hatch, etc.), similar to numlegend
         styles = dict(handle_kw or {})
         styles.update(_pop_num_props(kwargs))
 
@@ -1789,7 +1792,7 @@ class UltraLegend:
         country_proj = _not_none(country_proj, rc["legend.geo.country_proj"])
         handlesize = _not_none(handlesize, rc["legend.geo.handlesize"])
 
-        # 额外样式（如 linestyle, hatch, joinstyle）合并到后面
+        # Additional styles (e.g., linestyle, hatch, joinstyle) are merged later
         handles, labels = _geo_legend_entries(
             entries,
             labels=labels,
@@ -1801,7 +1804,7 @@ class UltraLegend:
             linewidth=linewidth,
             alpha=alpha,
             fill=fill,
-            **styles,   # 额外的 Patch 属性
+            **styles,   # Additional Patch properties
         )
 
         if not add:
