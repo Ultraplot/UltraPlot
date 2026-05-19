@@ -98,16 +98,20 @@ class LegendEntry(mlines.Line2D):
         marker_transform=None,
         **kwargs,
     ):
-        if marker_capstyle is not None or marker_joinstyle is not None or marker_transform is not None:
+        if (
+            marker_capstyle is not None
+            or marker_joinstyle is not None
+            or marker_transform is not None
+        ):
             if not isinstance(marker, MarkerStyle):
                 marker_kw = {}
                 if marker_capstyle is not None:
-                    marker_kw['capstyle'] = marker_capstyle
+                    marker_kw["capstyle"] = marker_capstyle
                 if marker_joinstyle is not None:
-                    marker_kw['joinstyle'] = marker_joinstyle
+                    marker_kw["joinstyle"] = marker_joinstyle
                 if marker_transform is not None:
-                    marker_kw['transform'] = marker_transform
-                marker = MarkerStyle(marker, **marker_kw)        
+                    marker_kw["transform"] = marker_transform
+                marker = MarkerStyle(marker, **marker_kw)
         marker = "o" if marker is None and not line else marker
         linestyle = "none" if not line else linestyle
         if markerfacecolor is None and color is not None:
@@ -866,11 +870,14 @@ def _geo_legend_entries(
     return handles, label_list
 
 
-
 # _is_color_like should only check the following args
 _COLOR_KEYS = {
-    'color', 'facecolor', 'edgecolor',
-    'markerfacecolor', 'markeredgecolor', 'markerfacecoloralt',
+    "color",
+    "facecolor",
+    "edgecolor",
+    "markerfacecolor",
+    "markeredgecolor",
+    "markerfacecoloralt",
 }
 
 
@@ -889,11 +896,10 @@ def _is_color_like(value):
     if isinstance(value, tuple):
         if len(value) in (3, 4):
             # Ensure all elements are numbers within [0, 1]
-            if all(
-                isinstance(v, (int, float)) and 0.0 <= v <= 1.0
-                for v in value
-            ):
-                print(f"Tuple {value} treated as a single color. Pass a list to apply per entry.")
+            if all(isinstance(v, (int, float)) and 0.0 <= v <= 1.0 for v in value):
+                print(
+                    f"Tuple {value} treated as a single color. Pass a list to apply per entry."
+                )
                 return True
     # List shouldn't be converted to color, to prevent confusion.
     if isinstance(value, list):
@@ -929,7 +935,6 @@ _PATCH_ALIAS_MAP = {
 }
 
 
-
 def _style_lookup(style, key, index, default=None, *, prop=None):
     """
     Resolve a style value from scalar, mapping, or sequence inputs.
@@ -947,7 +952,7 @@ def _style_lookup(style, key, index, default=None, *, prop=None):
         return default
 
     # Only perform color detection for known color properties
-    check_color = (prop is not None and prop in _COLOR_KEYS)
+    check_color = prop is not None and prop in _COLOR_KEYS
 
     if check_color and _is_color_like(style):
         return style
@@ -1028,14 +1033,14 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     collection_props = _pop_props(kwargs, "collection")
     collection_props.update(explicit_collection)
 
-    # 4. Map collection plural parameters to singular property names 
+    # 4. Map collection plural parameters to singular property names
     # only if the singular name is not already set)
     for source, target in _ENTRY_STYLE_FROM_COLLECTION.items():
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
 
-    # 5. Merge resolved aliases (aliases have lowest priority, 
+    # 5. Merge resolved aliases (aliases have lowest priority,
     # do not overwrite existing full-name parameters)
     for full_key, value in resolved_aliases.items():
         if full_key not in props:
@@ -1045,13 +1050,13 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
         # without this, line 645 of test_legend.py won't pass
         if key in ("labels", "label"):
             continue
-        if key.startswith('_'):
+        if key.startswith("_"):
             continue
-        if hasattr(mlines.Line2D, 'set_' + key):
+        if hasattr(mlines.Line2D, "set_" + key):
             props[key] = kwargs.pop(key)
-    for key in ('marker_capstyle', 'marker_joinstyle', 'marker_transform'):
-            if key in kwargs:
-                props[key] = kwargs.pop(key)
+    for key in ("marker_capstyle", "marker_joinstyle", "marker_transform"):
+        if key in kwargs:
+            props[key] = kwargs.pop(key)
     return props
 
 
@@ -1149,7 +1154,9 @@ def _cat_legend_entries(
         if not line_value and linestyle_value not in (None, "-", "none", "None"):
             line_value = True
 
-        color_val = _style_lookup(color, label, idx, default=palette[idx % len(palette)], prop="color")
+        color_val = _style_lookup(
+            color, label, idx, default=palette[idx % len(palette)], prop="color"
+        )
         marker_val = _style_lookup(marker, label, idx, default="o", prop="marker")
         if line_value and marker_val in (None, ""):
             marker_val = None
@@ -1319,8 +1326,12 @@ def _size_legend_entries(
     handles = []
     for idx, (value, label, size) in enumerate(zip(values, label_list, ms)):
         styles = _resolve_style_values(base_styles, float(value), idx)
-        color_value = _style_lookup(color, float(value), idx, default="0.35", prop="color")
-        marker_value = _style_lookup(marker, float(value), idx, default="o", prop="marker")
+        color_value = _style_lookup(
+            color, float(value), idx, default="0.35", prop="color"
+        )
+        marker_value = _style_lookup(
+            marker, float(value), idx, default="o", prop="marker"
+        )
         line_value = bool(styles.pop("line", False))
         if line_value and marker_value in ("", None):
             marker_value = None
@@ -1581,7 +1592,9 @@ class UltraLegend:
     ):
         styles = {}
         if handle_kw:
-            styles.update(_pop_entry_props(handle_kw))  # Handle explicit handle_kw first
+            styles.update(
+                _pop_entry_props(handle_kw)
+            )  # Handle explicit handle_kw first
         styles.update(_pop_entry_props(kwargs))
 
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
@@ -1589,7 +1602,9 @@ class UltraLegend:
         color = _not_none(color, styles.pop("color", None))
         linestyle = _not_none(styles.pop("linestyle", None), rc["legend.cat.linestyle"])
         linewidth = _not_none(styles.pop("linewidth", None), rc["legend.cat.linewidth"])
-        markersize = _not_none(styles.pop("markersize", None), rc["legend.cat.markersize"])
+        markersize = _not_none(
+            styles.pop("markersize", None), rc["legend.cat.markersize"]
+        )
         alpha = _not_none(styles.pop("alpha", None), rc["legend.cat.alpha"])
         markeredgecolor = _not_none(
             styles.pop("markeredgecolor", None), rc["legend.cat.markeredgecolor"]
@@ -1622,8 +1637,8 @@ class UltraLegend:
         self,
         categories: Iterable[Any],
         *,
-        color=None,          # Originally 'colors', change to singular form
-        marker=None,         # Originally 'markers', change to singular form
+        color=None,  # Originally 'colors', change to singular form
+        marker=None,  # Originally 'markers', change to singular form
         line: Optional[bool] = None,
         handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
@@ -1635,8 +1650,12 @@ class UltraLegend:
         # Merge handle_kw with auto-extracted styles
         styles = {}
         if handle_kw:
-            styles.update(_pop_entry_props(handle_kw))  # Handle explicit handle_kw first
-        styles.update(_pop_entry_props(kwargs))   # Alias-to-full-name conversion happens here
+            styles.update(
+                _pop_entry_props(handle_kw)
+            )  # Handle explicit handle_kw first
+        styles.update(
+            _pop_entry_props(kwargs)
+        )  # Alias-to-full-name conversion happens here
 
         # Apply rc default values
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
@@ -1644,7 +1663,9 @@ class UltraLegend:
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.cat.marker"])
         linestyle = _not_none(styles.pop("linestyle", None), rc["legend.cat.linestyle"])
         linewidth = _not_none(styles.pop("linewidth", None), rc["legend.cat.linewidth"])
-        markersize = _not_none(styles.pop("markersize", None), rc["legend.cat.markersize"])
+        markersize = _not_none(
+            styles.pop("markersize", None), rc["legend.cat.markersize"]
+        )
         alpha = _not_none(styles.pop("alpha", None), rc["legend.cat.alpha"])
         markeredgecolor = _not_none(
             styles.pop("markeredgecolor", None), rc["legend.cat.markeredgecolor"]
@@ -1654,7 +1675,7 @@ class UltraLegend:
         )
         markerfacecolor = _not_none(styles.pop("markerfacecolor", None), None)
 
-        # Remaining styles are passed as additional entry properties 
+        # Remaining styles are passed as additional entry properties
         # (e.g., 'markerfacecoloralt') to _cat_legend_entries
         handles, labels = _cat_legend_entries(
             categories,
@@ -1693,7 +1714,9 @@ class UltraLegend:
     ):
         styles = {}
         if handle_kw:
-            styles.update(_pop_entry_props(handle_kw))  # Handle explicit handle_kw first
+            styles.update(
+                _pop_entry_props(handle_kw)
+            )  # Handle explicit handle_kw first
         styles.update(_pop_entry_props(kwargs))
         color = _not_none(color, styles.pop("color", None), rc["legend.size.color"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.size.marker"])
@@ -1751,7 +1774,7 @@ class UltraLegend:
         styles = {}
         if handle_kw:
             styles.update(_pop_num_props(handle_kw))  # Handle explicit handle_kw first
-        styles.update(_pop_num_props(kwargs))   # Handle Patch styles and plural aliases
+        styles.update(_pop_num_props(kwargs))  # Handle Patch styles and plural aliases
 
         color = styles.pop("color", None)
         n = _not_none(n, rc["legend.num.n"])
@@ -1835,7 +1858,7 @@ class UltraLegend:
             linewidth=linewidth,
             alpha=alpha,
             fill=fill,
-            **styles,   # Additional Patch properties
+            **styles,  # Additional Patch properties
         )
         if not add:
             return handles, labels

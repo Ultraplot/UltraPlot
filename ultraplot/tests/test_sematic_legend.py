@@ -1,8 +1,10 @@
 """
 Unit tests for semantic legend style aliases and color detection.
 """
+
 import matplotlib
-matplotlib.use('Agg')          # Must be before any other matplotlib import for local test
+
+matplotlib.use("Agg")  # Must be before any other matplotlib import for local test
 import numpy as np
 import pytest
 from matplotlib import colors as mcolors
@@ -18,13 +20,11 @@ def test_catlegend_rgba_tuple_is_color():
     fig, ax = uplt.subplots()
     try:
         ax.axis("off")
-        handles, _ = ax.catlegend(
-            list("ABC"), color=(0.2, 0.4, 0.6, 0.8), add=False
-        )
+        handles, _ = ax.catlegend(list("ABC"), color=(0.2, 0.4, 0.6, 0.8), add=False)
         colors = [h.get_color() for h in handles]
-        assert all(c == colors[0] for c in colors), (
-            f"All entries should share the same color, got {colors}"
-        )
+        assert all(
+            c == colors[0] for c in colors
+        ), f"All entries should share the same color, got {colors}"
     finally:
         uplt.close(fig)
 
@@ -51,14 +51,13 @@ def test_numlegend_facecolor_rgba_tuple_is_color():
     try:
         ax.axis("off")
         handles, _ = ax.numlegend(
-            [1, 2, 3], vmin=0, vmax=4,
-            facecolor=(0.8, 0.2, 0.3, 0.6), add=False
+            [1, 2, 3], vmin=0, vmax=4, facecolor=(0.8, 0.2, 0.3, 0.6), add=False
         )
         ref = np.array(handles[0].get_facecolor())
         for h in handles:
-            assert np.allclose(np.array(h.get_facecolor()), ref), (
-                "All patches should have identical facecolor"
-            )
+            assert np.allclose(
+                np.array(h.get_facecolor()), ref
+            ), "All patches should have identical facecolor"
     finally:
         uplt.close(fig)
 
@@ -207,9 +206,7 @@ def test_numlegend_alias_fc_facecolor():
     fig, ax = uplt.subplots()
     try:
         ax.axis("off")
-        handles, _ = ax.numlegend(
-            [1, 2, 3], vmin=0, vmax=4, fc="lightblue", add=False
-        )
+        handles, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4, fc="lightblue", add=False)
         for h in handles:
             assert h.get_facecolor()[:3] == mcolors.to_rgb("lightblue")
     finally:
@@ -221,9 +218,7 @@ def test_numlegend_alias_ec_edgecolor():
     fig, ax = uplt.subplots()
     try:
         ax.axis("off")
-        handles, _ = ax.numlegend(
-            [1, 2, 3], vmin=0, vmax=4, ec="black", add=False
-        )
+        handles, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4, ec="black", add=False)
         for h in handles:
             assert h.get_edgecolor()[:3] == (0.0, 0.0, 0.0)
     finally:
@@ -235,9 +230,7 @@ def test_numlegend_alias_ls_linestyle():
     fig, ax = uplt.subplots()
     try:
         ax.axis("off")
-        handles, _ = ax.numlegend(
-            [1, 2, 3], vmin=0, vmax=4, ls=":", add=False
-        )
+        handles, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4, ls=":", add=False)
         for h in handles:
             assert h.get_linestyle() == ":"
     finally:
@@ -249,9 +242,7 @@ def test_numlegend_alias_lw_linewidth():
     fig, ax = uplt.subplots()
     try:
         ax.axis("off")
-        handles, _ = ax.numlegend(
-            [1, 2, 3], vmin=0, vmax=4, lw=1.5, add=False
-        )
+        handles, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4, lw=1.5, add=False)
         for h in handles:
             assert h.get_linewidth() == 1.5
     finally:
@@ -266,9 +257,7 @@ def test_alias_and_fullname_priority():
     fig, ax = uplt.subplots()
     try:
         ax.axis("off")
-        handles, _ = ax.catlegend(
-            list("AB"), markersize=15, ms=99, add=False
-        )
+        handles, _ = ax.catlegend(list("AB"), markersize=15, ms=99, add=False)
         for h in handles:
             assert h.get_markersize() == 15
     finally:
@@ -322,6 +311,7 @@ def test_sizelegend_alias_mec():
     finally:
         uplt.close(fig)
 
+
 def test_catlegend_ms_length_three_is_not_color():
     """ms list of length 3 should be treated as per‑entry markersize, not a color."""
     fig, ax = uplt.subplots()
@@ -359,6 +349,7 @@ def test_catlegend_alpha_length_three():
         assert handles[2].get_alpha() == 0.8
     finally:
         uplt.close(fig)
+
 
 def test_catlegend_color_as_list_of_rgba_tuples():
     """Color with list of RGBA tuples still works correctly."""
