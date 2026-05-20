@@ -333,3 +333,167 @@ def test_linestyle_auto_enable_line():
             assert hh.get_marker() == uplt.rc["legend.cat.marker"]
     finally:
         uplt.close(fig)
+
+# -----------------------------------------------------------------------------
+# geolegend: per‑entry lists
+# -----------------------------------------------------------------------------
+def test_geolegend_per_entry_lists():
+    """geolegend applies per-entry styles from lists (facecolor, edgecolor, linewidth, alpha, fill)."""
+    fig, ax = _make_fig()
+    try:
+        handles, labels = ax.geolegend(
+            ["box", "tri", "hex"],
+            facecolor=["tab:red", "tab:green", "tab:blue"],
+            edgecolor=["black", "gray", "white"],
+            linewidth=[1.0, 2.0, 3.0],
+            alpha=[0.5, 0.7, 1.0],
+            fill=[True, False, True],
+            add=False,
+        )
+        assert len(handles) == 3
+        assert labels == ["box", "tri", "hex"]
+
+        # Check per-entry properties
+        expected_fc = ["tab:red", "tab:green", "tab:blue"] # None for fill=False
+        expected_ec = ["black", "gray", "white"]
+        expected_lw = [1.0, 2.0, 3.0]
+        expected_alpha = [0.5, 0.7, 1.0]
+        expected_fill = [True, False, True]
+
+        for i, h in enumerate(handles):
+            assert isinstance(h, mpatches.PathPatch)
+            if expected_fill[i]:
+                assert np.allclose(h.get_facecolor(), mcolors.to_rgba(expected_fc[i], expected_alpha[i]))
+            else:
+                # for fill=False, facecolor is preserved, and set alpha=0
+                assert np.allclose(mcolors.to_rgba(h.get_facecolor()[:3], 0), mcolors.to_rgba(expected_fc[i], 0))
+            assert np.allclose(h.get_edgecolor(), mcolors.to_rgba(expected_ec[i], expected_alpha[i]))
+            assert h.get_linewidth() == pytest.approx(expected_lw[i])
+            assert h.get_alpha() == expected_alpha[i]
+            assert h.get_fill() == expected_fill[i]
+    finally:
+        uplt.close(fig)
+
+
+# -----------------------------------------------------------------------------
+# geolegend: per‑entry dicts
+# -----------------------------------------------------------------------------
+def test_geolegend_per_entry_dicts():
+    """geolegend applies per-entry styles from dicts."""
+    fig, ax = _make_fig()
+    try:
+        handles, labels = ax.geolegend(
+            ["box", "tri", "hex"],
+            facecolor={"box": "red", "tri": "green", "hex": "blue"},
+            edgecolor={"box": "black", "tri": "gray", "hex": "white"},
+            linewidth={"box": 1.0, "tri": 2.0, "hex": 3.0},
+            alpha={"box": 0.5, "tri": 0.7, "hex": 1.0},
+            fill={"box": True, "tri": False, "hex": True},
+            add=False,
+        )
+        assert len(handles) == 3
+        assert labels == ["box", "tri", "hex"]
+
+        expected = {
+            "box": ("red", "black", 1.0, 0.5, True),
+            "tri": ("green", "gray", 2.0, 0.7, False),
+            "hex": ("blue", "white", 3.0, 1.0, True),
+        }
+        for h, label in zip(handles, labels):
+            fc, ec, lw, alpha, fill = expected[label]
+            if fill:
+                assert np.allclose(h.get_facecolor(), mcolors.to_rgba(fc, alpha))
+            else:
+                # for fill=False, facecolor is preserved, and set alpha=0
+                assert np.allclose(mcolors.to_rgba(h.get_facecolor()[:3], 0), mcolors.to_rgba(fc, 0))
+            assert np.allclose(h.get_edgecolor(), mcolors.to_rgba(ec, alpha))
+            assert h.get_linewidth() == pytest.approx(lw)
+            assert h.get_alpha() == alpha
+            assert h.get_fill() == fill
+    finally:
+        uplt.close(fig)
+
+
+# -----------------------------------------------------------------------------
+# geolegend: alias support
+# -----------------------------------------------------------------------------
+def test_geolegend_alias_support():
+    """geolegend accepts aliases fc, ec, lw, ls, etc."""
+    fig, ax = _make_fig()
+    try:
+        handles, _ = ax.geolegend(
+            ["box", "tri"],
+            fc=["red", "green"],          # alias for facecolor
+            ec=["black", "blue"],         # alias for edgecolor
+            lw=2.0,                        # alias for linewidth
+            ls="--",                       # alias for linestyle
+            add=False,
+        )
+        assert len(handles) == 2
+        # First geometry
+        h0 = handles[0]
+        assert np.allclose(h0.get_facecolor(), mcolors.to_rgba("red"))
+        assert np.allclose(h0.get_edgecolor(), mcolors.to_rgba("black"))
+        assert h0.get_linewidth() == 2.0
+        assert h0.get_linestyle() == "--"
+        # Second geometry
+        h1 = handles[1]
+        assert np.allclose(h1.get_facecolor(), mcolors.to_rgba("green"))
+        assert np.allclose(h1.get_edgecolor(), mcolors.to_rgba("blue"))
+    finally:
+        uplt.close(fig)
+
+
+# -----------------------------------------------------------------------------
+# geolegend: explicit parameter overrides alias (no conflict error)
+# -----------------------------------------------------------------------------
+def test_geolegend_explicit_overrides_alias():
+    """Explicit facecolor parameter overrides alias fc."""
+    fig, ax = _make_fig()
+    try:
+        # facecolor='red' (explicit) vs fc='blue' (alias) → explicit wins
+        handles, _ = ax.geolegend(
+            ["box"],
+            facecolor="red",
+            fc="blue",
+            add=False,
+        )
+        h = handles[0]
+        assert np.allclose(h.get_facecolor(), mcolors.to_rgba("red"))
+        # edgecolor explicit vs ec
+        handles, _ = ax.geolegend(
+            ["box"],
+            edgecolor="green",
+            ec="black",
+            add=False,
+        )
+        h = handles[0]
+        assert np.allclose(h.get_edgecolor(), mcolors.to_rgba("green"))
+    finally:
+        uplt.close(fig)
+
+
+# -----------------------------------------------------------------------------
+# geolegend: per-entry scalar applied to all
+# -----------------------------------------------------------------------------
+def test_geolegend_scalar_applied_to_all():
+    """Scalar styles are applied to all geometry entries."""
+    fig, ax = _make_fig()
+    try:
+        handles, _ = ax.geolegend(
+            ["box", "tri", "hex"],
+            facecolor="cyan",
+            edgecolor="black",
+            linewidth=2.5,
+            alpha=0.6,
+            fill=True,
+            add=False,
+        )
+        for h in handles:
+            assert np.allclose(h.get_facecolor(), mcolors.to_rgba("cyan", 0.6))
+            assert np.allclose(h.get_edgecolor(), mcolors.to_rgba("black", 0.6))
+            assert h.get_linewidth() == pytest.approx(2.5)
+            assert h.get_alpha() == 0.6
+            assert h.get_fill() == True
+    finally:
+        uplt.close(fig)
