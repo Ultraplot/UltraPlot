@@ -896,10 +896,12 @@ def _is_color_like(value):
     """
     if value is None:
         return False
+    elif np.isscalar(value):
+        return True
     # matplotlib's is_color_like can already handle tuples like (1, 0, 0.5)
     # But we additionally check for numeric sequences with values in [0, 1]
     # to avoid misidentifying coordinate pairs or other numeric lists as colors.
-    if isinstance(value, tuple):
+    elif isinstance(value, tuple):
         if len(value) in (3, 4):
             # Ensure all elements are numbers within [0, 1]
             if all(isinstance(v, (int, float)) and 0.0 <= v <= 1.0 for v in value):
