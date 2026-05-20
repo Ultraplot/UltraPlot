@@ -1,367 +1,335 @@
 """
-Unit tests for semantic legend style aliases and color detection.
+Unit tests for semantic legend style aliases, color parsing, and advanced markers.
+These tests focus on functionality not covered by test_legend.py.
 """
-
 import matplotlib
+matplotlib.use("Agg")  # non-interactive backend
 
-matplotlib.use("Agg")  # Must be before any other matplotlib import for local test
 import numpy as np
 import pytest
 from matplotlib import colors as mcolors
+from matplotlib import patches as mpatches
+from matplotlib.markers import CapStyle, JoinStyle, MarkerStyle
+import matplotlib.transforms as mtransforms
 
 import ultraplot as uplt
 
-
-# -----------------------------------------------------------------------------
-# Color detection
-# -----------------------------------------------------------------------------
-def test_catlegend_rgba_tuple_is_color():
-    """RGBA tuple like (1, 0, 0.5, 0.5) is treated as a single color."""
+def _make_fig():
+    """Helper to create a figure and axis with axes turned off."""
     fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("ABC"), color=(0.2, 0.4, 0.6, 0.8), add=False)
-        colors = [h.get_color() for h in handles]
-        assert all(
-            c == colors[0] for c in colors
-        ), f"All entries should share the same color, got {colors}"
-    finally:
-        uplt.close(fig)
-
-
-def test_catlegend_rgba_list_of_tuples():
-    """List of RGBA tuples is treated as a per‑entry color list."""
-    c1 = (1.0, 0.0, 0.0, 1.0)
-    c2 = (0.0, 1.0, 0.0, 1.0)
-    c3 = (0.0, 0.0, 1.0, 1.0)
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("ABC"), color=[c1, c2, c3], add=False)
-        assert handles[0].get_color() == c1
-        assert handles[1].get_color() == c2
-        assert handles[2].get_color() == c3
-    finally:
-        uplt.close(fig)
-
-
-def test_numlegend_facecolor_rgba_tuple_is_color():
-    """RGBA facecolor for numlegend is not mistaken for a list."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.numlegend(
-            [1, 2, 3], vmin=0, vmax=4, facecolor=(0.8, 0.2, 0.3, 0.6), add=False
-        )
-        ref = np.array(handles[0].get_facecolor())
-        for h in handles:
-            assert np.allclose(
-                np.array(h.get_facecolor()), ref
-            ), "All patches should have identical facecolor"
-    finally:
-        uplt.close(fig)
+    ax.axis("off")
+    return fig, ax
 
 
 # -----------------------------------------------------------------------------
-# Line2D style aliases (catlegend)
+# Non-color properties: scalar, list, dict (single catlegend call)
 # -----------------------------------------------------------------------------
-def test_alias_c_color():
-    """'c' is an alias for 'color'."""
-    fig, ax = uplt.subplots()
+def test_non_color_properties():
+    """Non-color properties (marker, markersize, linewidth, alpha, fillstyle,
+    antialiased, markerfacecoloralt, markerfacecolor, markeredgecolor, size)
+    are correctly parsed and applied when passed together."""
+    fig, ax = _make_fig()
     try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), c="red", add=False)
-        for h in handles:
-            assert h.get_color() == "red"
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_m_marker():
-    """'m' is an alias for 'marker'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), m="^", add=False)
-        for h in handles:
-            assert h.get_marker() == "^"
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_ms_markersize_list():
-    """'ms' can be a list that cycles through entries."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("ABCD"), ms=[10, 20], add=False)
-        assert handles[0].get_markersize() == 10
-        assert handles[1].get_markersize() == 20
-        assert handles[2].get_markersize() == 10  # wraps around
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_ls_linestyle():
-    """'ls' is an alias for 'linestyle'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), ls="--", add=False)
-        for h in handles:
-            assert h.get_linestyle() == "--"
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_lw_linewidth():
-    """'lw' is an alias for 'linewidth'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), lw=3.0, add=False)
-        for h in handles:
-            assert h.get_linewidth() == 3.0
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_mec_markeredgecolor():
-    """'mec' is an alias for 'markeredgecolor'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), mec="blue", add=False)
-        for h in handles:
-            assert h.get_markeredgecolor() == "blue"
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_mew_markeredgewidth():
-    """'mew' is an alias for 'markeredgewidth'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), mew=2.0, add=False)
-        for h in handles:
-            assert h.get_markeredgewidth() == 2.0
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_mfc_markerfacecolor():
-    """'mfc' is an alias for 'markerfacecolor'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), mfc="yellow", add=False)
-        for h in handles:
-            assert h.get_markerfacecolor() == "yellow"
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_mfcalt_markerfacecoloralt():
-    """'mfcalt' is an alias for 'markerfacecoloralt'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), mfcalt="orange", add=False)
-        for h in handles:
-            assert h.get_markerfacecoloralt() == "orange"
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_aa_antialiased():
-    """'aa' is an alias for 'antialiased'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), aa=False, add=False)
-        for h in handles:
-            assert h.get_antialiased() is False
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_fs_fillstyle():
-    """'fs' is an alias for 'fillstyle'."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), fs="none", add=False)
-        for h in handles:
-            assert h.get_fillstyle() == "none"
-    finally:
-        uplt.close(fig)
-
-
-# -----------------------------------------------------------------------------
-# Patch style aliases (numlegend)
-# -----------------------------------------------------------------------------
-def test_numlegend_alias_fc_facecolor():
-    """'fc' is an alias for 'facecolor' in numlegend."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4, fc="lightblue", add=False)
-        for h in handles:
-            assert h.get_facecolor()[:3] == mcolors.to_rgb("lightblue")
-    finally:
-        uplt.close(fig)
-
-
-def test_numlegend_alias_ec_edgecolor():
-    """'ec' is an alias for 'edgecolor' in numlegend."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4, ec="black", add=False)
-        for h in handles:
-            assert h.get_edgecolor()[:3] == (0.0, 0.0, 0.0)
-    finally:
-        uplt.close(fig)
-
-
-def test_numlegend_alias_ls_linestyle():
-    """'ls' is an alias for 'linestyle' in numlegend."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4, ls=":", add=False)
-        for h in handles:
-            assert h.get_linestyle() == ":"
-    finally:
-        uplt.close(fig)
-
-
-def test_numlegend_alias_lw_linewidth():
-    """'lw' is an alias for 'linewidth' in numlegend."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4, lw=1.5, add=False)
-        for h in handles:
-            assert h.get_linewidth() == 1.5
-    finally:
-        uplt.close(fig)
-
-
-# -----------------------------------------------------------------------------
-# Alias priority & dict styles
-# -----------------------------------------------------------------------------
-def test_alias_and_fullname_priority():
-    """Full name should override its alias."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("AB"), markersize=15, ms=99, add=False)
-        for h in handles:
-            assert h.get_markersize() == 15
-    finally:
-        uplt.close(fig)
-
-
-def test_alias_dict_style():
-    """Aliases work with dictionary-based per‑label styles."""
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(
-            list("ABC"),
-            c={"A": "red", "B": "green", "C": "blue"},
-            ms={"A": 10, "B": 20, "C": 30},
+        # Combine many non-color properties in one catlegend call.
+        h, _ = ax.catlegend(
+            ["A", "B", "C"],
+            marker="o",
+            ms=[10, 20, 30],            # alias list – overrides above for each entry
+            lw=[1.5, 2.5, 3.5],         # linewidth via alias list
+            alpha=[0.2, 0.5, 0.8],      # length-3 list, not a color
+            fs="full", # fillstyle
+            aa=False,                   # antialiased scalar
+            markerfacecolor="green",    # full name
+            markeredgecolor="black",    # full name
+            markerfacecoloralt="orange",
+            line=True,                  # enable lines
             add=False,
         )
-        assert handles[0].get_color() == "red"
-        assert handles[1].get_color() == "green"
-        assert handles[2].get_color() == "blue"
-        assert handles[0].get_markersize() == 10
-        assert handles[1].get_markersize() == 20
-        assert handles[2].get_markersize() == 30
+        # markersize from ms list
+        assert h[0].get_markersize() == 10
+        assert h[1].get_markersize() == 20
+        assert h[2].get_markersize() == 30
+        # linewidth from lw list
+        assert h[0].get_linewidth() == 1.5
+        assert h[1].get_linewidth() == 2.5
+        assert h[2].get_linewidth() == 3.5
+        # alpha
+        assert h[0].get_alpha() == 0.2
+        assert h[1].get_alpha() == 0.5
+        assert h[2].get_alpha() == 0.8        
+        # antialiased
+        for hh in h:
+            assert hh.get_antialiased() is False
+        for hh in h:
+            assert hh.get_markerfacecoloralt() == "orange"
+            assert hh.get_fillstyle() == "full"
+    finally:
+        uplt.close(fig)
+
+
+def test_size_alias_and_markersize_dict():
+    """'size' (collection style) maps to markersize, and dict works."""
+    fig, ax = _make_fig()
+    try:
+        # size as list and dict
+        h, _ = ax.catlegend(
+            ["X", "Y", "Z"],
+            marker="s",
+            ms={"X": 5, "Y": 12, "Z": 20},  # dict should override per label
+            add=False,
+        )
+        assert h[0].get_markersize() == 5
+        assert h[1].get_markersize() == 12
+        assert h[2].get_markersize() == 20
+    finally:
+        uplt.close(fig)
+
+def test_markerfacecolor_and_edgecolor():
+    """Test full-name markerfacecolor and markeredgecolor with fillstyle='full'."""
+    fig, ax = _make_fig()
+    try:
+        h, _ = ax.catlegend(
+            ["A", "B"],
+            marker="o",
+            markerfacecolor="green",
+            markeredgecolor="black",
+            add=False,
+        )
+        for hh in h:
+            assert np.allclose(mcolors.to_rgba(hh.get_markerfacecolor()),
+                               mcolors.to_rgba("green"))
+            assert np.allclose(mcolors.to_rgba(hh.get_markeredgecolor()),
+                               mcolors.to_rgba("black"))
+    finally:
+        uplt.close(fig)
+
+# -----------------------------------------------------------------------------
+# Alias resolution and conflicts
+# -----------------------------------------------------------------------------
+def test_alias_resolution_and_conflicts():
+    """Aliases (c, m, ms, ls, lw, mec, mew, mfc, mfcalt, aa, fs) work,
+    and full names override aliases when both are given."""
+    fig, ax = _make_fig()
+    try:
+        # All aliases in one catlegend call
+        h, _ = ax.catlegend(
+            ["A", "B"],
+            c="red", m="^", ms=15, ls="--", lw=3.0,
+            mec="blue", mew=2.0, mfc="yellow", mfcalt="orange",
+            aa=False, fs="full",
+            add=False,
+        )
+        for hh in h:
+            assert hh.get_color() == "red"
+            assert hh.get_marker() == "^"
+            assert hh.get_markersize() == 15
+            assert hh.get_linestyle() == "--"
+            assert hh.get_linewidth() == 3.0
+            assert hh.get_markeredgecolor() == "blue"
+            assert hh.get_markeredgewidth() == 2.0
+            assert hh.get_markerfacecolor() == "yellow"
+            assert hh.get_markerfacecoloralt() == "orange"
+            assert hh.get_antialiased() is False
+            assert hh.get_fillstyle() == "full"
+
+        # Conflict: full name overrides alias (markersize vs ms)
+        h, _ = ax.catlegend(["U", "V"], markersize=15, ms=99, add=False)
+        assert h[0].get_markersize() == 15
+
+        # Dict styles with aliases
+        h, _ = ax.catlegend(
+            ["red", "green", "blue"],
+            c={"red": "red", "green": "green", "blue": "blue"},
+            ms={"red": 10, "green": 20, "blue": 30},
+            add=False,
+        )
+        assert h[0].get_color() == "red"
+        assert h[1].get_color() == "green"
+        assert h[2].get_color() == "blue"
+        assert h[0].get_markersize() == 10
+        assert h[1].get_markersize() == 20
+        assert h[2].get_markersize() == 30
+
+        # sizelegend aliases
+        h, _ = ax.sizelegend([1, 2, 3], c="purple", mec="green", add=False)
+        for hh in h:
+            assert hh.get_color() == "purple"
+            assert hh.get_markeredgecolor() == "green"
     finally:
         uplt.close(fig)
 
 
 # -----------------------------------------------------------------------------
-# sizelegend alias support
+# Color parsing: many formats (scalar, list, dict, tuple, etc.)
 # -----------------------------------------------------------------------------
-def test_sizelegend_alias_c():
-    """sizelegend accepts 'c' as color alias."""
-    fig, ax = uplt.subplots()
+def test_color_parsing():
+    """Color parameters accept many formats (names, hex, tuples, lists, dicts),
+    and RGBA tuples are treated as single colors, not unpacked."""
+    fig, ax = _make_fig()
     try:
-        ax.axis("off")
-        handles, _ = ax.sizelegend([1, 2, 3], c="purple", add=False)
-        for h in handles:
-            assert h.get_color() == "purple"
+        # Scalar colors: named, hex, grayscale, RGB tuple, RGBA tuple
+        for color in ["red", "#ff0000", "0.5", (0.2, 0.4, 0.6), (0.2, 0.4, 0.6, 0.8)]:
+            h, _ = ax.catlegend(["x", "y", "z"], color=color, add=False)
+            first = h[0].get_color()
+            assert all(hh.get_color() == first for hh in h), f"Failed for {color}"
+
+        # List of colors: mixed formats
+        c_list = ["red", "#00ff00", (0.0, 0.0, 1.0)]
+        h, _ = ax.catlegend(["p", "q", "r"], color=c_list, add=False)
+        assert h[0].get_color() == c_list[0]
+        assert h[1].get_color() == c_list[1]
+        assert h[2].get_color() == c_list[2]
+
+        # List of RGBA tuples
+        c_rgba = [(1.0, 0.0, 0.0, 1.0), (0.0, 1.0, 0.0, 1.0)]
+        h, _ = ax.catlegend(["X", "Y"], color=c_rgba, add=False)
+        assert h[0].get_color() == c_rgba[0]
+        assert h[1].get_color() == c_rgba[1]
+
+        # Dict mapping labels to colors
+        color_dict = {"A": "red", "B": "green", "C": "blue"}
+        h, _ = ax.catlegend(["A", "B", "C"], color=color_dict, add=False)
+        assert h[0].get_color() == "red"
+        assert h[1].get_color() == "green"
+        assert h[2].get_color() == "blue"
+
+        # markerfacecolor as single RGBA tuple
+        h, _ = ax.catlegend(["m1", "m2"], marker="o",
+                            markerfacecolor=(0.1, 0.2, 0.3, 1.0), add=False)
+        ref = h[0].get_markerfacecolor()
+        assert np.allclose(h[1].get_markerfacecolor(), ref)
+
+        # markerfacecolor via alias (mfc) with list of colors
+        h, _ = ax.catlegend(["g", "l"], marker="o",
+                            mfc=["gold", "lime"], add=False)
+        assert np.allclose(mcolors.to_rgba(h[0].get_markerfacecolor()), mcolors.to_rgba("gold"))
+        assert np.allclose(mcolors.to_rgba(h[1].get_markerfacecolor()), mcolors.to_rgba("lime"))
+
+        # numlegend facecolor as RGBA tuple
+        h, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4,
+                            facecolor=(0.8, 0.2, 0.3, 0.6), add=False)
+        ref_patch = np.array(h[0].get_facecolor())
+        assert all(np.allclose(np.array(hh.get_facecolor()), ref_patch) for hh in h)
     finally:
         uplt.close(fig)
 
 
-def test_sizelegend_alias_mec():
-    """sizelegend accepts 'mec' for markeredgecolor."""
-    fig, ax = uplt.subplots()
+# -----------------------------------------------------------------------------
+# Advanced marker styles (capstyle, joinstyle, transform)
+# -----------------------------------------------------------------------------
+def test_marker_advanced():
+    """marker_capstyle, marker_joinstyle, marker_transform create MarkerStyle."""
+    fig, ax = _make_fig()
     try:
-        ax.axis("off")
-        handles, _ = ax.sizelegend([1, 2, 3], mec="green", add=False)
-        for h in handles:
-            assert h.get_markeredgecolor() == "green"
+        # cap & join
+        h, _ = ax.catlegend(
+            ["A", "B"],
+            marker_capstyle=[CapStyle.round, CapStyle.butt],
+            marker_joinstyle=[JoinStyle.miter, JoinStyle.bevel],
+            add=False,
+        )
+        h[0]._marker.get_capstyle() == CapStyle.round
+        h[0]._marker.get_joinstyle() == JoinStyle.miter
+        h[1]._marker.get_capstyle() == CapStyle.butt
+        h[1]._marker.get_joinstyle() == JoinStyle.bevel
+
+        # transform (rotation)
+        h, _ = ax.catlegend(
+            ["0°", "45°"],
+            marker_transform=[
+                mtransforms.Affine2D().rotate_deg(0),
+                mtransforms.Affine2D().rotate_deg(45),
+            ],
+            add=False,
+        )
+        h[0]._marker.get_transform().get_matrix()[:2, :2] == mtransforms.Affine2D().rotate_deg(0).get_matrix()[:2, :2]
+        h[1]._marker.get_transform().get_matrix()[:2, :2] == mtransforms.Affine2D().rotate_deg(45).get_matrix()[:2, :2]
+
+        # combined with fillstyle and markerfacecoloralt
+        h, _ = ax.catlegend(
+            ["left", "right"],
+            marker="o",
+            markersize=25,
+            markerfacecolor="tab:blue",
+            markerfacecoloralt="lightsteelblue",
+            fillstyle=["left", "right"],
+            marker_capstyle=CapStyle.round,
+            marker_joinstyle="round",
+            add=False,
+        )
+        assert len(h) == 2
+        # Check each handle
+        for hh, expected_fillstyle in zip(h, ["left", "right"]):
+            # MarkerStyle creation
+            m = hh._marker
+            assert isinstance(m, MarkerStyle)
+            assert m.get_capstyle() == CapStyle.round
+            # 'round' string should be converted to JoinStyle.round by MarkerStyle
+            assert m.get_joinstyle() == JoinStyle.round
+
+            # Check Line2D properties
+            assert hh.get_markersize() == 25
+            assert np.allclose(mcolors.to_rgba(hh.get_markerfacecolor()),
+                               mcolors.to_rgba("tab:blue"))
+            assert hh.get_markerfacecoloralt() == "lightsteelblue"
+            assert hh.get_fillstyle() == expected_fillstyle
     finally:
         uplt.close(fig)
 
 
-def test_catlegend_ms_length_three_is_not_color():
-    """ms list of length 3 should be treated as per‑entry markersize, not a color."""
-    fig, ax = uplt.subplots()
+# -----------------------------------------------------------------------------
+# Validation of forbidden legend kwargs
+# -----------------------------------------------------------------------------
+def test_forbidden_legend_kwargs():
+    """Passing 'label' or 'labels' to semantic helpers raises TypeError."""
+    fig, ax = _make_fig()
     try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("abc"), ms=[10, 20, 30], add=False)
-        assert handles[0].get_markersize() == 10
-        assert handles[1].get_markersize() == 20
-        assert handles[2].get_markersize() == 30
+        with pytest.raises(TypeError, match=r"Use title=\.\.\. for the legend title"):
+            ax.catlegend(["A"], label="Legend", add=True)
+        with pytest.raises(TypeError, match="does not accept the legend kwarg 'labels'"):
+            ax.catlegend(["A"], labels=["x"], add=True)
     finally:
         uplt.close(fig)
 
 
-def test_catlegend_lw_length_three():
-    """Linewidth list of length 3 should work."""
-    fig, ax = uplt.subplots()
+# -----------------------------------------------------------------------------
+# Patch aliases and styles (numlegend, geolegend)
+# -----------------------------------------------------------------------------
+def test_patch_aliases_and_styles():
+    """numlegend and geolegend accept Patch aliases (fc, ec, ls, lw)."""
+    fig, ax = _make_fig()
     try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("abc"), lw=[1.5, 2.5, 3.5], line=True, add=False)
-        assert handles[0].get_linewidth() == 1.5
-        assert handles[1].get_linewidth() == 2.5
-        assert handles[2].get_linewidth() == 3.5
+        # numlegend with aliases
+        h, _ = ax.numlegend([1, 2], vmin=0, vmax=2,
+                            fc=["red", "green"], ec="black",
+                            ls=":", lw=1.5, add=False)
+        assert np.allclose(h[0].get_facecolor()[:3], mcolors.to_rgb("red"))
+        assert np.allclose(h[1].get_facecolor()[:3], mcolors.to_rgb("green"))
+        assert h[0].get_edgecolor()[:3] == (0, 0, 0)
+        assert h[0].get_linestyle() == ":"
+        assert h[0].get_linewidth() == 1.5
+
+        # geolegend shape existence
+        handles, labels = ax.geolegend(
+            [("Triangle", "triangle"), ("Hex", "hexagon")], add=False
+        )
+        assert labels == ["Triangle", "Hex"]
+        assert all(isinstance(hh, mpatches.PathPatch) for hh in handles)
     finally:
         uplt.close(fig)
 
 
-def test_catlegend_alpha_length_three():
-    """Alpha list of length 3 should be per‑entry, not mistaken for a color."""
-    fig, ax = uplt.subplots()
+# -----------------------------------------------------------------------------
+# Linestyle auto-enables line
+# -----------------------------------------------------------------------------
+def test_linestyle_auto_enable_line():
+    """Providing a non-default linestyle automatically enables line=True."""
+    fig, ax = _make_fig()
     try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("abc"), alpha=[0.2, 0.5, 0.8], add=False)
-        assert handles[0].get_alpha() == 0.2
-        assert handles[1].get_alpha() == 0.5
-        assert handles[2].get_alpha() == 0.8
-    finally:
-        uplt.close(fig)
-
-
-def test_catlegend_color_as_list_of_rgba_tuples():
-    """Color with list of RGBA tuples still works correctly."""
-    c1 = (1.0, 0.0, 0.0, 1.0)
-    c2 = (0.0, 1.0, 0.0, 1.0)
-    c3 = (0.0, 0.0, 1.0, 1.0)
-    fig, ax = uplt.subplots()
-    try:
-        ax.axis("off")
-        handles, _ = ax.catlegend(list("abc"), color=[c1, c2, c3], add=False)
-        assert handles[0].get_color() == c1
-        assert handles[1].get_color() == c2
-        assert handles[2].get_color() == c3
+        h, _ = ax.catlegend(["A", "B"], ls="--", add=False)
+        for hh in h:
+            assert hh.get_linestyle() == "--"
+            # when line is enabled, marker becomes None
+            assert hh.get_marker() == uplt.rc["legend.cat.marker"]
     finally:
         uplt.close(fig)

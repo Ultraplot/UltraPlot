@@ -98,10 +98,14 @@ class LegendEntry(mlines.Line2D):
         marker_transform=None,
         **kwargs,
     ):
+        # extract fillstyle，to avoid conflict with MarkerStyle
+        fillstyle = kwargs.pop("fillstyle", None)
+
         if (
             marker_capstyle is not None
             or marker_joinstyle is not None
             or marker_transform is not None
+            or fillstyle is not None
         ):
             if not isinstance(marker, MarkerStyle):
                 marker_kw = {}
@@ -111,6 +115,8 @@ class LegendEntry(mlines.Line2D):
                     marker_kw["joinstyle"] = marker_joinstyle
                 if marker_transform is not None:
                     marker_kw["transform"] = marker_transform
+                if fillstyle is not None:
+                    marker_kw["fillstyle"] = fillstyle
                 marker = MarkerStyle(marker, **marker_kw)
         marker = "o" if marker is None and not line else marker
         linestyle = "none" if not line else linestyle
@@ -1015,37 +1021,46 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     - Plural collection parameters (like 'colors', 'edgecolors') are converted to singular
     - Full name parameters take precedence over aliases
     """
-    # 1. Extract and resolve aliases (pop alias keys, map to full names)
+    # 1. Pop marker advanced properties BEFORE _pop_props so they are not swallowed
+    advanced_marker = {}
+    for key in ("marker_capstyle", "marker_joinstyle", "marker_transform"):
+        if key in kwargs:
+            advanced_marker[key] = kwargs.pop(key)
+    
+    # 2. Extract and resolve aliases (pop alias keys, map to full names)
     resolved_aliases = {}
     for alias in list(kwargs.keys()):
         if alias in _LINE_ALIAS_MAP:
             full_key = _LINE_ALIAS_MAP[alias]
             resolved_aliases[full_key] = kwargs.pop(alias)
 
-    # 2. Extract explicit collection-style plural parameters (like 'colors', 'edgecolors')
+    # 3. Extract explicit collection-style plural parameters (like 'colors', 'edgecolors')
     explicit_collection = {}
     for key in _ENTRY_STYLE_FROM_COLLECTION:
         if key in kwargs:
             explicit_collection[key] = kwargs.pop(key)
 
-    # 3. Use ultraplot's internal _pop_props to extract 'line' and 'collection' category properties
+    # 4. Use ultraplot's internal _pop_props to extract 'line' and 'collection' category properties
     props = _pop_props(kwargs, "line")
     collection_props = _pop_props(kwargs, "collection")
     collection_props.update(explicit_collection)
 
-    # 4. Map collection plural parameters to singular property names
+    # 5. Map collection plural parameters to singular property names
     # only if the singular name is not already set)
     for source, target in _ENTRY_STYLE_FROM_COLLECTION.items():
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
 
-    # 5. Merge resolved aliases (aliases have lowest priority,
+    # 6. Merge resolved aliases (aliases have lowest priority,
     # do not overwrite existing full-name parameters)
     for full_key, value in resolved_aliases.items():
         if full_key not in props:
             props[full_key] = value
-    # NEW: grab any remaining kwargs that are valid Line2D setters
+
+    # 7. Put back the advanced marker properties
+    props.update(advanced_marker)
+    # 8. Grab any remaining kwargs that are valid Line2D setters
     for key in list(kwargs.keys()):
         # without this, line 645 of test_legend.py won't pass
         if key in ("labels", "label"):
@@ -1054,9 +1069,7 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
             continue
         if hasattr(mlines.Line2D, "set_" + key):
             props[key] = kwargs.pop(key)
-    for key in ("marker_capstyle", "marker_joinstyle", "marker_transform"):
-        if key in kwargs:
-            props[key] = kwargs.pop(key)
+
     return props
 
 
@@ -1160,7 +1173,6 @@ def _cat_legend_entries(
         marker_val = _style_lookup(marker, label, idx, default="o", prop="marker")
         if line_value and marker_val in (None, ""):
             marker_val = None
-
         handles.append(
             LegendEntry(
                 label=str(label),
@@ -1495,7 +1507,7 @@ class Legend(mlegend.Legend):
     # The user may change the location and the legend_dict should
     # be updated accordingly. This caused an issue where
     # a legend format was not behaving according to the docs
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):        
         super().__init__(*args, **kwargs)
 
     @classmethod
