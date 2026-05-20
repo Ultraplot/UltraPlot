@@ -797,11 +797,7 @@ def _geo_legend_entries(
     country_reso: str = "110m",
     country_territories: bool = False,
     country_proj: Any = None,
-    facecolor: Any = "none",
-    edgecolor: Any = "0.25",
-    linewidth: float = 1.0,
-    alpha: Optional[float] = None,
-    fill: Optional[bool] = None,
+    patch_kw: dict = None,
 ):
     """
     Build geometry semantic legend handles and labels.
@@ -859,20 +855,40 @@ def _geo_legend_entries(
             "Labels and geometry entries must have the same length. "
             f"Got {len(label_list)} labels and {len(geometry_list)} entries."
         )
+    if patch_kw is None:
+        patch_kw = {}
+    facecolor = patch_kw.get("facecolor", "none")
+    edgecolor = patch_kw.get("edgecolor", "0.25")
+    linewidth = patch_kw.get("linewidth", 1.0)
+    alpha = patch_kw.get("alpha", None)
+    fill = patch_kw.get("fill", None)
+
     handles = []
-    for geometry, label, options in zip(geometry_list, label_list, entry_options):
+    for idx, (geometry, label, options) in enumerate(zip(geometry_list, label_list, entry_options)):
+        # Resolve per-entry values (scalar → all; list → cycled; dict → matched by label)
+        fc = _style_lookup(facecolor, label, idx, default="none", prop="facecolor")
+        ec = _style_lookup(edgecolor, label, idx, default="0.25", prop="edgecolor")
+        lw = _style_lookup(linewidth, label, idx, default=1.0, prop=None)
+        a  = _style_lookup(alpha, label, idx, default=None, prop=None)
+        fl = _style_lookup(fill, label, idx, default=None, prop=None)
+
         geo_kwargs = {
             "country_reso": country_reso,
             "country_territories": country_territories,
             "country_proj": country_proj,
-            "facecolor": facecolor,
-            "edgecolor": edgecolor,
-            "linewidth": linewidth,
-            "alpha": alpha,
-            "fill": fill,
+            "facecolor": fc,
+            "edgecolor": ec,
+            "linewidth": lw,
+            "alpha": a,
+            "fill": fl,
         }
+        # Apply any remaining patch properties (hatch, linestyle, capstyle, etc.)
+        for k, v in patch_kw.items():
+            if k not in geo_kwargs:
+                geo_kwargs[k] = _style_lookup(v, label, idx, default=None, prop=k)
         geo_kwargs.update(options or {})
         handles.append(GeometryEntry(geometry, label=label, **geo_kwargs))
+
     return handles, label_list
 
 
@@ -1845,18 +1861,29 @@ class UltraLegend:
         **kwargs: Any,
     ):
         # Geolegend can accept Patch styles (linestyle, hatch, etc.), similar to numlegend
-        styles = dict(handle_kw or {})
+        styles = {}
+        if handle_kw:
+            styles.update(_pop_num_props(handle_kw))
         styles.update(_pop_num_props(kwargs))
 
-        facecolor = _not_none(facecolor, rc["legend.geo.facecolor"])
-        edgecolor = _not_none(edgecolor, rc["legend.geo.edgecolor"])
-        linewidth = _not_none(linewidth, rc["legend.geo.linewidth"])
-        alpha = _not_none(alpha, rc["legend.geo.alpha"])
-        fill = _not_none(fill, rc["legend.geo.fill"])
+        facecolor = _not_none(facecolor, styles.pop("facecolor", None), rc["legend.geo.facecolor"])
+        edgecolor = _not_none(edgecolor, styles.pop("edgecolor", None), rc["legend.geo.edgecolor"])
+        linewidth = _not_none(linewidth, styles.pop("linewidth", None), rc["legend.geo.linewidth"])
+        alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.geo.alpha"])
+        fill = _not_none(fill, styles.pop("fill", None), rc["legend.geo.fill"])
+        
+        # Build final patch kw dict (includes remaining properties like hatch, linestyle)
+        patch_kw = {
+            "facecolor": facecolor,
+            "edgecolor": edgecolor,
+            "linewidth": linewidth,
+            "alpha": alpha,
+            "fill": fill,
+        }
+        patch_kw.update(styles)   # any leftover keys (hatch, linestyle, joinstyle, etc.)
+
         country_reso = _not_none(country_reso, rc["legend.geo.country_reso"])
-        country_territories = _not_none(
-            country_territories, rc["legend.geo.country_territories"]
-        )
+        country_territories = _not_none(country_territories, rc["legend.geo.country_territories"])
         country_proj = _not_none(country_proj, rc["legend.geo.country_proj"])
         handlesize = _not_none(handlesize, rc["legend.geo.handlesize"])
 
@@ -1867,12 +1894,7 @@ class UltraLegend:
             country_reso=country_reso,
             country_territories=country_territories,
             country_proj=country_proj,
-            facecolor=facecolor,
-            edgecolor=edgecolor,
-            linewidth=linewidth,
-            alpha=alpha,
-            fill=fill,
-            **styles,  # Additional Patch properties
+            patch_kw=patch_kw,
         )
         if not add:
             return handles, labels
