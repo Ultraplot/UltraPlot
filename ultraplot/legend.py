@@ -864,12 +864,14 @@ def _geo_legend_entries(
     fill = patch_kw.get("fill", None)
 
     handles = []
-    for idx, (geometry, label, options) in enumerate(zip(geometry_list, label_list, entry_options)):
+    for idx, (geometry, label, options) in enumerate(
+        zip(geometry_list, label_list, entry_options)
+    ):
         # Resolve per-entry values (scalar → all; list → cycled; dict → matched by label)
         fc = _style_lookup(facecolor, label, idx, default="none", prop="facecolor")
         ec = _style_lookup(edgecolor, label, idx, default="0.25", prop="edgecolor")
         lw = _style_lookup(linewidth, label, idx, default=1.0, prop=None)
-        a  = _style_lookup(alpha, label, idx, default=None, prop=None)
+        a = _style_lookup(alpha, label, idx, default=None, prop=None)
         fl = _style_lookup(fill, label, idx, default=None, prop=None)
 
         geo_kwargs = {
@@ -1044,7 +1046,7 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     for key in ("marker_capstyle", "marker_joinstyle", "marker_transform"):
         if key in kwargs:
             advanced_marker[key] = kwargs.pop(key)
-    
+
     # 2. Extract and resolve aliases (pop alias keys, map to full names)
     resolved_aliases = {}
     for alias in list(kwargs.keys()):
@@ -1525,7 +1527,7 @@ class Legend(mlegend.Legend):
     # The user may change the location and the legend_dict should
     # be updated accordingly. This caused an issue where
     # a legend format was not behaving according to the docs
-    def __init__(self, *args, **kwargs):        
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @classmethod
@@ -1866,12 +1868,18 @@ class UltraLegend:
             styles.update(_pop_num_props(handle_kw))
         styles.update(_pop_num_props(kwargs))
 
-        facecolor = _not_none(facecolor, styles.pop("facecolor", None), rc["legend.geo.facecolor"])
-        edgecolor = _not_none(edgecolor, styles.pop("edgecolor", None), rc["legend.geo.edgecolor"])
-        linewidth = _not_none(linewidth, styles.pop("linewidth", None), rc["legend.geo.linewidth"])
+        facecolor = _not_none(
+            facecolor, styles.pop("facecolor", None), rc["legend.geo.facecolor"]
+        )
+        edgecolor = _not_none(
+            edgecolor, styles.pop("edgecolor", None), rc["legend.geo.edgecolor"]
+        )
+        linewidth = _not_none(
+            linewidth, styles.pop("linewidth", None), rc["legend.geo.linewidth"]
+        )
         alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.geo.alpha"])
         fill = _not_none(fill, styles.pop("fill", None), rc["legend.geo.fill"])
-        
+
         # Build final patch kw dict (includes remaining properties like hatch, linestyle)
         patch_kw = {
             "facecolor": facecolor,
@@ -1880,10 +1888,12 @@ class UltraLegend:
             "alpha": alpha,
             "fill": fill,
         }
-        patch_kw.update(styles)   # any leftover keys (hatch, linestyle, joinstyle, etc.)
+        patch_kw.update(styles)  # any leftover keys (hatch, linestyle, joinstyle, etc.)
 
         country_reso = _not_none(country_reso, rc["legend.geo.country_reso"])
-        country_territories = _not_none(country_territories, rc["legend.geo.country_territories"])
+        country_territories = _not_none(
+            country_territories, rc["legend.geo.country_territories"]
+        )
         country_proj = _not_none(country_proj, rc["legend.geo.country_proj"])
         handlesize = _not_none(handlesize, rc["legend.geo.handlesize"])
 

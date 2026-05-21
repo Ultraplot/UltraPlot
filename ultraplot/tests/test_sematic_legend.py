@@ -2,7 +2,9 @@
 Unit tests for semantic legend style aliases, color parsing, and advanced markers.
 These tests focus on functionality not covered by test_legend.py.
 """
+
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend
 
 import numpy as np
@@ -13,6 +15,7 @@ from matplotlib.markers import CapStyle, JoinStyle, MarkerStyle
 import matplotlib.transforms as mtransforms
 
 import ultraplot as uplt
+
 
 def _make_fig():
     """Helper to create a figure and axis with axes turned off."""
@@ -34,15 +37,15 @@ def test_non_color_properties():
         h, _ = ax.catlegend(
             ["A", "B", "C"],
             marker="o",
-            ms=[10, 20, 30],            # alias list – overrides above for each entry
-            lw=[1.5, 2.5, 3.5],         # linewidth via alias list
-            alpha=[0.2, 0.5, 0.8],      # length-3 list, not a color
-            fs="full", # fillstyle
-            aa=False,                   # antialiased scalar
-            markerfacecolor="green",    # full name
-            markeredgecolor="black",    # full name
+            ms=[10, 20, 30],  # alias list – overrides above for each entry
+            lw=[1.5, 2.5, 3.5],  # linewidth via alias list
+            alpha=[0.2, 0.5, 0.8],  # length-3 list, not a color
+            fs="full",  # fillstyle
+            aa=False,  # antialiased scalar
+            markerfacecolor="green",  # full name
+            markeredgecolor="black",  # full name
             markerfacecoloralt="orange",
-            line=True,                  # enable lines
+            line=True,  # enable lines
             add=False,
         )
         # markersize from ms list
@@ -56,7 +59,7 @@ def test_non_color_properties():
         # alpha
         assert h[0].get_alpha() == 0.2
         assert h[1].get_alpha() == 0.5
-        assert h[2].get_alpha() == 0.8        
+        assert h[2].get_alpha() == 0.8
         # antialiased
         for hh in h:
             assert hh.get_antialiased() is False
@@ -84,6 +87,7 @@ def test_size_alias_and_markersize_dict():
     finally:
         uplt.close(fig)
 
+
 def test_markerfacecolor_and_edgecolor():
     """Test full-name markerfacecolor and markeredgecolor with fillstyle='full'."""
     fig, ax = _make_fig()
@@ -96,12 +100,15 @@ def test_markerfacecolor_and_edgecolor():
             add=False,
         )
         for hh in h:
-            assert np.allclose(mcolors.to_rgba(hh.get_markerfacecolor()),
-                               mcolors.to_rgba("green"))
-            assert np.allclose(mcolors.to_rgba(hh.get_markeredgecolor()),
-                               mcolors.to_rgba("black"))
+            assert np.allclose(
+                mcolors.to_rgba(hh.get_markerfacecolor()), mcolors.to_rgba("green")
+            )
+            assert np.allclose(
+                mcolors.to_rgba(hh.get_markeredgecolor()), mcolors.to_rgba("black")
+            )
     finally:
         uplt.close(fig)
+
 
 # -----------------------------------------------------------------------------
 # Alias resolution and conflicts
@@ -114,9 +121,17 @@ def test_alias_resolution_and_conflicts():
         # All aliases in one catlegend call
         h, _ = ax.catlegend(
             ["A", "B"],
-            c="red", m="^", ms=15, ls="--", lw=3.0,
-            mec="blue", mew=2.0, mfc="yellow", mfcalt="orange",
-            aa=False, fs="full",
+            c="red",
+            m="^",
+            ms=15,
+            ls="--",
+            lw=3.0,
+            mec="blue",
+            mew=2.0,
+            mfc="yellow",
+            mfcalt="orange",
+            aa=False,
+            fs="full",
             add=False,
         )
         for hh in h:
@@ -194,20 +209,25 @@ def test_color_parsing():
         assert h[2].get_color() == "blue"
 
         # markerfacecolor as single RGBA tuple
-        h, _ = ax.catlegend(["m1", "m2"], marker="o",
-                            markerfacecolor=(0.1, 0.2, 0.3, 1.0), add=False)
+        h, _ = ax.catlegend(
+            ["m1", "m2"], marker="o", markerfacecolor=(0.1, 0.2, 0.3, 1.0), add=False
+        )
         ref = h[0].get_markerfacecolor()
         assert np.allclose(h[1].get_markerfacecolor(), ref)
 
         # markerfacecolor via alias (mfc) with list of colors
-        h, _ = ax.catlegend(["g", "l"], marker="o",
-                            mfc=["gold", "lime"], add=False)
-        assert np.allclose(mcolors.to_rgba(h[0].get_markerfacecolor()), mcolors.to_rgba("gold"))
-        assert np.allclose(mcolors.to_rgba(h[1].get_markerfacecolor()), mcolors.to_rgba("lime"))
+        h, _ = ax.catlegend(["g", "l"], marker="o", mfc=["gold", "lime"], add=False)
+        assert np.allclose(
+            mcolors.to_rgba(h[0].get_markerfacecolor()), mcolors.to_rgba("gold")
+        )
+        assert np.allclose(
+            mcolors.to_rgba(h[1].get_markerfacecolor()), mcolors.to_rgba("lime")
+        )
 
         # numlegend facecolor as RGBA tuple
-        h, _ = ax.numlegend([1, 2, 3], vmin=0, vmax=4,
-                            facecolor=(0.8, 0.2, 0.3, 0.6), add=False)
+        h, _ = ax.numlegend(
+            [1, 2, 3], vmin=0, vmax=4, facecolor=(0.8, 0.2, 0.3, 0.6), add=False
+        )
         ref_patch = np.array(h[0].get_facecolor())
         assert all(np.allclose(np.array(hh.get_facecolor()), ref_patch) for hh in h)
     finally:
@@ -242,8 +262,12 @@ def test_marker_advanced():
             ],
             add=False,
         )
-        h[0]._marker.get_transform().get_matrix()[:2, :2] == mtransforms.Affine2D().rotate_deg(0).get_matrix()[:2, :2]
-        h[1]._marker.get_transform().get_matrix()[:2, :2] == mtransforms.Affine2D().rotate_deg(45).get_matrix()[:2, :2]
+        h[0]._marker.get_transform().get_matrix()[
+            :2, :2
+        ] == mtransforms.Affine2D().rotate_deg(0).get_matrix()[:2, :2]
+        h[1]._marker.get_transform().get_matrix()[
+            :2, :2
+        ] == mtransforms.Affine2D().rotate_deg(45).get_matrix()[:2, :2]
 
         # combined with fillstyle and markerfacecoloralt
         h, _ = ax.catlegend(
@@ -269,8 +293,9 @@ def test_marker_advanced():
 
             # Check Line2D properties
             assert hh.get_markersize() == 25
-            assert np.allclose(mcolors.to_rgba(hh.get_markerfacecolor()),
-                               mcolors.to_rgba("tab:blue"))
+            assert np.allclose(
+                mcolors.to_rgba(hh.get_markerfacecolor()), mcolors.to_rgba("tab:blue")
+            )
             assert hh.get_markerfacecoloralt() == "lightsteelblue"
             assert hh.get_fillstyle() == expected_fillstyle
     finally:
@@ -286,7 +311,9 @@ def test_forbidden_legend_kwargs():
     try:
         with pytest.raises(TypeError, match=r"Use title=\.\.\. for the legend title"):
             ax.catlegend(["A"], label="Legend", add=True)
-        with pytest.raises(TypeError, match="does not accept the legend kwarg 'labels'"):
+        with pytest.raises(
+            TypeError, match="does not accept the legend kwarg 'labels'"
+        ):
             ax.catlegend(["A"], labels=["x"], add=True)
     finally:
         uplt.close(fig)
@@ -300,9 +327,16 @@ def test_patch_aliases_and_styles():
     fig, ax = _make_fig()
     try:
         # numlegend with aliases
-        h, _ = ax.numlegend([1, 2], vmin=0, vmax=2,
-                            fc=["red", "green"], ec="black",
-                            ls=":", lw=1.5, add=False)
+        h, _ = ax.numlegend(
+            [1, 2],
+            vmin=0,
+            vmax=2,
+            fc=["red", "green"],
+            ec="black",
+            ls=":",
+            lw=1.5,
+            add=False,
+        )
         assert np.allclose(h[0].get_facecolor()[:3], mcolors.to_rgb("red"))
         assert np.allclose(h[1].get_facecolor()[:3], mcolors.to_rgb("green"))
         assert h[0].get_edgecolor()[:3] == (0, 0, 0)
@@ -334,6 +368,7 @@ def test_linestyle_auto_enable_line():
     finally:
         uplt.close(fig)
 
+
 # -----------------------------------------------------------------------------
 # geolegend: per‑entry lists
 # -----------------------------------------------------------------------------
@@ -354,7 +389,7 @@ def test_geolegend_per_entry_lists():
         assert labels == ["box", "tri", "hex"]
 
         # Check per-entry properties
-        expected_fc = ["tab:red", "tab:green", "tab:blue"] # None for fill=False
+        expected_fc = ["tab:red", "tab:green", "tab:blue"]  # None for fill=False
         expected_ec = ["black", "gray", "white"]
         expected_lw = [1.0, 2.0, 3.0]
         expected_alpha = [0.5, 0.7, 1.0]
@@ -363,11 +398,19 @@ def test_geolegend_per_entry_lists():
         for i, h in enumerate(handles):
             assert isinstance(h, mpatches.PathPatch)
             if expected_fill[i]:
-                assert np.allclose(h.get_facecolor(), mcolors.to_rgba(expected_fc[i], expected_alpha[i]))
+                assert np.allclose(
+                    h.get_facecolor(),
+                    mcolors.to_rgba(expected_fc[i], expected_alpha[i]),
+                )
             else:
                 # for fill=False, facecolor is preserved, and set alpha=0
-                assert np.allclose(mcolors.to_rgba(h.get_facecolor()[:3], 0), mcolors.to_rgba(expected_fc[i], 0))
-            assert np.allclose(h.get_edgecolor(), mcolors.to_rgba(expected_ec[i], expected_alpha[i]))
+                assert np.allclose(
+                    mcolors.to_rgba(h.get_facecolor()[:3], 0),
+                    mcolors.to_rgba(expected_fc[i], 0),
+                )
+            assert np.allclose(
+                h.get_edgecolor(), mcolors.to_rgba(expected_ec[i], expected_alpha[i])
+            )
             assert h.get_linewidth() == pytest.approx(expected_lw[i])
             assert h.get_alpha() == expected_alpha[i]
             assert h.get_fill() == expected_fill[i]
@@ -405,7 +448,9 @@ def test_geolegend_per_entry_dicts():
                 assert np.allclose(h.get_facecolor(), mcolors.to_rgba(fc, alpha))
             else:
                 # for fill=False, facecolor is preserved, and set alpha=0
-                assert np.allclose(mcolors.to_rgba(h.get_facecolor()[:3], 0), mcolors.to_rgba(fc, 0))
+                assert np.allclose(
+                    mcolors.to_rgba(h.get_facecolor()[:3], 0), mcolors.to_rgba(fc, 0)
+                )
             assert np.allclose(h.get_edgecolor(), mcolors.to_rgba(ec, alpha))
             assert h.get_linewidth() == pytest.approx(lw)
             assert h.get_alpha() == alpha
@@ -423,10 +468,10 @@ def test_geolegend_alias_support():
     try:
         handles, _ = ax.geolegend(
             ["box", "tri"],
-            fc=["red", "green"],          # alias for facecolor
-            ec=["black", "blue"],         # alias for edgecolor
-            lw=2.0,                        # alias for linewidth
-            ls="--",                       # alias for linestyle
+            fc=["red", "green"],  # alias for facecolor
+            ec=["black", "blue"],  # alias for edgecolor
+            lw=2.0,  # alias for linewidth
+            ls="--",  # alias for linestyle
             add=False,
         )
         assert len(handles) == 2
