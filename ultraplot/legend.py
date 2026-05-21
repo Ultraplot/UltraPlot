@@ -138,8 +138,9 @@ _GEOMETRY_SHAPE_PATHS = {
     "pentagon": mpath.Path.unit_regular_polygon(5),
     "hexagon": mpath.Path.unit_regular_polygon(6),
     "star": mpath.Path.unit_regular_star(5),
-    "rectangle": mpath.Path([[0, 0], [2, 0], [2, 1], [0, 1], [0, 0]],
-                            closed=True, readonly=True)
+    "rectangle": mpath.Path(
+        [[0, 0], [2, 0], [2, 1], [0, 1], [0, 0]], closed=True, readonly=True
+    ),
 }
 _GEOMETRY_SHAPE_ALIASES = {
     "box": "square",
