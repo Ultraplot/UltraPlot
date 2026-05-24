@@ -3668,7 +3668,7 @@ class PlotAxes(base.Axes):
             return
         if self._name != "cartesian":
             return
-        if not x.size or not y.size:
+        if not getattr(x, "size", None) or not getattr(y, "size", None):
             return
         kwargs, vert = _get_vert(**kwargs)
         if not vert:
