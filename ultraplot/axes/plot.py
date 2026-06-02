@@ -6057,7 +6057,9 @@ class PlotAxes(base.Axes):
             kw = self._parse_cycle(n, **kw)
             # Adjust x or y coordinates for grouped and stacked bars
             w = _not_none(w, np.array([0.8]))  # same as mpl but in *relative* units
-            b = _not_none(b, np.array([0.0]))  # same as mpl
+            b = np.atleast_1d(
+                _not_none(b, np.array([0.0]))
+            )  # tolerate scalar `bottom`/`left`
             if not absolute_width:
                 w = self._convert_bar_width(x, w)
             if stack:
