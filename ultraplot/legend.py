@@ -16,7 +16,7 @@ from matplotlib import legend_handler as mhandler
 from matplotlib.markers import MarkerStyle
 
 from .config import rc
-from .internals import _not_none, _pop_props, guides, rcsetup
+from .internals import _not_none, _pop_props, docstring, guides, rcsetup
 from .utils import _fontsize_to_pt, units
 
 try:
@@ -98,26 +98,28 @@ class LegendEntry(mlines.Line2D):
         marker_transform=None,
         **kwargs,
     ):
-        # extract fillstyle，to avoid conflict with MarkerStyle
+        # ``Line2D`` exposes capstyle/joinstyle/transform/fillstyle only via the
+        # marker object, not as kwargs. Wrap the marker spec in a ``MarkerStyle``
+        # so these properties survive into the rendered legend entry. Pop
+        # ``fillstyle`` from kwargs first so it doesn't reach ``Line2D.__init__``
+        # twice when ``MarkerStyle`` consumes it.
         fillstyle = kwargs.pop("fillstyle", None)
-
         if (
             marker_capstyle is not None
             or marker_joinstyle is not None
             or marker_transform is not None
             or fillstyle is not None
-        ):
-            if not isinstance(marker, MarkerStyle):
-                marker_kw = {}
-                if marker_capstyle is not None:
-                    marker_kw["capstyle"] = marker_capstyle
-                if marker_joinstyle is not None:
-                    marker_kw["joinstyle"] = marker_joinstyle
-                if marker_transform is not None:
-                    marker_kw["transform"] = marker_transform
-                if fillstyle is not None:
-                    marker_kw["fillstyle"] = fillstyle
-                marker = MarkerStyle(marker, **marker_kw)
+        ) and not isinstance(marker, MarkerStyle):
+            marker_kw = {}
+            if marker_capstyle is not None:
+                marker_kw["capstyle"] = marker_capstyle
+            if marker_joinstyle is not None:
+                marker_kw["joinstyle"] = marker_joinstyle
+            if marker_transform is not None:
+                marker_kw["transform"] = marker_transform
+            if fillstyle is not None:
+                marker_kw["fillstyle"] = fillstyle
+            marker = MarkerStyle(marker, **marker_kw)
         marker = "o" if marker is None and not line else marker
         linestyle = "none" if not line else linestyle
         if markerfacecolor is None and color is not None:
@@ -907,33 +909,27 @@ _COLOR_KEYS = {
 
 def _is_color_like(value):
     """
-    Determine whether a value can be interpreted as a color (including RGBA tuples).
+    Determine whether a value can be interpreted as a single color.
 
-    For tuple/list, if its length is 3 or 4 and each element is a number
-    strictly in the range [0, 1], it is treated as a color rather than a style list.
+    A tuple or list of 3 or 4 numbers in ``[0, 1]`` is treated as one RGB(A)
+    color rather than a per-entry style sequence — matching matplotlib's
+    color parser and giving tuple/list symmetric behavior. Other lists fall
+    through to per-entry resolution by ``_style_lookup``.
     """
     if value is None:
         return False
-    elif np.isscalar(value):
-        return True
-    # matplotlib's is_color_like can already handle tuples like (1, 0, 0.5)
-    # But we additionally check for numeric sequences with values in [0, 1]
-    # to avoid misidentifying coordinate pairs or other numeric lists as colors.
-    elif isinstance(value, tuple):
-        if len(value) in (3, 4):
-            # Ensure all elements are numbers within [0, 1]
-            if all(isinstance(v, (int, float)) and 0.0 <= v <= 1.0 for v in value):
-                print(
-                    f"Tuple {value} treated as a single color. Pass a list to apply per entry."
-                )
-                return True
-    # List shouldn't be converted to color, to prevent confusion.
-    if isinstance(value, list):
+    if isinstance(value, (tuple, list)):
+        if len(value) in (3, 4) and all(
+            isinstance(v, (int, float)) and 0.0 <= v <= 1.0 for v in value
+        ):
+            return True
         return False
     return _mpl_is_color_like(value)
 
 
-# Line2D / LegendEntry alias mapping
+# Line2D / LegendEntry alias mapping. ``ec`` / ``fc`` are deliberately
+# omitted: they already resolve to ``markeredgecolor`` / ``markerfacecolor``
+# via ultraplot's internal ``_pop_props(kwargs, "line")``.
 _LINE_ALIAS_MAP = {
     "c": "color",
     "m": "marker",
@@ -946,8 +942,6 @@ _LINE_ALIAS_MAP = {
     "mfcalt": "markerfacecoloralt",
     "aa": "antialiased",
     "fs": "fillstyle",
-    # "ec": "markeredgecolor",      # Compatible with 'ec' in Line2D context
-    # "fc": "markerfacecolor",      # Compatible with 'fc' in Line2D context
 }
 
 # Patch alias mapping
@@ -992,10 +986,7 @@ def _style_lookup(style, key, index, default=None, *, prop=None):
         return style
     if not values:
         return default
-    val = values[index % len(values)]
-    if check_color and _is_color_like(val):
-        return val
-    return val
+    return values[index % len(values)]
 
 
 def _format_label(value, fmt):
@@ -1033,63 +1024,88 @@ _ENTRY_STYLE_FROM_COLLECTION = {
 }
 
 
+def _pop_aliases(kwargs: dict[str, Any], alias_map: dict[str, str]) -> dict[str, Any]:
+    """Pop short aliases (``c``, ``ls``, …) from ``kwargs`` mapped to full names."""
+    resolved = {}
+    for alias in list(kwargs):
+        if alias in alias_map:
+            resolved[alias_map[alias]] = kwargs.pop(alias)
+    return resolved
+
+
+def _pop_plurals(
+    kwargs: dict[str, Any], plural_map: dict[str, str]
+) -> dict[str, Any]:
+    """Pop collection-style plurals (``colors``, ``sizes``, …) from ``kwargs``."""
+    explicit = {}
+    for key in plural_map:
+        if key in kwargs:
+            explicit[key] = kwargs.pop(key)
+    return explicit
+
+
+def _pop_line2d_setters(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """
+    Pop remaining kwargs that correspond to ``Line2D`` setters.
+
+    Catches properties that ``_pop_props(..., "line")`` does not know about
+    (e.g. ``fillstyle``, ``solid_capstyle``) so they survive into the
+    ``LegendEntry`` constructor instead of leaking through to ``Axes.legend``,
+    where matplotlib rejects them.
+
+    ``label``/``labels`` look like Line2D setters but are intentionally not
+    consumed here — the semantic-legend validator (covered by
+    ``test_semantic_legend_rejects_label{,s}_kwarg``) needs them to surface
+    as ``TypeError`` from the public ``legend()`` call.
+    """
+    extracted = {}
+    for key in list(kwargs):
+        if key in ("labels", "label") or key.startswith("_"):
+            continue
+        if hasattr(mlines.Line2D, "set_" + key):
+            extracted[key] = kwargs.pop(key)
+    return extracted
+
+
 def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     """
-    Extract LegendEntry style properties from kwargs.
-    Supports:
-    - Aliases (like 'c', 'ls', 'lw', 'mec', etc.) are automatically converted to full names
-    - Plural collection parameters (like 'colors', 'edgecolors') are converted to singular
-    - Full name parameters take precedence over aliases
+    Extract ``LegendEntry`` style properties from ``kwargs``.
+
+    Resolution order (highest → lowest priority):
+
+    1. Full-name properties recognised by ``_pop_props(kwargs, "line")``.
+    2. Collection-style plurals (``colors`` → ``color``, ``sizes`` → ``markersize``, …).
+    3. Short aliases (``c`` → ``color``, ``ls`` → ``linestyle``, …).
+    4. Any other valid ``Line2D`` setter still in ``kwargs``.
+
+    Advanced ``MarkerStyle`` properties (``marker_capstyle``/``_joinstyle``/
+    ``_transform``) are pulled out first so ``_pop_props`` does not consume
+    them, and merged back at the end with full priority.
     """
-    # 1. Pop marker advanced properties BEFORE _pop_props so they are not swallowed
     advanced_marker = {}
     for key in ("marker_capstyle", "marker_joinstyle", "marker_transform"):
         if key in kwargs:
             advanced_marker[key] = kwargs.pop(key)
 
-    # 2. Extract and resolve aliases (pop alias keys, map to full names)
-    resolved_aliases = {}
-    for alias in list(kwargs.keys()):
-        if alias in _LINE_ALIAS_MAP:
-            full_key = _LINE_ALIAS_MAP[alias]
-            resolved_aliases[full_key] = kwargs.pop(alias)
+    resolved_aliases = _pop_aliases(kwargs, _LINE_ALIAS_MAP)
+    explicit_collection = _pop_plurals(kwargs, _ENTRY_STYLE_FROM_COLLECTION)
 
-    # 3. Extract explicit collection-style plural parameters (like 'colors', 'edgecolors')
-    explicit_collection = {}
-    for key in _ENTRY_STYLE_FROM_COLLECTION:
-        if key in kwargs:
-            explicit_collection[key] = kwargs.pop(key)
-
-    # 4. Use ultraplot's internal _pop_props to extract 'line' and 'collection' category properties
     props = _pop_props(kwargs, "line")
     collection_props = _pop_props(kwargs, "collection")
     collection_props.update(explicit_collection)
 
-    # 5. Map collection plural parameters to singular property names
-    # only if the singular name is not already set)
     for source, target in _ENTRY_STYLE_FROM_COLLECTION.items():
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
 
-    # 6. Merge resolved aliases (aliases have lowest priority,
-    # do not overwrite existing full-name parameters)
     for full_key, value in resolved_aliases.items():
-        if full_key not in props:
-            props[full_key] = value
+        props.setdefault(full_key, value)
 
-    # 7. Put back the advanced marker properties
+    for full_key, value in _pop_line2d_setters(kwargs).items():
+        props.setdefault(full_key, value)
+
     props.update(advanced_marker)
-    # 8. Grab any remaining kwargs that are valid Line2D setters
-    for key in list(kwargs.keys()):
-        # without this, line 645 of test_legend.py won't pass
-        if key in ("labels", "label"):
-            continue
-        if key.startswith("_"):
-            continue
-        if hasattr(mlines.Line2D, "set_" + key):
-            props[key] = kwargs.pop(key)
-
     return props
 
 
@@ -1104,30 +1120,23 @@ _NUM_STYLE_FROM_COLLECTION = {
 
 def _pop_num_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     """
-    Pop patch/collection style aliases for numeric semantic legend entries.
+    Extract patch-style properties (and collection-plural / short aliases) for
+    numeric semantic legend entries (``numlegend`` / ``geolegend``).
     """
-    # Resolve aliases first
-    resolved = {}
-    for key in list(kwargs.keys()):
-        if key in _PATCH_ALIAS_MAP:
-            full_key = _PATCH_ALIAS_MAP[key]
-            resolved[full_key] = kwargs.pop(key)
+    resolved_aliases = _pop_aliases(kwargs, _PATCH_ALIAS_MAP)
+    explicit_collection = _pop_plurals(kwargs, _NUM_STYLE_FROM_COLLECTION)
 
-    explicit_collection = {}
-    for key in _NUM_STYLE_FROM_COLLECTION:
-        if key in kwargs:
-            explicit_collection[key] = kwargs.pop(key)
     props = _pop_props(kwargs, "patch")
     collection_props = _pop_props(kwargs, "collection")
     collection_props.update(explicit_collection)
+
     for source, target in _NUM_STYLE_FROM_COLLECTION.items():
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
 
-    for full_key, value in resolved.items():
-        if full_key not in props:
-            props[full_key] = value
+    for full_key, value in resolved_aliases.items():
+        props.setdefault(full_key, value)
 
     return props
 
@@ -1163,6 +1172,9 @@ def _cat_legend_entries(
     markerfacecolor=None,
     **entry_kwargs,
 ):
+    """
+    Build categorical semantic legend handles and labels.
+    """
     labels = list(dict.fromkeys(categories))
     palette = _default_cycle_colors()
     base_styles = {
@@ -1587,6 +1599,81 @@ def _normalize_em_kwargs(kwargs: dict[str, Any], *, fontsize: float) -> dict[str
     return kwargs
 
 
+_semantic_style_arg_docstring = """\
+A style value resolved per legend entry. Accepts a **scalar** (applied
+    to every entry), a **list / tuple / ndarray** (one value per entry,
+    cycled to match the number of entries), or a **dict** (mapping from
+    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
+    style; missing keys fall back to the default). A 3- or 4-element
+    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
+    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
+    ``color=(0.5, 0.5, 0.5)`` behave the same."""
+
+_semantic_style_kwargs_docstring = """\
+Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
+
+``color`` / ``c``
+    Marker (and line, when ``line=True``) color. ``c`` is the short alias.
+``marker`` / ``m``
+    Marker spec. Set to ``None`` or ``""`` to suppress the marker.
+``markersize`` / ``ms``, ``markeredgewidth`` / ``mew``
+    Marker dimensions.
+``markerfacecolor`` / ``mfc``, ``markeredgecolor`` / ``mec``, ``markerfacecoloralt`` / ``mfcalt``
+    Marker fills and edges.
+``linestyle`` / ``ls``, ``linewidth`` / ``lw``
+    Connector line styling. Setting a non-default ``linestyle`` implicitly
+    enables ``line=True``.
+``alpha``, ``antialiased`` / ``aa``, ``fillstyle`` / ``fs``
+    Generic appearance.
+``marker_capstyle``, ``marker_joinstyle``, ``marker_transform``
+    Advanced ``MarkerStyle`` properties; wrapped into the rendered marker.
+
+Plural forms (``colors``, ``markers``, ``sizes``, ``edgecolors``,
+``facecolors``, ``linestyles``, ``linewidths``) are accepted as
+synonyms for the singular per-entry form for backward compatibility.
+Each value accepts the scalar / sequence / mapping forms described in
+``%(legend.semantic_style_arg)s``."""
+
+_semantic_num_style_kwargs_docstring = """\
+Patch-style keywords accepted via ``handle_kw`` or ``**kwargs``:
+
+``facecolor`` / ``fc``, ``edgecolor`` / ``ec``, ``color`` / ``c``
+    Patch fills and edges.
+``linewidth`` / ``lw``, ``linestyle`` / ``ls``
+    Patch outline styling.
+``alpha``, ``antialiased`` / ``aa``, ``hatch``, ``fill``,
+``joinstyle``, ``capstyle``
+    Generic patch appearance.
+
+Plural collection forms (``colors``, ``facecolors``, ``edgecolors``,
+``linestyles``, ``linewidths``) map to the singular per-entry form.
+Each value accepts the scalar / sequence / mapping forms described in
+``%(legend.semantic_style_arg)s``."""
+
+_semantic_handle_kw_docstring = """\
+handle_kw : dict, optional
+    Style overrides applied to each generated handle. Same vocabulary as
+    ``**kwargs``; useful when style kwargs would otherwise collide with
+    matplotlib's :class:`~matplotlib.legend.Legend` keywords (``loc``,
+    ``title``, …).
+add : bool, default: True
+    When ``True`` (default), draw the legend on the axes and return the
+    legend artist. When ``False``, return ``(handles, labels)`` without
+    drawing — useful for composing into a parent legend.
+**kwargs
+    Style keywords applied per entry (see above), plus any
+    :class:`~matplotlib.legend.Legend` keyword."""
+
+docstring._snippet_manager["legend.semantic_style_arg"] = _semantic_style_arg_docstring
+docstring._snippet_manager["legend.semantic_style_kwargs"] = (
+    _semantic_style_kwargs_docstring
+)
+docstring._snippet_manager["legend.semantic_num_style_kwargs"] = (
+    _semantic_num_style_kwargs_docstring
+)
+docstring._snippet_manager["legend.semantic_handle_kw"] = _semantic_handle_kw_docstring
+
+
 class UltraLegend:
     """
     Centralized legend builder for axes.
@@ -1622,11 +1709,13 @@ class UltraLegend:
         add: bool = True,
         **kwargs: Any,
     ):
+        """
+        Build generic semantic legend entries and optionally draw a legend.
+        Public docs live on :meth:`Axes.entrylegend`.
+        """
         styles = {}
         if handle_kw:
-            styles.update(
-                _pop_entry_props(handle_kw)
-            )  # Handle explicit handle_kw first
+            styles.update(_pop_entry_props(handle_kw))
         styles.update(_pop_entry_props(kwargs))
 
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
@@ -1669,8 +1758,8 @@ class UltraLegend:
         self,
         categories: Iterable[Any],
         *,
-        color=None,  # Originally 'colors', change to singular form
-        marker=None,  # Originally 'markers', change to singular form
+        color=None,
+        marker=None,
         line: Optional[bool] = None,
         handle_kw: Optional[dict[str, Any]] = None,
         add: bool = True,
@@ -1678,18 +1767,13 @@ class UltraLegend:
     ):
         """
         Build categorical legend entries and optionally draw a legend.
+        Public docs live on :meth:`Axes.catlegend`.
         """
-        # Merge handle_kw with auto-extracted styles
         styles = {}
         if handle_kw:
-            styles.update(
-                _pop_entry_props(handle_kw)
-            )  # Handle explicit handle_kw first
-        styles.update(
-            _pop_entry_props(kwargs)
-        )  # Alias-to-full-name conversion happens here
+            styles.update(_pop_entry_props(handle_kw))
+        styles.update(_pop_entry_props(kwargs))
 
-        # Apply rc default values
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
         color = _not_none(color, styles.pop("color", None))
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.cat.marker"])
@@ -1725,7 +1809,6 @@ class UltraLegend:
         )
         if not add:
             return handles, labels
-        # Handle Patch styles and plural aliases
         self._validate_semantic_kwargs("catlegend", kwargs)
         return self.axes.legend(handles, labels, **kwargs)
 
@@ -1744,11 +1827,13 @@ class UltraLegend:
         add: bool = True,
         **kwargs: Any,
     ):
+        """
+        Build size legend entries and optionally draw a legend.
+        Public docs live on :meth:`Axes.sizelegend`.
+        """
         styles = {}
         if handle_kw:
-            styles.update(
-                _pop_entry_props(handle_kw)
-            )  # Handle explicit handle_kw first
+            styles.update(_pop_entry_props(handle_kw))
         styles.update(_pop_entry_props(kwargs))
         color = _not_none(color, styles.pop("color", None), rc["legend.size.color"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.size.marker"])
@@ -1803,10 +1888,14 @@ class UltraLegend:
         add: bool = True,
         **kwargs: Any,
     ):
+        """
+        Build numeric-color legend entries and optionally draw a legend.
+        Public docs live on :meth:`Axes.numlegend`.
+        """
         styles = {}
         if handle_kw:
-            styles.update(_pop_num_props(handle_kw))  # Handle explicit handle_kw first
-        styles.update(_pop_num_props(kwargs))  # Handle Patch styles and plural aliases
+            styles.update(_pop_num_props(handle_kw))
+        styles.update(_pop_num_props(kwargs))
 
         color = styles.pop("color", None)
         n = _not_none(n, rc["legend.num.n"])
@@ -1822,7 +1911,7 @@ class UltraLegend:
         alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.num.alpha"])
         fmt = _not_none(fmt, rc["legend.num.format"])
 
-        # Remaining styles may include 'hatch', 'joinstyle', 'capstyle', 'fill', etc.
+        # Remaining styles (e.g. hatch, joinstyle, capstyle, fill) pass through.
         handles, labels = _num_legend_entries(
             levels=levels,
             vmin=vmin,
@@ -1862,7 +1951,10 @@ class UltraLegend:
         add: bool = True,
         **kwargs: Any,
     ):
-        # Geolegend can accept Patch styles (linestyle, hatch, etc.), similar to numlegend
+        """
+        Build geometry legend entries and optionally draw a legend.
+        Public docs live on :meth:`Axes.geolegend`.
+        """
         styles = {}
         if handle_kw:
             styles.update(_pop_num_props(handle_kw))
@@ -1880,7 +1972,8 @@ class UltraLegend:
         alpha = _not_none(alpha, styles.pop("alpha", None), rc["legend.geo.alpha"])
         fill = _not_none(fill, styles.pop("fill", None), rc["legend.geo.fill"])
 
-        # Build final patch kw dict (includes remaining properties like hatch, linestyle)
+        # Carry remaining styles (hatch, linestyle, joinstyle, …) through
+        # to per-entry resolution in ``_geo_legend_entries``.
         patch_kw = {
             "facecolor": facecolor,
             "edgecolor": edgecolor,
@@ -1888,7 +1981,7 @@ class UltraLegend:
             "alpha": alpha,
             "fill": fill,
         }
-        patch_kw.update(styles)  # any leftover keys (hatch, linestyle, joinstyle, etc.)
+        patch_kw.update(styles)
 
         country_reso = _not_none(country_reso, rc["legend.geo.country_reso"])
         country_territories = _not_none(
@@ -1897,7 +1990,6 @@ class UltraLegend:
         country_proj = _not_none(country_proj, rc["legend.geo.country_proj"])
         handlesize = _not_none(handlesize, rc["legend.geo.handlesize"])
 
-        # Additional styles (e.g., linestyle, hatch, joinstyle) are merged later
         handles, labels = _geo_legend_entries(
             entries,
             labels=labels,
