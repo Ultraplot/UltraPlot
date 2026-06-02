@@ -27,7 +27,6 @@ from xml.etree import ElementTree
 import matplotlib as mpl
 import matplotlib.cm as mcm
 import matplotlib.colors as mcolors
-import matplotlib.colors as mcolors
 import numpy as np
 import numpy.ma as ma
 
