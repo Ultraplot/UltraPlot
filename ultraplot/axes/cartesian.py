@@ -1391,8 +1391,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             rc.find("tick.lenratio", context=True),
             rc["tick.lenratio"],
         )
-        tickwidth = get("tickwidth")
         tickwidth = _not_none(
+            get("tickwidth"),
             prev.get("tickwidth", None),
             prev.get("linewidth", None),
             rc.find("tick.width", context=True),
