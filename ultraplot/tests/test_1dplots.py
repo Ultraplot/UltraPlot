@@ -138,6 +138,24 @@ def test_bar_width(rng):
     return fig
 
 
+def test_bar_scalar_bottom():
+    """
+    Regression for #731: pandas dispatches Series.plot(kind="barh") via
+    matplotlib with a scalar ``bottom`` (or ``left``), which previously hit
+    ``AttributeError: 'int' object has no attribute 'size'`` inside
+    ``_inbounds_xylim``.
+    """
+    # Direct scalar `bottom` / `left`
+    fig, ax = uplt.subplots()
+    ax.bar([1, 2, 3], [4, 5, 6], bottom=0)
+    ax.barh([1, 2, 3], [4, 5, 6], left=0)
+
+    # The original failing reproducer from the issue
+    series = pd.Series({"a": 1, "b": 2, "c": 3})
+    fig, ax = uplt.subplots()
+    series.plot(kind="barh", ax=ax[0])
+
+
 @pytest.mark.mpl_image_compare
 def test_bar_vectors():
     """
