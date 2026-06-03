@@ -1036,9 +1036,7 @@ def _pop_aliases(kwargs: dict[str, Any], alias_map: dict[str, str]) -> dict[str,
     return resolved
 
 
-def _pop_plurals(
-    kwargs: dict[str, Any], plural_map: dict[str, str]
-) -> dict[str, Any]:
+def _pop_plurals(kwargs: dict[str, Any], plural_map: dict[str, str]) -> dict[str, Any]:
     """Pop collection-style plurals (``colors``, ``sizes``, …) from ``kwargs``."""
     explicit = {}
     for key in plural_map:
