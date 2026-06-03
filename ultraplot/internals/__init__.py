@@ -340,6 +340,7 @@ def _pop_rc(src, *, ignore_conflicts=True):
         "tight",
         "span",
     )
+
     kw = src.pop("rc_kw", None) or {}
     if "mode" in src:
         src["rc_mode"] = src.pop("mode")
