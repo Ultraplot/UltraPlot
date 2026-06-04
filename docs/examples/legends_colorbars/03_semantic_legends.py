@@ -114,6 +114,7 @@ ax.catlegend(
     ncols=1,
 )
 ax.axis("off")
+fig.show()
 
 
 # %%
