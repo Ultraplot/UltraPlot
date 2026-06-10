@@ -3,11 +3,14 @@
 Test projection features.
 """
 
+import warnings
+
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
-import numpy as np, warnings
-import ultraplot as uplt
+import numpy as np
 import pytest
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -152,16 +155,6 @@ def test_polar_projections():
         rlines=0.25,
     )
     return fig
-
-
-def test_polar_format_labels():
-    """
-    ax.format(xlabel=..., ylabel=...) must forward to set_xlabel/set_ylabel.
-    """
-    fig, ax = uplt.subplots(proj="polar")
-    ax.format(xlabel="xlabel", ylabel="ylabel")
-    assert ax.get_xlabel() == "xlabel"
-    assert ax.get_ylabel() == "ylabel"
 
 
 def test_polar_format_thetalabel_rlabel():

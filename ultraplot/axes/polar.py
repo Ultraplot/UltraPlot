@@ -18,8 +18,12 @@ from matplotlib.font_manager import FontProperties
 from .. import constructor
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import ic  # noqa: F401
-from ..internals import _not_none, _pop_rc, docstring
+from ..internals import (
+    _not_none,
+    _pop_rc,
+    docstring,
+    ic,  # noqa: F401
+)
 from . import plot, shared
 
 __all__ = ["PolarAxes"]
@@ -93,13 +97,6 @@ thetalabels, rlabels : optional
 thetaformatter_kw, rformatter_kw : dict-like, optional
     The azimuthal and radial label formatter settings. Passed to
     `~ultraplot.constructor.Formatter`.
-xlabel, ylabel : str, optional
-    The x and y axis labels. Applied with `~matplotlib.axes.Axes.set_xlabel`
-    and `~matplotlib.axes.Axes.set_ylabel`.
-xlabel_kw, ylabel_kw : dict-like, optional
-    Additional axis label settings applied with `~matplotlib.axes.Axes.set_xlabel`
-    and `~matplotlib.axes.Axes.set_ylabel`. See also `labelpad`, `labelcolor`,
-    `labelsize`, and `labelweight`.
 thetalabel, rlabel : str, optional
     Polar-aware axis labels rendered via `~ultraplot.text.CurvedText`.
     ``thetalabel`` follows the outer arc just beyond ``r=rmax``.
@@ -259,23 +256,6 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 axis.set_major_locator(loc)
             else:
                 axis.set_minor_locator(loc)
-
-    def _update_labels(self, x, *args, **kwargs):
-        """
-        Apply axis labels via `set_xlabel` / `set_ylabel`.
-        """
-        # NOTE: Critical to test whether arguments are None or else this
-        # will set isDefault_label to False every time format() is called.
-        kwargs = rc._get_label_props(**kwargs)
-        no_args = all(a is None for a in args)
-        no_kwargs = all(v is None for v in kwargs.values())
-        if no_args and no_kwargs:
-            return
-        setter = getattr(self, f"set_{x}label")
-        getter = getattr(self, f"get_{x}label")
-        if no_args:  # otherwise label text is reset!
-            args = (getter(),)
-        setter(*args, **kwargs)
 
     def _get_directed_thetalim(self):
         """Return the directed theta interval in degrees from the raw x-limits."""
@@ -747,16 +727,6 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 self._update_formatter(
                     x, formatter=formatter, formatter_kw=formatter_kw
                 )
-
-                # Axis label
-                kw = dict(
-                    labelpad=labelpad,
-                    color=labelcolor,
-                    size=labelsize,
-                    weight=labelweight,
-                )
-                kw.update(label_kw or {})
-                self._update_labels(x, label, **kw)
 
             # Polar-aware axis labels (rendered along the arc / radial spoke)
             for kind, text, loc, label_kw in (
