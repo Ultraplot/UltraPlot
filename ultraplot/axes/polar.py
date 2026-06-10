@@ -673,8 +673,6 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 formatter_kw,
                 minorlocator,
                 minorlocator_kw,
-                label,
-                label_kw,
             ) in zip(
                 ("x", "y"),
                 (thetamin, rmin),
