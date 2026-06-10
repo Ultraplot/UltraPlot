@@ -72,6 +72,11 @@ class CurvedText(mtext.Text):
         if kwargs.get("transform") is None:
             kwargs["transform"] = axes.transData
 
+        # Split pseudo-properties (border/bbox*) from valid Text kwargs so
+        # mtext.Text(**self._text_kwargs) accepts them and pseudo-props can be
+        # re-applied via labels._update_label.
+        label_props, text_kwargs = labels._split_label_props(kwargs)
+
         # Initialize storage before Text.__init__ triggers set_text()
         self._characters = []
         self._curve_text = "" if text is None else str(text)
@@ -82,11 +87,15 @@ class CurvedText(mtext.Text):
         self._curvature_pad = float(curvature_pad)
         self._min_advance = float(min_advance)
         self._ellipsis_text = "..."
-        self._text_kwargs = kwargs.copy()
+        self._text_kwargs = text_kwargs
+        self._label_props = label_props
         self._initializing = True
 
-        super().__init__(x[0], y[0], " ", **kwargs)
+        super().__init__(x[0], y[0], " ", **text_kwargs)
         axes.add_artist(self)
+        # add_artist calls set_clip_path(self.patch), which sets clip_on=True
+        # and silently overrides any clip_on=False the caller passed.
+        self._restore_clip_on(self)
 
         self._curve_x = x
         self._curve_y = y
@@ -95,18 +104,28 @@ class CurvedText(mtext.Text):
 
         self._build_characters(self._curve_text)
 
+    def _restore_clip_on(self, t) -> None:
+        """Re-assert clip_on after add_artist/add_text resets it."""
+        if "clip_on" in self._text_kwargs:
+            t.set_clip_on(self._text_kwargs["clip_on"])
+
     def _build_characters(self, text: str) -> None:
         # Remove previous character artists
         for _, artist in self._characters:
             artist.remove()
         self._characters = []
 
+        # Initial position on the curve (not (0, 0)) so get_window_extent works
+        # under transforms whose inverse is undefined at (0, 0) — e.g. polar
+        # annular plots where r=0 is below rmin and inverts to NaN.
+        x0 = float(self._curve_x[0])
+        y0 = float(self._curve_y[0])
         for char in text:
             if char == " ":
-                t = mtext.Text(0, 0, " ", **self._text_kwargs)
+                t = mtext.Text(x0, y0, " ", **self._text_kwargs)
                 t.set_alpha(0.0)
             else:
-                t = mtext.Text(0, 0, char, **self._text_kwargs)
+                t = mtext.Text(x0, y0, char, **self._text_kwargs)
 
             t.set_ha("center")
             t.set_va("center")
@@ -117,6 +136,10 @@ class CurvedText(mtext.Text):
                 add_text(t)
             else:
                 self.axes.add_artist(t)
+            self._restore_clip_on(t)
+            if self._label_props:
+                t.update = labels._update_label.__get__(t)
+                t.update(self._label_props)
             self._characters.append((char, t))
 
     def set_text(self, s):
@@ -143,6 +166,10 @@ class CurvedText(mtext.Text):
         return self._curve_x.copy(), self._curve_y.copy()
 
     def _apply_label_props(self, props) -> None:
+        new_label_props, new_text_kwargs = labels._split_label_props(props)
+        # Persist for future set_text() rebuilds.
+        self._text_kwargs.update(new_text_kwargs)
+        self._label_props.update(new_label_props)
         for _, t in self._characters:
             t.update = labels._update_label.__get__(t)
             t.update(props)
@@ -152,6 +179,12 @@ class CurvedText(mtext.Text):
         self._zorder = self.get_zorder()
         for _, t in self._characters:
             t.set_zorder(self._zorder + 1)
+
+    def set_transform(self, transform):
+        super().set_transform(transform)
+        self._text_kwargs["transform"] = transform
+        for _, t in self._characters:
+            t.set_transform(transform)
 
     def draw(self, renderer, *args, **kwargs):
         """
@@ -291,6 +324,16 @@ class CurvedText(mtext.Text):
                     y_disp[idx] + fraction * dy_arr[idx],
                 ]
             )
+            # Pre-place at a valid data position before measuring bbox: on
+            # annular polar plots (rmin > 0) the default (0, 0) data coord
+            # falls below rmin and inverts to NaN, which propagates and
+            # locks the glyph at NaN forever.
+            try:
+                base_data = trans_inv.transform(base)
+            except Exception:
+                base_data = None
+            if base_data is not None and not np.any(np.isnan(base_data)):
+                t.set_position(base_data)
             t.set_va("center")
             bbox_center = t.get_window_extent(renderer=renderer)
             t.set_va(self.get_va())

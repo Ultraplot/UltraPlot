@@ -3683,11 +3683,15 @@ class Figure(mfigure.Figure):
         if skip_axes:  # avoid recursion
             return
 
-        # Remove all keywords that are not in the allowed signature parameters
+        # Collect each class's matching kwargs without popping, then drop the union —
+        # shared params (e.g. xlabel/ylabel, accepted by both CartesianAxes and
+        # PolarAxes) need to reach every matching class.
         kws = {
-            cls: _pop_params(kwargs, sig)
+            cls: {k: kwargs[k] for k in sig.parameters if kwargs.get(k) is not None}
             for cls, sig in paxes.Axes._format_signatures.items()
         }
+        for k in {k for cls_kw in kws.values() for k in cls_kw}:
+            kwargs.pop(k, None)
         classes = set()  # track used dictionaries
 
         def _axis_has_share_label_text(ax, axis):
@@ -3731,11 +3735,14 @@ class Figure(mfigure.Figure):
                 **generic_axis_kwargs,
             )
             ax.number = store_old_number
-        # Warn unused keyword argument(s)
+        # Warn unused keyword argument(s). Shared params (those in multiple
+        # signatures) are considered "used" if any matched class consumed them.
+        used_keys = {k for cls in classes for k in kws[cls]}
         kw = {
             key: value
             for name in kws.keys() - classes
             for key, value in kws[name].items()
+            if key not in used_keys
         }
         if kw:
             warnings._warn_ultraplot(
