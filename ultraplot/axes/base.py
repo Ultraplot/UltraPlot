@@ -3599,78 +3599,207 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 **kwargs,
             )
 
+    @docstring._snippet_manager
     def catlegend(self, categories, **kwargs):
         """
-        Build categorical legend entries and optionally add a legend.
+        Build a categorical legend — one handle per unique category — and
+        optionally draw it.
 
         Parameters
         ----------
-        categories
-            Category labels used to generate legend handles.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.catlegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        categories : iterable
+            Category labels in display order. Duplicates are collapsed; the
+            first occurrence determines position.
+        color, marker
+            %(legend.semantic_style_arg)s
+            Defaults to ultraplot's color cycle for ``color`` and ``"o"`` for
+            ``marker`` (or :rc:`legend.cat.marker` when set).
+        line : bool, optional
+            Whether to render connector lines through the markers. Falls back
+            to :rc:`legend.cat.line`. Setting a non-default ``linestyle``
+            implicitly enables this.
+
+        Other parameters
+        ----------------
+        %(legend.semantic_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        See also
+        --------
+        Axes.entrylegend
+        Axes.sizelegend
         """
         return plegend.UltraLegend(self).catlegend(categories, **kwargs)
 
+    @docstring._snippet_manager
     def entrylegend(self, entries, **kwargs):
         """
-        Build generic semantic legend entries and optionally add a legend.
+        Build generic semantic legend entries from explicit ``{label: style}``
+        entries and optionally draw the legend.
 
         Parameters
         ----------
-        entries
-            Entry specifications as handles, style dictionaries, or ``(label, spec)``
-            pairs.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.entrylegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        entries : iterable or mapping
+            Entry specifications. Either a sequence of ``{**style_kwargs}``
+            dicts (each requiring at least ``label``) or a mapping from label
+            to style-kwargs dict.
+        line : bool, optional
+            Whether each entry shows a connector line. Falls back to
+            :rc:`legend.cat.line`.
+        marker, color
+            %(legend.semantic_style_arg)s
+
+        Other parameters
+        ----------------
+        %(legend.semantic_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        See also
+        --------
+        Axes.catlegend
+        Axes.sizelegend
         """
         return plegend.UltraLegend(self).entrylegend(entries, **kwargs)
 
+    @docstring._snippet_manager
     def sizelegend(self, levels, **kwargs):
         """
-        Build size legend entries and optionally add a legend.
+        Build a size legend — one handle per level, scaled by marker size —
+        and optionally draw it.
 
         Parameters
         ----------
-        levels
-            Numeric levels used to generate marker-size entries.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.sizelegend`.
-            Pass ``labels=[...]`` or ``labels={level: label}`` to override the
-            generated labels.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        levels : iterable of float
+            Numeric values to render as size-scaled markers.
+        labels : iterable or mapping, optional
+            Custom labels. A mapping ``{level: label}`` overrides individual
+            entries (every level must be a key). When omitted, labels are
+            formatted from ``levels`` via ``fmt``.
+        color, marker
+            %(legend.semantic_style_arg)s
+            Defaults to :rc:`legend.size.color` and :rc:`legend.size.marker`.
+        area : bool, optional
+            Treat ``levels`` as marker areas (``True``, default) or
+            diameters (``False``). Areas are converted with
+            ``ms = sqrt(level) * scale``. Falls back to :rc:`legend.size.area`.
+        scale : float, optional
+            Multiplier applied after area/diameter conversion.
+            Falls back to :rc:`legend.size.scale`.
+        minsize : float, optional
+            Lower bound on rendered marker size.
+            Falls back to :rc:`legend.size.minsize`.
+        fmt : str or callable, optional
+            Format used to label levels. Falls back to :rc:`legend.size.format`.
+
+        Other parameters
+        ----------------
+        %(legend.semantic_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        See also
+        --------
+        Axes.catlegend
+        Axes.numlegend
         """
         return plegend.UltraLegend(self).sizelegend(levels, **kwargs)
 
+    @docstring._snippet_manager
     def numlegend(self, levels=None, **kwargs):
         """
-        Build numeric-color legend entries and optionally add a legend.
+        Build a numeric legend — one patch handle per level, colored from a
+        colormap — and optionally draw it.
 
         Parameters
         ----------
-        levels
-            Numeric levels or number of levels.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.numlegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        levels : iterable of float, optional
+            Numeric levels to render. When omitted, ``n`` evenly spaced
+            levels are derived from ``vmin`` / ``vmax``.
+        vmin, vmax : float, optional
+            Limits for sampling ``cmap`` when ``norm`` is not provided.
+        n : int, optional
+            Number of levels to sample when ``levels`` is omitted.
+            Falls back to :rc:`legend.num.n`.
+        cmap : str or `~matplotlib.colors.Colormap`, optional
+            Colormap used to color the patches.
+            Falls back to :rc:`legend.num.cmap`.
+        norm : `~matplotlib.colors.Normalize`, optional
+            Normalization applied to ``levels`` before colormap lookup.
+        fmt : str or callable, optional
+            Format used to label levels.
+            Falls back to :rc:`legend.num.format`.
+        facecolor, edgecolor
+            %(legend.semantic_style_arg)s
+            ``facecolor`` defaults to colormap-derived values; ``edgecolor``
+            falls back to :rc:`legend.num.edgecolor`.
+        linewidth, linestyle, alpha
+            Patch outline width, style, and transparency. ``linewidth`` /
+            ``alpha`` fall back to :rc:`legend.num.linewidth` /
+            :rc:`legend.num.alpha`.
+
+        Other parameters
+        ----------------
+        %(legend.semantic_num_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        See also
+        --------
+        Axes.sizelegend
+        Axes.geolegend
         """
         return plegend.UltraLegend(self).numlegend(levels=levels, **kwargs)
 
+    @docstring._snippet_manager
     def geolegend(self, entries, labels=None, **kwargs):
         """
-        Build geometry legend entries and optionally add a legend.
+        Build a geometry legend — one patch handle per geometry entry — and
+        optionally draw it.
 
         Parameters
         ----------
-        entries
-            Geometry entries (mapping, ``(label, geometry)`` pairs, or geometries).
-        labels
-            Optional labels for geometry sequences.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.geolegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        entries : iterable or mapping
+            Either a sequence of ``(label, geometry)`` pairs or a mapping
+            from label to geometry specification (string keyword, shapely
+            geometry, ``cartopy`` feature, or a country name when
+            ``country_reso`` is set).
+        labels : iterable, optional
+            Labels overriding those derived from ``entries``.
+        country_reso : str, optional
+            Natural Earth resolution for country geometries (e.g. ``"110m"``).
+            Falls back to :rc:`legend.geo.country_reso`.
+        country_territories : bool, optional
+            Whether country lookups include overseas territories.
+            Falls back to :rc:`legend.geo.country_territories`.
+        country_proj : any, optional
+            Projection used to render country geometries; ignored for non-
+            country entries. Falls back to :rc:`legend.geo.country_proj`.
+        handlesize : float, optional
+            Multiplier applied to legend ``handlelength`` / ``handleheight``
+            to enlarge geometry handles. Falls back to
+            :rc:`legend.geo.handlesize`. Must be positive.
+        facecolor, edgecolor
+            %(legend.semantic_style_arg)s
+            Default to :rc:`legend.geo.facecolor` / :rc:`legend.geo.edgecolor`.
+        linewidth, alpha, fill
+            Patch outline width, transparency, and fill toggle.
+            Defaults from :rc:`legend.geo.linewidth` / :rc:`legend.geo.alpha` /
+            :rc:`legend.geo.fill`.
+
+        Other parameters
+        ----------------
+        %(legend.semantic_num_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        Notes
+        -----
+        Geometry legend entries use normalized patch proxies inside the legend
+        handle box rather than reusing the original map artist directly. This
+        preserves the general geometry shape and copied patch styling, but very
+        small or high-aspect-ratio handles can still make hatches difficult to
+        read at legend scale.
+
+        See also
+        --------
+        Axes.numlegend
         """
         return plegend.UltraLegend(self).geolegend(entries, labels=labels, **kwargs)
 

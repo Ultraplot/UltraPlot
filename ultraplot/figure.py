@@ -29,6 +29,7 @@ except:
     from typing_extensions import override
 
 from . import axes as paxes
+from .axes._formatting import pop_axis_format_kwargs
 from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
@@ -3623,19 +3624,14 @@ class Figure(mfigure.Figure):
         # Initiate context block
         axs = axs or self._subplot_dict.values()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
-        # Preserve explicit projection-specific format keywords that also happen to
-        # be valid rc aliases (e.g. GeoAxes/PolarAxes `labelsize`). Otherwise
-        # `_pop_rc()` removes them before the per-axes format dispatch below.
-        original_kwargs = kwargs.copy()
-        axis_param_names = set()
-        for ax in axs:
-            for cls, sig in paxes.Axes._format_signatures.items():
-                if isinstance(ax, cls):
-                    axis_param_names.update(sig.parameters)
-        axis_param_names.discard("self")
+        explicit_format_keys = set(kwargs)
+        signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
+            kwargs, *paxes.Axes._format_signatures.values()
+        )
+        explicit_format_keys.update(signature_axis_kwargs)
+        explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
-        for key in axis_param_names & original_kwargs.keys():
-            kwargs.setdefault(key, original_kwargs[key])
+        kwargs.update(signature_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
             kw = rc.fill({"facecolor": "figure.facecolor"}, context=True)
@@ -3726,7 +3722,18 @@ class Figure(mfigure.Figure):
             if kw.get("ylabel") is not None and self._has_share_label_groups("y"):
                 if _axis_has_share_label_text(ax, "y") or _axis_has_label_text(ax, "y"):
                     kw.pop("ylabel", None)
-            ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
+            explicit_kw = {}
+            if isinstance(ax, paxes.CartesianAxes):
+                explicit_kw["_explicit_format_keys"] = explicit_format_keys
+            ax.format(
+                rc_kw=rc_kw,
+                rc_mode=rc_mode,
+                skip_figure=True,
+                **explicit_kw,
+                **kw,
+                **kwargs,
+                **generic_axis_kwargs,
+            )
             ax.number = store_old_number
         # Warn unused keyword argument(s). Shared params (those in multiple
         # signatures) are considered "used" if any matched class consumed them.

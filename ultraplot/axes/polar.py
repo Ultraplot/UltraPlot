@@ -599,6 +599,34 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         rc_kw, rc_mode = _pop_rc(kwargs)
         labelcolor = _not_none(labelcolor, kwargs.get("color", None))
         with rc.context(rc_kw, mode=rc_mode):
+            edgecolor = _not_none(
+                kwargs.get("color", None),
+                rc.find("axes.edgecolor", context=True),
+                rc["axes.edgecolor"],
+            )
+            linewidth = _not_none(
+                kwargs.get("linewidth", None),
+                rc.find("axes.linewidth", context=True),
+                rc["axes.linewidth"],
+            )
+            tickcolor = _not_none(
+                kwargs.get("tickcolor", None),
+                kwargs.get("color", None),
+                rc.find("xtick.color", context=True),
+                rc["xtick.color"],
+            )
+            tickwidth = _not_none(
+                kwargs.get("tickwidth", None),
+                kwargs.get("linewidth", None) and linewidth,
+                rc.find("tick.width", context=True),
+                rc["tick.width"],
+            )
+            tickwidthratio = _not_none(
+                kwargs.get("tickwidthratio", None),
+                rc.find("tick.widthratio", context=True),
+                rc["tick.widthratio"],
+            )
+
             # Not mutable default args
             thetalocator_kw = thetalocator_kw or {}
             thetaminorlocator_kw = thetaminorlocator_kw or {}
@@ -636,6 +664,23 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 self.set_theta_zero_location(theta0)
             if thetadir is not None:
                 self.set_theta_direction(thetadir)
+
+            # Polar frame styling used to come from the shared background helper.
+            # Apply it explicitly now that patch and frame styling are separated.
+            self._update_frame(
+                "x",
+                edgecolor=edgecolor,
+                linewidth=linewidth,
+                tickcolor=tickcolor,
+                tickwidth=tickwidth,
+                tickwidthratio=tickwidthratio,
+            )
+            self._update_frame(
+                "y",
+                tickcolor=tickcolor,
+                tickwidth=tickwidth,
+                tickwidthratio=tickwidthratio,
+            )
 
             # Loop over axes
             for (

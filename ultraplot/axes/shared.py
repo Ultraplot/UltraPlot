@@ -40,41 +40,55 @@ class _SharedAxes(object):
         max_ = _not_none(**{f"{key}max": max_, f"{key}lim_1": lim[1]})
         return min_, max_
 
-    def _update_background(self, x=None, tickwidth=None, tickwidthratio=None, **kwargs):
+    def _update_background(self, **kwargs):
         """
-        Update the background patch and spines.
+        Update the background patch.
         """
-        # Update the background patch
         kw_face, kw_edge = rc._get_background_props(**kwargs)
         self.patch.update(kw_face)
-        if x is None:
-            opts = self.spines
-        elif x == "x":
-            opts = ("bottom", "top", "inner", "polar")
-        else:
-            opts = ("left", "right", "start", "end")
-        for opt in opts:
-            self.spines.get(opt, {}).update(kw_edge)
+        return kw_face, kw_edge
 
-        # Update the tick colors
-        axis = "both" if x is None else x
-        x = _not_none(x, "x")
-        obj = getattr(self, x + "axis")
-        edgecolor = kw_edge.get("edgecolor", None)
+    def _update_frame(
+        self,
+        x,
+        *,
+        edgecolor=None,
+        linewidth=None,
+        tickcolor=None,
+        tickwidth=None,
+        tickwidthratio=None,
+    ):
+        """
+        Update the axis frame, including spines and tick line appearance.
+        """
+        opts = (
+            ("bottom", "top", "inner", "polar")
+            if x == "x"
+            else (
+                "left",
+                "right",
+                "start",
+                "end",
+            )
+        )
+        kw_edge = {"capstyle": "projecting"}
         if edgecolor is not None:
-            self.tick_params(axis=axis, which="both", color=edgecolor)
+            kw_edge["edgecolor"] = edgecolor
+        if linewidth is not None:
+            kw_edge["linewidth"] = linewidth
+        if len(kw_edge) > 1:
+            for opt in opts:
+                self.spines.get(opt, {}).update(kw_edge)
+
+        obj = getattr(self, x + "axis")
+        if tickcolor is None:
+            tickcolor = edgecolor
+        if tickcolor is not None:
+            self.tick_params(axis=x, which="both", color=tickcolor)
 
         # Update the tick widths
-        # NOTE: Only use 'linewidth' if it was explicitly passed. Do not
-        # include 'linewidth' inferred from rc['axes.linewidth'] setting.
         kwmajor = getattr(obj, "_major_tick_kw", {})  # graceful fallback if API changes
         kwminor = getattr(obj, "_minor_tick_kw", {})
-        if "linewidth" in kwargs:
-            tickwidth = _not_none(tickwidth, kwargs["linewidth"])
-        tickwidth = _not_none(tickwidth, rc.find("tick.width", context=True))
-        tickwidthratio = _not_none(
-            tickwidthratio, rc.find("tick.widthratio", context=True)
-        )  # noqa: E501
         tickwidth_prev = kwmajor.get("width", rc[x + "tick.major.width"])
         if tickwidth_prev == 0:
             tickwidthratio_prev = rc["tick.widthratio"]  # no other way of knowing
@@ -92,7 +106,7 @@ class _SharedAxes(object):
                 elif which == "minor":
                     tickwidthratio = _not_none(tickwidthratio, tickwidthratio_prev)
                     kwticks["width"] *= tickwidthratio
-            self.tick_params(axis=axis, which=which, **kwticks)
+            self.tick_params(axis=x, which=which, **kwticks)
 
     def _update_ticks(
         self,
