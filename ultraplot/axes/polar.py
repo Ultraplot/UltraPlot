@@ -689,8 +689,6 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 (thetaformatter_kw, rformatter_kw),
                 (thetaminorlocator, rminorlocator),
                 (thetaminorlocator_kw, rminorlocator_kw),
-                (xlabel, ylabel),
-                (xlabel_kw, ylabel_kw),
             ):
                 # Axis limits
                 self._update_limits(x, min_=min_, max_=max_, lim=lim)
