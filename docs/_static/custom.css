@@ -78,12 +78,33 @@
     padding-right: 1.25rem !important;
 }
 
+/* ── iOS Safari compositing fix ─────────────────────────────────────────────
+   Shibuya's .sy-head-blur uses -webkit-backdrop-filter: blur(12px), which
+   creates a GPU compositing layer. On iOS Safari this disrupts rendering of
+   two distinct things in sibling/adjacent sticky elements:
+
+   1. -webkit-background-clip: text  →  gradient text goes invisible
+      Fix: isolation: isolate on .sy-head-brand (creates its own stacking
+      context, shielding the gradient-clip composite from the blur layer).
+
+   2. Plain text rendering in .sy-breadcrumbs  →  link text goes invisible
+      while CSS-mask icons in the same bar remain visible (icons use
+      background-color + mask, a different GPU path than text).
+      Fix: transform: translateZ(0) on .sy-breadcrumbs-inner forces it into
+      its own compositing layer so text renders independently of the header.
+────────────────────────────────────────────────────────────────────────── */
 .sy-head .sy-head-brand {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.2rem 0.04rem 0.2rem;
     line-height: 1.25;
+    isolation: isolate;
+    transform: translateZ(0);
+}
+
+.sy-breadcrumbs-inner {
+    transform: translateZ(0);
 }
 
 .sy-head .sy-head-brand strong {
@@ -93,6 +114,7 @@
     text-transform: uppercase;
     line-height: 1.25;
     color: #138a73;
+    transform: translateZ(0);
     background-image: linear-gradient(
         90deg,
         #0f6d5f 0%,
@@ -1110,8 +1132,13 @@ body.wy-body-for-nav
 }
 
 .sy-rside .localtoc > ul > li > button.uplt-toc-toggle::before {
-    content: "▸";
-    font-size: 2.02rem;
+    content: "";
+    display: block;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0.28rem 0 0.28rem 0.44rem;
+    border-color: transparent transparent transparent currentColor;
     transform: rotate(0deg);
     transition: transform 0.2s ease;
 }
