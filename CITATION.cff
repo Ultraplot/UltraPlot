@@ -20,13 +20,13 @@ keywords:
   - wrapper
 references:
   - type: software
-    name: "ProPlot"
+    title: "ProPlot"
     authors:
       - family-names: "Davis"
         given-names: "Luke"
     url: "https://github.com/lukelbd/proplot"
   - type: software
-    name: "Matplotlib"
+    title: "Matplotlib"
     authors:
       - family-names: "Hunter"
         given-names: "John D."
