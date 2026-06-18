@@ -63,6 +63,34 @@ def test_inset_colorbar_frame_alias_still_controls_frame(rng, kwargs):
     assert cb.ax._inset_colorbar_frame is None
 
 
+def test_colorbar_side_locations_work_on_inset_axes(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.55, 0.55, 0.35, 0.35], zoom=False)
+    m = ix.pcolormesh(rng.random((8, 8)))
+    ix_small = ax.inset_axes([0.65, 0.65, 0.15, 0.15], zoom=False)
+
+    cb_right = ix.colorbar(m, loc="right")
+    cb_bottom = fig.colorbar(m, ax=ix, loc="bottom")
+    ix_small.pcolormesh(rng.random((8, 8)), colorbar="r")
+    cb_auto = ix_small[0]._colorbar_dict[("right", "center")]
+
+    assert cb_right.orientation == "vertical"
+    assert cb_bottom.orientation == "horizontal"
+    assert cb_auto.orientation == "vertical"
+    assert cb_right.ax._inset_colorbar_parent is ix[0]
+    assert cb_bottom.ax._inset_colorbar_parent is ix[0]
+    assert cb_auto.ax._inset_colorbar_parent is ix_small[0]
+    assert cb_auto.ax._inset_colorbar_frame is None
+    assert cb_right.ax in ix[0].child_axes
+    assert cb_bottom.ax in ix[0].child_axes
+    assert cb_auto.ax in ix_small[0].child_axes
+
+    fig.canvas.draw()
+    assert cb_auto.ax.get_position().height == pytest.approx(
+        ix_small[0].get_position().height
+    )
+
+
 @pytest.mark.parametrize(
     "orientation, labelloc",
     [

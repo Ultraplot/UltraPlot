@@ -2003,6 +2003,103 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
         return ax, kwargs
 
+    def _parse_colorbar_inset_side(
+        self,
+        loc=None,
+        width=None,
+        length=None,
+        shrink=None,
+        frame=None,
+        frameon=None,
+        pad=None,
+        tickloc=None,
+        ticklocation=None,
+        orientation=None,
+        **kwargs,
+    ):
+        """
+        Return the axes and adjusted keyword args for a side colorbar on an inset axes.
+        """
+        frame_enabled = _not_none(frame=frame, frameon=frameon, default=False)
+        length = _not_none(length=length, shrink=shrink, default=1)
+        width = _not_none(width, rc["colorbar.width"])
+        pad = _not_none(pad, rc["colorbar.insetpad"])
+        side = _translate_loc(loc, "panel")
+        orientation = _not_none(
+            orientation, "vertical" if side in ("left", "right") else "horizontal"
+        )
+        if orientation == "horizontal":
+            ticklocation = _not_none(
+                tickloc,
+                ticklocation,
+                "bottom" if side == "bottom" else "top",
+            )
+        else:
+            ticklocation = _not_none(
+                tickloc,
+                ticklocation,
+                "left" if side == "left" else "right",
+            )
+
+        if isinstance(length, str):
+            length = units(
+                length, "em", "ax", axes=self, width=orientation == "horizontal"
+            )
+        width = units(width, "em", "ax", axes=self, width=orientation == "vertical")
+        xpad = units(pad, "em", "ax", axes=self, width=True)
+        ypad = units(pad, "em", "ax", axes=self, width=False)
+
+        if side == "right":
+            bounds = [1 + xpad, 0.5 * (1 - length), width, length]
+            bounds_frame = [
+                1 + 0.5 * xpad,
+                bounds[1] - ypad,
+                width + xpad,
+                length + 2 * ypad,
+            ]
+        elif side == "left":
+            bounds = [-xpad - width, 0.5 * (1 - length), width, length]
+            bounds_frame = [
+                bounds[0] - 0.5 * xpad,
+                bounds[1] - ypad,
+                width + xpad,
+                length + 2 * ypad,
+            ]
+        elif side == "top":
+            bounds = [0.5 * (1 - length), 1 + ypad, length, width]
+            bounds_frame = [
+                bounds[0] - xpad,
+                1 + 0.5 * ypad,
+                length + 2 * xpad,
+                width + ypad,
+            ]
+        else:
+            bounds = [0.5 * (1 - length), -ypad - width, length, width]
+            bounds_frame = [
+                bounds[0] - xpad,
+                bounds[1] - 0.5 * ypad,
+                length + 2 * xpad,
+                width + ypad,
+            ]
+
+        cls = mproj.get_projection_class("ultraplot_cartesian")
+        locator = self._make_inset_locator(bounds, self.transAxes)
+        ax = cls(self.figure, locator(self, None).bounds, zorder=5)
+        ax.patch.set_facecolor("none")
+        ax.set_axes_locator(locator)
+        self.add_child_axes(ax)
+        kw_frame, kwargs = self._parse_frame("colorbar", **kwargs)
+        frame_artist = None
+        if frame_enabled:
+            frame_artist = self._add_guide_frame(
+                *bounds_frame, fontsize=rc["xtick.labelsize"], **kw_frame
+            )
+        ax._inset_colorbar_parent = self
+        ax._inset_colorbar_frame = frame_artist
+
+        kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
+        return ax, kwargs
+
     def _parse_legend_aligned(self, pairs, ncol=None, order=None, **kwargs):
         """
         Draw an individual legend with aligned columns. Includes support
