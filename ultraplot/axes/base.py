@@ -726,11 +726,12 @@ class _TransformedBoundsLocator:
 class _SideColorbarLocator:
     """Position a side colorbar beyond its parent axes decorations."""
 
-    def __init__(self, parent, side, bounds, pad):
+    def __init__(self, parent, side, bounds, pad, previous=()):
         self._parent = parent
         self._side = side
         self._bounds = bounds
         self._pad = pad
+        self._previous = tuple(previous)
 
     def __call__(self, ax, renderer):
         parent = self._parent
@@ -751,6 +752,13 @@ class _SideColorbarLocator:
         bboxes = [parent.bbox]
         if tight_bbox is not None:
             bboxes.append(tight_bbox)
+        if renderer is not None:
+            bboxes.extend(
+                bbox
+                for previous in self._previous
+                if previous.get_visible()
+                and (bbox := previous.get_tightbbox(renderer)) is not None
+            )
         tight_bbox = mtransforms.Bbox.union(bboxes)
         if side == "left":
             axes_bbox = mtransforms.Bbox.from_bounds(
@@ -2136,8 +2144,16 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self, orientation, length, width, pad
         )
         bounds = _get_side_colorbar_bounds(side, align, length, width, xpad, ypad)
-        locator = _SideColorbarLocator(self, side, bounds, pad_points)
+        previous = (
+            child
+            for child in self.child_axes
+            if getattr(child, "_inset_colorbar_side", None) == side
+        )
+        locator = _SideColorbarLocator(
+            self, side, bounds, pad_points, previous=previous
+        )
         ax = self._add_colorbar_child_axes(bounds, locator=locator)
+        ax._inset_colorbar_side = side
         ax._inset_colorbar_frame = None
 
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})

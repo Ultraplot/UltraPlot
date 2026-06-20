@@ -152,6 +152,28 @@ def test_left_inset_axes_colorbar_clears_parent_ticks(rng):
     assert cb.ax.bbox.x1 < ix.yaxis.get_tightbbox(renderer).x0
 
 
+@pytest.mark.parametrize("loc", ["left", "right", "top", "bottom"])
+def test_inset_axes_side_colorbars_stack_outward(rng, loc):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    inner = ix.colorbar(m, loc=loc)
+    outer = ix.colorbar(m, loc=loc)
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    inner_bbox = inner.ax.get_tightbbox(renderer)
+    outer_bbox = outer.ax.bbox
+    if loc == "left":
+        assert outer_bbox.x1 < inner_bbox.x0
+    elif loc == "right":
+        assert outer_bbox.x0 > inner_bbox.x1
+    elif loc == "top":
+        assert outer_bbox.y0 > inner_bbox.y1
+    else:
+        assert outer_bbox.y1 < inner_bbox.y0
+
+
 @pytest.mark.parametrize(
     "orientation, labelloc",
     [
