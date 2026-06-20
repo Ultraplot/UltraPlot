@@ -92,6 +92,67 @@ def test_colorbar_side_locations_work_on_inset_axes(rng):
 
 
 @pytest.mark.parametrize(
+    "loc, align, edge",
+    [
+        ("left", "top", "y1"),
+        ("right", "bottom", "y0"),
+        ("top", "left", "x0"),
+        ("bottom", "right", "x1"),
+    ],
+)
+def test_inset_axes_side_colorbar_uses_outer_api(rng, loc, align, edge):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+
+    cb = ix.colorbar(
+        m,
+        loc=loc,
+        align=align,
+        shrink=0.5,
+        width=0.1,
+        frame=False,
+        label="values",
+    )
+
+    fig.canvas.draw()
+    parent_bounds = ix.get_position()
+    colorbar_bounds = cb.ax.get_position()
+    assert getattr(colorbar_bounds, edge) == pytest.approx(getattr(parent_bounds, edge))
+    if cb.orientation == "vertical":
+        assert colorbar_bounds.height == pytest.approx(0.5 * parent_bounds.height)
+    else:
+        assert colorbar_bounds.width == pytest.approx(0.5 * parent_bounds.width)
+    assert cb.ax._inset_colorbar_frame is None
+    assert cb.outline.get_visible() is False
+    assert cb.ax.get_ylabel() == "values" or cb.ax.get_xlabel() == "values"
+
+
+def test_inset_axes_side_colorbar_numeric_width_scales_consistently(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    narrow = ix.colorbar(m, loc="left", width=0.1)
+    wide = ix.colorbar(m, loc="right", width=0.2)
+
+    fig.canvas.draw()
+    assert wide.ax.get_position().width == pytest.approx(
+        2 * narrow.ax.get_position().width
+    )
+
+
+def test_left_inset_axes_colorbar_clears_parent_ticks(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.55, 0.45, 0.35, 0.35], zoom=False)[0]
+    ix.pcolormesh(rng.random((10, 10)), colorbar="left", colorbar_kw={"width": 0.1})
+    cb = ix._colorbar_dict[("left", "center")]
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    assert cb.ax.bbox.x1 < ix.yaxis.get_tightbbox(renderer).x0
+
+
+@pytest.mark.parametrize(
     "orientation, labelloc",
     [
         ("horizontal", "top"),
