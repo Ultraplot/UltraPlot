@@ -671,6 +671,41 @@ def _align_bbox(align, length):
     return mtransforms.Bbox(bounds)
 
 
+def _get_side_colorbar_ticklocation(side, orientation, tickloc, ticklocation):
+    """Return the outward-facing tick location for a side colorbar."""
+    if orientation == "horizontal":
+        default = "bottom" if side == "bottom" else "top"
+    else:
+        default = "left" if side == "left" else "right"
+    return _not_none(tickloc, ticklocation, default)
+
+
+def _convert_side_colorbar_units(axes, orientation, length, width, pad):
+    """Convert side colorbar dimensions to axes-relative units."""
+    horizontal = orientation == "horizontal"
+    if isinstance(length, str):
+        length = units(length, "em", "ax", axes=axes, width=horizontal)
+    if not isinstance(width, str):
+        width *= 0.5
+    width = units(width, "in", "ax", axes=axes, width=not horizontal)
+    xpad = units(pad, "em", "ax", axes=axes, width=True)
+    ypad = units(pad, "em", "ax", axes=axes, width=False)
+    pad_points = units(pad, "em", "pt", axes=axes, width=True)
+    return length, width, xpad, ypad, pad_points
+
+
+def _get_side_colorbar_bounds(side, align, length, width, xpad, ypad):
+    """Return axes-relative bounds for a side colorbar."""
+    aligned = _align_bbox(align, length).x0
+    if side == "right":
+        return [1 + xpad, aligned, width, length]
+    if side == "left":
+        return [-xpad - width, aligned, width, length]
+    if side == "top":
+        return [aligned, 1 + ypad, length, width]
+    return [aligned, -ypad - width, length, width]
+
+
 class _TransformedBoundsLocator:
     """
     Axes locator for `~Axes.inset_axes` and other axes.
@@ -2094,41 +2129,13 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         orientation = _not_none(
             orientation, "vertical" if side in ("left", "right") else "horizontal"
         )
-        if orientation == "horizontal":
-            ticklocation = _not_none(
-                tickloc,
-                ticklocation,
-                "bottom" if side == "bottom" else "top",
-            )
-        else:
-            ticklocation = _not_none(
-                tickloc,
-                ticklocation,
-                "left" if side == "left" else "right",
-            )
-
-        if isinstance(length, str):
-            length = units(
-                length, "em", "ax", axes=self, width=orientation == "horizontal"
-            )
-        if not isinstance(width, str):
-            width *= 0.5
-        width = units(width, "in", "ax", axes=self, width=orientation == "vertical")
-        xpad = units(pad, "em", "ax", axes=self, width=True)
-        ypad = units(pad, "em", "ax", axes=self, width=False)
-
-        aligned = _align_bbox(align, length).x0
-
-        if side == "right":
-            bounds = [1 + xpad, aligned, width, length]
-        elif side == "left":
-            bounds = [-xpad - width, aligned, width, length]
-        elif side == "top":
-            bounds = [aligned, 1 + ypad, length, width]
-        else:
-            bounds = [aligned, -ypad - width, length, width]
-
-        pad_points = units(pad, "em", "pt", axes=self, width=True)
+        ticklocation = _get_side_colorbar_ticklocation(
+            side, orientation, tickloc, ticklocation
+        )
+        length, width, xpad, ypad, pad_points = _convert_side_colorbar_units(
+            self, orientation, length, width, pad
+        )
+        bounds = _get_side_colorbar_bounds(side, align, length, width, xpad, ypad)
         locator = _SideColorbarLocator(self, side, bounds, pad_points)
         ax = self._add_colorbar_child_axes(bounds, locator=locator)
         ax._inset_colorbar_frame = None
