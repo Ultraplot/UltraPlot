@@ -674,9 +674,9 @@ def _align_bbox(align, length):
 def _get_side_colorbar_ticklocation(side, orientation, tickloc, ticklocation):
     """Return the outward-facing tick location for a side colorbar."""
     if orientation == "horizontal":
-        default = "bottom" if side == "bottom" else "top"
+        default = "top" if side == "top" else "bottom"
     else:
-        default = "left" if side == "left" else "right"
+        default = "right" if side == "right" else "left"
     return _not_none(tickloc, ticklocation, default)
 
 
@@ -704,6 +704,14 @@ def _get_side_colorbar_bounds(side, align, length, width, xpad, ypad):
     if side == "top":
         return [aligned, 1 + ypad, length, width]
     return [aligned, -ypad - width, length, width]
+
+
+def _get_filled_colorbar_bounds(side, align, length):
+    """Return panel-relative bounds for a side colorbar."""
+    aligned = _align_bbox(align, length).x0
+    if side in ("top", "bottom"):
+        return [aligned, 0, length, 1]
+    return [0, aligned, 1, length]
 
 
 class _TransformedBoundsLocator:
@@ -1949,50 +1957,14 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         side = _not_none(side, "left" if orientation == "vertical" else "bottom")
         align = _not_none(align, "center")
         length = _not_none(length=length, default=rc["colorbar.length"])
-        ticklocation = _not_none(tickloc=tickloc, ticklocation=ticklocation)
-
-        # Calculate inset bounds for the colorbar
-        delta = 0.5 * (1 - length)
-        if side in ("bottom", "top"):
-            if align == "left":
-                bounds = (0, 0, length, 1)
-            elif align == "center":
-                bounds = (delta, 0, length, 1)
-            elif align == "right":
-                bounds = (2 * delta, 0, length, 1)
-            else:
-                raise ValueError(f"Invalid align={align!r} for colorbar loc={side!r}.")
-        else:
-            if align == "bottom":
-                bounds = (0, 0, 1, length)
-            elif align == "center":
-                bounds = (0, delta, 1, length)
-            elif align == "top":
-                bounds = (0, 2 * delta, 1, length)
-            else:
-                raise ValueError(f"Invalid align={align!r} for colorbar loc={side!r}.")
-
-        # Add the axes as a child of the original axes
-        cls = mproj.get_projection_class("ultraplot_cartesian")
-        locator = self._make_inset_locator(bounds, self.transAxes)
-        ax = cls(self.figure, locator(self, None).bounds, zorder=5)
-        ax.set_axes_locator(locator)
-        self.add_child_axes(ax)
-        ax.patch.set_facecolor("none")  # ignore axes.alpha application
-
-        # Handle default keyword args
-        if orientation is None:
-            orientation = "horizontal" if side in ("bottom", "top") else "vertical"
-        if orientation == "horizontal":
-            outside, inside = "bottom", "top"
-            if side == "top":
-                outside, inside = inside, outside
-            ticklocation = _not_none(ticklocation, outside)
-        else:
-            outside, inside = "left", "right"
-            if side == "right":
-                outside, inside = inside, outside
-            ticklocation = _not_none(ticklocation, outside)
+        orientation = _not_none(
+            orientation, "horizontal" if side in ("bottom", "top") else "vertical"
+        )
+        ticklocation = _get_side_colorbar_ticklocation(
+            side, orientation, tickloc, ticklocation
+        )
+        bounds = _get_filled_colorbar_bounds(side, align, length)
+        ax = self._add_colorbar_child_axes(bounds, track_parent=False)
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
         return ax, kwargs
 
@@ -2101,7 +2073,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
         return ax, kwargs
 
-    def _add_colorbar_child_axes(self, bounds, locator=None):
+    def _add_colorbar_child_axes(self, bounds, locator=None, track_parent=True):
         """Add and return a colorbar axes positioned relative to this axes."""
         cls = mproj.get_projection_class("ultraplot_cartesian")
         initial_locator = self._make_inset_locator(bounds, self.transAxes)
@@ -2109,7 +2081,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         ax.patch.set_facecolor("none")
         ax.set_axes_locator(locator or initial_locator)
         self.add_child_axes(ax)
-        ax._inset_colorbar_parent = self
+        if track_parent:
+            ax._inset_colorbar_parent = self
         return ax
 
     def _parse_colorbar_inset_side(
