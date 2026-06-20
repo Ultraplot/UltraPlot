@@ -175,6 +175,42 @@ def test_inset_axes_side_colorbars_stack_outward(rng, loc):
 
 
 @pytest.mark.parametrize(
+    "loc, first_align, second_align, position",
+    [
+        ("left", "bottom", "top", "x0"),
+        ("right", "bottom", "top", "x0"),
+        ("top", "left", "right", "y0"),
+        ("bottom", "left", "right", "y0"),
+    ],
+)
+def test_nonoverlapping_inset_axes_side_colorbars_share_layer(
+    rng, loc, first_align, second_align, position
+):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    first = ix.colorbar(m, loc=loc, align=first_align, length=0.4)
+    second = ix.colorbar(m, loc=loc, align=second_align, length=0.4)
+
+    fig.canvas.draw()
+    assert getattr(first.ax.bbox, position) == pytest.approx(
+        getattr(second.ax.bbox, position)
+    )
+
+
+@pytest.mark.parametrize("loc, align", [("left", "left"), ("top", "top")])
+@pytest.mark.parametrize("inset", [False, True])
+def test_side_colorbar_rejects_cross_axis_alignment(rng, loc, align, inset):
+    fig, ax = uplt.subplots()
+    if inset:
+        ax = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ax.pcolormesh(rng.random((8, 8)))
+
+    with pytest.raises(ValueError, match="Invalid align"):
+        ax.colorbar(m, loc=loc, align=align)
+
+
+@pytest.mark.parametrize(
     "orientation, labelloc",
     [
         ("horizontal", "top"),

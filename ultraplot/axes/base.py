@@ -696,7 +696,7 @@ def _convert_side_colorbar_units(axes, orientation, length, width, pad):
 
 def _get_side_colorbar_bounds(side, align, length, width, xpad, ypad):
     """Return axes-relative bounds for a side colorbar."""
-    aligned = _align_bbox(align, length).x0
+    aligned = _get_colorbar_aligned_position(side, align, length)
     if side == "right":
         return [1 + xpad, aligned, width, length]
     if side == "left":
@@ -708,10 +708,19 @@ def _get_side_colorbar_bounds(side, align, length, width, xpad, ypad):
 
 def _get_filled_colorbar_bounds(side, align, length):
     """Return panel-relative bounds for a side colorbar."""
-    aligned = _align_bbox(align, length).x0
+    aligned = _get_colorbar_aligned_position(side, align, length)
     if side in ("top", "bottom"):
         return [aligned, 0, length, 1]
     return [0, aligned, 1, length]
+
+
+def _get_colorbar_aligned_position(side, align, length):
+    """Validate colorbar alignment and return its long-axis start position."""
+    horizontal = side in ("top", "bottom")
+    valid = ("left", "center", "right") if horizontal else ("bottom", "center", "top")
+    if align not in valid:
+        raise ValueError(f"Invalid align={align!r} for colorbar loc={side!r}.")
+    return _align_bbox(align, length).x0
 
 
 class _TransformedBoundsLocator:
@@ -2117,16 +2126,19 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self, orientation, length, width, pad
         )
         bounds = _get_side_colorbar_bounds(side, align, length, width, xpad, ypad)
+        align_bbox = _align_bbox(align, length)
         previous = (
             child
             for child in self.child_axes
             if getattr(child, "_inset_colorbar_side", None) == side
+            and align_bbox.overlaps(child._inset_colorbar_align_bbox)
         )
         locator = _SideColorbarLocator(
             self, side, bounds, pad_points, previous=previous
         )
         ax = self._add_colorbar_child_axes(bounds, locator=locator)
         ax._inset_colorbar_side = side
+        ax._inset_colorbar_align_bbox = align_bbox
         ax._inset_colorbar_frame = None
 
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
