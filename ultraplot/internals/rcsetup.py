@@ -1052,6 +1052,12 @@ _rc_ultraplot_table = {
         _validate_float,
         "Vertical margin around ribbon diagrams (axes-relative units).",
     ),
+    # Plot settings
+    "plot.sticky": (
+        True,
+        _validate_bool,
+        "Whether to use sticky edges for line and area plots by default.",
+    ),
     "ribbon.rowheightratio": (
         2.2,
         _validate_float,
