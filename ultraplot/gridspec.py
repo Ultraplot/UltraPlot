@@ -17,6 +17,7 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 
 from . import axes as paxes
+from .axes._formatting import pop_axis_format_kwargs
 from .config import rc
 from .internals import (
     _not_none,
@@ -2114,7 +2115,12 @@ class SubplotGrid(MutableSequence, list):
         else:
             shared_title_loc = None
             shared_title_pad = None
+        signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
+            kwargs, *paxes.Axes._format_signatures.values()
+        )
         rc_kw, rc_mode = _pop_rc(kwargs)
+        kwargs.update(signature_axis_kwargs)
+        kwargs.update(generic_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             implicit_share_xlabels = (
                 is_subset
