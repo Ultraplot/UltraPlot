@@ -104,7 +104,17 @@ UltraPlot is published on `PyPi <https://pypi.org/project/ultraplot/>`__ and
    pip install ultraplot
    conda install -c conda-forge ultraplot
 
-The default install includes optional features (for example, pyCirclize-based plots).
+The default install keeps a broad core runtime set (for example, pyCirclize-based
+plots) without pulling in every optional integration. Install extras only when you
+need them:
+
+.. code-block:: bash
+
+   pip install "ultraplot[astro]"   # Astropy/WCS integration
+   pip install "ultraplot[all]"     # Optional runtime integrations
+   pip install "ultraplot[astro,geo]"  # Combine extras
+   pip install "ultraplot[astropy,cartopy]"  # Package-name aliases also work
+
 For a minimal install, use ``--no-deps`` and install the core requirements:
 
 .. code-block:: bash
