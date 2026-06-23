@@ -55,6 +55,22 @@ def test_outer_colorbar_frame_alias_controls_outline(kwargs):
     assert not cb.outline.get_visible()
 
 
+def test_top_colorbar_inferred_orientation_keeps_outside_ticks():
+    fig, ax = uplt.subplots()
+    cb = ax.colorbar("magma", loc="top")
+
+    assert cb.ax.xaxis.get_ticks_position() == "top"
+    assert cb.ax.xaxis.get_label_position() == "top"
+
+
+def test_explicit_horizontal_colorbar_defaults_to_bottom_ticks():
+    fig, ax = uplt.subplots()
+    cb = ax.colorbar("magma", loc="top", orientation="horizontal")
+
+    assert cb.ax.xaxis.get_ticks_position() == "bottom"
+    assert cb.ax.xaxis.get_label_position() == "bottom"
+
+
 @pytest.mark.parametrize("kwargs", [{"frame": False}, {"frameon": False}])
 def test_inset_colorbar_frame_alias_still_controls_frame(rng, kwargs):
     fig, ax = uplt.subplots()

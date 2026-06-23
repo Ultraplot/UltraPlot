@@ -671,9 +671,13 @@ def _align_bbox(align, length):
     return mtransforms.Bbox(bounds)
 
 
-def _get_side_colorbar_ticklocation(side, orientation, tickloc, ticklocation):
+def _get_side_colorbar_ticklocation(
+    side, orientation, tickloc, ticklocation, *, orientation_explicit=False
+):
     """Return the outward-facing tick location for a side colorbar."""
-    if orientation == "horizontal":
+    if orientation == "horizontal" and orientation_explicit:
+        default = "bottom"
+    elif orientation == "horizontal":
         default = "top" if side == "top" else "bottom"
     else:
         default = "right" if side == "right" else "left"
@@ -1966,11 +1970,16 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         side = _not_none(side, "left" if orientation == "vertical" else "bottom")
         align = _not_none(align, "center")
         length = _not_none(length=length, default=rc["colorbar.length"])
+        orientation_explicit = orientation is not None
         orientation = _not_none(
             orientation, "horizontal" if side in ("bottom", "top") else "vertical"
         )
         ticklocation = _get_side_colorbar_ticklocation(
-            side, orientation, tickloc, ticklocation
+            side,
+            orientation,
+            tickloc,
+            ticklocation,
+            orientation_explicit=orientation_explicit,
         )
         bounds = _get_filled_colorbar_bounds(side, align, length)
         ax = self._add_colorbar_child_axes(bounds, track_parent=False)
@@ -2116,11 +2125,16 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         pad = _not_none(space, pad, rc["subplots.panelpad"])
         side = _translate_loc(loc, "panel")
         align = _not_none(align, "center")
+        orientation_explicit = orientation is not None
         orientation = _not_none(
             orientation, "vertical" if side in ("left", "right") else "horizontal"
         )
         ticklocation = _get_side_colorbar_ticklocation(
-            side, orientation, tickloc, ticklocation
+            side,
+            orientation,
+            tickloc,
+            ticklocation,
+            orientation_explicit=orientation_explicit,
         )
         length, width, xpad, ypad, pad_points = _convert_side_colorbar_units(
             self, orientation, length, width, pad
