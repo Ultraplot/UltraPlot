@@ -55,12 +55,175 @@ def test_outer_colorbar_frame_alias_controls_outline(kwargs):
     assert not cb.outline.get_visible()
 
 
+def test_top_colorbar_inferred_orientation_keeps_outside_ticks():
+    fig, ax = uplt.subplots()
+    cb = ax.colorbar("magma", loc="top")
+
+    assert cb.ax.xaxis.get_ticks_position() == "top"
+    assert cb.ax.xaxis.get_label_position() == "top"
+
+
+def test_explicit_horizontal_colorbar_defaults_to_bottom_ticks():
+    fig, ax = uplt.subplots()
+    cb = ax.colorbar("magma", loc="top", orientation="horizontal")
+
+    assert cb.ax.xaxis.get_ticks_position() == "bottom"
+    assert cb.ax.xaxis.get_label_position() == "bottom"
+
+
 @pytest.mark.parametrize("kwargs", [{"frame": False}, {"frameon": False}])
 def test_inset_colorbar_frame_alias_still_controls_frame(rng, kwargs):
     fig, ax = uplt.subplots()
     m = ax.imshow(rng.random((10, 10)))
     cb = ax.colorbar(m, loc="ur", **kwargs)
     assert cb.ax._inset_colorbar_frame is None
+
+
+def test_colorbar_side_locations_work_on_inset_axes(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.55, 0.55, 0.35, 0.35], zoom=False)
+    m = ix.pcolormesh(rng.random((8, 8)))
+    ix_small = ax.inset_axes([0.65, 0.65, 0.15, 0.15], zoom=False)
+
+    cb_right = ix.colorbar(m, loc="right")
+    cb_bottom = fig.colorbar(m, ax=ix, loc="bottom")
+    ix_small.pcolormesh(rng.random((8, 8)), colorbar="r")
+    cb_auto = ix_small[0]._colorbar_dict[("right", "center")]
+
+    assert cb_right.orientation == "vertical"
+    assert cb_bottom.orientation == "horizontal"
+    assert cb_auto.orientation == "vertical"
+    assert cb_right.ax._inset_colorbar_parent is ix[0]
+    assert cb_bottom.ax._inset_colorbar_parent is ix[0]
+    assert cb_auto.ax._inset_colorbar_parent is ix_small[0]
+    assert cb_auto.ax._inset_colorbar_frame is None
+    assert cb_right.ax in ix[0].child_axes
+    assert cb_bottom.ax in ix[0].child_axes
+    assert cb_auto.ax in ix_small[0].child_axes
+
+    fig.canvas.draw()
+    assert cb_auto.ax.get_position().height == pytest.approx(
+        ix_small[0].get_position().height
+    )
+
+
+@pytest.mark.parametrize(
+    "loc, align, edge",
+    [
+        ("left", "top", "y1"),
+        ("right", "bottom", "y0"),
+        ("top", "left", "x0"),
+        ("bottom", "right", "x1"),
+    ],
+)
+def test_inset_axes_side_colorbar_uses_outer_api(rng, loc, align, edge):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+
+    cb = ix.colorbar(
+        m,
+        loc=loc,
+        align=align,
+        shrink=0.5,
+        width=0.1,
+        frame=False,
+        label="values",
+    )
+
+    fig.canvas.draw()
+    parent_bounds = ix.get_position()
+    colorbar_bounds = cb.ax.get_position()
+    assert getattr(colorbar_bounds, edge) == pytest.approx(getattr(parent_bounds, edge))
+    if cb.orientation == "vertical":
+        assert colorbar_bounds.height == pytest.approx(0.5 * parent_bounds.height)
+    else:
+        assert colorbar_bounds.width == pytest.approx(0.5 * parent_bounds.width)
+    assert cb.ax._inset_colorbar_frame is None
+    assert cb.outline.get_visible() is False
+    assert cb.ax.get_ylabel() == "values" or cb.ax.get_xlabel() == "values"
+
+
+def test_inset_axes_side_colorbar_numeric_width_scales_consistently(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    narrow = ix.colorbar(m, loc="left", width=0.1)
+    wide = ix.colorbar(m, loc="right", width=0.2)
+
+    fig.canvas.draw()
+    assert wide.ax.get_position().width == pytest.approx(
+        2 * narrow.ax.get_position().width
+    )
+
+
+def test_left_inset_axes_colorbar_clears_parent_ticks(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.55, 0.45, 0.35, 0.35], zoom=False)[0]
+    ix.pcolormesh(rng.random((10, 10)), colorbar="left", colorbar_kw={"width": 0.1})
+    cb = ix._colorbar_dict[("left", "center")]
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    assert cb.ax.bbox.x1 < ix.yaxis.get_tightbbox(renderer).x0
+
+
+@pytest.mark.parametrize("loc", ["left", "right", "top", "bottom"])
+def test_inset_axes_side_colorbars_stack_outward(rng, loc):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    inner = ix.colorbar(m, loc=loc)
+    outer = ix.colorbar(m, loc=loc)
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    inner_bbox = inner.ax.get_tightbbox(renderer)
+    outer_bbox = outer.ax.bbox
+    if loc == "left":
+        assert outer_bbox.x1 < inner_bbox.x0
+    elif loc == "right":
+        assert outer_bbox.x0 > inner_bbox.x1
+    elif loc == "top":
+        assert outer_bbox.y0 > inner_bbox.y1
+    else:
+        assert outer_bbox.y1 < inner_bbox.y0
+
+
+@pytest.mark.parametrize(
+    "loc, first_align, second_align, position",
+    [
+        ("left", "bottom", "top", "x0"),
+        ("right", "bottom", "top", "x0"),
+        ("top", "left", "right", "y0"),
+        ("bottom", "left", "right", "y0"),
+    ],
+)
+def test_nonoverlapping_inset_axes_side_colorbars_share_layer(
+    rng, loc, first_align, second_align, position
+):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    first = ix.colorbar(m, loc=loc, align=first_align, length=0.4)
+    second = ix.colorbar(m, loc=loc, align=second_align, length=0.4)
+
+    fig.canvas.draw()
+    assert getattr(first.ax.bbox, position) == pytest.approx(
+        getattr(second.ax.bbox, position)
+    )
+
+
+@pytest.mark.parametrize("loc, align", [("left", "left"), ("top", "top")])
+@pytest.mark.parametrize("inset", [False, True])
+def test_side_colorbar_rejects_cross_axis_alignment(rng, loc, align, inset):
+    fig, ax = uplt.subplots()
+    if inset:
+        ax = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ax.pcolormesh(rng.random((8, 8)))
+
+    with pytest.raises(ValueError, match="Invalid align"):
+        ax.colorbar(m, loc=loc, align=align)
 
 
 @pytest.mark.parametrize(
