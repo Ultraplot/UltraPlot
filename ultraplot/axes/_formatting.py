@@ -6,8 +6,24 @@ Shared metadata for axis formatting keyword routing and persistence.
 import inspect
 
 _AXIS_STYLE_FIELD_TEMPLATES = {
-    "color": ("{axis}color", "color", "{axis}ec", "ec", "{axis}edgecolor", "edgecolor"),
-    "linewidth": ("{axis}linewidth", "linewidth", "{axis}lw", "lw"),
+    "color": (
+        "{axis}color",
+        "color",
+        "{axis}ec",
+        "ec",
+        "{axis}edgecolor",
+        "edgecolor",
+        "axesec",
+        "axesedgecolor",
+    ),
+    "linewidth": (
+        "{axis}linewidth",
+        "linewidth",
+        "{axis}lw",
+        "lw",
+        "axeslw",
+        "axeslinewidth",
+    ),
     "rotation": ("{axis}rotation", "rotation"),
     "spineloc": ("{axis}spineloc", "{axis}loc"),
     "tickloc": ("{axis}tickloc",),
