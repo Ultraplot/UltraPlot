@@ -197,6 +197,34 @@ def test_subplots_preserve_generic_tickcolor_across_later_axis_color():
         } == {mcolors.to_rgba("C1")}
 
 
+def test_subplots_preserve_per_axes_axesedgecolor_on_reformat():
+    fig, axs = uplt.subplots(ncols=2)
+    expected = []
+    for i, ax in enumerate(axs):
+        color = f"C{i}"
+        expected.append(mcolors.to_rgba(color))
+        ax.format(axesedgecolor=color)
+
+    axs.format(title="Axes edge color")
+
+    actual = [mcolors.to_rgba(ax.spines["left"].get_edgecolor()) for ax in axs]
+    assert actual == expected
+
+
+def test_subplots_preserve_per_axes_axeslinewidth_on_reformat():
+    fig, axs = uplt.subplots(ncols=2)
+    expected = []
+    for i, ax in enumerate(axs):
+        linewidth = i + 1
+        expected.append(linewidth)
+        ax.format(axeslinewidth=linewidth)
+
+    axs.format(title="Axes line width")
+
+    actual = [ax.spines["left"].get_linewidth() for ax in axs]
+    assert actual == expected
+
+
 def test_subplots_apply_generic_labelcolor():
     fig, axs = uplt.subplots()
     ax = axs[0]
