@@ -666,6 +666,53 @@ def test_external_padding_with_points_to_pixels():
     assert new_pos.height <= initial_pos.height
 
 
+class ContainerTightBboxAxes(MinimalExternalAxes):
+    """External axes whose tight bbox exactly matches its current position."""
+
+    def get_tightbbox(self, renderer):
+        return self._position.transformed(self.figure.transFigure)
+
+
+def _external_position_after_abc_fit(abcloc):
+    fig = uplt.figure()
+    ax = ExternalAxesContainer(
+        fig,
+        1,
+        1,
+        1,
+        external_axes_class=ContainerTightBboxAxes,
+        external_axes_kwargs={},
+        external_padding=0.0,
+        external_shrink_factor=1.0,
+    )
+    ax.number = 1
+    ax.format(abc="A", abcloc=abcloc)
+
+    child = ax.get_external_child()
+    child.set_position(ax.get_position())
+    initial_pos = child.get_position().frozen()
+    renderer = fig.canvas.get_renderer()
+    ax._update_title_position(renderer)
+    ax._ensure_external_fits_within_container(renderer)
+    return initial_pos, child.get_position()
+
+
+def test_inside_abc_location_does_not_reserve_external_title_space():
+    """Inside abc labels should not shrink the external axes title area."""
+    initial_pos, new_pos = _external_position_after_abc_fit("upper left")
+
+    assert new_pos.height == pytest.approx(initial_pos.height)
+    assert new_pos.y0 == pytest.approx(initial_pos.y0)
+
+
+def test_above_axes_abc_location_reserves_external_title_space():
+    """Above-axes abc labels should still leave room above external axes."""
+    initial_pos, new_pos = _external_position_after_abc_fit("left")
+
+    assert new_pos.height < initial_pos.height
+    assert new_pos.y0 > initial_pos.y0
+
+
 def test_external_axes_fallback_to_rect_on_typeerror():
     """Test fallback to rect init when subplotspec is unsupported."""
     fig = uplt.figure()

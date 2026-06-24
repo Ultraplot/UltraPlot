@@ -25,6 +25,17 @@ def test_style_dict_and_inference_helpers():
     inline_style = config._get_style_dict({"axes.facecolor": "black"})
     assert inline_style["axes.facecolor"] == "black"
 
+    poster_style = config._get_style_dict("poster")
+    assert poster_style["figure.facecolor"] == "none"
+    assert poster_style["font.size"] > config._get_style_dict("default")["font.size"]
+
+    dark_style = config._get_style_dict("dark_background")
+    assert dark_style["axes.facecolor"] == "#000000"
+    assert dark_style["text.color"] == "#f8fafc"
+
+    dark_alias_style = config._get_style_dict("dark")
+    assert dark_alias_style["axes.facecolor"] == dark_style["axes.facecolor"]
+
     combined = {"xtick.labelsize": 9, "axes.titlesize": 14, "text.color": "red"}
     inferred = config._infer_ultraplot_dict(combined)
     assert inferred["tick.labelsize"] == 9
@@ -74,6 +85,10 @@ def test_configurator_validation_item_dicts_and_context(tmp_path):
     assert "tick.labelsize" in kw_ultraplot
     assert kw_ultraplot["title.size"] == pytest.approx(14)
     assert kw_ultraplot["grid.labelcolor"] == "red"
+
+    kw_ultraplot, kw_matplotlib = cfg._get_item_dicts("style", "dark_background")
+    assert kw_matplotlib["axes.facecolor"] == "#000000"
+    assert kw_ultraplot["grid.labelcolor"] == "#f8fafc"
 
     kw_ultraplot, kw_matplotlib = cfg._get_item_dicts("font.size", 12)
     assert "abc.size" in kw_ultraplot
