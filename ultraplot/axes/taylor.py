@@ -178,6 +178,7 @@ class TaylorAxes(PolarAxes):
         Taylor's quarter-sector view before the first draw. This feeds back into
         UltraPlot's reference-width autosizing and creates excessive left margin.
         """
+        self._update_taylor_std_ticklabels()
         bbox = super().get_tightbbox(renderer, *args, **kwargs.copy())
         axis_bbox = self.yaxis.get_tightbbox(renderer)
         window = self.get_window_extent(renderer)
@@ -294,6 +295,7 @@ class TaylorAxes(PolarAxes):
             rotation_mode="anchor",
             **kw,
         )
+        self._taylor_yticklabel_artists = []
 
     def _format_correlation(self, value):
         """
@@ -428,6 +430,67 @@ class TaylorAxes(PolarAxes):
         self.xaxis.set_major_locator(mticker.FixedLocator(angles))
         self.xaxis.set_major_formatter(mticker.FixedFormatter(labels))
 
+    def _update_taylor_std_ticklabels(self):
+        """
+        Duplicate radial tick labels onto the vertical standard-deviation axis.
+        """
+        if not hasattr(self, "_taylor_yticklabel_artists"):
+            return
+        rmin, rmax = self.get_ylim()
+        if not np.isfinite(rmin) or not np.isfinite(rmax) or np.isclose(rmin, rmax):
+            return
+
+        ticks = np.asarray(self.get_yticks(), dtype=float)
+        mask = (ticks >= min(rmin, rmax)) & (ticks <= max(rmin, rmax))
+        mask &= ~np.isclose(ticks, rmin)
+        ticks = ticks[mask]
+        formatter = self.yaxis.get_major_formatter()
+        try:
+            labels = formatter.format_ticks(ticks)
+        except Exception:
+            labels = [formatter(tick, index) for index, tick in enumerate(ticks)]
+
+        quadrant = self._taylor_quadrant
+        if quadrant in (1, 2):
+            theta = np.pi / 2
+        else:
+            theta = -np.pi / 2
+        ha = "right" if quadrant in (1, 3) else "left"
+        dx = -3 if ha == "right" else 3
+        transform = self.transData + mtransforms.ScaledTranslation(
+            dx / 72, 0, self.figure.dpi_scale_trans
+        )
+
+        for index, (tick, label) in enumerate(zip(ticks, labels)):
+            if index >= len(self._taylor_yticklabel_artists):
+                artist = self.text(
+                    theta,
+                    tick,
+                    "",
+                    transform=transform,
+                    ha=ha,
+                    va="center",
+                    clip_on=False,
+                    zorder=3.5,
+                )
+                self._taylor_yticklabel_artists.append(artist)
+            artist = self._taylor_yticklabel_artists[index]
+            artist.set_text(label)
+            artist.set_position((theta, tick))
+            artist.set_transform(transform)
+            artist.set_horizontalalignment(ha)
+            artist.set_verticalalignment("center")
+            artist.set_visible(bool(label))
+        for artist in self._taylor_yticklabel_artists[len(ticks) :]:
+            artist.set_visible(False)
+
+    def draw(self, renderer=None, *args, **kwargs):
+        """
+        Draw after refreshing Taylor-specific standard-deviation tick labels.
+        """
+        self._update_taylor_std_ticklabels()
+        super().draw(renderer, *args, **kwargs)
+
     @docstring._snippet_manager
     def format(
         self,
@@ -513,6 +576,7 @@ class TaylorAxes(PolarAxes):
         self.xaxis.label.set_visible(False)
         self.yaxis.label.set_visible(False)
         self._update_taylor_label_positions()
+        self._update_taylor_std_ticklabels()
 
 
 TaylorAxes._format_signatures[TaylorAxes] = inspect.signature(TaylorAxes.format)
