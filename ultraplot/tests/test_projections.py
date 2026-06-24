@@ -203,6 +203,8 @@ def test_taylor_projection_via_figure_format_dispatch():
     for ax in axs:
         assert ax.get_xlabel() == "Common X"
         assert ax.get_ylabel() == "Common Y"
+
+
 def test_polar_format_thetalabel_rlabel():
     """
     `thetalabel` and `rlabel` both create CurvedText artists.

@@ -160,7 +160,9 @@ class TaylorAxes(PolarAxes):
         """
         Plot values specified as correlation coefficient and standard deviation.
         """
-        return self.plot(self._correlation_to_theta(correlation), stddev, *args, **kwargs)
+        return self.plot(
+            self._correlation_to_theta(correlation), stddev, *args, **kwargs
+        )
 
     def scatter_corr(self, correlation, stddev, *args, **kwargs):
         """
@@ -330,16 +332,14 @@ class TaylorAxes(PolarAxes):
 
         x_top = quadrant in (2, 3)
         y_right = quadrant in (3, 4)
-        self._taylor_xlabel_artist.set_position(
-            (0.5, 1 + offset if x_top else -offset)
-        )
-        self._taylor_xlabel_artist.set_verticalalignment(
-            "bottom" if x_top else "top"
-        )
+        self._taylor_xlabel_artist.set_position((0.5, 1 + offset if x_top else -offset))
+        self._taylor_xlabel_artist.set_verticalalignment("bottom" if x_top else "top")
         self._taylor_ylabel_artist.set_position(
             (1 + offset if y_right else -offset, 0.5)
         )
-        self._taylor_ylabel_artist.set_horizontalalignment("left" if y_right else "center")
+        self._taylor_ylabel_artist.set_horizontalalignment(
+            "left" if y_right else "center"
+        )
         self._taylor_ylabel_artist.set_verticalalignment(
             "center" if y_right else "bottom"
         )
