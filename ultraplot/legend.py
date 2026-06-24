@@ -1514,6 +1514,7 @@ class _LegendInputs:
     pad: Any
     space: Any
     frameon: bool
+    linewidth: Any
     ncol: Any
     order: str
     label: Any
@@ -2084,6 +2085,7 @@ class UltraLegend:
             pad=pad,
             space=space,
             frameon=frameon,
+            linewidth=kwargs.get("linewidth", None),
             ncol=ncol,
             order=order,
             label=label,
