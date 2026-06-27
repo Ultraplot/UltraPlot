@@ -7,6 +7,7 @@ import warnings
 
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
 import pytest
 
@@ -155,6 +156,184 @@ def test_polar_projections():
         rlines=0.25,
     )
     return fig
+
+
+def test_taylor_projection_labels_and_defaults():
+    fig, axs = uplt.subplots(proj="taylor")
+    ax = axs[0]
+
+    assert ax._name == "taylor"
+    ax.format(xlabel="STD X", ylabel="STD Y")
+    fig.canvas.draw()
+
+    assert ax.get_xlabel() == "STD X"
+    assert ax.get_ylabel() == "STD Y"
+    assert not ax.xaxis.label.get_visible()
+    assert not ax.yaxis.label.get_visible()
+    assert ax._taylor_xlabel_artist.get_text() == "STD X"
+    assert ax._taylor_ylabel_artist.get_text() == "STD Y"
+    assert ax._taylor_corrlabel_artist.get_text() == "Correlation"
+    assert np.allclose(np.rad2deg(ax.get_xlim()), (0.0, 90.0))
+    assert ax.get_rlabel_position() == pytest.approx(135.0)
+    assert [label.get_text() for label in ax.get_xticklabels()] == [
+        "1.00",
+        "0.95",
+        "0.90",
+        "0.80",
+        "0.60",
+        "0.40",
+        "0.20",
+        "0.00",
+    ]
+
+
+def test_taylor_projection_thetaunit_deg():
+    fig, axs = uplt.subplots(proj="taylor")
+    ax = axs[0]
+    ax.format(thetaunit="deg")
+    fig.canvas.draw()
+
+    labels = [label.get_text() for label in ax.get_xticklabels() if label.get_text()]
+    assert labels
+    assert any("°" in label for label in labels)
+
+
+def test_taylor_projection_quadrants_and_corr_helpers():
+    fig, axs = uplt.subplots(ncols=3, proj="taylor")
+    for ax, quadrant, expected_xlim, expected_rlabel, expected_theta in zip(
+        axs,
+        ("upper-left", 3, "upside down"),
+        ((90.0, 180.0), (180.0, 270.0), (0.0, -90.0)),
+        (45.0, 315.0, 225.0),
+        (np.pi / 2 + np.pi / 3, np.pi + np.pi / 3, -np.pi / 3),
+    ):
+        ax.format(
+            quadrant=quadrant,
+            corrlabel="rho",
+            thetaunit="rad",
+            corrticks=[1.0, 0.5, 0.0],
+            labelpad=8,
+            labelcolor="red",
+            labelsize=9,
+            labelweight="bold",
+            xlabel_kw={"color": "blue"},
+            ylabel_kw={"color": "green"},
+            corrlabel_kw={"color": "purple"},
+        )
+        line = ax.plot_corr([0.5], [1.2], marker="o")[0]
+        points = ax.scatter_corr([0.5], [1.2])
+
+        assert np.allclose(np.rad2deg(ax.get_xlim()), expected_xlim)
+        assert ax.get_rlabel_position() == pytest.approx(expected_rlabel)
+        assert line.get_xdata()[0] == pytest.approx(expected_theta)
+        assert points.get_offsets()[0, 0] == pytest.approx(expected_theta)
+        assert ax._taylor_corrlabel_artist.get_text() == "rho"
+        assert ax._taylor_xlabel_artist.get_color() == "blue"
+        assert ax._taylor_ylabel_artist.get_color() == "green"
+        assert ax._taylor_corrlabel_artist.get_color() == "purple"
+        assert [label.get_text() for label in ax.get_xticklabels()] == [
+            "0",
+            "1.0472",
+            "1.5708",
+        ]
+
+
+def test_taylor_projection_setters_and_scalar_corrticks():
+    fig, axs = uplt.subplots(proj="taylor")
+    ax = axs[0]
+
+    returned_xlabel = ax.set_xlabel(
+        "direct x", fontdict={"size": 11}, labelpad=6, loc="right", color="red"
+    )
+    returned_ylabel = ax.set_ylabel(
+        "direct y", fontdict={"size": 12}, labelpad=7, loc="top", color="blue"
+    )
+    ax.format(corrlocator=0.5)
+    fig.canvas.draw()
+
+    assert returned_xlabel is ax.xaxis.label
+    assert returned_ylabel is ax.yaxis.label
+    assert ax._taylor_xlabel_artist.get_text() == "direct x"
+    assert ax._taylor_ylabel_artist.get_text() == "direct y"
+    assert ax._taylor_xlabel_artist.get_color() == "red"
+    assert ax._taylor_ylabel_artist.get_color() == "blue"
+    assert ax._taylor_labelpad == 7
+    assert np.allclose(ax._taylor_corrs, [1.0, 0.5, 0.0])
+
+
+def test_taylor_projection_std_ticklabels_update_and_hide():
+    fig, axs = uplt.subplots(proj="taylor")
+    ax = axs[0]
+    ax.format(quadrant=4, rlim=(0, 2), rlines=[0, 1, 2])
+    fig.canvas.draw()
+
+    artists = ax._taylor_yticklabel_artists
+    visible_artists = [artist for artist in artists if artist.get_visible()]
+    assert visible_artists
+    assert all(
+        artist.get_position()[0] == pytest.approx(-np.pi / 2)
+        for artist in visible_artists
+    )
+    assert all(artist.get_horizontalalignment() == "left" for artist in visible_artists)
+
+    ax.set_yticks([0, 1])
+    ax._update_taylor_std_ticklabels()
+    assert artists[0].get_text() == "1"
+    assert all(not artist.get_visible() for artist in artists[1:])
+
+
+def test_taylor_projection_std_ticklabels_formatter_fallback():
+    class RaisingFormatter(mticker.Formatter):
+        def format_ticks(self, values):
+            raise RuntimeError("force scalar formatting")
+
+        def __call__(self, value, pos=None):
+            return f"tick-{pos}:{value:g}"
+
+    fig, axs = uplt.subplots(proj="taylor")
+    ax = axs[0]
+    ax.format(rlim=(0, 2), rlines=[0, 1])
+    ax.yaxis.set_major_formatter(RaisingFormatter())
+    ax._update_taylor_std_ticklabels()
+
+    assert ax._taylor_yticklabel_artists[0].get_text() == "tick-0:1"
+
+
+def test_taylor_projection_validation_errors():
+    fig, axs = uplt.subplots(proj="taylor")
+    ax = axs[0]
+
+    assert ax._parse_quadrant(None) is None
+    assert np.allclose(ax.correlation_to_angle([-2, 0, 2]), [np.pi, np.pi / 2, 0])
+    with pytest.raises(ValueError, match="Invalid Taylor quadrant"):
+        ax.format(quadrant="sideways")
+    with pytest.raises(ValueError, match="Invalid thetaunit"):
+        ax.format(thetaunit="turns")
+    with pytest.raises(ValueError, match="tick step must be positive"):
+        ax.format(corrlines=0)
+    with pytest.raises(ValueError, match="between -1 and 1"):
+        ax.format(corrticks=[1.2])
+    ax._taylor_thetaunit = "turns"
+    with pytest.raises(ValueError, match="Invalid thetaunit"):
+        ax._format_correlation(0.5)
+
+
+def test_taylor_single_axes_skips_shared_ticklabel_baseline():
+    fig, axs = uplt.subplots(proj="taylor")
+    baseline, skip = fig._compute_baseline_tick_state(
+        [axs[0]], "x", ("labelbottom", "labeltop")
+    )
+
+    assert baseline == {}
+    assert skip
+
+
+def test_taylor_projection_via_figure_format_dispatch():
+    fig, axs = uplt.subplots(ncols=2, proj="taylor")
+    axs.format(xlabel="Common X", ylabel="Common Y")
+    for ax in axs:
+        assert ax.get_xlabel() == "Common X"
+        assert ax.get_ylabel() == "Common Y"
 
 
 def test_polar_format_thetalabel_rlabel():

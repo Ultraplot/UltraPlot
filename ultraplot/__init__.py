@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from .axes import GeoAxes as GeoAxes
     from .axes import PlotAxes as PlotAxes
     from .axes import PolarAxes as PolarAxes
+    from .axes import TaylorAxes as TaylorAxes
     from .axes import ThreeAxes as ThreeAxes
     from .colors import ColormapDatabase as ColormapDatabase
     from .colors import ColorDatabase as ColorDatabase
