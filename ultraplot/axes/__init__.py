@@ -17,6 +17,7 @@ from .geo import (
 from .plot import PlotAxes  # noqa: F401
 from .polar import PolarAxes
 from .shared import _SharedAxes  # noqa: F401
+from .taylor import TaylorAxes
 from .three import ThreeAxes  # noqa: F401
 
 # Prevent importing module names and set order of appearance for objects
@@ -25,6 +26,7 @@ __all__ = [
     "PlotAxes",
     "CartesianAxes",
     "PolarAxes",
+    "TaylorAxes",
     "GeoAxes",
     "ThreeAxes",
     "ExternalAxesContainer",
@@ -34,7 +36,14 @@ __all__ = [
 # NOTE: We integrate with cartopy and basemap rather than using matplotlib's
 # native projection system. Therefore axes names are not part of public API.
 _cls_dict = {}  # track valid names
-for _cls in (CartesianAxes, PolarAxes, _CartopyAxes, _BasemapAxes, ThreeAxes):
+for _cls in (
+    CartesianAxes,
+    PolarAxes,
+    TaylorAxes,
+    _CartopyAxes,
+    _BasemapAxes,
+    ThreeAxes,
+):
     for _name in (_cls._name, *_cls._name_aliases):
         with context._state_context(_cls, name="ultraplot_" + _name):
             mproj.register_projection(_cls)

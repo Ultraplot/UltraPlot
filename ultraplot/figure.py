@@ -1544,6 +1544,16 @@ class Figure(mfigure.Figure):
         subplot_types = set()
         unsupported_found = False
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
+        main_axes = [axi for axi in group_axes if not getattr(axi, "_panel_side", None)]
+        if len(main_axes) < 2:
+            supported = all(
+                isinstance(
+                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+                )
+                for axi in main_axes
+            )
+            if not supported:
+                return {}, True
 
         for axi in group_axes:
             # Only main axes "vote"
