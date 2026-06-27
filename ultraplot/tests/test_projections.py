@@ -274,9 +274,7 @@ def test_taylor_projection_std_ticklabels_update_and_hide():
         artist.get_position()[0] == pytest.approx(-np.pi / 2)
         for artist in visible_artists
     )
-    assert all(
-        artist.get_horizontalalignment() == "left" for artist in visible_artists
-    )
+    assert all(artist.get_horizontalalignment() == "left" for artist in visible_artists)
 
     ax.set_yticks([0, 1])
     ax._update_taylor_std_ticklabels()
@@ -306,9 +304,7 @@ def test_taylor_projection_validation_errors():
     ax = axs[0]
 
     assert ax._parse_quadrant(None) is None
-    assert np.allclose(
-        ax.correlation_to_angle([-2, 0, 2]), [np.pi, np.pi / 2, 0]
-    )
+    assert np.allclose(ax.correlation_to_angle([-2, 0, 2]), [np.pi, np.pi / 2, 0])
     with pytest.raises(ValueError, match="Invalid Taylor quadrant"):
         ax.format(quadrant="sideways")
     with pytest.raises(ValueError, match="Invalid thetaunit"):
