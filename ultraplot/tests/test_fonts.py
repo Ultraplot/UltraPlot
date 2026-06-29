@@ -29,17 +29,35 @@ def test_mathtext_letters_and_numbers_keep_active_font():
     assert all(name.lower() not in {"cmex10", "cmsy10"} for name in names)
 
 
-def test_mathtext_routes_mathcal_to_computer_modern():
-    """Test that mathcal uses Computer Modern script glyphs by default."""
+def test_mathtext_keeps_default_mathcal_font():
+    """Test that mathcal does not use Computer Modern unless requested."""
     with uplt.rc.context({}):
+        names = _mathtext_postscript_names(r"$\mathcal{ABC}$")
+
+    assert names
+    assert all(name != "Cmsy10" for name in names)
+
+
+def test_mathtext_cm_routes_mathcal_to_computer_modern():
+    """Test that mathcal uses Computer Modern script glyphs by default."""
+    with uplt.rc.context({"mathtext.cm": True}):
         names = _mathtext_postscript_names(r"$\mathcal{ABC}$")
 
     assert names == ["Cmsy10", "Cmsy10", "Cmsy10"]
 
 
-def test_mathtext_routes_selected_operators_to_computer_modern():
-    """Test that selected large operators use Computer Modern glyphs."""
+def test_mathtext_keeps_default_operator_fonts():
+    """Test that selected operators use default fonts unless requested."""
     with uplt.rc.context({}):
+        names = _mathtext_postscript_names(r"$\sum x \int y$")
+
+    assert names[0] != "Cmex10"
+    assert names[2] != "Cmex10"
+
+
+def test_mathtext_cm_routes_selected_operators_to_computer_modern():
+    """Test that selected large operators use Computer Modern glyphs."""
+    with uplt.rc.context({"mathtext.cm": True}):
         names = _mathtext_postscript_names(r"$\sum x \int y$")
 
     assert names[0] == "Cmex10"
@@ -146,7 +164,8 @@ class TestCollectAndReplaceFonts:
         self.font_instance._cm_font = MagicMock()
         self.font_instance._cm_font._get_glyph.return_value = expected
 
-        result = self.font_instance._get_glyph("it", "it", r"\sum")
+        with uplt.rc.context({"mathtext.cm": True}):
+            result = self.font_instance._get_glyph("it", "it", r"\sum")
 
         assert result is expected
         self.font_instance._cm_font._get_glyph.assert_called_once_with(
@@ -172,7 +191,8 @@ class TestCollectAndReplaceFonts:
             expected
         )
 
-        result = self.font_instance.get_sized_alternatives_for_symbol("it", r"\sum")
+        with uplt.rc.context({"mathtext.cm": True}):
+            result = self.font_instance.get_sized_alternatives_for_symbol("it", r"\sum")
 
         assert result == expected
         self.font_instance._cm_font.get_sized_alternatives_for_symbol.assert_called_once_with(

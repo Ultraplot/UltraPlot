@@ -926,7 +926,7 @@ _rc_matplotlib_default = {
     "mathtext.default": "it",
     "mathtext.fontset": "custom",
     "mathtext.bf": "regular:bold",  # custom settings implemented above
-    "mathtext.cal": "cmsy10",
+    "mathtext.cal": "cursive",
     "mathtext.it": "regular:italic",
     "mathtext.rm": "regular",
     "mathtext.sf": "regular",
@@ -1713,6 +1713,13 @@ _rc_ultraplot_table = {
         True,
         _validate_bool,
         "Alias for :rcraw:`axes.formatter.useOffset`.",
+    ),
+    # Math text settings
+    "mathtext.cm": (
+        False,
+        _validate_bool,
+        "Whether to route selected math text glyphs through Computer Modern "
+        "while preserving the active font for ordinary letters and numbers.",
     ),
     # Geographic axes settings
     "geo.backend": (

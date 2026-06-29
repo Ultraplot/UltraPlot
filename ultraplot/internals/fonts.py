@@ -13,11 +13,20 @@ try:  # newer versions
     from matplotlib._mathtext import BakomaFonts, UnicodeFonts
 except ImportError:  # older versions
     from matplotlib.mathtext import UnicodeFonts
+
     BakomaFonts = None
 
 # Global constant
 WARN_MATHPARSER = True
 _CM_OPERATOR_SYMBOLS = frozenset((r"\sum", r"\prod", r"\coprod", r"\int", r"\oint"))
+
+
+def _is_cm_mathtext_enabled():
+    try:
+        from ..config import rc
+    except ImportError:
+        return False
+    return bool(rc["mathtext.cm"])
 
 
 class _UnicodeFonts(UnicodeFonts):
@@ -48,6 +57,8 @@ class _UnicodeFonts(UnicodeFonts):
 
     def _init_computer_modern_fonts(self, *args, **kwargs):
         self._cm_font = BakomaFonts(*args, **kwargs) if BakomaFonts else None
+        if _is_cm_mathtext_enabled() and self._cm_font is not None:
+            self.fontmap["cal"] = self._cm_font.fontmap["cal"]
 
     def _collect_replacements(self) -> tuple[dict, dict]:
         ctx = {}  # rc context
@@ -80,13 +91,21 @@ class _UnicodeFonts(UnicodeFonts):
 
     def _get_glyph(self, fontname: str, font_class: str, sym: str):
         cm_font = getattr(self, "_cm_font", None)
-        if cm_font is not None and sym in _CM_OPERATOR_SYMBOLS:
+        if (
+            _is_cm_mathtext_enabled()
+            and cm_font is not None
+            and sym in _CM_OPERATOR_SYMBOLS
+        ):
             return cm_font._get_glyph(fontname, font_class, sym)
         return super()._get_glyph(fontname, font_class, sym)
 
     def get_sized_alternatives_for_symbol(self, fontname: str, sym: str):
         cm_font = getattr(self, "_cm_font", None)
-        if cm_font is not None and sym in _CM_OPERATOR_SYMBOLS:
+        if (
+            _is_cm_mathtext_enabled()
+            and cm_font is not None
+            and sym in _CM_OPERATOR_SYMBOLS
+        ):
             return cm_font.get_sized_alternatives_for_symbol(fontname, sym)
         return super().get_sized_alternatives_for_symbol(fontname, sym)
 
