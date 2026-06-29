@@ -15,6 +15,39 @@ def test_replacement():
     pass
 
 
+def _mathtext_postscript_names(text):
+    parsed = MathTextParser("path").parse(text, dpi=72)
+    return [glyph[0].postscript_name for glyph in parsed.glyphs]
+
+
+def test_mathtext_letters_and_numbers_keep_active_font():
+    """Test that plain math text still uses the active non-CM math font."""
+    with uplt.rc.context({}):
+        names = _mathtext_postscript_names(r"$ABC123$")
+
+    assert names
+    assert all(name.lower() not in {"cmex10", "cmsy10"} for name in names)
+
+
+def test_mathtext_routes_mathcal_to_computer_modern():
+    """Test that mathcal uses Computer Modern script glyphs by default."""
+    with uplt.rc.context({}):
+        names = _mathtext_postscript_names(r"$\mathcal{ABC}$")
+
+    assert names == ["Cmsy10", "Cmsy10", "Cmsy10"]
+
+
+def test_mathtext_routes_selected_operators_to_computer_modern():
+    """Test that selected large operators use Computer Modern glyphs."""
+    with uplt.rc.context({}):
+        names = _mathtext_postscript_names(r"$\sum x \int y$")
+
+    assert names[0] == "Cmex10"
+    assert names[2] == "Cmex10"
+    assert names[1].lower() not in {"cmex10", "cmsy10"}
+    assert names[3].lower() not in {"cmex10", "cmsy10"}
+
+
 def test_warning_on_missing_attributes(monkeypatch):
     """Test warning is raised when font instance is missing required attributes."""
     # Create a mock instance without initialization
@@ -80,6 +113,7 @@ class TestCollectAndReplaceFonts:
                 return_value=(mock_ctx, mock_regular),
             ) as mock_collect,
             patch.object(ufonts._UnicodeFonts, "_replace_fonts") as mock_replace,
+            patch.object(ufonts._UnicodeFonts, "_init_computer_modern_fonts"),
             patch.object(
                 ufonts.UnicodeFonts, "__init__", return_value=None
             ) as mock_super_init,
@@ -105,6 +139,60 @@ class TestCollectAndReplaceFonts:
 
                 # Verify rc_context was called with the correct arguments
                 mock_rc_context.assert_called_once_with(mock_ctx)
+
+    def test_get_glyph_routes_operator_to_computer_modern(self):
+        """Test selected operators are delegated to the Computer Modern handler."""
+        expected = object()
+        self.font_instance._cm_font = MagicMock()
+        self.font_instance._cm_font._get_glyph.return_value = expected
+
+        result = self.font_instance._get_glyph("it", "it", r"\sum")
+
+        assert result is expected
+        self.font_instance._cm_font._get_glyph.assert_called_once_with(
+            "it", "it", r"\sum"
+        )
+
+    def test_get_glyph_routes_non_operator_to_parent(self):
+        """Test non-operator glyphs still use the parent mathtext handler."""
+        expected = object()
+        self.font_instance._cm_font = MagicMock()
+
+        with patch.object(ufonts.UnicodeFonts, "_get_glyph", return_value=expected):
+            result = self.font_instance._get_glyph("it", "it", "x")
+
+        assert result is expected
+        self.font_instance._cm_font._get_glyph.assert_not_called()
+
+    def test_sized_alternatives_routes_operator_to_computer_modern(self):
+        """Test selected operator sizing is delegated to Computer Modern."""
+        expected = [("ex", r"\sum")]
+        self.font_instance._cm_font = MagicMock()
+        self.font_instance._cm_font.get_sized_alternatives_for_symbol.return_value = (
+            expected
+        )
+
+        result = self.font_instance.get_sized_alternatives_for_symbol("it", r"\sum")
+
+        assert result == expected
+        self.font_instance._cm_font.get_sized_alternatives_for_symbol.assert_called_once_with(
+            "it", r"\sum"
+        )
+
+    def test_sized_alternatives_routes_non_operator_to_parent(self):
+        """Test non-operator sizing still uses the parent mathtext handler."""
+        expected = [("it", "x")]
+        self.font_instance._cm_font = MagicMock()
+
+        with patch.object(
+            ufonts.UnicodeFonts,
+            "get_sized_alternatives_for_symbol",
+            return_value=expected,
+        ):
+            result = self.font_instance.get_sized_alternatives_for_symbol("it", "x")
+
+        assert result == expected
+        self.font_instance._cm_font.get_sized_alternatives_for_symbol.assert_not_called()
 
     def test_collect_replacements_no_regular_fonts(self, monkeypatch):
         """Test _collect_replacements with no 'regular' fonts in rcParams."""

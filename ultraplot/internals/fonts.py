@@ -10,12 +10,14 @@ from matplotlib.mathtext import MathTextParser
 from . import warnings
 
 try:  # newer versions
-    from matplotlib._mathtext import UnicodeFonts
+    from matplotlib._mathtext import BakomaFonts, UnicodeFonts
 except ImportError:  # older versions
     from matplotlib.mathtext import UnicodeFonts
+    BakomaFonts = None
 
 # Global constant
 WARN_MATHPARSER = True
+_CM_OPERATOR_SYMBOLS = frozenset((r"\sum", r"\prod", r"\coprod", r"\int", r"\oint"))
 
 
 class _UnicodeFonts(UnicodeFonts):
@@ -41,7 +43,11 @@ class _UnicodeFonts(UnicodeFonts):
         ctx, regular = self._collect_replacements()
         with mpl.rc_context(ctx):
             super().__init__(*args, **kwargs)
+        self._init_computer_modern_fonts(*args, **kwargs)
         self._replace_fonts(regular)
+
+    def _init_computer_modern_fonts(self, *args, **kwargs):
+        self._cm_font = BakomaFonts(*args, **kwargs) if BakomaFonts else None
 
     def _collect_replacements(self) -> tuple[dict, dict]:
         ctx = {}  # rc context
@@ -71,6 +77,18 @@ class _UnicodeFonts(UnicodeFonts):
             # Suppress duplicate warnings in case API changes
             warnings._warn_ultraplot("Failed to update the math text parser.")
             WARN_MATHPARSER = False
+
+    def _get_glyph(self, fontname: str, font_class: str, sym: str):
+        cm_font = getattr(self, "_cm_font", None)
+        if cm_font is not None and sym in _CM_OPERATOR_SYMBOLS:
+            return cm_font._get_glyph(fontname, font_class, sym)
+        return super()._get_glyph(fontname, font_class, sym)
+
+    def get_sized_alternatives_for_symbol(self, fontname: str, sym: str):
+        cm_font = getattr(self, "_cm_font", None)
+        if cm_font is not None and sym in _CM_OPERATOR_SYMBOLS:
+            return cm_font.get_sized_alternatives_for_symbol(fontname, sym)
+        return super().get_sized_alternatives_for_symbol(fontname, sym)
 
 
 # Replace the parser

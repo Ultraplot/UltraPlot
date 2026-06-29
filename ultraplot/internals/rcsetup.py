@@ -926,7 +926,7 @@ _rc_matplotlib_default = {
     "mathtext.default": "it",
     "mathtext.fontset": "custom",
     "mathtext.bf": "regular:bold",  # custom settings implemented above
-    "mathtext.cal": "cursive",
+    "mathtext.cal": "cmsy10",
     "mathtext.it": "regular:italic",
     "mathtext.rm": "regular",
     "mathtext.sf": "regular",
