@@ -64,6 +64,8 @@ __all__ = ["PlotAxes"]
 # NOTE: Increased from native linewidth of 0.25 matplotlib uses for grid box edges.
 # This is half of rc['patch.linewidth'] of 0.6. Half seems like a nice default.
 EDGEWIDTH = 0.3
+SCATTER_SIZE_KEYS = ("s", "sizes", "size")
+SCATTER_MARKERSIZE_KEYS = ("markersize", "ms", "markersizes")
 
 DataInput: TypeAlias = ArrayLike
 ColorTupleRGB: TypeAlias = tuple[float, float, float]
@@ -994,10 +996,14 @@ Plot markers with flexible keyword arguments.
 Parameters
 ----------
 %(plot.args_1d_{y})s
-s, size, ms, markersize : float or array-like or unit-spec, optional
+s, size, sizes : float or array-like or unit-spec, optional
     The marker size area(s). If this is an array matching the shape of `x` and `y`,
     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
     is processed by `~ultraplot.utils.units` and represents the width rather than area.
+ms, markersize, markersizes : float or array-like or unit-spec, optional
+    The marker diameter(s) in points. These are converted to area before
+    dispatching to `~matplotlib.axes.Axes.scatter`, so they are visually
+    consistent with `~ultraplot.axes.PlotAxes.plot`.
 c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors \
 : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
@@ -4369,8 +4375,9 @@ class PlotAxes(base.Axes):
 
         # Apply manual cycle properties
         if cycle_manually:
-            current_prop = self._get_lines._cycler_items[self._get_lines._idx]
-            self._get_lines._idx = (self._get_lines._idx + 1) % len(self._active_cycle)
+            cycler = getattr(self._get_lines, "_prop_cycle", self._get_lines)
+            current_prop = cycler._cycler_items[cycler._idx]
+            cycler._idx = (cycler._idx + 1) % len(cycler._cycler_items)
             for prop, key in cycle_manually.items():
                 if kwargs.get(key) is None and prop in current_prop:
                     value = current_prop[prop]
@@ -5579,6 +5586,16 @@ class PlotAxes(base.Axes):
             s = s ** (2, 1)[area_size]
         return s, kwargs
 
+    def _pop_markersize_as_diameter(self, kwargs):
+        """
+        Pop scatter ``ms`` / ``markersize`` aliases as point diameters.
+        """
+        opts = {key: kwargs.pop(key, None) for key in SCATTER_MARKERSIZE_KEYS}
+        value = _not_none(**opts)
+        if isinstance(value, str):
+            value = units(value, "pt")
+        return value
+
     def _apply_scatter(self, xs, ys, ss, cc, *, vert=True, **kwargs):
         """
         Apply scatter or scatterx markers.
@@ -5602,10 +5619,26 @@ class PlotAxes(base.Axes):
 
         kw = kwargs.copy()
         inbounds = kw.pop("inbounds", None)
-        kw.update(_pop_props(kw, "collection"))
+        marker_size = self._pop_markersize_as_diameter(kw)
+        kw.update(_pop_props(kw, "collection", skip=SCATTER_MARKERSIZE_KEYS))
         kw, extents = self._inbounds_extent(inbounds=inbounds, **kw)
         xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, autoreverse=False, **kw)
         ys, kw = inputs._dist_reduce(ys, **kw)
+        if marker_size is not None:
+            if ss is None:
+                ss = marker_size
+                area_size = kw.get("area_size", None)
+                if area_size not in (None, False):
+                    warnings._warn_ultraplot(
+                        "Ignoring area_size=True because ms/markersize "
+                        "now denotes marker diameter."
+                    )
+                kw["area_size"] = False
+            else:
+                warnings._warn_ultraplot(
+                    "Got conflicting scatter size arguments. Using s/size/sizes "
+                    "and ignoring ms/markersize."
+                )
         ss, kw = self._parse_markersize(ss, **kw)  # parse 's'
 
         # Only parse color if explicitly provided
@@ -5655,7 +5688,7 @@ class PlotAxes(base.Axes):
     @inputs._preprocess_or_redirect(
         "x",
         "y",
-        _get_aliases("collection", "sizes"),
+        SCATTER_SIZE_KEYS,
         _get_aliases("collection", "colors", "facecolors"),
         keywords=_get_aliases("collection", "linewidths", "edgecolors"),
     )
@@ -5671,7 +5704,7 @@ class PlotAxes(base.Axes):
     @inputs._preprocess_or_redirect(
         "y",
         "x",
-        _get_aliases("collection", "sizes"),
+        SCATTER_SIZE_KEYS,
         _get_aliases("collection", "colors", "facecolors"),
         keywords=_get_aliases("collection", "linewidths", "edgecolors"),
     )

@@ -426,6 +426,23 @@ def test_entrylegend_handle_kw_with_per_entry_mappings():
     uplt.close(fig)
 
 
+def test_entrylegend_s_is_area_ms_is_diameter():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.entrylegend(
+        [
+            {"label": "Area", "line": False, "s": 100},
+            {"label": "Diameter", "line": False, "ms": 10},
+            {"label": "Full name", "line": False, "markersize": 12},
+        ],
+        add=False,
+    )
+    assert labels == ["Area", "Diameter", "Full name"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+    assert handles[1].get_markersize() == pytest.approx(10)
+    assert handles[2].get_markersize() == pytest.approx(12)
+    uplt.close(fig)
+
+
 def test_catlegend_handle_kw_accepts_line_scatter_aliases():
     fig, ax = uplt.subplots()
     handles, labels = ax.catlegend(
@@ -457,6 +474,23 @@ def test_catlegend_handle_kw_accepts_line_scatter_aliases():
         mcolors.to_rgba(handles[1].get_markerfacecolor()),
         mcolors.to_rgba("blue7"),
     )
+    uplt.close(fig)
+
+
+def test_catlegend_s_is_area_ms_is_diameter():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.catlegend(
+        ["A", "B"],
+        add=False,
+        sizes={"A": 100, "B": 144},
+    )
+    assert labels == ["A", "B"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+    assert handles[1].get_markersize() == pytest.approx(12)
+
+    handles, labels = ax.catlegend(["C"], add=False, ms=12)
+    assert labels == ["C"]
+    assert handles[0].get_markersize() == pytest.approx(12)
     uplt.close(fig)
 
 

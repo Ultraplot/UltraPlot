@@ -937,6 +937,7 @@ _LINE_ALIAS_MAP = {
     "c": "color",
     "m": "marker",
     "ms": "markersize",
+    "markersizes": "markersize",
     "ls": "linestyle",
     "lw": "linewidth",
     "mec": "markeredgecolor",
@@ -1022,9 +1023,9 @@ _ENTRY_STYLE_FROM_COLLECTION = {
     "facecolors": "markerfacecolor",
     "linestyles": "linestyle",
     "linewidths": "markeredgewidth",
-    "sizes": "markersize",
-    "size": "markersize",
 }
+_ENTRY_AREA_SIZE_KEYS = ("s", "size", "sizes")
+_ENTRY_DIAMETER_SIZE_KEYS = ("ms", "markersizes")
 
 
 def _pop_aliases(kwargs: dict[str, Any], alias_map: dict[str, str]) -> dict[str, Any]:
@@ -1037,12 +1038,41 @@ def _pop_aliases(kwargs: dict[str, Any], alias_map: dict[str, str]) -> dict[str,
 
 
 def _pop_plurals(kwargs: dict[str, Any], plural_map: dict[str, str]) -> dict[str, Any]:
-    """Pop collection-style plurals (``colors``, ``sizes``, …) from ``kwargs``."""
+    """Pop collection-style plurals (``colors``, ``linewidths``, …)."""
     explicit = {}
     for key in plural_map:
         if key in kwargs:
             explicit[key] = kwargs.pop(key)
     return explicit
+
+
+def _area_to_markersize(value: Any) -> Any:
+    """
+    Convert area-style marker sizes to Line2D marker diameters.
+    """
+    if isinstance(value, Mapping):
+        return {key: _area_to_markersize(val) for key, val in value.items()}
+    if isinstance(value, str):
+        return units(value, "pt")
+    try:
+        if np.isscalar(value):
+            return float(np.sqrt(np.clip(value, 0, None)))
+    except TypeError:
+        return value
+    try:
+        values = list(value)
+    except TypeError:
+        return value
+    return [_area_to_markersize(val) for val in values]
+
+
+def _pop_area_size(kwargs: dict[str, Any]) -> Any:
+    """
+    Pop scatter-style size aliases and return Line2D marker diameters.
+    """
+    opts = {key: kwargs.pop(key, None) for key in _ENTRY_AREA_SIZE_KEYS}
+    value = _not_none(**opts)
+    return None if value is None else _area_to_markersize(value)
 
 
 def _pop_line2d_setters(kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -1075,9 +1105,10 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     Resolution order (highest → lowest priority):
 
     1. Full-name properties recognised by ``_pop_props(kwargs, "line")``.
-    2. Collection-style plurals (``colors`` → ``color``, ``sizes`` → ``markersize``, …).
-    3. Short aliases (``c`` → ``color``, ``ls`` → ``linestyle``, …).
-    4. Any other valid ``Line2D`` setter still in ``kwargs``.
+    2. Collection-style plurals (``colors`` → ``color``, …).
+    3. Scatter-style area sizes (``s`` / ``size`` / ``sizes`` → ``markersize``).
+    4. Short aliases (``c`` → ``color``, ``ls`` → ``linestyle``, …).
+    5. Any other valid ``Line2D`` setter still in ``kwargs``.
 
     Advanced ``MarkerStyle`` properties (``marker_capstyle``/``_joinstyle``/
     ``_transform``) are pulled out first so ``_pop_props`` does not consume
@@ -1088,17 +1119,25 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
         if key in kwargs:
             advanced_marker[key] = kwargs.pop(key)
 
+    area_size = _pop_area_size(kwargs)
     resolved_aliases = _pop_aliases(kwargs, _LINE_ALIAS_MAP)
     explicit_collection = _pop_plurals(kwargs, _ENTRY_STYLE_FROM_COLLECTION)
 
-    props = _pop_props(kwargs, "line")
-    collection_props = _pop_props(kwargs, "collection")
+    props = _pop_props(kwargs, "line", skip=("s", *_ENTRY_DIAMETER_SIZE_KEYS))
+    collection_props = _pop_props(
+        kwargs,
+        "collection",
+        skip=(*_ENTRY_AREA_SIZE_KEYS, "markersize", *_ENTRY_DIAMETER_SIZE_KEYS),
+    )
     collection_props.update(explicit_collection)
 
     for source, target in _ENTRY_STYLE_FROM_COLLECTION.items():
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
+
+    if area_size is not None and "markersize" not in props:
+        props["markersize"] = area_size
 
     for full_key, value in resolved_aliases.items():
         props.setdefault(full_key, value)
@@ -1618,7 +1657,10 @@ Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
 ``marker`` / ``m``
     Marker spec. Set to ``None`` or ``""`` to suppress the marker.
 ``markersize`` / ``ms``, ``markeredgewidth`` / ``mew``
-    Marker dimensions.
+    Marker dimensions. ``markersize`` / ``ms`` denote marker diameter in points.
+``s`` / ``size`` / ``sizes``
+    Scatter-style marker areas, converted to marker diameters for the legend
+    handle. Use ``markersize`` / ``ms`` when specifying diameters directly.
 ``markerfacecolor`` / ``mfc``, ``markeredgecolor`` / ``mec``, ``markerfacecoloralt`` / ``mfcalt``
     Marker fills and edges.
 ``linestyle`` / ``ls``, ``linewidth`` / ``lw``
@@ -1629,9 +1671,10 @@ Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
 ``marker_capstyle``, ``marker_joinstyle``, ``marker_transform``
     Advanced ``MarkerStyle`` properties; wrapped into the rendered marker.
 
-Plural forms (``colors``, ``markers``, ``sizes``, ``edgecolors``,
-``facecolors``, ``linestyles``, ``linewidths``) are accepted as
-synonyms for the singular per-entry form for backward compatibility.
+Plural forms (``colors``, ``markers``, ``edgecolors``, ``facecolors``,
+``linestyles``, ``linewidths``) are accepted as synonyms for the singular
+per-entry form for backward compatibility. ``sizes`` is accepted with
+scatter-style area semantics.
 Each value accepts the scalar / sequence / mapping forms described in
 ``%(legend.semantic_style_arg)s``."""
 
