@@ -5596,6 +5596,17 @@ class PlotAxes(base.Axes):
             value = units(value, "pt")
         return value
 
+    def _parse_markersize_as_diameter(self, markersize):
+        """
+        Convert point-diameter marker sizes to scatter areas.
+        """
+        sizes, _ = self._parse_markersize(
+            markersize,
+            area_size=False,
+            absolute_size=True,
+        )
+        return sizes
+
     def _apply_scatter(self, xs, ys, ss, cc, *, vert=True, **kwargs):
         """
         Apply scatter or scatterx markers.
@@ -5611,7 +5622,7 @@ class PlotAxes(base.Axes):
             "markerfacecolor": "c",
             "markeredgecolor": "edgecolors",
             "marker": "marker",
-            "markersize": "s",
+            "markersize": "markersize",
             "markeredgewidth": "linewidths",
             "linestyle": "linestyles",
             "linewidth": "linewidths",
@@ -5624,22 +5635,20 @@ class PlotAxes(base.Axes):
         kw, extents = self._inbounds_extent(inbounds=inbounds, **kw)
         xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, autoreverse=False, **kw)
         ys, kw = inputs._dist_reduce(ys, **kw)
+        size_is_parsed = False
         if marker_size is not None:
             if ss is None:
-                ss = marker_size
-                area_size = kw.get("area_size", None)
-                if area_size not in (None, False):
-                    warnings._warn_ultraplot(
-                        "Ignoring area_size=True because ms/markersize "
-                        "now denotes marker diameter."
-                    )
-                kw["area_size"] = False
+                ss = self._parse_markersize_as_diameter(marker_size)
+                size_is_parsed = True
+                for key in ("area_size", "absolute_size", "smin", "smax"):
+                    kw.pop(key, None)
             else:
                 warnings._warn_ultraplot(
                     "Got conflicting scatter size arguments. Using s/size/sizes "
                     "and ignoring ms/markersize."
                 )
-        ss, kw = self._parse_markersize(ss, **kw)  # parse 's'
+        if not size_is_parsed:
+            ss, kw = self._parse_markersize(ss, **kw)  # parse 's'
 
         # Only parse color if explicitly provided
         infer_rgb = True
@@ -5671,6 +5680,9 @@ class PlotAxes(base.Axes):
             # Note: they could be None
             kw["s"], kw["c"] = s, c
             kw = self._parse_cycle(n, cycle_manually=cycle_manually, **kw)
+            cycle_marker_size = self._pop_markersize_as_diameter(kw)
+            if cycle_marker_size is not None and kw.get("s") is None:
+                kw["s"] = self._parse_markersize_as_diameter(cycle_marker_size)
             *eb, kw = self._add_error_bars(x, y, vert=vert, default_barstds=True, **kw)
             *es, kw = self._add_error_shading(x, y, vert=vert, color_key="c", **kw)
             if not vert:

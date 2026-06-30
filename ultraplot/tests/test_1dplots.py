@@ -469,6 +469,16 @@ def test_scatter_s_is_area_ms_is_diameter():
         uplt.close(fig)
 
 
+def test_scatter_cycle_markersize_is_diameter():
+    fig, ax = uplt.subplots()
+    try:
+        cycle = uplt.Cycle(marker=["o"], markersize=[30])
+        obj = ax.scatter([0], [0], cycle=cycle)
+        assert obj.get_sizes()[0] == pytest.approx(30**2)
+    finally:
+        uplt.close(fig)
+
+
 @pytest.mark.mpl_image_compare
 def test_scatter_cycle(rng):
     """

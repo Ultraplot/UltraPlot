@@ -426,17 +426,31 @@ def test_entrylegend_handle_kw_with_per_entry_mappings():
     uplt.close(fig)
 
 
-def test_entrylegend_s_is_area_ms_is_diameter():
+def test_entrylegend_marker_sizes_obey_area():
     fig, ax = uplt.subplots()
     handles, labels = ax.entrylegend(
         [
-            {"label": "Area", "line": False, "s": 100},
+            {"label": "Size", "line": False, "s": 100},
             {"label": "Diameter", "line": False, "ms": 10},
             {"label": "Full name", "line": False, "markersize": 12},
         ],
         add=False,
     )
-    assert labels == ["Area", "Diameter", "Full name"]
+    assert labels == ["Size", "Diameter", "Full name"]
+    assert handles[0].get_markersize() == pytest.approx(100)
+    assert handles[1].get_markersize() == pytest.approx(10)
+    assert handles[2].get_markersize() == pytest.approx(12)
+
+    handles, labels = ax.entrylegend(
+        [
+            {"label": "Size", "line": False, "s": 100},
+            {"label": "MS", "line": False, "ms": 100},
+            {"label": "Full name", "line": False, "markersize": 144},
+        ],
+        area=True,
+        add=False,
+    )
+    assert labels == ["Size", "MS", "Full name"]
     assert handles[0].get_markersize() == pytest.approx(10)
     assert handles[1].get_markersize() == pytest.approx(10)
     assert handles[2].get_markersize() == pytest.approx(12)
@@ -477,7 +491,7 @@ def test_catlegend_handle_kw_accepts_line_scatter_aliases():
     uplt.close(fig)
 
 
-def test_catlegend_s_is_area_ms_is_diameter():
+def test_catlegend_marker_sizes_obey_area():
     fig, ax = uplt.subplots()
     handles, labels = ax.catlegend(
         ["A", "B"],
@@ -485,12 +499,59 @@ def test_catlegend_s_is_area_ms_is_diameter():
         sizes={"A": 100, "B": 144},
     )
     assert labels == ["A", "B"]
+    assert handles[0].get_markersize() == pytest.approx(100)
+    assert handles[1].get_markersize() == pytest.approx(144)
+
+    handles, labels = ax.catlegend(
+        ["A", "B"],
+        area=True,
+        add=False,
+        sizes={"A": 100, "B": 144},
+    )
+    assert labels == ["A", "B"]
     assert handles[0].get_markersize() == pytest.approx(10)
     assert handles[1].get_markersize() == pytest.approx(12)
 
-    handles, labels = ax.catlegend(["C"], add=False, ms=12)
+    handles, labels = ax.catlegend(["C"], area=True, add=False, ms=144)
     assert labels == ["C"]
     assert handles[0].get_markersize() == pytest.approx(12)
+    uplt.close(fig)
+
+
+def test_sizelegend_marker_size_overrides_obey_area():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.sizelegend(
+        [1.0],
+        area=True,
+        add=False,
+        markersize=100,
+    )
+    assert labels == ["1"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+
+    handles, labels = ax.sizelegend(
+        [1.0],
+        area=False,
+        add=False,
+        s=10,
+    )
+    assert labels == ["1"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+    uplt.close(fig)
+
+
+def test_legend_single_point_plot_matches_marker_only_artist():
+    fig, ax = uplt.subplots()
+    ax.plot([0], [0], marker="o", label="point")
+    ax.plot([0, 1], [1, 2], marker="o", label="line")
+    leg = ax.legend(loc="best")
+    fig.canvas.draw()
+    point_handle, line_handle = leg.legend_handles
+
+    assert point_handle.get_marker() == "o"
+    assert point_handle.get_linestyle() in ("None", "none", "")
+    assert line_handle.get_marker() == "o"
+    assert line_handle.get_linestyle() not in ("None", "none", "")
     uplt.close(fig)
 
 

@@ -3244,6 +3244,7 @@ class Figure(mfigure.Figure):
         self,
         entries,
         *,
+        area=None,
         line=None,
         marker=None,
         color=None,
@@ -3266,6 +3267,7 @@ class Figure(mfigure.Figure):
         )
         handles, labels = plegend.UltraLegend(axes).entrylegend(
             entries,
+            area=area,
             line=line,
             marker=marker,
             color=color,
@@ -3288,6 +3290,7 @@ class Figure(mfigure.Figure):
         self,
         categories,
         *,
+        area=None,
         colors=None,
         markers=None,
         line=None,
@@ -3310,6 +3313,7 @@ class Figure(mfigure.Figure):
         )
         handles, labels = plegend.UltraLegend(axes).catlegend(
             categories,
+            area=area,
             colors=colors,
             markers=markers,
             line=line,
