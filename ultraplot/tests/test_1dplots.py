@@ -447,10 +447,9 @@ def test_scatter_alpha(rng):
     return fig
 
 
-def test_scatter_s_is_area_ms_is_diameter():
+def test_scatter_size_aliases_are_areas():
     """
-    Scatter preserves matplotlib ``s`` area semantics while ``ms`` /
-    ``markersize`` use Line2D-style diameter semantics.
+    Scatter preserves existing area semantics for all size aliases.
     """
     fig, ax = uplt.subplots()
     try:
@@ -463,18 +462,18 @@ def test_scatter_s_is_area_ms_is_diameter():
         assert s.get_sizes()[0] == pytest.approx(30)
         assert size.get_sizes()[0] == pytest.approx(30)
         assert sizes.get_sizes()[0] == pytest.approx(30)
-        assert ms.get_sizes()[0] == pytest.approx(30**2)
-        assert markersize.get_sizes()[0] == pytest.approx(30**2)
+        assert ms.get_sizes()[0] == pytest.approx(30)
+        assert markersize.get_sizes()[0] == pytest.approx(30)
     finally:
         uplt.close(fig)
 
 
-def test_scatter_cycle_markersize_is_diameter():
+def test_scatter_cycle_markersize_is_area():
     fig, ax = uplt.subplots()
     try:
         cycle = uplt.Cycle(marker=["o"], markersize=[30])
         obj = ax.scatter([0], [0], cycle=cycle)
-        assert obj.get_sizes()[0] == pytest.approx(30**2)
+        assert obj.get_sizes()[0] == pytest.approx(30)
     finally:
         uplt.close(fig)
 
