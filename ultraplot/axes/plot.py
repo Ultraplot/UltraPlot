@@ -4369,8 +4369,9 @@ class PlotAxes(base.Axes):
 
         # Apply manual cycle properties
         if cycle_manually:
-            current_prop = self._get_lines._cycler_items[self._get_lines._idx]
-            self._get_lines._idx = (self._get_lines._idx + 1) % len(self._active_cycle)
+            cycler = getattr(self._get_lines, "_prop_cycle", self._get_lines)
+            current_prop = cycler._cycler_items[cycler._idx]
+            cycler._idx = (cycler._idx + 1) % len(cycler._cycler_items)
             for prop, key in cycle_manually.items():
                 if kwargs.get(key) is None and prop in current_prop:
                     value = current_prop[prop]
@@ -5602,6 +5603,17 @@ class PlotAxes(base.Axes):
 
         kw = kwargs.copy()
         inbounds = kw.pop("inbounds", None)
+        size = kw.pop("size", None)
+        sizes = kw.pop("sizes", None)
+        size = _not_none(size=size, sizes=sizes)
+        if size is not None:
+            if ss is None:
+                ss = size
+            else:
+                warnings._warn_ultraplot(
+                    "Got conflicting scatter size arguments. Using s/ms/markersize "
+                    "and ignoring size/sizes."
+                )
         kw.update(_pop_props(kw, "collection"))
         kw, extents = self._inbounds_extent(inbounds=inbounds, **kw)
         xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, autoreverse=False, **kw)

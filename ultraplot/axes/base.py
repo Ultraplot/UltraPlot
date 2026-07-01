@@ -3773,7 +3773,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             Whether to render connector lines through the markers. Falls back
             to :rc:`legend.cat.line`. Setting a non-default ``linestyle``
             implicitly enables this.
-
         Other parameters
         ----------------
         %(legend.semantic_style_kwargs)s
@@ -3803,7 +3802,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             :rc:`legend.cat.line`.
         marker, color
             %(legend.semantic_style_arg)s
-
         Other parameters
         ----------------
         %(legend.semantic_style_kwargs)s
