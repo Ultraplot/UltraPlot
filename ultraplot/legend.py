@@ -1048,7 +1048,9 @@ _ENTRY_STYLE_FROM_COLLECTION = {
     "linestyles": "linestyle",
     "linewidths": "markeredgewidth",
 }
-_ENTRY_MARKERSIZE_KEYS = ("markersize", "s", "size", "ms", "markersizes", "sizes")
+_ENTRY_AREA_SIZE_KEYS = ("s", "size", "sizes")
+_ENTRY_DIAMETER_SIZE_KEYS = ("markersize", "ms", "markersizes")
+_ENTRY_MARKERSIZE_KEYS = (*_ENTRY_AREA_SIZE_KEYS, *_ENTRY_DIAMETER_SIZE_KEYS)
 
 
 def _pop_aliases(kwargs: dict[str, Any], alias_map: dict[str, str]) -> dict[str, Any]:
@@ -1089,15 +1091,23 @@ def _area_to_markersize(value: Any) -> Any:
     return [_area_to_markersize(val) for val in values]
 
 
-def _pop_marker_size(kwargs: dict[str, Any], *, area: bool = False) -> Any:
+def _pop_marker_size(kwargs: dict[str, Any]) -> Any:
     """
     Pop marker-size aliases and return Line2D marker diameters.
+
+    Semantic legend helpers accept scatter-style ``s`` / ``size`` / ``sizes``
+    inputs as marker areas, but render handles with ``Line2D`` where
+    ``markersize`` / ``ms`` are diameters.
     """
-    opts = {key: kwargs.pop(key, None) for key in _ENTRY_MARKERSIZE_KEYS}
-    value = _not_none(**opts)
-    if value is None:
+    area_opts = {key: kwargs.pop(key, None) for key in _ENTRY_AREA_SIZE_KEYS}
+    diameter_opts = {key: kwargs.pop(key, None) for key in _ENTRY_DIAMETER_SIZE_KEYS}
+    diameter = _not_none(**diameter_opts)
+    if diameter is not None:
+        return diameter
+    area = _not_none(**area_opts)
+    if area is None:
         return None
-    return _area_to_markersize(value) if area else value
+    return _area_to_markersize(area)
 
 
 def _pop_line2d_setters(kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -1123,7 +1133,7 @@ def _pop_line2d_setters(kwargs: dict[str, Any]) -> dict[str, Any]:
     return extracted
 
 
-def _pop_entry_props(kwargs: dict[str, Any], *, area: bool = False) -> dict[str, Any]:
+def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     """
     Extract ``LegendEntry`` style properties from ``kwargs``.
 
@@ -1131,7 +1141,8 @@ def _pop_entry_props(kwargs: dict[str, Any], *, area: bool = False) -> dict[str,
 
     1. Full-name properties recognised by ``_pop_props(kwargs, "line")``.
     2. Collection-style plurals (``colors`` → ``color``, …).
-    3. Marker-size aliases, converted from area when ``area=True``.
+    3. Marker-size aliases. ``s`` / ``size`` / ``sizes`` are scatter-style
+       areas converted to diameters; ``markersize`` / ``ms`` are diameters.
     4. Short aliases (``c`` → ``color``, ``ls`` → ``linestyle``, …).
     5. Any other valid ``Line2D`` setter still in ``kwargs``.
 
@@ -1144,7 +1155,7 @@ def _pop_entry_props(kwargs: dict[str, Any], *, area: bool = False) -> dict[str,
         if key in kwargs:
             advanced_marker[key] = kwargs.pop(key)
 
-    marker_size = _pop_marker_size(kwargs, area=area)
+    marker_size = _pop_marker_size(kwargs)
     resolved_aliases = _pop_aliases(kwargs, _LINE_ALIAS_MAP)
     explicit_collection = _pop_plurals(kwargs, _ENTRY_STYLE_FROM_COLLECTION)
 
@@ -1286,7 +1297,6 @@ def _cat_legend_entries(
 def _entry_legend_entries(
     entries: Iterable[Any] | Mapping[Any, Any],
     *,
-    area: bool,
     line: bool,
     marker,
     color,
@@ -1361,7 +1371,7 @@ def _entry_legend_entries(
             entry_style = {}
         else:
             entry_style = {"color": entry_spec}
-        entry_style.update(_pop_entry_props(entry_style, area=area))
+        entry_style.update(_pop_entry_props(entry_style))
         entry_label = entry_style.pop("label", entry_label)
         entry_label = entry_style.pop("name", entry_label)
 
@@ -1684,10 +1694,10 @@ Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
 ``marker`` / ``m``
     Marker spec. Set to ``None`` or ``""`` to suppress the marker.
 ``markersize`` / ``ms``, ``markeredgewidth`` / ``mew``
-    Marker dimensions. ``markersize`` / ``ms`` obey the helper's ``area``
-    setting: areas when ``area=True`` and diameters when ``area=False``.
+    Marker dimensions. ``markersize`` / ``ms`` denote marker diameter in points.
 ``s`` / ``size`` / ``sizes``
-    Marker-size aliases with the same ``area`` semantics as ``markersize``.
+    Scatter-style marker areas, converted to marker diameters for the legend
+    handle. Use ``markersize`` / ``ms`` when specifying diameters directly.
 ``markerfacecolor`` / ``mfc``, ``markeredgecolor`` / ``mec``, ``markerfacecoloralt`` / ``mfcalt``
     Marker fills and edges.
 ``linestyle`` / ``ls``, ``linewidth`` / ``lw``
@@ -1701,7 +1711,7 @@ Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
 Plural forms (``colors``, ``markers``, ``edgecolors``, ``facecolors``,
 ``linestyles``, ``linewidths``) are accepted as synonyms for the singular
 per-entry form for backward compatibility. ``sizes`` is accepted as a
-marker-size alias.
+scatter-style area alias.
 Each value accepts the scalar / sequence / mapping forms described in
 ``%(legend.semantic_style_arg)s``."""
 
@@ -1773,7 +1783,6 @@ class UltraLegend:
         self,
         entries: Iterable[Any] | Mapping[Any, Any],
         *,
-        area: Optional[bool] = None,
         line: Optional[bool] = None,
         marker=None,
         color=None,
@@ -1785,11 +1794,10 @@ class UltraLegend:
         Build generic semantic legend entries and optionally draw a legend.
         Public docs live on :meth:`Axes.entrylegend`.
         """
-        area = _not_none(area, False)
         styles = {}
         if handle_kw:
-            styles.update(_pop_entry_props(handle_kw, area=area))
-        styles.update(_pop_entry_props(kwargs, area=area))
+            styles.update(_pop_entry_props(handle_kw))
+        styles.update(_pop_entry_props(kwargs))
 
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.cat.marker"])
@@ -1810,7 +1818,6 @@ class UltraLegend:
 
         handles, labels = _entry_legend_entries(
             entries,
-            area=area,
             line=line,
             marker=marker,
             color=color,
@@ -1832,7 +1839,6 @@ class UltraLegend:
         self,
         categories: Iterable[Any],
         *,
-        area: Optional[bool] = None,
         color=None,
         marker=None,
         line: Optional[bool] = None,
@@ -1844,11 +1850,10 @@ class UltraLegend:
         Build categorical legend entries and optionally draw a legend.
         Public docs live on :meth:`Axes.catlegend`.
         """
-        area = _not_none(area, False)
         styles = {}
         if handle_kw:
-            styles.update(_pop_entry_props(handle_kw, area=area))
-        styles.update(_pop_entry_props(kwargs, area=area))
+            styles.update(_pop_entry_props(handle_kw))
+        styles.update(_pop_entry_props(kwargs))
 
         line = _not_none(line, styles.pop("line", None), rc["legend.cat.line"])
         color = _not_none(color, styles.pop("color", None))
@@ -1910,8 +1915,8 @@ class UltraLegend:
         area = _not_none(area, rc["legend.size.area"])
         styles = {}
         if handle_kw:
-            styles.update(_pop_entry_props(handle_kw, area=area))
-        styles.update(_pop_entry_props(kwargs, area=area))
+            styles.update(_pop_entry_props(handle_kw))
+        styles.update(_pop_entry_props(kwargs))
         color = _not_none(color, styles.pop("color", None), rc["legend.size.color"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.size.marker"])
         scale = _not_none(scale, rc["legend.size.scale"])

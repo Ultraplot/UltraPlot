@@ -5603,6 +5603,17 @@ class PlotAxes(base.Axes):
 
         kw = kwargs.copy()
         inbounds = kw.pop("inbounds", None)
+        size = kw.pop("size", None)
+        sizes = kw.pop("sizes", None)
+        size = _not_none(size=size, sizes=sizes)
+        if size is not None:
+            if ss is None:
+                ss = size
+            else:
+                warnings._warn_ultraplot(
+                    "Got conflicting scatter size arguments. Using s/ms/markersize "
+                    "and ignoring size/sizes."
+                )
         kw.update(_pop_props(kw, "collection"))
         kw, extents = self._inbounds_extent(inbounds=inbounds, **kw)
         xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, autoreverse=False, **kw)

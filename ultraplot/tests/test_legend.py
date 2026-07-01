@@ -426,7 +426,7 @@ def test_entrylegend_handle_kw_with_per_entry_mappings():
     uplt.close(fig)
 
 
-def test_entrylegend_marker_sizes_obey_area():
+def test_entrylegend_scatter_sizes_are_converted_to_diameters():
     fig, ax = uplt.subplots()
     handles, labels = ax.entrylegend(
         [
@@ -437,23 +437,22 @@ def test_entrylegend_marker_sizes_obey_area():
         add=False,
     )
     assert labels == ["Size", "Diameter", "Full name"]
-    assert handles[0].get_markersize() == pytest.approx(100)
+    assert handles[0].get_markersize() == pytest.approx(10)
     assert handles[1].get_markersize() == pytest.approx(10)
     assert handles[2].get_markersize() == pytest.approx(12)
 
     handles, labels = ax.entrylegend(
         [
-            {"label": "Size", "line": False, "s": 100},
-            {"label": "MS", "line": False, "ms": 100},
-            {"label": "Full name", "line": False, "markersize": 144},
+            {"label": "Size", "line": False, "size": 144},
+            {"label": "Sizes", "line": False, "sizes": 169},
+            {"label": "Full name", "line": False, "markersize": 14},
         ],
-        area=True,
         add=False,
     )
-    assert labels == ["Size", "MS", "Full name"]
-    assert handles[0].get_markersize() == pytest.approx(10)
-    assert handles[1].get_markersize() == pytest.approx(10)
-    assert handles[2].get_markersize() == pytest.approx(12)
+    assert labels == ["Size", "Sizes", "Full name"]
+    assert handles[0].get_markersize() == pytest.approx(12)
+    assert handles[1].get_markersize() == pytest.approx(13)
+    assert handles[2].get_markersize() == pytest.approx(14)
     uplt.close(fig)
 
 
@@ -491,7 +490,7 @@ def test_catlegend_handle_kw_accepts_line_scatter_aliases():
     uplt.close(fig)
 
 
-def test_catlegend_marker_sizes_obey_area():
+def test_catlegend_scatter_sizes_are_converted_to_diameters():
     fig, ax = uplt.subplots()
     handles, labels = ax.catlegend(
         ["A", "B"],
@@ -499,26 +498,25 @@ def test_catlegend_marker_sizes_obey_area():
         sizes={"A": 100, "B": 144},
     )
     assert labels == ["A", "B"]
-    assert handles[0].get_markersize() == pytest.approx(100)
-    assert handles[1].get_markersize() == pytest.approx(144)
-
-    handles, labels = ax.catlegend(
-        ["A", "B"],
-        area=True,
-        add=False,
-        sizes={"A": 100, "B": 144},
-    )
-    assert labels == ["A", "B"]
     assert handles[0].get_markersize() == pytest.approx(10)
     assert handles[1].get_markersize() == pytest.approx(12)
 
-    handles, labels = ax.catlegend(["C"], area=True, add=False, ms=144)
+    handles, labels = ax.catlegend(
+        ["A", "B"],
+        add=False,
+        size={"A": 121, "B": 169},
+    )
+    assert labels == ["A", "B"]
+    assert handles[0].get_markersize() == pytest.approx(11)
+    assert handles[1].get_markersize() == pytest.approx(13)
+
+    handles, labels = ax.catlegend(["C"], add=False, ms=14)
     assert labels == ["C"]
-    assert handles[0].get_markersize() == pytest.approx(12)
+    assert handles[0].get_markersize() == pytest.approx(14)
     uplt.close(fig)
 
 
-def test_sizelegend_marker_size_overrides_obey_area():
+def test_sizelegend_marker_size_overrides_use_semantic_size_rules():
     fig, ax = uplt.subplots()
     handles, labels = ax.sizelegend(
         [1.0],
@@ -527,13 +525,13 @@ def test_sizelegend_marker_size_overrides_obey_area():
         markersize=100,
     )
     assert labels == ["1"]
-    assert handles[0].get_markersize() == pytest.approx(10)
+    assert handles[0].get_markersize() == pytest.approx(100)
 
     handles, labels = ax.sizelegend(
         [1.0],
         area=False,
         add=False,
-        s=10,
+        s=100,
     )
     assert labels == ["1"]
     assert handles[0].get_markersize() == pytest.approx(10)
