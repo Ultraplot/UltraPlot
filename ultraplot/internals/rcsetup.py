@@ -1714,6 +1714,13 @@ _rc_ultraplot_table = {
         _validate_bool,
         "Alias for :rcraw:`axes.formatter.useOffset`.",
     ),
+    # Math text settings
+    "mathtext.cm": (
+        False,
+        _validate_bool,
+        "Whether to route selected math text glyphs through Computer Modern "
+        "while preserving the active font for ordinary letters and numbers.",
+    ),
     # Geographic axes settings
     "geo.backend": (
         "cartopy",
