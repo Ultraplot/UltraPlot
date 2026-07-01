@@ -19,7 +19,7 @@ jobs:
         with:
           swap-size-gb: 10
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -48,14 +48,14 @@ jobs:
           python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
           name: codecov-test-map
 
       - name: Cache test map
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .ci/test-map.json
           key: test-map-${{ github.sha }}
