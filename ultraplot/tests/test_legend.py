@@ -556,9 +556,7 @@ def test_sizelegend_area_levels_match_absolute_scatter_sizes():
 
     assert labels == ["50"]
     assert handles[0].get_marker() == "."
-    assert handles[0].get_markersize() == pytest.approx(
-        scatter.get_sizes()[0] ** 0.5
-    )
+    assert handles[0].get_markersize() == pytest.approx(scatter.get_sizes()[0] ** 0.5)
     uplt.close(fig)
 
 
