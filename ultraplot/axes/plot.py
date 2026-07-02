@@ -5618,7 +5618,12 @@ class PlotAxes(base.Axes):
         kw, extents = self._inbounds_extent(inbounds=inbounds, **kw)
         xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, autoreverse=False, **kw)
         ys, kw = inputs._dist_reduce(ys, **kw)
-        ss, kw = self._parse_markersize(ss, **kw)  # parse 's'
+        size_scale = {
+            key: kw.get(key, None)
+            for key in ("smin", "smax", "area_size", "absolute_size")
+        }
+        ss_source = inputs._to_numpy_array(ss) if ss is not None else None
+        ss, kw = self._parse_markersize(ss_source, **kw)  # parse 's'
 
         # Only parse color if explicitly provided
         infer_rgb = True
@@ -5645,7 +5650,9 @@ class PlotAxes(base.Axes):
         # Create the cycler object by manually cycling and sanitzing the inputs
         guide_kw = _pop_params(kw, self._update_guide)
         objs = []
-        for _, n, x, y, s, c, kw in self._iter_arg_cols(xs, ys, ss, cc, **kw):
+        for _, n, x, y, s, c, s_source, kw in self._iter_arg_cols(
+            xs, ys, ss, cc, ss_source, **kw
+        ):
             # Cycle s and c as they are in cycle_manually
             # Note: they could be None
             kw["s"], kw["c"] = s, c
@@ -5655,6 +5662,11 @@ class PlotAxes(base.Axes):
             if not vert:
                 x, y = y, x
             obj = self._call_native("scatter", x, y, **kw)
+            if s_source is not None:
+                obj._ultraplot_size_scale = {
+                    "values": inputs._to_numpy_array(s_source),
+                    **size_scale,
+                }
             self._inbounds_xylim(extents, x, y)
             objs.append((*eb, *es, obj) if eb or es else obj)
 

@@ -538,6 +538,133 @@ def test_sizelegend_marker_size_overrides_use_semantic_size_rules():
     uplt.close(fig)
 
 
+def test_sizelegend_area_levels_match_absolute_scatter_sizes():
+    fig, ax = uplt.subplots()
+    scatter_size = 50
+    scatter = ax.scatter(
+        [0],
+        [0],
+        marker=".",
+        s=scatter_size,
+        absolute_size=True,
+    )
+    handles, labels = ax.sizelegend(
+        [scatter_size],
+        marker=".",
+        add=False,
+    )
+
+    assert labels == ["50"]
+    assert handles[0].get_marker() == "."
+    assert handles[0].get_markersize() == pytest.approx(
+        scatter.get_sizes()[0] ** 0.5
+    )
+    uplt.close(fig)
+
+
+def test_sizelegend_values_follow_scatter_scaled_sizes():
+    fig, ax = uplt.subplots()
+    scatter_values = np.array([10.0, 30.0, 50.0, 70.0, 90.0])
+    legend_levels = scatter_values[1:-1]
+    scatter = ax.scatter(
+        np.arange(scatter_values.size),
+        np.zeros(scatter_values.size),
+        s=scatter_values,
+        smin=4,
+        smax=100,
+        absolute_size=False,
+    )
+    handles, labels = ax.sizelegend(
+        legend_levels,
+        values=scatter_values,
+        smin=4,
+        smax=100,
+        marker=".",
+        add=False,
+    )
+
+    assert labels == ["30", "50", "70"]
+    assert [handle.get_marker() for handle in handles] == [".", ".", "."]
+    assert [handle.get_markersize() for handle in handles] == pytest.approx(
+        np.sqrt(scatter.get_sizes()[1:-1])
+    )
+    uplt.close(fig)
+
+
+def test_sizelegend_infers_scatter_scaled_sizes_by_default():
+    fig, ax = uplt.subplots()
+    scatter_values = np.array([10.0, 30.0, 50.0, 70.0, 90.0])
+    legend_levels = scatter_values[1:-1]
+    scatter = ax.scatter(
+        np.arange(scatter_values.size),
+        np.zeros(scatter_values.size),
+        s=scatter_values,
+        smin=4,
+        smax=100,
+        absolute_size=False,
+    )
+    handles, labels = ax.sizelegend(
+        legend_levels,
+        marker=".",
+        add=False,
+    )
+
+    assert labels == ["30", "50", "70"]
+    assert [handle.get_markersize() for handle in handles] == pytest.approx(
+        np.sqrt(scatter.get_sizes()[1:-1])
+    )
+    uplt.close(fig)
+
+
+def test_sizelegend_explicit_area_false_skips_scatter_inference():
+    fig, ax = uplt.subplots()
+    ax.scatter([0, 1, 2], [0, 0, 0], s=[10, 50, 90], smin=4, smax=100)
+    handles, labels = ax.sizelegend([10], area=False, add=False)
+
+    assert labels == ["10"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+    uplt.close(fig)
+
+
+def test_sizelegend_skips_incompatible_scatter_inference():
+    fig, ax = uplt.subplots()
+    ax.scatter([0, 1, 2], [0, 0, 0], s=[10, 50, 90], smin=4, smax=100)
+    handles, labels = ax.sizelegend([200], add=False)
+
+    assert labels == ["200"]
+    assert handles[0].get_markersize() == pytest.approx(np.sqrt(200))
+    uplt.close(fig)
+
+
+def test_sizelegend_area_false_follows_scatter_radius_scaling():
+    fig, ax = uplt.subplots()
+    scatter_values = np.array([10.0, 50.0, 90.0])
+    scatter = ax.scatter(
+        np.arange(scatter_values.size),
+        np.zeros(scatter_values.size),
+        s=scatter_values,
+        smin=2,
+        smax=10,
+        area_size=False,
+        absolute_size=False,
+    )
+    handles, labels = ax.sizelegend(
+        scatter_values,
+        values=scatter_values,
+        area=False,
+        smin=2,
+        smax=10,
+        marker=".",
+        add=False,
+    )
+
+    assert labels == ["10", "50", "90"]
+    assert [handle.get_markersize() for handle in handles] == pytest.approx(
+        np.sqrt(scatter.get_sizes())
+    )
+    uplt.close(fig)
+
+
 def test_legend_single_point_plot_matches_marker_only_artist():
     fig, ax = uplt.subplots()
     ax.plot([0], [0], marker="o", label="point")
