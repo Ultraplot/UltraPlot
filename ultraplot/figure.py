@@ -473,6 +473,10 @@ Parameters
 ----------
 levels
     Numeric levels used to generate marker-size entries.
+values, vmin, vmax, smin, smax, area_size, absolute_size
+    Optional scatter-style size scaling controls forwarded to
+    `~ultraplot.axes.Axes.sizelegend`. When omitted, a compatible UltraPlot
+    scatter artist can be used to infer the size scale automatically.
 
 Other parameters
 ----------------
@@ -3336,6 +3340,13 @@ class Figure(mfigure.Figure):
         color=None,
         marker=None,
         area=None,
+        values=None,
+        vmin=None,
+        vmax=None,
+        smin=None,
+        smax=None,
+        area_size=None,
+        absolute_size=None,
         scale=None,
         minsize=None,
         fmt=None,
@@ -3359,6 +3370,13 @@ class Figure(mfigure.Figure):
             color=color,
             marker=marker,
             area=area,
+            values=values,
+            vmin=vmin,
+            vmax=vmax,
+            smin=smin,
+            smax=smax,
+            area_size=area_size,
+            absolute_size=absolute_size,
             scale=scale,
             minsize=minsize,
             fmt=fmt,
