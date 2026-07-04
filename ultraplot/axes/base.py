@@ -3835,6 +3835,27 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             Treat ``levels`` as marker areas (``True``, default) or
             diameters (``False``). Areas are converted with
             ``ms = sqrt(level) * scale``. Falls back to :rc:`legend.size.area`.
+        values : array-like, optional
+            Full scatter-size data used to infer the scaling range for
+            ``levels``. When provided, or when any of ``vmin``, ``vmax``,
+            ``smin``, ``smax``, ``area_size``, or ``absolute_size`` are
+            provided, ``levels`` are transformed with the same size scaling
+            rules used by :meth:`~ultraplot.axes.PlotAxes.scatter` while
+            labels remain based on the original ``levels``. When these options
+            are omitted and a compatible UltraPlot scatter artist already exists
+            on the axes, its size scale is inferred automatically.
+        vmin, vmax : float, optional
+            Explicit data range for scatter-style size scaling. Defaults to the
+            finite range of ``values`` or ``levels``.
+        smin, smax : float, optional
+            Minimum and maximum scaled marker sizes, with the same meaning as
+            in :meth:`~ultraplot.axes.PlotAxes.scatter`.
+        area_size, absolute_size : bool, optional
+            Scatter-style size scaling switches. Defaults match
+            :meth:`~ultraplot.axes.PlotAxes.scatter` when scatter-style scaling
+            is active. When scatter-style scaling is active and ``area_size`` is
+            omitted, an explicit ``area=False`` is treated like
+            ``area_size=False``.
         scale : float, optional
             Multiplier applied after area/diameter conversion.
             Falls back to :rc:`legend.size.scale`.
