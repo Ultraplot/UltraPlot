@@ -227,9 +227,13 @@ def _build_formatter_registry() -> dict[str, object]:
     if hasattr(mdates, "ConciseDateFormatter"):
         registry["concise"] = mdates.ConciseDateFormatter
     if _version_cartopy >= "0.18":
-        registry["dms"] = partial(pticker.DegreeFormatter, dms=True)
-        registry["dmslon"] = partial(pticker.LongitudeFormatter, dms=True)
-        registry["dmslat"] = partial(pticker.LatitudeFormatter, dms=True)
+        # Cartopy defaults to U+2032/U+2033 prime glyphs for minutes/seconds.
+        # TeX Gyre Heros, UltraPlot's default sans-serif font, does not contain
+        # those glyphs, so use ASCII symbols for the built-in DMS presets.
+        dms_kwargs = {"dms": True, "minute_symbol": "'", "second_symbol": '"'}
+        registry["dms"] = partial(pticker.DegreeFormatter, **dms_kwargs)
+        registry["dmslon"] = partial(pticker.LongitudeFormatter, **dms_kwargs)
+        registry["dmslat"] = partial(pticker.LatitudeFormatter, **dms_kwargs)
     return registry
 
 

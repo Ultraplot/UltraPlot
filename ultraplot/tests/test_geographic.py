@@ -306,6 +306,15 @@ def test_lon0_shifts():
     uplt.close(fig)
 
 
+def test_dms_formatter_symbols_are_default_font_safe():
+    formatter = uplt.Formatter("dmslon")
+    label = formatter(1 + 1 / 60 + 1 / 3600)
+    assert "\N{PRIME}" not in label
+    assert "\N{DOUBLE PRIME}" not in label
+    assert "'" in label
+    assert '"' in label
+
+
 @pytest.mark.parametrize(
     "layout, expectations",
     [
