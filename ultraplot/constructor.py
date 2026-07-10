@@ -21,9 +21,11 @@ from typing import Callable, Iterator, TypeVar
 import cycler
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
+import matplotlib.font_manager as mfonts
 import matplotlib.projections.polar as mpolar
 import matplotlib.scale as mscale
 import matplotlib.ticker as mticker
+from matplotlib.ft2font import FT2Font
 import numpy as np
 
 from . import colors as pcolors
@@ -184,6 +186,17 @@ def _build_locator_registry() -> dict[str, object]:
     return registry
 
 
+def _get_dms_symbol_kwargs() -> dict[str, str]:
+    """Return ASCII DMS symbols when the active font lacks prime glyphs."""
+    try:
+        path = mfonts.findfont(mfonts.FontProperties())
+        font = FT2Font(path)
+        has_primes = all(font.get_char_index(ord(symbol)) for symbol in "′″")
+    except Exception:  # pragma: no cover - font lookup should be reliable
+        has_primes = False
+    return {} if has_primes else {"minute_symbol": "'", "second_symbol": '"'}
+
+
 def _build_formatter_registry() -> dict[str, object]:
     registry = {  # note default LogFormatter uses ugly e+00 notation
         "none": mticker.NullFormatter,
@@ -228,9 +241,9 @@ def _build_formatter_registry() -> dict[str, object]:
         registry["concise"] = mdates.ConciseDateFormatter
     if _version_cartopy >= "0.18":
         # Cartopy defaults to U+2032/U+2033 prime glyphs for minutes/seconds.
-        # TeX Gyre Heros, UltraPlot's default sans-serif font, does not contain
-        # those glyphs, so use ASCII symbols for the built-in DMS presets.
-        dms_kwargs = {"dms": True, "minute_symbol": "'", "second_symbol": '"'}
+        # Use them whenever the active font supports them, otherwise use ASCII
+        # fallbacks so that the built-in DMS presets never render missing glyphs.
+        dms_kwargs = {"dms": True, **_get_dms_symbol_kwargs()}
         registry["dms"] = partial(pticker.DegreeFormatter, **dms_kwargs)
         registry["dmslon"] = partial(pticker.LongitudeFormatter, **dms_kwargs)
         registry["dmslat"] = partial(pticker.LatitudeFormatter, **dms_kwargs)

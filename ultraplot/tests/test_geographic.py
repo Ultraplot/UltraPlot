@@ -307,12 +307,16 @@ def test_lon0_shifts():
 
 
 def test_dms_formatter_symbols_are_default_font_safe():
+    pytest.importorskip("cartopy")
     formatter = uplt.Formatter("dmslon")
     label = formatter(1 + 1 / 60 + 1 / 3600)
-    assert "\N{PRIME}" not in label
-    assert "\N{DOUBLE PRIME}" not in label
-    assert "'" in label
-    assert '"' in label
+    assert formatter._minute_symbol in ("\N{PRIME}", "'")
+    assert formatter._second_symbol in ("\N{DOUBLE PRIME}", '"')
+    assert formatter._minute_symbol in label
+    assert formatter._second_symbol in label
+
+    formatter = uplt.Formatter("dmslon", minute_symbol="m", second_symbol="s")
+    assert formatter(1 + 1 / 60 + 1 / 3600).endswith("1m1sE")
 
 
 @pytest.mark.parametrize(
@@ -1484,11 +1488,11 @@ def test_dms_used_for_mercator():
     ax.format(land=True, labels=True, lonlocator=limit)
     import matplotlib.ticker as mticker
 
+    minute_symbol = ax[0].gridlines_major.xformatter._minute_symbol
     expectations = (
-        "0°36′E",
-        "113°15′E",
+        f"0°36{minute_symbol}E",
+        f"113°15{minute_symbol}E",
     )
-
     for expectation, tick in zip(expectations, limit):
         a = ax[0].gridlines_major.xformatter(tick)
         b = ax[1].gridlines_major.xformatter(tick)
