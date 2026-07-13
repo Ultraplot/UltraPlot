@@ -22,8 +22,6 @@ import numpy as np
 
 __all__ = ["align_text"]
 
-_ZERO = np.zeros(2)
-
 #: Above this many labels, fall back to a single relaxation schedule (see below).
 _RESTART_LIMIT = 120
 
@@ -126,16 +124,15 @@ def _colliding_pairs(boxes, live):
     return np.argwhere(np.triu(hit, k=1))
 
 
-def _count_overlaps(boxes, padx, pady) -> int:
+def _count_overlaps(boxes) -> int:
     """
-    Number of label pairs that visibly overlap, ignoring the padding cushion.
+    Number of label pairs that visibly overlap. Takes the raw boxes, without the
+    padding cushion: the cushion is a solver knob, but the score must be judged on
+    the boxes the reader actually sees.
     """
     if len(boxes) < 2:
         return 0
-    x0 = boxes[:, 0] + padx
-    y0 = boxes[:, 1] + pady
-    x1 = boxes[:, 2] - padx
-    y1 = boxes[:, 3] - pady
+    x0, y0, x1, y1 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
     inter_x = np.minimum(x1[:, None], x1[None, :]) - np.maximum(
         x0[:, None], x0[None, :]
     )
@@ -171,7 +168,7 @@ def _crowd_seed(anchors, obstacles, sizes) -> np.ndarray:
     return seed
 
 
-def _artist_points(artist, renderer) -> Optional[np.ndarray]:
+def _artist_points(artist) -> Optional[np.ndarray]:
     """
     Sample the display-space points an artist occupies, or None if unsupported.
     """
@@ -194,7 +191,7 @@ def _artist_points(artist, renderer) -> Optional[np.ndarray]:
     return None
 
 
-def _gather_obstacles(ax, renderer, labels, avoid_points: bool):
+def _gather_obstacles(ax, labels, avoid_points: bool):
     """
     Collect display-space points (data markers/vertices) that labels avoid.
     """
@@ -204,7 +201,7 @@ def _gather_obstacles(ax, renderer, labels, avoid_points: bool):
     for artist in (*ax.lines, *ax.collections):
         if not artist.get_visible() or artist in labels:
             continue
-        pts = _artist_points(artist, renderer)
+        pts = _artist_points(artist)
         if pts is not None and len(pts):
             points.append(pts)
     if not points:
@@ -231,23 +228,44 @@ def _label_bbox(label, renderer, padx, pady):
     return _expand_bbox(bbox, padx, pady)
 
 
+def _position(label) -> tuple:
+    """
+    Where the label currently sits, in its own coordinate system.
+    """
+    if isinstance(label, mtext.Annotation):
+        return tuple(map(float, label.xyann))
+    return tuple(map(float, label.get_position()))
+
+
+def _place(label, point) -> None:
+    """
+    Move a label to ``point`` and record that we are the ones who put it there.
+    """
+    if isinstance(label, mtext.Annotation):
+        label.xyann = tuple(point)
+    else:
+        label.set_position(tuple(point))
+    label._uplt_align_placed = _position(label)
+
+
 def _reset_label(label) -> np.ndarray:
     """
     Restore a label to its user-specified anchor and return that anchor.
 
     The anchor is cached in the label's own coordinate system the first time we
     see it, so re-running the solver on every draw is idempotent rather than
-    cumulative.
+    cumulative. A label that is not where we last left it has been repositioned by
+    the user since the previous solve, and that new position becomes the anchor --
+    otherwise ``set_position`` on an aligned label would appear to do nothing,
+    with the next draw quietly dragging it back to an anchor the user has
+    abandoned.
     """
-    if isinstance(label, mtext.Annotation):
-        if not hasattr(label, "_uplt_align_anchor"):
-            label._uplt_align_anchor = tuple(label.xyann)
-        label.xyann = label._uplt_align_anchor
-        return np.asarray(label._uplt_align_anchor, dtype=float)
-    if not hasattr(label, "_uplt_align_anchor"):
-        label._uplt_align_anchor = tuple(label.get_position())
-    label.set_position(label._uplt_align_anchor)
-    return np.asarray(label._uplt_align_anchor, dtype=float)
+    current = _position(label)
+    if current != getattr(label, "_uplt_align_placed", None):
+        label._uplt_align_anchor = current
+    anchor = label._uplt_align_anchor
+    _place(label, anchor)
+    return np.asarray(anchor, dtype=float)
 
 
 def _text_transform(label, renderer):
@@ -273,10 +291,7 @@ def _move_label(label, delta_display, anchor, transform) -> None:
         return
     if not np.all(np.isfinite(new)):
         return
-    if isinstance(label, mtext.Annotation):
-        label.xyann = tuple(new)
-    else:
-        label.set_position(tuple(new))
+    _place(label, new)
 
 
 def _target_display(label, renderer):
@@ -367,11 +382,8 @@ def align_text(
     # Reset to anchors first so repeated draws converge to the same layout
     anchors = [_reset_label(t) for t in labels]
     transforms = [_text_transform(t, renderer) for t in labels]
-    anchor_display = np.array(
-        [tr.transform(a) for tr, a in zip(transforms, anchors)], dtype=float
-    )
 
-    obstacles = _gather_obstacles(ax, renderer, labels, avoid_points)
+    obstacles = _gather_obstacles(ax, labels, avoid_points)
     static_bboxes = []
     for artist in avoid:
         try:
@@ -383,9 +395,7 @@ def align_text(
 
     # Measure each label exactly once. Translating a text does not change the size
     # of its bounding box, so every later box is just this one plus an offset --
-    # which keeps the whole relaxation in numpy and off the renderer. Keep the raw
-    # boxes: the padding cushion is a solver knob, but the score must always be
-    # judged on the boxes the reader actually sees.
+    # which keeps the whole relaxation in numpy and off the renderer.
     raw = []
     for label in labels:
         bbox = _label_bbox(label, renderer, 0, 0)
@@ -405,6 +415,12 @@ def align_text(
     obs_x = obstacles[:, 0] if len(obstacles) else np.empty(0)
     obs_y = obstacles[:, 1] if len(obstacles) else np.empty(0)
 
+    bounds = (
+        None
+        if axes_bbox is None
+        else np.array([axes_bbox.x0, axes_bbox.y0, axes_bbox.x1, axes_bbox.y1])
+    )
+
     def _solve(step, spring, seed=None, cushion=1.0):
         """One relaxation run; returns (score, offsets)."""
         base = raw + cushion * np.array([-padx, -pady, padx, pady])
@@ -419,9 +435,7 @@ def align_text(
             # and before the sweep below starts mutating `boxes` in place. Scoring
             # afterwards would rank the provisional fully-resolved state while
             # saving the damped offsets that do not correspond to it.
-            overlaps = _count_overlaps(
-                (raw + np.hstack([offsets, offsets]))[live], 0.0, 0.0
-            )
+            overlaps = _count_overlaps((raw + np.hstack([offsets, offsets]))[live])
 
             # Resolve collisions one at a time, each push applied immediately so that
             # later pairs see the updated box (Gauss-Seidel). Accumulating all the
@@ -522,44 +536,64 @@ def align_text(
 
         return best_score, best_offsets
 
-    bounds = (
-        None
-        if axes_bbox is None
-        else np.array([axes_bbox.x0, axes_bbox.y0, axes_bbox.x1, axes_bbox.y1])
+    # The solve is by far the most expensive part of a draw, and it is a pure
+    # function of the geometry gathered above. A figure is redrawn far more often
+    # than it changes -- the tight layout measures it, a legend is toggled, a
+    # notebook cell re-renders it -- so remember the answer and only pay for it
+    # again when one of the inputs actually moves. Every input is in display
+    # space, so a resize, a dpi change or new data limits all invalidate this on
+    # their own. The obstacles go in as a hash: a dense line contributes tens of
+    # thousands of points, and the key must not pin a copy of them all in memory.
+    key = (
+        tuple(map(id, labels)),
+        raw.tobytes(),
+        statics.tobytes(),
+        None if bounds is None else bounds.tobytes(),
+        hash(obstacles.tobytes()),
+        padx,
+        pady,
+        only_move,
+        max_iter,
+        spring,
+        step,
     )
+    cached = getattr(ax, "_align_cache", None)
+    if cached is not None and cached[0] == key:
+        offsets = cached[1]
+    else:
+        # No single relaxation schedule wins on every layout: a decisive step clears
+        # dense stacks but can overshoot into a worse arrangement, a gentle one does
+        # the reverse, and relaxing from the original positions cannot always escape
+        # a knotted cluster at all. The solve is cheap now that nothing re-measures,
+        # so run a handful and keep the best. The schedules are fixed rather than
+        # random, so the same figure always lands on the same layout.
+        centres = 0.5 * (raw[:, :2] + raw[:, 2:])
+        sizes = 0.5 * np.hypot(raw[:, 2] - raw[:, 0], raw[:, 3] - raw[:, 1])
+        seed = _crowd_seed(np.nan_to_num(centres), obstacles, np.nan_to_num(sizes))
 
-    # No single relaxation schedule wins on every layout: a decisive step clears
-    # dense stacks but can overshoot into a worse arrangement, a gentle one does
-    # the reverse, and relaxing from the original positions cannot always escape a
-    # knotted cluster at all. The solve is cheap now that nothing re-measures, so
-    # run a handful and keep the best. The schedules are fixed rather than random,
-    # so the same figure always lands on the same layout.
-    centres = 0.5 * (raw[:, :2] + raw[:, 2:])
-    sizes = 0.5 * np.hypot(raw[:, 2] - raw[:, 0], raw[:, 3] - raw[:, 1])
-    seed = _crowd_seed(np.nan_to_num(centres), obstacles, np.nan_to_num(sizes))
+        schedules = [
+            (step, spring, None, 1.0),
+            (1.0, spring, None, 1.0),
+            (step, spring, seed, 1.0),
+            (1.0, 0.0, seed, 1.0),
+            (step, spring, None, 1.5),
+            (step, spring, None, 0.5),
+            (0.4, 0.5 * spring, None, 1.0),
+        ]
+        # Each restart costs a full relaxation. Past a few hundred labels they cannot
+        # all fit anyway, so the restarts buy nothing but seconds of redraw time.
+        if len(order) > _RESTART_LIMIT:
+            schedules = schedules[:2]
 
-    schedules = [
-        (step, spring, None, 1.0),
-        (1.0, spring, None, 1.0),
-        (step, spring, seed, 1.0),
-        (1.0, 0.0, seed, 1.0),
-        (step, spring, None, 1.5),
-        (step, spring, None, 0.5),
-        (0.4, 0.5 * spring, None, 1.0),
-    ]
-    # Each restart costs a full relaxation. Past a few hundred labels they cannot
-    # all fit anyway, so the restarts buy nothing but seconds of redraw time.
-    if len(order) > _RESTART_LIMIT:
-        schedules = schedules[:2]
-
-    offsets = None
-    best = (np.inf, np.inf, np.inf, np.inf)
-    for step_i, spring_i, seed_i, cushion_i in schedules:
-        score, candidate = _solve(step_i, spring_i, seed_i, cushion_i)
-        if score < best:
-            best, offsets = score, candidate
-        if best[0] == 0 and best[2] == 0:
-            break  # nothing overlaps and nothing sits on a marker: we are done
+        offsets = None
+        best = (np.inf, np.inf, np.inf, np.inf)
+        for step_i, spring_i, seed_i, cushion_i in schedules:
+            score, candidate = _solve(step_i, spring_i, seed_i, cushion_i)
+            if score < best:
+                best, offsets = score, candidate
+            if best[0] == 0 and best[2] == 0:
+                break  # nothing overlaps and nothing sits on a marker: we are done
+        ax._align_cache = (key, offsets)
 
     # Apply the final offsets
     for label, anchor, trans, offset in zip(labels, anchors, transforms, offsets):

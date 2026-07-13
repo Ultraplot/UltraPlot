@@ -530,3 +530,91 @@ def test_auto_align_text_accepts_an_iterable(crowded):
     assert ax.auto_align_text(texts) == texts  # a list, not *args
     fig.canvas.draw()
     assert _count_overlaps(fig, texts) == 0
+
+
+def test_moving_a_label_by_hand_re_anchors_it(crowded):
+    """set_position() after a draw must not be undone by the next one."""
+    x, y, names = crowded
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.scatter(x, y)
+    texts = [
+        ax.text(*xy, nm, fontsize=7, avoid_overlap=True) for *xy, nm in zip(x, y, names)
+    ]
+    fig.canvas.draw()
+    text = texts[0]
+    solved = np.array(text.get_position())  # where the solver had parked it
+    text.set_position((0.05, 0.95))
+    fig.canvas.draw()
+
+    assert text._uplt_align_anchor == (0.05, 0.95)
+    # The solver may still nudge it, but it now relaxes away from where the user
+    # put it rather than from the anchor the user has abandoned
+    now = np.array(text.get_position())
+    assert np.hypot(*(now - [0.05, 0.95])) < np.hypot(*(now - solved))
+    assert _count_overlaps(fig, texts) == 0
+
+
+def test_three_axes_text_is_left_alone():
+    """A Text3D is placed by the projection, so a display-space nudge is meaningless."""
+    fig = uplt.figure()
+    ax = fig.subplot(proj="3d")
+    text = ax.text(0.5, 0.5, 0.5, "label", avoid_overlap=True)
+    other = ax.text(0.5, 0.5, 0.5, "overlapping", avoid_overlap=True)
+    fig.canvas.draw()
+    assert ax._align_texts == []
+    assert text.get_position() == (0.5, 0.5)
+    assert other.get_position() == (0.5, 0.5)
+
+
+def test_unchanged_redraw_reuses_the_solve(crowded, monkeypatch):
+    """A redraw that changes nothing must not pay for the relaxation again."""
+    import ultraplot.textalign as textalign
+
+    calls = []
+    seed = textalign._crowd_seed  # only reached on a full solve, never on a cache hit
+    monkeypatch.setattr(
+        textalign,
+        "_crowd_seed",
+        lambda *args, **kwargs: (calls.append(1), seed(*args, **kwargs))[1],
+    )
+    x, y, names = crowded
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.scatter(x, y)
+    texts = [
+        ax.text(*xy, nm, fontsize=7, avoid_overlap=True) for *xy, nm in zip(x, y, names)
+    ]
+    fig.canvas.draw()
+    assert calls  # solved at least once
+    before = np.array([t.get_position() for t in texts])
+
+    calls.clear()
+    fig.canvas.draw()
+    assert not calls  # ... and reused it, rather than solving again
+    assert np.array_equal([t.get_position() for t in texts], before)
+
+    # A resize changes every box in display space, so the cache must not survive it
+    fig.set_size_inches(12, 4)
+    fig.canvas.draw()
+    assert calls
+    assert _count_overlaps(fig, texts) == 0
+
+
+def test_releasing_every_label_removes_the_connectors(crowded):
+    x, y, names = crowded
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.scatter(x, y)
+    texts = [
+        ax.text(*xy, nm, fontsize=7, avoid_overlap=True) for *xy, nm in zip(x, y, names)
+    ]
+    ax.auto_align_text(arrows=True, min_arrow_dist=0)
+    fig.canvas.draw()
+    patches = list(ax._align_arrows)
+    assert patches
+    for text in texts:
+        ax._register_align_text(text, False)
+    fig.canvas.draw()
+    assert ax._align_arrows == []
+    assert not any(p in ax.artists for p in patches)

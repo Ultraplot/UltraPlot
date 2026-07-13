@@ -4,6 +4,7 @@ The first-level axes subclass used for all ultraplot figures.
 Implements basic shared functionality.
 """
 
+import contextlib
 import copy
 import inspect
 import re
@@ -973,6 +974,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         self._align_texts = []  # texts registered for overlap avoidance
         self._align_kwargs = {}  # solver settings from auto_align_text()
         self._align_arrows = []  # connectors drawn back to displaced anchors
+        self._align_cache = None  # last solve, reused while its inputs hold
         self._inset_parent = None
         self._inset_bounds = None  # for introspection ony
         self._inset_zoom = False
@@ -4190,6 +4192,13 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         Queue a text object for draw-time overlap avoidance, or release it.
         """
+        # The solver moves a label by inverting its transform, which only means
+        # anything for text that its transform actually positions. A Text3D is
+        # placed by the 3D projection instead, and its stored position is the data
+        # coordinate that feeds it, so a display-space nudge would not move the
+        # label -- it would rewrite the data point.
+        if hasattr(obj, "get_position_3d"):
+            return obj
         # An explicit avoid_overlap=False beats the rc setting, so opting out is
         # always available. Releasing a label also puts it back where the user
         # asked for it, rather than stranding it wherever the solver left it.
@@ -4235,11 +4244,15 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         spring : float, default: 0.05
             Strength of the pull back towards the original position. Larger
             values keep labels closer to their anchors at the cost of overlap.
+        step : float, default: 0.6
+            Damping applied to each iteration's displacement.
         clip : bool, default: True
             Whether to keep labels inside the axes.
         arrows : bool or dict, default: :rc:`text.align.arrows`
             Whether to draw a connector from each displaced label back to the
             point it labels. A dict is passed to `~matplotlib.patches.FancyArrowPatch`.
+        min_arrow_dist : float, default: 8.0
+            Only draw connectors for labels displaced further than this, in points.
 
         Examples
         --------
@@ -4274,6 +4287,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Run the overlap solver for this axes (called on every draw).
         """
         if not self._align_texts:
+            # Every label was released; take their connectors with them
+            for patch in self._align_arrows:
+                with contextlib.suppress(Exception):
+                    patch.remove()
+            self._align_arrows = []
             return
         from ..textalign import align_text
 
