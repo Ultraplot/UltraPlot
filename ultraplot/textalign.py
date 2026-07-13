@@ -410,7 +410,7 @@ def align_text(
         base = raw + cushion * np.array([-padx, -pady, padx, pady])
         offsets = np.zeros((len(labels), 2)) if seed is None else seed * mask
         best_offsets = offsets.copy()
-        best_score = (np.inf, np.inf, np.inf)
+        best_score = (np.inf, np.inf, np.inf, np.inf)
 
         for it in range(max_iter):
             boxes = base + np.hstack([offsets, offsets])
@@ -483,14 +483,21 @@ def align_text(
 
             forces = np.column_stack([fx, fy])
             pair_forces = np.column_stack([px_, py_])
+            # Whatever is left over came from the markers and the `avoid` artists
+            obstacle_forces = forces - pair_forces
 
-            # Rank on the overlap count taken above: what the eye objects to is
-            # labels sitting on each other, so that comes first and sitting on a
-            # marker is only a tie-break. Ranking on the summed force instead would
-            # let a state with stacked labels but clear markers beat the reverse.
+            # Rank on the overlap count taken above: what the eye objects to first is
+            # labels sitting on each other. Sitting on a marker is the next cost, and
+            # it has to be scored -- a lone label parked on top of a marker overlaps
+            # no other label, so without this term it would score a perfect zero on
+            # the very first iteration and never move. Distance from the anchor only
+            # breaks ties, so labels stay put when nothing is in their way.
             crowding = float(np.sum(np.hypot(pair_forces[:, 0], pair_forces[:, 1])))
+            blocked = float(
+                np.sum(np.hypot(obstacle_forces[:, 0], obstacle_forces[:, 1]))
+            )
             displacement = float(np.sum(np.hypot(offsets[:, 0], offsets[:, 1])))
-            score = (overlaps, crowding, displacement)
+            score = (overlaps, crowding, blocked, displacement)
             if score < best_score:
                 best_score = score
                 best_offsets = offsets.copy()
@@ -546,13 +553,13 @@ def align_text(
         schedules = schedules[:2]
 
     offsets = None
-    best = (np.inf, np.inf, np.inf)
+    best = (np.inf, np.inf, np.inf, np.inf)
     for step_i, spring_i, seed_i, cushion_i in schedules:
         score, candidate = _solve(step_i, spring_i, seed_i, cushion_i)
         if score < best:
             best, offsets = score, candidate
-        if best[0] == 0:
-            break  # nothing overlaps any more; no need to try the rest
+        if best[0] == 0 and best[2] == 0:
+            break  # nothing overlaps and nothing sits on a marker: we are done
 
     # Apply the final offsets
     for label, anchor, trans, offset in zip(labels, anchors, transforms, offsets):
