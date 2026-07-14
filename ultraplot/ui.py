@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from . import axes as paxes
 from . import figure as pfigure
 from . import gridspec as pgridspec
+from ._subplots import SubplotManager
 from .internals import (
     _not_none,
     _pop_params,
@@ -182,7 +183,10 @@ def subplot(**kwargs):
     _parse_figsize(kwargs)
     rc_kw, rc_mode = _pop_rc(kwargs)
     kwsub = _pop_props(kwargs, "patch")  # e.g. 'color'
-    kwsub.update(_pop_params(kwargs, pfigure.Figure._parse_proj))
+    # NOTE: Introspect the manager, which owns these parameters, rather than the
+    # thin Figure delegator. Pointing this at a pass-through means any cleanup of
+    # that pass-through's signature silently routes 'proj' to the figure instead.
+    kwsub.update(_pop_params(kwargs, SubplotManager.parse_proj))
     for sig in paxes.Axes._format_signatures.values():
         kwsub.update(_pop_params(kwargs, sig))
     kwargs["aspect"] = kwsub.pop("aspect", None)  # keyword conflict
@@ -227,7 +231,7 @@ def subplots(*args, **kwargs):
     _parse_figsize(kwargs)
     rc_kw, rc_mode = _pop_rc(kwargs)
     kwsubs = _pop_props(kwargs, "patch")  # e.g. 'color'
-    kwsubs.update(_pop_params(kwargs, pfigure.Figure._add_subplots))
+    kwsubs.update(_pop_params(kwargs, SubplotManager.add_subplots))
     kwsubs.update(_pop_params(kwargs, pgridspec.GridSpec._update_params))
     for sig in paxes.Axes._format_signatures.values():
         kwsubs.update(_pop_params(kwargs, sig))

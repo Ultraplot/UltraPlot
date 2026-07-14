@@ -36,6 +36,18 @@ class SubplotManager:
         self.counter: int = 0
         self._gridspec = None
 
+    def reset(self):
+        """
+        Forget every subplot and release the gridspec.
+
+        Called by `~ultraplot.figure.Figure.clear`, which destroys the axes this
+        manager tracks. Without this the figure keeps handing out axes that are no
+        longer attached to it.
+        """
+        self.subplot_dict.clear()
+        self.counter = 0
+        self._gridspec = None
+
     @property
     def gridspec(self):
         """The single GridSpec used for all subplots in the figure."""
