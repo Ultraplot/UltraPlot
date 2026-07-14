@@ -477,20 +477,184 @@ axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
 #
 # Legends usually annotate artists already drawn on an axes, but sometimes you need
 # standalone semantic keys (categories, size scales, color levels, or geometry types).
-# UltraPlot provides helper methods that build these entries directly:
+# UltraPlot provides helper methods that build these entries directly on both
+# axes and figures:
 #
+# * :meth:`~ultraplot.axes.Axes.entrylegend`
 # * :meth:`~ultraplot.axes.Axes.catlegend`
 # * :meth:`~ultraplot.axes.Axes.sizelegend`
 # * :meth:`~ultraplot.axes.Axes.numlegend`
 # * :meth:`~ultraplot.axes.Axes.geolegend`
+# * :meth:`~ultraplot.figure.Figure.entrylegend`
+# * :meth:`~ultraplot.figure.Figure.catlegend`
+# * :meth:`~ultraplot.figure.Figure.sizelegend`
+# * :meth:`~ultraplot.figure.Figure.numlegend`
+# * :meth:`~ultraplot.figure.Figure.geolegend`
+#
+# These helpers are useful whenever the legend should describe an encoding rather than
+# mirror artists that already happen to be drawn. In practice there are two distinct
+# workflows:
+#
+# * Use :meth:`~ultraplot.axes.Axes.legend` when you already have artists and want to
+#   reuse their labels or lightly restyle the legend handles.
+# * Use the semantic helpers when you want to define the legend from meaning-first
+#   inputs such as categories, numeric size levels, numeric color levels, or geometry
+#   types, even if no matching exemplar artist exists on the axes.
+#
+# Choosing a helper
+# ~~~~~~~~~~~~~~~~~
+#
+# * :meth:`~ultraplot.axes.Axes.entrylegend` is the most general helper. Use it when
+#   you want explicit labels, mixed line and marker entries, or fully custom legend
+#   rows that are not easily described by a single category or numeric scale.
+# * :meth:`~ultraplot.axes.Axes.catlegend` is for discrete categories mapped to colors,
+#   markers, and optional line styles. Labels come from the category names.
+# * :meth:`~ultraplot.axes.Axes.sizelegend` is for marker-size semantics. Labels are
+#   derived from the numeric levels by default, can be formatted with ``fmt=``, and
+#   can now be overridden directly with ``labels=[...]`` or ``labels={level: label}``.
+# * :meth:`~ultraplot.axes.Axes.numlegend` is for numeric color encodings rendered as
+#   discrete patches without requiring a pre-existing mappable.
+# * :meth:`~ultraplot.axes.Axes.geolegend` is for shapes and map-like semantics. It can
+#   mix named symbols, Shapely geometries, and country shorthands in one legend.
+#
+# The helpers are intentionally composable. Each one accepts ``add=False`` and returns
+# ``(handles, labels)`` so you can merge semantic sections and pass the result through
+# :meth:`~ultraplot.axes.Axes.legend` or :meth:`~ultraplot.figure.Figure.legend`
+# yourself.
+#
+# .. code-block:: python
+#
+#    # Reuse plotted artists when they already exist.
+#    hs = ax.plot(data, labels=["control", "treatment"])
+#    ax.legend(hs, loc="r")
+#
+#    # Build a category key without plotting one exemplar artist per category.
+#    ax.catlegend(
+#        ["Control", "Treatment"],
+#        colors={"Control": "blue7", "Treatment": "red7"},
+#        markers={"Control": "o", "Treatment": "^"},
+#        loc="r",
+#    )
+#
+#    # Build fully custom entries with explicit labels and mixed semantics.
+#    ax.entrylegend(
+#        [
+#            {
+#                "label": "Observed samples",
+#                "line": False,
+#                "marker": "o",
+#                "markersize": 8,
+#                "markerfacecolor": "blue7",
+#                "markeredgecolor": "black",
+#            },
+#            {
+#                "label": "Model fit",
+#                "line": True,
+#                "color": "black",
+#                "linewidth": 2.5,
+#                "linestyle": "--",
+#            },
+#        ],
+#        title="Entry styles",
+#        loc="l",
+#    )
+#
+#    # Size legends can format labels automatically or accept explicit labels.
+#    ax.sizelegend(
+#        [10, 50, 200],
+#        labels=["Small", "Medium", "Large"],
+#        title="Population",
+#        loc="ur",
+#    )
+#
+#    # Numeric color legends are discrete color keys decoupled from a mappable.
+#    ax.numlegend(vmin=0, vmax=1, n=5, cmap="viko", fmt="{:.2f}", loc="ll")
+#
+#    # Geometry legends can mix named shapes, Shapely geometries, and country codes.
+#    ax.geolegend([("Triangle", "triangle"), ("Australia", "country:AU")], loc="r")
+#
+# .. code-block:: python
+#
+#    # Add semantic legends around an entire subplot group.
+#    fig, axs = uplt.subplots(ncols=2)
+#    fig.catlegend(
+#        ["Control", "Treatment"],
+#        colors={"Control": "blue7", "Treatment": "red7"},
+#        markers={"Control": "o", "Treatment": "^"},
+#        ref=axs,
+#        loc="b",
+#        title="Group",
+#    )
+#    fig.sizelegend(
+#        [10, 50, 200],
+#        labels=["Small", "Medium", "Large"],
+#        color="gray6",
+#        ref=axs,
+#        loc="r",
+#        title="Population",
+#    )
+#
+# .. code-block:: python
+#
+#    # Compose multiple semantic helpers into one legend.
+#    size_handles, size_labels = ax.sizelegend(
+#        [10, 50, 200],
+#        labels=["Small", "Medium", "Large"],
+#        add=False,
+#    )
+#    entry_handles, entry_labels = ax.entrylegend(
+#        [
+#            {
+#                "label": "Observed",
+#                "line": False,
+#                "marker": "o",
+#                "markerfacecolor": "blue7",
+#            },
+#            {
+#                "label": "Fit",
+#                "line": True,
+#                "color": "black",
+#                "linewidth": 2,
+#            },
+#        ],
+#        add=False,
+#    )
+#    ax.legend(
+#        size_handles + entry_handles,
+#        size_labels + entry_labels,
+#        loc="r",
+#        title="Combined semantic key",
+#    )
 
 # %%
 import cartopy.crs as ccrs
 import shapely.geometry as sg
 
-fig, ax = uplt.subplots(refwidth=4.2)
+fig, ax = uplt.subplots(refwidth=5.0)
 ax.format(title="Semantic legend helpers", grid=False)
 
+ax.entrylegend(
+    [
+        {
+            "label": "Observed samples",
+            "line": False,
+            "marker": "o",
+            "markersize": 8,
+            "markerfacecolor": "blue7",
+            "markeredgecolor": "black",
+        },
+        {
+            "label": "Model fit",
+            "line": True,
+            "color": "black",
+            "linewidth": 2.5,
+            "linestyle": "--",
+        },
+    ],
+    loc="l",
+    title="Entry styles",
+    frameon=False,
+)
 ax.catlegend(
     ["A", "B", "C"],
     colors={"A": "red7", "B": "green7", "C": "blue7"},
@@ -500,6 +664,7 @@ ax.catlegend(
 )
 ax.sizelegend(
     [10, 50, 200],
+    labels=["Small", "Medium", "Large"],
     loc="upper right",
     title="Population",
     ncols=1,
@@ -546,6 +711,32 @@ ax.geolegend(
     country_reso="10m",
 )
 ax.axis("off")
+
+
+# %%
+fig, axs = uplt.subplots(ncols=2, refwidth=2.8, share=False)
+axs[0].scatter([0, 1, 2], [3, 1, 2], c=[0.2, 0.5, 0.8], s=[40, 120, 260])
+axs[1].scatter([0, 1, 2], [2, 3, 1], c=[0.8, 0.4, 0.1], s=[60, 90, 220])
+axs.format(title="Figure semantic legend helpers", grid=False)
+
+fig.catlegend(
+    ["Control", "Treatment"],
+    colors={"Control": "blue7", "Treatment": "red7"},
+    markers={"Control": "o", "Treatment": "^"},
+    ref=axs,
+    loc="bottom",
+    title="Group",
+    frameon=False,
+)
+fig.sizelegend(
+    [40, 120, 260],
+    labels=["Small", "Medium", "Large"],
+    color="gray6",
+    ref=axs,
+    loc="right",
+    title="Size scale",
+    frameon=False,
+)
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"

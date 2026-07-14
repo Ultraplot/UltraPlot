@@ -17,6 +17,8 @@ from .cartesian import CartesianAxes
 
 __all__ = ["ExternalAxesContainer"]
 
+_ABOVE_AXES_TITLE_LOCS = {"left", "center", "right"}
+
 
 class ExternalAxesContainer(CartesianAxes):
     """
@@ -399,7 +401,9 @@ class ExternalAxesContainer(CartesianAxes):
         container_bbox = container_pos.transformed(self.figure.transFigure)
         # Reserve vertical space for titles/abc labels.
         title_pad_px = 0.0
-        for obj in self._title_dict.values():
+        for loc, obj in self._title_dict.items():
+            if not self._title_reserves_external_space(loc):
+                continue
             if not obj.get_visible():
                 continue
             if not obj.get_text():
@@ -548,13 +552,23 @@ class ExternalAxesContainer(CartesianAxes):
         container_bbox = self.get_position().transformed(fig.transFigure)
         if container_bbox.height <= 0:
             return
-        for obj in self._title_dict.values():
+        for loc, obj in self._title_dict.items():
+            if not self._title_reserves_external_space(loc):
+                continue
             bbox = obj.get_window_extent(renderer)
             overflow = bbox.y1 - container_bbox.y1
             if overflow > 0:
                 x, y = obj.get_position()
                 y -= overflow / container_bbox.height
                 obj.set_position((x, y))
+
+    def _title_reserves_external_space(self, loc):
+        """
+        Return whether a title-like artist needs room above an external axes.
+        """
+        if loc == "abc":
+            loc = self._abc_loc
+        return loc in _ABOVE_AXES_TITLE_LOCS
 
     def _iter_axes(self, hidden=True, children=True, panels=True):
         """

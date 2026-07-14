@@ -17,9 +17,11 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 
 from . import axes as paxes
+from .axes._formatting import pop_axis_format_kwargs
 from .config import rc
 from .internals import (
     _not_none,
+    _pop_rc,
     docstring,
     ic,  # noqa: F401
     warnings,
@@ -2010,7 +2012,7 @@ class SubplotGrid(MutableSequence, list):
         # De-duplicate while preserving order so method dispatch does not repeat.
         objs = list(dict.fromkeys(objs))
         if len(objs) == 1:
-            return objs[0]
+            return SubplotGrid(objs[0])
         return SubplotGrid(objs)
 
     def __setitem__(self, key, value):
@@ -2096,34 +2098,88 @@ class SubplotGrid(MutableSequence, list):
         ultraplot.figure.Figure.format
         ultraplot.config.Configurator.context
         """
+
+        def _supports_implicit_label_share(target):
+            compatible_sides = {
+                "x": {"top", "bottom"},
+                "y": {"left", "right"},
+            }
+            for ax in axes:
+                side = getattr(ax, "_panel_side", None)
+                if side is None:
+                    continue
+                if side not in compatible_sides[target]:
+                    return False
+            return True
+
         # Implicit label sharing for subset format calls
         share_xlabels = kwargs.get("share_xlabels", None)
         share_ylabels = kwargs.get("share_ylabels", None)
         xlabel = kwargs.get("xlabel", None)
         ylabel = kwargs.get("ylabel", None)
+        title = kwargs.get("title", None)
         axes = [ax for ax in self if ax is not None]
         all_axes = set(self.figure._subplot_dict.values())
         is_subset = bool(axes) and all_axes and set(axes) != all_axes
-        if len(self) > 1:
-            if share_xlabels is False:
-                self.figure._clear_share_label_groups(self, target="x")
-            if share_ylabels is False:
-                self.figure._clear_share_label_groups(self, target="y")
-            if not is_subset and share_xlabels is None and xlabel is not None:
-                self.figure._clear_share_label_groups(self, target="x")
-            if not is_subset and share_ylabels is None and ylabel is not None:
-                self.figure._clear_share_label_groups(self, target="y")
-            if is_subset and share_xlabels is None and xlabel is not None:
-                self.figure._register_share_label_group(self, target="x")
-            if is_subset and share_ylabels is None and ylabel is not None:
-                self.figure._register_share_label_group(self, target="y")
-        self.figure.format(axs=self, **kwargs)
-        # Refresh groups after labels are set
-        if len(self) > 1:
-            if is_subset and share_xlabels is None and xlabel is not None:
-                self.figure._register_share_label_group(self, target="x")
-            if is_subset and share_ylabels is None and ylabel is not None:
-                self.figure._register_share_label_group(self, target="y")
+        shared_subset_title = len(self) > 1 and is_subset and isinstance(title, str)
+        shared_title_kw = (
+            dict(kwargs.pop("title_kw", None) or {}) if shared_subset_title else None
+        )
+        if shared_subset_title:
+            kwargs.pop("title", None)
+            shared_title_loc = kwargs.pop("titleloc", None)
+            shared_title_pad = kwargs.pop("titlepad", None)
+            kwargs.pop("titleabove", None)
+        else:
+            shared_title_loc = None
+            shared_title_pad = None
+        signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
+            kwargs, *paxes.Axes._format_signatures.values()
+        )
+        rc_kw, rc_mode = _pop_rc(kwargs)
+        kwargs.update(signature_axis_kwargs)
+        kwargs.update(generic_axis_kwargs)
+        with rc.context(rc_kw, mode=rc_mode):
+            implicit_share_xlabels = (
+                is_subset
+                and share_xlabels is None
+                and xlabel is not None
+                and _supports_implicit_label_share("x")
+            )
+            implicit_share_ylabels = (
+                is_subset
+                and share_ylabels is None
+                and ylabel is not None
+                and _supports_implicit_label_share("y")
+            )
+            if len(self) > 1:
+                if share_xlabels is False:
+                    self.figure._clear_share_label_groups(self, target="x")
+                if share_ylabels is False:
+                    self.figure._clear_share_label_groups(self, target="y")
+                if not is_subset and share_xlabels is None and xlabel is not None:
+                    self.figure._clear_share_label_groups(self, target="x")
+                if not is_subset and share_ylabels is None and ylabel is not None:
+                    self.figure._clear_share_label_groups(self, target="y")
+                if implicit_share_xlabels:
+                    self.figure._register_share_label_group(self, target="x")
+                if implicit_share_ylabels:
+                    self.figure._register_share_label_group(self, target="y")
+            self.figure.format(axs=self, **kwargs)
+            if shared_subset_title:
+                self.figure._update_subset_title(
+                    self,
+                    title,
+                    loc=shared_title_loc,
+                    pad=shared_title_pad,
+                    **(shared_title_kw or {}),
+                )
+            # Refresh groups after labels are set
+            if len(self) > 1:
+                if implicit_share_xlabels:
+                    self.figure._register_share_label_group(self, target="x")
+                if implicit_share_ylabels:
+                    self.figure._register_share_label_group(self, target="y")
 
     def share_labels(self, *, axis="x"):
         """

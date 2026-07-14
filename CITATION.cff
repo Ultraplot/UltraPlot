@@ -8,9 +8,9 @@ authors:
   - family-names: "Becker"
     given-names: "Matthew R."
     orcid: "https://orcid.org/0000-0001-7774-2246"
-date-released: "2025-01-01"
-version: "1.57"
-doi: "10.5281/zenodo.15733580"
+date-released: "2026-03-30"
+version: "2.1.5"
+doi: "10.5281/zenodo.15733564"
 repository-code: "https://github.com/Ultraplot/UltraPlot"
 license: "MIT"
 keywords:
@@ -20,13 +20,13 @@ keywords:
   - wrapper
 references:
   - type: software
-    name: "ProPlot"
+    title: "ProPlot"
     authors:
       - family-names: "Davis"
         given-names: "Luke"
     url: "https://github.com/lukelbd/proplot"
   - type: software
-    name: "Matplotlib"
+    title: "Matplotlib"
     authors:
       - family-names: "Hunter"
         given-names: "John D."

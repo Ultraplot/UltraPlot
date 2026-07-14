@@ -3,6 +3,8 @@
 Test 1D plotting overrides.
 """
 
+import warnings
+
 import numpy as np
 import numpy.ma as ma
 import pandas as pd
@@ -134,6 +136,24 @@ def test_bar_width(rng):
     for i, ax in enumerate(axs):
         ax.bar(x * (2 * i + 1), y, width=0.8, absolute_width=i == 1)
     return fig
+
+
+def test_bar_scalar_bottom():
+    """
+    Regression for #731: pandas dispatches Series.plot(kind="barh") via
+    matplotlib with a scalar ``bottom`` (or ``left``), which previously hit
+    ``AttributeError: 'int' object has no attribute 'size'`` inside
+    ``_inbounds_xylim``.
+    """
+    # Direct scalar `bottom` / `left`
+    fig, ax = uplt.subplots()
+    ax.bar([1, 2, 3], [4, 5, 6], bottom=0)
+    ax.barh([1, 2, 3], [4, 5, 6], left=0)
+
+    # The original failing reproducer from the issue
+    series = pd.Series({"a": 1, "b": 2, "c": 3})
+    fig, ax = uplt.subplots()
+    series.plot(kind="barh", ax=ax[0])
 
 
 @pytest.mark.mpl_image_compare
@@ -378,6 +398,26 @@ def test_scatter_edgecolor_single_row():
     return fig
 
 
+def test_scatter_numeric_c_honors_cmap():
+    """
+    Numeric 1D ``c`` arrays should be treated as scalar data for colormapping.
+    """
+    fig, ax = uplt.subplots()
+    values = np.array([0.1, 0.2, 0.3, 0.4])
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        obj = ax.scatter(
+            [1.0, 2.0, 3.0, 4.0],
+            [1.0, 2.0, 3.0, 4.0],
+            c=values,
+            cmap="turbo",
+        )
+    messages = [str(item.message) for item in caught]
+    assert not any("Ignoring unused keyword arg(s)" in message for message in messages)
+    assert "turbo" in obj.get_cmap().name
+    np.testing.assert_allclose(obj.get_array(), values)
+
+
 @pytest.mark.mpl_image_compare
 def test_scatter_inbounds():
     """
@@ -405,6 +445,37 @@ def test_scatter_alpha(rng):
     ax.scatter(data + 2, color="k", alpha=alpha)
     ax.scatter(data + 3, color=[f"red{i}" for i in range(data.size)], alpha=alpha)
     return fig
+
+
+def test_scatter_size_aliases_are_areas():
+    """
+    Scatter preserves existing area semantics for all size aliases.
+    """
+    fig, ax = uplt.subplots()
+    try:
+        s = ax.scatter([0], [0], s=30)
+        size = ax.scatter([1], [0], size=30)
+        sizes = ax.scatter([2], [0], sizes=30)
+        ms = ax.scatter([3], [0], ms=30)
+        markersize = ax.scatter([4], [0], markersize=30)
+
+        assert s.get_sizes()[0] == pytest.approx(30)
+        assert size.get_sizes()[0] == pytest.approx(30)
+        assert sizes.get_sizes()[0] == pytest.approx(30)
+        assert ms.get_sizes()[0] == pytest.approx(30)
+        assert markersize.get_sizes()[0] == pytest.approx(30)
+    finally:
+        uplt.close(fig)
+
+
+def test_scatter_cycle_markersize_is_area():
+    fig, ax = uplt.subplots()
+    try:
+        cycle = uplt.Cycle(marker=["o"], markersize=[30])
+        obj = ax.scatter([0], [0], cycle=cycle)
+        assert obj.get_sizes()[0] == pytest.approx(30)
+    finally:
+        uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare

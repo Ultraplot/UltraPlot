@@ -277,6 +277,37 @@ def test_text_borderstyle_overrides_rc():
     assert _get_text_stroke_joinstyle(txt) == "bevel"
 
 
+def test_titleborder_false_clears_path_effects():
+    """Ensure titleborder=False removes stroke effects on inner titles."""
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    # Default rc has title.border=True, so inner title gets Stroke
+    ax.format(title="Test", titleloc="upper left")
+    t = ax._title_dict["upper left"]
+    assert t.get_path_effects(), "expected default border path effects"
+    # Now disable — path effects should be cleared
+    ax.format(titleborder=False)
+    assert not t.get_path_effects(), "titleborder=False did not clear path effects"
+
+
+def test_titleborder_false_at_creation():
+    """Ensure titleborder=False works when passed during subplot creation."""
+    fig, ax = uplt.subplot(title="Test", titleloc="upper left", titleborder=False)
+    t = ax._title_dict["upper left"]
+    assert not t.get_path_effects()
+
+
+def test_abcborder_false_clears_path_effects():
+    """Ensure abcborder=False removes stroke effects on inner abc labels."""
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.format(abc="A", abcloc="upper left", abcborder=True)
+    t = ax._title_dict["abc"]
+    assert t.get_path_effects(), "expected border path effects after abcborder=True"
+    ax.format(abcborder=False)
+    assert not t.get_path_effects(), "abcborder=False did not clear path effects"
+
+
 def test_dualx_log_transform_is_finite():
     """
     Ensure dualx transforms remain finite on log axes.
@@ -311,16 +342,18 @@ def test_title_manual_size_ignores_auto_shrink():
     assert title_obj.get_fontsize() == 20
 
 
-def test_title_shrinks_when_abc_overlaps_different_loc():
+def test_title_shifts_when_abc_overlaps_different_loc():
     """
-    Ensure long titles shrink when overlapping abc at a different location.
+    Ensure centered titles keep their requested size by shifting away from abc.
     """
     fig, axs = uplt.subplots(figsize=(3, 2))
-    axs.format(abc=True, title="X" * 200, titleloc="center", abcloc="left")
+    axs.format(abc=True, title="X" * 100, titleloc="center", abcloc="left")
     title_obj = axs[0]._title_dict["center"]
     original_size = title_obj.get_fontsize()
+    original_x = title_obj.get_position()[0]
     fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
+    assert title_obj.get_fontsize() == original_size
+    assert title_obj.get_position()[0] > original_x
 
 
 def test_title_shrinks_right_aligned_same_location():
@@ -387,17 +420,18 @@ def test_title_no_shrink_when_no_overlap():
     assert title_obj.get_fontsize() == original_size
 
 
-def test_title_shrinks_centered_left_of_abc():
+def test_title_shifts_centered_left_of_abc():
     """
-    Test that centered titles shrink when they are to the left of abc label.
-    This covers the specific case where base_x <= ax0 - pad for centered titles.
+    Centered titles should also shift left to avoid a right-side abc label.
     """
     fig, axs = uplt.subplots(figsize=(3, 2))
     axs.format(abc=True, title="X" * 100, titleloc="center", abcloc="right")
     title_obj = axs[0]._title_dict["center"]
     original_size = title_obj.get_fontsize()
+    original_x = title_obj.get_position()[0]
     fig.canvas.draw()
-    assert title_obj.get_fontsize() < original_size
+    assert title_obj.get_fontsize() == original_size
+    assert title_obj.get_position()[0] < original_x
     ticks = axs[0].get_xticks()
     assert ticks.size > 0
     xy = np.column_stack([ticks, np.zeros_like(ticks)])

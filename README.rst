@@ -104,9 +104,8 @@ UltraPlot is published on `PyPi <https://pypi.org/project/ultraplot/>`__ and
    pip install ultraplot
    conda install -c conda-forge ultraplot
 
-The default install keeps a broad core runtime set (for example, pyCirclize-based
-plots) without pulling in every optional integration. Install extras only when you
-need them:
+The PyPI install keeps optional integrations out of the default dependency set.
+Install extras only when you need them:
 
 .. code-block:: bash
 
@@ -114,6 +113,10 @@ need them:
    pip install "ultraplot[all]"     # Optional runtime integrations
    pip install "ultraplot[astro,geo]"  # Combine extras
    pip install "ultraplot[astropy,cartopy]"  # Package-name aliases also work
+
+The Conda package includes UltraPlot's supported integrations because Conda does
+not provide an equivalent to pip extras. No additional Astropy installation is
+needed for WCS axes when UltraPlot is installed from conda-forge.
 
 For a minimal install, use ``--no-deps`` and install the core requirements:
 
@@ -135,16 +138,10 @@ To install a development version of UltraPlot, you can use
 or clone the repository and run ``pip install -e .``
 inside the ``ultraplot`` folder.
 
-If you use UltraPlot in your research, please cite it using the following BibTeX entry::
-
-    @software{vanElteren2025,
-      author       = {Casper van Elteren and Matthew R. Becker},
-      title        = {UltraPlot: A succinct wrapper for Matplotlib},
-      year         = {2025},
-      version      = {1.57.1},
-      publisher    = {GitHub},
-      url          = {https://github.com/Ultraplot/UltraPlot}
-    }
+If you use UltraPlot in your research, please cite the latest release metadata in
+``CITATION.cff``. GitHub can export this metadata as BibTeX from the
+repository's "Cite this repository" panel, and the Zenodo badge below points to
+the project DOI across releases.
 
 .. |downloads| image:: https://static.pepy.tech/personalized-badge/UltraPlot?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
     :target: https://pepy.tech/project/ultraplot

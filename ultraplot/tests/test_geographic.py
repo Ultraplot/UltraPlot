@@ -188,6 +188,35 @@ def test_geoticks_label_shorthand_lb_no_warning(recwarn):
     uplt.close(fig)
 
 
+def test_geo_labelsize_updates_gridliner_labels():
+    fig, ax = uplt.subplots(proj="cyl")
+    ax = ax[0]
+    ax.format(labels=True, lonlines=30, latlines=30, labelsize=30)
+    fig.canvas.draw()
+
+    labels = (
+        ax.gridlines_major.bottom_label_artists + ax.gridlines_major.left_label_artists
+    )
+    assert labels
+    assert {label.get_fontsize() for label in labels} == {30}
+    uplt.close(fig)
+
+
+def test_subplotgrid_geo_labelsize_updates_gridliner_labels():
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.format(labels=True, lonlines=30, latlines=30, labelsize=30)
+    fig.canvas.draw()
+
+    geo = ax[0]
+    labels = (
+        geo.gridlines_major.bottom_label_artists
+        + geo.gridlines_major.left_label_artists
+    )
+    assert labels
+    assert {label.get_fontsize() for label in labels} == {30}
+    uplt.close(fig)
+
+
 def test_toggle_ticks_supports_bool_and_sequence_specs():
     fig, ax = uplt.subplots(proj="cyl")
     geo = ax[0]
@@ -275,6 +304,19 @@ def test_lon0_shifts():
         assert str_loc == format[:n], f"Epxected: {str_loc}, got: {format[:n]}"
     assert locs[0] != 0  # we should not be a 0 anymore
     uplt.close(fig)
+
+
+def test_dms_formatter_symbols_are_default_font_safe():
+    pytest.importorskip("cartopy")
+    formatter = uplt.Formatter("dmslon")
+    label = formatter(1 + 1 / 60 + 1 / 3600)
+    assert formatter._minute_symbol in ("\N{PRIME}", "'")
+    assert formatter._second_symbol in ("\N{DOUBLE PRIME}", '"')
+    assert formatter._minute_symbol in label
+    assert formatter._second_symbol in label
+
+    formatter = uplt.Formatter("dmslon", minute_symbol="m", second_symbol="s")
+    assert formatter(1 + 1 / 60 + 1 / 3600).endswith("1m1sE")
 
 
 @pytest.mark.parametrize(
@@ -929,6 +971,265 @@ def test_rasterize_feature():
     uplt.close(fig)
 
 
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_draws_patch_collection_and_missing_polygons(backend):
+    if backend == "cartopy":
+        pytest.importorskip("cartopy.crs")
+    sgeom = pytest.importorskip("shapely.geometry")
+    from matplotlib import collections as mcollections
+
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    geo = ax[0]
+    coll = geo.choropleth(
+        [
+            sgeom.box(-20, -10, -5, 5),
+            sgeom.box(0, -5, 15, 10),
+            sgeom.box(20, -5, 35, 10),
+        ],
+        [1.0, np.nan, 3.0],
+        edgecolor="k",
+        linewidth=0.5,
+        colorbar="r",
+        missing_kw={"facecolor": "gray8", "hatch": "//"},
+    )
+    fig.canvas.draw()
+
+    assert isinstance(coll, mcollections.PatchCollection)
+    assert np.allclose(np.asarray(coll.get_array()), [1.0, 3.0])
+    assert len(coll.get_paths()) == 2
+    missing = [other for other in geo.collections if other.get_hatch() == "//"]
+    assert len(missing) == 1
+    assert len(fig.axes) == 2
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_country_mapping_resolves_codes(monkeypatch, backend):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    calls = []
+    country_geoms = {
+        "AUS": sgeom.box(110, -45, 155, -10),
+        "NZL": sgeom.box(166, -48, 179, -34),
+    }
+
+    def _fake_country(code, resolution="110m", include_far=False):
+        key = str(code).upper()
+        calls.append((key, resolution, bool(include_far)))
+        return country_geoms[key]
+
+    monkeypatch.setattr(plegend, "_resolve_country_geometry", _fake_country)
+
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    coll = ax[0].choropleth(
+        {"AUS": 1.0, "NZL": 2.0},
+        country=True,
+        country_reso="50m",
+        country_territories=True,
+    )
+    fig.canvas.draw()
+
+    assert np.allclose(np.asarray(coll.get_array()), [1.0, 2.0])
+    assert len(coll.get_paths()) == 2
+    assert calls == [("AUS", "50m", True), ("NZL", "50m", True)]
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_country_defaults_respect_rc(monkeypatch, backend):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from ultraplot import legend as plegend
+
+    calls = []
+
+    def _fake_country(code, resolution="110m", include_far=False):
+        calls.append((str(code).upper(), resolution, bool(include_far)))
+        return sgeom.box(110, -45, 155, -10)
+
+    monkeypatch.setattr(plegend, "_resolve_country_geometry", _fake_country)
+
+    with uplt.rc.context(
+        {
+            "geo.choropleth.country_reso": "50m",
+            "geo.choropleth.country_territories": True,
+        }
+    ):
+        fig, ax = uplt.subplots(proj="cyl", backend=backend)
+        coll = ax[0].choropleth({"AUS": 1.0}, country=True)
+        fig.canvas.draw()
+
+    assert np.allclose(np.asarray(coll.get_array()), [1.0])
+    assert calls == [("AUS", "50m", True)]
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_default_zorder_above_land(backend):
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    geo = ax[0]
+    coll = geo.choropleth([sgeom.box(-20, -10, 20, 10)], [1.0])
+    geo.format(land=True)
+    fig.canvas.draw()
+
+    land = getattr(geo, "_land_feature")
+    if isinstance(land, (tuple, list)):
+        land_zorder = land[0].get_zorder()
+    else:
+        land_zorder = land.get_zorder()
+    assert coll.get_zorder() > land_zorder
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("backend", ["cartopy", "basemap"])
+def test_choropleth_edgecolor_overlays_borders(backend):
+    sgeom = pytest.importorskip("shapely.geometry")
+    from matplotlib import colors as mcolors
+
+    fig, ax = uplt.subplots(proj="cyl", backend=backend)
+    geo = ax[0]
+    coll = geo.choropleth(
+        [sgeom.box(-20, -10, 20, 10)],
+        [1.0],
+        edgecolor="red",
+        linewidth=2,
+    )
+    geo.format(borders=True)
+    fig.canvas.draw()
+
+    borders = getattr(geo, "_borders_feature")
+    if isinstance(borders, (tuple, list)):
+        borders_zorder = borders[0].get_zorder()
+    else:
+        borders_zorder = borders.get_zorder()
+    edge = next(
+        other
+        for other in geo.collections
+        if other is not coll
+        and len(other.get_paths()) == len(coll.get_paths())
+        and np.allclose(np.asarray(other.get_edgecolor())[0], mcolors.to_rgba("red"))
+    )
+    assert edge.get_zorder() > borders_zorder
+    assert np.allclose(np.asarray(edge.get_edgecolor())[0], mcolors.to_rgba("red"))
+    uplt.close(fig)
+
+
+def test_choropleth_zorder_respects_rc():
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    with uplt.rc.context({"geo.choropleth.zorder": 5.5}):
+        fig, ax = uplt.subplots(proj="cyl")
+        coll = ax[0].choropleth([sgeom.box(-20, -10, 20, 10)], [1.0])
+        fig.canvas.draw()
+
+    assert coll.get_zorder() == pytest.approx(5.5)
+    uplt.close(fig)
+
+
+def test_choropleth_length_mismatch_raises():
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="same length"):
+        ax[0].choropleth([sgeom.box(-10, -10, 10, 10)], [1.0, 2.0])
+    uplt.close(fig)
+
+
+def test_choropleth_basemap_rejects_non_platecarree_transform():
+    ccrs = pytest.importorskip("cartopy.crs")
+    sgeom = pytest.importorskip("shapely.geometry")
+
+    fig, ax = uplt.subplots(proj="cyl", backend="basemap")
+    with pytest.raises(ValueError, match="Basemap choropleth"):
+        ax[0].choropleth(
+            [sgeom.box(-10, -10, 10, 10)],
+            [1.0],
+            transform=ccrs.Mercator(),
+        )
+    uplt.close(fig)
+
+
+def test_choropleth_country_mapping_with_explicit_values_raises():
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="does not accept both a mapping input"):
+        ax[0].choropleth({"AUS": 1.0}, [1.0], country=True)
+    uplt.close(fig)
+
+
+def test_choropleth_antimeridian_no_horizontal_artifacts():
+    """
+    Polygons crossing the antimeridian (e.g. Russia) must be split by
+    project_geometry so that no path vertex jumps across the map.
+    """
+    sgeom = pytest.importorskip("shapely.geometry")
+    ccrs = pytest.importorskip("cartopy.crs")
+
+    # A box that crosses the antimeridian: 170E to 190E (= 170W)
+    box = sgeom.box(170, 50, 190, 70)
+    fig, ax = uplt.subplots(proj="robin")
+    geo = ax[0]
+    coll = geo.choropleth([box], [1.0])
+    fig.canvas.draw()
+
+    # After project_geometry splits the box, the compound path should
+    # have multiple sub-paths (MOVETO codes) rather than one continuous ring
+    paths = coll.get_paths()
+    assert len(paths) >= 1
+    codes = paths[0].codes
+    moveto_count = (codes == 1).sum()  # Path.MOVETO == 1
+    assert (
+        moveto_count >= 2
+    ), "Antimeridian-crossing polygon should be split into multiple sub-paths"
+    uplt.close(fig)
+
+
+def test_choropleth_project_geometry_non_cylindrical():
+    """
+    Choropleth on non-cylindrical projections (Robinson, Mollweide, etc.)
+    should render without errors for geometries that span wide longitudes.
+    """
+    sgeom = pytest.importorskip("shapely.geometry")
+    pytest.importorskip("cartopy.crs")
+
+    # Wide-spanning box (like Russia or Canada)
+    box = sgeom.box(-170, 40, 170, 75)
+    for proj in ("robin", "moll", "merc"):
+        fig, ax = uplt.subplots(proj=proj)
+        coll = ax[0].choropleth([box], [42.0])
+        fig.canvas.draw()
+
+        paths = coll.get_paths()
+        assert len(paths) >= 1
+        # Verify no inf/nan in projected vertices
+        for path in paths:
+            verts = path.vertices
+            assert np.all(
+                np.isfinite(verts)
+            ), f"Projected path has non-finite vertices on {proj!r} projection"
+        uplt.close(fig)
+
+
+def test_choropleth_country_antimeridian_renders():
+    """
+    Country-level choropleth for Russia (crosses antimeridian) should
+    produce valid paths with finite vertices on multiple projections.
+    """
+    pytest.importorskip("cartopy.crs")
+    for proj in ("robin", "merc", "moll"):
+        fig, ax = uplt.subplots(proj=proj)
+        coll = ax[0].choropleth({"Russia": 1.0}, country=True, cmap="Glacial")
+        fig.canvas.draw()
+
+        for path in coll.get_paths():
+            verts = path.vertices
+            assert np.all(
+                np.isfinite(verts)
+            ), f"Russia choropleth path has non-finite vertices on {proj!r}"
+        uplt.close(fig)
+
+
 def test_check_tricontourf():
     """
     Ensure transform defaults are applied only when appropriate for tri-plots.
@@ -1187,11 +1488,11 @@ def test_dms_used_for_mercator():
     ax.format(land=True, labels=True, lonlocator=limit)
     import matplotlib.ticker as mticker
 
+    minute_symbol = ax[0].gridlines_major.xformatter._minute_symbol
     expectations = (
-        "0°36′E",
-        "113°15′E",
+        f"0°36{minute_symbol}E",
+        f"113°15{minute_symbol}E",
     )
-
     for expectation, tick in zip(expectations, limit):
         a = ax[0].gridlines_major.xformatter(tick)
         b = ax[1].gridlines_major.xformatter(tick)

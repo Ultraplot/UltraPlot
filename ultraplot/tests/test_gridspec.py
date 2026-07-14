@@ -1,7 +1,16 @@
 import pytest
+import numpy as np
+import matplotlib.colors as mcolors
 
 import ultraplot as uplt
 from ultraplot.gridspec import SubplotGrid
+
+
+def _singleton_axis(obj):
+    if isinstance(obj, SubplotGrid):
+        assert len(obj) == 1
+        return obj[0]
+    return obj
 
 
 def test_grid_has_dynamic_methods():
@@ -135,8 +144,9 @@ def test_gridspec_spanning_slice_deduplicates_axes():
 
     # The first two slots in the top row refer to the same spanning subplot.
     ax = axs[0, :2]
-    assert isinstance(ax, uplt.axes.Axes)
-    assert ax is axs[0, 0]
+    assert isinstance(ax, uplt.SubplotGrid)
+    assert len(ax) == 1
+    assert _singleton_axis(ax) is _singleton_axis(axs[0, 0])
 
     data = np.array([[0.1, 0.2], [0.4, 0.5], [0.7, 0.8]])
     ax.scatter(data[:, 0], data[:, 1], c="grey", label="data", legend=True)
@@ -145,3 +155,158 @@ def test_gridspec_spanning_slice_deduplicates_axes():
     legend = ax.get_legend()
     assert legend is not None
     assert [t.get_text() for t in legend.texts] == ["data"]
+
+
+def test_subplotgrid_format_title_creates_shared_subset_title():
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+
+    subset = axs[:, 0]
+    subset.format(title="Shared title")
+    fig.canvas.draw()
+
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    assert title.get_text() == "Shared title"
+    assert all(not ax.get_title() for ax in subset)
+
+    x_expected, _ = fig._get_align_coord("top", list(subset), align="center")
+    bbox = title.get_window_extent(fig._get_renderer()).transformed(
+        fig.transFigure.inverted()
+    )
+    top = max(ax.get_position().y1 for ax in subset)
+    assert np.isclose(title.get_position()[0], x_expected)
+    assert bbox.y0 > top
+
+
+def test_subplotgrid_format_title_uses_rc_defaults():
+    with uplt.rc.context({"title.loc": "left"}):
+        fig, axs = uplt.subplots(nrows=2, ncols=2)
+        subset = axs[:, 0]
+        subset.format(title="Shared title")
+        fig.canvas.draw()
+
+        title = next(iter(fig._subset_title_dict.values()))["artist"]
+        x_expected, _ = fig._get_align_coord("top", list(subset), align="left")
+        assert title.get_ha() == "left"
+        assert np.isclose(title.get_position()[0], x_expected)
+
+
+def test_subplotgrid_format_title_uses_format_rc_settings():
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    subset = axs[:, 0]
+    subset.format(title="Shared title", titlesize=22, titlecolor="red")
+    fig.canvas.draw()
+
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    assert title.get_fontsize() == 22
+    assert np.allclose(mcolors.to_rgba(title.get_color()), mcolors.to_rgba("red"))
+
+
+@pytest.mark.parametrize(
+    ("loc", "ha"),
+    [
+        ("upper left", "left"),
+        ("lower center", "center"),
+        ("outer right", "right"),
+    ],
+)
+def test_subplotgrid_format_title_accepts_standard_title_locations(loc, ha):
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    subset = axs[:, 0]
+    subset.format(title="Shared title", titleloc=loc)
+    fig.canvas.draw()
+
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    x_expected, _ = fig._get_align_coord("top", list(subset), align=ha)
+    assert title.get_ha() == ha
+    assert np.isclose(title.get_position()[0], x_expected)
+
+
+def test_subplotgrid_format_title_matches_axes_title_top_gap():
+    fig, axs = uplt.subplots(ncols=3)
+    axs[0].format(title="Single")
+    subset = axs[1:]
+    subset.format(title="Shared")
+    fig.canvas.draw()
+
+    renderer = fig._get_renderer()
+    single = axs[0]._title_dict["center"]
+    shared = next(iter(fig._subset_title_dict.values()))["artist"]
+    single_top = fig.transFigure.transform((0, axs[0].get_position().y1))[1]
+    shared_top = fig.transFigure.transform((0, axs[1].get_position().y1))[1]
+    single_gap = single.get_window_extent(renderer).y0 - single_top
+    shared_gap = shared.get_window_extent(renderer).y0 - shared_top
+
+    assert np.isclose(single_gap, shared_gap)
+
+
+def test_subplotgrid_format_title_across_rows_does_not_inflate_hspace():
+    fig_plain, axs_plain = uplt.subplots(ncols=4, nrows=2, refwidth=1)
+    fig_plain.canvas.draw()
+    plain_hspace = fig_plain.gridspec.hspace_total[0]
+
+    fig, axs = uplt.subplots(ncols=4, nrows=2, refwidth=1)
+    subset = axs[:, :3]
+    subset.format(title="A test title")
+    fig.canvas.draw()
+
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    bbox = title.get_window_extent(fig._get_renderer()).transformed(
+        fig.transFigure.inverted()
+    )
+    top = max(ax.get_position().y1 for ax in subset[:3])
+
+    assert bbox.y0 > top
+    assert fig.gridspec.hspace_total[0] < plain_hspace + 0.2
+
+
+def test_subplotgrid_format_title_allows_vertical_alignment_override():
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    subset = axs[:, 0]
+    subset.format(title="Shared title", title_kw={"va": "bottom"})
+    fig.canvas.draw()
+
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    assert title.get_va() == "bottom"
+
+
+def test_subplotgrid_format_title_clears_bottom_colorbar_panels():
+    fig, axs = uplt.subplots(nrows=2, ncols=2, refwidth=2.5, share=False)
+    data = np.random.random((10, 10))
+    top = axs[:2]
+    top[0].contourf(data, colorbar="b")
+    top[1].pcolormesh(data, colorbar="b")
+    bottom = axs[2:]
+    bottom.format(title="Shared title")
+    fig.canvas.draw()
+
+    renderer = fig._get_renderer()
+    title = next(iter(fig._subset_title_dict.values()))["artist"]
+    title_bbox = title.get_window_extent(renderer)
+    panel_y0 = min(
+        panel.get_tightbbox(renderer).y0
+        for ax in top
+        for panel in ax._panel_dict["bottom"]
+    )
+    assert title_bbox.y1 <= panel_y0
+
+
+def test_subplotgrid_set_title_still_applies_per_axes():
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+
+    titles = axs[:].set_title("Shared title")
+
+    assert isinstance(titles, tuple)
+    assert len(titles) == 2
+    assert [ax.get_title() for ax in axs] == ["Shared title", "Shared title"]
+
+
+def test_return_type_after_indexing():
+    """
+    Inexing should always return a SubplotGrid even if we have 1 element
+    """
+    fig, axs = uplt.subplots(ncols=2, nrows=2)
+    assert isinstance(axs[1, 0:], uplt.SubplotGrid)
+    assert len(axs[1, 0:]) == 2
+
+    assert isinstance(axs[1, 1:], uplt.SubplotGrid)
+    assert len(axs[1, 1:]) == 1

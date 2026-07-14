@@ -671,6 +671,62 @@ def _align_bbox(align, length):
     return mtransforms.Bbox(bounds)
 
 
+def _get_side_colorbar_ticklocation(
+    side, orientation, tickloc, ticklocation, *, orientation_explicit=False
+):
+    """Return the outward-facing tick location for a side colorbar."""
+    if orientation == "horizontal" and orientation_explicit:
+        default = "bottom"
+    elif orientation == "horizontal":
+        default = "top" if side == "top" else "bottom"
+    else:
+        default = "right" if side == "right" else "left"
+    return _not_none(tickloc, ticklocation, default)
+
+
+def _convert_side_colorbar_units(axes, orientation, length, width, pad):
+    """Convert side colorbar dimensions to axes-relative units."""
+    horizontal = orientation == "horizontal"
+    if isinstance(length, str):
+        length = units(length, "em", "ax", axes=axes, width=horizontal)
+    if not isinstance(width, str):
+        width *= 0.5
+    width = units(width, "in", "ax", axes=axes, width=not horizontal)
+    xpad = units(pad, "em", "ax", axes=axes, width=True)
+    ypad = units(pad, "em", "ax", axes=axes, width=False)
+    pad_points = units(pad, "em", "pt", axes=axes, width=True)
+    return length, width, xpad, ypad, pad_points
+
+
+def _get_side_colorbar_bounds(side, align, length, width, xpad, ypad):
+    """Return axes-relative bounds for a side colorbar."""
+    aligned = _get_colorbar_aligned_position(side, align, length)
+    if side == "right":
+        return [1 + xpad, aligned, width, length]
+    if side == "left":
+        return [-xpad - width, aligned, width, length]
+    if side == "top":
+        return [aligned, 1 + ypad, length, width]
+    return [aligned, -ypad - width, length, width]
+
+
+def _get_filled_colorbar_bounds(side, align, length):
+    """Return panel-relative bounds for a side colorbar."""
+    aligned = _get_colorbar_aligned_position(side, align, length)
+    if side in ("top", "bottom"):
+        return [aligned, 0, length, 1]
+    return [0, aligned, 1, length]
+
+
+def _get_colorbar_aligned_position(side, align, length):
+    """Validate colorbar alignment and return its long-axis start position."""
+    horizontal = side in ("top", "bottom")
+    valid = ("left", "center", "right") if horizontal else ("bottom", "center", "top")
+    if align not in valid:
+        raise ValueError(f"Invalid align={align!r} for colorbar loc={side!r}.")
+    return _align_bbox(align, length).x0
+
+
 class _TransformedBoundsLocator:
     """
     Axes locator for `~Axes.inset_axes` and other axes.
@@ -686,6 +742,75 @@ class _TransformedBoundsLocator:
         bbox = mtransforms.TransformedBbox(bbox, self._transform)
         bbox = mtransforms.TransformedBbox(bbox, transfig.inverted())
         return bbox
+
+
+class _SideColorbarLocator:
+    """Position a side colorbar beyond its parent axes decorations."""
+
+    def __init__(self, parent, side, bounds, pad, previous=()):
+        self._parent = parent
+        self._side = side
+        self._bounds = bounds
+        self._pad = pad
+        self._previous = tuple(previous)
+
+    def __call__(self, ax, renderer):
+        parent = self._parent
+        side = self._side
+        x, y, width, height = self._bounds
+        pad = (
+            renderer.points_to_pixels(self._pad)
+            if renderer is not None
+            else self._pad * ax.figure.dpi / 72
+        )
+        axes_bbox = mtransforms.TransformedBbox(
+            mtransforms.Bbox.from_bounds(x, y, width, height), parent.transAxes
+        )
+        tight_bbox = None
+        if renderer is not None:
+            axis = parent.yaxis if side in ("left", "right") else parent.xaxis
+            tight_bbox = axis.get_tightbbox(renderer)
+        bboxes = [parent.bbox]
+        if tight_bbox is not None:
+            bboxes.append(tight_bbox)
+        if renderer is not None:
+            bboxes.extend(
+                bbox
+                for previous in self._previous
+                if previous.get_visible()
+                and (bbox := previous.get_tightbbox(renderer)) is not None
+            )
+        tight_bbox = mtransforms.Bbox.union(bboxes)
+        if side == "left":
+            axes_bbox = mtransforms.Bbox.from_bounds(
+                tight_bbox.x0 - pad - axes_bbox.width,
+                axes_bbox.y0,
+                axes_bbox.width,
+                axes_bbox.height,
+            )
+        elif side == "right":
+            axes_bbox = mtransforms.Bbox.from_bounds(
+                tight_bbox.x1 + pad,
+                axes_bbox.y0,
+                axes_bbox.width,
+                axes_bbox.height,
+            )
+        elif side == "top":
+            axes_bbox = mtransforms.Bbox.from_bounds(
+                axes_bbox.x0,
+                tight_bbox.y1 + pad,
+                axes_bbox.width,
+                axes_bbox.height,
+            )
+        else:
+            axes_bbox = mtransforms.Bbox.from_bounds(
+                axes_bbox.x0,
+                tight_bbox.y0 - pad - axes_bbox.height,
+                axes_bbox.width,
+                axes_bbox.height,
+            )
+        transfig = getattr(ax.figure, "transSubfigure", ax.figure.transFigure)
+        return mtransforms.TransformedBbox(axes_bbox, transfig.inverted())
 
 
 class _ExternalModeMixin:
@@ -1349,22 +1474,24 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         # External axes sharing, sometimes overrides panel axes sharing
         # Share x axes within compatible groups
-        axes_x = self._get_share_axes("x")
-        for group in self.figure._partition_share_axes(axes_x, "x"):
-            if not group:
-                continue
-            parent, *children = group
-            for child in children:
-                child._sharex_setup(parent)
+        if self.figure._sharex > 0:
+            axes_x = self._get_share_axes("x")
+            for group in self.figure._partition_share_axes(axes_x, "x"):
+                if not group:
+                    continue
+                parent, *children = group
+                for child in children:
+                    child._sharex_setup(parent)
 
         # Share y axes within compatible groups
-        axes_y = self._get_share_axes("y")
-        for group in self.figure._partition_share_axes(axes_y, "y"):
-            if not group:
-                continue
-            parent, *children = group
-            for child in children:
-                child._sharey_setup(parent)
+        if self.figure._sharey > 0:
+            axes_y = self._get_share_axes("y")
+            for group in self.figure._partition_share_axes(axes_y, "y"):
+                if not group:
+                    continue
+                parent, *children = group
+                for child in children:
+                    child._sharey_setup(parent)
 
         # Global sharing, use the reference subplot where compatible
         ref = self.figure._subplot_dict.get(self.figure._refnum, None)
@@ -1845,50 +1972,19 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         side = _not_none(side, "left" if orientation == "vertical" else "bottom")
         align = _not_none(align, "center")
         length = _not_none(length=length, default=rc["colorbar.length"])
-        ticklocation = _not_none(tickloc=tickloc, ticklocation=ticklocation)
-
-        # Calculate inset bounds for the colorbar
-        delta = 0.5 * (1 - length)
-        if side in ("bottom", "top"):
-            if align == "left":
-                bounds = (0, 0, length, 1)
-            elif align == "center":
-                bounds = (delta, 0, length, 1)
-            elif align == "right":
-                bounds = (2 * delta, 0, length, 1)
-            else:
-                raise ValueError(f"Invalid align={align!r} for colorbar loc={side!r}.")
-        else:
-            if align == "bottom":
-                bounds = (0, 0, 1, length)
-            elif align == "center":
-                bounds = (0, delta, 1, length)
-            elif align == "top":
-                bounds = (0, 2 * delta, 1, length)
-            else:
-                raise ValueError(f"Invalid align={align!r} for colorbar loc={side!r}.")
-
-        # Add the axes as a child of the original axes
-        cls = mproj.get_projection_class("ultraplot_cartesian")
-        locator = self._make_inset_locator(bounds, self.transAxes)
-        ax = cls(self.figure, locator(self, None).bounds, zorder=5)
-        ax.set_axes_locator(locator)
-        self.add_child_axes(ax)
-        ax.patch.set_facecolor("none")  # ignore axes.alpha application
-
-        # Handle default keyword args
-        if orientation is None:
-            orientation = "horizontal" if side in ("bottom", "top") else "vertical"
-        if orientation == "horizontal":
-            outside, inside = "bottom", "top"
-            if side == "top":
-                outside, inside = inside, outside
-            ticklocation = _not_none(ticklocation, outside)
-        else:
-            outside, inside = "left", "right"
-            if side == "right":
-                outside, inside = inside, outside
-            ticklocation = _not_none(ticklocation, outside)
+        orientation_explicit = orientation is not None
+        orientation = _not_none(
+            orientation, "horizontal" if side in ("bottom", "top") else "vertical"
+        )
+        ticklocation = _get_side_colorbar_ticklocation(
+            side,
+            orientation,
+            tickloc,
+            ticklocation,
+            orientation_explicit=orientation_explicit,
+        )
+        bounds = _get_filled_colorbar_bounds(side, align, length)
+        ax = self._add_colorbar_child_axes(bounds, track_parent=False)
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
         return ax, kwargs
 
@@ -1973,12 +2069,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             )
 
         # Create axes and frame
-        cls = mproj.get_projection_class("ultraplot_cartesian")
-        locator = self._make_inset_locator(bounds_inset, self.transAxes)
-        ax = cls(self.figure, locator(self, None).bounds, zorder=5)
-        ax.patch.set_facecolor("none")
-        ax.set_axes_locator(locator)
-        self.add_child_axes(ax)
+        ax = self._add_colorbar_child_axes(bounds_inset)
         kw_frame, kwargs = self._parse_frame("colorbar", **kwargs)
         frame_artist = None
         if frame_enabled:
@@ -1997,8 +2088,74 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             "width_raw": width_raw,
             "pad_raw": pad_raw,
         }
-        ax._inset_colorbar_parent = self
         ax._inset_colorbar_frame = frame_artist
+
+        kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
+        return ax, kwargs
+
+    def _add_colorbar_child_axes(self, bounds, locator=None, track_parent=True):
+        """Add and return a colorbar axes positioned relative to this axes."""
+        cls = mproj.get_projection_class("ultraplot_cartesian")
+        initial_locator = self._make_inset_locator(bounds, self.transAxes)
+        ax = cls(self.figure, initial_locator(self, None).bounds, zorder=5)
+        ax.patch.set_facecolor("none")
+        ax.set_axes_locator(locator or initial_locator)
+        self.add_child_axes(ax)
+        if track_parent:
+            ax._inset_colorbar_parent = self
+        return ax
+
+    def _parse_colorbar_inset_side(
+        self,
+        loc=None,
+        align=None,
+        width=None,
+        length=None,
+        shrink=None,
+        space=None,
+        pad=None,
+        tickloc=None,
+        ticklocation=None,
+        orientation=None,
+        **kwargs,
+    ):
+        """
+        Return the axes and adjusted keyword args for a side colorbar on an inset axes.
+        """
+        length = _not_none(length=length, shrink=shrink, default=rc["colorbar.length"])
+        width = _not_none(width, rc["colorbar.width"])
+        pad = _not_none(space, pad, rc["subplots.panelpad"])
+        side = _translate_loc(loc, "panel")
+        align = _not_none(align, "center")
+        orientation_explicit = orientation is not None
+        orientation = _not_none(
+            orientation, "vertical" if side in ("left", "right") else "horizontal"
+        )
+        ticklocation = _get_side_colorbar_ticklocation(
+            side,
+            orientation,
+            tickloc,
+            ticklocation,
+            orientation_explicit=orientation_explicit,
+        )
+        length, width, xpad, ypad, pad_points = _convert_side_colorbar_units(
+            self, orientation, length, width, pad
+        )
+        bounds = _get_side_colorbar_bounds(side, align, length, width, xpad, ypad)
+        align_bbox = _align_bbox(align, length)
+        previous = (
+            child
+            for child in self.child_axes
+            if getattr(child, "_inset_colorbar_side", None) == side
+            and align_bbox.overlaps(child._inset_colorbar_align_bbox)
+        )
+        locator = _SideColorbarLocator(
+            self, side, bounds, pad_points, previous=previous
+        )
+        ax = self._add_colorbar_child_axes(bounds, locator=locator)
+        ax._inset_colorbar_side = side
+        ax._inset_colorbar_align_bbox = align_bbox
+        ax._inset_colorbar_frame = None
 
         kwargs.update({"orientation": orientation, "ticklocation": ticklocation})
         return ax, kwargs
@@ -2129,14 +2286,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # Helper function. Translate handles in the input tuple group. Extracts
         # legend handles from contour sets and extracts labeled elements from
         # matplotlib containers (important for histogram plots).
-        ignore = (mcontainer.ErrorbarContainer,)
         containers = (cbook.silent_list, mcontainer.Container)
 
         def _legend_tuple(*objs):  # noqa: E306
             handles = []
             for obj in objs:
-                if isinstance(obj, ignore) and not _legend_label(obj):
-                    continue
                 if hasattr(obj, "update_scalarmappable"):  # for e.g. pcolor
                     obj.update_scalarmappable()
                 if isinstance(obj, mcontour.ContourSet):  # extract single element
@@ -2145,7 +2299,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     if hs:  # non-empty
                         obj = hs[len(hs) // 2]
                         obj.set_label(label)
-                if isinstance(obj, containers):  # extract labeled elements
+                if isinstance(obj, mcontainer.ErrorbarContainer):
+                    handles.append(obj)
+                elif isinstance(obj, containers):  # extract labeled elements
                     hs = (obj, *guides._iter_iterables(obj))
                     hs = tuple(filter(_legend_label, hs))
                     if hs:
@@ -2419,6 +2575,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         Reposition the subplot axes.
         """
+        # NOTE: The panel span override logic here will move to a layout
+        # composer in a future refactor.
         # WARNING: In later versions self.numRows, self.numCols, and self.figbox
         # are @property definitions that never go stale but in mpl < 3.4 they are
         # attributes that must be updated explicitly with update_params().
@@ -2461,7 +2619,41 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 ncols=gs.ncols_total
             )
 
+            # Check if the panel has a span override (spans more columns/rows
+            # than its parent). When it does, compute the visual extent from
+            # actual axes positions so the panel aligns with aspect-adjusted
+            # axes rather than raw grid slots. Otherwise use parent_bbox.
+            parent_ss = self._panel_parent.get_subplotspec().get_topmost_subplotspec()
+            p_row1, p_row2, p_col1, p_col2 = parent_ss._get_rows_columns(
+                ncols=gs.ncols_total
+            )
+
             if side in ("right", "left"):
+                has_span_override = (row1 < p_row1) or (row2 > p_row2)
+                if has_span_override:
+                    # Compute visual extent from all axes in the span range
+                    vmin, vmax = float("inf"), float("-inf")
+                    for other in self.figure.axes:
+                        if getattr(other, "_panel_side", None):
+                            continue
+                        oss = getattr(other, "get_subplotspec", lambda: None)()
+                        if oss is None:
+                            continue
+                        oss = oss.get_topmost_subplotspec()
+                        if oss.get_gridspec() is not gs:
+                            continue
+                        o_r1, o_r2, _, _ = oss._get_rows_columns(ncols=gs.ncols_total)
+                        if o_r1 >= row1 and o_r2 <= row2:
+                            opos = other.get_position()
+                            vmin = min(vmin, opos.y0)
+                            vmax = max(vmax, opos.y1)
+                    if vmin < vmax:
+                        along_y0, along_h = vmin, vmax - vmin
+                    else:
+                        slot = ss.get_position(self.figure)
+                        along_y0, along_h = slot.y0, slot.height
+                else:
+                    along_y0, along_h = parent_bbox.y0, parent_bbox.height
                 boundary = None
                 width = sum(gs._wratios_total[col1 : col2 + 1]) / figwidth
                 if a_col2 < col1:
@@ -2481,10 +2673,32 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     x0 = anchor_bbox.x1 + pad
                 else:
                     x0 = anchor_bbox.x0 - pad - width
-                bbox = mtransforms.Bbox.from_bounds(
-                    x0, parent_bbox.y0, width, parent_bbox.height
-                )
+                bbox = mtransforms.Bbox.from_bounds(x0, along_y0, width, along_h)
             else:
+                has_span_override = (col1 < p_col1) or (col2 > p_col2)
+                if has_span_override:
+                    vmin, vmax = float("inf"), float("-inf")
+                    for other in self.figure.axes:
+                        if getattr(other, "_panel_side", None):
+                            continue
+                        oss = getattr(other, "get_subplotspec", lambda: None)()
+                        if oss is None:
+                            continue
+                        oss = oss.get_topmost_subplotspec()
+                        if oss.get_gridspec() is not gs:
+                            continue
+                        _, _, o_c1, o_c2 = oss._get_rows_columns(ncols=gs.ncols_total)
+                        if o_c1 >= col1 and o_c2 <= col2:
+                            opos = other.get_position()
+                            vmin = min(vmin, opos.x0)
+                            vmax = max(vmax, opos.x1)
+                    if vmin < vmax:
+                        along_x0, along_w = vmin, vmax - vmin
+                    else:
+                        slot = ss.get_position(self.figure)
+                        along_x0, along_w = slot.x0, slot.width
+                else:
+                    along_x0, along_w = parent_bbox.x0, parent_bbox.width
                 boundary = None
                 height = sum(gs._hratios_total[row1 : row2 + 1]) / figheight
                 if a_row2 < row1:
@@ -2503,9 +2717,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     y0 = anchor_bbox.y1 + pad
                 else:
                     y0 = anchor_bbox.y0 - pad - height
-                bbox = mtransforms.Bbox.from_bounds(
-                    parent_bbox.x0, y0, parent_bbox.width, height
-                )
+                bbox = mtransforms.Bbox.from_bounds(along_x0, y0, along_w, height)
             setter(bbox)
 
     def _update_abc(self, **kwargs):
@@ -2874,10 +3086,18 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                         if base_x >= ax1 + abc_title_sep:
                             max_width = base_x - (ax1 + abc_title_sep)
                     elif ha == "center":
+                        # Keep the requested font size for centered titles and
+                        # resolve collisions by shifting the title away from the
+                        # abc label, matching the overflow-tolerant behavior of
+                        # left/right titles in practice.
                         if base_x >= ax1 + abc_title_sep:
-                            max_width = 2 * (base_x - (ax1 + abc_title_sep))
+                            shift = (ax1 + abc_title_sep) - tx0
+                            if shift > 0:
+                                title_obj.set_x(base_x + shift)
                         elif base_x <= ax0 - abc_title_sep:
-                            max_width = 2 * ((ax0 - abc_title_sep) - base_x)
+                            shift = (ax0 - abc_title_sep) - tx1
+                            if shift < 0:
+                                title_obj.set_x(base_x + shift)
                     if 0 < max_width < title_bbox.width:
                         scale = max_width / title_bbox.width
                         title_obj.set_fontsize(title_obj.get_fontsize() * scale)
@@ -3193,13 +3413,31 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # Perform extra post-processing steps
         # NOTE: This should be updated alongside draw(). We also cache the resulting
         # bounding box to speed up tight layout calculations (see _range_tightbbox).
+        include_subset_titles = kwargs.pop("include_subset_titles", True)
         self._add_queued_guides()
         self._apply_title_above()
         if self._colorbar_fill:
             self._colorbar_fill.update_ticks(manual_only=True)  # only if needed
         if self._inset_parent is not None and self._inset_zoom:
             self.indicate_inset_zoom()
-        self._tight_bbox = super().get_tightbbox(renderer, *args, **kwargs)
+        bbox = super().get_tightbbox(renderer, *args, **kwargs)
+        fig = self.figure
+        if (
+            bbox is not None
+            and fig is not None
+            and self._panel_parent is None
+            and include_subset_titles
+            and hasattr(fig, "_get_subset_title_bbox")
+        ):
+            title_bbox = fig._get_subset_title_bbox(self, renderer)
+            if title_bbox is not None:
+                bbox = mtransforms.Bbox.from_extents(
+                    bbox.xmin,
+                    min(bbox.ymin, title_bbox.ymin),
+                    bbox.xmax,
+                    max(bbox.ymax, title_bbox.ymax),
+                )
+        self._tight_bbox = bbox
         return self._tight_bbox
 
     def get_default_bbox_extra_artists(self):
@@ -3538,76 +3776,226 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 **kwargs,
             )
 
+    @docstring._snippet_manager
     def catlegend(self, categories, **kwargs):
         """
-        Build categorical legend entries and optionally add a legend.
+        Build a categorical legend — one handle per unique category — and
+        optionally draw it.
 
         Parameters
         ----------
-        categories
-            Category labels used to generate legend handles.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.catlegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        categories : iterable
+            Category labels in display order. Duplicates are collapsed; the
+            first occurrence determines position.
+        color, marker
+            %(legend.semantic_style_arg)s
+            Defaults to ultraplot's color cycle for ``color`` and ``"o"`` for
+            ``marker`` (or :rc:`legend.cat.marker` when set).
+        line : bool, optional
+            Whether to render connector lines through the markers. Falls back
+            to :rc:`legend.cat.line`. Setting a non-default ``linestyle``
+            implicitly enables this.
+        Other parameters
+        ----------------
+        %(legend.semantic_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        See also
+        --------
+        Axes.entrylegend
+        Axes.sizelegend
         """
         return plegend.UltraLegend(self).catlegend(categories, **kwargs)
 
+    @docstring._snippet_manager
     def entrylegend(self, entries, **kwargs):
         """
-        Build generic semantic legend entries and optionally add a legend.
+        Build generic semantic legend entries from explicit ``{label: style}``
+        entries and optionally draw the legend.
 
         Parameters
         ----------
-        entries
-            Entry specifications as handles, style dictionaries, or ``(label, spec)``
-            pairs.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.entrylegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        entries : iterable or mapping
+            Entry specifications. Either a sequence of ``{**style_kwargs}``
+            dicts (each requiring at least ``label``) or a mapping from label
+            to style-kwargs dict.
+        line : bool, optional
+            Whether each entry shows a connector line. Falls back to
+            :rc:`legend.cat.line`.
+        marker, color
+            %(legend.semantic_style_arg)s
+        Other parameters
+        ----------------
+        %(legend.semantic_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        See also
+        --------
+        Axes.catlegend
+        Axes.sizelegend
         """
         return plegend.UltraLegend(self).entrylegend(entries, **kwargs)
 
+    @docstring._snippet_manager
     def sizelegend(self, levels, **kwargs):
         """
-        Build size legend entries and optionally add a legend.
+        Build a size legend — one handle per level, scaled by marker size —
+        and optionally draw it.
 
         Parameters
         ----------
-        levels
-            Numeric levels used to generate marker-size entries.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.sizelegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        levels : iterable of float
+            Numeric values to render as size-scaled markers.
+        labels : iterable or mapping, optional
+            Custom labels. A mapping ``{level: label}`` overrides individual
+            entries (every level must be a key). When omitted, labels are
+            formatted from ``levels`` via ``fmt``.
+        color, marker
+            %(legend.semantic_style_arg)s
+            Defaults to :rc:`legend.size.color` and :rc:`legend.size.marker`.
+        area : bool, optional
+            Treat ``levels`` as marker areas (``True``, default) or
+            diameters (``False``). Areas are converted with
+            ``ms = sqrt(level) * scale``. Falls back to :rc:`legend.size.area`.
+        values : array-like, optional
+            Full scatter-size data used to infer the scaling range for
+            ``levels``. When provided, or when any of ``vmin``, ``vmax``,
+            ``smin``, ``smax``, ``area_size``, or ``absolute_size`` are
+            provided, ``levels`` are transformed with the same size scaling
+            rules used by :meth:`~ultraplot.axes.PlotAxes.scatter` while
+            labels remain based on the original ``levels``. When these options
+            are omitted and a compatible UltraPlot scatter artist already exists
+            on the axes, its size scale is inferred automatically.
+        vmin, vmax : float, optional
+            Explicit data range for scatter-style size scaling. Defaults to the
+            finite range of ``values`` or ``levels``.
+        smin, smax : float, optional
+            Minimum and maximum scaled marker sizes, with the same meaning as
+            in :meth:`~ultraplot.axes.PlotAxes.scatter`.
+        area_size, absolute_size : bool, optional
+            Scatter-style size scaling switches. Defaults match
+            :meth:`~ultraplot.axes.PlotAxes.scatter` when scatter-style scaling
+            is active. When scatter-style scaling is active and ``area_size`` is
+            omitted, an explicit ``area=False`` is treated like
+            ``area_size=False``.
+        scale : float, optional
+            Multiplier applied after area/diameter conversion.
+            Falls back to :rc:`legend.size.scale`.
+        minsize : float, optional
+            Lower bound on rendered marker size.
+            Falls back to :rc:`legend.size.minsize`.
+        fmt : str or callable, optional
+            Format used to label levels. Falls back to :rc:`legend.size.format`.
+
+        Other parameters
+        ----------------
+        %(legend.semantic_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        See also
+        --------
+        Axes.catlegend
+        Axes.numlegend
         """
         return plegend.UltraLegend(self).sizelegend(levels, **kwargs)
 
+    @docstring._snippet_manager
     def numlegend(self, levels=None, **kwargs):
         """
-        Build numeric-color legend entries and optionally add a legend.
+        Build a numeric legend — one patch handle per level, colored from a
+        colormap — and optionally draw it.
 
         Parameters
         ----------
-        levels
-            Numeric levels or number of levels.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.numlegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        levels : iterable of float, optional
+            Numeric levels to render. When omitted, ``n`` evenly spaced
+            levels are derived from ``vmin`` / ``vmax``.
+        vmin, vmax : float, optional
+            Limits for sampling ``cmap`` when ``norm`` is not provided.
+        n : int, optional
+            Number of levels to sample when ``levels`` is omitted.
+            Falls back to :rc:`legend.num.n`.
+        cmap : str or `~matplotlib.colors.Colormap`, optional
+            Colormap used to color the patches.
+            Falls back to :rc:`legend.num.cmap`.
+        norm : `~matplotlib.colors.Normalize`, optional
+            Normalization applied to ``levels`` before colormap lookup.
+        fmt : str or callable, optional
+            Format used to label levels.
+            Falls back to :rc:`legend.num.format`.
+        facecolor, edgecolor
+            %(legend.semantic_style_arg)s
+            ``facecolor`` defaults to colormap-derived values; ``edgecolor``
+            falls back to :rc:`legend.num.edgecolor`.
+        linewidth, linestyle, alpha
+            Patch outline width, style, and transparency. ``linewidth`` /
+            ``alpha`` fall back to :rc:`legend.num.linewidth` /
+            :rc:`legend.num.alpha`.
+
+        Other parameters
+        ----------------
+        %(legend.semantic_num_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        See also
+        --------
+        Axes.sizelegend
+        Axes.geolegend
         """
         return plegend.UltraLegend(self).numlegend(levels=levels, **kwargs)
 
+    @docstring._snippet_manager
     def geolegend(self, entries, labels=None, **kwargs):
         """
-        Build geometry legend entries and optionally add a legend.
+        Build a geometry legend — one patch handle per geometry entry — and
+        optionally draw it.
 
         Parameters
         ----------
-        entries
-            Geometry entries (mapping, ``(label, geometry)`` pairs, or geometries).
-        labels
-            Optional labels for geometry sequences.
-        **kwargs
-            Forwarded to `ultraplot.legend.UltraLegend.geolegend`.
-            Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+        entries : iterable or mapping
+            Either a sequence of ``(label, geometry)`` pairs or a mapping
+            from label to geometry specification (string keyword, shapely
+            geometry, ``cartopy`` feature, or a country name when
+            ``country_reso`` is set).
+        labels : iterable, optional
+            Labels overriding those derived from ``entries``.
+        country_reso : str, optional
+            Natural Earth resolution for country geometries (e.g. ``"110m"``).
+            Falls back to :rc:`legend.geo.country_reso`.
+        country_territories : bool, optional
+            Whether country lookups include overseas territories.
+            Falls back to :rc:`legend.geo.country_territories`.
+        country_proj : any, optional
+            Projection used to render country geometries; ignored for non-
+            country entries. Falls back to :rc:`legend.geo.country_proj`.
+        handlesize : float, optional
+            Multiplier applied to legend ``handlelength`` / ``handleheight``
+            to enlarge geometry handles. Falls back to
+            :rc:`legend.geo.handlesize`. Must be positive.
+        facecolor, edgecolor
+            %(legend.semantic_style_arg)s
+            Default to :rc:`legend.geo.facecolor` / :rc:`legend.geo.edgecolor`.
+        linewidth, alpha, fill
+            Patch outline width, transparency, and fill toggle.
+            Defaults from :rc:`legend.geo.linewidth` / :rc:`legend.geo.alpha` /
+            :rc:`legend.geo.fill`.
+
+        Other parameters
+        ----------------
+        %(legend.semantic_num_style_kwargs)s
+        %(legend.semantic_handle_kw)s
+
+        Notes
+        -----
+        Geometry legend entries use normalized patch proxies inside the legend
+        handle box rather than reusing the original map artist directly. This
+        preserves the general geometry shape and copied patch styling, but very
+        small or high-aspect-ratio handles can still make hatches difficult to
+        read at legend scale.
+
+        See also
+        --------
+        Axes.numlegend
         """
         return plegend.UltraLegend(self).geolegend(entries, labels=labels, **kwargs)
 
@@ -4627,6 +5015,53 @@ def _apply_inset_colorbar_layout(
         frame.set_bounds(*bounds_frame)
 
 
+def _has_finite_bbox(bbox) -> bool:
+    return bbox is not None and np.all(
+        np.isfinite((bbox.x0, bbox.y0, bbox.x1, bbox.y1))
+    )
+
+
+def _collect_inset_colorbar_bboxes(
+    colorbar, *, labelloc_layout: str, loc: str, orientation: str, renderer
+):
+    bboxes = []
+
+    longaxis = _get_colorbar_long_axis(colorbar)
+    try:
+        bbox = longaxis.get_tightbbox(renderer)
+    except Exception:
+        bbox = None
+    if _has_finite_bbox(bbox):
+        bboxes.append(bbox)
+
+    label_axis = _get_axis_for(
+        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    )
+    if label_axis.label.get_text():
+        try:
+            bbox = label_axis.label.get_window_extent(renderer=renderer)
+        except Exception:
+            bbox = None
+        if _has_finite_bbox(bbox):
+            bboxes.append(bbox)
+
+    for artist in (
+        getattr(colorbar, "outline", None),
+        getattr(colorbar, "solids", None),
+        getattr(colorbar, "dividers", None),
+    ):
+        if artist is None:
+            continue
+        try:
+            bbox = artist.get_window_extent(renderer=renderer)
+        except Exception:
+            bbox = None
+        if _has_finite_bbox(bbox):
+            bboxes.append(bbox)
+
+    return bboxes
+
+
 def _inset_colorbar_frame_needs_reflow(colorbar, *, labelloc: str, renderer) -> bool:
     cax = colorbar.ax
     layout = getattr(cax, "_inset_colorbar_layout", None)
@@ -4638,36 +5073,13 @@ def _inset_colorbar_frame_needs_reflow(colorbar, *, labelloc: str, renderer) -> 
     loc = layout["loc"]
     ticklocation = layout["ticklocation"]
     labelloc_layout = labelloc if isinstance(labelloc, str) else ticklocation
-    bboxes = []
-
-    longaxis = _get_colorbar_long_axis(colorbar)
-    try:
-        bbox = longaxis.get_tightbbox(renderer)
-    except Exception:
-        bbox = None
-    if bbox is not None:
-        bboxes.append(bbox)
-
-    label_axis = _get_axis_for(
-        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    bboxes = _collect_inset_colorbar_bboxes(
+        colorbar,
+        labelloc_layout=labelloc_layout,
+        loc=loc,
+        orientation=orientation,
+        renderer=renderer,
     )
-    if label_axis.label.get_text():
-        try:
-            bboxes.append(label_axis.label.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
-
-    for artist in (
-        getattr(colorbar, "outline", None),
-        getattr(colorbar, "solids", None),
-        getattr(colorbar, "dividers", None),
-    ):
-        if artist is None:
-            continue
-        try:
-            bboxes.append(artist.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
 
     if not bboxes:
         return False
@@ -4732,37 +5144,13 @@ def _reflow_inset_colorbar_frame(
     renderer = renderer or cax.figure._get_renderer()
     if hasattr(colorbar, "update_ticks"):
         colorbar.update_ticks(manual_only=True)
-    bboxes = []
-    longaxis = _get_colorbar_long_axis(colorbar)
-    try:
-        bbox = longaxis.get_tightbbox(renderer)
-    except Exception:
-        bbox = None
-    if bbox is not None:
-        bboxes.append(bbox)
-    label_axis = _get_axis_for(
-        labelloc_layout, loc, orientation=orientation, ax=colorbar
+    bboxes = _collect_inset_colorbar_bboxes(
+        colorbar,
+        labelloc_layout=labelloc_layout,
+        loc=loc,
+        orientation=orientation,
+        renderer=renderer,
     )
-    if label_axis.label.get_text():
-        try:
-            bboxes.append(label_axis.label.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
-    if colorbar.outline is not None:
-        try:
-            bboxes.append(colorbar.outline.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
-    if getattr(colorbar, "solids", None) is not None:
-        try:
-            bboxes.append(colorbar.solids.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
-    if getattr(colorbar, "dividers", None) is not None:
-        try:
-            bboxes.append(colorbar.dividers.get_window_extent(renderer=renderer))
-        except Exception:
-            pass
     if not bboxes:
         return
     x0 = min(b.x0 for b in bboxes)

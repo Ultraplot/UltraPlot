@@ -81,7 +81,7 @@ class Aitoff(_WarpedRectangularProjection):
                 f"The {self.name!r} projection does not handle elliptical globes."
             )
 
-        proj4_params = {"proj": "aitoff", "lon_0": central_longitude}
+        proj4_params = [("proj", "aitoff"), ("lon_0", central_longitude)]
         super().__init__(
             proj4_params,
             central_longitude,
@@ -126,7 +126,7 @@ class Hammer(_WarpedRectangularProjection):
                 f"The {self.name!r} projection does not handle elliptical globes."
             )
 
-        proj4_params = {"proj": "hammer", "lon_0": central_longitude}
+        proj4_params = [("proj", "hammer"), ("lon_0", central_longitude)]
         super().__init__(
             proj4_params,
             central_longitude,
@@ -172,7 +172,7 @@ class KavrayskiyVII(_WarpedRectangularProjection):
                 f"The {self.name!r} projection does not handle elliptical globes."
             )
 
-        proj4_params = {"proj": "kav7", "lon_0": central_longitude}
+        proj4_params = [("proj", "kav7"), ("lon_0", central_longitude)]
         super().__init__(
             proj4_params,
             central_longitude,
@@ -218,7 +218,7 @@ class WinkelTripel(_WarpedRectangularProjection):
                 f"The {self.name!r} projection does not handle " "elliptical globes."
             )
 
-        proj4_params = {"proj": "wintri", "lon_0": central_longitude}
+        proj4_params = [("proj", "wintri"), ("lon_0", central_longitude)]
         super().__init__(
             proj4_params,
             central_longitude,

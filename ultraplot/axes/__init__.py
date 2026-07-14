@@ -17,6 +17,7 @@ from .geo import (
 from .plot import PlotAxes  # noqa: F401
 from .polar import PolarAxes
 from .shared import _SharedAxes  # noqa: F401
+from .taylor import TaylorAxes
 from .three import ThreeAxes  # noqa: F401
 
 _ASTRO_AXES_CLASS = None
@@ -29,6 +30,7 @@ __all__ = [
     "PlotAxes",
     "CartesianAxes",
     "PolarAxes",
+    "TaylorAxes",
     "GeoAxes",
     "ThreeAxes",
     "ExternalAxesContainer",
@@ -38,8 +40,6 @@ __all__ = [
 # NOTE: We integrate with cartopy and basemap rather than using matplotlib's
 # native projection system. Therefore axes names are not part of public API.
 _cls_dict = {}  # track valid names
-
-
 def _refresh_cls_table():
     global _cls_table
     _cls_table = "\n".join(
@@ -60,7 +60,14 @@ def _register_projection_class(_cls):
     _refresh_cls_table()
 
 
-for _cls in (CartesianAxes, PolarAxes, _CartopyAxes, _BasemapAxes, ThreeAxes):
+for _cls in (
+    CartesianAxes,
+    PolarAxes,
+    TaylorAxes,
+    _CartopyAxes,
+    _BasemapAxes,
+    ThreeAxes,
+):
     _register_projection_class(_cls)
 
 

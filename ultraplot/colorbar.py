@@ -163,11 +163,15 @@ class UltraColorbar:
         # NOTE: The inset axes function needs 'label' to know how to pad the box
         # TODO: Use seperate keywords for frame properties vs. colorbar edge properties?
         frame = _not_none(frame=frame, frameon=frameon)
+        inset_side = loc in ("left", "right", "top", "bottom") and getattr(
+            ax, "_inset_parent", None
+        )
         if loc in ("fill", "left", "right", "top", "bottom"):
             outline = _not_none(outline=outline, frame=frame)
             length = _not_none(length, rc["colorbar.length"])  # for _add_guide_panel
             kwargs.update({"align": align, "length": length})
             extendsize = _not_none(extendsize, rc["colorbar.extend"])
+        if loc in ("fill", "left", "right", "top", "bottom") and not inset_side:
             panel_ax = ax._add_guide_panel(
                 loc,
                 align,
@@ -183,17 +187,27 @@ class UltraColorbar:
             )  # noqa: E501
             cax, kwargs = panel_ax._parse_colorbar_filled(**kwargs)
         else:
-            kwargs.update({"label": label, "length": length, "width": width})
-            extendsize = _not_none(extendsize, rc["colorbar.insetextend"])
-            cax, kwargs = ax._parse_colorbar_inset(
-                loc=loc,
-                frame=frame,
-                labelloc=labelloc,
-                labelrotation=labelrotation,
-                labelsize=labelsize,
-                pad=pad,
-                **kwargs,
-            )  # noqa: E501
+            if inset_side:
+                kwargs.update(
+                    {"align": align, "length": length, "space": space, "width": width}
+                )
+                cax, kwargs = ax._parse_colorbar_inset_side(
+                    loc=loc,
+                    pad=pad,
+                    **kwargs,
+                )
+            else:
+                kwargs.update({"label": label, "length": length, "width": width})
+                extendsize = _not_none(extendsize, rc["colorbar.insetextend"])
+                cax, kwargs = ax._parse_colorbar_inset(
+                    loc=loc,
+                    frame=frame,
+                    labelloc=labelloc,
+                    labelrotation=labelrotation,
+                    labelsize=labelsize,
+                    pad=pad,
+                    **kwargs,
+                )  # noqa: E501
 
         # Parse the colorbar mappable
         # NOTE: Account for special case where auto colorbar is generated from 1D

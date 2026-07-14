@@ -11,7 +11,7 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from numbers import Integral, Number
-from typing import Any, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Iterable, Mapping, Optional, Sequence, TypeAlias, Union
 
 import matplotlib as mpl
 import matplotlib.artist as martist
@@ -29,6 +29,7 @@ import matplotlib.pyplot as mplt
 import matplotlib.ticker as mticker
 import numpy as np
 import numpy.ma as ma
+from numpy.typing import ArrayLike
 from packaging import version
 
 from .. import colors as pcolors
@@ -63,6 +64,12 @@ __all__ = ["PlotAxes"]
 # NOTE: Increased from native linewidth of 0.25 matplotlib uses for grid box edges.
 # This is half of rc['patch.linewidth'] of 0.6. Half seems like a nice default.
 EDGEWIDTH = 0.3
+
+DataInput: TypeAlias = ArrayLike
+ColorTupleRGB: TypeAlias = tuple[float, float, float]
+ColorTupleRGBA: TypeAlias = tuple[float, float, float, float]
+ColorInput: TypeAlias = DataInput | str | ColorTupleRGB | ColorTupleRGBA | None
+ParsedColor: TypeAlias = DataInput | list[str] | str | None
 
 # Data argument docstrings
 _args_1d_docstring = """
@@ -186,6 +193,8 @@ linewidth : float or 2D array, optional
     Width of streamlines.
 cmap, norm : optional
     Colormap and normalization for array colors.
+colorbar, colorbar_kw : optional
+    Add a colorbar for array-valued streamline colors.
 arrowsize : float, optional
     Arrow size scaling.
 arrowstyle : str, optional
@@ -993,7 +1002,10 @@ c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors \
 : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
     the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
-    this should be a valid matplotlib color.
+    this should be a valid matplotlib color. To pass explicit RGB(A) colors,
+    use an ``N x 3`` or ``N x 4`` array, or pass a single color with `color=`.
+    One-dimensional numeric arrays matching the point count are interpreted as
+    scalar values for colormapping.
 smin, smax : float, optional
     The minimum and maximum marker size area in units ``points ** 2``. Ignored
     if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
@@ -1908,6 +1920,8 @@ class PlotAxes(base.Axes):
         grains: Optional[int] = None,
         density: Optional[int] = None,
         arrow_at_end: Optional[bool] = None,
+        colorbar: Optional[str] = None,
+        colorbar_kw: Optional[dict[str, Any]] = None,
     ):
         """
         %(plot.curved_quiver)s
@@ -1925,6 +1939,7 @@ class PlotAxes(base.Axes):
         zorder = _not_none(zorder, mlines.Line2D.zorder)
         transform = _not_none(transform, self.transData)
         color = _not_none(color, self._get_lines.get_next_color())
+        colorbar_kw = colorbar_kw or {}
         linewidth = _not_none(linewidth, rc["lines.linewidth"])
         scale = _not_none(scale, rc["curved_quiver.scale"])
         grains = _not_none(grains, rc["curved_quiver.grains"])
@@ -1958,6 +1973,7 @@ class PlotAxes(base.Axes):
                 raise ValueError(
                     "If 'linewidth' is given, must have the shape of 'Grid(x,y)'"
                 )
+            linewidth = np.ma.masked_invalid(linewidth)
             line_kw["linewidth"] = []
         else:
             line_kw["linewidth"] = linewidth
@@ -1980,7 +1996,6 @@ class PlotAxes(base.Axes):
 
         integrate = solver.get_integrator(u, v, minlength, resolution, magnitude)
         trajectories = []
-        edges = []
 
         if start_points is None:
             start_points = solver.gen_starting_points(x, y, grains)
@@ -2016,18 +2031,19 @@ class PlotAxes(base.Axes):
 
         for xs, ys in sp2:
             xg, yg = solver.domain_map.data2grid(xs, ys)
-            t = integrate(xg, yg)
-            if t is not None:
-                trajectories.append(t[0])
-                edges.append(t[1])
+            trajectory = integrate(xg, yg)
+            if trajectory is not None:
+                trajectories.append(trajectory)
         streamlines = []
         arrows = []
-        for t, edge in zip(trajectories, edges):
-            tgx = np.array(t[0])
-            tgy = np.array(t[1])
+        for trajectory in trajectories:
+            tgx = np.array(trajectory.x)
+            tgy = np.array(trajectory.y)
 
             # Rescale from grid-coordinates to data-coordinates.
-            tx, ty = solver.domain_map.grid2data(*np.array(t))
+            tx, ty = solver.domain_map.grid2data(
+                *np.array([trajectory.x, trajectory.y])
+            )
             tx += solver.grid.x_origin
             ty += solver.grid.y_origin
 
@@ -2044,14 +2060,9 @@ class PlotAxes(base.Axes):
                     continue
 
                 arrow_tail = (tx[-1], ty[-1])
-
-                # Extrapolate to find arrow head
-                xg, yg = solver.domain_map.data2grid(
-                    tx[-1] - solver.grid.x_origin, ty[-1] - solver.grid.y_origin
-                )
-
-                ui = solver.interpgrid(u, xg, yg)
-                vi = solver.interpgrid(v, xg, yg)
+                if trajectory.end_direction is None:
+                    continue
+                ui, vi = trajectory.end_direction
 
                 norm_v = np.sqrt(ui**2 + vi**2)
                 if norm_v > 0:
@@ -2077,6 +2088,8 @@ class PlotAxes(base.Axes):
             if isinstance(linewidth, np.ndarray):
                 line_widths = solver.interpgrid(linewidth, tgx, tgy)[:-1]
                 line_kw["linewidth"].extend(line_widths)
+                if np.ma.is_masked(line_widths[n]):
+                    continue
                 arrow_kw["linewidth"] = line_widths[n]
 
             if use_multicolor_lines:
@@ -2084,7 +2097,7 @@ class PlotAxes(base.Axes):
                 line_colors.append(color_values)
                 arrow_kw["color"] = cmap(norm(color_values[n]))
 
-            if not edge:
+            if not trajectory.hit_edge:
                 p = mpatches.FancyArrowPatch(
                     arrow_tail, arrow_head, transform=transform, **arrow_kw
                 )
@@ -2115,6 +2128,12 @@ class PlotAxes(base.Axes):
             lc.set_array(np.ma.hstack(line_colors))
             lc.set_cmap(cmap)
             lc.set_norm(norm)
+            self._update_guide(
+                lc,
+                colorbar=colorbar,
+                colorbar_kw=colorbar_kw,
+                queue_colorbar=False,
+            )
 
         self.add_collection(lc)
         self.autoscale_view()
@@ -3499,7 +3518,9 @@ class PlotAxes(base.Axes):
                 edges.extend(convert((min_, max_)))
 
     @staticmethod
-    def _fix_patch_edges(obj, edgefix=None, **kwargs):
+    def _fix_patch_edges(
+        obj, edgefix=None, default_linewidth: float | None = None, **kwargs
+    ):
         """
         Fix white lines between between filled patches and fix issues
         with colormaps that are transparent. If keyword args passed by user
@@ -3510,7 +3531,11 @@ class PlotAxes(base.Axes):
         # See: https://github.com/jklymak/contourfIssues
         # See: https://stackoverflow.com/q/15003353/4970632
         edgefix = _not_none(edgefix, rc.edgefix, True)
-        linewidth = EDGEWIDTH if edgefix is True else 0 if edgefix is False else edgefix
+        linewidth = (
+            _not_none(default_linewidth, EDGEWIDTH)
+            if edgefix is True
+            else 0 if edgefix is False else edgefix
+        )
         if not linewidth:
             return
         keys = ("linewidth", "linestyle", "edgecolor")  # patches and collections
@@ -3547,7 +3572,9 @@ class PlotAxes(base.Axes):
             obj.set_edgecolor(obj.get_facecolor())
         elif np.iterable(obj):  # e.g. silent_list of BarContainer
             for element in obj:
-                PlotAxes._fix_patch_edges(element, edgefix=edgefix)
+                PlotAxes._fix_patch_edges(
+                    element, edgefix=edgefix, default_linewidth=default_linewidth
+                )
         else:
             warnings._warn_ultraplot(
                 f"Unexpected obj {obj} passed to _fix_patch_edges."
@@ -3963,7 +3990,17 @@ class PlotAxes(base.Axes):
         zs = tuple(map(inputs._to_numpy_array, zs))
         return (x, y, *zs, kwargs)
 
-    def _parse_color(self, x, y, c, *, apply_cycle=True, infer_rgb=False, **kwargs):
+    def _parse_color(
+        self,
+        x: DataInput,
+        y: DataInput,
+        c: ColorInput,
+        *,
+        apply_cycle: bool = True,
+        infer_rgb: bool = False,
+        force_cmap: bool = False,
+        **kwargs: Any,
+    ) -> tuple[ParsedColor, dict[str, Any]]:
         """
         Parse either a colormap or color cycler. Colormap will be discrete and fade
         to subwhite luminance by default. Returns a HEX string if needed so we don't
@@ -3972,7 +4009,7 @@ class PlotAxes(base.Axes):
         # NOTE: This function is positioned above the _parse_cmap and _parse_cycle
         # functions and helper functions.
         parsers = (self._parse_cmap, *self._level_parsers)
-        if c is None or mcolors.is_color_like(c):
+        if c is None or (mcolors.is_color_like(c) and not force_cmap):
             if infer_rgb and c is not None and (isinstance(c, str) and c != "none"):
                 c = pcolors.to_hex(c)  # avoid scatter() ambiguous color warning
             if apply_cycle:  # False for scatter() so we can wait to get correct 'N'
@@ -3999,6 +4036,32 @@ class PlotAxes(base.Axes):
         if pop:
             warnings._warn_ultraplot(f"Ignoring unused keyword arg(s): {pop}")
         return (c, kwargs)
+
+    def _scatter_c_is_scalar_data(
+        self, x: DataInput, y: DataInput, c: ColorInput
+    ) -> bool:
+        """
+        Return whether scatter ``c=`` should be treated as scalar data.
+
+        Matplotlib treats 1D numeric arrays matching the point count as values to
+        be colormapped, even though short float sequences can also look like an
+        RGBA tuple to ``is_color_like``. Preserve explicit RGB/RGBA arrays via the
+        existing ``N x 3``/``N x 4`` path and reserve this override for the 1D
+        numeric case only.
+        """
+        if c is None or isinstance(c, str):
+            return False
+        values = np.asarray(c)
+        if values.ndim != 1 or values.size <= 1:
+            return False
+        if not np.issubdtype(values.dtype, np.number):
+            return False
+        x = np.atleast_1d(inputs._to_numpy_array(x))
+        y = np.atleast_1d(inputs._to_numpy_array(y))
+        point_count = x.shape[0]
+        if y.shape[0] != point_count:
+            return False
+        return values.shape[0] == point_count
 
     @warnings._rename_kwargs("0.6.0", centers="values")
     def _parse_cmap(
@@ -4057,9 +4120,30 @@ class PlotAxes(base.Axes):
         # Parse keyword args
         cmap_kw = cmap_kw or {}
         norm_kw = norm_kw or {}
-        # If norm is given we use it to set vmin and vmax
-        if (vmin is not None or vmax is not None) and norm is not None:
-            raise ValueError("If 'norm' is given, 'vmin' and 'vmax' must not be set.")
+        # Tuple/list specs like ``('linear', 0, 1)`` pack positional args for
+        # ``constructor.Norm``. Build the Normalize now so downstream code can
+        # treat it uniformly with pre-constructed Normalize instances instead
+        # of risking a positional/kwarg collision when vmin/vmax are forwarded.
+        if (
+            np.iterable(norm)
+            and not isinstance(norm, str)
+            and not isinstance(norm, mcolors.Normalize)
+            and len(norm) > 1
+        ):
+            norm = constructor.Norm(norm, **norm_kw)
+            norm_kw = {}
+        # A ``Normalize`` instance already carries vmin/vmax, so combining it
+        # with explicit vmin/vmax is ambiguous. String / single-element list or
+        # tuple specs are just names for ``constructor.Norm`` and accept
+        # vmin/vmax as kwargs.
+        if (vmin is not None or vmax is not None) and isinstance(
+            norm, mcolors.Normalize
+        ):
+            raise ValueError(
+                "If 'norm' is a Normalize instance, 'vmin' and 'vmax' must not be "
+                "set. Pass them through the Normalize constructor, or specify "
+                "'norm' as a string / list / tuple to let vmin and vmax apply."
+            )
         if isinstance(norm, mcolors.Normalize):
             vmin = norm.vmin
             vmax = norm.vmax
@@ -4285,8 +4369,9 @@ class PlotAxes(base.Axes):
 
         # Apply manual cycle properties
         if cycle_manually:
-            current_prop = self._get_lines._cycler_items[self._get_lines._idx]
-            self._get_lines._idx = (self._get_lines._idx + 1) % len(self._active_cycle)
+            cycler = getattr(self._get_lines, "_prop_cycle", self._get_lines)
+            current_prop = cycler._cycler_items[cycler._idx]
+            cycler._idx = (cycler._idx + 1) % len(cycler._cycler_items)
             for prop, key in cycle_manually.items():
                 if kwargs.get(key) is None and prop in current_prop:
                     value = current_prop[prop]
@@ -5518,15 +5603,32 @@ class PlotAxes(base.Axes):
 
         kw = kwargs.copy()
         inbounds = kw.pop("inbounds", None)
+        size = kw.pop("size", None)
+        sizes = kw.pop("sizes", None)
+        size = _not_none(size=size, sizes=sizes)
+        if size is not None:
+            if ss is None:
+                ss = size
+            else:
+                warnings._warn_ultraplot(
+                    "Got conflicting scatter size arguments. Using s/ms/markersize "
+                    "and ignoring size/sizes."
+                )
         kw.update(_pop_props(kw, "collection"))
         kw, extents = self._inbounds_extent(inbounds=inbounds, **kw)
         xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, autoreverse=False, **kw)
         ys, kw = inputs._dist_reduce(ys, **kw)
-        ss, kw = self._parse_markersize(ss, **kw)  # parse 's'
+        size_scale = {
+            key: kw.get(key, None)
+            for key in ("smin", "smax", "area_size", "absolute_size")
+        }
+        ss_source = inputs._to_numpy_array(ss) if ss is not None else None
+        ss, kw = self._parse_markersize(ss_source, **kw)  # parse 's'
 
         # Only parse color if explicitly provided
         infer_rgb = True
         if cc is not None:
+            force_cmap = self._scatter_c_is_scalar_data(xs, ys, cc)
             if not isinstance(cc, str):
                 test = np.atleast_1d(cc)
                 if (
@@ -5542,12 +5644,15 @@ class PlotAxes(base.Axes):
                 inbounds=inbounds,
                 apply_cycle=False,
                 infer_rgb=infer_rgb,
+                force_cmap=force_cmap,
                 **kw,
             )
         # Create the cycler object by manually cycling and sanitzing the inputs
         guide_kw = _pop_params(kw, self._update_guide)
         objs = []
-        for _, n, x, y, s, c, kw in self._iter_arg_cols(xs, ys, ss, cc, **kw):
+        for _, n, x, y, s, c, s_source, kw in self._iter_arg_cols(
+            xs, ys, ss, cc, ss_source, **kw
+        ):
             # Cycle s and c as they are in cycle_manually
             # Note: they could be None
             kw["s"], kw["c"] = s, c
@@ -5557,6 +5662,11 @@ class PlotAxes(base.Axes):
             if not vert:
                 x, y = y, x
             obj = self._call_native("scatter", x, y, **kw)
+            if s_source is not None:
+                obj._ultraplot_size_scale = {
+                    "values": inputs._to_numpy_array(s_source),
+                    **size_scale,
+                }
             self._inbounds_xylim(extents, x, y)
             objs.append((*eb, *es, obj) if eb or es else obj)
 
@@ -5708,7 +5818,9 @@ class PlotAxes(base.Axes):
             # No synthetic tagging or seaborn-based label overrides
 
             # Patch edge fixes
-            self._fix_patch_edges(obj, **edgefix_kw, **kw)
+            self._fix_patch_edges(
+                obj, default_linewidth=rc["patch.linewidth"], **edgefix_kw, **kw
+            )
 
             # Track sides for sticky edges
             xsides.append(x)
@@ -5969,7 +6081,9 @@ class PlotAxes(base.Axes):
             kw = self._parse_cycle(n, **kw)
             # Adjust x or y coordinates for grouped and stacked bars
             w = _not_none(w, np.array([0.8]))  # same as mpl but in *relative* units
-            b = _not_none(b, np.array([0.0]))  # same as mpl
+            b = np.atleast_1d(
+                _not_none(b, np.array([0.0]))
+            )  # tolerate scalar `bottom`/`left`
             if not absolute_width:
                 w = self._convert_bar_width(x, w)
             if stack:
@@ -5991,7 +6105,9 @@ class PlotAxes(base.Axes):
                 if isinstance(obj, mcontainer.BarContainer):
                     self._add_bar_labels(obj, orientation=orientation, **bar_labels_kw)
 
-            self._fix_patch_edges(obj, **edgefix_kw, **kw)
+            self._fix_patch_edges(
+                obj, default_linewidth=rc["patch.linewidth"], **edgefix_kw, **kw
+            )
             for y in (b, b + h):
                 self._inbounds_xylim(extents, x, y, orientation=orientation)
 
@@ -6114,7 +6230,9 @@ class PlotAxes(base.Axes):
             **kw,
         )
         objs = tuple(cbook.silent_list(type(seq[0]).__name__, seq) for seq in objs)
-        self._fix_patch_edges(objs[0], **edgefix_kw, **wedge_kw)
+        self._fix_patch_edges(
+            objs[0], default_linewidth=rc["patch.linewidth"], **edgefix_kw, **wedge_kw
+        )
         return objs
 
     @staticmethod
@@ -6142,6 +6260,32 @@ class PlotAxes(base.Axes):
             )
             edgecolor = edgecolor[0]
         return fillcolor, fillalpha, edgecolor, kw
+
+    def _boxplot_has_shared_tick_axis(self, axis_name: str) -> bool:
+        """
+        Return whether the boxplot tick axis is shared with sibling axes.
+        """
+        shared = (
+            self.get_shared_x_axes() if axis_name == "x" else self.get_shared_y_axes()
+        )
+        return len(shared.get_siblings(self)) > 1
+
+    def _apply_boxplot_tick_manager(
+        self,
+        axis_name: str,
+        positions: Iterable[Any],
+        tick_labels: Optional[Iterable[Any]] = None,
+    ) -> None:
+        """
+        Apply fixed tick locations/labels without appending duplicates on shared axes.
+        """
+        axis = self._axis_map[axis_name]
+        locator_positions = np.asarray(axis.convert_units(positions))
+        label_values = positions if tick_labels is None else tick_labels
+        axis.set_major_locator(mticker.FixedLocator(locator_positions))
+        axis.set_major_formatter(
+            mticker.FixedFormatter([str(label) for label in label_values])
+        )
 
     def _apply_boxplot(
         self,
@@ -6207,6 +6351,27 @@ class PlotAxes(base.Axes):
 
         # Plot boxes
         kw.setdefault("positions", x)
+        tick_labels = kw.get("tick_labels", kw.get("labels"))
+        manage_ticks = kw.pop("manage_ticks", True)
+        axis_name = "x" if vert else "y"
+        # Matplotlib's boxplot tick manager appends onto an existing
+        # FixedLocator/FixedFormatter pair. UltraPlot's stronger sharex/sharey
+        # modes currently share ticker state across sibling axes, so repeated
+        # boxplot calls in one shared group can duplicate tick labels.
+        #
+        # For now, avoid the native tick-manager path only for shared axes and
+        # install the intended fixed ticks ourselves. This keeps the fix narrow
+        # to the reported regression instead of changing global axis-sharing
+        # behavior in a bugfix PR.
+        #
+        # TODO: Revisit the shared ticker design more broadly. A deeper fix may
+        # be to stop aliasing ticker containers across shared axes, or to make
+        # the statistical-plot tick management path deduplicate shared fixed
+        # locators/formatters after the native call.
+        native_manage_ticks = manage_ticks and not self._boxplot_has_shared_tick_axis(
+            axis_name
+        )
+        kw["manage_ticks"] = native_manage_ticks
         if means:
             kw["showmeans"] = kw["meanline"] = True
         y = inputs._dist_clean(y)
@@ -6230,6 +6395,13 @@ class PlotAxes(base.Axes):
             # For older matplotlib versions:
             # Use vert parameter
             artists = self._call_native("boxplot", y, vert=vert, **kw)
+
+        if manage_ticks and not native_manage_ticks:
+            self._apply_boxplot_tick_manager(
+                axis_name,
+                kw["positions"],
+                tick_labels=tick_labels,
+            )
 
         artists = artists or {}  # necessary?
         artists = {
@@ -6972,7 +7144,9 @@ class PlotAxes(base.Axes):
         kw = self._parse_cycle(n, **kw)
         obj = self._call_native("hist", xs, orientation=orientation, **kw)
         if histtype.startswith("bar"):
-            self._fix_patch_edges(obj[2], **edgefix_kw, **kw)
+            self._fix_patch_edges(
+                obj[2], default_linewidth=rc["patch.linewidth"], **edgefix_kw, **kw
+            )
         # Revert to mpl < 3.3 behavior where silent_list was always returned for
         # non-bar-type histograms. Because consistency.
         res = obj[2]

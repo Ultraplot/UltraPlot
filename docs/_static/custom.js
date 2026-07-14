@@ -329,7 +329,134 @@ function initShibuyaRightToc() {
   syncRightTocCodeButtons(localtoc);
 }
 
+const upltApiSearchGenericTerms = new Set([
+  "api",
+  "apis",
+  "attribute",
+  "attributes",
+  "class",
+  "classes",
+  "doc",
+  "docs",
+  "documentation",
+  "function",
+  "functions",
+  "method",
+  "methods",
+  "object",
+  "objects",
+  "reference",
+  "references",
+]);
+
+function normalizeApiSearchTerm(term) {
+  return String(term || "")
+    .toLowerCase()
+    .replace(/\(\)$/, "")
+    .trim();
+}
+
+function isGenericApiSearchTerm(term) {
+  return upltApiSearchGenericTerms.has(normalizeApiSearchTerm(term));
+}
+
+function getApiSearchTerms(terms) {
+  if (terms instanceof Set) {
+    return Array.from(terms);
+  }
+  return Array.from(terms || []);
+}
+
+function apiSearchResultMatchesQueryTerm(title, anchor, terms) {
+  const haystack = `${title || ""} ${anchor || ""}`.toLowerCase();
+  const leaf = haystack.split("#").pop().split(".").pop();
+  return getApiSearchTerms(terms).some((term) => {
+    const normalized = normalizeApiSearchTerm(term);
+    if (!normalized || isGenericApiSearchTerm(normalized)) return false;
+    return (
+      leaf === normalized ||
+      leaf.includes(normalized) ||
+      haystack.includes("." + normalized)
+    );
+  });
+}
+
+function initApiSearchScoring() {
+  if (typeof Search === "undefined" || typeof Scorer === "undefined") return;
+  if (Search.upltApiSearchScoring === "1") return;
+
+  const previousParseQuery = Search._parseQuery;
+  if (typeof previousParseQuery === "function") {
+    Search._parseQuery = function (query) {
+      const parsed = previousParseQuery.call(this, query);
+      const queryTerms = new Set(
+        getApiSearchTerms(parsed && parsed[4])
+          .map(normalizeApiSearchTerm)
+          .filter(Boolean),
+      );
+      Search.upltQueryTerms = queryTerms;
+      Search.upltApiLikeQuery =
+        /[.()]/.test(query || "") ||
+        getApiSearchTerms(queryTerms).some(isGenericApiSearchTerm);
+      return parsed;
+    };
+  }
+
+  const previousObjectSearch = Search.performObjectSearch;
+  if (typeof previousObjectSearch === "function") {
+    Search.performObjectSearch = function (object, objectTerms) {
+      const normalizedObject = normalizeApiSearchTerm(object);
+      const filteredTerms = new Set(
+        getApiSearchTerms(objectTerms)
+          .map(normalizeApiSearchTerm)
+          .filter((term) => term && !isGenericApiSearchTerm(term)),
+      );
+      if (normalizedObject && !isGenericApiSearchTerm(normalizedObject)) {
+        filteredTerms.add(normalizedObject);
+      }
+      return previousObjectSearch.call(this, object, filteredTerms);
+    };
+  }
+
+  const previousScore = Scorer.score;
+  Scorer.score = function (result) {
+    let score =
+      typeof previousScore === "function" ? previousScore(result) : result[4];
+    if (!Number.isFinite(score)) {
+      score = Number.isFinite(result[4]) ? result[4] : 0;
+    }
+
+    const [docname, title, anchor, descr, _baseScore, _filename, kind] = result;
+    const isApiReference = String(docname || "").startsWith("api/");
+    const isApiLikeQuery = !!Search.upltApiLikeQuery;
+    const queryTerms = Search.upltQueryTerms || new Set();
+
+    if (isApiReference && kind === "object") {
+      score += 24;
+      if (isApiLikeQuery) score += 16;
+      if (apiSearchResultMatchesQueryTerm(title, anchor, queryTerms)) {
+        score += 12;
+      }
+      if (
+        queryTerms.has("function") &&
+        String(descr || "").toLowerCase().includes("python function")
+      ) {
+        score += 4;
+      }
+    } else if (isApiReference && isApiLikeQuery) {
+      score += kind === "title" || kind === "index" ? 12 : 8;
+    } else if (!isApiReference && isApiLikeQuery) {
+      score -= 4;
+    }
+
+    return score;
+  };
+
+  Search.upltApiSearchScoring = "1";
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  initApiSearchScoring();
   initScrollChromeFade();
 
   if (document.querySelector(".sphx-glr-thumbcontainer")) {

@@ -11,9 +11,9 @@ from numbers import Integral
 from packaging import version
 
 try:
-    from typing import List, Optional, Tuple, Union
+    from typing import Any, Iterable, List, Optional, Tuple, Union
 except ImportError:
-    from typing_extensions import List, Optional, Tuple, Union
+    from typing_extensions import Any, Iterable, List, Optional, Tuple, Union
 
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
@@ -28,8 +28,10 @@ except:
     from typing_extensions import override
 
 from . import axes as paxes
+from .axes._formatting import pop_axis_format_kwargs
 from . import constructor
 from . import gridspec as pgridspec
+from . import legend as plegend
 from .config import rc, rc_matplotlib
 from .internals.projections import finalize_projection_kwargs, resolve_projection_kwargs
 from .internals import (
@@ -411,6 +413,128 @@ docstring._snippet_manager["figure.colorbar_space"] = _space_docstring.format(
 )  # noqa: E501
 
 
+# Figure semantic legend helpers
+_figure_semantic_legend_common_docstring = """
+**legend_kwargs
+    Placement and legend styling keywords forwarded to
+    `~ultraplot.figure.Figure.legend` when ``add=True``. This includes figure legend
+    placement keywords like ``loc=``, ``ref=``, ``ax=``, ``rows=``, ``cols=``, and
+    ``span=``. Pass ``add=False`` to return ``(handles, labels)`` without drawing.
+"""
+docstring._snippet_manager["figure.semantic_legend_common"] = (
+    _figure_semantic_legend_common_docstring
+)
+
+_figure_entrylegend_docstring = """
+Build generic semantic legend entries and optionally add a figure legend.
+
+Parameters
+----------
+entries
+    Entry specifications as handles, style dictionaries, or ``(label, spec)``
+    pairs.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.entrylegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+"""
+docstring._snippet_manager["figure.entrylegend"] = _figure_entrylegend_docstring
+
+_figure_catlegend_docstring = """
+Build categorical legend entries and optionally add a figure legend.
+
+Parameters
+----------
+categories
+    Category labels used to generate legend handles.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.catlegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+"""
+docstring._snippet_manager["figure.catlegend"] = _figure_catlegend_docstring
+
+_figure_sizelegend_docstring = """
+Build size legend entries and optionally add a figure legend.
+
+Parameters
+----------
+levels
+    Numeric levels used to generate marker-size entries.
+values, vmin, vmax, smin, smax, area_size, absolute_size
+    Optional scatter-style size scaling controls forwarded to
+    `~ultraplot.axes.Axes.sizelegend`. When omitted, a compatible UltraPlot
+    scatter artist can be used to infer the size scale automatically.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.sizelegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+
+Pass ``labels=[...]`` or ``labels={level: label}`` to override the generated labels.
+"""
+docstring._snippet_manager["figure.sizelegend"] = _figure_sizelegend_docstring
+
+_figure_numlegend_docstring = """
+Build numeric-color legend entries and optionally add a figure legend.
+
+Parameters
+----------
+levels
+    Numeric levels or number of levels.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.numlegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+"""
+docstring._snippet_manager["figure.numlegend"] = _figure_numlegend_docstring
+
+_figure_geolegend_docstring = """
+Build geometry legend entries and optionally add a figure legend.
+
+Parameters
+----------
+entries
+    Geometry entries (mapping, ``(label, geometry)`` pairs, or geometries).
+labels
+    Optional labels for geometry sequences.
+
+Other parameters
+----------------
+%(figure.semantic_legend_common)s
+
+Notes
+-----
+Handle generation currently reuses the semantic legend builder used by
+`~ultraplot.axes.Axes.geolegend`, then routes the final draw step through
+`~ultraplot.figure.Figure.legend`.
+"""
+docstring._snippet_manager["figure.geolegend"] = _figure_geolegend_docstring
+
+
 # Save docstring
 _save_docstring = """
 Save the figure.
@@ -496,6 +620,12 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
 
         skip_autolayout = getattr(fig, "_skip_autolayout", False)
         layout_dirty = getattr(fig, "_layout_dirty", False)
+        saving_frame_count = getattr(fig, "_saving_frame_count", 0)
+        lock_tight_during_save = (
+            getattr(self, "_is_saving", False)
+            and saving_frame_count > 0
+            and getattr(fig, "_tight_active", False)
+        )
         if (
             skip_autolayout
             and getattr(fig, "_layout_initialized", False)
@@ -514,14 +644,20 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         with ctx1, ctx2, ctx3:
             needs_post_layout = False
             if not fig._layout_initialized or layout_dirty:
-                fig.auto_layout()
+                fig.auto_layout(tight=False if lock_tight_during_save else None)
                 fig._layout_initialized = True
                 fig._layout_dirty = False
-                needs_post_layout = _needs_post_tight_layout(fig)
+                needs_post_layout = (
+                    not lock_tight_during_save and _needs_post_tight_layout(fig)
+                )
             result = func(self, *args, **kwargs)
             if needs_post_layout:
                 fig.auto_layout()
                 result = func(self, *args, **kwargs)
+            if method == "print_figure" and getattr(self, "_is_saving", False):
+                fig._saving_frame_count = saving_frame_count + 1
+            elif not getattr(self, "_is_saving", False):
+                fig._saving_frame_count = 0
             return result
 
     # Add preprocessor
@@ -657,18 +793,66 @@ class Figure(mfigure.Figure):
         ultraplot.ui.subplots
         matplotlib.figure.Figure
         """
-        # Add figure sizing settings
-        # NOTE: We cannot catpure user-input 'figsize' here because it gets
-        # automatically filled by the figure manager. See ui.figure().
-        # NOTE: The figure size is adjusted according to these arguments by the
-        # canvas preprocessor. Although in special case where both 'figwidth' and
-        # 'figheight' were passes we update 'figsize' to limit side effects.
-        refnum = _not_none(refnum=refnum, ref=ref, default=1)  # never None
+        # Resolve aliases
+        refnum = _not_none(refnum=refnum, ref=ref, default=1)
         refaspect = _not_none(refaspect=refaspect, aspect=aspect)
         refwidth = _not_none(refwidth=refwidth, axwidth=axwidth)
         refheight = _not_none(refheight=refheight, axheight=axheight)
         figwidth = _not_none(figwidth=figwidth, width=width)
         figheight = _not_none(figheight=figheight, height=height)
+
+        # Initialize sections
+        figwidth, figheight = self._init_figure_size(
+            refnum, refaspect, refwidth, refheight, figwidth, figheight, journal
+        )
+        self._init_gridspec_params(
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
+            wspace=wspace,
+            hspace=hspace,
+            space=space,
+            wequal=wequal,
+            hequal=hequal,
+            equal=equal,
+            wgroup=wgroup,
+            hgroup=hgroup,
+            group=group,
+            wpad=wpad,
+            hpad=hpad,
+            pad=pad,
+            outerpad=outerpad,
+            innerpad=innerpad,
+            panelpad=panelpad,
+        )
+        self._init_tight_layout(tight, kwargs)
+        self._init_sharing(
+            sharex=sharex,
+            sharey=sharey,
+            share=share,
+            spanx=spanx,
+            spany=spany,
+            span=span,
+            alignx=alignx,
+            aligny=aligny,
+            align=align,
+        )
+        self._init_figure_state(figwidth, figheight, kwargs)
+
+    def _init_figure_size(
+        self, refnum, refaspect, refwidth, refheight, figwidth, figheight, journal
+    ):
+        """
+        Resolve figure sizing from reference dimensions, journal presets,
+        and explicit figure dimensions. Sets sizing attributes on self and
+        returns the resolved (figwidth, figheight).
+        """
+        # NOTE: We cannot capture user-input 'figsize' here because it gets
+        # automatically filled by the figure manager. See ui.figure().
+        # NOTE: The figure size is adjusted according to these arguments by the
+        # canvas preprocessor. Although in special case where both 'figwidth' and
+        # 'figheight' were passed we update 'figsize' to limit side effects.
         messages = []
         if journal is not None:
             jwidth, jheight = _get_journal_size(journal)
@@ -689,7 +873,7 @@ class Figure(mfigure.Figure):
             and figheight is None
             and refwidth is None
             and refheight is None
-        ):  # noqa: E501
+        ):
             refwidth = rc["subplots.refwidth"]  # always inches
         if np.iterable(refaspect):
             refaspect = refaspect[0] / refaspect[1]
@@ -706,7 +890,7 @@ class Figure(mfigure.Figure):
         self._figwidth = figwidth = units(figwidth, "in")
         self._figheight = figheight = units(figheight, "in")
 
-        # Add special consideration for interactive backends
+        # Handle interactive backends
         backend = _not_none(rc.backend, "")
         backend = backend.lower()
         interactive = "nbagg" in backend or "ipympl" in backend
@@ -727,35 +911,13 @@ class Figure(mfigure.Figure):
                     "(default) backend. This warning message is shown the first time "
                     "you create a figure without explicitly specifying the size."
                 )
+        return figwidth, figheight
 
-        # Add space settings
-        # NOTE: This is analogous to 'subplotpars' but we don't worry about
-        # user mutability. Think it's perfectly fine to ask users to simply
-        # pass these to uplt.figure() or uplt.subplots(). Also overriding
-        # 'subplots_adjust' would be confusing since we switch to absolute
-        # units and that function is heavily used outside of ultraplot.
-        params = {
-            "left": left,
-            "right": right,
-            "top": top,
-            "bottom": bottom,
-            "wspace": wspace,
-            "hspace": hspace,
-            "space": space,
-            "wequal": wequal,
-            "hequal": hequal,
-            "equal": equal,
-            "wgroup": wgroup,
-            "hgroup": hgroup,
-            "group": group,
-            "wpad": wpad,
-            "hpad": hpad,
-            "pad": pad,
-            "outerpad": outerpad,
-            "innerpad": innerpad,
-            "panelpad": panelpad,
-        }
-        self._gridspec_params = params  # used to initialize the gridspec
+    def _init_gridspec_params(self, **params):
+        """
+        Validate and store gridspec spacing parameters.
+        """
+        self._gridspec_params = params
         for key, value in tuple(params.items()):
             if not isinstance(value, str) and np.iterable(value) and len(value) > 1:
                 raise ValueError(
@@ -764,7 +926,10 @@ class Figure(mfigure.Figure):
                     "GridSpec() or pass space parameters to subplots()."
                 )
 
-        # Add tight layout setting and ignore native settings
+    def _init_tight_layout(self, tight, kwargs):
+        """
+        Configure tight layout, suppressing native matplotlib layout engines.
+        """
         pars = kwargs.pop("subplotpars", None)
         if pars is not None:
             warnings._warn_ultraplot(
@@ -785,50 +950,58 @@ class Figure(mfigure.Figure):
         if rc_matplotlib.get("figure.constrained_layout.use", False):
             warnings._warn_ultraplot(
                 "Setting rc['figure.constrained_layout.use'] to False. "
-                + self._tight_message  # noqa: E501
+                + self._tight_message
             )
         try:
-            rc_matplotlib["figure.autolayout"] = False  # this is rcParams
+            rc_matplotlib["figure.autolayout"] = False
         except KeyError:
             pass
         try:
-            rc_matplotlib["figure.constrained_layout.use"] = False  # this is rcParams
+            rc_matplotlib["figure.constrained_layout.use"] = False
         except KeyError:
             pass
         self._tight_active = _not_none(tight, rc["subplots.tight"])
 
-        # Translate share settings
+    @staticmethod
+    def _normalize_share(value):
+        """
+        Normalize a share setting to an integer level and auto flag.
+        """
         translate = {"labels": 1, "labs": 1, "limits": 2, "lims": 2, "all": 4}
+        auto = isinstance(value, str) and value.lower() == "auto"
+        if auto:
+            return 3, True
+        value = 3 if value is True else translate.get(value, value)
+        if value not in range(5):
+            raise ValueError(
+                f"Invalid sharing value {value!r}. " + Figure._share_message
+            )
+        return int(value), False
+
+    def _init_sharing(
+        self, *, sharex, sharey, share, spanx, spany, span, alignx, aligny, align
+    ):
+        """
+        Resolve share, span, and align settings.
+        """
         sharex = _not_none(sharex, share, rc["subplots.share"])
         sharey = _not_none(sharey, share, rc["subplots.share"])
-
-        def _normalize_share(value):
-            auto = isinstance(value, str) and value.lower() == "auto"
-            if auto:
-                return 3, True
-            value = 3 if value is True else translate.get(value, value)
-            if value not in range(5):
-                raise ValueError(
-                    f"Invalid sharing value {value!r}. " + self._share_message
-                )
-            return int(value), False
-
-        sharex, sharex_auto = _normalize_share(sharex)
-        sharey, sharey_auto = _normalize_share(sharey)
+        sharex, sharex_auto = self._normalize_share(sharex)
+        sharey, sharey_auto = self._normalize_share(sharey)
         self._sharex = int(sharex)
         self._sharey = int(sharey)
         self._sharex_auto = bool(sharex_auto)
         self._sharey_auto = bool(sharey_auto)
         self._share_incompat_warned = False
 
-        # Translate span and align settings
+        # Span and align settings
         spanx = _not_none(
             spanx, span, False if not sharex else None, rc["subplots.span"]
-        )  # noqa: E501
+        )
         spany = _not_none(
             spany, span, False if not sharey else None, rc["subplots.span"]
-        )  # noqa: E501
-        if spanx and (alignx or align):  # only warn when explicitly requested
+        )
+        if spanx and (alignx or align):
             warnings._warn_ultraplot('"alignx" has no effect when spanx=True.')
         if spany and (aligny or align):
             warnings._warn_ultraplot('"aligny" has no effect when spany=True.')
@@ -839,12 +1012,15 @@ class Figure(mfigure.Figure):
         self._alignx = bool(alignx)
         self._aligny = bool(aligny)
 
-        # Initialize the figure
-        # NOTE: Super labels are stored inside {axes: text} dictionaries
+    def _init_figure_state(self, figwidth, figheight, kwargs):
+        """
+        Initialize internal state, call matplotlib's Figure.__init__,
+        set up super labels, and apply initial formatting.
+        """
         self._gridspec = None
         self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
-        self._subplot_dict = {}  # subplots indexed by number
-        self._subplot_counter = 0  # avoid add_subplot() returning an existing subplot
+        self._subplot_dict = {}
+        self._subplot_counter = 0
         self._is_adjusting = False
         self._is_authorized = False
         self._layout_initialized = False
@@ -859,29 +1035,26 @@ class Figure(mfigure.Figure):
         with self._context_authorized():
             super().__init__(**kwargs)
 
-        # Super labels. We don't rely on private matplotlib _suptitle attribute and
-        # _align_axis_labels supports arbitrary spanning labels for subplot groups.
-        # NOTE: Don't use 'anchor' rotation mode otherwise switching to horizontal
-        # left and right super labels causes overlap. Current method is fine.
+        # Super labels
         self._suptitle = self.text(0.5, 0.95, "", ha="center", va="bottom")
-        self._supxlabel_dict = {}  # an axes: label mapping
-        self._supylabel_dict = {}  # an axes: label mapping
+        self._supxlabel_dict = {}
+        self._supylabel_dict = {}
         self._suplabel_dict = {"left": {}, "right": {}, "bottom": {}, "top": {}}
-        self._share_label_groups = {"x": {}, "y": {}}  # explicit label-sharing groups
+        self._share_label_groups = {"x": {}, "y": {}}
+        self._subset_title_dict = {}
         self._suptitle_pad = rc["suptitle.pad"]
-        d = self._suplabel_props = {}  # store the super label props
+        d = self._suplabel_props = {}
         d["left"] = {"va": "center", "ha": "right"}
         d["right"] = {"va": "center", "ha": "left"}
         d["bottom"] = {"va": "top", "ha": "center"}
         d["top"] = {"va": "bottom", "ha": "center"}
-        d = self._suplabel_pad = {}  # store the super label padding
+        d = self._suplabel_pad = {}
         d["left"] = rc["leftlabel.pad"]
         d["right"] = rc["rightlabel.pad"]
         d["bottom"] = rc["bottomlabel.pad"]
         d["top"] = rc["toplabel.pad"]
 
-        # Format figure
-        # NOTE: This ignores user-input rc_mode.
+        # Apply initial formatting (ignores user-input rc_mode)
         self.format(rc_kw=rc_kw, rc_mode=1, skip_axes=True, **kw_format)
 
     @override
@@ -1177,6 +1350,109 @@ class Figure(mfigure.Figure):
                 which="both",
             )
 
+    def _find_misaligned_spans(
+        self, axes: List[paxes.Axes], *, tol: float = 1e-9
+    ) -> List[Tuple[str, int, int, mtransforms.Bbox, mtransforms.Bbox, paxes.Axes]]:
+        """
+        Identify spanning axes whose actual position differs from their
+        gridspec slot (e.g. because of an aspect constraint).
+
+        Returns a list of ``(axis, start, stop, slot, pos, ref_ax)`` tuples
+        where *axis* is ``'y'`` for row-spanning or ``'x'`` for column-spanning.
+        """
+        spans = []
+        for ax in axes:
+            try:
+                ax.apply_aspect()
+                ss = ax.get_subplotspec().get_topmost_subplotspec()
+                row1, row2, col1, col2 = ss._get_rows_columns()
+                slot = ss.get_position(self)
+                pos = ax.get_position(original=False)
+            except (AttributeError, TypeError):
+                continue
+
+            if row2 > row1 and (
+                abs(pos.y0 - slot.y0) > tol
+                or abs((pos.y0 + pos.height) - (slot.y0 + slot.height)) > tol
+            ):
+                spans.append(("y", row1, row2, slot, pos, ax))
+            if col2 > col1 and (
+                abs(pos.x0 - slot.x0) > tol
+                or abs((pos.x0 + pos.width) - (slot.x0 + slot.width)) > tol
+            ):
+                spans.append(("x", col1, col2, slot, pos, ax))
+        return spans
+
+    def _remap_axes_to_span(
+        self,
+        axes: List[paxes.Axes],
+        spans: List[
+            Tuple[str, int, int, mtransforms.Bbox, mtransforms.Bbox, paxes.Axes]
+        ],
+        *,
+        tol: float = 1e-9,
+    ) -> None:
+        """
+        Remap sibling axes so they align with the actual bounds of
+        spanning axes described by *spans*.  Siblings with their own
+        fixed aspect are skipped since they have independent constraints.
+        """
+        for axis, start, stop, slot, pos, ref_ax in spans:
+            slot0 = slot.y0 if axis == "y" else slot.x0
+            slotsize = slot.height if axis == "y" else slot.width
+            pos0 = pos.y0 if axis == "y" else pos.x0
+            possize = pos.height if axis == "y" else pos.width
+            if slotsize <= tol or possize <= tol:
+                continue
+
+            for ax in axes:
+                if ax is ref_ax:
+                    continue
+                try:
+                    if ax.get_aspect() != "auto":
+                        continue
+                    ss = ax.get_subplotspec().get_topmost_subplotspec()
+                    row1, row2, col1, col2 = ss._get_rows_columns()
+                    if axis == "y":
+                        if row1 < start or row2 > stop:
+                            continue
+                    else:
+                        if col1 < start or col2 > stop:
+                            continue
+                    old = ss.get_position(self)
+                except (AttributeError, TypeError):
+                    continue
+
+                if axis == "y":
+                    rel0 = (old.y0 - slot0) / slotsize
+                    rel1 = (old.y0 + old.height - slot0) / slotsize
+                    new0 = pos0 + rel0 * possize
+                    new1 = pos0 + rel1 * possize
+                    bounds = [old.x0, new0, old.width, new1 - new0]
+                else:
+                    rel0 = (old.x0 - slot0) / slotsize
+                    rel1 = (old.x0 + old.width - slot0) / slotsize
+                    new0 = pos0 + rel0 * possize
+                    new1 = pos0 + rel1 * possize
+                    bounds = [new0, old.y0, new1 - new0, old.height]
+                ax.set_position(bounds, which="both")
+
+    def _align_spanning_axes(self, *, tol: float = 1e-9) -> None:
+        """
+        Align sibling subplots to spanning axes whose actual position
+        differs from their gridspec slot.
+
+        When a subplot spans multiple rows or columns and is shrunk inside
+        its slot (e.g. by a fixed aspect ratio), the adjacent subplots keep
+        their full extent and visibly stick out.  This method detects the
+        mismatch and remaps the sibling positions proportionally.
+        """
+        axes = list(self._iter_axes(hidden=False, children=False, panels=False))
+        if not axes:
+            return
+        spans = self._find_misaligned_spans(axes, tol=tol)
+        self._remap_axes_to_span(axes, spans, tol=tol)
+
     def _share_ticklabels(self, *, axis: str) -> None:
         """
         Tick label sharing is determined at the figure level. While
@@ -1196,6 +1472,25 @@ class Figure(mfigure.Figure):
 
         # Process each group independently
         for _, group_axes in groups.items():
+            # Singleton groups can still need border masking reapplied for
+            # supported axes (e.g. GeoAxes split by guides), but unsupported
+            # singleton groups like a single PolarAxes should not warn.
+            main_axes = [
+                axi for axi in group_axes if not getattr(axi, "_panel_side", None)
+            ]
+            supported_main_axes = any(
+                isinstance(
+                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+                )
+                for axi in main_axes
+            )
+            if len(group_axes) < 2 and not supported_main_axes:
+                continue
+            if all(
+                self._effective_share_level(axi, axis, sides) < 3 for axi in group_axes
+            ):
+                continue
+
             # Build baseline from MAIN axes only (exclude panels)
             baseline, skip_group = self._compute_baseline_tick_state(group_axes, axis)
             if skip_group:
@@ -1245,6 +1540,16 @@ class Figure(mfigure.Figure):
         subplot_types = set()
         unsupported_found = False
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
+        main_axes = [axi for axi in group_axes if not getattr(axi, "_panel_side", None)]
+        if len(main_axes) < 2:
+            supported = all(
+                isinstance(
+                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+                )
+                for axi in main_axes
+            )
+            if not supported:
+                return {}, True
 
         for axi in group_axes:
             # Only main axes "vote"
@@ -1329,10 +1634,18 @@ class Figure(mfigure.Figure):
         if getattr(axi, "_panel_side", None) and getattr(axi, f"_share{axis}", None):
             return 3
 
-        # Adjacent panels on any relevant side
+        # Adjacent panels on any relevant side. Ignore hidden filled panels
+        # (e.g. those created for outer legends/colorbars via ``loc='r'``);
+        # they do not participate in axis sharing and must not promote the
+        # parent axes' tick-label sharing level (see issue #694).
         panel_dict = getattr(axi, "_panel_dict", {})
         for side in sides:
-            side_panels = panel_dict.get(side) or []
+            side_panels = [
+                p
+                for p in (panel_dict.get(side) or [])
+                if not getattr(p, "_panel_hidden", False)
+                and getattr(p, "_panel_share", False)
+            ]
             if side_panels and getattr(side_panels[0], f"_share{axis}", False):
                 return 3
 
@@ -1574,7 +1887,9 @@ class Figure(mfigure.Figure):
         ax = ax._panel_parent or ax  # always use main subplot for spanning labels
         return pos, ax
 
-    def _get_offset_coord(self, side, axs, renderer, *, pad=None, extra=None):
+    def _get_offset_coord(
+        self, side, axs, renderer, *, pad=None, extra=None, include_subset_titles=True
+    ):
         """
         Return the figure coordinate for offsetting super labels and super titles.
         """
@@ -1587,7 +1902,12 @@ class Figure(mfigure.Figure):
         )  # noqa: E501
         objs = objs + (extra or ())  # e.g. top super labels
         for obj in objs:
-            bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
+            if isinstance(obj, paxes.Axes):
+                bbox = obj.get_tightbbox(
+                    renderer, include_subset_titles=include_subset_titles
+                )
+            else:
+                bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
             attr = s + "max" if side in ("top", "right") else s + "min"
             c = getattr(bbox, attr)
             c = (c, 0) if side in ("left", "right") else (0, c)
@@ -2396,6 +2716,12 @@ class Figure(mfigure.Figure):
         if not axs:
             return
         labs = tuple(t for t in self._suplabel_dict["top"].values() if t.get_text())
+        subset_titles = tuple(
+            group["artist"]
+            for group in self._subset_title_dict.values()
+            if group["artist"].get_text()
+        )
+        labs = labs + subset_titles
         pad = (self._suptitle_pad / 72) / self.get_size_inches()[1]
 
         # Get current alignment settings from suptitle (may be set via suptitle_kw)
@@ -2420,6 +2746,208 @@ class Figure(mfigure.Figure):
         y_bbox = self.transFigure.inverted().transform((0, bbox.ymin))[1]
         y = y_target - y_bbox
         self._suptitle.set_position((x, y))
+
+    @staticmethod
+    def _deduplicate_axes(axes: Iterable[paxes.Axes]) -> List[paxes.Axes]:
+        """
+        Resolve panel parents and remove duplicates, preserving order.
+        """
+        seen = set()
+        unique = []
+        for ax in axes:
+            ax = ax._panel_parent or ax
+            ax_id = id(ax)
+            if ax_id not in seen:
+                seen.add(ax_id)
+                unique.append(ax)
+        return unique
+
+    @staticmethod
+    def _normalize_title_alignment(loc: str) -> str:
+        """
+        Convert a *loc* string to a horizontal alignment for ``Text.set_ha``.
+        """
+        align = _translate_loc(loc, "text")
+        match align:
+            case "left" | "outer left" | "upper left" | "lower left":
+                return "left"
+            case "center" | "upper center" | "lower center":
+                return "center"
+            case "right" | "outer right" | "upper right" | "lower right":
+                return "right"
+            case _:
+                raise ValueError(f"Invalid shared subplot title location {loc!r}.")
+
+    @staticmethod
+    def _resolve_title_props(
+        fontdict: dict[str, Any] | None, kwargs: dict[str, Any]
+    ) -> dict[str, Any]:
+        """
+        Build the property dict for a title from rc defaults, *fontdict*,
+        and extra *kwargs*.
+        """
+        kw = rc.fill(
+            {
+                "size": "title.size",
+                "weight": "title.weight",
+                "color": "title.color",
+                "family": "font.family",
+            },
+            context=True,
+        )
+        if "color" in kw and kw["color"] == "auto":
+            del kw["color"]
+        if fontdict:
+            kw.update(fontdict)
+        kw.update(kwargs)
+        return kw
+
+    def _update_subset_title(
+        self,
+        axes: Iterable[paxes.Axes],
+        title: str | None,
+        *,
+        fontdict: dict[str, Any] | None = None,
+        loc: str | None = None,
+        pad: float | str | None = None,
+        y: float | None = None,
+        **kwargs: Any,
+    ) -> mtext.Text:
+        """
+        Create or update a title spanning a subset of subplots.
+        """
+        fontdict = _not_none(fontdict, kwargs.pop("fontdict", None))
+        loc = _not_none(
+            loc,
+            kwargs.pop("loc", None),
+            rc.find("title.loc", context=True),
+            rc["title.loc"],
+        )
+        pad = _not_none(
+            pad,
+            kwargs.pop("pad", None),
+            rc.find("title.pad", context=True),
+            rc["title.pad"],
+        )
+        y = _not_none(y, kwargs.pop("y", None))
+        axes = [ax for ax in axes if ax is not None and ax.figure is self]
+        if not axes:
+            raise ValueError("Need at least one axes to create a shared subplot title.")
+
+        axes = self._deduplicate_axes(axes)
+        if len(axes) < 2:
+            return axes[0].set_title(
+                title, fontdict=fontdict, loc=loc, pad=pad, y=y, **kwargs
+            )
+
+        key = tuple(sorted(id(ax) for ax in axes))
+        group = self._subset_title_dict.get(key)
+        kw = self._resolve_title_props(fontdict, kwargs)
+        align = self._normalize_title_alignment(loc)
+
+        if group is None:
+            artist = self.text(
+                0.5,
+                0.0,
+                "",
+                transform=self.transFigure,
+                ha=align,
+                va="baseline",
+                zorder=3.5,
+            )
+            group = {"axes": axes, "artist": artist, "pad": None, "y": None}
+            self._subset_title_dict[key] = group
+        else:
+            artist = group["artist"]
+            group["axes"] = axes
+        group["pad"] = pad
+        group["y"] = y
+        artist.set_ha(align)
+        artist.set_va("baseline")
+        if title is not None:
+            artist.set_text(title)
+        if kw:
+            artist.update(kw)
+        return artist
+
+    def _visible_subset_group_axes(self, group: dict[str, Any]) -> List[paxes.Axes]:
+        """
+        Return visible axes from a subset-title group that belong to this figure.
+        """
+        return [
+            ax
+            for ax in group["axes"]
+            if ax is not None and ax.figure is self and ax.get_visible()
+        ]
+
+    def _get_subset_title_bbox(
+        self, ax: paxes.Axes, renderer
+    ) -> mtransforms.Bbox | None:
+        """
+        Return the union bbox for shared titles covering the given axes.
+
+        Shared subset titles live above the subset's top edge, so they should
+        only contribute to the tight bounding boxes for axes that actually touch
+        that top boundary. Otherwise, multi-row subsets can incorrectly claim
+        the title as extra inter-row spacing.
+        """
+        ax = ax._panel_parent or ax
+        bboxes = []
+        for group in self._subset_title_dict.values():
+            artist = group["artist"]
+            if not artist.get_visible() or not artist.get_text():
+                continue
+            axs = [a._panel_parent or a for a in self._visible_subset_group_axes(group)]
+            if not axs or ax not in axs:
+                continue
+            top = min(a._range_subplotspec("y")[0] for a in axs)
+            if ax._range_subplotspec("y")[0] == top:
+                bboxes.append(artist.get_window_extent(renderer))
+        return mtransforms.Bbox.union(bboxes) if bboxes else None
+
+    def _align_subset_titles(self, renderer: Any) -> None:
+        """
+        Update the positions of titles spanning subplot subsets.
+        """
+        for key in list(self._subset_title_dict):
+            group = self._subset_title_dict[key]
+            artist = group["artist"]
+            axs = self._visible_subset_group_axes(group)
+            if not axs:
+                artist.remove()
+                del self._subset_title_dict[key]
+                continue
+            if not artist.get_text():
+                continue
+            align = artist.get_ha()
+            x, _ = self._get_align_coord(
+                "top",
+                axs,
+                includepanels=self._includepanels,
+                align=align,
+            )
+            top_labels = tuple(
+                lab
+                for ax, lab in self._suplabel_dict["top"].items()
+                if lab.get_text() and ax in axs
+            )
+            artist.set_x(x)
+            manual_y = group["y"]
+            if manual_y is not None:
+                artist.set_y(manual_y)
+                continue
+            pad = group["pad"]
+            if pad is not None:
+                pad = units(pad, "pt") / (72 * self.get_size_inches()[1])
+            y_target = self._get_offset_coord(
+                "top",
+                axs,
+                renderer,
+                pad=pad,
+                extra=top_labels,
+                include_subset_titles=False,
+            )
+            artist.set_y(y_target)
 
     def _update_axis_label(self, side, axs):
         """
@@ -2562,6 +3090,268 @@ class Figure(mfigure.Figure):
         if title is not None:
             self._suptitle.set_text(title)
 
+    @staticmethod
+    def _iter_semantic_legend_axes(candidate):
+        """
+        Yield axes objects from nested axis containers.
+        """
+        if candidate is None or isinstance(candidate, str):
+            return
+        if isinstance(candidate, maxes.Axes):
+            yield candidate
+            return
+        if np.iterable(candidate):
+            for item in candidate:
+                yield from Figure._iter_semantic_legend_axes(item)
+
+    def _semantic_legend_axes(self, ax=None, ref=None):
+        """
+        Pick an axes instance for semantic legend handle generation.
+        """
+        for candidate in (ax, ref, self.axes):
+            for axis in self._iter_semantic_legend_axes(candidate):
+                return axis
+        raise RuntimeError(
+            "Figure semantic legend helpers require an existing axes. "
+            "Create an axes first or pass ax=... or ref=...."
+        )
+
+    @docstring._snippet_manager
+    def entrylegend(
+        self,
+        entries,
+        *,
+        line=None,
+        marker=None,
+        color=None,
+        linestyle=None,
+        linewidth=None,
+        markersize=None,
+        alpha=None,
+        markeredgecolor=None,
+        markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        %(figure.entrylegend)s
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).entrylegend(
+            entries,
+            line=line,
+            marker=marker,
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            markersize=markersize,
+            alpha=alpha,
+            markeredgecolor=markeredgecolor,
+            markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            handle_kw=handle_kw,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
+    @docstring._snippet_manager
+    def catlegend(
+        self,
+        categories,
+        *,
+        colors=None,
+        markers=None,
+        line=None,
+        linestyle=None,
+        linewidth=None,
+        markersize=None,
+        alpha=None,
+        markeredgecolor=None,
+        markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        %(figure.catlegend)s
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).catlegend(
+            categories,
+            colors=colors,
+            markers=markers,
+            line=line,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            markersize=markersize,
+            alpha=alpha,
+            markeredgecolor=markeredgecolor,
+            markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            handle_kw=handle_kw,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
+    @docstring._snippet_manager
+    def sizelegend(
+        self,
+        levels,
+        *,
+        labels=None,
+        color=None,
+        marker=None,
+        area=None,
+        values=None,
+        vmin=None,
+        vmax=None,
+        smin=None,
+        smax=None,
+        area_size=None,
+        absolute_size=None,
+        scale=None,
+        minsize=None,
+        fmt=None,
+        alpha=None,
+        markeredgecolor=None,
+        markeredgewidth=None,
+        markerfacecolor=None,
+        handle_kw=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        %(figure.sizelegend)s
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).sizelegend(
+            levels,
+            labels=labels,
+            color=color,
+            marker=marker,
+            area=area,
+            values=values,
+            vmin=vmin,
+            vmax=vmax,
+            smin=smin,
+            smax=smax,
+            area_size=area_size,
+            absolute_size=absolute_size,
+            scale=scale,
+            minsize=minsize,
+            fmt=fmt,
+            alpha=alpha,
+            markeredgecolor=markeredgecolor,
+            markeredgewidth=markeredgewidth,
+            markerfacecolor=markerfacecolor,
+            handle_kw=handle_kw,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
+    @docstring._snippet_manager
+    def numlegend(
+        self,
+        levels=None,
+        *,
+        vmin=None,
+        vmax=None,
+        n=None,
+        cmap=None,
+        norm=None,
+        fmt=None,
+        facecolor=None,
+        edgecolor=None,
+        linewidth=None,
+        linestyle=None,
+        alpha=None,
+        handle_kw=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        %(figure.numlegend)s
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).numlegend(
+            levels=levels,
+            vmin=vmin,
+            vmax=vmax,
+            n=n,
+            cmap=cmap,
+            norm=norm,
+            fmt=fmt,
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            linewidth=linewidth,
+            linestyle=linestyle,
+            alpha=alpha,
+            handle_kw=handle_kw,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
+    @docstring._snippet_manager
+    def geolegend(
+        self,
+        entries,
+        labels=None,
+        *,
+        country_reso=None,
+        country_territories=None,
+        country_proj=None,
+        handlesize=None,
+        facecolor=None,
+        edgecolor=None,
+        linewidth=None,
+        alpha=None,
+        fill=None,
+        add=True,
+        **legend_kwargs,
+    ):
+        """
+        %(figure.geolegend)s
+        """
+        axes = self._semantic_legend_axes(
+            ax=legend_kwargs.get("ax"), ref=legend_kwargs.get("ref")
+        )
+        handles, labels = plegend.UltraLegend(axes).geolegend(
+            entries,
+            labels=labels,
+            country_reso=country_reso,
+            country_territories=country_territories,
+            country_proj=country_proj,
+            handlesize=handlesize,
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            linewidth=linewidth,
+            alpha=alpha,
+            fill=fill,
+            add=False,
+        )
+        if not add:
+            return handles, labels
+        return self.legend(handles, labels, **legend_kwargs)
+
     @_clear_border_cache
     @docstring._concatenate_inherited
     @docstring._snippet_manager
@@ -2650,6 +3440,7 @@ class Figure(mfigure.Figure):
                 self._align_axis_label(axis)
             for side in ("left", "right", "top", "bottom"):
                 self._align_super_labels(side, renderer)
+            self._align_subset_titles(renderer)
             self._align_super_title(renderer)
 
         # Update the layout
@@ -2660,9 +3451,11 @@ class Figure(mfigure.Figure):
             return
         if aspect:
             gs._auto_layout_aspect()
+            self._align_spanning_axes()
         _align_content()
         if tight:
             gs._auto_layout_tight(renderer)
+            self._align_spanning_axes()
         _align_content()
 
     @warnings._rename_kwargs(
@@ -2732,7 +3525,14 @@ class Figure(mfigure.Figure):
         # Initiate context block
         axs = axs or self._subplot_dict.values()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
+        explicit_format_keys = set(kwargs)
+        signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
+            kwargs, *paxes.Axes._format_signatures.values()
+        )
+        explicit_format_keys.update(signature_axis_kwargs)
+        explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
+        kwargs.update(signature_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
             kw = rc.fill({"facecolor": "figure.facecolor"}, context=True)
@@ -2784,11 +3584,15 @@ class Figure(mfigure.Figure):
         if skip_axes:  # avoid recursion
             return
 
-        # Remove all keywords that are not in the allowed signature parameters
+        # Collect each class's matching kwargs without popping, then drop the union —
+        # shared params (e.g. xlabel/ylabel, accepted by both CartesianAxes and
+        # PolarAxes) need to reach every matching class.
         kws = {
-            cls: _pop_params(kwargs, sig)
+            cls: {k: kwargs[k] for k in sig.parameters if kwargs.get(k) is not None}
             for cls, sig in paxes.Axes._format_signatures.items()
         }
+        for k in {k for cls_kw in kws.values() for k in cls_kw}:
+            kwargs.pop(k, None)
         classes = set()  # track used dictionaries
 
         def _axis_has_share_label_text(ax, axis):
@@ -2819,13 +3623,27 @@ class Figure(mfigure.Figure):
             if kw.get("ylabel") is not None and self._has_share_label_groups("y"):
                 if _axis_has_share_label_text(ax, "y") or _axis_has_label_text(ax, "y"):
                     kw.pop("ylabel", None)
-            ax.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_figure=True, **kw, **kwargs)
+            explicit_kw = {}
+            if isinstance(ax, paxes.CartesianAxes):
+                explicit_kw["_explicit_format_keys"] = explicit_format_keys
+            ax.format(
+                rc_kw=rc_kw,
+                rc_mode=rc_mode,
+                skip_figure=True,
+                **explicit_kw,
+                **kw,
+                **kwargs,
+                **generic_axis_kwargs,
+            )
             ax.number = store_old_number
-        # Warn unused keyword argument(s)
+        # Warn unused keyword argument(s). Shared params (those in multiple
+        # signatures) are considered "used" if any matched class consumed them.
+        used_keys = {k for cls in classes for k in kws[cls]}
         kw = {
             key: value
             for name in kws.keys() - classes
             for key, value in kws[name].items()
+            if key not in used_keys
         }
         if kw:
             warnings._warn_ultraplot(

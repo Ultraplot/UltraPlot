@@ -55,12 +55,175 @@ def test_outer_colorbar_frame_alias_controls_outline(kwargs):
     assert not cb.outline.get_visible()
 
 
+def test_top_colorbar_inferred_orientation_keeps_outside_ticks():
+    fig, ax = uplt.subplots()
+    cb = ax.colorbar("magma", loc="top")
+
+    assert cb.ax.xaxis.get_ticks_position() == "top"
+    assert cb.ax.xaxis.get_label_position() == "top"
+
+
+def test_explicit_horizontal_colorbar_defaults_to_bottom_ticks():
+    fig, ax = uplt.subplots()
+    cb = ax.colorbar("magma", loc="top", orientation="horizontal")
+
+    assert cb.ax.xaxis.get_ticks_position() == "bottom"
+    assert cb.ax.xaxis.get_label_position() == "bottom"
+
+
 @pytest.mark.parametrize("kwargs", [{"frame": False}, {"frameon": False}])
 def test_inset_colorbar_frame_alias_still_controls_frame(rng, kwargs):
     fig, ax = uplt.subplots()
     m = ax.imshow(rng.random((10, 10)))
     cb = ax.colorbar(m, loc="ur", **kwargs)
     assert cb.ax._inset_colorbar_frame is None
+
+
+def test_colorbar_side_locations_work_on_inset_axes(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.55, 0.55, 0.35, 0.35], zoom=False)
+    m = ix.pcolormesh(rng.random((8, 8)))
+    ix_small = ax.inset_axes([0.65, 0.65, 0.15, 0.15], zoom=False)
+
+    cb_right = ix.colorbar(m, loc="right")
+    cb_bottom = fig.colorbar(m, ax=ix, loc="bottom")
+    ix_small.pcolormesh(rng.random((8, 8)), colorbar="r")
+    cb_auto = ix_small[0]._colorbar_dict[("right", "center")]
+
+    assert cb_right.orientation == "vertical"
+    assert cb_bottom.orientation == "horizontal"
+    assert cb_auto.orientation == "vertical"
+    assert cb_right.ax._inset_colorbar_parent is ix[0]
+    assert cb_bottom.ax._inset_colorbar_parent is ix[0]
+    assert cb_auto.ax._inset_colorbar_parent is ix_small[0]
+    assert cb_auto.ax._inset_colorbar_frame is None
+    assert cb_right.ax in ix[0].child_axes
+    assert cb_bottom.ax in ix[0].child_axes
+    assert cb_auto.ax in ix_small[0].child_axes
+
+    fig.canvas.draw()
+    assert cb_auto.ax.get_position().height == pytest.approx(
+        ix_small[0].get_position().height
+    )
+
+
+@pytest.mark.parametrize(
+    "loc, align, edge",
+    [
+        ("left", "top", "y1"),
+        ("right", "bottom", "y0"),
+        ("top", "left", "x0"),
+        ("bottom", "right", "x1"),
+    ],
+)
+def test_inset_axes_side_colorbar_uses_outer_api(rng, loc, align, edge):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+
+    cb = ix.colorbar(
+        m,
+        loc=loc,
+        align=align,
+        shrink=0.5,
+        width=0.1,
+        frame=False,
+        label="values",
+    )
+
+    fig.canvas.draw()
+    parent_bounds = ix.get_position()
+    colorbar_bounds = cb.ax.get_position()
+    assert getattr(colorbar_bounds, edge) == pytest.approx(getattr(parent_bounds, edge))
+    if cb.orientation == "vertical":
+        assert colorbar_bounds.height == pytest.approx(0.5 * parent_bounds.height)
+    else:
+        assert colorbar_bounds.width == pytest.approx(0.5 * parent_bounds.width)
+    assert cb.ax._inset_colorbar_frame is None
+    assert cb.outline.get_visible() is False
+    assert cb.ax.get_ylabel() == "values" or cb.ax.get_xlabel() == "values"
+
+
+def test_inset_axes_side_colorbar_numeric_width_scales_consistently(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    narrow = ix.colorbar(m, loc="left", width=0.1)
+    wide = ix.colorbar(m, loc="right", width=0.2)
+
+    fig.canvas.draw()
+    assert wide.ax.get_position().width == pytest.approx(
+        2 * narrow.ax.get_position().width
+    )
+
+
+def test_left_inset_axes_colorbar_clears_parent_ticks(rng):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.55, 0.45, 0.35, 0.35], zoom=False)[0]
+    ix.pcolormesh(rng.random((10, 10)), colorbar="left", colorbar_kw={"width": 0.1})
+    cb = ix._colorbar_dict[("left", "center")]
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    assert cb.ax.bbox.x1 < ix.yaxis.get_tightbbox(renderer).x0
+
+
+@pytest.mark.parametrize("loc", ["left", "right", "top", "bottom"])
+def test_inset_axes_side_colorbars_stack_outward(rng, loc):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    inner = ix.colorbar(m, loc=loc)
+    outer = ix.colorbar(m, loc=loc)
+
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    inner_bbox = inner.ax.get_tightbbox(renderer)
+    outer_bbox = outer.ax.bbox
+    if loc == "left":
+        assert outer_bbox.x1 < inner_bbox.x0
+    elif loc == "right":
+        assert outer_bbox.x0 > inner_bbox.x1
+    elif loc == "top":
+        assert outer_bbox.y0 > inner_bbox.y1
+    else:
+        assert outer_bbox.y1 < inner_bbox.y0
+
+
+@pytest.mark.parametrize(
+    "loc, first_align, second_align, position",
+    [
+        ("left", "bottom", "top", "x0"),
+        ("right", "bottom", "top", "x0"),
+        ("top", "left", "right", "y0"),
+        ("bottom", "left", "right", "y0"),
+    ],
+)
+def test_nonoverlapping_inset_axes_side_colorbars_share_layer(
+    rng, loc, first_align, second_align, position
+):
+    fig, ax = uplt.subplots()
+    ix = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ix.pcolormesh(rng.random((8, 8)))
+    first = ix.colorbar(m, loc=loc, align=first_align, length=0.4)
+    second = ix.colorbar(m, loc=loc, align=second_align, length=0.4)
+
+    fig.canvas.draw()
+    assert getattr(first.ax.bbox, position) == pytest.approx(
+        getattr(second.ax.bbox, position)
+    )
+
+
+@pytest.mark.parametrize("loc, align", [("left", "left"), ("top", "top")])
+@pytest.mark.parametrize("inset", [False, True])
+def test_side_colorbar_rejects_cross_axis_alignment(rng, loc, align, inset):
+    fig, ax = uplt.subplots()
+    if inset:
+        ax = ax.inset_axes([0.3, 0.3, 0.4, 0.4], zoom=False)[0]
+    m = ax.pcolormesh(rng.random((8, 8)))
+
+    with pytest.raises(ValueError, match="Invalid align"):
+        ax.colorbar(m, loc=loc, align=align)
 
 
 @pytest.mark.parametrize(
@@ -899,6 +1062,250 @@ def test_colorbar_row_without_span():
     assert cb is not None
 
 
+def test_colorbar_span_bottom_non_rectilinear_geo_axes(rng):
+    """Spanning bottom colorbar should stay under row 1 and honor cols."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj=["npstere", "npstere", None, None])
+    data = rng.random((20, 20))
+    cm = axs[0, 0].imshow(data)
+
+    cb = fig.colorbar(cm, ax=axs[0, :], span=(1, 2), loc="bottom")
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    row0_col0_pos = axs[0, 0].get_position()
+    row0_col1_pos = axs[0, 1].get_position()
+    row1_col0_pos = axs[1, 0].get_position()
+
+    tol = 0.05
+    assert abs(panel_pos.x0 - row0_col0_pos.x0) < tol
+    assert abs(panel_pos.x1 - row0_col1_pos.x1) < tol
+    assert panel_pos.width > row0_col0_pos.width * 1.5
+    assert abs(panel_pos.y1 - row0_col0_pos.y0) < 0.08
+    assert panel_pos.y0 > row1_col0_pos.y1
+
+
+def test_colorbar_span_bottom_mixed_projections(rng):
+    """Spanning bottom colorbar across mixed projections (npstere + cyl)."""
+    import cartopy.crs as ccrs
+
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj=["npstere", "cyl", None, None])
+    data = rng.random((100, 100))
+    lon = np.linspace(-180, 180, 100)
+    lat = np.linspace(30, 90, 100)
+    Lon, Lat = np.meshgrid(lon, lat)
+
+    cm = axs[0, 0].pcolormesh(Lon, Lat, data, transform=ccrs.PlateCarree())
+    cb = fig.colorbar(cm, loc="b", ax=axs[0, :], span=(1, 2))
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    row0_col0_pos = axs[0, 0].get_position()
+    row0_col1_pos = axs[0, 1].get_position()
+    row1_col0_pos = axs[1, 0].get_position()
+
+    tol = 0.05
+    assert abs(panel_pos.x0 - row0_col0_pos.x0) < tol
+    assert abs(panel_pos.x1 - row0_col1_pos.x1) < tol
+    assert panel_pos.width > row0_col0_pos.width * 1.5
+    assert panel_pos.y1 < row0_col0_pos.y0 + 0.08
+    assert panel_pos.y0 > row1_col0_pos.y1
+
+
+def test_colorbar_span_mixed_geo_and_cartesian_right(rng):
+    """Right colorbar on mixed npstere+Cartesian grid aligns with axes extent."""
+    import cartopy.crs as ccrs
+
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj=["npstere", None, "cyl", "cyl"])
+    data = rng.random((100, 100))
+    lon = np.linspace(-180, 180, 100)
+    lat = np.linspace(30, 90, 100)
+    Lon, Lat = np.meshgrid(lon, lat)
+
+    cm = axs[0, 0].pcolormesh(Lon, Lat, data, transform=ccrs.PlateCarree())
+    fig.colorbar(cm, loc="b", ax=axs[0, :], span=(1, 2))
+    cb_right = fig.colorbar(cm, loc="r", ax=axs[0], ref=axs[:, 1])
+
+    fig.canvas.draw()
+
+    right_pos = cb_right.ax.get_position()
+    top_ax = axs[0, 1].get_position()
+    bot_ax = axs[1, 1].get_position()
+    tol = 0.05
+    # Right colorbar should align with actual axes, not grid slots
+    assert abs(right_pos.y1 - top_ax.y1) < tol
+    assert abs(right_pos.y0 - bot_ax.y0) < tol
+    assert right_pos.x0 >= top_ax.x1 - tol
+
+
+def test_colorbar_span_mixed_projections_bottom_and_right(rng):
+    """Bottom + right colorbars on mixed npstere/cyl grid align with axes."""
+    import cartopy.crs as ccrs
+
+    fig, axs = uplt.subplots(
+        nrows=2, ncols=2, proj=["npstere", "npstere", "cyl", "cyl"]
+    )
+    data = rng.random((100, 100))
+    lon = np.linspace(-180, 180, 100)
+    lat = np.linspace(30, 90, 100)
+    Lon, Lat = np.meshgrid(lon, lat)
+
+    cm = axs[0, 0].pcolormesh(Lon, Lat, data, transform=ccrs.PlateCarree())
+    cb_bot = fig.colorbar(cm, loc="b", ax=axs[0, :], span=(1, 2))
+    cb_right = fig.colorbar(cm, loc="r", ax=axs[0], ref=axs[:, 1])
+
+    fig.canvas.draw()
+
+    # Bottom colorbar should span both columns
+    bot_pos = cb_bot.ax.get_position()
+    assert bot_pos.width > axs[0, 0].get_position().width * 1.5
+
+    # Right colorbar should align with the visual extent of axs[:,1]
+    right_pos = cb_right.ax.get_position()
+    top_ax = axs[0, 1].get_position()
+    bot_ax = axs[1, 1].get_position()
+    tol = 0.05
+    assert abs(right_pos.y1 - top_ax.y1) < tol
+    assert abs(right_pos.y0 - bot_ax.y0) < tol
+    assert right_pos.x0 >= top_ax.x1 - tol
+
+
+def test_colorbar_span_right_non_rectilinear_geo_axes(rng):
+    """Right colorbar with row span on npstere should preserve span height."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj="npstere")
+    cm = axs[0, 0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="r", ax=axs[:, 1], rows=(1, 2))
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    row0_pos = axs[0, 1].get_position()
+    row1_pos = axs[1, 1].get_position()
+
+    # Panel must span both rows vertically
+    assert panel_pos.y1 >= row0_pos.y1 - 0.05
+    assert panel_pos.y0 <= row1_pos.y0 + 0.05
+    assert panel_pos.height > row0_pos.height * 1.5
+    # Panel must be to the right of column 1
+    assert panel_pos.x0 >= row0_pos.x1 - 0.05
+
+
+def test_colorbar_span_left_non_rectilinear_geo_axes(rng):
+    """Left colorbar with row span on npstere should preserve span height."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj="npstere")
+    cm = axs[0, 0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="l", ax=axs[:, 0], rows=(1, 2))
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    row0_pos = axs[0, 0].get_position()
+    row1_pos = axs[1, 0].get_position()
+
+    # Panel must span both rows vertically
+    assert panel_pos.y1 >= row0_pos.y1 - 0.05
+    assert panel_pos.y0 <= row1_pos.y0 + 0.05
+    assert panel_pos.height > row0_pos.height * 1.5
+    # Panel must be to the left of column 0
+    assert panel_pos.x1 <= row0_pos.x0 + 0.05
+
+
+def test_colorbar_span_top_non_rectilinear_geo_axes(rng):
+    """Top colorbar with col span on npstere should preserve span width."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj="npstere")
+    cm = axs[0, 0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="t", ax=axs[0, :], span=(1, 2))
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    col0_pos = axs[0, 0].get_position()
+    col1_pos = axs[0, 1].get_position()
+
+    # Panel must span both columns
+    assert abs(panel_pos.x0 - col0_pos.x0) < 0.05
+    assert abs(panel_pos.x1 - col1_pos.x1) < 0.05
+    assert panel_pos.width > col0_pos.width * 1.5
+    # Panel must be above row 0
+    assert panel_pos.y0 >= col0_pos.y1 - 0.05
+
+
+def test_colorbar_no_span_override_geo_axes_bottom(rng):
+    """Bottom colorbar without span override clips to parent on npstere."""
+    fig, axs = uplt.subplots(nrows=1, ncols=2, proj="npstere")
+    cm = axs[0].imshow(rng.random((20, 20)))
+
+    # Single-axis colorbar, no span override
+    cb = fig.colorbar(cm, loc="b", ax=axs[0])
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    parent_pos = axs[0].get_position()
+
+    # Panel should be below the parent and not wider than parent
+    assert panel_pos.y1 < parent_pos.y0 + 0.05
+    assert panel_pos.x0 >= parent_pos.x0 - 0.05
+    assert panel_pos.x1 <= parent_pos.x1 + 0.05
+
+
+def test_colorbar_no_span_override_geo_axes_right(rng):
+    """Right colorbar without span override clips to parent on npstere."""
+    fig, axs = uplt.subplots(nrows=2, ncols=1, proj="npstere")
+    cm = axs[0].imshow(rng.random((20, 20)))
+
+    # Single-axis colorbar, no span override
+    cb = fig.colorbar(cm, loc="r", ax=axs[0])
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    parent_pos = axs[0].get_position()
+
+    # Panel should be to the right and not taller than parent
+    assert panel_pos.x0 >= parent_pos.x1 - 0.05
+    assert panel_pos.y0 >= parent_pos.y0 - 0.05
+    assert panel_pos.y1 <= parent_pos.y1 + 0.05
+
+
+def test_colorbar_no_span_override_geo_axes_left(rng):
+    """Left colorbar without span override clips to parent on npstere."""
+    fig, axs = uplt.subplots(nrows=2, ncols=1, proj="npstere")
+    cm = axs[0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="l", ax=axs[0])
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    parent_pos = axs[0].get_position()
+
+    assert panel_pos.x1 <= parent_pos.x0 + 0.05
+    assert panel_pos.y0 >= parent_pos.y0 - 0.05
+    assert panel_pos.y1 <= parent_pos.y1 + 0.05
+
+
+def test_colorbar_no_span_override_geo_axes_top(rng):
+    """Top colorbar without span override clips to parent on npstere."""
+    fig, axs = uplt.subplots(nrows=1, ncols=2, proj="npstere")
+    cm = axs[0].imshow(rng.random((20, 20)))
+
+    cb = fig.colorbar(cm, loc="t", ax=axs[0])
+    assert cb is not None
+
+    fig.canvas.draw()
+    panel_pos = cb.ax.get_position()
+    parent_pos = axs[0].get_position()
+
+    assert panel_pos.y0 >= parent_pos.y1 - 0.05
+    assert panel_pos.x0 >= parent_pos.x0 - 0.05
+    assert panel_pos.x1 <= parent_pos.x1 + 0.05
+
+
 def test_colorbar_column_without_span():
     """Test that colorbar on column without span spans entire column."""
     fig, axs = uplt.subplots(nrows=3, ncols=2)
@@ -926,3 +1333,123 @@ def test_colorbar_multiple_sides_with_span():
     assert cb_top is not None
     assert cb_right is not None
     assert cb_left is not None
+
+
+def test_colorbar_span_position_matches_target_columns():
+    """Regression: UltraLayout must not clip span panels to parent width.
+
+    The _reposition_subplot UltraLayout block used parent_bbox for the
+    "along" dimension, overriding the SubplotSpec span. Verify the drawn
+    panel actually spans the requested columns/rows.
+    """
+    fig, axs = uplt.subplots(nrows=2, ncols=3)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Bottom colorbar anchored to axs[0,:] spanning columns 1-2
+    cb = fig.colorbar(cm, ax=axs[0, :], span=(1, 2), loc="bottom")
+    fig.canvas.draw()
+
+    panel_pos = cb.ax.get_position()
+    col0_pos = axs[0, 0].get_position()
+    col1_pos = axs[0, 1].get_position()
+
+    # Panel must start at column 0's left edge and end at column 1's right edge
+    assert (
+        abs(panel_pos.x0 - col0_pos.x0) < 0.02
+    ), f"Panel x0={panel_pos.x0:.3f} != col0 x0={col0_pos.x0:.3f}"
+    assert (
+        abs(panel_pos.x1 - col1_pos.x1) < 0.02
+    ), f"Panel x1={panel_pos.x1:.3f} != col1 x1={col1_pos.x1:.3f}"
+    # Sanity: panel must be wider than a single column
+    assert panel_pos.width > col0_pos.width * 1.5
+
+
+def test_colorbar_span_position_matches_target_rows():
+    """Regression: right colorbar with rows= must span the requested rows."""
+    fig, axs = uplt.subplots(nrows=3, ncols=2)
+    data = np.random.random((10, 10))
+    cm = axs[0, 0].pcolormesh(data)
+
+    # Right colorbar anchored to axs[:,0] spanning rows 1-2
+    cb = fig.colorbar(cm, ax=axs[:, 0], rows=(1, 2), loc="right")
+    fig.canvas.draw()
+
+    panel_pos = cb.ax.get_position()
+    row0_pos = axs[0, 0].get_position()
+    row1_pos = axs[1, 0].get_position()
+
+    # Panel must start at row 1's bottom and end at row 0's top
+    # (row 0 is top, row 1 is below it)
+    assert (
+        abs(panel_pos.y1 - row0_pos.y1) < 0.02
+    ), f"Panel y1={panel_pos.y1:.3f} != row0 y1={row0_pos.y1:.3f}"
+    assert (
+        abs(panel_pos.y0 - row1_pos.y0) < 0.02
+    ), f"Panel y0={panel_pos.y0:.3f} != row1 y0={row1_pos.y0:.3f}"
+    # Sanity: panel must be taller than a single row
+    assert panel_pos.height > row0_pos.height * 1.5
+
+
+@pytest.mark.parametrize(
+    "norm",
+    ["linear", ["linear"], ("linear",)],
+)
+def test_colorbar_norm_str_with_limits(norm):
+    """
+    Should allow to pass vmin or vmax when we are passing a norm specification
+    as a string, list, or tuple (per the ``constructor.Norm`` contract).
+    """
+    data = np.random.rand(10, 10)
+    fig, ax = uplt.subplots()
+    cm = ax.pcolormesh(data, vmin=0.1, norm=norm, vmax=1)
+    assert cm.norm.vmin == pytest.approx(0.1)
+    assert cm.norm.vmax == pytest.approx(1)
+
+
+@pytest.mark.parametrize(
+    "norm", [("linear", 0.1, 1), ["linear", 0.1, 1], ("linear", 0.1, 1, False)]
+)
+def test_colorbar_norm_tuple_positional_limits(norm):
+    """
+    Tuple / list form ``(name, vmin, vmax)`` should construct the normalizer
+    with the positional arguments and not collide with implicit vmin/vmax
+    kwargs when the user does not separately specify them.
+    """
+    data = np.random.rand(10, 10)
+    fig, ax = uplt.subplots()
+    cm = ax.pcolormesh(data, norm=norm)
+    assert cm.norm.vmin == pytest.approx(0.1)
+    assert cm.norm.vmax == pytest.approx(1)
+
+
+@pytest.mark.parametrize("norm", [uplt.DiscreteNorm, uplt.colors.mcolors.Normalize])
+def test_normalize_types(norm):
+    data = np.random.rand(10, 10)
+    target = norm
+
+    if norm is uplt.DiscreteNorm:
+        norm = uplt.DiscreteNorm(levels=[0, 1])
+        discrete = True
+    elif norm is uplt.colors.mcolors.Normalize:
+        norm = uplt.colors.mcolors.Normalize(vmin=0, vmax=1)
+        discrete = False
+    else:
+        raise ValueError("Norm not understood.")
+    fig, ax = uplt.subplots()
+    cm = ax.pcolormesh(data, norm=norm, discrete=discrete)
+    assert isinstance(cm.norm, target)
+
+
+def test_colorbar_norm_with_limits():
+    """ "
+    Should allow to pass vmin or vmax when we are passing a str formatter
+    """
+    data = np.random.rand(10, 10)
+    fig = None
+    with pytest.raises(ValueError):
+        fig, ax = uplt.subplots()
+        ax.pcolormesh(
+            data, vmin=0, norm=uplt.colors.mcolors.Normalize(vmin=0, vmax=1), vmax=1
+        )
+    return fig

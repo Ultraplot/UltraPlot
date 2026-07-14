@@ -9,6 +9,13 @@ import pytest
 import ultraplot as uplt
 
 
+def _singleton_axis(obj):
+    if isinstance(obj, uplt.SubplotGrid):
+        assert len(obj) == 1
+        return obj[0]
+    return obj
+
+
 @pytest.mark.mpl_image_compare
 def test_align_labels():
     """
@@ -277,6 +284,30 @@ def test_subset_share_xlabels_override():
     uplt.close(fig)
 
 
+def test_panel_subset_keeps_orthogonal_axis_labels_local():
+    fig, axs = uplt.subplots(ncols=2, sharey=0)
+    bottom = axs.panel_axes("bottom")
+    right = axs.panel_axes("right")
+
+    axs.format(xlabel="main x", ylabel="main y")
+    bottom.format(ylabel="bottom y")
+    right.format(xlabel="right x")
+    fig.canvas.draw()
+
+    assert not fig._supylabel_dict
+    assert not fig._supxlabel_dict
+    for ax in axs:
+        assert ax.get_ylabel() == "main y"
+    for pax in bottom:
+        assert pax.get_ylabel() == "bottom y"
+        assert pax.yaxis.label.get_visible()
+    for pax in right:
+        assert pax.get_xlabel() == "right x"
+        assert pax.xaxis.label.get_visible()
+
+    uplt.close(fig)
+
+
 def test_spanning_labels_excluded_from_tight_layout_bbox():
     """
     Spanning x/y labels should not be counted twice by tight layout.
@@ -354,7 +385,7 @@ def test_subset_share_xlabels_implicit_column():
         for axi, lab in fig._supxlabel_dict.items()
         if lab.get_text() == "Right-column X"
     ]
-    assert label_axes and label_axes[0] is ax[1, 1]
+    assert label_axes and label_axes[0] is _singleton_axis(ax[1, 1])
 
     uplt.close(fig)
 
@@ -406,7 +437,7 @@ def test_subset_share_ylabels_implicit_row():
     label_axes = [
         axi for axi, lab in fig._supylabel_dict.items() if lab.get_text() == "Top-row Y"
     ]
-    assert label_axes and label_axes[0] is ax[0, 0]
+    assert label_axes and label_axes[0] is _singleton_axis(ax[0, 0])
 
     uplt.close(fig)
 
@@ -493,7 +524,7 @@ def test_subset_share_xlabels_implicit_column_top():
         for axi, lab in fig._supxlabel_dict.items()
         if lab.get_text() == "Right-column X (top)"
     ]
-    assert label_axes and label_axes[0] is ax[0, 1]
+    assert label_axes and label_axes[0] is _singleton_axis(ax[0, 1])
 
     uplt.close(fig)
 
@@ -512,7 +543,7 @@ def test_subset_share_ylabels_implicit_row_right():
         for axi, lab in fig._supylabel_dict.items()
         if lab.get_text() == "Top-row Y (right)"
     ]
-    assert label_axes and label_axes[0] is ax[0, 1]
+    assert label_axes and label_axes[0] is _singleton_axis(ax[0, 1])
 
     uplt.close(fig)
 
@@ -965,3 +996,41 @@ def test_grid_geo_and_cartesian():
     assert axs[2] in outer_axes["right"]
     assert axs[3] in outer_axes["right"]
     return fig
+
+
+@pytest.mark.parametrize("share_level", ["labs", "lims"])
+def test_outer_legend_keeps_ticklabels_with_label_sharing(share_level: str) -> None:
+    """
+    Regression test for issue #694. With ``sharey`` set to a "label" or
+    "limits" level (i.e. < 3), tick labels must remain on every visible
+    subplot even after an outer legend (``loc='r'``) is added next to one
+    of them. Previously the legend's hidden filled panel promoted the
+    parent's effective share level to 3 and hid its left tick labels.
+    """
+    fig, axs = uplt.subplots(ncols=3, sharey=share_level)
+    axs[-1].set_visible(False)
+    for ax in axs[:-1]:
+        ax.plot([0, 1], [0, 1], label="line")
+    axs[-2].legend(loc="r")
+    fig.canvas.draw()
+
+    for ax in axs[:-1]:
+        assert ax.yaxis.get_tick_params()["labelleft"] is True
+
+
+def test_outer_legend_preserves_share_true_ticklabel_hiding() -> None:
+    """
+    Counterpart to ``test_outer_legend_keeps_ticklabels_with_label_sharing``:
+    when ``sharey=True`` (level 3) the inner subplots' tick labels must
+    still be hidden even after an outer legend is attached. Guards against
+    over-correcting the issue #694 fix.
+    """
+    fig, axs = uplt.subplots(ncols=3, sharey=True)
+    for ax in axs:
+        ax.plot([0, 1], [0, 1], label="line")
+    axs[1].legend(loc="r")
+    fig.canvas.draw()
+
+    assert axs[0].yaxis.get_tick_params()["labelleft"] is True
+    assert axs[1].yaxis.get_tick_params()["labelleft"] is False
+    assert axs[2].yaxis.get_tick_params()["labelleft"] is False

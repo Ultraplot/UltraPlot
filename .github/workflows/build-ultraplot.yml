@@ -49,11 +49,11 @@ jobs:
           nproc
           cat /proc/cpuinfo | grep "model name" | head -1
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: mamba-org/setup-micromamba@v2.0.7
+      - uses: mamba-org/setup-micromamba@v3.0.0
         with:
           environment-file: ./environment.yml
           init-shell: bash
@@ -98,9 +98,9 @@ jobs:
           nproc
           cat /proc/cpuinfo | grep "model name" | head -1
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: mamba-org/setup-micromamba@v2.0.7
+      - uses: mamba-org/setup-micromamba@v3.0.0
         with:
           environment-file: ./environment.yml
           init-shell: bash
@@ -131,7 +131,7 @@ jobs:
       # Cache Baseline Figures (Restore step)
       - name: Cache Baseline Figures
         id: cache-baseline
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         if: ${{ env.IS_PR }}
         with:
           path: ./ultraplot/tests/baseline # The directory to cache

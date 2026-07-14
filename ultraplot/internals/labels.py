@@ -11,6 +11,34 @@ from ..config import rc
 
 from . import ic  # noqa: F401
 
+# Pseudo-properties handled by `_update_label`. These are not valid
+# `matplotlib.text.Text` constructor kwargs, so they must be filtered before
+# instantiating Text and re-applied via `_update_label` afterwards.
+LABEL_PSEUDO_PROPS = frozenset(
+    {
+        "border",
+        "bordercolor",
+        "borderinvert",
+        "borderwidth",
+        "borderstyle",
+        "bbox",
+        "bboxcolor",
+        "bboxstyle",
+        "bboxalpha",
+        "bboxpad",
+    }
+)
+
+
+def _split_label_props(kwargs):
+    """
+    Split a kwargs dict into (label_props, text_kwargs) so the latter can be
+    passed to `mtext.Text(...)` and the former applied via `_update_label`.
+    """
+    label_props = {k: kwargs[k] for k in kwargs if k in LABEL_PSEUDO_PROPS}
+    text_kwargs = {k: v for k, v in kwargs.items() if k not in LABEL_PSEUDO_PROPS}
+    return label_props, text_kwargs
+
 
 def merge_font_properties(
     dest_fp: FontProperties, src_fp: FontProperties
@@ -81,10 +109,8 @@ def _update_label(text, props=None, **kwargs):
         text.set_path_effects(
             [mpatheffects.Stroke(**kw), mpatheffects.Normal()],
         )
-    # ISSUE: interfers with adding path effects when we border is False but we do apply path effects
-    elif border is False and not text.get_path_effects():
+    elif border is False:
         text.set_path_effects(None)
-    # print(props.get("path_effects", []))
 
     # Update bounding box
     # NOTE: We use '_title_pad' and '_title_above' for both titles and a-b-c

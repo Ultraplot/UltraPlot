@@ -2,54 +2,49 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import shlex
 import shutil
 import tempfile
+import importlib.util
 from pathlib import Path
 
 import nox
 
 PROJECT_ROOT = Path(__file__).parent
 PYPROJECT_PATH = PROJECT_ROOT / "pyproject.toml"
+VERSION_SUPPORT_PATH = PROJECT_ROOT / "tools" / "ci" / "version_support.py"
 
 nox.options.reuse_existing_virtualenvs = True
 nox.options.sessions = ["tests"]
 
 
-def _load_pyproject() -> dict:
-    try:
-        import tomllib
-    except ImportError:  # pragma: no cover - py<3.11
-        import tomli as tomllib
-    with PYPROJECT_PATH.open("rb") as f:
-        return tomllib.load(f)
-
-
-def _version_range(requirement: str) -> list[str]:
-    min_match = re.search(r">=(\d+\.\d+)", requirement)
-    max_match = re.search(r"<(\d+\.\d+)", requirement)
-    if not (min_match and max_match):
-        return []
-    min_v = tuple(map(int, min_match.group(1).split(".")))
-    max_v = tuple(map(int, max_match.group(1).split(".")))
-    versions = []
-    current = min_v
-    while current < max_v:
-        versions.append(".".join(map(str, current)))
-        current = (current[0], current[1] + 1)
-    return versions
+def _load_version_support():
+    """
+    Import the shared version-support helper from the repo checkout.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "version_support",
+        VERSION_SUPPORT_PATH,
+    )
+    if spec is None or spec.loader is None:
+        raise ImportError(
+            f"Could not load 'version_support' module from {VERSION_SUPPORT_PATH}"
+        )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _matrix_versions() -> tuple[list[str], list[str]]:
-    data = _load_pyproject()
-    python_req = data["project"]["requires-python"]
-    py_versions = _version_range(python_req)
-    mpl_req = next(
-        dep for dep in data["project"]["dependencies"] if dep.startswith("matplotlib")
+    """
+    Derive the supported Python/Matplotlib test matrix from the shared helper.
+    """
+    version_support = _load_version_support()
+    data = version_support.load_pyproject(PYPROJECT_PATH)
+    return (
+        version_support.supported_python_versions(data),
+        version_support.supported_matplotlib_versions(data),
     )
-    mpl_versions = _version_range(mpl_req) or ["3.9"]
-    return py_versions, mpl_versions
 
 
 PYTHON_VERSIONS, MPL_VERSIONS = _matrix_versions()

@@ -27,7 +27,6 @@ from xml.etree import ElementTree
 import matplotlib as mpl
 import matplotlib.cm as mcm
 import matplotlib.colors as mcolors
-import matplotlib.colors as mcolors
 import numpy as np
 import numpy.ma as ma
 
@@ -2934,8 +2933,14 @@ def _translate_cmap(cmap, lut=None, cyclic=None, listedthresh=None):
     # WARNING: Apply default 'cyclic' property to native matplotlib colormaps
     # based on known names. Maybe slightly dangerous but cleanest approach
     lut = _not_none(lut, rc["image.lut"])
-    cyclic = _not_none(cyclic, cmap.name and cmap.name.lower() in CMAPS_CYCLIC)
+    name = getattr(cmap, "name", None)
+    cyclic = _not_none(cyclic, name and name.lower() in CMAPS_CYCLIC)
     listedthresh = _not_none(listedthresh, rc["cmap.listedthresh"])
+    if not isinstance(cmap, mcolors.Colormap):
+        raise ValueError(
+            f"Invalid colormap type {type(cmap).__name__!r}. "
+            "Must be instance of matplotlib.colors.Colormap."
+        )
 
     # Translate the colormap
     # WARNING: Here we ignore 'N' in order to respect ultraplotrc lut sizes
@@ -2957,12 +2962,6 @@ def _translate_cmap(cmap, lut=None, cyclic=None, listedthresh=None):
             cmap = DiscreteColormap(colors, name)
     elif isinstance(cmap, mcolors.Colormap):  # base class
         pass
-    else:
-        raise ValueError(
-            f"Invalid colormap type {type(cmap).__name__!r}. "
-            "Must be instance of matplotlib.colors.Colormap."
-        )
-
     # Apply hidden settings
     cmap._rgba_bad = bad
     cmap._rgba_under = under

@@ -39,7 +39,7 @@ reproduces the issue. This is critical for contributors to fix the bug quickly.
 If you can figure out how to fix the bug yourself, feel free to submit
 a pull request.
 
-.. _contrib_tets:
+.. _contrib_tests:
 
 Write tests
 ===========
@@ -156,7 +156,7 @@ Here is a quick guide for submitting pull requests:
       git clone git@github.com:YOUR_GITHUB_USERNAME/ultraplot.git
       cd ultraplot
       git remote add upstream git@github.com:ultraplot/ultraplot.git
-      git checkout -b your-branch-name master
+      git checkout -b your-branch-name main
 
    If you need some help with git, follow the
    `quick start guide <https://git.wiki.kernel.org/index.php/QuickStart>`__.
@@ -168,7 +168,7 @@ Here is a quick guide for submitting pull requests:
       pip install -e .
 
    This way ``import ultraplot`` imports your local copy,
-   rather than the stable version you last downloaded from PyPi.
+   rather than the stable version you last downloaded from PyPI.
    You can ``import ultraplot; print(ultraplot.__file__)`` to verify your
    local copy has been imported.
 
@@ -207,8 +207,8 @@ Here is a quick guide for submitting pull requests:
    ..
       #. Run all the tests. Now running tests is as simple as issuing this command:
          .. code-block:: bash
-            coverage run --source ultraplot -m py.test
-         This command will run tests via the ``pytest`` tool against Python 3.7.
+            coverage run --source ultraplot -m pytest
+         This command will run tests via the ``pytest`` tool.
 
 #. If you intend to make changes or add examples to the user guide, you may want to
    open the ``docs/*.py`` files as
@@ -239,11 +239,44 @@ Here is a quick guide for submitting pull requests:
       compare: your-branch-name
 
       base-fork: ultraplot/ultraplot
-      base: master
+      base: main
 
 Note that you can create the pull request before you're finished with your
 feature addition or bug fix. The PR will update as you add more commits. UltraPlot
 developers and contributors can then review your code and offer suggestions.
+
+.. _contrib_ai:
+
+AI policy
+=========
+
+UltraPlot welcomes contributions from developers at all skill levels, including
+those who use AI tools as part of their workflow. To keep contributions
+meaningful and to help new contributors genuinely learn the codebase, we ask
+that you follow these guidelines.
+
+**Good first issues must be written by humans.**
+Issues labelled *good first issue* are intentionally kept for people who want
+to get familiar with the backend. These issues should be scoped, described, and
+solved by a human — not generated or resolved wholesale by an AI assistant.
+Working through them yourself is how you build the mental model of the code
+that makes future contributions easier.
+
+**AI-assisted contributions are welcome for other issues**, provided that:
+
+* You understand and can explain every change you submit. Maintainers may ask
+  questions during review; if you cannot answer them the PR will be closed.
+* You disclose AI assistance in the PR description (a one-line note is fine).
+* The code meets the same quality bar as any other contribution — correct,
+  tested, and consistent with the existing style.
+
+**AI must not be used to bulk-generate issues, comments, or spam.**
+Automated issue creation or low-effort AI-generated content will be removed and
+may result in being blocked from the repository.
+
+The spirit of this policy is simple: AI is a tool, not a substitute for
+understanding. We want contributions that improve UltraPlot *and* grow the
+contributor.
 
 .. _contrib_release:
 
@@ -253,30 +286,31 @@ Ultraplot follows EffVer (`Effectual Versioning <https://jacobtomlinson.dev/effv
 
 While version 1.0 has been released, we are still in the process of ensuring proplot is fully replaced by ultraplot as we continue development under the ultraplot name. During this transition, the versioning scheme reflects both our commitment to stable APIs and the ongoing work to complete this transition. The minor version number is incremented when changes require user attention (like deprecations or style changes), and the patch number is incremented for additions and fixes that users can safely adopt.
 
-For now, `Casper van Eltern <https://github.com/cvanelteren>`__ is the only one who can
-publish releases on PyPi, but this will change in the future. Releases should
+For now, `Casper van Elteren <https://github.com/cvanelteren>`__ is the only one who can
+publish releases on PyPI, but this will change in the future. Releases should
 be carried out as follows:
 
 #. Create a new branch ``release-vX.Y.Z`` with the version for the release.
 
 #. Make sure to update ``CHANGELOG.rst`` and that all new changes are reflected
-   in the documentation:
+   in the documentation. Before tagging, sync ``CITATION.cff`` to the release
+   version and date:
 
    .. code-block:: bash
 
-      git add CHANGELOG.rst
-      git commit -m 'Update changelog'
+      git add CHANGELOG.rst CITATION.cff
+      git commit -m 'Prepare release metadata'
 
-#. Open a new pull request for this branch targeting ``master``.
+#. Open a new pull request for this branch targeting ``main``.
 
 #. After all tests pass and the pull request has been approved, merge into
-   ``master``.
+   ``main``.
 
-#. Get the latest version of the master branch:
+#. Get the latest version of the ``main`` branch:
 
    .. code-block:: bash
 
-      git checkout master
+      git switch main
       git pull
 
 #. Tag the current commit and push to github:
@@ -284,20 +318,19 @@ be carried out as follows:
    .. code-block:: bash
 
       git tag -a vX.Y.Z -m "Version X.Y.Z"
-      git push origin master --tags
+      git push origin main --tags
 
-#. Build and publish release on PyPI:
+   Pushing a ``vX.Y.Z`` tag triggers the release workflow, which publishes the
+   package, creates the corresponding GitHub release, and uploads the same
+   ``dist/`` artifacts to Zenodo through the Zenodo deposit API.
 
-   .. code-block:: bash
+#. After the workflow completes, confirm that the repository "Cite this
+   repository" panel reflects ``CITATION.cff``, that the release is available
+   on TestPyPI and PyPI, and that Zenodo created a new release record.
 
-      # Remove previous build products and build the package
-      rm -r dist build *.egg-info
-      python setup.py sdist bdist_wheel
-      # Check the source and upload to the test repository
-      twine check dist/*
-      twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-      # Go to https://test.pypi.org/project/ultraplot/ and make sure everything looks ok
-      # Then make sure the package is installable
-      pip install --index-url https://test.pypi.org/simple/ ultraplot
-      # Register and push to pypi
-      twine upload dist/*
+   The Zenodo release job uses ``CITATION.cff`` as the maintained metadata
+   source and requires a GitHub Actions secret named
+   ``ZENODO_ACCESS_TOKEN`` with the Zenodo scopes ``deposit:write`` and
+   ``deposit:actions``. To avoid duplicate Zenodo records, disable the
+   repository's Zenodo GitHub auto-archiving integration once the API-based
+   workflow is enabled.

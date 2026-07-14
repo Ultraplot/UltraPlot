@@ -174,6 +174,9 @@ world-coordinate overlays. Install Astropy only when you need that support:
 
    pip install "ultraplot[astro]"
 
+The conda-forge package includes Astropy and the other supported integrations,
+since Conda has no equivalent to pip extras.
+
 You can then create WCS-aware axes either by passing a WCS object directly or
 by using the ``"wcs"`` projection alias with an explicit ``wcs=...`` argument:
 
