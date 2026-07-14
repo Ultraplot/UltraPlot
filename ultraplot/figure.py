@@ -1034,7 +1034,19 @@ class Figure(mfigure.Figure):
         with self._context_authorized():
             super().__init__(**kwargs)
 
-        # Super labels
+        self._init_super_labels()
+
+        # Apply initial formatting (ignores user-input rc_mode)
+        self.format(rc_kw=rc_kw, rc_mode=1, skip_axes=True, **kw_format)
+
+    def _init_super_labels(self):
+        """
+        Create the figure-level label artists and their style state.
+
+        NOTE: Also called by `clear`, which discards every artist on the figure and
+        sets ``_suptitle`` to None. The labels must be rebuilt there or the next
+        ``format(suptitle=...)`` raises on the missing artist.
+        """
         self._suptitle = self.text(0.5, 0.95, "", ha="center", va="bottom")
         self._supxlabel_dict = {}
         self._supylabel_dict = {}
@@ -1053,8 +1065,30 @@ class Figure(mfigure.Figure):
         d["bottom"] = rc["bottomlabel.pad"]
         d["top"] = rc["toplabel.pad"]
 
-        # Apply initial formatting (ignores user-input rc_mode)
-        self.format(rc_kw=rc_kw, rc_mode=1, skip_axes=True, **kw_format)
+    @_clear_border_cache
+    def clear(self, keep_observers=False):
+        """
+        Clear the figure, discarding all subplots, panels, and figure-level labels.
+
+        Parameters
+        ----------
+        keep_observers : bool, default: False
+            Whether to retain the figure's observers, e.g. a GUI widget tracking
+            the axes.
+
+        See also
+        --------
+        matplotlib.figure.Figure.clear
+        """
+        # Matplotlib removes every axes and artist, so the ultraplot state that
+        # points at them is now dangling. Rebuild it rather than leaving the figure
+        # handing out axes it no longer owns.
+        super().clear(keep_observers=keep_observers)
+        self._subplots.reset()
+        self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
+        self._layout_initialized = False
+        self._layout_dirty = True
+        self._init_super_labels()
 
     @override
     def draw(self, renderer):
@@ -1700,34 +1734,9 @@ class Figure(mfigure.Figure):
         """Delegate to SubplotManager."""
         return SubplotManager.parse_backend(backend, basemap)
 
-    def _parse_proj(
-        self,
-        proj=None,
-        projection=None,
-        proj_kw=None,
-        projection_kw=None,
-        backend=None,
-        basemap=None,
-        **kwargs,
-    ):
-        """
-        Delegate to SubplotManager.
-
-        NOTE: The parameters must stay spelled out rather than collapsing into
-        ``**kwargs``. `~ultraplot.ui.subplot` uses ``_pop_params`` to introspect
-        this signature and decide which keywords belong to the subplot instead of
-        the figure; a ``*args, **kwargs`` signature silently routes them to the
-        figure and raises on ``Figure.set()``.
-        """
-        return self._subplots.parse_proj(
-            proj=proj,
-            projection=projection,
-            proj_kw=proj_kw,
-            projection_kw=projection_kw,
-            backend=backend,
-            basemap=basemap,
-            **kwargs,
-        )
+    def _parse_proj(self, *args, **kwargs):
+        """Delegate to SubplotManager."""
+        return self._subplots.parse_proj(*args, **kwargs)
 
     def _get_align_axes(self, side):
         """
@@ -2233,34 +2242,9 @@ class Figure(mfigure.Figure):
                     else:
                         ref._shared_axes[which].join(ref, other)
 
-    def _add_subplots(
-        self,
-        array=None,
-        nrows=1,
-        ncols=1,
-        order="C",
-        proj=None,
-        projection=None,
-        proj_kw=None,
-        projection_kw=None,
-        backend=None,
-        basemap=None,
-        **kwargs,
-    ):
+    def _add_subplots(self, *args, **kwargs):
         """Delegate to SubplotManager."""
-        return self._subplots.add_subplots(
-            array=array,
-            nrows=nrows,
-            ncols=ncols,
-            order=order,
-            proj=proj,
-            projection=projection,
-            proj_kw=proj_kw,
-            projection_kw=projection_kw,
-            backend=backend,
-            basemap=basemap,
-            **kwargs,
-        )
+        return self._subplots.add_subplots(*args, **kwargs)
 
     def _align_axis_label(self, x):
         """

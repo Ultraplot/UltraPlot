@@ -2,11 +2,14 @@
 Tests for SubplotManager (ultraplot._subplots).
 """
 
+import inspect
+
 import matplotlib.projections as mproj
 import numpy as np
 import pytest
 
 import ultraplot as uplt
+from ultraplot import figure as pfigure
 from ultraplot import gridspec as pgridspec
 from ultraplot._subplots import SubplotManager
 from ultraplot.axes.container import ExternalAxesContainer
@@ -362,4 +365,42 @@ def test_ui_subplots_routes_projection_kwargs():
     """``uplt.subplots`` routes projection keywords to the subplots."""
     fig, axs = uplt.subplots(nrows=1, ncols=2, proj="polar")
     assert all(isinstance(ax, uplt.axes.PolarAxes) for ax in axs)
+    uplt.close(fig)
+
+
+def test_ui_introspects_manager_not_figure_delegator():
+    """
+    ``ui.subplot``/``ui.subplots`` split figure keywords from subplot keywords by
+    introspecting the manager, which owns these parameters -- not the thin
+    ``Figure`` delegators, whose signatures are free to change.
+
+    These names are therefore load-bearing: collapsing them into ``**kwargs``
+    silently routes ``proj`` to the figure, which then raises from ``Figure.set()``.
+    """
+    proj_params = set(inspect.signature(SubplotManager.parse_proj).parameters)
+    assert {
+        "proj",
+        "projection",
+        "proj_kw",
+        "projection_kw",
+        "backend",
+        "basemap",
+    } <= proj_params
+
+    subplots_params = set(inspect.signature(SubplotManager.add_subplots).parameters)
+    assert {"array", "nrows", "ncols", "order"} <= subplots_params
+    assert {"proj", "projection", "proj_kw", "projection_kw"} <= subplots_params
+
+
+def test_figure_delegator_signature_is_not_load_bearing():
+    """
+    The routing above must survive the Figure pass-throughs being collapsed --
+    that collapse is exactly the regression fixed in #755.
+    """
+    for name in ("_parse_proj", "_add_subplots"):
+        params = set(inspect.signature(getattr(pfigure.Figure, name)).parameters)
+        assert params == {"self", "args", "kwargs"}
+
+    fig, ax = uplt.subplot(proj="polar")
+    assert isinstance(ax, uplt.axes.PolarAxes)
     uplt.close(fig)
