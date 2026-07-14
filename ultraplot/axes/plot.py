@@ -4369,8 +4369,9 @@ class PlotAxes(base.Axes):
 
         # Apply manual cycle properties
         if cycle_manually:
-            current_prop = self._get_lines._cycler_items[self._get_lines._idx]
-            self._get_lines._idx = (self._get_lines._idx + 1) % len(self._active_cycle)
+            cycler = getattr(self._get_lines, "_prop_cycle", self._get_lines)
+            current_prop = cycler._cycler_items[cycler._idx]
+            cycler._idx = (cycler._idx + 1) % len(cycler._cycler_items)
             for prop, key in cycle_manually.items():
                 if kwargs.get(key) is None and prop in current_prop:
                     value = current_prop[prop]
@@ -5602,11 +5603,27 @@ class PlotAxes(base.Axes):
 
         kw = kwargs.copy()
         inbounds = kw.pop("inbounds", None)
+        size = kw.pop("size", None)
+        sizes = kw.pop("sizes", None)
+        size = _not_none(size=size, sizes=sizes)
+        if size is not None:
+            if ss is None:
+                ss = size
+            else:
+                warnings._warn_ultraplot(
+                    "Got conflicting scatter size arguments. Using s/ms/markersize "
+                    "and ignoring size/sizes."
+                )
         kw.update(_pop_props(kw, "collection"))
         kw, extents = self._inbounds_extent(inbounds=inbounds, **kw)
         xs, ys, kw = self._parse_1d_args(xs, ys, vert=vert, autoreverse=False, **kw)
         ys, kw = inputs._dist_reduce(ys, **kw)
-        ss, kw = self._parse_markersize(ss, **kw)  # parse 's'
+        size_scale = {
+            key: kw.get(key, None)
+            for key in ("smin", "smax", "area_size", "absolute_size")
+        }
+        ss_source = inputs._to_numpy_array(ss) if ss is not None else None
+        ss, kw = self._parse_markersize(ss_source, **kw)  # parse 's'
 
         # Only parse color if explicitly provided
         infer_rgb = True
@@ -5633,7 +5650,9 @@ class PlotAxes(base.Axes):
         # Create the cycler object by manually cycling and sanitzing the inputs
         guide_kw = _pop_params(kw, self._update_guide)
         objs = []
-        for _, n, x, y, s, c, kw in self._iter_arg_cols(xs, ys, ss, cc, **kw):
+        for _, n, x, y, s, c, s_source, kw in self._iter_arg_cols(
+            xs, ys, ss, cc, ss_source, **kw
+        ):
             # Cycle s and c as they are in cycle_manually
             # Note: they could be None
             kw["s"], kw["c"] = s, c
@@ -5643,6 +5662,11 @@ class PlotAxes(base.Axes):
             if not vert:
                 x, y = y, x
             obj = self._call_native("scatter", x, y, **kw)
+            if s_source is not None:
+                obj._ultraplot_size_scale = {
+                    "values": inputs._to_numpy_array(s_source),
+                    **size_scale,
+                }
             self._inbounds_xylim(extents, x, y)
             objs.append((*eb, *es, obj) if eb or es else obj)
 
@@ -6057,7 +6081,9 @@ class PlotAxes(base.Axes):
             kw = self._parse_cycle(n, **kw)
             # Adjust x or y coordinates for grouped and stacked bars
             w = _not_none(w, np.array([0.8]))  # same as mpl but in *relative* units
-            b = _not_none(b, np.array([0.0]))  # same as mpl
+            b = np.atleast_1d(
+                _not_none(b, np.array([0.0]))
+            )  # tolerate scalar `bottom`/`left`
             if not absolute_width:
                 w = self._convert_bar_width(x, w)
             if stack:

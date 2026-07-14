@@ -14,7 +14,7 @@ jobs:
     name: Build packages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -130,55 +130,55 @@ jobs:
       contents: write
     steps:
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
 
-  publish-zenodo:
-    name: Publish Zenodo release
-    needs: publish-github-release
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    permissions:
-      contents: read
-    env:
-      ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_ACCESS_TOKEN }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Install release tooling
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install PyYAML
-        shell: bash
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: dist-${{ github.sha }}-${{ github.run_id }}-${{ github.run_number }}
-          path: dist
-
-      - name: Generate release citation metadata
-        run: |
-          python tools/release/sync_citation.py \
-            --tag "${GITHUB_REF_NAME}" \
-            --output "${RUNNER_TEMP}/CITATION.cff"
-        shell: bash
-
-      - name: Check tree stayed clean
-        run: |
-          git diff --quiet || (git status --short && git diff && exit 1)
-        shell: bash
-
-      - name: Publish to Zenodo
-        run: |
-          python tools/release/publish_zenodo.py \
-            --dist-dir dist \
-            --citation-file "${RUNNER_TEMP}/CITATION.cff"
-        shell: bash
+  # publish-zenodo:
+  #   name: Publish Zenodo release
+  #   needs: publish-github-release
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push'
+  #   permissions:
+  #     contents: read
+  #   env:
+  #     ZENODO_ACCESS_TOKEN: ${{ secrets.ZENODO_ACCESS_TOKEN }}
+  #   steps:
+  #     - uses: actions/checkout@v7
+  #       with:
+  #         fetch-depth: 0
+  #
+  #     - uses: actions/setup-python@v6
+  #       with:
+  #         python-version: "3.12"
+  #
+  #     - name: Install release tooling
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         python -m pip install PyYAML
+  #       shell: bash
+  #
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v8
+  #       with:
+  #         name: dist-${{ github.sha }}-${{ github.run_id }}-${{ github.run_number }}
+  #         path: dist
+  #
+  #     - name: Generate release citation metadata
+  #       run: |
+  #         python tools/release/sync_citation.py \
+  #           --tag "${GITHUB_REF_NAME}" \
+  #           --output "${RUNNER_TEMP}/CITATION.cff"
+  #       shell: bash
+  #
+  #     - name: Check tree stayed clean
+  #       run: |
+  #         git diff --quiet || (git status --short && git diff && exit 1)
+  #       shell: bash
+  #
+  #     - name: Publish to Zenodo
+  #       run: |
+  #         python tools/release/publish_zenodo.py \
+  #           --dist-dir dist \
+  #           --citation-file "${RUNNER_TEMP}/CITATION.cff"
+  #       shell: bash

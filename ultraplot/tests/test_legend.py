@@ -1,12 +1,16 @@
 import numpy as np
 import pandas as pd
 import pytest
+from matplotlib import collections as mcollections
 from matplotlib import colors as mcolors
+from matplotlib import container as mcontainer
 from matplotlib import legend_handler as mhandler
+from matplotlib import lines as mlines
 from matplotlib import patches as mpatches
 
 import ultraplot as uplt
 from ultraplot.axes import Axes as UAxes
+from ultraplot.internals import guides
 
 
 @pytest.mark.mpl_image_compare
@@ -181,6 +185,28 @@ def test_tuple_handles(rng):
             handler_map={tuple: legend_handler.HandlerTuple(pad=0, ndivide=3)},
         )
     return fig
+
+
+@pytest.mark.parametrize("kwarg", ["barstd", "boxstd"])
+def test_mean_errorbar_handles_are_preserved_in_legends(kwarg, rng):
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    data = rng.random((10, 4)).cumsum(axis=0)
+
+    handles = ax.plot(data, means=True, label="label", **{kwarg: 1})
+    handles, labels = ax._parse_legend_group(handles, None)
+
+    assert labels == ["label"]
+    assert len(handles) == 1
+    assert isinstance(handles[0], tuple)
+    assert any(isinstance(obj, mcontainer.ErrorbarContainer) for obj in handles[0])
+
+    leg = ax.legend(handles)
+    legend_children = list(guides._iter_children(leg._legend_handle_box))
+    assert any(isinstance(obj, mcollections.LineCollection) for obj in legend_children)
+    assert any(isinstance(obj, mlines.Line2D) for obj in legend_children)
+
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
@@ -400,6 +426,36 @@ def test_entrylegend_handle_kw_with_per_entry_mappings():
     uplt.close(fig)
 
 
+def test_entrylegend_scatter_sizes_are_converted_to_diameters():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.entrylegend(
+        [
+            {"label": "Size", "line": False, "s": 100},
+            {"label": "Diameter", "line": False, "ms": 10},
+            {"label": "Full name", "line": False, "markersize": 12},
+        ],
+        add=False,
+    )
+    assert labels == ["Size", "Diameter", "Full name"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+    assert handles[1].get_markersize() == pytest.approx(10)
+    assert handles[2].get_markersize() == pytest.approx(12)
+
+    handles, labels = ax.entrylegend(
+        [
+            {"label": "Size", "line": False, "size": 144},
+            {"label": "Sizes", "line": False, "sizes": 169},
+            {"label": "Full name", "line": False, "markersize": 14},
+        ],
+        add=False,
+    )
+    assert labels == ["Size", "Sizes", "Full name"]
+    assert handles[0].get_markersize() == pytest.approx(12)
+    assert handles[1].get_markersize() == pytest.approx(13)
+    assert handles[2].get_markersize() == pytest.approx(14)
+    uplt.close(fig)
+
+
 def test_catlegend_handle_kw_accepts_line_scatter_aliases():
     fig, ax = uplt.subplots()
     handles, labels = ax.catlegend(
@@ -431,6 +487,194 @@ def test_catlegend_handle_kw_accepts_line_scatter_aliases():
         mcolors.to_rgba(handles[1].get_markerfacecolor()),
         mcolors.to_rgba("blue7"),
     )
+    uplt.close(fig)
+
+
+def test_catlegend_scatter_sizes_are_converted_to_diameters():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.catlegend(
+        ["A", "B"],
+        add=False,
+        sizes={"A": 100, "B": 144},
+    )
+    assert labels == ["A", "B"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+    assert handles[1].get_markersize() == pytest.approx(12)
+
+    handles, labels = ax.catlegend(
+        ["A", "B"],
+        add=False,
+        size={"A": 121, "B": 169},
+    )
+    assert labels == ["A", "B"]
+    assert handles[0].get_markersize() == pytest.approx(11)
+    assert handles[1].get_markersize() == pytest.approx(13)
+
+    handles, labels = ax.catlegend(["C"], add=False, ms=14)
+    assert labels == ["C"]
+    assert handles[0].get_markersize() == pytest.approx(14)
+    uplt.close(fig)
+
+
+def test_sizelegend_marker_size_overrides_use_semantic_size_rules():
+    fig, ax = uplt.subplots()
+    handles, labels = ax.sizelegend(
+        [1.0],
+        area=True,
+        add=False,
+        markersize=100,
+    )
+    assert labels == ["1"]
+    assert handles[0].get_markersize() == pytest.approx(100)
+
+    handles, labels = ax.sizelegend(
+        [1.0],
+        area=False,
+        add=False,
+        s=100,
+    )
+    assert labels == ["1"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+    uplt.close(fig)
+
+
+def test_sizelegend_area_levels_match_absolute_scatter_sizes():
+    fig, ax = uplt.subplots()
+    scatter_size = 50
+    scatter = ax.scatter(
+        [0],
+        [0],
+        marker=".",
+        s=scatter_size,
+        absolute_size=True,
+    )
+    handles, labels = ax.sizelegend(
+        [scatter_size],
+        marker=".",
+        add=False,
+    )
+
+    assert labels == ["50"]
+    assert handles[0].get_marker() == "."
+    assert handles[0].get_markersize() == pytest.approx(scatter.get_sizes()[0] ** 0.5)
+    uplt.close(fig)
+
+
+def test_sizelegend_values_follow_scatter_scaled_sizes():
+    fig, ax = uplt.subplots()
+    scatter_values = np.array([10.0, 30.0, 50.0, 70.0, 90.0])
+    legend_levels = scatter_values[1:-1]
+    scatter = ax.scatter(
+        np.arange(scatter_values.size),
+        np.zeros(scatter_values.size),
+        s=scatter_values,
+        smin=4,
+        smax=100,
+        absolute_size=False,
+    )
+    handles, labels = ax.sizelegend(
+        legend_levels,
+        values=scatter_values,
+        smin=4,
+        smax=100,
+        marker=".",
+        add=False,
+    )
+
+    assert labels == ["30", "50", "70"]
+    assert [handle.get_marker() for handle in handles] == [".", ".", "."]
+    assert [handle.get_markersize() for handle in handles] == pytest.approx(
+        np.sqrt(scatter.get_sizes()[1:-1])
+    )
+    uplt.close(fig)
+
+
+def test_sizelegend_infers_scatter_scaled_sizes_by_default():
+    fig, ax = uplt.subplots()
+    scatter_values = np.array([10.0, 30.0, 50.0, 70.0, 90.0])
+    legend_levels = scatter_values[1:-1]
+    scatter = ax.scatter(
+        np.arange(scatter_values.size),
+        np.zeros(scatter_values.size),
+        s=scatter_values,
+        smin=4,
+        smax=100,
+        absolute_size=False,
+    )
+    handles, labels = ax.sizelegend(
+        legend_levels,
+        marker=".",
+        add=False,
+    )
+
+    assert labels == ["30", "50", "70"]
+    assert [handle.get_markersize() for handle in handles] == pytest.approx(
+        np.sqrt(scatter.get_sizes()[1:-1])
+    )
+    uplt.close(fig)
+
+
+def test_sizelegend_explicit_area_false_skips_scatter_inference():
+    fig, ax = uplt.subplots()
+    ax.scatter([0, 1, 2], [0, 0, 0], s=[10, 50, 90], smin=4, smax=100)
+    handles, labels = ax.sizelegend([10], area=False, add=False)
+
+    assert labels == ["10"]
+    assert handles[0].get_markersize() == pytest.approx(10)
+    uplt.close(fig)
+
+
+def test_sizelegend_skips_incompatible_scatter_inference():
+    fig, ax = uplt.subplots()
+    ax.scatter([0, 1, 2], [0, 0, 0], s=[10, 50, 90], smin=4, smax=100)
+    handles, labels = ax.sizelegend([200], add=False)
+
+    assert labels == ["200"]
+    assert handles[0].get_markersize() == pytest.approx(np.sqrt(200))
+    uplt.close(fig)
+
+
+def test_sizelegend_area_false_follows_scatter_radius_scaling():
+    fig, ax = uplt.subplots()
+    scatter_values = np.array([10.0, 50.0, 90.0])
+    scatter = ax.scatter(
+        np.arange(scatter_values.size),
+        np.zeros(scatter_values.size),
+        s=scatter_values,
+        smin=2,
+        smax=10,
+        area_size=False,
+        absolute_size=False,
+    )
+    handles, labels = ax.sizelegend(
+        scatter_values,
+        values=scatter_values,
+        area=False,
+        smin=2,
+        smax=10,
+        marker=".",
+        add=False,
+    )
+
+    assert labels == ["10", "50", "90"]
+    assert [handle.get_markersize() for handle in handles] == pytest.approx(
+        np.sqrt(scatter.get_sizes())
+    )
+    uplt.close(fig)
+
+
+def test_legend_single_point_plot_matches_marker_only_artist():
+    fig, ax = uplt.subplots()
+    ax.plot([0], [0], marker="o", label="point")
+    ax.plot([0, 1], [1, 2], marker="o", label="line")
+    leg = ax.legend(loc="best")
+    fig.canvas.draw()
+    point_handle, line_handle = leg.legend_handles
+
+    assert point_handle.get_marker() == "o"
+    assert point_handle.get_linestyle() in ("None", "none", "")
+    assert line_handle.get_marker() == "o"
+    assert line_handle.get_linestyle() not in ("None", "none", "")
     uplt.close(fig)
 
 
@@ -631,6 +875,77 @@ def test_semantic_legend_rejects_labels_kwarg(builder, args, kwargs):
     method = getattr(ax, builder)
     with pytest.raises(TypeError, match="does not accept the legend kwarg 'labels'"):
         method(*args, labels=["x", "y"], **kwargs)
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize(
+    "builder, args, kwargs",
+    (
+        (
+            "entrylegend",
+            ([{"label": "Trend", "line": True}, {"label": "Samples", "line": False}],),
+            {},
+        ),
+        ("catlegend", (["A", "B"],), {"colors": ["red7", "blue7"]}),
+        (
+            "sizelegend",
+            ([10, 50],),
+            {"labels": ["small", "large"], "color": "gray6"},
+        ),
+        ("numlegend", tuple(), {"levels": [0, 1], "cmap": "viridis"}),
+        (
+            "geolegend",
+            ([("Triangle", "triangle"), ("Hex", "hexagon")],),
+            {},
+        ),
+    ),
+)
+def test_figure_semantic_legend_helpers(builder, args, kwargs):
+    fig, axs = uplt.subplots(ncols=2)
+    ax = axs[0]
+    figure_method = getattr(fig, builder)
+    axes_method = getattr(ax, builder)
+
+    expected_handles, expected_labels = axes_method(*args, add=False, **kwargs)
+    leg = figure_method(*args, ref=axs, loc="bottom", title=builder, **kwargs)
+
+    assert leg is not None
+    assert [text.get_text() for text in leg.get_texts()] == expected_labels
+    assert leg.get_title().get_text() == builder
+    assert len(leg.legend_handles) == len(expected_handles)
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize(
+    "builder, args, kwargs",
+    (
+        ("entrylegend", ([{"label": "Trend", "line": True}],), {}),
+        ("catlegend", (["A", "B"],), {}),
+        ("sizelegend", ([10, 50],), {"labels": ["small", "large"]}),
+        ("numlegend", tuple(), {"levels": [0, 1]}),
+        ("geolegend", (["triangle"], ["Triangle"]), {}),
+    ),
+)
+def test_figure_semantic_legend_add_false_matches_axes(builder, args, kwargs):
+    fig, ax = uplt.subplots()
+    figure_method = getattr(fig, builder)
+    axes_method = getattr(ax, builder)
+
+    fig_handles, fig_labels = figure_method(*args, add=False, **kwargs)
+    ax_handles, ax_labels = axes_method(*args, add=False, **kwargs)
+
+    assert fig_labels == ax_labels
+    assert len(fig_handles) == len(ax_handles)
+    assert [handle.get_label() for handle in fig_handles] == [
+        handle.get_label() for handle in ax_handles
+    ]
+    uplt.close(fig)
+
+
+def test_figure_semantic_legend_without_axes_raises():
+    fig = uplt.figure()
+    with pytest.raises(RuntimeError, match="require an existing axes"):
+        fig.catlegend(["A"], loc="right")
     uplt.close(fig)
 
 

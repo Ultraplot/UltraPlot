@@ -188,6 +188,35 @@ def test_geoticks_label_shorthand_lb_no_warning(recwarn):
     uplt.close(fig)
 
 
+def test_geo_labelsize_updates_gridliner_labels():
+    fig, ax = uplt.subplots(proj="cyl")
+    ax = ax[0]
+    ax.format(labels=True, lonlines=30, latlines=30, labelsize=30)
+    fig.canvas.draw()
+
+    labels = (
+        ax.gridlines_major.bottom_label_artists + ax.gridlines_major.left_label_artists
+    )
+    assert labels
+    assert {label.get_fontsize() for label in labels} == {30}
+    uplt.close(fig)
+
+
+def test_subplotgrid_geo_labelsize_updates_gridliner_labels():
+    fig, ax = uplt.subplots(proj="cyl")
+    ax.format(labels=True, lonlines=30, latlines=30, labelsize=30)
+    fig.canvas.draw()
+
+    geo = ax[0]
+    labels = (
+        geo.gridlines_major.bottom_label_artists
+        + geo.gridlines_major.left_label_artists
+    )
+    assert labels
+    assert {label.get_fontsize() for label in labels} == {30}
+    uplt.close(fig)
+
+
 def test_toggle_ticks_supports_bool_and_sequence_specs():
     fig, ax = uplt.subplots(proj="cyl")
     geo = ax[0]
@@ -275,6 +304,19 @@ def test_lon0_shifts():
         assert str_loc == format[:n], f"Epxected: {str_loc}, got: {format[:n]}"
     assert locs[0] != 0  # we should not be a 0 anymore
     uplt.close(fig)
+
+
+def test_dms_formatter_symbols_are_default_font_safe():
+    pytest.importorskip("cartopy")
+    formatter = uplt.Formatter("dmslon")
+    label = formatter(1 + 1 / 60 + 1 / 3600)
+    assert formatter._minute_symbol in ("\N{PRIME}", "'")
+    assert formatter._second_symbol in ("\N{DOUBLE PRIME}", '"')
+    assert formatter._minute_symbol in label
+    assert formatter._second_symbol in label
+
+    formatter = uplt.Formatter("dmslon", minute_symbol="m", second_symbol="s")
+    assert formatter(1 + 1 / 60 + 1 / 3600).endswith("1m1sE")
 
 
 @pytest.mark.parametrize(
@@ -1446,11 +1488,11 @@ def test_dms_used_for_mercator():
     ax.format(land=True, labels=True, lonlocator=limit)
     import matplotlib.ticker as mticker
 
+    minute_symbol = ax[0].gridlines_major.xformatter._minute_symbol
     expectations = (
-        "0°36′E",
-        "113°15′E",
+        f"0°36{minute_symbol}E",
+        f"113°15{minute_symbol}E",
     )
-
     for expectation, tick in zip(expectations, limit):
         a = ax[0].gridlines_major.xformatter(tick)
         b = ax[1].gridlines_major.xformatter(tick)

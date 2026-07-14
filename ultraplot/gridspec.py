@@ -17,6 +17,7 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 
 from . import axes as paxes
+from .axes._formatting import pop_axis_format_kwargs
 from .config import rc
 from .internals import (
     _not_none,
@@ -2079,6 +2080,20 @@ class SubplotGrid(MutableSequence, list):
         ultraplot.figure.Figure.format
         ultraplot.config.Configurator.context
         """
+
+        def _supports_implicit_label_share(target):
+            compatible_sides = {
+                "x": {"top", "bottom"},
+                "y": {"left", "right"},
+            }
+            for ax in axes:
+                side = getattr(ax, "_panel_side", None)
+                if side is None:
+                    continue
+                if side not in compatible_sides[target]:
+                    return False
+            return True
+
         # Implicit label sharing for subset format calls
         share_xlabels = kwargs.get("share_xlabels", None)
         share_ylabels = kwargs.get("share_ylabels", None)
@@ -2100,8 +2115,25 @@ class SubplotGrid(MutableSequence, list):
         else:
             shared_title_loc = None
             shared_title_pad = None
+        signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
+            kwargs, *paxes.Axes._format_signatures.values()
+        )
         rc_kw, rc_mode = _pop_rc(kwargs)
+        kwargs.update(signature_axis_kwargs)
+        kwargs.update(generic_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
+            implicit_share_xlabels = (
+                is_subset
+                and share_xlabels is None
+                and xlabel is not None
+                and _supports_implicit_label_share("x")
+            )
+            implicit_share_ylabels = (
+                is_subset
+                and share_ylabels is None
+                and ylabel is not None
+                and _supports_implicit_label_share("y")
+            )
             if len(self) > 1:
                 if share_xlabels is False:
                     self.figure._clear_share_label_groups(self, target="x")
@@ -2111,9 +2143,9 @@ class SubplotGrid(MutableSequence, list):
                     self.figure._clear_share_label_groups(self, target="x")
                 if not is_subset and share_ylabels is None and ylabel is not None:
                     self.figure._clear_share_label_groups(self, target="y")
-                if is_subset and share_xlabels is None and xlabel is not None:
+                if implicit_share_xlabels:
                     self.figure._register_share_label_group(self, target="x")
-                if is_subset and share_ylabels is None and ylabel is not None:
+                if implicit_share_ylabels:
                     self.figure._register_share_label_group(self, target="y")
             self.figure.format(axs=self, **kwargs)
             if shared_subset_title:
@@ -2126,9 +2158,9 @@ class SubplotGrid(MutableSequence, list):
                 )
             # Refresh groups after labels are set
             if len(self) > 1:
-                if is_subset and share_xlabels is None and xlabel is not None:
+                if implicit_share_xlabels:
                     self.figure._register_share_label_group(self, target="x")
-                if is_subset and share_ylabels is None and ylabel is not None:
+                if implicit_share_ylabels:
                     self.figure._register_share_label_group(self, target="y")
 
     def share_labels(self, *, axis="x"):

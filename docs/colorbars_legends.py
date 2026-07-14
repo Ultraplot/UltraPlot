@@ -477,13 +477,19 @@ axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
 #
 # Legends usually annotate artists already drawn on an axes, but sometimes you need
 # standalone semantic keys (categories, size scales, color levels, or geometry types).
-# UltraPlot provides helper methods that build these entries directly:
+# UltraPlot provides helper methods that build these entries directly on both
+# axes and figures:
 #
 # * :meth:`~ultraplot.axes.Axes.entrylegend`
 # * :meth:`~ultraplot.axes.Axes.catlegend`
 # * :meth:`~ultraplot.axes.Axes.sizelegend`
 # * :meth:`~ultraplot.axes.Axes.numlegend`
 # * :meth:`~ultraplot.axes.Axes.geolegend`
+# * :meth:`~ultraplot.figure.Figure.entrylegend`
+# * :meth:`~ultraplot.figure.Figure.catlegend`
+# * :meth:`~ultraplot.figure.Figure.sizelegend`
+# * :meth:`~ultraplot.figure.Figure.numlegend`
+# * :meth:`~ultraplot.figure.Figure.geolegend`
 #
 # These helpers are useful whenever the legend should describe an encoding rather than
 # mirror artists that already happen to be drawn. In practice there are two distinct
@@ -513,7 +519,8 @@ axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
 #
 # The helpers are intentionally composable. Each one accepts ``add=False`` and returns
 # ``(handles, labels)`` so you can merge semantic sections and pass the result through
-# :meth:`~ultraplot.axes.Axes.legend` yourself.
+# :meth:`~ultraplot.axes.Axes.legend` or :meth:`~ultraplot.figure.Figure.legend`
+# yourself.
 #
 # .. code-block:: python
 #
@@ -565,6 +572,27 @@ axs.format(xlabel="xlabel", ylabel="ylabel", suptitle="Legend formatting demo")
 #
 #    # Geometry legends can mix named shapes, Shapely geometries, and country codes.
 #    ax.geolegend([("Triangle", "triangle"), ("Australia", "country:AU")], loc="r")
+#
+# .. code-block:: python
+#
+#    # Add semantic legends around an entire subplot group.
+#    fig, axs = uplt.subplots(ncols=2)
+#    fig.catlegend(
+#        ["Control", "Treatment"],
+#        colors={"Control": "blue7", "Treatment": "red7"},
+#        markers={"Control": "o", "Treatment": "^"},
+#        ref=axs,
+#        loc="b",
+#        title="Group",
+#    )
+#    fig.sizelegend(
+#        [10, 50, 200],
+#        labels=["Small", "Medium", "Large"],
+#        color="gray6",
+#        ref=axs,
+#        loc="r",
+#        title="Population",
+#    )
 #
 # .. code-block:: python
 #
@@ -683,6 +711,32 @@ ax.geolegend(
     country_reso="10m",
 )
 ax.axis("off")
+
+
+# %%
+fig, axs = uplt.subplots(ncols=2, refwidth=2.8, share=False)
+axs[0].scatter([0, 1, 2], [3, 1, 2], c=[0.2, 0.5, 0.8], s=[40, 120, 260])
+axs[1].scatter([0, 1, 2], [2, 3, 1], c=[0.8, 0.4, 0.1], s=[60, 90, 220])
+axs.format(title="Figure semantic legend helpers", grid=False)
+
+fig.catlegend(
+    ["Control", "Treatment"],
+    colors={"Control": "blue7", "Treatment": "red7"},
+    markers={"Control": "o", "Treatment": "^"},
+    ref=axs,
+    loc="bottom",
+    title="Group",
+    frameon=False,
+)
+fig.sizelegend(
+    [40, 120, 260],
+    labels=["Small", "Medium", "Large"],
+    color="gray6",
+    ref=axs,
+    loc="right",
+    title="Size scale",
+    frameon=False,
+)
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"

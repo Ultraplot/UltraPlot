@@ -121,6 +121,7 @@ class _SnippetManager(dict):
         "plot": "ultraplot.axes.plot",
         "figure": "ultraplot.figure",
         "gridspec": "ultraplot.gridspec",
+        "legend": "ultraplot.legend",
         "ticker": "ultraplot.ticker",
         "proj": "ultraplot.proj",
         "colors": "ultraplot.colors",

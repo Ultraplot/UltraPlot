@@ -169,6 +169,28 @@ def test_mask_range_and_metadata_helpers():
     assert inputs._meta_units(np.array([1, 2, 3])) is None
 
 
+def test_meta_coords_xarray_string_coord():
+    """
+    Regression test: passing an xarray.DataArray with a string coordinate
+    to _meta_coords must yield plain string tick labels, not the multi-line
+    repr of each scalar DataArray element.
+    """
+    xr = pytest.importorskip("xarray")
+
+    da = xr.DataArray(
+        np.array(["a", "b", "c"]),
+        coords={"ens": ["a", "b", "c"]},
+        dims=["ens"],
+        name="ens",
+    )
+
+    coords, kwargs = inputs._meta_coords(da, which="x")
+
+    assert np.array_equal(coords, np.array([0, 1, 2]))
+    formatter = kwargs["xformatter"]
+    assert [formatter(i) for i in coords] == ["a", "b", "c"]
+
+
 def test_geographic_helpers_cover_clipping_bounds_and_globes():
     clipped = inputs._geo_clip(np.array([-100.0, 0.0, 100.0]))
     assert np.allclose(clipped, [-90.0, 0.0, 90.0])
