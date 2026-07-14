@@ -920,3 +920,80 @@ def test_refaspect_as_tuple():
     fig, axs = uplt.subplots(refaspect=(16, 9))
     fig.canvas.draw()
     uplt.close(fig)
+
+
+def test_clear_drops_subplot_state():
+    """
+    clear() must forget the subplots it destroyed. Otherwise the figure keeps
+    handing out axes that matplotlib already detached from it.
+    """
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    fig.clear()
+    assert fig.axes == []
+    assert len(fig.subplotgrid) == 0
+    assert fig._get_subplot(1) is None
+    assert list(fig._iter_subplots()) == []
+    assert fig.gridspec is None
+    uplt.close(fig)
+
+
+def test_clear_drops_panel_state():
+    """clear() also forgets figure-level panels created by e.g. fig.colorbar."""
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    m = axs[0].pcolormesh(np.arange(16).reshape(4, 4))
+    fig.colorbar(m, loc="r")
+    assert fig._panel_dict["right"]
+    fig.clear()
+    assert not any(fig._panel_dict.values())
+    assert list(fig._iter_axes(panels=True)) == []
+    uplt.close(fig)
+
+
+def test_clear_resets_subplot_numbering():
+    """
+    The label counter restarts after clear(), so a reused figure numbers its
+    subplots from 1 rather than continuing from the destroyed ones.
+    """
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    fig.clear()
+    ax = fig.add_subplot(111)
+    assert ax.number == 1
+    assert list(fig._iter_subplots()) == [ax]
+    uplt.close(fig)
+
+
+def test_clear_allows_suptitle():
+    """
+    Matplotlib's clear() sets _suptitle to None, so ultraplot must rebuild its
+    label artists or the next format(suptitle=...) raises AttributeError.
+    """
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    fig.clear()
+    fig.add_subplot(111)
+    fig.format(suptitle="after clear")
+    fig.canvas.draw()
+    assert fig._suptitle.get_text() == "after clear"
+    assert fig._suptitle in fig.texts  # detached artists never render
+    uplt.close(fig)
+
+
+def test_clf_alias_clears_subplot_state():
+    """clf() is matplotlib's alias for clear() and must reset the same state."""
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    fig.clf()
+    assert len(fig.subplotgrid) == 0
+    assert fig.gridspec is None
+    uplt.close(fig)
+
+
+def test_figure_is_reusable_after_clear():
+    """A cleared figure can be drawn again from scratch."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    fig.canvas.draw()
+    fig.clear()
+    axs = fig.add_subplots(nrows=1, ncols=3)
+    axs[0].plot([1, 2, 3])
+    fig.canvas.draw()
+    assert len(fig.subplotgrid) == 3
+    assert fig.gridspec.get_geometry() == (1, 3)
+    uplt.close(fig)
