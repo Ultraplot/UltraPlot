@@ -929,7 +929,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         zorder = _not_none(zorder, 4)
 
         # Parse projection and inherit from the current axes by default
-        # NOTE: The _parse_proj method also accepts axes classes.
         proj = _not_none(proj=proj, projection=projection)
         if proj is None:
             if self._name in ("cartopy", "basemap"):
@@ -1365,7 +1364,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 child._sharey_setup(parent)
 
         # Global sharing, use the reference subplot where compatible
-        ref = self.figure._subplot_dict.get(self.figure._refnum, None)
+        ref = self.figure._get_subplot(self.figure._refnum)
         if self is not ref and ref is not None:
             if self.figure._sharex > 3:
                 ok, reason = self.figure._share_axes_compatible(ref, self, "x")
