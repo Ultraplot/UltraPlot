@@ -929,7 +929,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         zorder = _not_none(zorder, 4)
 
         # Parse projection and inherit from the current axes by default
-        # NOTE: The _parse_proj method also accepts axes classes.
         proj = _not_none(proj=proj, projection=projection)
         if proj is None:
             if self._name in ("cartopy", "basemap"):

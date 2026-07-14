@@ -2,16 +2,10 @@
 Subplot creation and management for ultraplot figures.
 """
 
-import inspect
 from numbers import Integral
-
-try:
-    from typing import Optional, Tuple, Union
-except ImportError:
-    from typing_extensions import Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import matplotlib.axes as maxes
-import matplotlib.figure as mfigure
 import matplotlib.gridspec as mgridspec
 import matplotlib.projections as mproj
 import numpy as np
@@ -20,6 +14,9 @@ from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
 from .internals import _not_none, _pop_params, warnings
+
+if TYPE_CHECKING:
+    from .figure import Figure
 
 
 class SubplotManager:
@@ -82,10 +79,6 @@ class SubplotManager:
         backend = self.parse_backend(backend, basemap)
         if isinstance(proj, str):
             proj = proj.lower()
-        if isinstance(self.figure, paxes.Axes):
-            proj = self.figure._name
-        elif isinstance(self.figure, maxes.Axes):
-            raise ValueError("Matplotlib axes cannot be added to ultraplot figures.")
 
         # Search axes projections
         name = None
@@ -256,11 +249,13 @@ class SubplotManager:
 
         kwargs.pop("_subplot_spec", None)
 
-        # NOTE: We call mfigure.Figure.add_subplot directly (unbound) rather
-        # than fig.add_subplot because SubplotManager is not a Figure subclass
-        # and cannot use super(). This bypasses any Figure.add_subplot override,
-        # which is acceptable because Figure._add_subplot is the real entry point.
-        ax = mfigure.Figure.add_subplot(fig, ss, **kwargs)
+        # NOTE: Skip past Figure.add_subplot (which routes back here) to the
+        # matplotlib implementation. Using super() rather than naming the
+        # matplotlib class keeps any mixin between Figure and matplotlib's
+        # Figure in a subclass MRO from being bypassed.
+        from .figure import Figure
+
+        ax = super(Figure, fig).add_subplot(ss, **kwargs)
         if ax.number:
             self.subplot_dict[ax.number] = ax
         return ax

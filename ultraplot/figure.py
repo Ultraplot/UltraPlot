@@ -1535,9 +1535,34 @@ class Figure(mfigure.Figure):
         """Delegate to SubplotManager."""
         return SubplotManager.parse_backend(backend, basemap)
 
-    def _parse_proj(self, *args, **kwargs):
-        """Delegate to SubplotManager."""
-        return self._subplots.parse_proj(*args, **kwargs)
+    def _parse_proj(
+        self,
+        proj=None,
+        projection=None,
+        proj_kw=None,
+        projection_kw=None,
+        backend=None,
+        basemap=None,
+        **kwargs,
+    ):
+        """
+        Delegate to SubplotManager.
+
+        NOTE: The parameters must stay spelled out rather than collapsing into
+        ``**kwargs``. `~ultraplot.ui.subplot` uses ``_pop_params`` to introspect
+        this signature and decide which keywords belong to the subplot instead of
+        the figure; a ``*args, **kwargs`` signature silently routes them to the
+        figure and raises on ``Figure.set()``.
+        """
+        return self._subplots.parse_proj(
+            proj=proj,
+            projection=projection,
+            proj_kw=proj_kw,
+            projection_kw=projection_kw,
+            backend=backend,
+            basemap=basemap,
+            **kwargs,
+        )
 
     def _get_align_axes(self, side):
         """
