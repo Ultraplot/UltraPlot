@@ -1,0 +1,30 @@
+{
+  "upload_type": "software",
+  "title": "UltraPlot",
+  "description": "A succinct matplotlib wrapper for making beautiful, publication-quality graphics.",
+  "creators": [
+    {
+      "name": "van Elteren, Casper",
+      "orcid": "0000-0001-9862-8936"
+    },
+    {
+      "name": "Becker, Matthew R.",
+      "orcid": "0000-0001-7774-2246"
+    }
+  ],
+  "license": "mit",
+  "access_right": "open",
+  "keywords": [
+    "plotting",
+    "matplotlib",
+    "scientific visualization",
+    "wrapper"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/Ultraplot/UltraPlot",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}
