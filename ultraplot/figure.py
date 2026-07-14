@@ -1478,12 +1478,11 @@ class Figure(mfigure.Figure):
             main_axes = [
                 axi for axi in group_axes if not getattr(axi, "_panel_side", None)
             ]
-            supported_main_axes = any(
-                isinstance(
-                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
-                )
-                for axi in main_axes
-            )
+            supported = (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+            astro_cls = paxes.get_astro_axes_class()
+            if astro_cls is not None:
+                supported = (*supported, astro_cls)
+            supported_main_axes = any(isinstance(axi, supported) for axi in main_axes)
             if len(group_axes) < 2 and not supported_main_axes:
                 continue
             if all(
@@ -1542,12 +1541,11 @@ class Figure(mfigure.Figure):
         sides = ("top", "bottom") if axis == "x" else ("left", "right")
         main_axes = [axi for axi in group_axes if not getattr(axi, "_panel_side", None)]
         if len(main_axes) < 2:
-            supported = all(
-                isinstance(
-                    axi, (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
-                )
-                for axi in main_axes
-            )
+            supported = (paxes.CartesianAxes, paxes._CartopyAxes, paxes._BasemapAxes)
+            astro_cls = paxes.get_astro_axes_class()
+            if astro_cls is not None:
+                supported = (*supported, astro_cls)
+            supported = all(isinstance(axi, supported) for axi in main_axes)
             if not supported:
                 return {}, True
 
