@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -38,12 +39,28 @@ def test_citation_does_not_pin_a_version():
     assert "date-released" not in citation
 
 
-def test_zenodo_json_is_not_committed():
+def test_zenodo_json_is_the_metadata_zenodo_reads():
     """
-    Zenodo reads .zenodo.json in preference to CITATION.cff, so committing one
-    would reintroduce a second, competing copy of the release metadata.
+    Zenodo reads .zenodo.json in preference to CITATION.cff and ignores the CFF
+    entirely when one exists. We ship it because the CFF -> Zenodo conversion is
+    lossy: CFF must spell the license with its SPDX id ("MIT"), while Zenodo's
+    vocabulary only knows the lowercase "mit", and a CFF-derived deposit carried a
+    'doi' and a hand-pinned 'version' that Zenodo should be deciding itself.
+    Releases stopped archiving the day CITATION.cff landed; this file is the
+    controlled surface that removes the guesswork.
     """
-    assert not (ROOT / ".zenodo.json").exists()
+    zenodo = json.loads((ROOT / ".zenodo.json").read_text(encoding="utf-8"))
+
+    # Zenodo mints the DOI and takes the version from the release tag. Pinning
+    # either here is what we are getting away from.
+    assert "doi" not in zenodo
+    assert "version" not in zenodo
+
+    # Must match Zenodo's license vocabulary, which is lowercase (GET
+    # /api/vocabularies/licenses/mit -> 200, .../MIT -> 404).
+    assert zenodo["license"] == zenodo["license"].lower()
+    assert zenodo["upload_type"] == "software"
+    assert zenodo["creators"][0]["orcid"] == "0000-0001-9862-8936"
 
 
 def test_readme_citation_section_uses_repository_metadata():
