@@ -8,8 +8,12 @@ authors:
   - family-names: "Becker"
     given-names: "Matthew R."
     orcid: "https://orcid.org/0000-0001-7774-2246"
-date-released: "2026-03-30"
-version: "2.1.5"
+# NOTE: Deliberately no 'version' or 'date-released'. The package version comes
+# from the git tag via setuptools_scm, and Zenodo's GitHub integration takes the
+# version and publication date from the release itself. Pinning them here means
+# hand-editing this file on every release, which is how it drifted to 2.1.5 while
+# the project shipped 2.4.0. The DOI below is the *concept* DOI: it is stable
+# across releases and always resolves to the latest version.
 doi: "10.5281/zenodo.15733564"
 repository-code: "https://github.com/Ultraplot/UltraPlot"
 license: "MIT"
