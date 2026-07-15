@@ -517,6 +517,60 @@ fig.format(
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
+# .. _ug_geo_layout:
+#
+# Geographic axes in mixed subplot layouts
+# -----------------------------------------
+#
+# Geographic axes preserve the aspect ratio required by their projection. This is
+# important for interpreting distances and shapes correctly, but it creates a layout
+# choice when a map shares a GridSpec with Cartesian axes or maps that have a different
+# natural aspect ratio. A fixed-aspect map cannot both fill a differently shaped subplot
+# slot *and* preserve its projection geometry.
+#
+# By default, UltraPlot preserves the map aspect. If the slot is a different shape, the
+# visible map is centered inside it. This keeps the map accurate, but decorations attached
+# to the visible map boundary can stop lining up with decorations on neighboring subplots.
+# For example, the following uses ``abcanchor='slot'`` to attach the map's a-b-c label to
+# its unadjusted GridSpec slot instead. The map itself remains aspect-faithful.
+
+# %%
+import ultraplot as uplt
+
+layout = [[1, 1, 1, 2, 2, 2], [3, 3, 4, 4, 5, 5]]
+fig, axs = uplt.subplots(layout, refwidth=2.4, proj={4: "cyl"}, share=False)
+axs[3].format(
+    lonlim=(0, 1),
+    latlim=(0, 1),
+    abcanchor="slot",  # align its a-b-c label with the Cartesian subplot slots
+)
+fig.format(abc="A.", abcloc="left")
+
+
+# %% [raw] raw_mimetype="text/restructuredtext"
+# ``abcanchor`` has two modes:
+#
+# * ``'axes'`` (the default) attaches the label to the visible map boundary. This is
+#   usually best when the map is the visual focus.
+# * ``'slot'`` attaches it to the original GridSpec slot. This is useful when labels
+#   should form a regular grid across mixed subplot types.
+#
+# There are two other deliberate trade-offs, depending on what the figure needs:
+#
+# * Use ``aspect='auto'`` with :meth:`~ultraplot.axes.GeoAxes.format` to stretch a map
+#   to fill its slot. This preserves the GridSpec geometry but distorts the projection,
+#   so it is generally unsuitable when geographic shape or scale matters.
+# * Make the map the layout reference with ``ref=4`` in the above call to
+#   :func:`~ultraplot.ui.subplots`. UltraPlot then resizes the overall figure so that
+#   the map fills its slot while retaining its aspect. This is useful when the map,
+#   rather than the Cartesian axes, should determine the figure geometry.
+#
+# If none of these trade-offs is appropriate, change the map extent so that its natural
+# aspect better matches the intended GridSpec slot. That preserves projection geometry,
+# but necessarily changes the plotted geographic domain.
+
+
+# %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_zoom:
 #
 # Zooming into projections

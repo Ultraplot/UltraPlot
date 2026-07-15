@@ -7,6 +7,60 @@ import pytest
 import ultraplot as uplt
 
 
+def test_geo_format_aspect():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(proj="cyl")
+
+    ax.format(aspect="auto")
+
+    assert ax[0].get_aspect() == "auto"
+    uplt.close(fig)
+
+
+def test_geo_abcanchor_slot():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(ncols=2, proj="cyl", figsize=(8, 3), share=False)
+    ax.format(
+        abc=True,
+        abcloc="upper left",
+        abcanchor="slot",
+        lonlim=(0, 1),
+        latlim=(0, 1),
+    )
+    fig.canvas.draw()
+
+    axes = ax[0]
+    label = axes._title_dict["abc"]
+    slot = axes.get_subplotspec().get_position(fig).transformed(fig.transFigure)
+    active = axes.get_position().transformed(fig.transFigure)
+    bbox = label.get_window_extent(fig.canvas.get_renderer())
+    assert bbox.x0 < active.x0
+    assert abs(bbox.x0 - slot.x0) < abs(bbox.x0 - active.x0)
+    uplt.close(fig)
+
+
+def test_geo_abcanchor_slot_above_axes():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(nrows=2, proj="cyl", figsize=(3, 8), share=False)
+    ax.format(
+        abc=True,
+        abcloc="left",
+        abcanchor="slot",
+        lonlim=(0, 1),
+        latlim=(0, 1),
+    )
+    fig.canvas.draw()
+
+    axes = ax[0]
+    label = axes._title_dict["abc"]
+    slot = axes.get_subplotspec().get_position(fig).transformed(fig.transFigure)
+    active = axes.get_position().transformed(fig.transFigure)
+    bbox = label.get_window_extent(fig.canvas.get_renderer())
+    assert bbox.y0 > active.y1
+    assert abs(bbox.y0 - slot.y1) < abs(bbox.y0 - active.y1)
+    uplt.close(fig)
+
+
 @pytest.mark.mpl_image_compare
 def test_geographic_single_projection():
     fig = uplt.figure(refwidth=3)
