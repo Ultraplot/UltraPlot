@@ -6,9 +6,6 @@ The figure class used for all ultraplot figures.
 import functools
 import inspect
 import os
-from numbers import Integral
-
-from packaging import version
 
 try:
     from typing import Any, Iterable, List, Optional, Tuple, Union
@@ -17,8 +14,6 @@ except ImportError:
 
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
-import matplotlib.gridspec as mgridspec
-import matplotlib.projections as mproj
 import matplotlib.text as mtext
 import matplotlib.transforms as mtransforms
 import numpy as np
