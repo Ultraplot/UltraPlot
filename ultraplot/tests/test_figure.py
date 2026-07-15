@@ -997,3 +997,35 @@ def test_figure_is_reusable_after_clear():
     assert len(fig.subplotgrid) == 3
     assert fig.gridspec.get_geometry() == (1, 3)
     uplt.close(fig)
+def test_spanning_ylabel_is_outside_leftlabels():
+    """Row labels take precedence over the shared y label in side layout."""
+    fig, axs = uplt.subplots(nrows=2, share=True, refwidth=2)
+    axs.format(ylabel="Shared y")
+    fig.format(leftlabels=("Row 1", "Row 2"), leftlabelsharedpad="20pt")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    shared = next(iter(fig._supylabel_dict.values())).get_window_extent(renderer)
+    rows = [
+        label.get_window_extent(renderer)
+        for label in fig._suplabel_dict["left"].values()
+    ]
+    gap = min(row.xmin for row in rows) - shared.xmax
+    assert gap >= fig._suplabel_shared_pad["left"] - 1e-6
+    uplt.close(fig)
+
+
+def test_spanning_ylabel_scales_with_output_dpi(tmp_path):
+    """Spanning labels remain inside the figure when the output DPI changes."""
+    fig, axs = uplt.subplots(nrows=2, share=True, figsize=(3, 3))
+    axs.format(ylabel="Shared y")
+    fig.format(leftlabels=("Row 1", "Row 2"), leftlabelsharedpad="5em")
+    path = tmp_path / "spanning-label.png"
+    fig.savefig(path, dpi=300)
+    from matplotlib import image
+
+    pixels = image.imread(path)
+    dark = pixels[..., :3].min(axis=2) < 0.1
+    # At high output DPI, the spanning y label must occupy the outer label lane.
+    # Previously its raw-pixel transform placed it outside the saved image.
+    assert dark[:, : pixels.shape[1] * 8 // 100].any()
+    uplt.close(fig)
