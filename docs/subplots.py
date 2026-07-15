@@ -395,6 +395,14 @@ for (name1, equal), (name2, group) in zip(equals, groups):
 #    Explicit sharing levels still force sharing attempts and may warn when
 #    incompatible axes are encountered.
 #
+# When figure-level row or column labels and a shared spanning axis label use
+# the same side, the row or column labels are placed nearer the axes and the
+# spanning label is placed outside them. Control this gap with the
+# :rc:`leftlabel.sharedpad`, :rc:`rightlabel.sharedpad`,
+# :rc:`bottomlabel.sharedpad`, and :rc:`toplabel.sharedpad` settings. These
+# can also be passed to ``format`` without periods; for example,
+# ``fig.format(leftlabelsharedpad='2em')``.
+#
 # The below examples demonstrate the effect of various axis and label sharing
 # settings on the appearance of several subplot grids.
 
