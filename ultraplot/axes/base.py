@@ -3076,8 +3076,15 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     self.transAxes.inverted()
                 )
                 ax0, ax1 = abc_bbox.x0, abc_bbox.x1
+                ay0, ay1 = abc_bbox.y0, abc_bbox.y1
                 tx0, tx1 = title_bbox.x0, title_bbox.x1
-                if tx0 < ax1 + abc_title_sep and tx1 > ax0 - abc_title_sep:
+                ty0, ty1 = title_bbox.y0, title_bbox.y1
+                if (
+                    tx0 < ax1 + abc_title_sep
+                    and tx1 > ax0 - abc_title_sep
+                    and ty0 < ay1
+                    and ty1 > ay0
+                ):
                     base_x = title_obj.get_position()[0]
                     ha = title_obj.get_ha()
                     max_width = 0

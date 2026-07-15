@@ -356,6 +356,18 @@ def test_title_shifts_when_abc_overlaps_different_loc():
     assert title_obj.get_position()[0] > original_x
 
 
+def test_centered_title_does_not_shift_for_inset_abc():
+    """
+    Centered titles do not collide with an inset upper-left abc label.
+    """
+    fig, axs = uplt.subplots(figsize=(3, 2))
+    axs.format(abc=True, title="X" * 100, titleloc="center", abcloc="upper left")
+    title_obj = axs[0]._title_dict["center"]
+    original_x = title_obj.get_position()[0]
+    fig.canvas.draw()
+    assert title_obj.get_position()[0] == pytest.approx(original_x)
+
+
 def test_title_shrinks_right_aligned_same_location():
     """
     Test that right-aligned titles shrink when they would overflow with abc label.
