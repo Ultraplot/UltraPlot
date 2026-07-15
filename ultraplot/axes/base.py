@@ -383,6 +383,11 @@ leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, d
 : :rc:`leftlabel.pad`, :rc:`toplabel.pad`, :rc:`rightlabel.pad`, :rc:`bottomlabel.pad`
     The padding between the labels and the axes content.
     %(units.pt)s
+leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad : float or unit-spec, default
+: :rc:`leftlabel.sharedpad`, :rc:`toplabel.sharedpad`, :rc:`rightlabel.sharedpad`, :rc:`bottomlabel.sharedpad`
+    The padding between side labels and a shared spanning axis label on the
+    same side. The spanning label is placed outside the side labels.
+    %(units.pt)s
 leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw : dict-like, optional
     Additional settings used to update the labels with ``text.update()``.
 figtitle
@@ -1059,7 +1064,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         zorder = _not_none(zorder, 4)
 
         # Parse projection and inherit from the current axes by default
-        # NOTE: The _parse_proj method also accepts axes classes.
         proj = _not_none(proj=proj, projection=projection)
         if proj is None:
             if self._name in ("cartopy", "basemap"):
@@ -1497,7 +1501,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     child._sharey_setup(parent)
 
         # Global sharing, use the reference subplot where compatible
-        ref = self.figure._subplot_dict.get(self.figure._refnum, None)
+        ref = self.figure._get_subplot(self.figure._refnum)
         if self is not ref and ref is not None:
             if self.figure._sharex > 3:
                 ok, reason = self.figure._share_axes_compatible(ref, self, "x")
@@ -3077,8 +3081,15 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     self.transAxes.inverted()
                 )
                 ax0, ax1 = abc_bbox.x0, abc_bbox.x1
+                ay0, ay1 = abc_bbox.y0, abc_bbox.y1
                 tx0, tx1 = title_bbox.x0, title_bbox.x1
-                if tx0 < ax1 + abc_title_sep and tx1 > ax0 - abc_title_sep:
+                ty0, ty1 = title_bbox.y0, title_bbox.y1
+                if (
+                    tx0 < ax1 + abc_title_sep
+                    and tx1 > ax0 - abc_title_sep
+                    and ty0 < ay1
+                    and ty1 > ay0
+                ):
                     base_x = title_obj.get_position()[0]
                     ha = title_obj.get_ha()
                     max_width = 0
