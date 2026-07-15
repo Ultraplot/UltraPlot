@@ -1059,6 +1059,11 @@ class Figure(mfigure.Figure):
         d["right"] = rc["rightlabel.pad"]
         d["bottom"] = rc["bottomlabel.pad"]
         d["top"] = rc["toplabel.pad"]
+        d = self._suplabel_shared_pad = {}
+        d["left"] = rc["leftlabel.sharedpad"]
+        d["right"] = rc["rightlabel.sharedpad"]
+        d["bottom"] = rc["bottomlabel.sharedpad"]
+        d["top"] = rc["toplabel.sharedpad"]
 
     @_clear_border_cache
     def clear(self, keep_observers=False):
@@ -1909,7 +1914,15 @@ class Figure(mfigure.Figure):
         return pos, ax
 
     def _get_offset_coord(
-        self, side, axs, renderer, *, pad=None, extra=None, include_subset_titles=True
+        self,
+        side,
+        axs,
+        renderer,
+        *,
+        pad=None,
+        extra=None,
+        include_subset_titles=True,
+        exclude_spanning_axis_labels=False,
     ):
         """
         Return the figure coordinate for offsetting super labels and super titles.
@@ -1923,12 +1936,25 @@ class Figure(mfigure.Figure):
         )  # noqa: E501
         objs = objs + (extra or ())  # e.g. top super labels
         for obj in objs:
+            # Spanning axis labels reserve space with whitespace placeholders.
+            # When aligning figure-level side labels, those placeholders must not
+            # count as content; otherwise the side labels are incorrectly placed
+            # outside the spanning label.
+            label = None
+            if exclude_spanning_axis_labels and isinstance(obj, paxes.Axes):
+                axis = obj.yaxis if side in ("left", "right") else obj.xaxis
+                label = axis.label
+                visible = label.get_visible()
+                if label.get_text() and not label.get_text().strip():
+                    label.set_visible(False)
             if isinstance(obj, paxes.Axes):
                 bbox = obj.get_tightbbox(
                     renderer, include_subset_titles=include_subset_titles
                 )
             else:
                 bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
+            if label is not None:
+                label.set_visible(visible)
             attr = s + "max" if side in ("top", "right") else s + "min"
             c = getattr(bbox, attr)
             c = (c, 0) if side in ("left", "right") else (0, c)
@@ -2507,11 +2533,66 @@ class Figure(mfigure.Figure):
         labs = self._suplabel_dict[side]
         axs = tuple(ax for ax, lab in labs.items() if lab.get_text())
         if not axs:
+            self._align_spanning_axis_labels(side, renderer, ())
             return
-        c = self._get_offset_coord(side, axs, renderer)
+        c = self._get_offset_coord(
+            side, axs, renderer, exclude_spanning_axis_labels=True
+        )
         for lab in labs.values():
             s = "x" if side in ("left", "right") else "y"
             lab.update({s: c})
+        self._align_spanning_axis_labels(side, renderer, tuple(labs.values()))
+
+    def _align_spanning_axis_labels(self, side, renderer, side_labels):
+        """
+        Place spanning axis labels outside figure-level labels on the same side.
+
+        Figure-level side labels describe individual rows or columns, while a
+        spanning axis label describes the whole group. The latter therefore has
+        lower visual priority and belongs farther from the axes.
+        """
+        labels = (
+            self._supylabel_dict if side in ("left", "right") else self._supxlabel_dict
+        )
+        side_labels = tuple(label for label in side_labels if label.get_text())
+        if not labels:
+            return
+        pad = self._suplabel_shared_pad[side]
+        for ax, label in labels.items():
+            axis = ax.yaxis if side in ("left", "right") else ax.xaxis
+            if axis.get_label_position() != side:
+                continue
+            axis_label = axis.label
+            old_offset = getattr(axis_label, "_ultraplot_spanning_offset", 0)
+            size = self.bbox.width if side in ("left", "right") else self.bbox.height
+            old_offset_px = old_offset * size
+            if not side_labels or not label.get_text():
+                if old_offset:
+                    axis_label._ultraplot_spanning_offset = 0
+                    coord = axis_label.get_position()
+                    getattr(
+                        axis_label, "set_" + ("x" if side in ("left", "right") else "y")
+                    )(coord[0 if side in ("left", "right") else 1] - old_offset_px)
+                continue
+            bbox = label.get_window_extent(renderer)
+            if side == "left":
+                edge = min(lab.get_window_extent(renderer).xmin for lab in side_labels)
+                delta = edge - pad - bbox.xmax
+                setter, coord = axis_label.set_x, axis_label.get_position()[0]
+            elif side == "right":
+                edge = max(lab.get_window_extent(renderer).xmax for lab in side_labels)
+                delta = edge + pad - bbox.xmin
+                setter, coord = axis_label.set_x, axis_label.get_position()[0]
+            elif side == "bottom":
+                edge = min(lab.get_window_extent(renderer).ymin for lab in side_labels)
+                delta = edge - pad - bbox.ymax
+                setter, coord = axis_label.set_y, axis_label.get_position()[1]
+            else:
+                edge = max(lab.get_window_extent(renderer).ymax for lab in side_labels)
+                delta = edge + pad - bbox.ymin
+                setter, coord = axis_label.set_y, axis_label.get_position()[1]
+            axis_label._ultraplot_spanning_offset = old_offset + delta / size
+            setter(coord - old_offset_px)
 
     def _align_super_title(self, renderer):
         """
@@ -2796,24 +2877,29 @@ class Figure(mfigure.Figure):
             axis = getattr(ax, x + "axis")
             axis.label.set_text(space)
 
-        # Update spanning label position then add simple monkey patch
-        # NOTE: Simply using axis._update_label_position() when this is
-        # called is not sufficient. Fails with e.g. inline backend.
-        t = mtransforms.IdentityTransform()  # set in pixels
+        # Update spanning label position then add simple monkey patch.
+        # Axis-label positions are expressed in display pixels, but spanning
+        # labels are figure artists. Store their position in figure coordinates
+        # so it remains correct when saving at a DPI different from the canvas
+        # DPI (e.g. ``savefig(dpi=1000)``).
         cx, cy = axlab.get_position()
         if x == "x":
-            trans = mtransforms.blended_transform_factory(self.transFigure, t)
-            coord = (c, cy)
+            coord = (c, self.transFigure.inverted().transform((0, cy))[1])
         else:
-            trans = mtransforms.blended_transform_factory(t, self.transFigure)
-            coord = (cx, c)
-        suplab.set_transform(trans)
+            coord = (self.transFigure.inverted().transform((cx, 0))[0], c)
+        suplab.set_transform(self.transFigure)
         suplab.set_position(coord)
         setpos = getattr(mtext.Text, "set_" + y)
 
         def _set_coord(self, *args, **kwargs):  # noqa: E306
+            offset = getattr(self, "_ultraplot_spanning_offset", 0)
+            size = self.figure.bbox.width if x == "y" else self.figure.bbox.height
+            args = (args[0] + offset * size, *args[1:])
             setpos(self, *args, **kwargs)
-            setpos(suplab, *args, **kwargs)
+            coord = self.figure.transFigure.inverted().transform(
+                (args[0], 0) if x == "y" else (0, args[0])
+            )
+            setpos(suplab, coord[0 if x == "y" else 1], *args[1:], **kwargs)
 
         setattr(axlab, "set_" + y, _set_coord.__get__(axlab))
 
@@ -3308,8 +3394,10 @@ class Figure(mfigure.Figure):
 
         Important
         ---------
-        `leftlabelpad`, `toplabelpad`, `rightlabelpad`, and `bottomlabelpad`
-        keywords are actually :ref:`configuration settings <ug_config>`.
+        `leftlabelpad`, `leftlabelsharedpad`, `toplabelpad`,
+        `toplabelsharedpad`, `rightlabelpad`, `rightlabelsharedpad`,
+        `bottomlabelpad`, and `bottomlabelsharedpad` keywords are actually
+        :ref:`configuration settings <ug_config>`.
         We explicitly document these arguments here because it is common to
         change them for specific figures. But many :ref:`other configuration
         settings <ug_format>` can be passed to ``format`` too.
@@ -3356,6 +3444,9 @@ class Figure(mfigure.Figure):
                 pad = rc.find(side + "label.pad", context=True)
                 if pad is not None:
                     self._suplabel_pad[side] = pad
+                pad = rc.find(side + "label.sharedpad", context=True)
+                if pad is not None:
+                    self._suplabel_shared_pad[side] = pad
             if includepanels is not None:
                 self._includepanels = includepanels
 
