@@ -997,6 +997,8 @@ def test_figure_is_reusable_after_clear():
     assert len(fig.subplotgrid) == 3
     assert fig.gridspec.get_geometry() == (1, 3)
     uplt.close(fig)
+
+
 def test_spanning_ylabel_is_outside_leftlabels():
     """Row labels take precedence over the shared y label in side layout."""
     fig, axs = uplt.subplots(nrows=2, share=True, refwidth=2)

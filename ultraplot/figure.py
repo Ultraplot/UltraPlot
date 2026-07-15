@@ -2552,9 +2552,7 @@ class Figure(mfigure.Figure):
         lower visual priority and belongs farther from the axes.
         """
         labels = (
-            self._supylabel_dict
-            if side in ("left", "right")
-            else self._supxlabel_dict
+            self._supylabel_dict if side in ("left", "right") else self._supxlabel_dict
         )
         side_labels = tuple(label for label in side_labels if label.get_text())
         if not labels:
@@ -2572,9 +2570,9 @@ class Figure(mfigure.Figure):
                 if old_offset:
                     axis_label._ultraplot_spanning_offset = 0
                     coord = axis_label.get_position()
-                    getattr(axis_label, "set_" + ("x" if side in ("left", "right") else "y"))(
-                        coord[0 if side in ("left", "right") else 1] - old_offset_px
-                    )
+                    getattr(
+                        axis_label, "set_" + ("x" if side in ("left", "right") else "y")
+                    )(coord[0 if side in ("left", "right") else 1] - old_offset_px)
                 continue
             bbox = label.get_window_extent(renderer)
             if side == "left":
