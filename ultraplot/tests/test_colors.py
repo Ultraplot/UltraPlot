@@ -14,6 +14,7 @@ from ultraplot import config
     ("N", "expected"),
     (
         (None, ["#ff0000", "#0000ff"]),
+        (0, []),
         (1, ["#ff0000"]),
         (3, ["#ff0000", "#0000ff", "#ff0000"]),
     ),
@@ -30,6 +31,53 @@ def test_discrete_colormap_resizes_without_listed_n_warning(N, expected):
 
     assert cmap.N == len(expected)
     assert [mcolors.to_hex(color) for color in cmap.colors] == expected
+
+
+@pytest.mark.parametrize(
+    ("N", "expected_size"),
+    (
+        (None, 3),
+        (1, 1),
+        (4, 4),
+    ),
+)
+def test_discrete_colormap_expands_scalar_color(N, expected_size):
+    """Scalar color strings produce the requested monochromatic colormap."""
+    cmap = pcolors.DiscreteColormap("red", N=N)
+
+    assert cmap.N == expected_size
+    assert [mcolors.to_hex(color) for color in cmap.colors] == [
+        "#ff0000"
+    ] * expected_size
+    assert cmap.monochrome is True
+
+
+def test_discrete_colormap_resizing_preserves_alpha_override():
+    """Alpha replacement is applied to every color after cycling the input."""
+    cmap = pcolors.DiscreteColormap(
+        [(1, 0, 0, 0.2), (0, 0, 1, 0.8)], N=3, alpha=0.5
+    )
+
+    assert [mcolors.to_hex(color, keep_alpha=True) for color in cmap.colors] == [
+        "#ff000080",
+        "#0000ff80",
+        "#ff000080",
+    ]
+    assert cmap.monochrome is False
+
+
+@pytest.mark.parametrize(
+    ("colors", "expected"),
+    (
+        (["red", "red"], True),
+        (["red", "blue"], False),
+    ),
+)
+def test_discrete_colormap_monochrome_is_python_bool(colors, expected):
+    """Monochrome detection remains available across matplotlib versions."""
+    cmap = pcolors.DiscreteColormap(colors)
+
+    assert cmap.monochrome is expected
 
 
 @pytest.fixture(autouse=True)
