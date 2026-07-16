@@ -133,6 +133,16 @@ Demo functions
    :toctree: api
 
 
+Text alignment
+==============
+
+.. automodule:: ultraplot.textalign
+   :no-private-members:
+
+.. automodsumm:: ultraplot.textalign
+   :toctree: api
+
+
 Miscellaneous functions
 =======================
 
