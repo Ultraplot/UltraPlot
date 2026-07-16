@@ -1,10 +1,35 @@
 import os
+import warnings
+
+import matplotlib as mpl
+import matplotlib.colors as mcolors
 import pytest
 import numpy as np
-import matplotlib.colors as mcolors
 
 from ultraplot import colors as pcolors
 from ultraplot import config
+
+
+@pytest.mark.parametrize(
+    ("N", "expected"),
+    (
+        (None, ["#ff0000", "#0000ff"]),
+        (1, ["#ff0000"]),
+        (3, ["#ff0000", "#0000ff", "#ff0000"]),
+    ),
+)
+def test_discrete_colormap_resizes_without_listed_n_warning(N, expected):
+    """DiscreteColormap preserves N semantics without deprecated mpl input."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "error",
+            message=r"Passing 'N' to ListedColormap.*",
+            category=mpl.MatplotlibDeprecationWarning,
+        )
+        cmap = pcolors.DiscreteColormap(["red", "blue"], N=N)
+
+    assert cmap.N == len(expected)
+    assert [mcolors.to_hex(color) for color in cmap.colors] == expected
 
 
 @pytest.fixture(autouse=True)
