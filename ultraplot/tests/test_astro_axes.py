@@ -20,6 +20,24 @@ def _make_test_wcs():
     return wcs
 
 
+class CustomWCS(WCS):
+    """Application-defined WCS subclass outside the astropy namespace."""
+
+
+@pytest.mark.parametrize("method", ["add_axes", "add_subplot"])
+def test_custom_wcs_subclass_uses_native_astro_axes(method):
+    wcs = CustomWCS(_make_test_wcs().to_header())
+    fig = uplt.figure()
+    if method == "add_axes":
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], projection=wcs)
+    else:
+        ax = fig.add_subplot(111, projection=wcs)
+
+    assert isinstance(ax, paxes.AstroAxes)
+    assert ax.wcs is wcs
+    uplt.close(fig)
+
+
 def test_add_subplot_with_wcs_projection_returns_native_astro_axes():
     fig = uplt.figure()
     ax = fig.add_subplot(111, projection=_make_test_wcs())

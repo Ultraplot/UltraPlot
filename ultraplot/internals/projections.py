@@ -82,11 +82,14 @@ def _get_axes_module():
 
 
 def _looks_like_astropy_projection(proj):
-    module = getattr(type(proj), "__module__", "")
-    return module.startswith("astropy.")
+    return any(
+        getattr(cls, "__module__", "").startswith("astropy.")
+        for cls in type(proj).__mro__
+    )
 
 
 def _prefixed_projection_name(name):
+    name = name.lower()
     if name.startswith("ultraplot_"):
         return name if name in mproj.get_projection_names() else None
     prefixed = "ultraplot_" + name
@@ -158,7 +161,7 @@ def _wrap_external_projection(figure, projection):
 @register_projection_binding(
     "astropy_wcs_string",
     lambda proj, context: isinstance(proj, str)
-    and proj in ("astro", "astropy", "wcs", "ultraplot_astro"),
+    and proj.lower() in ("astro", "astropy", "wcs", "ultraplot_astro"),
 )
 def _resolve_astropy_wcs_string(proj, context):
     _get_axes_module().get_astro_axes_class(load=True)
@@ -225,7 +228,7 @@ def _resolve_basemap_projection_object(proj, context):
 def _resolve_geographic_projection_name(proj, context):
     try:
         proj_obj = constructor.Proj(
-            proj,
+            proj.lower(),
             backend=context.backend,
             include_axes=True,
             **context.proj_kw,
@@ -252,8 +255,6 @@ def resolve_projection(proj, *, figure, proj_kw=None, backend=None):
     Resolve a user projection spec to a final projection and kwargs.
     """
     proj_kw = proj_kw or {}
-    if isinstance(proj, str):
-        proj = proj.lower()
     context = ProjectionContext(figure=figure, proj_kw=proj_kw, backend=backend)
 
     resolution = None

@@ -177,13 +177,9 @@ class SubplotManager:
 
         kwargs.pop("_subplot_spec", None)
 
-        # NOTE: Skip past Figure.add_subplot (which routes back here) to the
-        # matplotlib implementation. Using super() rather than naming the
-        # matplotlib class keeps any mixin between Figure and matplotlib's
-        # Figure in a subclass MRO from being bypassed.
-        from .figure import Figure
-
-        ax = super(Figure, fig).add_subplot(ss, **kwargs)
+        # Figure.add_subplot routes back here, so use the dedicated hook that
+        # subclasses can override before dispatching to matplotlib.
+        ax = fig._add_subplot_mpl(ss, **kwargs)
         if ax.number:
             self.subplot_dict[ax.number] = ax
         return ax

@@ -2161,6 +2161,10 @@ class Figure(mfigure.Figure):
         """Delegate to SubplotManager."""
         return self._subplots.add_subplot(*args, **kwargs)
 
+    def _add_subplot_mpl(self, *args, **kwargs):
+        """Dispatch subplot creation to matplotlib without manager recursion."""
+        return super().add_subplot(*args, **kwargs)
+
     def _unshare_axes(self):
 
         for which in "xyz":
