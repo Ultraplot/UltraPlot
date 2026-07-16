@@ -4,6 +4,7 @@ The first-level axes subclass used for all ultraplot figures.
 Implements basic shared functionality.
 """
 
+import contextlib
 import copy
 import inspect
 import re
@@ -975,6 +976,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         self._altx_parent = None  # for cartesian axes only
         self._alty_parent = None
         self._colorbar_fill = None
+        self._align_texts = []  # texts registered for overlap avoidance
+        self._align_kwargs = {}  # solver settings from auto_align_text()
+        self._align_arrows = []  # connectors drawn back to displaced anchors
+        self._align_cache = None  # last solve, reused while its inputs hold
         self._inset_parent = None
         self._inset_bounds = None  # for introspection ony
         self._inset_zoom = False
@@ -3394,6 +3399,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self._colorbar_fill.update_ticks(manual_only=True)  # only if needed
         if self._inset_parent is not None and self._inset_zoom:
             self.indicate_inset_zoom()
+        self._apply_align_text(renderer)
         needs_inset_reflow = bool(getattr(self, "_inset_colorbar_needs_reflow", False))
         has_inset_frame = bool(
             getattr(self, "_inset_colorbar_frame", None) is not None
@@ -3431,6 +3437,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self._colorbar_fill.update_ticks(manual_only=True)  # only if needed
         if self._inset_parent is not None and self._inset_zoom:
             self.indicate_inset_zoom()
+        self._apply_align_text(renderer)
         bbox = super().get_tightbbox(renderer, *args, **kwargs)
         fig = self.figure
         if (
@@ -4081,6 +4088,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
     def text(
         self,
         *args,
+        avoid_overlap=None,
         border=False,
         bbox=False,
         bordercolor="w",
@@ -4108,6 +4116,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         Other parameters
         ----------------
+        avoid_overlap : bool, default: :rc:`text.align`
+            Whether to automatically nudge this text at draw time so it does not
+            overlap other auto-aligned text or the plotted data. See
+            `~ultraplot.axes.Axes.auto_align_text` for the solver settings.
         border : bool, default: False
             Whether to draw border around text.
         borderwidth : float, default: 2
@@ -4137,6 +4149,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         See also
         --------
         matplotlib.axes.Axes.text
+        ultraplot.axes.Axes.auto_align_text
         """
         # Translate positional args
         # Audo-redirect to text2D for 3D axes if not enough arguments passed
@@ -4205,7 +4218,126 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 "bboxpad": bboxpad,
             }
         )
+        self._register_align_text(obj, avoid_overlap)
         return obj
+
+    def _register_align_text(self, obj, avoid_overlap=None):
+        """
+        Queue a text object for draw-time overlap avoidance, or release it.
+        """
+        # The solver moves a label by inverting its transform, which only means
+        # anything for text that its transform actually positions. A Text3D is
+        # placed by the 3D projection instead, and its stored position is the data
+        # coordinate that feeds it, so a display-space nudge would not move the
+        # label -- it would rewrite the data point.
+        if hasattr(obj, "get_position_3d"):
+            return obj
+        # An explicit avoid_overlap=False beats the rc setting, so opting out is
+        # always available. Releasing a label also puts it back where the user
+        # asked for it, rather than stranding it wherever the solver left it.
+        if _not_none(avoid_overlap, rc["text.align"]):
+            if obj not in self._align_texts:
+                self._align_texts.append(obj)
+        else:
+            if obj in self._align_texts:
+                self._align_texts.remove(obj)
+            from ..textalign import _reset_label
+
+            if hasattr(obj, "_uplt_align_anchor"):
+                _reset_label(obj)
+        self.stale = True
+        return obj
+
+    def auto_align_text(self, *objs, **kwargs):
+        """
+        Automatically reposition text so that it does not overlap.
+
+        Labels are relaxed away from each other, from the plotted data and from
+        the axes edges at draw time, then pulled back towards where you put them.
+        Because the solver runs on every draw, the layout stays valid when the
+        figure is resized or the data limits change.
+
+        Parameters
+        ----------
+        *objs : `~matplotlib.text.Text`, optional
+            The text or annotation objects to align. Default is every text
+            created with ``avoid_overlap=True`` plus, if none were, all the text
+            you added to the axes.
+        pad : float, default: :rc:`text.align.pad`
+            Padding in points kept around each label.
+        avoid_points : bool, default: True
+            Whether labels also repel the data points of lines and scatter plots.
+        avoid : sequence of `~matplotlib.artist.Artist`, optional
+            Extra artists whose bounding boxes the labels must stay clear of.
+        only_move : {'xy', 'x', 'y'}, default: 'xy'
+            Restrict movement to one axis. Use ``'y'`` when the horizontal
+            position of a label carries meaning, as on a time series.
+        max_iter : int, default: :rc:`text.align.maxiter`
+            Maximum number of relaxation iterations.
+        spring : float, default: 0.05
+            Strength of the pull back towards the original position. Larger
+            values keep labels closer to their anchors at the cost of overlap.
+        step : float, default: 0.6
+            Damping applied to each iteration's displacement.
+        clip : bool, default: True
+            Whether to keep labels inside the axes.
+        arrows : bool or dict, default: :rc:`text.align.arrows`
+            Whether to draw a connector from each displaced label back to the
+            point it labels. A dict is passed to `~matplotlib.patches.FancyArrowPatch`.
+        min_arrow_dist : float, default: 8.0
+            Only draw connectors for labels displaced further than this, in points.
+
+        Examples
+        --------
+        >>> import ultraplot as uplt
+        >>> fig, ax = uplt.subplots()
+        >>> ax.scatter(x, y)
+        >>> for xi, yi, name in zip(x, y, names):
+        ...     ax.text(xi, yi, name)
+        >>> ax.auto_align_text()
+
+        See also
+        --------
+        ultraplot.axes.Axes.text
+        ultraplot.axes.Axes.annotate
+        """
+        objs = [obj for arg in objs for obj in (arg if np.iterable(arg) else (arg,))]
+        if objs:
+            self._align_texts = list(objs)
+        elif not self._align_texts:
+            # Titles and a-b-c labels live in self.texts but are positioned by the
+            # layout engine, so they are not ours to move.
+            titles = set(map(id, self._title_dict.values()))
+            self._align_texts = [
+                t for t in self.texts if id(t) not in titles and t.get_text().strip()
+            ]
+        self._align_kwargs = kwargs
+        self.stale = True
+        return self._align_texts
+
+    def _apply_align_text(self, renderer):
+        """
+        Run the overlap solver for this axes (called on every draw).
+        """
+        if not self._align_texts:
+            # Every label was released; take their connectors with them
+            for patch in self._align_arrows:
+                with contextlib.suppress(Exception):
+                    patch.remove()
+            self._align_arrows = []
+            return
+        from ..textalign import align_text
+
+        kwargs = {
+            "pad": rc["text.align.pad"],
+            "max_iter": rc["text.align.maxiter"],
+            "arrows": rc["text.align.arrows"],
+            **self._align_kwargs,
+        }
+        try:
+            align_text(self, self._align_texts, renderer=renderer, **kwargs)
+        except Exception as err:  # never let label polish break a render
+            warnings._warn_ultraplot(f"Failed to auto-align text: {err}")
 
     @docstring._concatenate_inherited
     def annotate(
@@ -4224,16 +4356,24 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         textcoords: Optional[Union[str, mtransforms.Transform]] = None,
         arrowprops: Optional[dict[str, Any]] = None,
         annotation_clip: Optional[bool] = None,
+        avoid_overlap: Optional[bool] = None,
         **kwargs: Any,
     ) -> Union[mtext.Annotation, "CurvedText"]:
         """
         Add an annotation. If `xy` is a pair of 1D arrays, draw curved text.
 
         For curved input with `arrowprops`, the arrow points to the curve center.
+
+        Parameters
+        ----------
+        avoid_overlap : bool, default: :rc:`text.align`
+            Whether to automatically nudge this annotation at draw time so it
+            does not overlap other auto-aligned text or the plotted data. See
+            `~ultraplot.axes.Axes.auto_align_text`.
         """
         curve_xy = self._coerce_curve_xy_from_xy_arg(xy)
         if curve_xy is None:
-            return super().annotate(
+            obj = super().annotate(
                 text,
                 xy=xy,
                 xytext=xytext,
@@ -4243,6 +4383,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 annotation_clip=annotation_clip,
                 **kwargs,
             )
+            return self._register_align_text(obj, avoid_overlap)
 
         x_curve, y_curve = curve_xy
         try:
