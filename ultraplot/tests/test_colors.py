@@ -54,9 +54,7 @@ def test_discrete_colormap_expands_scalar_color(N, expected_size):
 
 def test_discrete_colormap_resizing_preserves_alpha_override():
     """Alpha replacement is applied to every color after cycling the input."""
-    cmap = pcolors.DiscreteColormap(
-        [(1, 0, 0, 0.2), (0, 0, 1, 0.8)], N=3, alpha=0.5
-    )
+    cmap = pcolors.DiscreteColormap([(1, 0, 0, 0.2), (0, 0, 1, 0.8)], N=3, alpha=0.5)
 
     assert [mcolors.to_hex(color, keep_alpha=True) for color in cmap.colors] == [
         "#ff000080",
