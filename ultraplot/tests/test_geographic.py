@@ -99,6 +99,12 @@ def test_geo_abcanchor_slot_above_axes():
 def test_geo_abcanchor_slot_horizontal_locations(abcloc, label_fraction, box_fraction):
     pytest.importorskip("cartopy")
     fig, ax = uplt.subplots(ncols=2, proj="cyl", figsize=(8, 3), share=False)
+    axes = ax[0]
+    if box_fraction == 0.5:
+        # Fixed-aspect axes are centered in their slot by default, making the
+        # axes and slot centers identical. Shift the active axes west so this
+        # case can distinguish the two coordinate boxes.
+        axes.set_anchor("W")
     ax.format(
         abc=True,
         abcloc=abcloc,
@@ -108,7 +114,6 @@ def test_geo_abcanchor_slot_horizontal_locations(abcloc, label_fraction, box_fra
     )
     fig.canvas.draw()
 
-    axes = ax[0]
     label = axes._title_dict["abc"]
     slot = axes.get_subplotspec().get_position(fig).transformed(fig.transFigure)
     active = axes.get_position().transformed(fig.transFigure)
