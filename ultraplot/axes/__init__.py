@@ -40,6 +40,8 @@ __all__ = [
 # NOTE: We integrate with cartopy and basemap rather than using matplotlib's
 # native projection system. Therefore axes names are not part of public API.
 _cls_dict = {}  # track valid names
+
+
 def _refresh_cls_table():
     global _cls_table
     _cls_table = "\n".join(
