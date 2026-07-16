@@ -17,6 +17,7 @@ Various colormap classes and colormap normalization classes.
 # colors or truncate colors. So we translate the relevant ListedColormaps to
 # LinearSegmentedColormaps for consistency. See :rc:`cmap.listedthresh`
 import functools
+import itertools
 import json
 import os
 import re
@@ -1715,6 +1716,20 @@ class DiscreteColormap(mcolors.ListedColormap, _Colormap):
         string += "})"
         return string
 
+    @property
+    def monochrome(self):
+        """Whether every color is identical, normalized to a Python boolean."""
+        if hasattr(self, "_monochrome"):
+            return self._monochrome
+        try:
+            return bool(super().monochrome)
+        except AttributeError:
+            return False
+
+    @monochrome.setter
+    def monochrome(self, value):
+        self._monochrome = bool(value)
+
     def __init__(self, colors, name=None, N=None, alpha=None, **kwargs):
         """
         Parameters
@@ -1748,7 +1763,13 @@ class DiscreteColormap(mcolors.ListedColormap, _Colormap):
         # identical monochromatic ListedColormaps when it receives scalar colors.
         N = _not_none(N, len(colors))
         name = _not_none(name, DEFAULT_NAME)
-        super().__init__(colors, name=name, N=N, **kwargs)
+        if isinstance(colors, str):
+            colors = [colors] * N
+        elif np.iterable(colors):
+            colors = list(itertools.islice(itertools.cycle(colors), N))
+        else:
+            colors = [colors] * N
+        super().__init__(colors, name=name, **kwargs)
         if alpha is not None:
             self.set_alpha(alpha)
         for i, color in enumerate(self.colors):
