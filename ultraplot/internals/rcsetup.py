@@ -1126,6 +1126,28 @@ _rc_ultraplot_table = {
         "Join style for text border strokes. Must be one of "
         "``'miter'``, ``'round'``, or ``'bevel'``.",
     ),
+    "text.align": (
+        False,
+        _validate_bool,
+        "Whether text and annotations avoid overlapping each other and the data "
+        "by default. Set to ``True`` to opt every label into the solver used by "
+        "`~ultraplot.axes.Axes.auto_align_text`.",
+    ),
+    "text.align.pad": (
+        2.0,
+        _validate_pt,
+        "Padding in points kept around auto-aligned text.",
+    ),
+    "text.align.maxiter": (
+        60,
+        _validate_int,
+        "Maximum number of relaxation iterations used to auto-align text.",
+    ),
+    "text.align.arrows": (
+        False,
+        _validate_bool,
+        "Whether auto-aligned text draws a connector back to the point it labels.",
+    ),
     "text.curved.upright": (
         True,
         _validate_bool,
