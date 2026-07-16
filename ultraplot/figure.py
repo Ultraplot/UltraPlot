@@ -6,9 +6,6 @@ The figure class used for all ultraplot figures.
 import functools
 import inspect
 import os
-from numbers import Integral
-
-from packaging import version
 
 try:
     from typing import Any, Iterable, List, Optional, Tuple, Union
@@ -17,7 +14,6 @@ except ImportError:
 
 import matplotlib.axes as maxes
 import matplotlib.figure as mfigure
-import matplotlib.gridspec as mgridspec
 import matplotlib.text as mtext
 import matplotlib.transforms as mtransforms
 import numpy as np
@@ -33,7 +29,7 @@ from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
 from .config import rc, rc_matplotlib
-from .internals.projections import finalize_projection_kwargs, resolve_projection_kwargs
+from .internals.projections import finalize_projection_kwargs
 from .internals import (
     _not_none,
     _pop_params,
@@ -45,6 +41,7 @@ from .internals import (
     labels,
     warnings,
 )
+from ._subplots import SubplotManager
 from .utils import _Crawler, units
 
 __all__ = [
@@ -1017,10 +1014,8 @@ class Figure(mfigure.Figure):
         Initialize internal state, call matplotlib's Figure.__init__,
         set up super labels, and apply initial formatting.
         """
-        self._gridspec = None
+        self._subplots = SubplotManager(self)
         self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
-        self._subplot_dict = {}
-        self._subplot_counter = 0
         self._is_adjusting = False
         self._is_authorized = False
         self._layout_initialized = False
@@ -1035,7 +1030,19 @@ class Figure(mfigure.Figure):
         with self._context_authorized():
             super().__init__(**kwargs)
 
-        # Super labels
+        self._init_super_labels()
+
+        # Apply initial formatting (ignores user-input rc_mode)
+        self.format(rc_kw=rc_kw, rc_mode=1, skip_axes=True, **kw_format)
+
+    def _init_super_labels(self):
+        """
+        Create the figure-level label artists and their style state.
+
+        NOTE: Also called by `clear`, which discards every artist on the figure and
+        sets ``_suptitle`` to None. The labels must be rebuilt there or the next
+        ``format(suptitle=...)`` raises on the missing artist.
+        """
         self._suptitle = self.text(0.5, 0.95, "", ha="center", va="bottom")
         self._supxlabel_dict = {}
         self._supylabel_dict = {}
@@ -1053,9 +1060,36 @@ class Figure(mfigure.Figure):
         d["right"] = rc["rightlabel.pad"]
         d["bottom"] = rc["bottomlabel.pad"]
         d["top"] = rc["toplabel.pad"]
+        d = self._suplabel_shared_pad = {}
+        d["left"] = rc["leftlabel.sharedpad"]
+        d["right"] = rc["rightlabel.sharedpad"]
+        d["bottom"] = rc["bottomlabel.sharedpad"]
+        d["top"] = rc["toplabel.sharedpad"]
 
-        # Apply initial formatting (ignores user-input rc_mode)
-        self.format(rc_kw=rc_kw, rc_mode=1, skip_axes=True, **kw_format)
+    @_clear_border_cache
+    def clear(self, keep_observers=False):
+        """
+        Clear the figure, discarding all subplots, panels, and figure-level labels.
+
+        Parameters
+        ----------
+        keep_observers : bool, default: False
+            Whether to retain the figure's observers, e.g. a GUI widget tracking
+            the axes.
+
+        See also
+        --------
+        matplotlib.figure.Figure.clear
+        """
+        # Matplotlib removes every axes and artist, so the ultraplot state that
+        # points at them is now dangling. Rebuild it rather than leaving the figure
+        # handing out axes it no longer owns.
+        super().clear(keep_observers=keep_observers)
+        self._subplots.reset()
+        self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
+        self._layout_initialized = False
+        self._layout_dirty = True
+        self._init_super_labels()
 
     @override
     def draw(self, renderer):
@@ -1668,46 +1702,15 @@ class Figure(mfigure.Figure):
 
     @staticmethod
     def _parse_backend(backend=None, basemap=None):
-        """
-        Handle deprecation of basemap and cartopy package.
-        """
-        # Basemap is currently being developed again so are removing the deprecation warning
-        if backend == "basemap":
-            warnings._warn_ultraplot(
-                f"{backend=} will be deprecated in next major release (v2.0). See https://github.com/Ultraplot/ultraplot/pull/243"
-            )
-        return backend
+        """Delegate to SubplotManager."""
+        return SubplotManager.parse_backend(backend, basemap)
 
-    def _parse_proj(
-        self,
-        proj=None,
-        projection=None,
-        proj_kw=None,
-        projection_kw=None,
-        backend=None,
-        basemap=None,
-        **kwargs,
-    ):
-        """
-        Translate the user-input projection into a registered matplotlib
-        axes class. Input projection can be a string, `matplotlib.axes.Axes`,
-        `cartopy.crs.Projection`, or `mpl_toolkits.basemap.Basemap`.
-        """
-        proj = _not_none(proj=proj, projection=projection, default="cartesian")
-        proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
-        backend = self._parse_backend(backend, basemap)
-        return resolve_projection_kwargs(
-            self,
-            proj,
-            proj_kw=proj_kw,
-            backend=backend,
-            kwargs=kwargs,
-        )
+    def _parse_proj(self, *args, **kwargs):
+        """Delegate to SubplotManager."""
+        return self._subplots.parse_proj(*args, **kwargs)
 
     def _wrap_external_projection(self, **kwargs):
-        """
-        Wrap non-ultraplot projection classes in an external container.
-        """
+        """Wrap non-ultraplot projection classes in an external container."""
         return finalize_projection_kwargs(self, kwargs)
 
     def _get_align_axes(self, side):
@@ -1717,7 +1720,7 @@ class Figure(mfigure.Figure):
         For 'left'/'right': select one extreme axis per row (leftmost/rightmost).
         For 'top'/'bottom': select one extreme axis per column (topmost/bottommost).
         """
-        axs = tuple(self._subplot_dict.values())
+        axs = tuple(self._iter_subplots())
         if not axs:
             return []
         if side not in ("left", "right", "top", "bottom"):
@@ -1725,7 +1728,7 @@ class Figure(mfigure.Figure):
         from .utils import _get_subplot_layout
 
         grid = _get_subplot_layout(
-            self._gridspec, list(self._iter_axes(panels=False, hidden=False))
+            self.gridspec, list(self._iter_axes(panels=False, hidden=False))
         )[0]
         # From the @side we find the first non-zero
         # entry in each row or column and collect the axes
@@ -1886,7 +1889,15 @@ class Figure(mfigure.Figure):
         return pos, ax
 
     def _get_offset_coord(
-        self, side, axs, renderer, *, pad=None, extra=None, include_subset_titles=True
+        self,
+        side,
+        axs,
+        renderer,
+        *,
+        pad=None,
+        extra=None,
+        include_subset_titles=True,
+        exclude_spanning_axis_labels=False,
     ):
         """
         Return the figure coordinate for offsetting super labels and super titles.
@@ -1900,12 +1911,25 @@ class Figure(mfigure.Figure):
         )  # noqa: E501
         objs = objs + (extra or ())  # e.g. top super labels
         for obj in objs:
+            # Spanning axis labels reserve space with whitespace placeholders.
+            # When aligning figure-level side labels, those placeholders must not
+            # count as content; otherwise the side labels are incorrectly placed
+            # outside the spanning label.
+            label = None
+            if exclude_spanning_axis_labels and isinstance(obj, paxes.Axes):
+                axis = obj.yaxis if side in ("left", "right") else obj.xaxis
+                label = axis.label
+                visible = label.get_visible()
+                if label.get_text() and not label.get_text().strip():
+                    label.set_visible(False)
             if isinstance(obj, paxes.Axes):
                 bbox = obj.get_tightbbox(
                     renderer, include_subset_titles=include_subset_titles
                 )
             else:
                 bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
+            if label is not None:
+                label.set_visible(visible)
             attr = s + "max" if side in ("top", "right") else s + "min"
             c = getattr(bbox, attr)
             c = (c, 0) if side in ("left", "right") else (0, c)
@@ -2134,101 +2158,8 @@ class Figure(mfigure.Figure):
 
     @_clear_border_cache
     def _add_subplot(self, *args, **kwargs):
-        """
-        The driver function for adding single subplots.
-        """
-        self._layout_dirty = True
-        # Parse arguments
-        kwargs = self._parse_proj(**kwargs)
-
-        args = args or (1, 1, 1)
-        gs = self.gridspec
-
-        # Integer arg
-        if len(args) == 1 and isinstance(args[0], Integral):
-            if not 111 <= args[0] <= 999:
-                raise ValueError(f"Input {args[0]} must fall between 111 and 999.")
-            args = tuple(map(int, str(args[0])))
-
-        # Subplot spec
-        if len(args) == 1 and isinstance(
-            args[0], (maxes.SubplotBase, mgridspec.SubplotSpec)
-        ):
-            ss = args[0]
-            if isinstance(ss, maxes.SubplotBase):
-                ss = ss.get_subplotspec()
-            if gs is None:
-                gs = ss.get_topmost_subplotspec().get_gridspec()
-            if not isinstance(gs, pgridspec.GridSpec):
-                raise ValueError(
-                    "Input subplotspec must be derived from a ultraplot.GridSpec."
-                )
-            if ss.get_topmost_subplotspec().get_gridspec() is not gs:
-                raise ValueError(
-                    "Input subplotspec must be derived from the active figure gridspec."
-                )
-
-        # Row and column spec
-        # TODO: How to pass spacing parameters to gridspec? Consider overriding
-        # subplots adjust? Or require using gridspec manually?
-        elif (
-            len(args) == 3
-            and all(isinstance(arg, Integral) for arg in args[:2])
-            and all(isinstance(arg, Integral) for arg in np.atleast_1d(args[2]))
-        ):
-            nrows, ncols, num = args
-            i, j = np.resize(num, 2)
-            if gs is None:
-                gs = pgridspec.GridSpec(nrows, ncols)
-            orows, ocols = gs.get_geometry()
-            if orows % nrows:
-                raise ValueError(
-                    f"The input number of rows {nrows} does not divide the "
-                    f"figure gridspec number of rows {orows}."
-                )
-            if ocols % ncols:
-                raise ValueError(
-                    f"The input number of columns {ncols} does not divide the "
-                    f"figure gridspec number of columns {ocols}."
-                )
-            if any(_ < 1 or _ > nrows * ncols for _ in (i, j)):
-                raise ValueError(
-                    "The input subplot indices must fall between "
-                    f"1 and {nrows * ncols}. Instead got {i} and {j}."
-                )
-            rowfact, colfact = orows // nrows, ocols // ncols
-            irow, icol = divmod(i - 1, ncols)  # convert to zero-based
-            jrow, jcol = divmod(j - 1, ncols)
-            irow, icol = irow * rowfact, icol * colfact
-            jrow, jcol = (jrow + 1) * rowfact - 1, (jcol + 1) * colfact - 1
-            ss = gs[irow : jrow + 1, icol : jcol + 1]
-
-        # Otherwise
-        else:
-            raise ValueError(f"Invalid add_subplot positional arguments {args!r}.")
-
-        # Add the subplot
-        # NOTE: Pass subplotspec as keyword arg for mpl >= 3.4 workaround
-        # NOTE: Must assign unique label to each subplot or else subsequent calls
-        # to add_subplot() in mpl < 3.4 may return an already-drawn subplot in the
-        # wrong location due to gridspec override. Is against OO package design.
-        self.gridspec = gs  # trigger layout adjustment
-        self._subplot_counter += 1  # unique label for each subplot
-        kwargs.setdefault("label", f"subplot_{self._subplot_counter}")
-        kwargs.setdefault("number", 1 + max(self._subplot_dict, default=0))
-        kwargs.pop("refwidth", None)  # TODO: remove this
-
-        # Remove _subplot_spec from kwargs if present to prevent it from being passed
-        # to .set() or other methods that don't accept it.
-        kwargs.pop("_subplot_spec", None)
-
-        # Pass only the SubplotSpec as a positional argument
-        # Don't pass _subplot_spec as a keyword argument to avoid it being
-        # propagated to Axes.set() or other methods that don't accept it
-        ax = super().add_subplot(ss, **kwargs)
-        if ax.number:
-            self._subplot_dict[ax.number] = ax
-        return ax
+        """Delegate to SubplotManager."""
+        return self._subplots.add_subplot(*args, **kwargs)
 
     def _unshare_axes(self):
 
@@ -2309,125 +2240,9 @@ class Figure(mfigure.Figure):
                     else:
                         ref._shared_axes[which].join(ref, other)
 
-    def _add_subplots(
-        self,
-        array=None,
-        nrows=1,
-        ncols=1,
-        order="C",
-        proj=None,
-        projection=None,
-        proj_kw=None,
-        projection_kw=None,
-        backend=None,
-        basemap=None,
-        **kwargs,
-    ):
-        """
-        The driver function for adding multiple subplots.
-        """
-
-        # Clunky helper function
-        # TODO: Consider deprecating and asking users to use add_subplot()
-        def _axes_dict(naxs, input, kw=False, default=None):
-            # First build up dictionary
-            if not kw:  # 'string' or {1: 'string1', (2, 3): 'string2'}
-                if np.iterable(input) and not isinstance(input, (str, dict)):
-                    input = {num + 1: item for num, item in enumerate(input)}
-                elif not isinstance(input, dict):
-                    input = {range(1, naxs + 1): input}
-            else:  # {key: value} or {1: {key: value1}, (2, 3): {key: value2}}
-                nested = [isinstance(_, dict) for _ in input.values()]
-                if not any(nested):  # any([]) == False
-                    input = {range(1, naxs + 1): input.copy()}
-                elif not all(nested):
-                    raise ValueError(f"Invalid input {input!r}.")
-            # Unfurl keys that contain multiple axes numbers
-            output = {}
-            for nums, item in input.items():
-                nums = np.atleast_1d(nums)
-                for num in nums.flat:
-                    output[num] = item.copy() if kw else item
-            # Fill with default values
-            for num in range(1, naxs + 1):
-                if num not in output:
-                    output[num] = {} if kw else default
-            if output.keys() != set(range(1, naxs + 1)):
-                raise ValueError(
-                    f"Have {naxs} axes, but {input!r} includes props for the axes: "
-                    + ", ".join(map(repr, sorted(output)))
-                    + "."
-                )
-            return output
-
-        # Build the subplot array
-        # NOTE: Currently this may ignore user-input nrows/ncols without warning
-        if order not in ("C", "F"):  # better error message
-            raise ValueError(f"Invalid order={order!r}. Options are 'C' or 'F'.")
-        gs = None
-        if array is None or isinstance(array, mgridspec.GridSpec):
-            if array is not None:
-                gs, nrows, ncols = array, array.nrows, array.ncols
-            array = np.arange(1, nrows * ncols + 1)[..., None]
-            array = array.reshape((nrows, ncols), order=order)
-        else:
-            array = np.atleast_1d(array)
-            array[array == None] = 0  # None or 0 both valid placeholders  # noqa: E711
-            array = array.astype(int)
-            if array.ndim == 1:  # interpret as single row or column
-                array = array[None, :] if order == "C" else array[:, None]
-            elif array.ndim != 2:
-                raise ValueError(f"Expected 1D or 2D array of integers. Got {array}.")
-
-        # Parse input format, gridspec, and projection arguments
-        # NOTE: Permit figure format keywords for e.g. 'collabels' (more intuitive)
-        nums = np.unique(array[array != 0])
-        naxs = len(nums)
-        if any(num < 0 or not isinstance(num, Integral) for num in nums.flat):
-            raise ValueError(f"Expected array of positive integers. Got {array}.")
-        proj = _not_none(projection=projection, proj=proj)
-        proj = _axes_dict(naxs, proj, kw=False, default="cartesian")
-        proj_kw = _not_none(projection_kw=projection_kw, proj_kw=proj_kw) or {}
-        proj_kw = _axes_dict(naxs, proj_kw, kw=True)
-        backend = self._parse_backend(backend, basemap)
-        backend = _axes_dict(naxs, backend, kw=False)
-        axes_kw = {
-            num: {"proj": proj[num], "proj_kw": proj_kw[num], "backend": backend[num]}
-            for num in proj
-        }
-        for key in ("gridspec_kw", "subplot_kw"):
-            kw = kwargs.pop(key, None)
-            if not kw:
-                continue
-            warnings._warn_ultraplot(
-                f"{key!r} is not necessary in ultraplot. Pass the "
-                "parameters as keyword arguments instead."
-            )
-            kwargs.update(kw or {})
-        figure_kw = _pop_params(kwargs, self._format_signature)
-        gridspec_kw = _pop_params(kwargs, pgridspec.GridSpec._update_params)
-
-        # Create or update the gridspec and add subplots with subplotspecs
-        # NOTE: The gridspec is added to the figure when we pass the subplotspec
-        if gs is None:
-            if "layout_array" not in gridspec_kw:
-                gridspec_kw = {**gridspec_kw, "layout_array": array}
-            gs = pgridspec.GridSpec(*array.shape, **gridspec_kw)
-        else:
-            gs.update(**gridspec_kw)
-        axs = naxs * [None]  # list of axes
-        axids = [np.where(array == i) for i in np.sort(np.unique(array)) if i > 0]
-        axcols = np.array([[x.min(), x.max()] for _, x in axids])
-        axrows = np.array([[y.min(), y.max()] for y, _ in axids])
-        for idx in range(naxs):
-            num = idx + 1
-            x0, x1 = axcols[idx, 0], axcols[idx, 1]
-            y0, y1 = axrows[idx, 0], axrows[idx, 1]
-            ss = gs[y0 : y1 + 1, x0 : x1 + 1]
-            kw = {**kwargs, **axes_kw[num], "number": num}
-            axs[idx] = self.add_subplot(ss, **kw)
-        self.format(skip_axes=True, **figure_kw)
-        return pgridspec.SubplotGrid(axs)
+    def _add_subplots(self, *args, **kwargs):
+        """Delegate to SubplotManager."""
+        return self._subplots.add_subplots(*args, **kwargs)
 
     def _align_axis_label(self, x):
         """
@@ -2439,7 +2254,7 @@ class Figure(mfigure.Figure):
         seen = set()
         span = getattr(self, "_span" + x)
         align = getattr(self, "_align" + x)
-        for ax in self._subplot_dict.values():
+        for ax in self._iter_subplots():
             if isinstance(ax, paxes.CartesianAxes):
                 ax._apply_axis_sharing()  # always!
             else:
@@ -2688,18 +2503,73 @@ class Figure(mfigure.Figure):
         Adjust the position of super labels.
         """
         # NOTE: Ensure title is offset only here.
-        for ax in self._subplot_dict.values():
+        for ax in self._iter_subplots():
             ax._apply_title_above()
         if side not in ("left", "right", "bottom", "top"):
             raise ValueError(f"Invalid side {side!r}.")
         labs = self._suplabel_dict[side]
         axs = tuple(ax for ax, lab in labs.items() if lab.get_text())
         if not axs:
+            self._align_spanning_axis_labels(side, renderer, ())
             return
-        c = self._get_offset_coord(side, axs, renderer)
+        c = self._get_offset_coord(
+            side, axs, renderer, exclude_spanning_axis_labels=True
+        )
         for lab in labs.values():
             s = "x" if side in ("left", "right") else "y"
             lab.update({s: c})
+        self._align_spanning_axis_labels(side, renderer, tuple(labs.values()))
+
+    def _align_spanning_axis_labels(self, side, renderer, side_labels):
+        """
+        Place spanning axis labels outside figure-level labels on the same side.
+
+        Figure-level side labels describe individual rows or columns, while a
+        spanning axis label describes the whole group. The latter therefore has
+        lower visual priority and belongs farther from the axes.
+        """
+        labels = (
+            self._supylabel_dict if side in ("left", "right") else self._supxlabel_dict
+        )
+        side_labels = tuple(label for label in side_labels if label.get_text())
+        if not labels:
+            return
+        pad = self._suplabel_shared_pad[side]
+        for ax, label in labels.items():
+            axis = ax.yaxis if side in ("left", "right") else ax.xaxis
+            if axis.get_label_position() != side:
+                continue
+            axis_label = axis.label
+            old_offset = getattr(axis_label, "_ultraplot_spanning_offset", 0)
+            size = self.bbox.width if side in ("left", "right") else self.bbox.height
+            old_offset_px = old_offset * size
+            if not side_labels or not label.get_text():
+                if old_offset:
+                    axis_label._ultraplot_spanning_offset = 0
+                    coord = axis_label.get_position()
+                    getattr(
+                        axis_label, "set_" + ("x" if side in ("left", "right") else "y")
+                    )(coord[0 if side in ("left", "right") else 1] - old_offset_px)
+                continue
+            bbox = label.get_window_extent(renderer)
+            if side == "left":
+                edge = min(lab.get_window_extent(renderer).xmin for lab in side_labels)
+                delta = edge - pad - bbox.xmax
+                setter, coord = axis_label.set_x, axis_label.get_position()[0]
+            elif side == "right":
+                edge = max(lab.get_window_extent(renderer).xmax for lab in side_labels)
+                delta = edge + pad - bbox.xmin
+                setter, coord = axis_label.set_x, axis_label.get_position()[0]
+            elif side == "bottom":
+                edge = min(lab.get_window_extent(renderer).ymin for lab in side_labels)
+                delta = edge - pad - bbox.ymax
+                setter, coord = axis_label.set_y, axis_label.get_position()[1]
+            else:
+                edge = max(lab.get_window_extent(renderer).ymax for lab in side_labels)
+                delta = edge + pad - bbox.ymin
+                setter, coord = axis_label.set_y, axis_label.get_position()[1]
+            axis_label._ultraplot_spanning_offset = old_offset + delta / size
+            setter(coord - old_offset_px)
 
     def _align_super_title(self, renderer):
         """
@@ -2984,24 +2854,29 @@ class Figure(mfigure.Figure):
             axis = getattr(ax, x + "axis")
             axis.label.set_text(space)
 
-        # Update spanning label position then add simple monkey patch
-        # NOTE: Simply using axis._update_label_position() when this is
-        # called is not sufficient. Fails with e.g. inline backend.
-        t = mtransforms.IdentityTransform()  # set in pixels
+        # Update spanning label position then add simple monkey patch.
+        # Axis-label positions are expressed in display pixels, but spanning
+        # labels are figure artists. Store their position in figure coordinates
+        # so it remains correct when saving at a DPI different from the canvas
+        # DPI (e.g. ``savefig(dpi=1000)``).
         cx, cy = axlab.get_position()
         if x == "x":
-            trans = mtransforms.blended_transform_factory(self.transFigure, t)
-            coord = (c, cy)
+            coord = (c, self.transFigure.inverted().transform((0, cy))[1])
         else:
-            trans = mtransforms.blended_transform_factory(t, self.transFigure)
-            coord = (cx, c)
-        suplab.set_transform(trans)
+            coord = (self.transFigure.inverted().transform((cx, 0))[0], c)
+        suplab.set_transform(self.transFigure)
         suplab.set_position(coord)
         setpos = getattr(mtext.Text, "set_" + y)
 
         def _set_coord(self, *args, **kwargs):  # noqa: E306
+            offset = getattr(self, "_ultraplot_spanning_offset", 0)
+            size = self.figure.bbox.width if x == "y" else self.figure.bbox.height
+            args = (args[0] + offset * size, *args[1:])
             setpos(self, *args, **kwargs)
-            setpos(suplab, *args, **kwargs)
+            coord = self.figure.transFigure.inverted().transform(
+                (args[0], 0) if x == "y" else (0, args[0])
+            )
+            setpos(suplab, coord[0 if x == "y" else 1], *args[1:], **kwargs)
 
         setattr(axlab, "set_" + y, _set_coord.__get__(axlab))
 
@@ -3496,8 +3371,10 @@ class Figure(mfigure.Figure):
 
         Important
         ---------
-        `leftlabelpad`, `toplabelpad`, `rightlabelpad`, and `bottomlabelpad`
-        keywords are actually :ref:`configuration settings <ug_config>`.
+        `leftlabelpad`, `leftlabelsharedpad`, `toplabelpad`,
+        `toplabelsharedpad`, `rightlabelpad`, `rightlabelsharedpad`,
+        `bottomlabelpad`, and `bottomlabelsharedpad` keywords are actually
+        :ref:`configuration settings <ug_config>`.
         We explicitly document these arguments here because it is common to
         change them for specific figures. But many :ref:`other configuration
         settings <ug_format>` can be passed to ``format`` too.
@@ -3521,7 +3398,7 @@ class Figure(mfigure.Figure):
         """
         self._layout_dirty = True
         # Initiate context block
-        axs = axs or self._subplot_dict.values()
+        axs = axs or self._iter_subplots()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         explicit_format_keys = set(kwargs)
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
@@ -3544,6 +3421,9 @@ class Figure(mfigure.Figure):
                 pad = rc.find(side + "label.pad", context=True)
                 if pad is not None:
                     self._suplabel_pad[side] = pad
+                pad = rc.find(side + "label.sharedpad", context=True)
+                if pad is not None:
+                    self._suplabel_shared_pad[side] = pad
             if includepanels is not None:
                 self._includepanels = includepanels
 
@@ -4235,7 +4115,7 @@ class Figure(mfigure.Figure):
             raise ValueError(f"Invalid sides {panels!r}.")
         # Iterate
         axs = (
-            *self._subplot_dict.values(),
+            *self._iter_subplots(),
             *(ax for side in panels for ax in self._panel_dict[side]),
         )
         for ax in axs:
@@ -4255,14 +4135,19 @@ class Figure(mfigure.Figure):
         ultraplot.gridspec.GridSpec.figure
         ultraplot.gridspec.SubplotGrid.gridspec
         """
-        return self._gridspec
+        return self._subplots.gridspec
 
     @gridspec.setter
     def gridspec(self, gs):
-        if not isinstance(gs, pgridspec.GridSpec):
-            raise ValueError("Gridspec must be a ultraplot.GridSpec instance.")
-        self._gridspec = gs
-        gs.figure = self  # trigger copying settings from the figure
+        self._subplots.gridspec = gs
+
+    def _get_subplot(self, number: int):
+        """Return the subplot with the given *number*, or ``None``."""
+        return self._subplots.subplot_dict.get(number, None)
+
+    def _iter_subplots(self):
+        """Iterate over all numbered subplots."""
+        return self._subplots.subplot_dict.values()
 
     @property
     def subplotgrid(self):
@@ -4275,7 +4160,7 @@ class Figure(mfigure.Figure):
         ultraplot.figure.Figure.gridspec
         ultraplot.gridspec.SubplotGrid.figure
         """
-        return pgridspec.SubplotGrid([s for _, s in sorted(self._subplot_dict.items())])
+        return self._subplots.subplotgrid
 
     @property
     def tight(self):

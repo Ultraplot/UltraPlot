@@ -97,8 +97,11 @@ def _prefixed_projection_name(name):
     return prefixed
 
 
-def _container_projection_name(external_axes_class):
-    token = f"{external_axes_class.__module__}_{external_axes_class.__name__}"
+def _container_projection_name(external_axes_class, projection=None):
+    if isinstance(projection, str):
+        token = projection
+    else:
+        token = f"{external_axes_class.__module__}_{external_axes_class.__name__}"
     return "_ultraplot_container_" + token.replace(".", "_").replace("-", "_").lower()
 
 
@@ -136,7 +139,7 @@ def _wrap_external_projection(figure, projection):
 
     from ..axes.container import create_external_axes_container
 
-    container_name = _container_projection_name(external_axes_class)
+    container_name = _container_projection_name(external_axes_class, projection)
     if container_name not in mproj.get_projection_names():
         container_class = create_external_axes_container(
             external_axes_class, projection_name=container_name
