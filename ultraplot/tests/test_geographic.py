@@ -7,13 +7,33 @@ import pytest
 import ultraplot as uplt
 
 
-def test_geo_format_aspect():
+@pytest.mark.parametrize(
+    ("aspect", "expected"),
+    (("auto", "auto"), ("equal", 1.0), (2.0, 2.0)),
+)
+def test_geo_format_aspect(aspect, expected):
     pytest.importorskip("cartopy")
     fig, ax = uplt.subplots(proj="cyl")
 
-    ax.format(aspect="auto")
+    ax.format(aspect=aspect)
 
-    assert ax[0].get_aspect() == "auto"
+    assert ax[0].get_aspect() == expected
+    uplt.close(fig)
+
+
+def test_geo_abcanchor_validation_and_reset():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(proj="cyl")
+    axes = ax[0]
+
+    assert axes._abc_anchor == "axes"
+    axes.format(abcanchor="slot")
+    assert axes._abc_anchor == "slot"
+    axes.format(abcanchor="axes")
+    assert axes._abc_anchor == "axes"
+    with pytest.raises(ValueError, match="Invalid abcanchor='figure'"):
+        axes.format(abcanchor="figure")
+    assert axes._abc_anchor == "axes"
     uplt.close(fig)
 
 
@@ -36,6 +56,11 @@ def test_geo_abcanchor_slot():
     bbox = label.get_window_extent(fig.canvas.get_renderer())
     assert bbox.x0 < active.x0
     assert abs(bbox.x0 - slot.x0) < abs(bbox.x0 - active.x0)
+
+    first_bounds = bbox.bounds
+    fig.canvas.draw()
+    second_bounds = label.get_window_extent(fig.canvas.get_renderer()).bounds
+    np.testing.assert_allclose(second_bounds, first_bounds)
     uplt.close(fig)
 
 
@@ -58,6 +83,94 @@ def test_geo_abcanchor_slot_above_axes():
     bbox = label.get_window_extent(fig.canvas.get_renderer())
     assert bbox.y0 > active.y1
     assert abs(bbox.y0 - slot.y1) < abs(bbox.y0 - active.y1)
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize(
+    ("abcloc", "label_fraction", "box_fraction"),
+    (
+        ("upper left", 0.0, 0.0),
+        ("upper center", 0.5, 0.5),
+        ("upper right", 1.0, 1.0),
+        ("outer left", 1.0, 0.0),
+        ("outer right", 0.0, 1.0),
+    ),
+)
+def test_geo_abcanchor_slot_horizontal_locations(abcloc, label_fraction, box_fraction):
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(ncols=2, proj="cyl", figsize=(8, 3), share=False)
+    ax.format(
+        abc=True,
+        abcloc=abcloc,
+        abcanchor="slot",
+        lonlim=(0, 1),
+        latlim=(0, 1),
+    )
+    fig.canvas.draw()
+
+    axes = ax[0]
+    label = axes._title_dict["abc"]
+    slot = axes.get_subplotspec().get_position(fig).transformed(fig.transFigure)
+    active = axes.get_position().transformed(fig.transFigure)
+    bbox = label.get_window_extent(fig.canvas.get_renderer())
+    label_position = bbox.x0 + label_fraction * bbox.width
+    slot_position = slot.x0 + box_fraction * slot.width
+    active_position = active.x0 + box_fraction * active.width
+    assert abs(label_position - slot_position) < abs(label_position - active_position)
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize(
+    ("abcloc", "label_edge", "slot_edge", "active_edge"),
+    (
+        ("left", "y0", "y1", "y1"),
+        ("upper center", "y1", "y1", "y1"),
+        ("lower center", "y0", "y0", "y0"),
+    ),
+)
+def test_geo_abcanchor_slot_vertical_locations(
+    abcloc, label_edge, slot_edge, active_edge
+):
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(nrows=2, proj="cyl", figsize=(3, 8), share=False)
+    ax.format(
+        abc=True,
+        abcloc=abcloc,
+        abcanchor="slot",
+        lonlim=(0, 1),
+        latlim=(0, 1),
+    )
+    fig.canvas.draw()
+
+    axes = ax[0]
+    label = axes._title_dict["abc"]
+    slot = axes.get_subplotspec().get_position(fig).transformed(fig.transFigure)
+    active = axes.get_position().transformed(fig.transFigure)
+    bbox = label.get_window_extent(fig.canvas.get_renderer())
+    label_position = getattr(bbox, label_edge)
+    assert abs(label_position - getattr(slot, slot_edge)) < abs(
+        label_position - getattr(active, active_edge)
+    )
+    uplt.close(fig)
+
+
+def test_geo_abcanchor_axes_keeps_label_on_active_axes():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(ncols=2, proj="cyl", figsize=(8, 3), share=False)
+    ax.format(
+        abc=True,
+        abcloc="upper left",
+        lonlim=(0, 1),
+        latlim=(0, 1),
+    )
+    fig.canvas.draw()
+
+    axes = ax[0]
+    label = axes._title_dict["abc"]
+    slot = axes.get_subplotspec().get_position(fig).transformed(fig.transFigure)
+    active = axes.get_position().transformed(fig.transFigure)
+    bbox = label.get_window_extent(fig.canvas.get_renderer())
+    assert abs(bbox.x0 - active.x0) < abs(bbox.x0 - slot.x0)
     uplt.close(fig)
 
 
