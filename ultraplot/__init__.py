@@ -101,6 +101,7 @@ if TYPE_CHECKING:
     from .scale import SineLatitudeScale as SineLatitudeScale
     from .scale import SymmetricalLogScale as SymmetricalLogScale
     from .text import CurvedText as CurvedText
+    from .textalign import align_text as align_text
     from .ultralayout import ColorbarLayoutSolver as ColorbarLayoutSolver
     from .ultralayout import compute_ultra_positions as compute_ultra_positions
     from .ultralayout import get_grid_positions_ultra as get_grid_positions_ultra
