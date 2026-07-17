@@ -928,6 +928,8 @@ def test_figure_keyword_aliases() -> None:
     assert uplt.figure(ref=3)._refnum == 3
     assert uplt.figure(refnum=2)._refnum == 2
     assert uplt.figure()._refnum == 1
+    # An explicit None must still collapse to the default of 1 (as _not_none did).
+    assert uplt.figure(refnum=None)._refnum == 1
 
     # width/height -> figwidth/figheight.
     np.testing.assert_allclose(uplt.figure(width=6, height=3).get_size_inches(), (6, 3))

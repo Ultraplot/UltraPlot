@@ -62,6 +62,10 @@ def _alias_kwargs(**aliases):
     with a synonym (or two synonyms) warns and keeps the canonical / first value,
     matching the precedence and warning of `_not_none`. This replaces the repetitive
     ``x = _not_none(x=x, y=y)`` boilerplate at the top of aliased functions.
+
+    This handles keyword aliases only: a canonical argument passed *positionally*
+    is not deduplicated against its synonyms, and a synonym must not shadow a
+    different real parameter of the wrapped function.
     """
     # Map each synonym to its canonical name; synonyms are tried in declared order
     # so the first non-``None`` one wins, exactly like `_not_none`.
@@ -79,9 +83,11 @@ def _alias_kwargs(**aliases):
                 if kwargs.get(canon) is None:
                     kwargs[canon] = value
                 else:
+                    # ``canon`` already holds an earlier value (from the canonical
+                    # keyword or a prior synonym); keep it and drop this synonym.
                     warnings._warn_ultraplot(
-                        f"Got conflicting or duplicate keyword arguments "
-                        f"{canon!r} and alias {syn!r}. Using {canon!r}."
+                        f"Got conflicting or duplicate values for {canon!r} "
+                        f"(ignoring alias {syn!r}). Using the first value."
                     )
             return func(*args, **kwargs)
 

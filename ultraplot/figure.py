@@ -736,7 +736,7 @@ class Figure(mfigure.Figure):
     def __init__(
         self,
         *,
-        refnum=1,
+        refnum=None,
         refaspect=None,
         refwidth=None,
         refheight=None,
@@ -792,9 +792,12 @@ class Figure(mfigure.Figure):
         ultraplot.ui.subplots
         matplotlib.figure.Figure
         """
-        # Initialize sections
         # NOTE: Keyword aliases (ref, aspect, axwidth, axheight, width, height) are
-        # folded into their canonical names by the @_alias_kwargs decorator.
+        # folded into their canonical names by the @_alias_kwargs decorator. Only
+        # refnum keeps an explicit default, so an omitted or None value maps to 1.
+        refnum = _not_none(refnum, default=1)
+
+        # Initialize sections
         figwidth, figheight = self._init_figure_size(
             refnum, refaspect, refwidth, refheight, figwidth, figheight, journal
         )
