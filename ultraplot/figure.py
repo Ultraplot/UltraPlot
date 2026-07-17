@@ -30,6 +30,7 @@ from . import gridspec as pgridspec
 from . import legend as plegend
 from .config import rc, rc_matplotlib
 from .internals import (
+    _alias_kwargs,
     _not_none,
     _pop_params,
     _pop_rc,
@@ -724,21 +725,23 @@ class Figure(mfigure.Figure):
     @warnings._rename_kwargs(
         "0.7.0", axpad="innerpad", autoformat="uplt.rc.autoformat = {}"
     )
+    @_alias_kwargs(
+        refnum=("ref",),
+        refaspect=("aspect",),
+        refwidth=("axwidth",),
+        refheight=("axheight",),
+        figwidth=("width",),
+        figheight=("height",),
+    )
     def __init__(
         self,
         *,
-        refnum=None,
-        ref=None,
+        refnum=1,
         refaspect=None,
-        aspect=None,
         refwidth=None,
         refheight=None,
-        axwidth=None,
-        axheight=None,
         figwidth=None,
         figheight=None,
-        width=None,
-        height=None,
         journal=None,
         sharex=None,
         sharey=None,
@@ -789,15 +792,9 @@ class Figure(mfigure.Figure):
         ultraplot.ui.subplots
         matplotlib.figure.Figure
         """
-        # Resolve aliases
-        refnum = _not_none(refnum=refnum, ref=ref, default=1)
-        refaspect = _not_none(refaspect=refaspect, aspect=aspect)
-        refwidth = _not_none(refwidth=refwidth, axwidth=axwidth)
-        refheight = _not_none(refheight=refheight, axheight=axheight)
-        figwidth = _not_none(figwidth=figwidth, width=width)
-        figheight = _not_none(figheight=figheight, height=height)
-
         # Initialize sections
+        # NOTE: Keyword aliases (ref, aspect, axwidth, axheight, width, height) are
+        # folded into their canonical names by the @_alias_kwargs decorator.
         figwidth, figheight = self._init_figure_size(
             refnum, refaspect, refwidth, refheight, figwidth, figheight, journal
         )
