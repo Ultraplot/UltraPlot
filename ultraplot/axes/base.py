@@ -977,6 +977,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         self._active_cycle = rc["axes.prop_cycle"]
         self._auto_format = None  # manipulated by wrapper functions
         self._abc_border_kwargs = {}
+        self._abc_anchor = "axes"
         self._abc_loc = None
         self._abc_pad = 0  # User's horizontal offset for abc label (in points)
         self._abc_title_pad = rc[
