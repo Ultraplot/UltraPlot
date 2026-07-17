@@ -218,6 +218,8 @@ def test_hawkeye_zoom_indicator_normalizes_legacy_tuple(monkeypatch) -> None:
 
     def legacy(self, inset_ax, **kwargs):
         indicator = original(self, inset_ax, **kwargs)
+        if isinstance(indicator, tuple):
+            return indicator
         return indicator.rectangle, tuple(indicator.connectors)
 
     monkeypatch.setattr(maxes.Axes, "indicate_inset_zoom", legacy)
