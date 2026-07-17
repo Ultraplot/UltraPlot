@@ -88,10 +88,8 @@ fig.format(
 )
 
 # %%
-import ultraplot as uplt
 import numpy as np
-from cartopy import crs as ccrs
-import osmnx as ox
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 data = (state.rand(20, 20) - 0.48).cumsum(axis=1).cumsum(axis=0)
@@ -212,22 +210,25 @@ ix.pcolormesh(data, cmap="Grays", levels=N, inbounds=False)
 # to retain the projection; use a square extent when the exact circular map scope is
 # important, or pass ``aspect='auto'`` to fit the exact extent with distortion.
 #
-# The following example downloads and caches `OpenStreetMap
-# <https://www.openstreetmap.org/>`__ street geometry with `OSMnx
-# <https://osmnx.readthedocs.io/>`__. Its first render requires network access. The
-# OpenStreetMap attribution must be retained when adapting this example.
+# The following dependency-free example shows a Singapore city locator on a world map.
+# The returned inset is an ordinary geographic axes, so optional geospatial libraries
+# can draw external data inside it. For example, `OSMnx <https://osmnx.readthedocs.io/>`__
+# can provide street geometry when it is installed separately:
+#
+# .. code-block:: python
+#
+#    import osmnx as ox
+#    from cartopy import crs as ccrs
+#
+#    network = ox.graph_from_point((1.3521, 103.8198), dist=8_000, network_type="drive")
+#    streets = ox.graph_to_gdfs(network, nodes=False)
+#    streets.plot(ax=inax, color="0.3", linewidth=0.4, transform=ccrs.PlateCarree())
+#
+# The data download and OpenStreetMap attribution are the responsibility of the
+# application using that optional integration.
 
 # %%
 singapore = (103.8198, 1.3521)
-ox.settings.use_cache = True
-network = ox.graph_from_point(
-    (singapore[1], singapore[0]), dist=8_000, network_type="drive"
-)
-streets = ox.graph_to_gdfs(network, nodes=False)
-major_roads = streets[
-    streets["highway"].isin(("motorway", "trunk", "primary", "secondary", "tertiary"))
-]
-minor_roads = streets.drop(index=major_roads.index).iloc[::4]
 fig, ax = uplt.subplots(proj="robin", refwidth=4)
 ax.format(land=True, landcolor="gray8", oceancolor="blue9")
 ax.plot(
@@ -253,11 +254,6 @@ inax = ax.hawkeye(
     indicator_kw={"linewidth": 1.5},
 )
 inax.format(land=True, landcolor="gray9", oceancolor="blue9")
-minor_roads.plot(
-    ax=inax, color="gray6", alpha=0.65, linewidth=0.22, transform=ccrs.PlateCarree()
-)
-major_roads.plot(ax=inax, color="white", linewidth=1.25, transform=ccrs.PlateCarree())
-major_roads.plot(ax=inax, color="gray2", linewidth=0.6, transform=ccrs.PlateCarree())
 inax.plot(
     *singapore,
     marker="o",
@@ -267,4 +263,3 @@ inax.plot(
     ms=5,
     transform="cyl",
 )
-fig.text(0.99, 0.01, "© OpenStreetMap contributors", ha="right", size=6)
