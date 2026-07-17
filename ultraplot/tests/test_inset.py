@@ -172,3 +172,47 @@ def test_hawkeye_overview_indicator():
     assert inset._hawkeye_indicator in inset.patches
     assert inset._hawkeye_indicator not in parent.patches
     uplt.close(fig)
+
+
+def test_hawkeye_indicator_disabled() -> None:
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.9, 0.9), size=0.2, extent=(120, 180, 10, 30), indicator=False
+    )
+
+    # Relation is still resolved, but no indicator artist is drawn.
+    assert inset._hawkeye_relation == "detail"
+    assert not hasattr(inset, "_hawkeye_indicator")
+    uplt.close(fig)
+
+
+def test_hawkeye_overview_leader() -> None:
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    parent = ax[0]
+    parent.set_extent((145, 155, -38, -32))
+    inset = parent.hawkeye(
+        (0.9, 0.9),
+        size=0.2,
+        extent=(110, 180, -50, 0),
+        connectors="line",
+        relation="overview",
+    )
+    fig.canvas.draw()
+
+    assert inset._hawkeye_relation == "overview"
+    assert inset._hawkeye_indicator in inset.patches
+    assert len(inset._hawkeye_connectors) == 1
+    uplt.close(fig)
+
+
+def test_hawkeye_invalid_relation_raises() -> None:
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="relation must be"):
+        ax[0].hawkeye((0.9, 0.9), size=0.2, relation="sideways")
+    uplt.close(fig)

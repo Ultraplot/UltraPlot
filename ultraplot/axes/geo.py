@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import copy
 import inspect
+from dataclasses import dataclass
 from functools import partial
 from numbers import Real
 
@@ -299,6 +300,71 @@ def _add_hawkeye_leader(
     # source point to ``inset.patch`` stops the leader at any custom inset boundary.
     target_axes.add_artist(connector)
     return connector
+
+
+@dataclass
+class _HawkeyeSpec:
+    """
+    Validated inputs for :meth:`GeoAxes.hawkeye`.
+
+    ``extent_transform`` and ``relation`` are only fully resolved when ``extent``
+    is not ``None`` (they require a geographic extent to normalize and infer);
+    otherwise they retain their raw defaults and are never consumed. ``aspect`` is
+    intentionally not stored here because ``'projection'`` can only be resolved
+    from the live inset axes (see :meth:`GeoAxes._build_hawkeye_inset`).
+    """
+
+    xy: tuple[float, float]
+    size: tuple[float, float]
+    anchor: tuple[float, float]
+    transform: Any
+    extent: Optional[tuple[float, float, float, float]]
+    extent_transform: Any
+    relation: str
+    connectors: Optional[str]
+    shape: str
+    target: str
+
+
+def _apply_hawkeye_circle_boundary(inset: "GeoAxes", aspect: str | float) -> None:
+    """Clip a hawkeye inset to a circular map boundary matching its view."""
+    if aspect != "auto":
+        _square_hawkeye_view(inset)
+    x0, x1 = inset.get_xlim()
+    y0, y1 = inset.get_ylim()
+    radius_x = (x1 - x0) / 2
+    radius_y = (y1 - y0) / 2
+    theta = np.linspace(0, 2 * np.pi, 256)
+    circle_path = mpath.Path(
+        np.column_stack(
+            (
+                (x0 + x1) / 2 + radius_x * np.cos(theta),
+                (y0 + y1) / 2 + radius_y * np.sin(theta),
+            )
+        )
+    )
+    inset.set_boundary(circle_path, transform=inset.transData)
+
+
+def _make_hawkeye_indicator_patch(
+    extent: Sequence[float], transform: Any, target: str, **kwargs: Any
+) -> mpatches.Patch:
+    """Build the outline patch (box or circle) marking a hawkeye extent."""
+    west, east, south, north = extent
+    if target == "circle":
+        return mpatches.Circle(
+            ((west + east) / 2, (south + north) / 2),
+            min(east - west, north - south) / 2,
+            transform=transform,
+            **kwargs,
+        )
+    return mpatches.Rectangle(
+        (west, south),
+        east - west,
+        north - south,
+        transform=transform,
+        **kwargs,
+    )
 
 
 # Format docstring
@@ -1391,6 +1457,40 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         """
         %(geo.hawkeye)s
         """
+        spec = self._resolve_hawkeye_spec(
+            xy,
+            size,
+            transform,
+            anchor,
+            extent,
+            extent_transform,
+            relation,
+            connectors,
+            shape,
+            target,
+        )
+        kwargs.setdefault("grid", False)
+        inset = self._build_hawkeye_inset(spec, aspect, **kwargs)
+        inset._hawkeye_relation = spec.relation
+        if indicator and spec.extent is not None:
+            color = kwargs.get("color", rc["axes.edgecolor"])
+            self._add_hawkeye_indicator(inset, spec, indicator_kw, color)
+        return inset
+
+    def _resolve_hawkeye_spec(
+        self,
+        xy: Sequence[float],
+        size: float | Sequence[float],
+        transform: Any,
+        anchor: str | Sequence[float],
+        extent: Optional[Sequence[float]],
+        extent_transform: Any,
+        relation: str,
+        connectors: bool | str,
+        shape: str,
+        target: str,
+    ) -> "_HawkeyeSpec":
+        """Validate and normalize raw hawkeye arguments into a :class:`_HawkeyeSpec`."""
         if len(xy) != 2:
             raise ValueError(f"xy must have length 2, got {xy!r}.")
         size = _parse_hawkeye_size(size)
@@ -1418,112 +1518,106 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                     "extent must be ordered as (west, east, south, north) with "
                     "west < east and south < north."
                 )
+            extent = tuple(extent)
             extent_transform = _parse_hawkeye_extent_transform(extent_transform)
             if relation == "auto":
                 relation = _infer_hawkeye_relation(
                     self.get_extent(crs=extent_transform), extent
                 )
-        kwargs.setdefault("grid", False)
-        inset = self._add_inset_axes((0, 0, *size), transform="axes", **kwargs)
+        return _HawkeyeSpec(
+            xy=tuple(xy),
+            size=size,
+            anchor=anchor,
+            transform=transform,
+            extent=extent,
+            extent_transform=extent_transform,
+            relation=relation,
+            connectors=connectors,
+            shape=shape,
+            target=target,
+        )
+
+    def _build_hawkeye_inset(
+        self, spec: "_HawkeyeSpec", aspect: str | float, **kwargs: Any
+    ) -> "GeoAxes":
+        """Create the inset axes and configure its extent, aspect, and boundary."""
+        inset = self._add_inset_axes((0, 0, *spec.size), transform="axes", **kwargs)
         # Hawkeyes may intentionally extend outside their parent axes. They must not
         # claim that space when the figure performs automatic layout.
         inset.set_in_layout(False)
-        if extent is not None:
-            if isinstance(extent_transform, ccrs.PlateCarree) and np.allclose(
-                extent, (-180, 180, -90, 90)
+        if spec.extent is not None:
+            if isinstance(spec.extent_transform, ccrs.PlateCarree) and np.allclose(
+                spec.extent, (-180, 180, -90, 90)
             ):
                 inset.set_global()
             else:
-                inset.set_extent(extent, crs=extent_transform)
+                inset.set_extent(spec.extent, crs=spec.extent_transform)
         if aspect == "projection":
             aspect = inset.get_aspect()
         inset.set_aspect(aspect)
-        inset.set_anchor(anchor)
+        inset.set_anchor(spec.anchor)
         inset.set_axes_locator(
             _AnchoredInsetLocator(
                 self,
-                xy,
-                size,
-                transform,
-                anchor,
-                square=shape == "circle",
+                spec.xy,
+                spec.size,
+                spec.transform,
+                spec.anchor,
+                square=spec.shape == "circle",
             )
         )
-        if shape == "circle":
-            if aspect != "auto":
-                _square_hawkeye_view(inset)
-            x0, x1 = inset.get_xlim()
-            y0, y1 = inset.get_ylim()
-            radius_x = (x1 - x0) / 2
-            radius_y = (y1 - y0) / 2
-            theta = np.linspace(0, 2 * np.pi, 256)
-            circle_path = mpath.Path(
-                np.column_stack(
-                    (
-                        (x0 + x1) / 2 + radius_x * np.cos(theta),
-                        (y0 + y1) / 2 + radius_y * np.sin(theta),
-                    )
-                )
-            )
-            inset.set_boundary(circle_path, transform=inset.transData)
-        inset._hawkeye_relation = relation
-        if indicator and extent is not None:
-            indicator_kw = dict(indicator_kw or {})
-            indicator_kw.setdefault(
-                "edgecolor", kwargs.get("color", rc["axes.edgecolor"])
-            )
-            indicator_kw.setdefault("facecolor", "none")
-            indicator_kw.setdefault("linewidth", rc["axes.linewidth"])
-            indicator_kw.setdefault("zorder", 3.5)
-            if connectors == "corners" and relation == "detail":
-                inset._hawkeye_indicator = maxes.Axes.indicate_inset_zoom(
-                    self, inset, **indicator_kw
-                )
-            else:
-                outline_axes = self if relation == "detail" else inset
-                outline_extent = (
-                    extent
-                    if relation == "detail"
-                    else self.get_extent(crs=extent_transform)
-                )
-                west, east, south, north = outline_extent
-                if target == "circle":
-                    patch = mpatches.Circle(
-                        ((west + east) / 2, (south + north) / 2),
-                        min(east - west, north - south) / 2,
-                        transform=extent_transform,
-                        **indicator_kw,
-                    )
-                else:
-                    patch = mpatches.Rectangle(
-                        (west, south),
-                        east - west,
-                        north - south,
-                        transform=extent_transform,
-                        **indicator_kw,
-                    )
-                outline_axes.add_patch(patch)
-                inset._hawkeye_indicator = patch
-                if connectors == "corners":
-                    inset._hawkeye_connectors = _add_hawkeye_overview_connectors(
-                        self,
-                        inset,
-                        outline_extent,
-                        extent_transform,
-                        **indicator_kw,
-                    )
-                elif connectors == "line":
-                    inset._hawkeye_connectors = (
-                        _add_hawkeye_leader(
-                            inset,
-                            outline_axes,
-                            ((west + east) / 2, (south + north) / 2),
-                            extent_transform,
-                            target_patch=patch,
-                            **indicator_kw,
-                        ),
-                    )
+        if spec.shape == "circle":
+            _apply_hawkeye_circle_boundary(inset, aspect)
         return inset
+
+    def _add_hawkeye_indicator(
+        self,
+        inset: "GeoAxes",
+        spec: "_HawkeyeSpec",
+        indicator_kw: Optional[Mapping[str, Any]],
+        color: Any,
+    ) -> None:
+        """Draw the extent indicator patch and any connectors onto the hawkeye."""
+        indicator_kw = dict(indicator_kw or {})
+        indicator_kw.setdefault("edgecolor", color)
+        indicator_kw.setdefault("facecolor", "none")
+        indicator_kw.setdefault("linewidth", rc["axes.linewidth"])
+        indicator_kw.setdefault("zorder", 3.5)
+        if spec.connectors == "corners" and spec.relation == "detail":
+            # matplotlib's indicate_inset_zoom always draws a box outline, so
+            # ``spec.target`` cannot be honored here; the box/circle guard in
+            # _resolve_hawkeye_spec rejects target='circle' with corner connectors.
+            inset._hawkeye_indicator = maxes.Axes.indicate_inset_zoom(
+                self, inset, **indicator_kw
+            )
+            return
+        outline_axes = self if spec.relation == "detail" else inset
+        outline_extent = (
+            spec.extent
+            if spec.relation == "detail"
+            else self.get_extent(crs=spec.extent_transform)
+        )
+        patch = _make_hawkeye_indicator_patch(
+            outline_extent, spec.extent_transform, spec.target, **indicator_kw
+        )
+        outline_axes.add_patch(patch)
+        inset._hawkeye_indicator = patch
+        if spec.connectors == "corners":
+            inset._hawkeye_connectors = _add_hawkeye_overview_connectors(
+                self, inset, outline_extent, spec.extent_transform, **indicator_kw
+            )
+        elif spec.connectors == "line":
+            west, east, south, north = outline_extent
+            inset._hawkeye_connectors = (
+                _add_hawkeye_leader(
+                    inset,
+                    outline_axes,
+                    ((west + east) / 2, (south + north) / 2),
+                    spec.extent_transform,
+                    target_patch=patch,
+                    **indicator_kw,
+                ),
+            )
 
     @override
     def _sharey_limits(self, sharey: "GeoAxes") -> None:
