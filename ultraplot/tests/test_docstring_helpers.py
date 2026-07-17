@@ -17,6 +17,17 @@ def test_style_snippets_lead_with_canonical_name() -> None:
     assert "lw, linewidth, linewidths :" not in line
 
 
+def test_collection_snippets_lead_with_registry_canonical_names() -> None:
+    for name in ("artist.collection_pcolor", "artist.collection_contour"):
+        snippet = docstring._snippet_manager[name]
+        assert snippet.lstrip().startswith("linewidths : unit-spec")
+        assert "\nlinestyles : str" in snippet
+        assert "\nedgecolors : color-spec" in snippet
+        assert "Aliases: ``lw``, ``linewidth``." in snippet
+        assert "Aliases: ``ls``, ``linestyle``." in snippet
+        assert "Aliases: ``ec``, ``edgecolor``." in snippet
+
+
 def test_contour_alpha_alias_typo_fixed() -> None:
     # Previously the contour snippet listed ``a, alpha, alpha`` (duplicate typo).
     contour = docstring._snippet_manager["artist.collection_contour"]
@@ -46,5 +57,7 @@ def test_geo_format_folds_alias_entries() -> None:
     geo = docstring._snippet_manager["geo.format"]
     assert "Aliases for" not in geo
     assert "lonlocator, latlocator : locator-spec" in geo
-    assert "Aliases: ``lonlines``, ``latlines``." in geo
-    assert "Aliases: ``lonminorlines_kw``, ``latminorlines_kw``." in geo
+    assert "Aliases: ``lonlines`` and ``latlines``, respectively." in geo
+    assert (
+        "Aliases: ``lonminorlines_kw`` and ``latminorlines_kw``, respectively." in geo
+    )

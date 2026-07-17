@@ -216,28 +216,28 @@ alpha : float, optional
     The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. {_aliases_note("a", "alphas")}
 """
 _pcolor_collection_docstring = f"""
-linewidth : unit-spec, default: 0.3
-    The width of lines between grid boxes. {_aliases_note("lw", "linewidths")}
+linewidths : unit-spec, default: 0.3
+    The width of lines between grid boxes. {_aliases_note("lw", "linewidth")}
     %(units.pt)s
-linestyle : str, default: '-'
-    The style of lines between grid boxes. {_aliases_note("ls", "linestyles")}
-edgecolor : color-spec, default: 'k'
-    The color of lines between grid boxes. {_aliases_note("ec", "edgecolors")}
+linestyles : str, default: '-'
+    The style of lines between grid boxes. {_aliases_note("ls", "linestyle")}
+edgecolors : color-spec, default: 'k'
+    The color of lines between grid boxes. {_aliases_note("ec", "edgecolor")}
 alpha : float, optional
     The opacity of the grid boxes. Inferred from `cmap` by default. {_aliases_note("a", "alphas")}
 """
 _contour_collection_docstring = f"""
-linewidth : unit-spec, default: 0.3 or :rc:`lines.linewidth`
+linewidths : unit-spec, default: 0.3 or :rc:`lines.linewidth`
     The width of the line contours. Default is ``0.3`` when adding to filled contours
-    or :rc:`lines.linewidth` otherwise. {_aliases_note("lw", "linewidths")} %(units.pt)s
-linestyle : str, default: '-' or :rc:`contour.negative_linestyle`
+    or :rc:`lines.linewidth` otherwise. {_aliases_note("lw", "linewidth")} %(units.pt)s
+linestyles : str, default: '-' or :rc:`contour.negative_linestyle`
     The style of the line contours. Default is ``'-'`` for positive contours and
-    :rcraw:`contour.negative_linestyle` for negative contours. {_aliases_note("ls", "linestyles")}
-edgecolor : color-spec, default: 'k' or inferred
+    :rcraw:`contour.negative_linestyle` for negative contours. {_aliases_note("ls", "linestyle")}
+edgecolors : color-spec, default: 'k' or inferred
     The color of the line contours. Default is ``'k'`` when adding to filled contours
-    or inferred from `color` or `cmap` otherwise. {_aliases_note("ec", "edgecolors")}
+    or inferred from `color` or `cmap` otherwise. {_aliases_note("ec", "edgecolor")}
 alpha : float, optional
-    The opacity of the contours. Inferred from `edgecolor` by default. {_aliases_note("a", "alphas")}
+    The opacity of the contours. Inferred from `edgecolors` by default. {_aliases_note("a", "alphas")}
 """
 _text_docstring = f"""
 fontfamily : str, optional
