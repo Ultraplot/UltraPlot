@@ -86,6 +86,32 @@ def test_hawkeye_extent_and_connectors():
     uplt.close(fig)
 
 
+def test_hawkeye_corner_connectors_envelop_inset() -> None:
+    pytest.importorskip("cartopy.crs")
+
+    # Inset lower-left, indicator extent upper-right: the enveloping pair is the
+    # upper-left and lower-right connectors (indices 1 and 2), not a parallel pair.
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.03, 0.03), size=0.2, anchor="ll", extent=(110, 160, -45, 0), connectors=True
+    )
+    fig.canvas.draw()
+    visible = [bool(c.get_visible()) for c in inset._hawkeye_indicator.connectors]
+    assert visible == [False, True, True, False]
+    uplt.close(fig)
+
+    # Opposite diagonal (inset upper-left, extent lower-right): the enveloping pair
+    # is the lower-left and upper-right connectors (indices 0 and 3).
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.03, 0.97), size=0.2, anchor="ul", extent=(60, 110, -60, -20), connectors=True
+    )
+    fig.canvas.draw()
+    visible = [bool(c.get_visible()) for c in inset._hawkeye_indicator.connectors]
+    assert visible == [True, False, False, True]
+    uplt.close(fig)
+
+
 def test_hawkeye_auto_relation_handles_disjoint_detail_extent():
     pytest.importorskip("cartopy.crs")
 

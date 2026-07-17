@@ -317,6 +317,45 @@ def _add_hawkeye_zoom_indicator(parent: "GeoAxes", inset: "GeoAxes", **kwargs: A
     return indicator
 
 
+def _select_enveloping_connectors(indicator, inset: "GeoAxes", renderer=None) -> None:
+    """Show the two zoom connectors that wrap around the inset (outer tangents).
+
+    The visible pair is chosen from the sign of the inset-to-indicator centre
+    offset: a diagonally opposite pair envelops the inset, whereas a same-side
+    pair would run parallel and cross the frustum.
+    """
+    connectors = indicator.connectors
+    if not connectors:
+        return
+    rect_bbox = indicator.rectangle.get_window_extent(renderer)
+    inset_bbox = inset.get_window_extent(renderer)
+    dx = (inset_bbox.x0 + inset_bbox.x1) - (rect_bbox.x0 + rect_bbox.x1)
+    dy = (inset_bbox.y0 + inset_bbox.y1) - (rect_bbox.y0 + rect_bbox.y1)
+    # Connector order is (lower-left, upper-left, lower-right, upper-right).
+    visible = (1, 2) if dx * dy >= 0 else (0, 3)
+    for index, connector in enumerate(connectors):
+        connector.set_visible(index in visible)
+
+
+def _envelop_hawkeye_zoom_connectors(indicator, inset: "GeoAxes") -> None:
+    """Reassert the enveloping connector pair on every draw.
+
+    matplotlib fixes connector visibility once, from a bounding-box rule that can
+    pick a parallel pair for a diagonally placed inset. The inset position is only
+    final at draw time, so recompute the enveloping pair from a draw hook: on
+    matplotlib >= 3.10 the ``InsetIndicator`` resolves its connectors in its own
+    ``draw``, while the legacy wrapper draws its rectangle before the connectors.
+    """
+    draw_host = indicator if hasattr(indicator, "draw") else indicator.rectangle
+    original_draw = draw_host.draw
+
+    def draw(renderer, *args, **kwargs):
+        _select_enveloping_connectors(indicator, inset, renderer)
+        return original_draw(renderer, *args, **kwargs)
+
+    draw_host.draw = draw
+
+
 @dataclass
 class _HawkeyeSpec:
     """
@@ -1602,9 +1641,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             # matplotlib's indicate_inset_zoom always draws a box outline, so
             # ``spec.target`` cannot be honored here; the box/circle guard in
             # _resolve_hawkeye_spec rejects target='circle' with corner connectors.
-            inset._hawkeye_indicator = _add_hawkeye_zoom_indicator(
-                self, inset, **indicator_kw
-            )
+            indicator = _add_hawkeye_zoom_indicator(self, inset, **indicator_kw)
+            _envelop_hawkeye_zoom_connectors(indicator, inset)
+            inset._hawkeye_indicator = indicator
             return
         outline_axes = self if spec.relation == "detail" else inset
         outline_extent = (
