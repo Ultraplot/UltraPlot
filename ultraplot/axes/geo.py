@@ -121,10 +121,9 @@ latmax : float, default: 80
 nsteps : int, default: :rc:`grid.nsteps`
     *For cartopy axes only.*
     The number of interpolation steps used to draw gridlines.
-lonlines, latlines : optional
-    Aliases for `lonlocator`, `latlocator`.
 lonlocator, latlocator : locator-spec, optional
     Used to determine the longitude and latitude gridline locations.
+    Aliases: ``lonlines``, ``latlines``.
     Passed to the `~ultraplot.constructor.Locator` constructor. Can be
     string, float, list of float, or `matplotlib.ticker.Locator` instance.
 
@@ -134,16 +133,15 @@ lonlocator, latlocator : locator-spec, optional
     For cartopy >= 0.18, the defaults are ``'dmslon'`` and ``'dmslat'``,
     which uses the same locators with ``dms=True``. This selects gridlines
     at nice degree-minute-second intervals when the map extent is very small.
-lonlines_kw, latlines_kw : optional
-    Aliases for `lonlocator_kw`, `latlocator_kw`.
 lonlocator_kw, latlocator_kw : dict-like, optional
     Keyword arguments passed to the `matplotlib.ticker.Locator` class.
-lonminorlocator, latminorlocator, lonminorlines, latminorlines : optional
+    Aliases: ``lonlines_kw``, ``latlines_kw``.
+lonminorlocator, latminorlocator : optional
     As with `lonlocator` and `latlocator` but for the "minor" gridlines.
-lonminorlines_kw, latminorlines_kw : optional
-    Aliases for `lonminorlocator_kw`, `latminorlocator_kw`.
+    Aliases: ``lonminorlines``, ``latminorlines``.
 lonminorlocator_kw, latminorlocator_kw : optional
     As with `lonlocator_kw`, and `latlocator_kw` but for the "minor" gridlines.
+    Aliases: ``lonminorlines_kw``, ``latminorlines_kw``.
 lonlabels, latlabels, labels : str, bool, or sequence, :rc:`grid.labels`
     Whether to add non-inline longitude and latitude gridline labels, and on
     which sides of the map. Use the keyword `labels` to set both at once. The

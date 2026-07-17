@@ -38,3 +38,13 @@ def test_method_docstring_fully_substituted() -> None:
     assert "linewidth : unit-spec" in doc
     assert "Aliases: ``lw``" in doc
     assert "%(artist" not in doc
+
+
+def test_geo_format_folds_alias_entries() -> None:
+    # The geo format docstring folded its standalone "Aliases for ..." blocks
+    # into trailing notes on the canonical locator entries.
+    geo = docstring._snippet_manager["geo.format"]
+    assert "Aliases for" not in geo
+    assert "lonlocator, latlocator : locator-spec" in geo
+    assert "Aliases: ``lonlines``, ``latlines``." in geo
+    assert "Aliases: ``lonminorlines_kw``, ``latminorlines_kw``." in geo
