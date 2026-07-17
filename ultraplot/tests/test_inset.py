@@ -77,7 +77,7 @@ def test_hawkeye_extent_and_connectors():
         (0.9, 0.9),
         size=0.2,
         extent=(120, 180, 10, 30),
-        connectors=True,
+        connector=True,
     )
     fig.canvas.draw()
 
@@ -93,7 +93,7 @@ def test_hawkeye_corner_connectors_envelop_inset() -> None:
     # upper-left and lower-right connectors (indices 1 and 2), not a parallel pair.
     fig, ax = uplt.subplots(proj="cyl")
     inset = ax[0].hawkeye(
-        (0.03, 0.03), size=0.2, anchor="ll", extent=(110, 160, -45, 0), connectors=True
+        (0.03, 0.03), size=0.2, anchor="ll", extent=(110, 160, -45, 0), connector=True
     )
     fig.canvas.draw()
     visible = [bool(c.get_visible()) for c in inset._hawkeye_indicator.connectors]
@@ -104,7 +104,7 @@ def test_hawkeye_corner_connectors_envelop_inset() -> None:
     # is the lower-left and upper-right connectors (indices 0 and 3).
     fig, ax = uplt.subplots(proj="cyl")
     inset = ax[0].hawkeye(
-        (0.03, 0.97), size=0.2, anchor="ul", extent=(60, 110, -60, -20), connectors=True
+        (0.03, 0.97), size=0.2, anchor="ul", extent=(60, 110, -60, -20), connector=True
     )
     fig.canvas.draw()
     visible = [bool(c.get_visible()) for c in inset._hawkeye_indicator.connectors]
@@ -128,7 +128,7 @@ def test_hawkeye_connectors_require_extent():
 
     fig, ax = uplt.subplots(proj="cyl")
     with pytest.raises(ValueError, match="requires extent"):
-        ax[0].hawkeye((0.9, 0.9), size=0.2, connectors=True)
+        ax[0].hawkeye((0.9, 0.9), size=0.2, connector=True)
     uplt.close(fig)
 
 
@@ -140,7 +140,7 @@ def test_hawkeye_circular_cutout_and_leader():
         (0.9, 0.9),
         size=0.2,
         extent=(120, 180, 10, 30),
-        connectors="line",
+        connector="line",
         shape="circle",
         target="circle",
     )
@@ -174,7 +174,7 @@ def test_hawkeye_overview_connectors():
         (0.9, 0.9),
         size=0.2,
         extent=(110, 180, -50, 0),
-        connectors=True,
+        connector=True,
     )
     fig.canvas.draw()
 
@@ -251,7 +251,7 @@ def test_hawkeye_overview_leader() -> None:
         (0.9, 0.9),
         size=0.2,
         extent=(110, 180, -50, 0),
-        connectors="line",
+        connector="line",
         relation="overview",
     )
     fig.canvas.draw()

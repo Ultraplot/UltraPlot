@@ -165,15 +165,15 @@ def _parse_hawkeye_extent_transform(transform):
     raise ValueError("extent_transform must be 'map' or a cartopy CRS.")
 
 
-def _parse_hawkeye_connectors(connectors):
+def _parse_hawkeye_connector(connector):
     """Normalize connector shorthand to a named presentation mode."""
-    if connectors is False:
+    if connector is False:
         return None
-    if connectors is True:
+    if connector is True:
         return "corners"
-    if connectors in ("corners", "line"):
-        return connectors
-    raise ValueError("connectors must be False, True, 'corners', or 'line'.")
+    if connector in ("corners", "line"):
+        return connector
+    raise ValueError("connector must be False, True, 'corners', or 'line'.")
 
 
 def _parse_hawkeye_shape(value, name):
@@ -375,7 +375,7 @@ class _HawkeyeSpec:
     extent: Optional[tuple[float, float, float, float]]
     extent_transform: Any
     relation: str
-    connectors: Optional[str]
+    connector: Optional[str]
     shape: str
     target: str
 
@@ -617,13 +617,13 @@ relation : {'auto', 'detail', 'overview'}, default: 'auto'
     where the extent outline and connectors are drawn.
 indicator : bool, default: True
     Whether to outline *extent* on the parent map when an extent is supplied.
-connectors : {False, True, 'corners', 'line'}, default: False
+connector : {False, True, 'corners', 'line'}, default: False
     The connector presentation. ``True`` and ``'corners'`` draw corner links between
     the extent outline and inset. ``'line'`` draws one leader from the inset boundary
     to the target centre. Requires *extent*.
 shape, target : {'box', 'circle'}, default: 'box'
     The inset clipping shape and target marker shape. Circular targets require
-    ``connectors='line'`` or no connectors.
+    ``connector='line'`` or no connector.
 indicator_kw : dict-like, optional
     Patch properties for the extent outline and connector lines.
 
@@ -1502,7 +1502,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         extent_transform: Any = "map",
         relation: str = "auto",
         indicator: bool = True,
-        connectors: bool | str = False,
+        connector: bool | str = False,
         shape: str = "box",
         target: str = "box",
         indicator_kw: Optional[Mapping[str, Any]] = None,
@@ -1519,7 +1519,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             extent,
             extent_transform,
             relation,
-            connectors,
+            connector,
             shape,
             target,
         )
@@ -1540,7 +1540,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         extent: Optional[Sequence[float]],
         extent_transform: Any,
         relation: str,
-        connectors: bool | str,
+        connector: bool | str,
         shape: str,
         target: str,
     ) -> "_HawkeyeSpec":
@@ -1550,13 +1550,13 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         size = _parse_hawkeye_size(size)
         anchor = _parse_hawkeye_anchor(anchor)
         transform = self._get_transform(transform, default="axes")
-        connectors = _parse_hawkeye_connectors(connectors)
+        connector = _parse_hawkeye_connector(connector)
         shape = _parse_hawkeye_shape(shape, "shape")
         target = _parse_hawkeye_shape(target, "target")
-        if connectors and extent is None:
-            raise ValueError("connectors requires extent.")
-        if connectors == "corners" and target == "circle":
-            raise ValueError("target='circle' requires connectors='line' or False.")
+        if connector and extent is None:
+            raise ValueError("connector requires extent.")
+        if connector == "corners" and target == "circle":
+            raise ValueError("target='circle' requires connector='line' or False.")
         if relation not in ("auto", "detail", "overview"):
             raise ValueError("relation must be 'auto', 'detail', or 'overview'.")
         if extent is not None:
@@ -1586,7 +1586,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             extent=extent,
             extent_transform=extent_transform,
             relation=relation,
-            connectors=connectors,
+            connector=connector,
             shape=shape,
             target=target,
         )
@@ -1637,7 +1637,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         indicator_kw.setdefault("facecolor", "none")
         indicator_kw.setdefault("linewidth", rc["axes.linewidth"])
         indicator_kw.setdefault("zorder", 3.5)
-        if spec.connectors == "corners" and spec.relation == "detail":
+        if spec.connector == "corners" and spec.relation == "detail":
             # matplotlib's indicate_inset_zoom always draws a box outline, so
             # ``spec.target`` cannot be honored here; the box/circle guard in
             # _resolve_hawkeye_spec rejects target='circle' with corner connectors.
@@ -1656,11 +1656,11 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         )
         outline_axes.add_patch(patch)
         inset._hawkeye_indicator = patch
-        if spec.connectors == "corners":
+        if spec.connector == "corners":
             inset._hawkeye_connectors = _add_hawkeye_overview_connectors(
                 self, inset, outline_extent, spec.extent_transform, **indicator_kw
             )
-        elif spec.connectors == "line":
+        elif spec.connector == "line":
             west, east, south, north = outline_extent
             inset._hawkeye_connectors = (
                 _add_hawkeye_leader(

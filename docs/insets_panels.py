@@ -249,7 +249,7 @@ inax = ax.hawkeye(
     extent=(103.76, 103.90, 1.27, 1.41),
     shape="circle",
     target="circle",
-    connectors="line",
+    connector="line",
     color="red",
     indicator_kw={"linewidth": 1.5},
 )
