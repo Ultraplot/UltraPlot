@@ -10,6 +10,7 @@ import inspect
 from dataclasses import dataclass
 from functools import partial
 from numbers import Real
+from types import SimpleNamespace
 
 try:
     # From python 3.12
@@ -300,6 +301,20 @@ def _add_hawkeye_leader(
     # source point to ``inset.patch`` stops the leader at any custom inset boundary.
     target_axes.add_artist(connector)
     return connector
+
+
+def _add_hawkeye_zoom_indicator(parent: "GeoAxes", inset: "GeoAxes", **kwargs: Any):
+    """Draw an ``indicate_inset_zoom`` marker with a version-stable return.
+
+    matplotlib >= 3.10 returns an ``InsetIndicator`` artist exposing
+    ``.rectangle`` and ``.connectors``. Earlier versions return a plain
+    ``(rectangle, connectors)`` tuple, so wrap it to expose the same accessors.
+    """
+    indicator = maxes.Axes.indicate_inset_zoom(parent, inset, **kwargs)
+    if isinstance(indicator, tuple):
+        rectangle, connectors = indicator
+        indicator = SimpleNamespace(rectangle=rectangle, connectors=connectors)
+    return indicator
 
 
 @dataclass
@@ -1587,7 +1602,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             # matplotlib's indicate_inset_zoom always draws a box outline, so
             # ``spec.target`` cannot be honored here; the box/circle guard in
             # _resolve_hawkeye_spec rejects target='circle' with corner connectors.
-            inset._hawkeye_indicator = maxes.Axes.indicate_inset_zoom(
+            inset._hawkeye_indicator = _add_hawkeye_zoom_indicator(
                 self, inset, **indicator_kw
             )
             return

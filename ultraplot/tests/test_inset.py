@@ -174,6 +174,33 @@ def test_hawkeye_overview_indicator():
     uplt.close(fig)
 
 
+def test_hawkeye_zoom_indicator_normalizes_legacy_tuple(monkeypatch) -> None:
+    """The corners+detail indicator exposes ``.connectors`` on every mpl version.
+
+    matplotlib < 3.10 returns a ``(rectangle, connectors)`` tuple from
+    ``indicate_inset_zoom`` instead of an ``InsetIndicator``; the helper must
+    normalize both to something exposing ``.rectangle`` / ``.connectors``.
+    """
+    import matplotlib.axes as maxes
+    from ultraplot.axes import geo
+
+    fig, ax = uplt.subplots()
+    inset = fig.add_axes([0.6, 0.6, 0.3, 0.3])
+
+    # Force the pre-3.10 tuple return regardless of the installed matplotlib.
+    original = maxes.Axes.indicate_inset_zoom
+
+    def legacy(self, inset_ax, **kwargs):
+        indicator = original(self, inset_ax, **kwargs)
+        return indicator.rectangle, tuple(indicator.connectors)
+
+    monkeypatch.setattr(maxes.Axes, "indicate_inset_zoom", legacy)
+    normalized = geo._add_hawkeye_zoom_indicator(ax[0], inset)
+    assert hasattr(normalized, "rectangle")
+    assert len(normalized.connectors) == 4
+    uplt.close(fig)
+
+
 def test_hawkeye_indicator_disabled() -> None:
     pytest.importorskip("cartopy.crs")
 
