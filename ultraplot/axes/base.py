@@ -750,6 +750,20 @@ class _TransformedBoundsLocator:
         return bbox
 
 
+class _AspectAwareTransformedBoundsLocator(_TransformedBoundsLocator):
+    """Preserve an inset's lower-left anchor after box-aspect adjustment."""
+
+    def __call__(self, ax, renderer):
+        bbox = super().__call__(ax, renderer)
+        aspect = ax.get_aspect()
+        if aspect == "auto" or ax.get_adjustable() != "box":
+            return bbox
+        box_aspect = float(aspect) * ax.get_data_ratio()
+        fig_bbox = ax.figure.bbox
+        fig_aspect = fig_bbox.height / fig_bbox.width
+        return bbox.shrunk_to_aspect(box_aspect, bbox, fig_aspect)
+
+
 class _SideColorbarLocator:
     """Position a side colorbar beyond its parent axes decorations."""
 
@@ -1058,8 +1072,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Add an inset axes using arbitrary projection.
         """
         # Converting transform to figure-relative coordinates
+        bounds_input = bounds
         transform = self._get_transform(transform, "axes")
-        locator = self._make_inset_locator(bounds, transform)
+        locator = self._make_inset_locator(bounds_input, transform)
         bounds = locator(self, None).bounds
         label = kwargs.pop("label", "inset_axes")
         zorder = _not_none(zorder, 4)
@@ -1077,6 +1092,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # automatically if we used data coords. Called by ax.apply_aspect()
         cls = mproj.get_projection_class(kwargs.pop("projection"))
         ax = cls(self.figure, bounds, zorder=zorder, label=label, **kwargs)
+        if ax._name in ("cartopy", "basemap"):
+            locator = _AspectAwareTransformedBoundsLocator(bounds_input, transform)
         ax.set_axes_locator(locator)
         ax._inset_parent = self
         ax._inset_bounds = bounds

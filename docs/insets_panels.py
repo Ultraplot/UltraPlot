@@ -90,6 +90,8 @@ fig.format(
 # %%
 import ultraplot as uplt
 import numpy as np
+from cartopy import crs as ccrs
+import osmnx as ox
 
 state = np.random.RandomState(51423)
 data = (state.rand(20, 20) - 0.48).cumsum(axis=1).cumsum(axis=0)
@@ -192,3 +194,77 @@ ix = ax.inset(
 )
 ix.format(xlim=(2, 4), ylim=(2, 4), color="red8", linewidth=1.5, ticklabelweight="bold")
 ix.pcolormesh(data, cmap="Grays", levels=N, inbounds=False)
+
+# %% [raw] raw_mimetype="text/restructuredtext"
+# Hawkeye map insets
+# ~~~~~~~~~~~~~~~~~~
+#
+# :class:`~ultraplot.axes.GeoAxes` adds :meth:`~ultraplot.axes.GeoAxes.hawkeye`
+# for geographic callout maps. The inset is anchored at ``xy`` in a parent coordinate
+# system, and its ``size`` is a fraction of the parent axes. Supply ``extent`` to set
+# the inset map scope and draw a matching indicator and optional connectors on the
+# parent map. Hawkeyes are excluded from automatic layout, so they can extend beyond
+# the parent axes without reserving subplot space.
+#
+# Rectangular hawkeyes preserve both the requested extent and projection scale. A
+# circular frame cannot simultaneously preserve projection scale and display an exact
+# non-square extent. Circular hawkeyes therefore expand the shorter projected dimension
+# to retain the projection; use a square extent when the exact circular map scope is
+# important, or pass ``aspect='auto'`` to fit the exact extent with distortion.
+#
+# The following example downloads and caches `OpenStreetMap
+# <https://www.openstreetmap.org/>`__ street geometry with `OSMnx
+# <https://osmnx.readthedocs.io/>`__. Its first render requires network access. The
+# OpenStreetMap attribution must be retained when adapting this example.
+
+# %%
+singapore = (103.8198, 1.3521)
+ox.settings.use_cache = True
+network = ox.graph_from_point(
+    (singapore[1], singapore[0]), dist=8_000, network_type="drive"
+)
+streets = ox.graph_to_gdfs(network, nodes=False)
+major_roads = streets[
+    streets["highway"].isin(("motorway", "trunk", "primary", "secondary", "tertiary"))
+]
+minor_roads = streets.drop(index=major_roads.index).iloc[::4]
+fig, ax = uplt.subplots(proj="robin", refwidth=4)
+ax.format(land=True, landcolor="gray8", oceancolor="blue9")
+ax.plot(
+    *singapore,
+    marker="o",
+    color="red",
+    markeredgecolor="white",
+    markeredgewidth=0.8,
+    ms=5,
+    transform="cyl",
+)
+ax.text(106, 4, "Singapore", color="red", size=7, transform="map")
+inax = ax.hawkeye(
+    (0.97, 0.97),
+    size=0.23,
+    anchor="ur",
+    proj="merc",
+    extent=(103.76, 103.90, 1.27, 1.41),
+    shape="circle",
+    target="circle",
+    connectors="line",
+    color="red",
+    indicator_kw={"linewidth": 1.5},
+)
+inax.format(land=True, landcolor="gray9", oceancolor="blue9")
+minor_roads.plot(
+    ax=inax, color="gray6", alpha=0.65, linewidth=0.22, transform=ccrs.PlateCarree()
+)
+major_roads.plot(ax=inax, color="white", linewidth=1.25, transform=ccrs.PlateCarree())
+major_roads.plot(ax=inax, color="gray2", linewidth=0.6, transform=ccrs.PlateCarree())
+inax.plot(
+    *singapore,
+    marker="o",
+    color="red",
+    markeredgecolor="white",
+    markeredgewidth=0.8,
+    ms=5,
+    transform="cyl",
+)
+fig.text(0.99, 0.01, "© OpenStreetMap contributors", ha="right", size=6)
