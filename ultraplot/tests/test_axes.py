@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 import matplotlib.patheffects as mpatheffects
 import matplotlib.text as mtext
+import matplotlib.transforms as mtransforms
 
 import ultraplot as uplt
 from ultraplot.internals.warnings import UltraPlotWarning
@@ -499,6 +500,35 @@ def test_inset_zoom_update():
     ix.format(xlim=(10, 20), ylim=(10, 30))
     ax.format(ylim=(0, 300))
     return fig
+
+
+@pytest.mark.parametrize("transform", ["figure", "axes"])
+def test_inset_axes_anchor_coordinates_transform(transform):
+    """Inset anchors may package their coordinates with a named transform."""
+    fig, ax = uplt.subplots()
+    bounds = (0.1, 0.2, 0.3, 0.4)
+    ix = ax.inset_axes((bounds, transform), zoom=False)
+    fig.canvas.draw()
+
+    expected = bounds
+    if transform == "axes":
+        expected = ax.transAxes.transform_bbox(
+            mtransforms.Bbox.from_bounds(*bounds)
+        ).transformed(fig.transFigure.inverted()).bounds
+    assert np.allclose(ix.get_position().bounds, expected)
+
+
+def test_parse_anchor_accepts_coordinates_and_transform():
+    """Separate and packaged anchor inputs resolve to the same transform."""
+    fig, ax = uplt.subplots()
+    ax = ax[0]
+    bounds = (0.1, 0.2, 0.3, 0.4)
+    coords, transform = ax._parse_anchor(bounds, "figure")
+    assert coords == bounds
+    assert transform is fig.transFigure
+    coords, transform = ax._parse_anchor((bounds, fig.transFigure))
+    assert coords == bounds
+    assert transform is fig.transFigure
 
 
 @pytest.mark.mpl_image_compare

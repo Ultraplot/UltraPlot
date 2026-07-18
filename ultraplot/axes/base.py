@@ -166,8 +166,9 @@ This is similar to `matplotlib.axes.Axes.inset_axes`.
 
 Parameters
 -----------
-bounds : 4-tuple of float
-    The (left, bottom, width, height) coordinates for the axes.
+bounds : 4-tuple of float or (4-tuple, transform)
+    The (left, bottom, width, height) coordinates for the axes. To specify the
+    coordinate system alongside the coordinates, pass ``(bounds, transform)``.
 %(axes.transform)s
     Default is to use the same projection as the current axes.
 %(axes.proj)s
@@ -1071,9 +1072,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         Add an inset axes using arbitrary projection.
         """
-        # Converting transform to figure-relative coordinates
-        bounds_input = bounds
-        transform = self._get_transform(transform, "axes")
+        # Convert coordinates to figure-relative coordinates while retaining the
+        # original bounds for aspect-aware geographic inset locators.
+        bounds_input, transform = self._parse_anchor(
+            bounds, transform, default="axes"
+        )
         locator = self._make_inset_locator(bounds_input, transform)
         bounds = locator(self, None).bounds
         label = kwargs.pop("label", "inset_axes")
@@ -1764,6 +1767,22 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             return self.figure.transSubfigure
         else:
             raise ValueError(f"Unknown transform {transform!r}.")
+
+    def _parse_anchor(self, coordinates, transform=None, default="data"):
+        """
+        Parse coordinates and their transform.
+
+        Coordinates can be passed with the transform separately or packaged as
+        a ``(coordinates, transform)`` tuple. The latter is useful for APIs
+        that accept a single anchor argument, such as ``inset_axes``.
+        """
+        if (
+            transform is None
+            and isinstance(coordinates, tuple)
+            and len(coordinates) == 2
+        ):
+            coordinates, transform = coordinates
+        return coordinates, self._get_transform(transform, default)
 
     def _register_guide(self, guide, obj, key, **kwargs):
         """
