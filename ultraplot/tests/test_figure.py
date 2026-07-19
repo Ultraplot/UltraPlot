@@ -922,6 +922,36 @@ def test_refaspect_as_tuple():
     uplt.close(fig)
 
 
+def test_figure_keyword_aliases() -> None:
+    """Figure.__init__ aliases are folded by the @_alias_kwargs decorator."""
+    # ref -> refnum, with the canonical default (1) preserved.
+    assert uplt.figure(ref=3)._refnum == 3
+    assert uplt.figure(refnum=2)._refnum == 2
+    assert uplt.figure()._refnum == 1
+    # An explicit None must still collapse to the default of 1 (as _not_none did).
+    assert uplt.figure(refnum=None)._refnum == 1
+
+    # width/height -> figwidth/figheight.
+    np.testing.assert_allclose(uplt.figure(width=6, height=3).get_size_inches(), (6, 3))
+    np.testing.assert_allclose(
+        uplt.figure(figwidth=6, figheight=3).get_size_inches(), (6, 3)
+    )
+
+    # axwidth -> refwidth still builds a laid-out figure.
+    fig, ax = uplt.subplots(axwidth=2)
+    fig.canvas.draw()
+    uplt.close("all")
+
+
+def test_figure_alias_conflict_warns() -> None:
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        fig = uplt.figure(refnum=1, ref=5)
+    assert fig._refnum == 1  # canonical wins
+    assert any("conflicting" in str(w.message).lower() for w in record)
+    uplt.close(fig)
+
+
 def test_clear_drops_subplot_state():
     """
     clear() must forget the subplots it destroyed. Otherwise the figure keeps
