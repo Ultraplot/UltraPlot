@@ -101,27 +101,41 @@ fig, axs = uplt.show_fonts(family="tex-gyre")
 # (e.g., ``'stixsans'`` or ``'dejavusans'``).
 #
 # If you want to retain UltraPlot's active alphabet and number fonts while using
-# Computer Modern for selected LaTeX-style symbols, set :rcraw:`mathtext.cm` to
-# ``True``. This routes ``\mathcal`` through ``cmsy10`` and selected large
-# operators like ``\sum``, ``\prod``, ``\coprod``, ``\int``, and ``\oint``
-# through ``cmex10``. This does not affect ordinary letters and numbers, and it
-# does not provide a Computer Modern ``\mathfrak`` font because matplotlib's
-# bundled mathtext fonts do not include one.
+# Computer Modern for selected LaTeX-style symbols, set :rcraw:`mathtext.cm_symbols`
+# to ``True``. This routes ``\mathcal`` through ``cmsy10`` and big operators like
+# ``\sum``, ``\prod``, ``\int``, ``\oint``, ``\bigcup``, and ``\bigoplus`` through
+# ``cmex10``. This does not affect ordinary letters and numbers, and it does not
+# provide a Computer Modern ``\mathfrak`` font because matplotlib's bundled
+# mathtext fonts do not include one. Note that math text is parsed when the
+# figure is *drawn*, so the setting must be active at draw time -- assign it
+# globally rather than wrapping plotting commands in a context block.
 
 # %%
 import ultraplot as uplt
 
-fig, axs = uplt.subplots(nrows=2, refwidth=6, refheight=1.4, share=False, span=False)
 expr = r"$\mathcal{ABC}\quad \sum_i x_i \quad \int_a^b f(x)\,dx$"
+fig, ax = uplt.subplots(refwidth=6, refheight=1.4)
+ax.text(0.02, 0.5, expr, transform="axes", va="center", fontsize=20)
+ax.format(
+    title="Default custom math text",
+    titleloc="left",
+    xlocator="null",
+    ylocator="null",
+)
 
-for ax, cm, title in zip(
-    axs,
-    (False, True),
-    ("Default custom math text", "Selected Computer Modern math text"),
-):
-    with uplt.rc.context({"mathtext.cm": cm}):
-        ax.text(0.02, 0.5, expr, transform="axes", va="center", fontsize=20)
-    ax.format(title=title, titleloc="left", xlocator="null", ylocator="null")
+# %%
+uplt.rc["mathtext.cm_symbols"] = True
+fig, ax = uplt.subplots(refwidth=6, refheight=1.4)
+ax.text(0.02, 0.5, expr, transform="axes", va="center", fontsize=20)
+ax.format(
+    title="Computer Modern math symbols",
+    titleloc="left",
+    xlocator="null",
+    ylocator="null",
+)
+
+# %%
+uplt.rc["mathtext.cm_symbols"] = False  # restore the default
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 #

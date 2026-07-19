@@ -16,9 +16,26 @@ except ImportError:  # older versions
 
     BakomaFonts = None
 
-# Global constant
+# Global constants
 WARN_MATHPARSER = True
-_CM_OPERATOR_SYMBOLS = frozenset((r"\sum", r"\prod", r"\coprod", r"\int", r"\oint"))
+WARN_BAKOMA = True
+_CM_SYMBOLS = frozenset(
+    (
+        r"\sum",
+        r"\prod",
+        r"\coprod",
+        r"\int",
+        r"\oint",
+        r"\bigcup",
+        r"\bigcap",
+        r"\bigvee",
+        r"\bigwedge",
+        r"\biguplus",
+        r"\bigoplus",
+        r"\bigotimes",
+        r"\bigodot",
+    )
+)
 
 
 def _is_cm_mathtext_enabled():
@@ -26,7 +43,18 @@ def _is_cm_mathtext_enabled():
         from ..config import rc
     except ImportError:
         return False
-    return bool(rc["mathtext.cm"])
+    return bool(rc["mathtext.cm_symbols"])
+
+
+def _clear_math_parse_cache():
+    # NOTE: Matplotlib caches parse results keyed on the input string and font
+    # properties only, so long-lived parsers (e.g. on agg renderers) would
+    # otherwise keep serving glyphs from the previous 'mathtext.cm_symbols'
+    # value after the setting changes.
+    cache = getattr(MathTextParser, "_parse_cached", None)
+    clear = getattr(cache, "cache_clear", None)
+    if clear is not None:
+        clear()
 
 
 class _UnicodeFonts(UnicodeFonts):
@@ -56,9 +84,24 @@ class _UnicodeFonts(UnicodeFonts):
         self._replace_fonts(regular)
 
     def _init_computer_modern_fonts(self, *args, **kwargs):
-        self._cm_font = BakomaFonts(*args, **kwargs) if BakomaFonts else None
-        if _is_cm_mathtext_enabled() and self._cm_font is not None:
-            self.fontmap["cal"] = self._cm_font.fontmap["cal"]
+        # NOTE: The rc setting is read once per instance. Instances live for a
+        # single parse, and toggling the setting clears matplotlib's parse cache.
+        global WARN_BAKOMA
+        self._cm_font = None
+        self._cm_enabled = _is_cm_mathtext_enabled()
+        if not self._cm_enabled:
+            return
+        if BakomaFonts is None:
+            if WARN_BAKOMA:
+                warnings._warn_ultraplot(
+                    "Cannot route math text symbols through Computer Modern with "
+                    "this matplotlib version. Ignoring rc['mathtext.cm_symbols']."
+                )
+                WARN_BAKOMA = False
+            self._cm_enabled = False
+            return
+        self._cm_font = BakomaFonts(*args, **kwargs)
+        self.fontmap["cal"] = self._cm_font.fontmap["cal"]
 
     def _collect_replacements(self) -> tuple[dict, dict]:
         ctx = {}  # rc context
@@ -82,6 +125,10 @@ class _UnicodeFonts(UnicodeFonts):
             font = self._fonts["regular"]  # an ft2font.FT2Font instance
             font = ttfFontProperty(font)
             for texfont, prop in regular.items():
+                # NOTE: Computer Modern calligraphic takes precedence over the
+                # 'regular' dummy value when symbol routing is enabled.
+                if texfont == "cal" and getattr(self, "_cm_enabled", False):
+                    continue
                 prop = prop.replace("regular", font.name)
                 self.fontmap[texfont] = findfont(prop, fallback_to_default=False)
         elif WARN_MATHPARSER:
@@ -89,24 +136,21 @@ class _UnicodeFonts(UnicodeFonts):
             warnings._warn_ultraplot("Failed to update the math text parser.")
             WARN_MATHPARSER = False
 
+    def _uses_cm_symbol(self, sym: str) -> bool:
+        return (
+            getattr(self, "_cm_enabled", False)
+            and getattr(self, "_cm_font", None) is not None
+            and sym in _CM_SYMBOLS
+        )
+
     def _get_glyph(self, fontname: str, font_class: str, sym: str):
-        cm_font = getattr(self, "_cm_font", None)
-        if (
-            _is_cm_mathtext_enabled()
-            and cm_font is not None
-            and sym in _CM_OPERATOR_SYMBOLS
-        ):
-            return cm_font._get_glyph(fontname, font_class, sym)
+        if self._uses_cm_symbol(sym):
+            return self._cm_font._get_glyph(fontname, font_class, sym)
         return super()._get_glyph(fontname, font_class, sym)
 
     def get_sized_alternatives_for_symbol(self, fontname: str, sym: str):
-        cm_font = getattr(self, "_cm_font", None)
-        if (
-            _is_cm_mathtext_enabled()
-            and cm_font is not None
-            and sym in _CM_OPERATOR_SYMBOLS
-        ):
-            return cm_font.get_sized_alternatives_for_symbol(fontname, sym)
+        if self._uses_cm_symbol(sym):
+            return self._cm_font.get_sized_alternatives_for_symbol(fontname, sym)
         return super().get_sized_alternatives_for_symbol(fontname, sym)
 
 
