@@ -1596,9 +1596,6 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     ) -> "GeoAxes":
         """Create the inset axes and configure its extent, aspect, and boundary."""
         inset = self._add_inset_axes((0, 0, *spec.size), transform="axes", **kwargs)
-        # Hawkeyes may intentionally extend outside their parent axes. They must not
-        # claim that space when the figure performs automatic layout.
-        inset.set_in_layout(False)
         if spec.extent is not None:
             if isinstance(spec.extent_transform, ccrs.PlateCarree) and np.allclose(
                 spec.extent, (-180, 180, -90, 90)

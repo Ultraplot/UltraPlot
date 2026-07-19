@@ -152,7 +152,7 @@ def test_hawkeye_circular_cutout_and_leader():
     assert connector.patchA is inset.patch
     assert connector.patchB is inset._hawkeye_indicator
     assert connector.axes is ax[0]
-    assert not inset.get_in_layout()
+    assert inset.get_in_layout()
     bbox = inset.get_position()
     figure_bbox = fig.bbox
     assert bbox.width * figure_bbox.width == pytest.approx(
@@ -161,6 +161,28 @@ def test_hawkeye_circular_cutout_and_leader():
     assert inset.get_aspect() == 1
     assert not inset._gridlines_major.xline_artists
     assert not inset._gridlines_major.yline_artists
+    uplt.close(fig)
+
+
+def test_hawkeye_outside_parent_claims_layout_space():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.97, 0.97),
+        size=0.25,
+        anchor="c",
+        extent=(120, 180, 10, 30),
+        shape="circle",
+        target="circle",
+    )
+    fig.canvas.draw()
+
+    # The inset protrudes past the parent axes; automatic layout must reserve
+    # space for it so it is not clipped at the figure edge.
+    bbox = inset.get_position()
+    assert bbox.x1 <= 1
+    assert bbox.y1 <= 1
     uplt.close(fig)
 
 
