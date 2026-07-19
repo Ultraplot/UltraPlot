@@ -512,9 +512,11 @@ def test_inset_axes_anchor_coordinates_transform(transform):
 
     expected = bounds
     if transform == "axes":
-        expected = ax.transAxes.transform_bbox(
-            mtransforms.Bbox.from_bounds(*bounds)
-        ).transformed(fig.transFigure.inverted()).bounds
+        expected = (
+            ax.transAxes.transform_bbox(mtransforms.Bbox.from_bounds(*bounds))
+            .transformed(fig.transFigure.inverted())
+            .bounds
+        )
     assert np.allclose(ix.get_position().bounds, expected)
 
 

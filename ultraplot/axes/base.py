@@ -1074,9 +1074,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         # Convert coordinates to figure-relative coordinates while retaining the
         # original bounds for aspect-aware geographic inset locators.
-        bounds_input, transform = self._parse_anchor(
-            bounds, transform, default="axes"
-        )
+        bounds_input, transform = self._parse_anchor(bounds, transform, default="axes")
         locator = self._make_inset_locator(bounds_input, transform)
         bounds = locator(self, None).bounds
         label = kwargs.pop("label", "inset_axes")
