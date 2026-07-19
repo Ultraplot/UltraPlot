@@ -1126,6 +1126,28 @@ _rc_ultraplot_table = {
         "Join style for text border strokes. Must be one of "
         "``'miter'``, ``'round'``, or ``'bevel'``.",
     ),
+    "text.align": (
+        False,
+        _validate_bool,
+        "Whether text and annotations avoid overlapping each other and the data "
+        "by default. Set to ``True`` to opt every label into the solver used by "
+        "`~ultraplot.axes.Axes.auto_align_text`.",
+    ),
+    "text.align.pad": (
+        2.0,
+        _validate_pt,
+        "Padding in points kept around auto-aligned text.",
+    ),
+    "text.align.maxiter": (
+        60,
+        _validate_int,
+        "Maximum number of relaxation iterations used to auto-align text.",
+    ),
+    "text.align.arrows": (
+        False,
+        _validate_bool,
+        "Whether auto-aligned text draws a connector back to the point it labels.",
+    ),
     "text.curved.upright": (
         True,
         _validate_bool,
@@ -1249,6 +1271,12 @@ _rc_ultraplot_table = {
         TITLEPAD,
         _validate_pt,
         "Padding between axes content and column labels on the bottom of the figure."
+        + _addendum_pt,
+    ),
+    "bottomlabel.sharedpad": (
+        2 * TITLEPAD,
+        _validate_pt,
+        "Padding between column labels and a shared x label on the bottom of the figure."
         + _addendum_pt,
     ),
     "bottomlabel.rotation": (
@@ -1994,6 +2022,12 @@ _rc_ultraplot_table = {
         "Padding between axes content and row labels on the left-hand side."
         + _addendum_pt,
     ),
+    "leftlabel.sharedpad": (
+        2 * TITLEPAD,
+        _validate_pt,
+        "Padding between row labels and a shared y label on the left-hand side."
+        + _addendum_pt,
+    ),
     "leftlabel.rotation": (
         "vertical",
         _validate_rotation,
@@ -2102,6 +2136,12 @@ _rc_ultraplot_table = {
         TITLEPAD,
         _validate_pt,
         "Padding between axes content and row labels on the right-hand side."
+        + _addendum_pt,
+    ),
+    "rightlabel.sharedpad": (
+        2 * TITLEPAD,
+        _validate_pt,
+        "Padding between row labels and a shared y label on the right-hand side."
         + _addendum_pt,
     ),
     "rightlabel.rotation": (
@@ -2527,6 +2567,12 @@ _rc_ultraplot_table = {
         TITLEPAD,
         _validate_pt,
         "Padding between axes content and column labels on the top of the figure."
+        + _addendum_pt,
+    ),
+    "toplabel.sharedpad": (
+        2 * TITLEPAD,
+        _validate_pt,
+        "Padding between column labels and a shared x label on the top of the figure."
         + _addendum_pt,
     ),
     "toplabel.rotation": (

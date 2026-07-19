@@ -75,6 +75,15 @@ _BASEMAP_LABEL_SIDES = ("labelleft", "labelright", "labelbottom", "labeltop", "g
 
 # Format docstring
 _format_docstring = """
+aspect : {'auto', 'equal'} or float, optional
+    The map aspect ratio. ``'auto'`` makes the map fill its subplot slot, which
+    can be useful for aligning it with neighboring Cartesian axes but distorts
+    the projection. See :func:`~matplotlib.axes.Axes.set_aspect` for details.
+abcanchor : {'axes', 'slot'}, default: 'axes'
+    The coordinate box used for the a-b-c label. ``'axes'`` attaches it to the
+    visible map boundary. ``'slot'`` attaches it to the unadjusted GridSpec
+    slot, keeping labels aligned with neighboring subplots when fixed map
+    aspect leaves empty space inside a slot.
 round : bool, default: :rc:`geo.round`
     *For polar cartopy axes only*.
     Whether to bound polar projections with circles rather than squares. Note that outer
@@ -112,10 +121,9 @@ latmax : float, default: 80
 nsteps : int, default: :rc:`grid.nsteps`
     *For cartopy axes only.*
     The number of interpolation steps used to draw gridlines.
-lonlines, latlines : optional
-    Aliases for `lonlocator`, `latlocator`.
 lonlocator, latlocator : locator-spec, optional
     Used to determine the longitude and latitude gridline locations.
+    Aliases: ``lonlines`` and ``latlines``, respectively.
     Passed to the `~ultraplot.constructor.Locator` constructor. Can be
     string, float, list of float, or `matplotlib.ticker.Locator` instance.
 
@@ -125,16 +133,15 @@ lonlocator, latlocator : locator-spec, optional
     For cartopy >= 0.18, the defaults are ``'dmslon'`` and ``'dmslat'``,
     which uses the same locators with ``dms=True``. This selects gridlines
     at nice degree-minute-second intervals when the map extent is very small.
-lonlines_kw, latlines_kw : optional
-    Aliases for `lonlocator_kw`, `latlocator_kw`.
 lonlocator_kw, latlocator_kw : dict-like, optional
     Keyword arguments passed to the `matplotlib.ticker.Locator` class.
-lonminorlocator, latminorlocator, lonminorlines, latminorlines : optional
+    Aliases: ``lonlines_kw`` and ``latlines_kw``, respectively.
+lonminorlocator, latminorlocator : optional
     As with `lonlocator` and `latlocator` but for the "minor" gridlines.
-lonminorlines_kw, latminorlines_kw : optional
-    Aliases for `lonminorlocator_kw`, `latminorlocator_kw`.
+    Aliases: ``lonminorlines`` and ``latminorlines``, respectively.
 lonminorlocator_kw, latminorlocator_kw : optional
     As with `lonlocator_kw`, and `latlocator_kw` but for the "minor" gridlines.
+    Aliases: ``lonminorlines_kw`` and ``latminorlines_kw``, respectively.
 lonlabels, latlabels, labels : str, bool, or sequence, :rc:`grid.labels`
     Whether to add non-inline longitude and latitude gridline labels, and on
     which sides of the map. Use the keyword `labels` to set both at once. The
@@ -1553,6 +1560,57 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             right=right,
         )
 
+    def _update_title_position(self, renderer: Any) -> None:
+        """Optionally anchor the a-b-c label to the unadjusted subplot slot."""
+        super()._update_title_position(renderer)
+        if self._abc_anchor != "slot":
+            return
+
+        obj = self._title_dict["abc"]
+        if not obj.get_text():
+            return
+        ss = self.get_subplotspec()
+        if ss is None:
+            return
+        fig = self.figure
+        active = self.get_position()
+        slot = ss.get_position(fig)
+        if np.allclose(active.bounds, slot.bounds):
+            return
+
+        # Preserve the physical text offset from its active-axes edge, while
+        # replacing that edge with the corresponding GridSpec-slot edge.
+        active = active.transformed(fig.transFigure)
+        slot = slot.transformed(fig.transFigure)
+        x, y = obj.get_transform().transform(obj.get_position())
+        loc = self._abc_loc
+        if loc in ("left", "upper left", "lower left", "outer left"):
+            x = slot.x0 + (x - active.x0)
+        elif loc in ("right", "upper right", "lower right", "outer right"):
+            x = slot.x1 - (active.x1 - x)
+        else:
+            x = 0.5 * (slot.x0 + slot.x1) + (x - 0.5 * (active.x0 + active.x1))
+        # Matplotlib's above-axes titles use ``va='baseline'`` despite being
+        # positioned at the top edge, so use the requested location rather
+        # than the text vertical alignment to select the reference edge.
+        if loc in (
+            "left",
+            "center",
+            "right",
+            "upper left",
+            "upper center",
+            "upper right",
+            "outer left",
+            "outer right",
+        ):
+            y = slot.y1 - (active.y1 - y)
+        elif loc in ("lower left", "lower center", "lower right"):
+            y = slot.y0 + (y - active.y0)
+        else:
+            y = 0.5 * (slot.y0 + slot.y1) + (y - 0.5 * (active.y0 + active.y1))
+        obj.set_transform(fig.transFigure)
+        obj.set_position(fig.transFigure.inverted().transform((x, y)))
+
     def _toggle_gridliner_labels(
         self,
         labeltop: bool | str | None = None,
@@ -2138,6 +2196,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     def format(
         self,
         *,
+        aspect: str | float | None = None,
+        abcanchor: str | None = None,
         extent: str | None = None,
         round: bool | None = None,
         lonlim: tuple[float | None, float | None] | None = None,
@@ -2319,6 +2379,14 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             lonticklen=lonticklen,
             latticklen=latticklen,
         )
+        if aspect is not None:
+            self.set_aspect(aspect)
+        if abcanchor is not None:
+            if abcanchor not in ("axes", "slot"):
+                raise ValueError(
+                    f"Invalid abcanchor={abcanchor!r}. Options are 'axes' and 'slot'."
+                )
+            self._abc_anchor = abcanchor
 
         # Parent format method
         super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)

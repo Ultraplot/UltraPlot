@@ -16,7 +16,7 @@ from matplotlib import legend_handler as mhandler
 from matplotlib.markers import MarkerStyle
 
 from .config import rc
-from .internals import _not_none, _pop_props, docstring, guides, rcsetup
+from .internals import _not_none, _pop_props, docstring, guides, inputs, rcsetup
 from .utils import _fontsize_to_pt, units
 
 try:
@@ -155,6 +155,30 @@ class LegendEntry(mlines.Line2D):
         Build a marker-style legend entry.
         """
         return cls(label=label, line=False, marker=marker, **kwargs)
+
+
+class _Line2DLegendHandler(mhandler.HandlerLine2D):
+    """
+    Match single-point marker plots by hiding the legend connector line.
+    """
+
+    def create_artists(self, legend, orig_handle, *args, **kwargs):
+        artists = super().create_artists(legend, orig_handle, *args, **kwargs)
+        if isinstance(orig_handle, LegendEntry):
+            return artists
+        marker = orig_handle.get_marker()
+        if marker in (None, "", "none", "None"):
+            return artists
+        try:
+            xdata = orig_handle.get_xdata(orig=False)
+            ydata = orig_handle.get_ydata(orig=False)
+        except Exception:
+            return artists
+        if len(np.atleast_1d(xdata)) <= 1 and len(np.atleast_1d(ydata)) <= 1:
+            for artist in artists:
+                if isinstance(artist, mlines.Line2D):
+                    artist.set_linestyle("None")
+        return artists
 
 
 _GEOMETRY_SHAPE_PATHS = {
@@ -937,6 +961,7 @@ _LINE_ALIAS_MAP = {
     "c": "color",
     "m": "marker",
     "ms": "markersize",
+    "markersizes": "markersize",
     "ls": "linestyle",
     "lw": "linewidth",
     "mec": "markeredgecolor",
@@ -1022,9 +1047,10 @@ _ENTRY_STYLE_FROM_COLLECTION = {
     "facecolors": "markerfacecolor",
     "linestyles": "linestyle",
     "linewidths": "markeredgewidth",
-    "sizes": "markersize",
-    "size": "markersize",
 }
+_ENTRY_AREA_SIZE_KEYS = ("s", "size", "sizes")
+_ENTRY_DIAMETER_SIZE_KEYS = ("markersize", "ms", "markersizes")
+_ENTRY_MARKERSIZE_KEYS = (*_ENTRY_AREA_SIZE_KEYS, *_ENTRY_DIAMETER_SIZE_KEYS)
 
 
 def _pop_aliases(kwargs: dict[str, Any], alias_map: dict[str, str]) -> dict[str, Any]:
@@ -1037,12 +1063,51 @@ def _pop_aliases(kwargs: dict[str, Any], alias_map: dict[str, str]) -> dict[str,
 
 
 def _pop_plurals(kwargs: dict[str, Any], plural_map: dict[str, str]) -> dict[str, Any]:
-    """Pop collection-style plurals (``colors``, ``sizes``, …) from ``kwargs``."""
+    """Pop collection-style plurals (``colors``, ``linewidths``, …)."""
     explicit = {}
     for key in plural_map:
         if key in kwargs:
             explicit[key] = kwargs.pop(key)
     return explicit
+
+
+def _area_to_markersize(value: Any) -> Any:
+    """
+    Convert area-style marker sizes to Line2D marker diameters.
+    """
+    if isinstance(value, Mapping):
+        return {key: _area_to_markersize(val) for key, val in value.items()}
+    if isinstance(value, str):
+        return units(value, "pt")
+    try:
+        if np.isscalar(value):
+            return float(np.sqrt(np.clip(value, 0, None)))
+    except TypeError:
+        return value
+    try:
+        values = list(value)
+    except TypeError:
+        return value
+    return [_area_to_markersize(val) for val in values]
+
+
+def _pop_marker_size(kwargs: dict[str, Any]) -> Any:
+    """
+    Pop marker-size aliases and return Line2D marker diameters.
+
+    Semantic legend helpers accept scatter-style ``s`` / ``size`` / ``sizes``
+    inputs as marker areas, but render handles with ``Line2D`` where
+    ``markersize`` / ``ms`` are diameters.
+    """
+    area_opts = {key: kwargs.pop(key, None) for key in _ENTRY_AREA_SIZE_KEYS}
+    diameter_opts = {key: kwargs.pop(key, None) for key in _ENTRY_DIAMETER_SIZE_KEYS}
+    diameter = _not_none(**diameter_opts)
+    if diameter is not None:
+        return diameter
+    area = _not_none(**area_opts)
+    if area is None:
+        return None
+    return _area_to_markersize(area)
 
 
 def _pop_line2d_setters(kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -1075,9 +1140,11 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
     Resolution order (highest → lowest priority):
 
     1. Full-name properties recognised by ``_pop_props(kwargs, "line")``.
-    2. Collection-style plurals (``colors`` → ``color``, ``sizes`` → ``markersize``, …).
-    3. Short aliases (``c`` → ``color``, ``ls`` → ``linestyle``, …).
-    4. Any other valid ``Line2D`` setter still in ``kwargs``.
+    2. Collection-style plurals (``colors`` → ``color``, …).
+    3. Marker-size aliases. ``s`` / ``size`` / ``sizes`` are scatter-style
+       areas converted to diameters; ``markersize`` / ``ms`` are diameters.
+    4. Short aliases (``c`` → ``color``, ``ls`` → ``linestyle``, …).
+    5. Any other valid ``Line2D`` setter still in ``kwargs``.
 
     Advanced ``MarkerStyle`` properties (``marker_capstyle``/``_joinstyle``/
     ``_transform``) are pulled out first so ``_pop_props`` does not consume
@@ -1088,17 +1155,25 @@ def _pop_entry_props(kwargs: dict[str, Any]) -> dict[str, Any]:
         if key in kwargs:
             advanced_marker[key] = kwargs.pop(key)
 
+    marker_size = _pop_marker_size(kwargs)
     resolved_aliases = _pop_aliases(kwargs, _LINE_ALIAS_MAP)
     explicit_collection = _pop_plurals(kwargs, _ENTRY_STYLE_FROM_COLLECTION)
 
-    props = _pop_props(kwargs, "line")
-    collection_props = _pop_props(kwargs, "collection")
+    props = _pop_props(kwargs, "line", skip=_ENTRY_MARKERSIZE_KEYS)
+    collection_props = _pop_props(
+        kwargs,
+        "collection",
+        skip=_ENTRY_MARKERSIZE_KEYS,
+    )
     collection_props.update(explicit_collection)
 
     for source, target in _ENTRY_STYLE_FROM_COLLECTION.items():
         value = collection_props.get(source, None)
         if value is not None and target not in props:
             props[target] = value
+
+    if marker_size is not None and "markersize" not in props:
+        props["markersize"] = marker_size
 
     for full_key, value in resolved_aliases.items():
         props.setdefault(full_key, value)
@@ -1321,6 +1396,7 @@ def _entry_legend_entries(
 def _size_legend_entries(
     levels: Iterable[float],
     *,
+    label_values=None,
     labels=None,
     color="0.35",
     marker="o",
@@ -1340,16 +1416,21 @@ def _size_legend_entries(
     values = np.asarray(list(levels), dtype=float)
     if values.size == 0:
         return [], []
+    label_values = (
+        values if label_values is None else np.asarray(label_values, dtype=float)
+    )
+    if label_values.size != values.size:
+        raise ValueError("sizelegend label values must have the same length as levels.")
     if area:
         ms = np.sqrt(np.clip(values, 0, None))
     else:
         ms = np.abs(values)
     ms = np.maximum(ms * scale, minsize)
     if labels is None:
-        label_list = [_format_label(value, fmt) for value in values]
+        label_list = [_format_label(value, fmt) for value in label_values]
     elif isinstance(labels, Mapping):
         label_list = []
-        for value in values:
+        for value in label_values:
             key = float(value)
             if key not in labels:
                 raise ValueError(
@@ -1369,13 +1450,13 @@ def _size_legend_entries(
     }
     base_styles.update(entry_kwargs)
     handles = []
-    for idx, (value, label, size) in enumerate(zip(values, label_list, ms)):
-        styles = _resolve_style_values(base_styles, float(value), idx)
+    for idx, (label_value, label, size) in enumerate(zip(label_values, label_list, ms)):
+        styles = _resolve_style_values(base_styles, float(label_value), idx)
         color_value = _style_lookup(
-            color, float(value), idx, default="0.35", prop="color"
+            color, float(label_value), idx, default="0.35", prop="color"
         )
         marker_value = _style_lookup(
-            marker, float(value), idx, default="o", prop="marker"
+            marker, float(label_value), idx, default="o", prop="marker"
         )
         line_value = bool(styles.pop("line", False))
         if line_value and marker_value in ("", None):
@@ -1393,6 +1474,70 @@ def _size_legend_entries(
             )
         )
     return handles, label_list
+
+
+def _scale_size_legend_values(
+    values,
+    *,
+    source=None,
+    vmin=None,
+    vmax=None,
+    smin=None,
+    smax=None,
+    area_size=True,
+    absolute_size=None,
+):
+    """
+    Transform semantic size values with the same rules used by scatter().
+    """
+    values = np.asarray(values, dtype=float)
+    source = values if source is None else inputs._to_numpy_array(source)
+    if absolute_size is None:
+        absolute_size = np.size(source) == 1
+    if not absolute_size or smin is not None or smax is not None:
+        smin = _not_none(smin, 1)
+        smax = _not_none(smax, rc["lines.markersize"] ** (1, 2)[area_size])
+        dmin, dmax = inputs._safe_range(source)
+        dmin = _not_none(vmin, dmin)
+        dmax = _not_none(vmax, dmax)
+        if dmin is not None and dmax is not None and dmin != dmax:
+            values = smin + (smax - smin) * (values - dmin) / (dmax - dmin)
+    areas = values ** (2, 1)[area_size]
+    return np.sqrt(np.clip(areas, 0, None))
+
+
+def _infer_size_legend_scale(axes, values):
+    """
+    Infer scatter-style size scaling from the latest compatible scatter artist.
+    """
+    values = np.asarray(values, dtype=float)
+    finite_values = values[np.isfinite(values)]
+    candidates = []
+    for artist in getattr(axes, "collections", ()):
+        metadata = getattr(artist, "_ultraplot_size_scale", None)
+        if metadata and metadata.get("values", None) is not None:
+            candidates.append(metadata)
+    if not candidates:
+        return None
+
+    def _covers(metadata):
+        if finite_values.size == 0:
+            return False
+        try:
+            dmin, dmax = inputs._safe_range(metadata["values"])
+            return (
+                dmin is not None
+                and dmax is not None
+                and np.nanmin(finite_values) >= dmin
+                and np.nanmax(finite_values) <= dmax
+            )
+        except Exception:
+            return False
+
+    compatible = [metadata for metadata in candidates if _covers(metadata)]
+    if not compatible:
+        return None
+    return dict(compatible[-1])
 
 
 def _num_legend_entries(
@@ -1549,6 +1694,7 @@ class Legend(mlegend.Legend):
         Extend matplotlib defaults with a wedge handler for pie legends.
         """
         handler_map = dict(super().get_default_handler_map())
+        handler_map[mlines.Line2D] = _Line2DLegendHandler()
         handler_map.setdefault(
             GeometryEntry,
             _GeometryEntryLegendHandler(),
@@ -1618,7 +1764,10 @@ Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
 ``marker`` / ``m``
     Marker spec. Set to ``None`` or ``""`` to suppress the marker.
 ``markersize`` / ``ms``, ``markeredgewidth`` / ``mew``
-    Marker dimensions.
+    Marker dimensions. ``markersize`` / ``ms`` denote marker diameter in points.
+``s`` / ``size`` / ``sizes``
+    Scatter-style marker areas, converted to marker diameters for the legend
+    handle. Use ``markersize`` / ``ms`` when specifying diameters directly.
 ``markerfacecolor`` / ``mfc``, ``markeredgecolor`` / ``mec``, ``markerfacecoloralt`` / ``mfcalt``
     Marker fills and edges.
 ``linestyle`` / ``ls``, ``linewidth`` / ``lw``
@@ -1629,9 +1778,10 @@ Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
 ``marker_capstyle``, ``marker_joinstyle``, ``marker_transform``
     Advanced ``MarkerStyle`` properties; wrapped into the rendered marker.
 
-Plural forms (``colors``, ``markers``, ``sizes``, ``edgecolors``,
-``facecolors``, ``linestyles``, ``linewidths``) are accepted as
-synonyms for the singular per-entry form for backward compatibility.
+Plural forms (``colors``, ``markers``, ``edgecolors``, ``facecolors``,
+``linestyles``, ``linewidths``) are accepted as synonyms for the singular
+per-entry form for backward compatibility. ``sizes`` is accepted as a
+scatter-style area alias.
 Each value accepts the scalar / sequence / mapping forms described in
 ``%(legend.semantic_style_arg)s``."""
 
@@ -1821,6 +1971,13 @@ class UltraLegend:
         color=None,
         marker=None,
         area: Optional[bool] = None,
+        values=None,
+        vmin: Optional[float] = None,
+        vmax: Optional[float] = None,
+        smin: Optional[float] = None,
+        smax: Optional[float] = None,
+        area_size: Optional[bool] = None,
+        absolute_size: Optional[bool] = None,
         scale: Optional[float] = None,
         minsize: Optional[float] = None,
         fmt=None,
@@ -1832,15 +1989,32 @@ class UltraLegend:
         Build size legend entries and optionally draw a legend.
         Public docs live on :meth:`Axes.sizelegend`.
         """
+        area_input = area
+        levels = np.asarray(list(levels), dtype=float)
+        explicit_scaled = any(
+            value is not None
+            for value in (values, vmin, vmax, smin, smax, area_size, absolute_size)
+        )
+        auto_scale = None
+        if not explicit_scaled and area_input is None:
+            auto_scale = _infer_size_legend_scale(self.axes, levels)
+        if auto_scale is not None:
+            values = auto_scale.get("values", values)
+            smin = auto_scale.get("smin", smin)
+            smax = auto_scale.get("smax", smax)
+            area_size = auto_scale.get("area_size", area_size)
+            absolute_size = auto_scale.get("absolute_size", absolute_size)
+        scaled = explicit_scaled or auto_scale is not None
+        area = _not_none(area, rc["legend.size.area"])
+        area_size = _not_none(area_size, area_input if scaled else None, True)
         styles = {}
         if handle_kw:
             styles.update(_pop_entry_props(handle_kw))
         styles.update(_pop_entry_props(kwargs))
         color = _not_none(color, styles.pop("color", None), rc["legend.size.color"])
         marker = _not_none(marker, styles.pop("marker", None), rc["legend.size.marker"])
-        area = _not_none(area, rc["legend.size.area"])
         scale = _not_none(scale, rc["legend.size.scale"])
-        minsize = _not_none(minsize, rc["legend.size.minsize"])
+        minsize = _not_none(minsize, 0.0 if scaled else rc["legend.size.minsize"])
         fmt = _not_none(fmt, rc["legend.size.format"])
         alpha = _not_none(styles.pop("alpha", None), rc["legend.size.alpha"])
         markeredgecolor = _not_none(
@@ -1850,8 +2024,23 @@ class UltraLegend:
             styles.pop("markeredgewidth", None), rc["legend.size.markeredgewidth"]
         )
         markerfacecolor = _not_none(styles.pop("markerfacecolor", None), None)
+        if scaled:
+            visual_sizes = _scale_size_legend_values(
+                levels,
+                source=values,
+                vmin=vmin,
+                vmax=vmax,
+                smin=smin,
+                smax=smax,
+                area_size=area_size,
+                absolute_size=absolute_size,
+            )
+            area = False
+        else:
+            visual_sizes = levels
         handles, labels = _size_legend_entries(
-            levels,
+            visual_sizes,
+            label_values=levels if scaled else None,
             labels=labels,
             color=color,
             marker=marker,

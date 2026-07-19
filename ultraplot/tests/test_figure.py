@@ -920,3 +920,144 @@ def test_refaspect_as_tuple():
     fig, axs = uplt.subplots(refaspect=(16, 9))
     fig.canvas.draw()
     uplt.close(fig)
+
+
+def test_figure_keyword_aliases() -> None:
+    """Figure.__init__ aliases are folded by the @_alias_kwargs decorator."""
+    # ref -> refnum, with the canonical default (1) preserved.
+    assert uplt.figure(ref=3)._refnum == 3
+    assert uplt.figure(refnum=2)._refnum == 2
+    assert uplt.figure()._refnum == 1
+    # An explicit None must still collapse to the default of 1 (as _not_none did).
+    assert uplt.figure(refnum=None)._refnum == 1
+
+    # width/height -> figwidth/figheight.
+    np.testing.assert_allclose(uplt.figure(width=6, height=3).get_size_inches(), (6, 3))
+    np.testing.assert_allclose(
+        uplt.figure(figwidth=6, figheight=3).get_size_inches(), (6, 3)
+    )
+
+    # axwidth -> refwidth still builds a laid-out figure.
+    fig, ax = uplt.subplots(axwidth=2)
+    fig.canvas.draw()
+    uplt.close("all")
+
+
+def test_figure_alias_conflict_warns() -> None:
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        fig = uplt.figure(refnum=1, ref=5)
+    assert fig._refnum == 1  # canonical wins
+    assert any("conflicting" in str(w.message).lower() for w in record)
+    uplt.close(fig)
+
+
+def test_clear_drops_subplot_state():
+    """
+    clear() must forget the subplots it destroyed. Otherwise the figure keeps
+    handing out axes that matplotlib already detached from it.
+    """
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    fig.clear()
+    assert fig.axes == []
+    assert len(fig.subplotgrid) == 0
+    assert fig._get_subplot(1) is None
+    assert list(fig._iter_subplots()) == []
+    assert fig.gridspec is None
+    uplt.close(fig)
+
+
+def test_clear_drops_panel_state():
+    """clear() also forgets figure-level panels created by e.g. fig.colorbar."""
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    m = axs[0].pcolormesh(np.arange(16).reshape(4, 4))
+    fig.colorbar(m, loc="r")
+    assert fig._panel_dict["right"]
+    fig.clear()
+    assert not any(fig._panel_dict.values())
+    assert list(fig._iter_axes(panels=True)) == []
+    uplt.close(fig)
+
+
+def test_clear_resets_subplot_numbering():
+    """
+    The label counter restarts after clear(), so a reused figure numbers its
+    subplots from 1 rather than continuing from the destroyed ones.
+    """
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    fig.clear()
+    ax = fig.add_subplot(111)
+    assert ax.number == 1
+    assert list(fig._iter_subplots()) == [ax]
+    uplt.close(fig)
+
+
+def test_clear_allows_suptitle():
+    """
+    Matplotlib's clear() sets _suptitle to None, so ultraplot must rebuild its
+    label artists or the next format(suptitle=...) raises AttributeError.
+    """
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    fig.clear()
+    fig.add_subplot(111)
+    fig.format(suptitle="after clear")
+    fig.canvas.draw()
+    assert fig._suptitle.get_text() == "after clear"
+    assert fig._suptitle in fig.texts  # detached artists never render
+    uplt.close(fig)
+
+
+def test_clf_alias_clears_subplot_state():
+    """clf() is matplotlib's alias for clear() and must reset the same state."""
+    fig, axs = uplt.subplots(nrows=1, ncols=2)
+    fig.clf()
+    assert len(fig.subplotgrid) == 0
+    assert fig.gridspec is None
+    uplt.close(fig)
+
+
+def test_figure_is_reusable_after_clear():
+    """A cleared figure can be drawn again from scratch."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2)
+    fig.canvas.draw()
+    fig.clear()
+    axs = fig.add_subplots(nrows=1, ncols=3)
+    axs[0].plot([1, 2, 3])
+    fig.canvas.draw()
+    assert len(fig.subplotgrid) == 3
+    assert fig.gridspec.get_geometry() == (1, 3)
+    uplt.close(fig)
+
+
+def test_spanning_ylabel_is_outside_leftlabels():
+    """Row labels take precedence over the shared y label in side layout."""
+    fig, axs = uplt.subplots(nrows=2, share=True, refwidth=2)
+    axs.format(ylabel="Shared y")
+    fig.format(leftlabels=("Row 1", "Row 2"), leftlabelsharedpad="20pt")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    shared = next(iter(fig._supylabel_dict.values())).get_window_extent(renderer)
+    rows = [
+        label.get_window_extent(renderer)
+        for label in fig._suplabel_dict["left"].values()
+    ]
+    gap = min(row.xmin for row in rows) - shared.xmax
+    assert gap >= fig._suplabel_shared_pad["left"] - 1e-6
+    uplt.close(fig)
+
+
+def test_spanning_ylabel_scales_with_output_dpi(tmp_path):
+    """Spanning labels remain inside the figure when the output DPI changes."""
+    fig, axs = uplt.subplots(nrows=2, share=True, figsize=(3, 3))
+    axs.format(ylabel="Shared y")
+    fig.format(leftlabels=("Row 1", "Row 2"), leftlabelsharedpad="5em")
+    path = tmp_path / "spanning-label.png"
+    fig.savefig(path, dpi=300)
+    from matplotlib import image
+
+    pixels = image.imread(path)
+    dark = pixels[..., :3].min(axis=2) < 0.1
+    # At high output DPI, the spanning y label must occupy the outer label lane.
+    # Previously its raw-pixel transform placed it outside the saved image.
+    assert dark[:, : pixels.shape[1] * 8 // 100].any()
+    uplt.close(fig)

@@ -447,6 +447,37 @@ def test_scatter_alpha(rng):
     return fig
 
 
+def test_scatter_size_aliases_are_areas():
+    """
+    Scatter preserves existing area semantics for all size aliases.
+    """
+    fig, ax = uplt.subplots()
+    try:
+        s = ax.scatter([0], [0], s=30)
+        size = ax.scatter([1], [0], size=30)
+        sizes = ax.scatter([2], [0], sizes=30)
+        ms = ax.scatter([3], [0], ms=30)
+        markersize = ax.scatter([4], [0], markersize=30)
+
+        assert s.get_sizes()[0] == pytest.approx(30)
+        assert size.get_sizes()[0] == pytest.approx(30)
+        assert sizes.get_sizes()[0] == pytest.approx(30)
+        assert ms.get_sizes()[0] == pytest.approx(30)
+        assert markersize.get_sizes()[0] == pytest.approx(30)
+    finally:
+        uplt.close(fig)
+
+
+def test_scatter_cycle_markersize_is_area():
+    fig, ax = uplt.subplots()
+    try:
+        cycle = uplt.Cycle(marker=["o"], markersize=[30])
+        obj = ax.scatter([0], [0], cycle=cycle)
+        assert obj.get_sizes()[0] == pytest.approx(30)
+    finally:
+        uplt.close(fig)
+
+
 @pytest.mark.mpl_image_compare
 def test_scatter_cycle(rng):
     """
