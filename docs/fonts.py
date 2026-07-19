@@ -100,7 +100,49 @@ fig, axs = uplt.show_fonts(family="tex-gyre")
 # :rcraw:`mathtext.fontset` back to one of matplotlib's math-specialized font sets
 # (e.g., ``'stixsans'`` or ``'dejavusans'``).
 #
-# If you want to retain UltraPlot's active alphabet and number fonts while using
+# In short, math fonts can be tailored to taste at three levels, depending on
+# how much of the "LaTeX look" you want:
+#
+# #. **Match the document font** (the default). With the ``'custom'`` font set,
+#    math follows the active text font -- including fonts assigned to
+#    individual text objects, as demonstrated below.
+# #. **Computer Modern symbols**. Keep the active font for letters and numbers
+#    but render ``\mathcal`` and big operators with authentic Computer Modern
+#    glyphs by setting :rcraw:`mathtext.cm_symbols` to ``True``
+#    (see :ref:`below <ug_fonts_cm>`).
+# #. **Full LaTeX**. Set matplotlib's :rcraw:`text.usetex` to ``True`` to
+#    delegate all text rendering to an external LaTeX installation. This gives
+#    complete LaTeX typesetting but is much slower and requires TeX on your
+#    system -- with the previous two options it is rarely necessary.
+#
+# The example below demonstrates the first level: the same expression rendered
+# with different fonts assigned per text object.
+
+# %%
+import ultraplot as uplt
+
+expr = (
+    r"$\mathcal{ABCXYZ}\quad"
+    r"\sum_{i=0}^{n}\quad"
+    r"\prod_{j=1}^{m}\quad"
+    r"\int_a^b\quad"
+    r"\oint_C$"
+)
+
+fig, axs = uplt.subplots(nrows=3, refwidth=6, refheight=1.1, share=False, span=False)
+for ax, font in zip(axs, ("TeX Gyre Heros", "Fira Math", "DejaVu Sans")):
+    ax.text(0.02, 0.5, expr, transform="axes", va="center", fontsize=24, fontname=font)
+    ax.format(title=font, titleloc="left")
+axs.format(xlocator="null", ylocator="null", xspineloc="none", yspineloc="none")
+
+# %% [raw] raw_mimetype="text/restructuredtext"
+#
+# .. _ug_fonts_cm:
+#
+# Computer Modern symbols
+# ^^^^^^^^^^^^^^^^^^^^^^^
+#
+# If you want to retain the active alphabet and number fonts while using
 # Computer Modern for selected LaTeX-style symbols, set :rcraw:`mathtext.cm_symbols`
 # to ``True``. This routes ``\mathcal`` through ``cmsy10`` and big operators like
 # ``\sum``, ``\prod``, ``\int``, ``\oint``, ``\bigcup``, and ``\bigoplus`` through
@@ -111,27 +153,28 @@ fig, axs = uplt.show_fonts(family="tex-gyre")
 # globally rather than wrapping plotting commands in a context block.
 
 # %%
-import ultraplot as uplt
-
-expr = r"$\mathcal{ABC}\quad \sum_i x_i \quad \int_a^b f(x)\,dx$"
-fig, ax = uplt.subplots(refwidth=6, refheight=1.4)
-ax.text(0.02, 0.5, expr, transform="axes", va="center", fontsize=20)
+fig, ax = uplt.subplots(refwidth=6, refheight=1.1)
+ax.text(0.02, 0.5, expr, transform="axes", va="center", fontsize=24)
 ax.format(
     title="Default custom math text",
     titleloc="left",
     xlocator="null",
     ylocator="null",
+    xspineloc="none",
+    yspineloc="none",
 )
 
 # %%
 uplt.rc["mathtext.cm_symbols"] = True
-fig, ax = uplt.subplots(refwidth=6, refheight=1.4)
-ax.text(0.02, 0.5, expr, transform="axes", va="center", fontsize=20)
+fig, ax = uplt.subplots(refwidth=6, refheight=1.1)
+ax.text(0.02, 0.5, expr, transform="axes", va="center", fontsize=24)
 ax.format(
     title="Computer Modern math symbols",
     titleloc="left",
     xlocator="null",
     ylocator="null",
+    xspineloc="none",
+    yspineloc="none",
 )
 
 # %%
