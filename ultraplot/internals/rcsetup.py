@@ -5,6 +5,7 @@ Utilities for global configuration.
 
 import functools
 import re
+import sys
 from collections.abc import MutableMapping
 from numbers import Integral, Real
 
@@ -652,6 +653,12 @@ class _RcParams(MutableMapping, dict):
         except (ValueError, TypeError) as error:
             raise ValueError(f"Key {key}: {error}") from None
         if key is not None:
+            # NOTE: Matplotlib's math text parse cache does not key on this
+            # ultraplot setting, so stale results must be dropped on change.
+            if key == "mathtext.cm_symbols" and dict.get(self, key) != value:
+                fonts = sys.modules.get("ultraplot.internals.fonts")
+                if fonts is not None:
+                    fonts._clear_math_parse_cache()
             dict.__setitem__(self, key, value)
 
     @staticmethod
@@ -1741,6 +1748,16 @@ _rc_ultraplot_table = {
         True,
         _validate_bool,
         "Alias for :rcraw:`axes.formatter.useOffset`.",
+    ),
+    # Math text settings
+    "mathtext.cm_symbols": (
+        False,
+        _validate_bool,
+        "Whether to render ``\\mathcal`` and big operator symbols "
+        "(``\\sum``, ``\\int``, ``\\bigcup``, etc.) with Computer Modern "
+        "while preserving the active font for ordinary letters and numbers. "
+        "Unlike ``mathtext.fontset: cm`` this does not affect the rest "
+        "of the math text.",
     ),
     # Geographic axes settings
     "geo.backend": (
