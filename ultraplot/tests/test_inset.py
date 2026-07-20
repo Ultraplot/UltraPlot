@@ -222,6 +222,83 @@ def test_hawkeye_overview_indicator():
     uplt.close(fig)
 
 
+def test_hawkeye_transform_accepts_projection_name():
+    ccrs = pytest.importorskip("cartopy.crs")
+
+    # A projection name resolves to a CRS so xy can be given in projected
+    # coordinates; the result matches passing the equivalent CRS instance.
+    fig, ax = uplt.subplots(proj="cyl")
+    by_name = ax[0].hawkeye((10, 20), size=0.2, transform="cyl")
+    by_crs = ax[0].hawkeye((10, 20), size=0.2, transform=ccrs.PlateCarree())
+    fig.canvas.draw()
+    np.testing.assert_allclose(
+        by_name.get_position().bounds, by_crs.get_position().bounds
+    )
+    uplt.close(fig)
+
+
+def test_hawkeye_extent_transform_accepts_projection_name():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.9, 0.9), size=0.2, extent=(120, 180, 10, 30), extent_transform="cyl"
+    )
+    fig.canvas.draw()
+    assert inset._hawkeye_relation == "detail"
+    uplt.close(fig)
+
+
+def test_hawkeye_geographic_anchor_pins_point():
+    ccrs = pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    parent = ax[0]
+    # Pin a specific lon/lat point on the inset map to xy on the parent.
+    xy = (0.5, 0.5)
+    lonlat = (103.8, 1.3)
+    inset = parent.hawkeye(
+        xy, size=0.3, extent=(90, 120, 0, 30), anchor=lonlat, anchor_transform="map"
+    )
+    fig.canvas.draw()
+
+    projected = inset.projection.transform_point(*lonlat, ccrs.PlateCarree())
+    display = inset.transData.transform(projected)
+    fraction = parent.transAxes.inverted().transform(display)
+    np.testing.assert_allclose(fraction, xy, atol=1e-6)
+    uplt.close(fig)
+
+
+def test_hawkeye_geographic_anchor_outside_extent_errors():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="outside the inset extent"):
+        ax[0].hawkeye(
+            (0.5, 0.5),
+            size=0.3,
+            extent=(90, 120, 0, 30),
+            anchor=(0, 0),
+            anchor_transform="map",
+        )
+    uplt.close(fig)
+
+
+def test_hawkeye_string_anchor_rejects_anchor_transform():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="String anchors are axes-relative"):
+        ax[0].hawkeye(
+            (0.5, 0.5),
+            size=0.3,
+            extent=(90, 120, 0, 30),
+            anchor="ul",
+            anchor_transform="map",
+        )
+    uplt.close(fig)
+
+
 def test_hawkeye_zoom_indicator_normalizes_legacy_tuple(monkeypatch) -> None:
     """The corners+detail indicator exposes ``.connectors`` on every mpl version.
 
