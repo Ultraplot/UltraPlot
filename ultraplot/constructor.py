@@ -41,7 +41,7 @@ from .internals import (
     ic,  # noqa: F401
     warnings,
 )
-from .utils import get_colors, to_hex, to_rgba
+from .utils import to_hex, to_rgba
 
 try:
     from mpl_toolkits.basemap import Basemap
@@ -62,7 +62,6 @@ __all__ = [
     "Colormap",
     "Norm",
     "Cycle",
-    "Colors",  # deprecated
 ]
 
 # Color cycle constants
@@ -482,9 +481,6 @@ def _modify_colormap(cmap, *, cut, left, right, reverse, shift, alpha, samples):
     return cmap
 
 
-@warnings._rename_kwargs(
-    "0.8.0", fade="saturation", shade="luminance", to_listed="discrete"
-)
 def Colormap(
     *args,
     name=None,
@@ -710,13 +706,6 @@ def Colormap(
         raise ValueError(
             "Colormap() requires either positional arguments or "
             "'hue', 'chroma', 'saturation', and/or 'luminance' keywords."
-        )
-    deprecated = {"listed": "discrete", "linear": "continuous"}
-    if listmode in deprecated:
-        oldmode, listmode = listmode, deprecated[listmode]
-        warnings._warn_ultraplot(
-            f"Please use listmode={listmode!r} instead of listmode={oldmode!r}."
-            "Option was renamed in v0.8 and will be removed in a future relase."
         )
     options = {"discrete", "continuous", "perceptual"}
     for key, mode in zip(("listmode", "filemode"), (listmode, filemode)):
@@ -1792,7 +1781,3 @@ def Proj(
 
     proj._proj_backend = backend
     return proj
-
-
-# Deprecated
-Colors = warnings._rename_objs("0.8.0", Colors=get_colors)
