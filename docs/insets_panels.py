@@ -88,8 +88,8 @@ fig.format(
 )
 
 # %%
-import ultraplot as uplt
 import numpy as np
+import ultraplot as uplt
 
 state = np.random.RandomState(51423)
 data = (state.rand(20, 20) - 0.48).cumsum(axis=1).cumsum(axis=0)
@@ -192,3 +192,74 @@ ix = ax.inset(
 )
 ix.format(xlim=(2, 4), ylim=(2, 4), color="red8", linewidth=1.5, ticklabelweight="bold")
 ix.pcolormesh(data, cmap="Grays", levels=N, inbounds=False)
+
+# %% [raw] raw_mimetype="text/restructuredtext"
+# Hawkeye map insets
+# ~~~~~~~~~~~~~~~~~~
+#
+# :class:`~ultraplot.axes.GeoAxes` adds :meth:`~ultraplot.axes.GeoAxes.hawkeye`
+# for geographic callout maps. The inset is anchored at ``xy`` in a parent coordinate
+# system, and its ``size`` is a fraction of the parent axes. Supply ``extent`` to set
+# the inset map scope and draw a matching indicator and optional connectors on the
+# parent map. Hawkeyes are excluded from automatic layout, so they can extend beyond
+# the parent axes without reserving subplot space.
+#
+# Rectangular hawkeyes preserve both the requested extent and projection scale. A
+# circular frame cannot simultaneously preserve projection scale and display an exact
+# non-square extent. Circular hawkeyes therefore expand the shorter projected dimension
+# to retain the projection; use a square extent when the exact circular map scope is
+# important, or pass ``aspect='auto'`` to fit the exact extent with distortion.
+#
+# The following dependency-free example shows a Singapore city locator on a world map.
+# The returned inset is an ordinary geographic axes, so optional geospatial libraries
+# can draw external data inside it. For example, `OSMnx <https://osmnx.readthedocs.io/>`__
+# can provide street geometry when it is installed separately:
+#
+# .. code-block:: python
+#
+#    import osmnx as ox
+#    from cartopy import crs as ccrs
+#
+#    network = ox.graph_from_point((1.3521, 103.8198), dist=8_000, network_type="drive")
+#    streets = ox.graph_to_gdfs(network, nodes=False)
+#    streets.plot(ax=inax, color="0.3", linewidth=0.4, transform=ccrs.PlateCarree())
+#
+# The data download and OpenStreetMap attribution are the responsibility of the
+# application using that optional integration.
+
+# %%
+singapore = (103.8198, 1.3521)
+fig, ax = uplt.subplots(proj="robin", refwidth=4)
+ax.format(land=True, landcolor="gray8", oceancolor="blue9")
+ax.plot(
+    *singapore,
+    marker="o",
+    color="red",
+    markeredgecolor="white",
+    markeredgewidth=0.8,
+    ms=5,
+    transform="cyl",
+)
+ax.text(106, 4, "Singapore", color="red", size=7, transform="map")
+inax = ax.hawkeye(
+    (0.97, 0.97),
+    size=0.23,
+    anchor="ur",
+    proj="merc",
+    extent=(103.76, 103.90, 1.27, 1.41),
+    shape="circle",
+    target="circle",
+    connector="line",
+    color="red",
+    indicator_kw={"linewidth": 1.5},
+)
+inax.format(land=True, landcolor="gray9", oceancolor="blue9")
+inax.plot(
+    *singapore,
+    marker="o",
+    color="red",
+    markeredgecolor="white",
+    markeredgewidth=0.8,
+    ms=5,
+    transform="cyl",
+)
