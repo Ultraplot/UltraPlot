@@ -34,11 +34,7 @@ if TYPE_CHECKING:
     from .colors import DiscreteColormap as DiscreteColormap
     from .colors import DiscreteNorm as DiscreteNorm
     from .colors import DivergingNorm as DivergingNorm
-    from .colors import LinearSegmentedColormap as LinearSegmentedColormap
-    from .colors import LinearSegmentedNorm as LinearSegmentedNorm
-    from .colors import ListedColormap as ListedColormap
     from .colors import PerceptualColormap as PerceptualColormap
-    from .colors import PerceptuallyUniformColormap as PerceptuallyUniformColormap
     from .colors import SegmentedNorm as SegmentedNorm
     from .colors import _cmap_database as colormaps
     from .config import config_inline_backend as config_inline_backend
@@ -138,14 +134,12 @@ if TYPE_CHECKING:
     from .utils import edges as edges
     from .utils import edges2d as edges2d
     from .utils import get_colors as get_colors
-    from .utils import saturate as saturate
     from .utils import scale_luminance as scale_luminance
     from .utils import scale_saturation as scale_saturation
     from .utils import set_alpha as set_alpha
     from .utils import set_hue as set_hue
     from .utils import set_luminance as set_luminance
     from .utils import set_saturation as set_saturation
-    from .utils import shade as shade
     from .utils import shift_hue as shift_hue
     from .utils import to_hex as to_hex
     from .utils import to_rgb as to_rgb

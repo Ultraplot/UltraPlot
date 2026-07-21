@@ -4063,7 +4063,6 @@ class PlotAxes(base.Axes):
             return False
         return values.shape[0] == point_count
 
-    @warnings._rename_kwargs("0.6.0", centers="values")
     def _parse_cmap(
         self,
         *args,
@@ -7702,10 +7701,6 @@ class PlotAxes(base.Axes):
 
     # Related parsing functions for warnings
     _level_parsers = (_parse_level_vals, _parse_level_num, _parse_level_lim)
-
-    # Rename the shorthands
-    boxes = warnings._rename_objs("0.8.0", boxes=box)
-    violins = warnings._rename_objs("0.8.0", violins=violin)
 
 
 # mock commit

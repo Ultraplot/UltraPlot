@@ -243,5 +243,5 @@ classes and :ref:`constructor functions <why_constructor>`.
   :ref:`modifying individual settings, changing settings in bulk, and
   temporarily changing settings in context blocks <ug_rc>`.
   It also introduces several :ref:`new setings <ug_config>`
-  and sets up the inline plotting backend with :func:`~ultraplot.config.inline_backend_fmt`
+  and sets up the inline plotting backend with :func:`~ultraplot.config.config_inline_backend`
   so that your inline figures look the same as your saved figures.

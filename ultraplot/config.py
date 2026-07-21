@@ -56,8 +56,6 @@ __all__ = [
     "register_cycles",
     "register_colors",
     "register_fonts",
-    "RcConfigurator",  # deprecated
-    "inline_backend_fmt",  # deprecated
 ]
 
 # Constants
@@ -1888,9 +1886,6 @@ class Configurator(MutableMapping, dict):
         rcdict.pop("axes.prop_cycle", None)
         return _filter_style_dict(rcdict, warn=False)
 
-    # Renamed methods
-    load_file = warnings._rename_objs("0.8.0", load_file=load)
-
 
 # Initialize locations
 _init_user_folders()
@@ -1907,12 +1902,3 @@ rc_ultraplot = rcsetup._rc_ultraplot_default.copy()  # a validated rcParams-styl
 #: Instance of `Configurator`. This controls both `rc_matplotlib` and `rc_ultraplot`
 #: settings. See the :ref:`configuration guide <ug_config>` for details.
 rc = Configurator()
-
-# Deprecated
-RcConfigurator = warnings._rename_objs(
-    "0.8.0",
-    RcConfigurator=Configurator,
-)
-inline_backend_fmt = warnings._rename_objs(
-    "0.6.0", inline_backend_fmt=config_inline_backend
-)
