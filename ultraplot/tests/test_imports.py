@@ -209,8 +209,7 @@ def test_type_checking_block_covers_public_all():
     - Module-level scalars defined directly in ``__init__.py`` (``name``,
       ``version``, ``__version__``, ``setup``) — already visible to type checkers
       without an import.
-    - Deprecated ``_rename_objs`` wrappers (e.g. ``RcConfigurator``,
-      ``inline_backend_fmt``, ``Colors``) — their runtime type is a dynamically
+    - Deprecated ``_rename_objs`` wrappers — their runtime type is a dynamically
       generated class/function from ``internals.warnings``; they cannot be
       imported cleanly and are not worth exposing to type checkers.
     """

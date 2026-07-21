@@ -29,9 +29,8 @@ def test_colormap_constructor_branches(tmp_path, monkeypatch):
 
     monkeypatch.setattr(pcolors.DiscreteColormap, "save", fake_save)
 
-    with pytest.warns(UltraPlotWarning, match="listmode='discrete'"):
-        deprecated = constructor.Colormap(["red", "blue"], listmode="listed")
-    assert isinstance(deprecated, pcolors.DiscreteColormap)
+    discrete = constructor.Colormap(["red", "blue"], listmode="discrete")
+    assert isinstance(discrete, pcolors.DiscreteColormap)
 
     cmap = constructor.Colormap(
         str(hex_path),

@@ -39,8 +39,6 @@ __all__ = [
     "to_rgba",
     "to_xyza",
     "units",
-    "shade",  # deprecated
-    "saturate",  # deprecated
 ]
 
 UNIT_REGEX = re.compile(
@@ -768,7 +766,6 @@ def _fontsize_to_pt(size):
         )
 
 
-@warnings._rename_kwargs("0.6.0", units="dest")
 def units(
     value, numeric=None, dest=None, *, fontsize=None, figure=None, axes=None, width=None
 ):
@@ -1158,11 +1155,3 @@ def check_for_update(package_name: str) -> None:
             f"{current_version} → {latest_version}\n"
             f"Run: pip install -U {package_name}\033[0m"
         )
-
-
-# Deprecations
-shade, saturate = warnings._rename_objs(
-    "0.6.0",
-    shade=scale_luminance,
-    saturate=scale_saturation,
-)

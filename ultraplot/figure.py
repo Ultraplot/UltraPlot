@@ -718,13 +718,8 @@ class Figure(mfigure.Figure):
         opts = ", ".join(f"{key}={value!r}" for key, value in opts.items())
         return f"Figure({geom}{opts})"
 
-    # NOTE: If _rename_kwargs argument is an invalid identifier, it is
-    # simply used in the warning message.
     @docstring._obfuscate_kwargs
     @docstring._snippet_manager
-    @warnings._rename_kwargs(
-        "0.7.0", axpad="innerpad", autoformat="uplt.rc.autoformat = {}"
-    )
     @_alias_kwargs(
         refnum=("ref",),
         refaspect=("aspect",),
