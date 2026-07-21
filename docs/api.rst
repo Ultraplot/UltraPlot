@@ -68,7 +68,6 @@ Configuration tools
 
 .. automodsumm:: ultraplot.config
    :toctree: api
-   :skip: inline_backend_fmt, RcConfigurator
 
 
 Constructor functions
@@ -79,7 +78,6 @@ Constructor functions
 
 .. automodsumm:: ultraplot.constructor
    :toctree: api
-   :skip: Colors
 
 
 Locators and formatters
@@ -110,7 +108,6 @@ Colormaps and normalizers
 
 .. automodsumm:: ultraplot.colors
    :toctree: api
-   :skip: ListedColormap, LinearSegmentedColormap, PerceptuallyUniformColormap, LinearSegmentedNorm
 
 
 Projection classes

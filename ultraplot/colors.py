@@ -71,10 +71,6 @@ __all__ = [
     "SegmentedNorm",
     "ColorDatabase",
     "ColormapDatabase",
-    "ListedColormap",  # deprecated
-    "LinearSegmentedColormap",  # deprecated
-    "PerceptuallyUniformColormap",  # deprecated
-    "LinearSegmentedNorm",  # deprecated
 ]
 
 # Default colormap properties
@@ -1689,16 +1685,6 @@ class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
             cdict[key] = _make_segment_data(values, coords, ratios)
         return cls(name, cdict, **kwargs)
 
-    # Deprecated
-    to_listed = warnings._rename_objs("0.8.0", to_listed=to_discrete)
-    concatenate, punched, truncated, updated = warnings._rename_objs(
-        "0.6.0",
-        concatenate=append,
-        punched=cut,
-        truncated=truncate,
-        updated=copy,
-    )
-
 
 class DiscreteColormap(mcolors.ListedColormap, _Colormap):
     r"""
@@ -1987,14 +1973,6 @@ class DiscreteColormap(mcolors.ListedColormap, _Colormap):
         """
         return cls._from_file(path, warn_on_failure=warn_on_failure)
 
-    # Rename methods
-    concatenate, truncated, updated = warnings._rename_objs(
-        "0.6.0",
-        concatenate=append,
-        truncated=truncate,
-        updated=copy,
-    )
-
 
 class PerceptualColormap(ContinuousColormap):
     """
@@ -2224,7 +2202,6 @@ class PerceptualColormap(ContinuousColormap):
 
     @classmethod
     @docstring._snippet_manager
-    @warnings._rename_kwargs("0.7.0", fade="saturation", shade="luminance")
     def from_color(cls, *args, **kwargs):
         """
         Return a simple monochromatic "sequential" colormap that blends from white
@@ -2420,11 +2397,6 @@ class PerceptualColormap(ContinuousColormap):
 
         return cls(name, cdict, **kwargs)
 
-    # Deprecated
-    to_linear_segmented = warnings._rename_objs(
-        "0.8.0", to_linear_segmented=to_continuous
-    )
-
 
 def _interpolate_scalar(x, x0, x1, y0, y1):
     """
@@ -2490,9 +2462,6 @@ class DiscreteNorm(mcolors.BoundaryNorm):
     # WARNING: Must be child of BoundaryNorm. Many methods in ColorBarBase
     # test for class membership, crucially including _process_values(), which
     # if it doesn't detect BoundaryNorm will try to use DiscreteNorm.inverse().
-    @warnings._rename_kwargs(
-        "0.7.0", extend="unique", descending="DiscreteNorm(descending_levels)"
-    )
     def __init__(
         self,
         levels,
@@ -3325,17 +3294,3 @@ class ColormapDatabase(mcm.ColormapRegistry):
 # Initialize databases
 _cmap_database = _init_cmap_database()
 _color_database = _init_color_database()
-
-# Deprecated
-(
-    ListedColormap,
-    LinearSegmentedColormap,
-    PerceptuallyUniformColormap,
-    LinearSegmentedNorm,
-) = warnings._rename_objs(  # noqa: E501
-    "0.8.0",
-    ListedColormap=DiscreteColormap,
-    LinearSegmentedColormap=ContinuousColormap,
-    PerceptuallyUniformColormap=PerceptualColormap,
-    LinearSegmentedNorm=SegmentedNorm,
-)
