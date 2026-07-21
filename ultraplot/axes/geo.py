@@ -7,7 +7,10 @@ from __future__ import annotations
 
 import copy
 import inspect
+from dataclasses import dataclass
 from functools import partial
+from numbers import Real
+from types import SimpleNamespace
 
 try:
     # From python 3.12
@@ -19,6 +22,7 @@ from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import Any, Optional, Protocol
 
 import matplotlib.axis as maxis
+import matplotlib.axes as maxes
 import matplotlib.collections as mcollections
 import matplotlib.patches as mpatches
 import matplotlib.path as mpath
@@ -71,6 +75,432 @@ _BASEMAP_LABEL_Y_SCALE = 0.65  # empirical spacing to mimic cartopy
 _BASEMAP_LABEL_X_SCALE = 0.25  # empirical spacing to mimic cartopy
 _CARTOPY_LABEL_SIDES = ("labelleft", "labelright", "labelbottom", "labeltop", "geo")
 _BASEMAP_LABEL_SIDES = ("labelleft", "labelright", "labelbottom", "labeltop", "geo")
+_HAWKEYE_ANCHORS = {
+    "ul": (0, 1),
+    "upper left": (0, 1),
+    "ur": (1, 1),
+    "upper right": (1, 1),
+    "ll": (0, 0),
+    "lower left": (0, 0),
+    "lr": (1, 0),
+    "lower right": (1, 0),
+    "c": (0.5, 0.5),
+    "center": (0.5, 0.5),
+    "uc": (0.5, 1),
+    "upper center": (0.5, 1),
+    "lc": (0.5, 0),
+    "lower center": (0.5, 0),
+    "cl": (0, 0.5),
+    "center left": (0, 0.5),
+    "cr": (1, 0.5),
+    "center right": (1, 0.5),
+}
+
+
+class _AnchoredInsetLocator:
+    """Locate an inset by anchoring one of its points to a parent coordinate."""
+
+    def __init__(self, parent, xy, size, transform, anchor, square=False):
+        self._parent = parent
+        self._xy = tuple(xy)
+        self._size = tuple(size)
+        self._transform = transform
+        self._anchor = anchor
+        self._square = square
+
+    def __call__(self, ax, renderer):  # noqa: U100
+        parent = self._parent
+        transform = self._transform
+        if ccrs is not None and isinstance(transform, ccrs.CRS):
+            transform = transform._as_mpl_transform(parent)
+        xy = transform.transform(self._xy)
+        transfig = getattr(parent.figure, "transSubfigure", parent.figure.transFigure)
+        x, y = transfig.inverted().transform(xy)
+        parent_bbox = parent.get_position()
+        width = self._size[0] * parent_bbox.width
+        height = self._size[1] * parent_bbox.height
+        if self._square:
+            figure_bbox = parent.figure.bbox
+            side = min(width * figure_bbox.width, height * figure_bbox.height)
+            width = side / figure_bbox.width
+            height = side / figure_bbox.height
+        return mtransforms.Bbox.from_bounds(
+            x - self._anchor[0] * width,
+            y - self._anchor[1] * height,
+            width,
+            height,
+        )
+
+
+# Transform names that address a matplotlib coordinate system rather than a
+# geographic projection. Any other string passed as a hawkeye ``transform`` is
+# resolved as a projection name through ``constructor.Proj``.
+_HAWKEYE_TRANSFORM_NAMES = frozenset({"axes", "data", "figure", "subfigure", "map"})
+
+
+def _parse_hawkeye_anchor(anchor, axes_relative=True):
+    """Translate a named hawkeye anchor to normalized axes coordinates.
+
+    String anchors are always axes-relative. When ``axes_relative`` is False the
+    caller supplied a non-default ``anchor_transform``, so a coordinate 2-tuple
+    is required and string aliases are rejected.
+    """
+    if isinstance(anchor, str):
+        if not axes_relative:
+            raise ValueError(
+                "String anchors are axes-relative and cannot be combined with a "
+                "non-default anchor_transform; pass a coordinate 2-tuple instead."
+            )
+        try:
+            return _HAWKEYE_ANCHORS[anchor]
+        except KeyError as exc:
+            options = ", ".join(map(repr, _HAWKEYE_ANCHORS))
+            raise ValueError(
+                f"Invalid anchor {anchor!r}. Must be one of {options}."
+            ) from exc
+    if len(anchor) != 2:
+        raise ValueError(f"anchor must have length 2, got {anchor!r}.")
+    return tuple(anchor)
+
+
+def _parse_hawkeye_size(size):
+    """Normalize scalar hawkeye sizes to square inset dimensions."""
+    if isinstance(size, Real):
+        size = (size, size)
+    if len(size) != 2 or any(value <= 0 for value in size):
+        raise ValueError(f"size must contain two positive values, got {size!r}.")
+    return tuple(size)
+
+
+def _hawkeye_crs_from_name(name):
+    """Resolve a projection name to a cartopy CRS for hawkeye coordinates."""
+    crs = constructor.Proj(name)
+    if ccrs is None or not isinstance(crs, ccrs.CRS):
+        raise ValueError(
+            f"Projection {name!r} did not resolve to a cartopy CRS; hawkeye "
+            "projection coordinates require the cartopy backend."
+        )
+    return crs
+
+
+def _hawkeye_crs(transform, param):
+    """Resolve a hawkeye geographic transform to a cartopy CRS.
+
+    Accepts ``'map'`` (an alias for `~cartopy.crs.PlateCarree`), a cartopy CRS
+    instance, or a registered projection name (e.g. ``'cyl'``, ``'moll'``).
+    """
+    if transform == "map":
+        return ccrs.PlateCarree()
+    if ccrs is not None and isinstance(transform, ccrs.CRS):
+        return transform
+    if isinstance(transform, str):
+        return _hawkeye_crs_from_name(transform)
+    raise ValueError(f"{param} must be 'map', a projection name, or a cartopy CRS.")
+
+
+def _parse_hawkeye_extent_transform(transform):
+    """Translate hawkeye extent transforms to cartopy coordinate systems."""
+    return _hawkeye_crs(transform, "extent_transform")
+
+
+def _parse_hawkeye_anchor_transform(transform):
+    """Resolve the coordinate system for a hawkeye anchor point.
+
+    ``'axes'`` (the default) leaves the anchor as an inset axes fraction and is
+    signalled by returning ``None``. Any other value is resolved to a cartopy CRS
+    so the anchor can be interpreted as a geographic or projected point.
+    """
+    if transform in ("axes", None):
+        return None
+    return _hawkeye_crs(transform, "anchor_transform")
+
+
+def _hawkeye_anchor_fraction(inset, anchor, anchor_transform):
+    """Convert a hawkeye anchor point to an inset axes fraction.
+
+    With ``anchor_transform`` None the anchor is already an axes fraction and is
+    returned unchanged. Otherwise the anchor is a point in ``anchor_transform``
+    coordinates; it is projected into the inset projection and normalized against
+    the inset view limits, which are fixed by the time this runs.
+    """
+    if anchor_transform is None:
+        return anchor
+    x, y = inset.projection.transform_point(anchor[0], anchor[1], anchor_transform)
+    if not (np.isfinite(x) and np.isfinite(y)):
+        raise ValueError(
+            f"anchor {anchor!r} does not project into the inset projection."
+        )
+    x0, x1 = inset.get_xlim()
+    y0, y1 = inset.get_ylim()
+    fx = (x - x0) / (x1 - x0)
+    fy = (y - y0) / (y1 - y0)
+    tol = 1e-9
+    if not (-tol <= fx <= 1 + tol and -tol <= fy <= 1 + tol):
+        raise ValueError(
+            f"anchor {anchor!r} lies outside the inset extent; the anchor point "
+            "must fall within the displayed geographic area."
+        )
+    return (fx, fy)
+
+
+def _parse_hawkeye_connector(connector):
+    """Normalize connector shorthand to a named presentation mode."""
+    if connector is False:
+        return None
+    if connector is True:
+        return "corners"
+    if connector in ("corners", "line"):
+        return connector
+    raise ValueError("connector must be False, True, 'corners', or 'line'.")
+
+
+def _parse_hawkeye_shape(value, name):
+    """Validate a hawkeye inset or target shape."""
+    if value not in ("box", "circle"):
+        raise ValueError(f"{name} must be 'box' or 'circle'.")
+    return value
+
+
+def _square_hawkeye_view(inset):
+    """Expand the shorter projected dimension to make a square map viewport."""
+    x0, x1 = inset.get_xlim()
+    y0, y1 = inset.get_ylim()
+    width, height = x1 - x0, y1 - y0
+    if width > height:
+        center = (y0 + y1) / 2
+        inset.set_ylim(center - width / 2, center + width / 2)
+    elif height > width:
+        center = (x0 + x1) / 2
+        inset.set_xlim(center - height / 2, center + height / 2)
+
+
+def _infer_hawkeye_relation(parent_extent, inset_extent):
+    """Infer whether an inset is a geographic detail or overview."""
+    parent_west, parent_east, parent_south, parent_north = parent_extent
+    inset_west, inset_east, inset_south, inset_north = inset_extent
+    parent_area = abs((parent_east - parent_west) * (parent_north - parent_south))
+    inset_area = abs((inset_east - inset_west) * (inset_north - inset_south))
+    return "overview" if inset_area > parent_area else "detail"
+
+
+def _segments_intersect(start1, end1, start2, end2):
+    """Return whether two display-coordinate line segments intersect."""
+
+    def _cross(origin, point1, point2):
+        return np.cross(point1 - origin, point2 - origin)
+
+    cross1 = _cross(start1, end1, start2)
+    cross2 = _cross(start1, end1, end2)
+    cross3 = _cross(start2, end2, start1)
+    cross4 = _cross(start2, end2, end1)
+    return cross1 * cross2 < 0 and cross3 * cross4 < 0
+
+
+def _select_hawkeye_connector_pairs(extent_display, frame_display):
+    """Select the shortest pair of non-crossing overview connectors."""
+    candidates = [
+        (extent_index, frame_index)
+        for extent_index in range(len(extent_display))
+        for frame_index in range(len(frame_display))
+    ]
+    best = None
+    for first_index, first in enumerate(candidates):
+        for second in candidates[first_index + 1 :]:
+            if first[0] == second[0] or first[1] == second[1]:
+                continue
+            first_start, first_end = extent_display[first[0]], frame_display[first[1]]
+            second_start, second_end = (
+                extent_display[second[0]],
+                frame_display[second[1]],
+            )
+            if _segments_intersect(first_start, first_end, second_start, second_end):
+                continue
+            distance = np.linalg.norm(first_end - first_start) + np.linalg.norm(
+                second_end - second_start
+            )
+            if best is None or distance < best[0]:
+                best = (distance, (first, second))
+    return best[1] if best is not None else ()
+
+
+def _add_hawkeye_overview_connectors(parent, inset, extent, transform, **kwargs):
+    """Connect the parent frame to its geographic extent on an overview inset."""
+    west, east, south, north = extent
+    extent_corners = np.array(
+        ((west, south), (west, north), (east, south), (east, north))
+    )
+    frame_corners = np.array(((0, 0), (0, 1), (1, 0), (1, 1)))
+    extent_transform = transform._as_mpl_transform(inset)
+    pairs = _select_hawkeye_connector_pairs(
+        extent_transform.transform(extent_corners),
+        parent.transAxes.transform(frame_corners),
+    )
+
+    kwargs = dict(kwargs)
+    kwargs.pop("facecolor", None)
+    kwargs["color"] = kwargs.pop("edgecolor", kwargs.get("color", None))
+    kwargs.setdefault("clip_on", False)
+    connectors = []
+    for extent_index, frame_index in pairs:
+        connector = mpatches.ConnectionPatch(
+            extent_corners[extent_index],
+            frame_corners[frame_index],
+            coordsA=extent_transform,
+            coordsB=parent.transAxes,
+            axesA=inset,
+            axesB=parent,
+            **kwargs,
+        )
+        parent.figure.add_artist(connector)
+        connectors.append(connector)
+    return tuple(connectors)
+
+
+def _add_hawkeye_leader(
+    inset, target_axes, target_xy, transform, target_patch=None, **kwargs
+):
+    """Draw a leader from an inset edge to a geographic target point."""
+    kwargs = dict(kwargs)
+    kwargs.pop("facecolor", None)
+    kwargs["color"] = kwargs.pop("edgecolor", kwargs.get("color", None))
+    kwargs.setdefault("clip_on", False)
+    connector = mpatches.ConnectionPatch(
+        (0.5, 0.5),
+        target_xy,
+        coordsA=inset.transAxes,
+        coordsB=transform._as_mpl_transform(target_axes),
+        axesA=inset,
+        axesB=target_axes,
+        patchA=inset.patch,
+        patchB=target_patch,
+        **kwargs,
+    )
+    # The parent draws after its map artists but before the inset axes. Clipping the
+    # source point to ``inset.patch`` stops the leader at any custom inset boundary.
+    target_axes.add_artist(connector)
+    return connector
+
+
+def _add_hawkeye_zoom_indicator(parent: "GeoAxes", inset: "GeoAxes", **kwargs: Any):
+    """Draw an ``indicate_inset_zoom`` marker with a version-stable return.
+
+    matplotlib >= 3.10 returns an ``InsetIndicator`` artist exposing
+    ``.rectangle`` and ``.connectors``. Earlier versions return a plain
+    ``(rectangle, connectors)`` tuple, so wrap it to expose the same accessors.
+    """
+    indicator = maxes.Axes.indicate_inset_zoom(parent, inset, **kwargs)
+    if isinstance(indicator, tuple):
+        rectangle, connectors = indicator
+        indicator = SimpleNamespace(rectangle=rectangle, connectors=connectors)
+    return indicator
+
+
+def _select_enveloping_connectors(indicator, inset: "GeoAxes", renderer=None) -> None:
+    """Show the two zoom connectors that wrap around the inset (outer tangents).
+
+    The visible pair is chosen from the sign of the inset-to-indicator centre
+    offset: a diagonally opposite pair envelops the inset, whereas a same-side
+    pair would run parallel and cross the frustum.
+    """
+    connectors = indicator.connectors
+    if not connectors:
+        return
+    rect_bbox = indicator.rectangle.get_window_extent(renderer)
+    inset_bbox = inset.get_window_extent(renderer)
+    dx = (inset_bbox.x0 + inset_bbox.x1) - (rect_bbox.x0 + rect_bbox.x1)
+    dy = (inset_bbox.y0 + inset_bbox.y1) - (rect_bbox.y0 + rect_bbox.y1)
+    # Connector order is (lower-left, upper-left, lower-right, upper-right).
+    visible = (1, 2) if dx * dy >= 0 else (0, 3)
+    for index, connector in enumerate(connectors):
+        connector.set_visible(index in visible)
+
+
+def _envelop_hawkeye_zoom_connectors(indicator, inset: "GeoAxes") -> None:
+    """Reassert the enveloping connector pair on every draw.
+
+    matplotlib fixes connector visibility once, from a bounding-box rule that can
+    pick a parallel pair for a diagonally placed inset. The inset position is only
+    final at draw time, so recompute the enveloping pair from a draw hook: on
+    matplotlib >= 3.10 the ``InsetIndicator`` resolves its connectors in its own
+    ``draw``, while the legacy wrapper draws its rectangle before the connectors.
+    """
+    draw_host = indicator if hasattr(indicator, "draw") else indicator.rectangle
+    original_draw = draw_host.draw
+
+    def draw(renderer, *args, **kwargs):
+        _select_enveloping_connectors(indicator, inset, renderer)
+        return original_draw(renderer, *args, **kwargs)
+
+    draw_host.draw = draw
+
+
+@dataclass
+class _HawkeyeSpec:
+    """
+    Validated inputs for :meth:`GeoAxes.hawkeye`.
+
+    ``extent_transform`` and ``relation`` are only fully resolved when ``extent``
+    is not ``None`` (they require a geographic extent to normalize and infer);
+    otherwise they retain their raw defaults and are never consumed. ``aspect`` is
+    intentionally not stored here because ``'projection'`` can only be resolved
+    from the live inset axes (see :meth:`GeoAxes._build_hawkeye_inset`). When
+    ``anchor_transform`` is not ``None`` the ``anchor`` is a geographic/projected
+    point rather than an axes fraction; it is converted to a fraction against the
+    live inset view limits in :meth:`GeoAxes._build_hawkeye_inset`.
+    """
+
+    xy: tuple[float, float]
+    size: tuple[float, float]
+    anchor: tuple[float, float]
+    anchor_transform: Any
+    transform: Any
+    extent: Optional[tuple[float, float, float, float]]
+    extent_transform: Any
+    relation: str
+    connector: Optional[str]
+    shape: str
+    target: str
+
+
+def _apply_hawkeye_circle_boundary(inset: "GeoAxes", aspect: str | float) -> None:
+    """Clip a hawkeye inset to a circular map boundary matching its view."""
+    if aspect != "auto":
+        _square_hawkeye_view(inset)
+    x0, x1 = inset.get_xlim()
+    y0, y1 = inset.get_ylim()
+    radius_x = (x1 - x0) / 2
+    radius_y = (y1 - y0) / 2
+    theta = np.linspace(0, 2 * np.pi, 256)
+    circle_path = mpath.Path(
+        np.column_stack(
+            (
+                (x0 + x1) / 2 + radius_x * np.cos(theta),
+                (y0 + y1) / 2 + radius_y * np.sin(theta),
+            )
+        )
+    )
+    inset.set_boundary(circle_path, transform=inset.transData)
+
+
+def _make_hawkeye_indicator_patch(
+    extent: Sequence[float], transform: Any, target: str, **kwargs: Any
+) -> mpatches.Patch:
+    """Build the outline patch (box or circle) marking a hawkeye extent."""
+    west, east, south, north = extent
+    if target == "circle":
+        return mpatches.Circle(
+            ((west + east) / 2, (south + north) / 2),
+            min(east - west, north - south) / 2,
+            transform=transform,
+            **kwargs,
+        )
+    return mpatches.Rectangle(
+        (west, south),
+        east - west,
+        north - south,
+        transform=transform,
+        **kwargs,
+    )
 
 
 # Format docstring
@@ -234,6 +664,82 @@ labelweight : str, default: :rc:`grid.labelweight`
     The font weight for the gridline labels (`gridlabelweight` is also allowed).
 """
 docstring._snippet_manager["geo.format"] = _format_docstring
+
+_hawkeye_docstring = """
+Add a transform-anchored geographic callout inset.
+
+Parameters
+----------
+xy : 2-tuple of float
+    The parent-axes coordinate at which to anchor the inset.
+size : float or 2-tuple of float
+    The requested inset width and height as fractions of the parent axes box. A scalar
+    requests equal width and height before geographic aspect adjustment.
+transform : coordinate system, default: 'axes'
+    Coordinate system for *xy*. One of:
+
+    * ``'axes'`` -- parent axes fractions (`~matplotlib.axes.Axes.transAxes`).
+    * ``'data'`` -- parent *projected* coordinates
+      (`~matplotlib.axes.Axes.transData`), i.e. the parent projection's native
+      units (metres for most projections). This coincides with longitude-latitude
+      only for a default `~cartopy.crs.PlateCarree` parent, so it is rarely what
+      you want on a map; use ``'map'`` for longitude-latitude.
+    * ``'figure'`` / ``'subfigure'`` -- figure or subfigure fractions.
+    * ``'map'`` -- longitude-latitude degrees (`~cartopy.crs.PlateCarree`).
+    * a projection name (e.g. ``'cyl'``, ``'moll'``), a `~cartopy.crs.Projection`,
+      or a `~matplotlib.transforms.Transform` -- *xy* in arbitrary projected
+      coordinates.
+anchor : str or 2-tuple of float, default: 'upper right'
+    The inset point placed at *xy*. String aliases include ``'ul'``, ``'ur'``,
+    ``'ll'``, ``'lr'``, and ``'c'``. A float 2-tuple is interpreted in
+    `anchor_transform` coordinates. String aliases are always axes-relative.
+anchor_transform : coordinate system, default: 'axes'
+    Coordinate system for a float-tuple `anchor`. ``'axes'`` (the default) reads
+    the anchor as inset axes fractions, matching string aliases. ``'map'``, a
+    projection name, or a `~cartopy.crs.Projection` reads the anchor as a
+    geographic/projected point, so a specific location on the inset map (e.g.
+    ``anchor=(103.8, 1.3), anchor_transform='map'``) is placed at *xy*. The point
+    must fall within the inset extent. Requires the cartopy backend.
+aspect : {'auto', 'projection'} or float, default: 'projection'
+    The inset aspect. ``'projection'`` preserves the geographic projection aspect
+    inside the requested box, while ``'auto'`` stretches the map to fill that box.
+    Circular insets expand the shorter projected dimension to avoid distorting the
+    projection.
+grid : bool, default: False
+    Whether to draw gridlines in the inset.
+extent : 4-tuple of float, optional
+    The geographic scope ``(west, east, south, north)`` displayed by the inset.
+extent_transform : coordinate system, default: 'map'
+    Coordinate system for *extent*. ``'map'`` uses `~cartopy.crs.PlateCarree`
+    (longitude-latitude). A projection name (e.g. ``'cyl'``) or a
+    `~cartopy.crs.Projection` is also accepted.
+relation : {'auto', 'detail', 'overview'}, default: 'auto'
+    Whether the inset is a zoomed detail of the parent or an overview containing the
+    parent extent. ``'auto'`` compares the rectangular extent sizes. This determines
+    where the extent outline and connectors are drawn.
+indicator : bool, default: True
+    Whether to outline *extent* on the parent map when an extent is supplied.
+connector : {False, True, 'corners', 'line'}, default: False
+    The connector presentation. ``True`` and ``'corners'`` draw corner links between
+    the extent outline and inset. ``'line'`` draws one leader from the inset boundary
+    to the target centre. Requires *extent*.
+shape, target : {'box', 'circle'}, default: 'box'
+    The inset clipping shape and target marker shape. Circular targets require
+    ``connector='line'`` or no connector.
+indicator_kw : dict-like, optional
+    Patch properties for the extent outline and connector lines.
+
+Other parameters
+----------------
+**kwargs
+    Passed to `~Axes.inset_axes`.
+
+Returns
+-------
+GeoAxes
+    The geographic inset axes.
+"""
+docstring._snippet_manager["geo.hawkeye"] = _hawkeye_docstring
 
 _choropleth_docstring = """
 Draw polygon geometries colored by numeric values.
@@ -1084,6 +1590,212 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self._edge_lon_labels: list[mtext.Text] = []
         self._edge_lat_labels: list[mtext.Text] = []
         super().__init__(*args, **kwargs)
+
+    @docstring._snippet_manager
+    def hawkeye(
+        self,
+        xy: Sequence[float],
+        size: float | Sequence[float],
+        *,
+        transform: Any = "axes",
+        anchor: str | Sequence[float] = "upper right",
+        anchor_transform: Any = "axes",
+        aspect: str | float = "projection",
+        extent: Optional[Sequence[float]] = None,
+        extent_transform: Any = "map",
+        relation: str = "auto",
+        indicator: bool = True,
+        connector: bool | str = False,
+        shape: str = "box",
+        target: str = "box",
+        indicator_kw: Optional[Mapping[str, Any]] = None,
+        **kwargs: Any,
+    ) -> "GeoAxes":
+        """
+        %(geo.hawkeye)s
+        """
+        spec = self._resolve_hawkeye_spec(
+            xy,
+            size,
+            transform,
+            anchor,
+            anchor_transform,
+            extent,
+            extent_transform,
+            relation,
+            connector,
+            shape,
+            target,
+        )
+        kwargs.setdefault("grid", False)
+        inset = self._build_hawkeye_inset(spec, aspect, **kwargs)
+        inset._hawkeye_relation = spec.relation
+        if indicator and spec.extent is not None:
+            color = kwargs.get("color", rc["axes.edgecolor"])
+            self._add_hawkeye_indicator(inset, spec, indicator_kw, color)
+        return inset
+
+    def _resolve_hawkeye_spec(
+        self,
+        xy: Sequence[float],
+        size: float | Sequence[float],
+        transform: Any,
+        anchor: str | Sequence[float],
+        anchor_transform: Any,
+        extent: Optional[Sequence[float]],
+        extent_transform: Any,
+        relation: str,
+        connector: bool | str,
+        shape: str,
+        target: str,
+    ) -> "_HawkeyeSpec":
+        """Validate and normalize raw hawkeye arguments into a :class:`_HawkeyeSpec`."""
+        if len(xy) != 2:
+            raise ValueError(f"xy must have length 2, got {xy!r}.")
+        size = _parse_hawkeye_size(size)
+        anchor_transform = _parse_hawkeye_anchor_transform(anchor_transform)
+        if anchor_transform is not None and self._name != "cartopy":
+            raise NotImplementedError(
+                "hawkeye(anchor_transform=...) currently requires the cartopy backend."
+            )
+        anchor = _parse_hawkeye_anchor(anchor, axes_relative=anchor_transform is None)
+        transform = self._resolve_hawkeye_xy_transform(transform)
+        connector = _parse_hawkeye_connector(connector)
+        shape = _parse_hawkeye_shape(shape, "shape")
+        target = _parse_hawkeye_shape(target, "target")
+        if connector and extent is None:
+            raise ValueError("connector requires extent.")
+        if connector == "corners" and target == "circle":
+            raise ValueError("target='circle' requires connector='line' or False.")
+        if relation not in ("auto", "detail", "overview"):
+            raise ValueError("relation must be 'auto', 'detail', or 'overview'.")
+        if extent is not None:
+            if self._name != "cartopy":
+                raise NotImplementedError(
+                    "hawkeye(extent=...) currently requires the cartopy backend."
+                )
+            if len(extent) != 4:
+                raise ValueError(f"extent must have length 4, got {extent!r}.")
+            west, east, south, north = extent
+            if west >= east or south >= north:
+                raise ValueError(
+                    "extent must be ordered as (west, east, south, north) with "
+                    "west < east and south < north."
+                )
+            extent = tuple(extent)
+            extent_transform = _parse_hawkeye_extent_transform(extent_transform)
+            if relation == "auto":
+                relation = _infer_hawkeye_relation(
+                    self.get_extent(crs=extent_transform), extent
+                )
+        return _HawkeyeSpec(
+            xy=tuple(xy),
+            size=size,
+            anchor=anchor,
+            anchor_transform=anchor_transform,
+            transform=transform,
+            extent=extent,
+            extent_transform=extent_transform,
+            relation=relation,
+            connector=connector,
+            shape=shape,
+            target=target,
+        )
+
+    def _resolve_hawkeye_xy_transform(self, transform: Any) -> Any:
+        """Resolve the *xy* transform, accepting projection names.
+
+        Reserved names (``'axes'``, ``'data'``, ``'figure'``, ``'subfigure'``,
+        ``'map'``), matplotlib transforms, and cartopy CRS instances are handled
+        by :meth:`_get_transform`. Any other string is treated as a projection
+        name and resolved to a cartopy CRS so *xy* can be given in arbitrary
+        projected coordinates.
+        """
+        if isinstance(transform, str) and transform not in _HAWKEYE_TRANSFORM_NAMES:
+            transform = _hawkeye_crs_from_name(transform)
+        return self._get_transform(transform, default="axes")
+
+    def _build_hawkeye_inset(
+        self, spec: "_HawkeyeSpec", aspect: str | float, **kwargs: Any
+    ) -> "GeoAxes":
+        """Create the inset axes and configure its extent, aspect, and boundary."""
+        inset = self._add_inset_axes((0, 0, *spec.size), transform="axes", **kwargs)
+        if spec.extent is not None:
+            if isinstance(spec.extent_transform, ccrs.PlateCarree) and np.allclose(
+                spec.extent, (-180, 180, -90, 90)
+            ):
+                inset.set_global()
+            else:
+                inset.set_extent(spec.extent, crs=spec.extent_transform)
+        if aspect == "projection":
+            aspect = inset.get_aspect()
+        inset.set_aspect(aspect)
+        # Resolve the anchor to a fraction against the final view limits, which a
+        # circular boundary may adjust, before pinning it with set_anchor/locator.
+        if spec.shape == "circle":
+            _apply_hawkeye_circle_boundary(inset, aspect)
+        anchor = _hawkeye_anchor_fraction(inset, spec.anchor, spec.anchor_transform)
+        inset.set_anchor(anchor)
+        inset.set_axes_locator(
+            _AnchoredInsetLocator(
+                self,
+                spec.xy,
+                spec.size,
+                spec.transform,
+                anchor,
+                square=spec.shape == "circle",
+            )
+        )
+        return inset
+
+    def _add_hawkeye_indicator(
+        self,
+        inset: "GeoAxes",
+        spec: "_HawkeyeSpec",
+        indicator_kw: Optional[Mapping[str, Any]],
+        color: Any,
+    ) -> None:
+        """Draw the extent indicator patch and any connectors onto the hawkeye."""
+        indicator_kw = dict(indicator_kw or {})
+        indicator_kw.setdefault("edgecolor", color)
+        indicator_kw.setdefault("facecolor", "none")
+        indicator_kw.setdefault("linewidth", rc["axes.linewidth"])
+        indicator_kw.setdefault("zorder", 3.5)
+        if spec.connector == "corners" and spec.relation == "detail":
+            # matplotlib's indicate_inset_zoom always draws a box outline, so
+            # ``spec.target`` cannot be honored here; the box/circle guard in
+            # _resolve_hawkeye_spec rejects target='circle' with corner connectors.
+            indicator = _add_hawkeye_zoom_indicator(self, inset, **indicator_kw)
+            _envelop_hawkeye_zoom_connectors(indicator, inset)
+            inset._hawkeye_indicator = indicator
+            return
+        outline_axes = self if spec.relation == "detail" else inset
+        outline_extent = (
+            spec.extent
+            if spec.relation == "detail"
+            else self.get_extent(crs=spec.extent_transform)
+        )
+        patch = _make_hawkeye_indicator_patch(
+            outline_extent, spec.extent_transform, spec.target, **indicator_kw
+        )
+        outline_axes.add_patch(patch)
+        inset._hawkeye_indicator = patch
+        if spec.connector == "corners":
+            inset._hawkeye_connectors = _add_hawkeye_overview_connectors(
+                self, inset, outline_extent, spec.extent_transform, **indicator_kw
+            )
+        elif spec.connector == "line":
+            west, east, south, north = outline_extent
+            inset._hawkeye_connectors = (
+                _add_hawkeye_leader(
+                    inset,
+                    outline_axes,
+                    ((west + east) / 2, (south + north) / 2),
+                    spec.extent_transform,
+                    target_patch=patch,
+                    **indicator_kw,
+                ),
+            )
 
     @override
     def _sharey_limits(self, sharey: "GeoAxes") -> None:

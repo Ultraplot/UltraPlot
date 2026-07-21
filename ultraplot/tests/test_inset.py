@@ -1,4 +1,8 @@
-import ultraplot as uplt, numpy as np, pytest
+import numpy as np
+import pytest
+from matplotlib import patches as mpatches
+
+import ultraplot as uplt
 
 
 @pytest.mark.mpl_image_compare
@@ -27,3 +31,342 @@ def test_inset_basic():
         titleabove=False,
     )
     return fig
+
+
+def test_geo_inset_preserves_bounds_anchor():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    parent = ax[0]
+    inset = parent.inset((0.1, 0.2, 0.4, 0.2), transform="axes")
+    fig.canvas.draw()
+
+    expected = fig.transFigure.inverted().transform(
+        parent.transAxes.transform((0.1, 0.2))
+    )
+    actual = inset.get_position()
+    np.testing.assert_allclose((actual.x0, actual.y0), expected)
+    assert actual.width < 0.4 * parent.get_position().width
+    uplt.close(fig)
+
+
+def test_hawkeye_projection_and_auto_aspects():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    parent = ax[0]
+    projected = parent.hawkeye((0.9, 0.9), size=(0.2, 0.2))
+    stretched = parent.hawkeye((0.9, 0.6), size=0.2, aspect="auto")
+    fig.canvas.draw()
+
+    projected_bbox = projected.get_position()
+    stretched_bbox = stretched.get_position()
+    np.testing.assert_allclose(
+        (stretched_bbox.width, stretched_bbox.height),
+        (0.2 * parent.get_position().width, 0.2 * parent.get_position().height),
+    )
+    assert projected_bbox.width != pytest.approx(projected_bbox.height)
+    uplt.close(fig)
+
+
+def test_hawkeye_extent_and_connectors():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.9, 0.9),
+        size=0.2,
+        extent=(120, 180, 10, 30),
+        connector=True,
+    )
+    fig.canvas.draw()
+
+    assert inset._hawkeye_relation == "detail"
+    assert len(inset._hawkeye_indicator.connectors) == 4
+    uplt.close(fig)
+
+
+def test_hawkeye_corner_connectors_envelop_inset() -> None:
+    pytest.importorskip("cartopy.crs")
+
+    # Inset lower-left, indicator extent upper-right: the enveloping pair is the
+    # upper-left and lower-right connectors (indices 1 and 2), not a parallel pair.
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.03, 0.03), size=0.2, anchor="ll", extent=(110, 160, -45, 0), connector=True
+    )
+    fig.canvas.draw()
+    visible = [bool(c.get_visible()) for c in inset._hawkeye_indicator.connectors]
+    assert visible == [False, True, True, False]
+    uplt.close(fig)
+
+    # Opposite diagonal (inset upper-left, extent lower-right): the enveloping pair
+    # is the lower-left and upper-right connectors (indices 0 and 3).
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.03, 0.97), size=0.2, anchor="ul", extent=(60, 110, -60, -20), connector=True
+    )
+    fig.canvas.draw()
+    visible = [bool(c.get_visible()) for c in inset._hawkeye_indicator.connectors]
+    assert visible == [True, False, False, True]
+    uplt.close(fig)
+
+
+def test_hawkeye_auto_relation_handles_disjoint_detail_extent():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    ax[0].set_extent((30, 100, -20, 30))
+    inset = ax[0].hawkeye((0.9, 0.9), size=0.2, extent=(120, 180, 10, 30))
+
+    assert inset._hawkeye_relation == "detail"
+    uplt.close(fig)
+
+
+def test_hawkeye_connectors_require_extent():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="requires extent"):
+        ax[0].hawkeye((0.9, 0.9), size=0.2, connector=True)
+    uplt.close(fig)
+
+
+def test_hawkeye_circular_cutout_and_leader():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.9, 0.9),
+        size=0.2,
+        extent=(120, 180, 10, 30),
+        connector="line",
+        shape="circle",
+        target="circle",
+    )
+    fig.canvas.draw()
+
+    assert isinstance(inset._hawkeye_indicator, mpatches.Circle)
+    assert len(inset._hawkeye_connectors) == 1
+    connector = inset._hawkeye_connectors[0]
+    assert connector.patchA is inset.patch
+    assert connector.patchB is inset._hawkeye_indicator
+    assert connector.axes is ax[0]
+    assert inset.get_in_layout()
+    bbox = inset.get_position()
+    figure_bbox = fig.bbox
+    assert bbox.width * figure_bbox.width == pytest.approx(
+        bbox.height * figure_bbox.height
+    )
+    assert inset.get_aspect() == 1
+    assert not inset._gridlines_major.xline_artists
+    assert not inset._gridlines_major.yline_artists
+    uplt.close(fig)
+
+
+def test_hawkeye_outside_parent_claims_layout_space():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.97, 0.97),
+        size=0.25,
+        anchor="c",
+        extent=(120, 180, 10, 30),
+        shape="circle",
+        target="circle",
+    )
+    fig.canvas.draw()
+
+    # The inset protrudes past the parent axes; automatic layout must reserve
+    # space for it so it is not clipped at the figure edge.
+    bbox = inset.get_position()
+    assert bbox.x1 <= 1
+    assert bbox.y1 <= 1
+    uplt.close(fig)
+
+
+def test_hawkeye_overview_connectors():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    parent = ax[0]
+    parent.set_extent((145, 155, -38, -32))
+    inset = parent.hawkeye(
+        (0.9, 0.9),
+        size=0.2,
+        extent=(110, 180, -50, 0),
+        connector=True,
+    )
+    fig.canvas.draw()
+
+    assert inset._hawkeye_relation == "overview"
+    assert inset._hawkeye_indicator in inset.patches
+    assert len(inset._hawkeye_connectors) == 2
+    uplt.close(fig)
+
+
+def test_hawkeye_overview_indicator():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    parent = ax[0]
+    parent.set_extent((145, 155, -38, -32))
+    inset = parent.hawkeye(
+        (0.9, 0.9), size=0.2, extent=(110, 180, -50, 0), relation="overview"
+    )
+    fig.canvas.draw()
+
+    assert inset._hawkeye_indicator in inset.patches
+    assert inset._hawkeye_indicator not in parent.patches
+    uplt.close(fig)
+
+
+def test_hawkeye_transform_accepts_projection_name():
+    ccrs = pytest.importorskip("cartopy.crs")
+
+    # A projection name resolves to a CRS so xy can be given in projected
+    # coordinates; the result matches passing the equivalent CRS instance.
+    fig, ax = uplt.subplots(proj="cyl")
+    by_name = ax[0].hawkeye((10, 20), size=0.2, transform="cyl")
+    by_crs = ax[0].hawkeye((10, 20), size=0.2, transform=ccrs.PlateCarree())
+    fig.canvas.draw()
+    np.testing.assert_allclose(
+        by_name.get_position().bounds, by_crs.get_position().bounds
+    )
+    uplt.close(fig)
+
+
+def test_hawkeye_extent_transform_accepts_projection_name():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.9, 0.9), size=0.2, extent=(120, 180, 10, 30), extent_transform="cyl"
+    )
+    fig.canvas.draw()
+    assert inset._hawkeye_relation == "detail"
+    uplt.close(fig)
+
+
+def test_hawkeye_geographic_anchor_pins_point():
+    ccrs = pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    parent = ax[0]
+    # Pin a specific lon/lat point on the inset map to xy on the parent.
+    xy = (0.5, 0.5)
+    lonlat = (103.8, 1.3)
+    inset = parent.hawkeye(
+        xy, size=0.3, extent=(90, 120, 0, 30), anchor=lonlat, anchor_transform="map"
+    )
+    fig.canvas.draw()
+
+    projected = inset.projection.transform_point(*lonlat, ccrs.PlateCarree())
+    display = inset.transData.transform(projected)
+    fraction = parent.transAxes.inverted().transform(display)
+    np.testing.assert_allclose(fraction, xy, atol=1e-6)
+    uplt.close(fig)
+
+
+def test_hawkeye_geographic_anchor_outside_extent_errors():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="outside the inset extent"):
+        ax[0].hawkeye(
+            (0.5, 0.5),
+            size=0.3,
+            extent=(90, 120, 0, 30),
+            anchor=(0, 0),
+            anchor_transform="map",
+        )
+    uplt.close(fig)
+
+
+def test_hawkeye_string_anchor_rejects_anchor_transform():
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="String anchors are axes-relative"):
+        ax[0].hawkeye(
+            (0.5, 0.5),
+            size=0.3,
+            extent=(90, 120, 0, 30),
+            anchor="ul",
+            anchor_transform="map",
+        )
+    uplt.close(fig)
+
+
+def test_hawkeye_zoom_indicator_normalizes_legacy_tuple(monkeypatch) -> None:
+    """The corners+detail indicator exposes ``.connectors`` on every mpl version.
+
+    matplotlib < 3.10 returns a ``(rectangle, connectors)`` tuple from
+    ``indicate_inset_zoom`` instead of an ``InsetIndicator``; the helper must
+    normalize both to something exposing ``.rectangle`` / ``.connectors``.
+    """
+    import matplotlib.axes as maxes
+    from ultraplot.axes import geo
+
+    fig, ax = uplt.subplots()
+    inset = fig.add_axes([0.6, 0.6, 0.3, 0.3])
+
+    # Force the pre-3.10 tuple return regardless of the installed matplotlib.
+    original = maxes.Axes.indicate_inset_zoom
+
+    def legacy(self, inset_ax, **kwargs):
+        indicator = original(self, inset_ax, **kwargs)
+        if isinstance(indicator, tuple):
+            return indicator
+        return indicator.rectangle, tuple(indicator.connectors)
+
+    monkeypatch.setattr(maxes.Axes, "indicate_inset_zoom", legacy)
+    normalized = geo._add_hawkeye_zoom_indicator(ax[0], inset)
+    assert hasattr(normalized, "rectangle")
+    assert len(normalized.connectors) == 4
+    uplt.close(fig)
+
+
+def test_hawkeye_indicator_disabled() -> None:
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    inset = ax[0].hawkeye(
+        (0.9, 0.9), size=0.2, extent=(120, 180, 10, 30), indicator=False
+    )
+
+    # Relation is still resolved, but no indicator artist is drawn.
+    assert inset._hawkeye_relation == "detail"
+    assert not hasattr(inset, "_hawkeye_indicator")
+    uplt.close(fig)
+
+
+def test_hawkeye_overview_leader() -> None:
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    parent = ax[0]
+    parent.set_extent((145, 155, -38, -32))
+    inset = parent.hawkeye(
+        (0.9, 0.9),
+        size=0.2,
+        extent=(110, 180, -50, 0),
+        connector="line",
+        relation="overview",
+    )
+    fig.canvas.draw()
+
+    assert inset._hawkeye_relation == "overview"
+    assert inset._hawkeye_indicator in inset.patches
+    assert len(inset._hawkeye_connectors) == 1
+    uplt.close(fig)
+
+
+def test_hawkeye_invalid_relation_raises() -> None:
+    pytest.importorskip("cartopy.crs")
+
+    fig, ax = uplt.subplots(proj="cyl")
+    with pytest.raises(ValueError, match="relation must be"):
+        ax[0].hawkeye((0.9, 0.9), size=0.2, relation="sideways")
+    uplt.close(fig)
