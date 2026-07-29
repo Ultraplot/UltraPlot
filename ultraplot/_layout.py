@@ -154,10 +154,8 @@ class _AxisTickCache:
         )
         return all(_is_internal_ticker(obj) for obj in ticker_objects)
 
-    @staticmethod
-    def _get_state(axis):
+    def _get_state(self, axis):
         axes = axis.axes
-        figure = axes.get_figure(root=True)
         get_converter = getattr(axis, "get_converter", None)
         converter = get_converter() if get_converter is not None else None
         get_units = getattr(axis, "get_units", None)
@@ -166,7 +164,7 @@ class _AxisTickCache:
             view_interval=_interval_key(axis.get_view_interval()),
             data_interval=_interval_key(axis.get_data_interval()),
             axes_size=(axes.bbox.width, axes.bbox.height),
-            dpi=float(figure.dpi),
+            dpi=float(self.figure.dpi),
             scale=axis.get_scale(),
             major_locator=id(axis.major.locator),
             major_formatter=id(axis.major.formatter),
@@ -410,7 +408,7 @@ class _LayoutExtentStore:
         return _AxesExtentState(
             bbox_size=(bbox.width, bbox.height),
             bbox_position=(bbox.x0, bbox.y0) if position_sensitive else (),
-            dpi=float(axes.get_figure(root=True).dpi),
+            dpi=float(self.figure.dpi),
             axis_states=tuple(axis_states),
             decorations=self._get_decoration_state(axes),
             subset_titles=self._get_subset_title_state(axes, include_subset_titles),
@@ -492,7 +490,7 @@ class _LayoutExtentStore:
     def _get_subset_title_state(self, axes, include_subset_titles):
         if not include_subset_titles:
             return ()
-        figure = axes.get_figure(root=True)
+        figure = self.figure
         groups = getattr(figure, "_subset_title_dict", {})
         state = []
         parent = getattr(axes, "_panel_parent", None) or axes
