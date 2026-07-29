@@ -1,15 +1,18 @@
 from unittest.mock import MagicMock
 
+import datetime
 import io
 import matplotlib
 import numpy as np
 import pytest
+from matplotlib import ticker as mticker
 from matplotlib.animation import FuncAnimation
 from matplotlib.backend_bases import FigureCanvasBase
 from PIL import Image
 
 import ultraplot as uplt
 from ultraplot._animation import _BlitManager
+from ultraplot._layout import _AxisTickCache
 
 
 def test_auto_layout_not_called_on_every_frame():
@@ -46,6 +49,220 @@ def test_draw_idle_skips_auto_layout_after_first_draw():
 
     fig.canvas.draw_idle()
     assert fig.auto_layout.call_count == 1
+
+
+def test_initial_draw_reuses_tick_updates():
+    """
+    Layout and render phases should share identical tick computations.
+    """
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=False)
+    for ax in axs:
+        ax.plot([0, 1, 2], [0, 1, 0])
+    axs.format(xlabel="Coordinate", ylabel="Response", suptitle="Tick cache")
+
+    fig.canvas.draw()
+
+    stats = fig._last_axis_tick_cache_stats
+    assert stats["hits"] > 0
+    assert stats["misses"] > 0
+    assert stats["bypasses"] == 0
+    assert stats["evictions"] == 0
+    assert "_axis_tick_cache" not in fig.__dict__
+    for ax in fig.axes:
+        for axis in ax._axis_map.values():
+            assert "_update_ticks" not in axis.__dict__
+
+
+def test_tick_cache_preserves_rendered_pixels():
+    """
+    Caching tick updates must produce the exact uncached raster output.
+    """
+
+    def _draw(disable):
+        fig, axs = uplt.subplots(nrows=2, ncols=2, share=False)
+        x = np.linspace(0, 2 * np.pi, 100)
+        for index, ax in enumerate(axs):
+            ax.plot(x, np.sin(x + index))
+        axs.format(
+            xlabel="Coordinate",
+            ylabel="Response",
+            suptitle="Pixel comparison",
+            grid=True,
+        )
+        fig._disable_axis_tick_cache = disable
+        fig._disable_layout_extent_cache = disable
+        fig.canvas.draw()
+        return np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    expected = _draw(True)
+    actual = _draw(False)
+
+    assert np.array_equal(actual, expected)
+
+
+@pytest.mark.parametrize("kind", ("log", "date", "categorical", "shared"))
+def test_layout_caches_preserve_specialized_tick_pixels(kind):
+    """
+    Built-in non-linear, unit-aware, categorical, and shared ticks stay exact.
+    """
+
+    def _draw(disable):
+        if kind == "shared":
+            fig, axs = uplt.subplots(ncols=2, share=True)
+        else:
+            fig, ax = uplt.subplots()
+            axs = [ax]
+        if kind == "log":
+            axs[0].semilogx([1, 10, 100, 1000], [0, 1, 0, 1])
+        elif kind == "date":
+            dates = [datetime.date(2025, 1, day) for day in range(1, 8)]
+            axs[0].plot(dates, np.arange(len(dates)))
+        elif kind == "categorical":
+            axs[0].bar(["alpha", "beta", "gamma"], [1, 3, 2])
+        else:
+            for index, ax in enumerate(axs):
+                ax.plot([0, 1, 2], np.asarray([0, 1, 0]) + index)
+        fig._disable_axis_tick_cache = disable
+        fig._disable_layout_extent_cache = disable
+        fig.canvas.draw()
+        return np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    expected = _draw(True)
+    actual = _draw(False)
+
+    assert np.array_equal(actual, expected)
+
+
+def test_layout_caches_bypass_non_cartesian_axes():
+    """
+    Projection-specific tick and bbox implementations use their native paths.
+    """
+    fig, ax = uplt.subplots(proj="polar")
+    ax.plot(np.linspace(0, 2 * np.pi, 20), np.linspace(0, 1, 20))
+
+    fig.canvas.draw()
+
+    stats = fig._last_axis_tick_cache_stats
+    assert stats["bypasses"] > 0
+    assert fig._last_layout_extent_stats == {"hits": 0, "misses": 0}
+
+
+def test_tick_cache_invalidates_changed_axis_geometry():
+    """
+    Limits and pixel geometry are part of the draw-local cache key.
+    """
+    fig, ax = uplt.subplots()
+    axis = ax.xaxis
+    with _AxisTickCache(fig) as cache:
+        axis._update_ticks()
+        axis._update_ticks()
+        assert (cache.hits, cache.misses) == (1, 1)
+
+        ax.set_xlim(0, 10)
+        axis._update_ticks()
+        assert (cache.hits, cache.misses) == (1, 2)
+
+        position = ax.get_position()
+        ax.set_position(
+            [position.x0, position.y0, 0.5 * position.width, position.height]
+        )
+        axis._update_ticks()
+        assert (cache.hits, cache.misses) == (1, 3)
+
+        ax.set_position(position)
+        axis._update_ticks()
+        assert (cache.hits, cache.misses) == (2, 3)
+
+
+def test_tick_cache_bypasses_custom_tickers():
+    """
+    Unknown locator and formatter implementations may have stateful calls.
+    """
+
+    class CustomFormatter(mticker.Formatter):
+        def __call__(self, value, pos=None):
+            return f"{value:g}"
+
+    fig, ax = uplt.subplots()
+    ax.xaxis.set_major_formatter(CustomFormatter())
+    with _AxisTickCache(fig) as cache:
+        ax.xaxis._update_ticks()
+        ax.xaxis._update_ticks()
+
+    assert cache.hits == 0
+    assert cache.misses == 0
+    assert cache.bypasses == 2
+
+
+def test_tick_cache_lru_is_bounded():
+    """
+    Cycling through many geometries must not grow the draw-local cache.
+    """
+    fig, ax = uplt.subplots()
+    with _AxisTickCache(fig) as cache:
+        for stop in range(2, 9):
+            ax.set_xlim(0, stop)
+            ax.xaxis._update_ticks()
+        states = cache._cache[ax.xaxis]
+
+    assert len(states) == cache._MAX_STATES_PER_AXIS
+    assert cache.evictions == 3
+
+
+def test_layout_extent_store_reuses_unmodified_axes():
+    """
+    A one-axes title edit should only remeasure that axes.
+    """
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=False)
+    axs.format(abc="a.")
+    axs[1].plot([0, 1], [0, 1], label="Default axes legend")
+    axs[1].legend()
+    fig.canvas.draw()
+
+    axs[0].format(title="Changed")
+    fig.canvas.draw()
+
+    stats = fig._last_layout_extent_stats
+    assert stats == {"hits": 3, "misses": 1}
+
+
+def test_layout_extent_store_preserves_incremental_pixels():
+    """
+    Relative outsets must exactly match an uncached geometry update.
+    """
+
+    def _draw(disable):
+        fig, axs = uplt.subplots(nrows=2, ncols=2, share=False)
+        for ax in axs:
+            ax.plot([0, 1, 2], [0, 1, 0])
+        axs.format(abc="a.")
+        axs[1].plot([0, 1], [1, 0], label="Legend entry")
+        axs[1].legend()
+        fig._disable_layout_extent_cache = disable
+        fig.canvas.draw()
+        axs[0].format(title="A longer changed title")
+        fig.canvas.draw()
+        return np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    expected = _draw(True)
+    actual = _draw(False)
+
+    assert np.array_equal(actual, expected)
+
+
+def test_layout_extent_store_tracks_subset_title_changes():
+    """
+    Shared subset-title state participates in axes extent cache keys.
+    """
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=False)
+    axs[0, :].format(title="First")
+    fig.canvas.draw()
+
+    axs[0, :].format(title="A substantially longer shared title")
+    fig.canvas.draw()
+
+    stats = fig._last_layout_extent_stats
+    assert stats["misses"] >= 2
 
 
 @pytest.mark.parametrize(
