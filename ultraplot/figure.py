@@ -42,7 +42,7 @@ from .internals import (
     labels,
     warnings,
 )
-from ._layout import _AxisTickCache, _LayoutExtentStore
+from ._layout import _LayoutTransaction
 from ._subplots import SubplotManager
 from .utils import _Crawler, units
 
@@ -647,18 +647,15 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         ctx2 = fig._context_authorized()  # skip backend set_constrained_layout()
         ctx3 = rc.context(fig._render_context)  # draw with figure-specific setting
         ctx4 = (
-            _AxisTickCache(fig)
-            if needs_layout and not getattr(fig, "_disable_axis_tick_cache", False)
+            _LayoutTransaction(
+                fig,
+                cache_ticks=not getattr(fig, "_disable_axis_tick_cache", False),
+                cache_extents=not getattr(fig, "_disable_layout_extent_cache", False),
+            )
+            if needs_layout
             else context._empty_context()
         )
-        if needs_layout and not getattr(fig, "_disable_layout_extent_cache", False):
-            store = getattr(fig, "_layout_extent_store", None)
-            if store is None:
-                store = fig._layout_extent_store = _LayoutExtentStore(fig)
-            ctx5 = store
-        else:
-            ctx5 = context._empty_context()
-        with ctx1, ctx2, ctx3, ctx4, ctx5:
+        with ctx1, ctx2, ctx3, ctx4:
             needs_post_layout = False
             if not fig._layout_initialized or layout_dirty:
                 fig.auto_layout(tight=False if lock_tight_during_save else None)
@@ -692,9 +689,6 @@ def _clear_border_cache(func):
         result = func(self, *args, **kwargs)
         if hasattr(self, "_cached_border_axes"):
             delattr(self, "_cached_border_axes")
-        store = getattr(self, "_layout_extent_store", None)
-        if store is not None:
-            store.invalidate_topology()
         return result
 
     return wrapper
@@ -1088,6 +1082,13 @@ class Figure(mfigure.Figure):
         d["bottom"] = rc["bottomlabel.sharedpad"]
         d["top"] = rc["toplabel.sharedpad"]
 
+    def _invalidate_layout(self, *, reset=False):
+        """Mark automatic layout stale, optionally discarding persistent state."""
+        self._layout_dirty = True
+        if reset:
+            self._layout_initialized = False
+            self.__dict__.pop("_layout_extent_store", None)
+
     @_clear_border_cache
     def clear(self, keep_observers=False):
         """
@@ -1109,9 +1110,7 @@ class Figure(mfigure.Figure):
         super().clear(keep_observers=keep_observers)
         self._subplots.reset()
         self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
-        self._layout_initialized = False
-        self._layout_dirty = True
-        self.__dict__.pop("_layout_extent_store", None)
+        self._invalidate_layout(reset=True)
         self._init_super_labels()
 
     @override
@@ -2025,8 +2024,9 @@ class Figure(mfigure.Figure):
         use_cache=True,
     ):
         """Return an axes bbox using the active relative-outset store."""
-        store = getattr(self, "_layout_extent_store", None)
-        if store is not None and store._active:
+        transaction = getattr(self, "_layout_transaction", None)
+        store = transaction.extents if transaction is not None else None
+        if store is not None:
             return store.get_tightbbox(
                 axes,
                 renderer,
@@ -2045,7 +2045,7 @@ class Figure(mfigure.Figure):
         Return the figure tight bbox while reusing relative axes outsets.
 
         This mirrors matplotlib's ``Figure.get_tightbbox`` but routes axes
-        measurements through the active dependency store and reduction tree.
+        measurements through the active relative-outset store.
         """
         artists = [
             artist
@@ -2062,20 +2062,10 @@ class Figure(mfigure.Figure):
             if bbox is not None:
                 bboxes.append(bbox)
 
-        store = getattr(self, "_layout_extent_store", None)
-        if store is not None and store._active:
-            store.clear_union()
         for axes in self.axes:
             if not axes.get_visible():
-                if store is not None and store._active:
-                    store.update_union(axes, None)
                 continue
             bbox = self._get_layout_axes_bbox(axes, renderer)
-            if store is None or not store._active:
-                if bbox is not None:
-                    bboxes.append(bbox)
-        if store is not None and store._active:
-            bbox = store.get_union()
             if bbox is not None:
                 bboxes.append(bbox)
 
@@ -2276,7 +2266,7 @@ class Figure(mfigure.Figure):
         """
         Add a figure panel.
         """
-        self._layout_dirty = True
+        self._invalidate_layout()
         # Interpret args and enforce sensible keyword args
         side = _translate_loc(side, "panel", default="right")
         if side in ("left", "right"):
@@ -3469,12 +3459,9 @@ class Figure(mfigure.Figure):
         # WARNING: Tried to avoid two figure resizes but made
         # subsequent tight layout really weird. Have to resize twice.
         _draw_content()
-        manager = getattr(self, "_axis_tick_cache", None)
-        if manager is not None:
-            manager.refresh()
-        store = getattr(self, "_layout_extent_store", None)
-        if store is not None and store._active:
-            store.refresh()
+        transaction = getattr(self, "_layout_transaction", None)
+        if transaction is not None:
+            transaction.refresh()
         if not gs:
             return
         if aspect:
@@ -3586,7 +3573,7 @@ class Figure(mfigure.Figure):
             or bool(rc_kw)
             or axis_format_requires_layout(explicit_format_keys)
         ):
-            self._layout_dirty = True
+            self._invalidate_layout()
         kwargs.update(signature_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
@@ -4277,7 +4264,7 @@ class Figure(mfigure.Figure):
         if not samesize:  # gridspec positions will resolve differently
             self.gridspec.update()
             if not backend and not internal:
-                self._layout_dirty = True
+                self._invalidate_layout()
 
     def _iter_axes(self, hidden=False, children=False, panels=True):
         """

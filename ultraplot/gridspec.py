@@ -1117,12 +1117,8 @@ class GridSpec(mgridspec.GridSpec):
         # Iterate along each row or column space
         axs = tuple(fig._iter_axes(hidden=True, children=False))
         space = list(space)  # a copy
-        store = getattr(fig, "_layout_extent_store", None)
-        if store is not None and store._active:
-            ralong, racross = store.get_subplot_ranges(axs, x, y)
-        else:
-            ralong = np.array([ax._range_subplotspec(x) for ax in axs])
-            racross = np.array([ax._range_subplotspec(y) for ax in axs])
+        ralong = np.array([ax._range_subplotspec(x) for ax in axs])
+        racross = np.array([ax._range_subplotspec(y) for ax in axs])
         for i, (s, p) in enumerate(zip(space, pad)):
             # Find axes that abutt aginst this row or column space
             groups = []
