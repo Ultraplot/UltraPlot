@@ -6,6 +6,7 @@ The figure class used for all ultraplot figures.
 import functools
 import inspect
 import os
+from contextlib import ExitStack
 
 try:
     from typing import Any, Iterable, List, Optional, Tuple, Union
@@ -24,7 +25,7 @@ except:
     from typing_extensions import override
 
 from . import axes as paxes
-from .axes._formatting import pop_axis_format_kwargs
+from .axes._formatting import axis_format_requires_layout, pop_axis_format_kwargs
 from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
@@ -1115,6 +1116,28 @@ class Figure(mfigure.Figure):
         finally:
             if self.dpi != dpi:
                 mfigure.Figure.set_dpi(self, dpi)
+
+    def _blit_manager(self, *artists, bbox=None):
+        """
+        Return a manager for efficient updates of changing artists.
+
+        Parameters
+        ----------
+        *artists : `~matplotlib.artist.Artist`
+            Artists that will change between updates.
+        bbox : `~matplotlib.transforms.Bbox` or object with a ``bbox`` attribute, optional
+            Region to cache and blit. By default, the union of the artists'
+            axes bounding boxes is used.
+
+        Returns
+        -------
+        `~ultraplot._animation._BlitManager`
+            Manager that restores the cached static background and redraws only
+            the supplied artists.
+        """
+        from ._animation import _BlitManager
+
+        return _BlitManager(self.canvas, artists, bbox=bbox)
 
     def _is_auto_share_mode(self, which: str) -> bool:
         """Return whether a given axis uses auto-share mode."""
@@ -3419,7 +3442,6 @@ class Figure(mfigure.Figure):
         ultraplot.gridspec.SubplotGrid.format
         ultraplot.config.Configurator.context
         """
-        self._layout_dirty = True
         # Initiate context block
         axs = axs or self._iter_subplots()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
@@ -3430,6 +3452,32 @@ class Figure(mfigure.Figure):
         explicit_format_keys.update(signature_axis_kwargs)
         explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
+        figure_layout_values = (
+            figtitle,
+            suptitle,
+            suptitle_kw,
+            llabels,
+            leftlabels,
+            leftlabels_kw,
+            rlabels,
+            rightlabels,
+            rightlabels_kw,
+            blabels,
+            bottomlabels,
+            bottomlabels_kw,
+            tlabels,
+            toplabels,
+            toplabels_kw,
+            rowlabels,
+            collabels,
+            includepanels,
+        )
+        if (
+            any(value is not None for value in figure_layout_values)
+            or bool(rc_kw)
+            or axis_format_requires_layout(explicit_format_keys)
+        ):
+            self._layout_dirty = True
         kwargs.update(signature_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
@@ -3996,9 +4044,18 @@ class Figure(mfigure.Figure):
         # do not want to overwrite the matplotlib docstring.
         if isinstance(filename, str):
             filename = os.path.expanduser(filename)
-        # NOTE: this draw ensures that we are applying ultraplots layout adjustment. It is unclear what changed with ultraplot's history that makes this necessary, but it seems to cause no issues. Future devs, if unnecessary remove this line and test.
-        self.canvas.draw()
-        super().savefig(filename, **kwargs)
+        # Blitting marks managed artists as animated so full interactive draws can
+        # cache the static background. Temporarily restore their original states
+        # so savefig includes them in normal z-order.
+        managers = tuple(getattr(self, "_blit_managers", ()))
+        with ExitStack() as stack:
+            for manager in managers:
+                stack.enter_context(manager._save_context())
+            # NOTE: this draw ensures that we are applying ultraplots layout
+            # adjustment. It is unclear what changed with ultraplot's history that
+            # makes this necessary, but it seems to cause no issues.
+            self.canvas.draw()
+            super().savefig(filename, **kwargs)
 
     @docstring._concatenate_inherited
     def set_canvas(self, canvas):
