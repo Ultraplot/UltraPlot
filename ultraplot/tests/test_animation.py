@@ -12,7 +12,7 @@ from PIL import Image
 
 import ultraplot as uplt
 from ultraplot._animation import _BlitManager
-from ultraplot._layout import _AxisTickCache
+from ultraplot._layout import _AxisTickCache, _LayoutTransaction
 
 
 def test_auto_layout_not_called_on_every_frame():
@@ -68,6 +68,7 @@ def test_initial_draw_reuses_tick_updates():
     assert stats["bypasses"] == 0
     assert stats["evictions"] == 0
     assert "_axis_tick_cache" not in fig.__dict__
+    assert "_layout_transaction" not in fig.__dict__
     for ax in fig.axes:
         for axis in ax._axis_map.values():
             assert "_update_ticks" not in axis.__dict__
@@ -230,6 +231,45 @@ def test_tick_cache_includes_child_axes():
         assert (cache.hits, cache.misses) == (1, 1)
 
     assert "_update_ticks" not in child_axes[0].xaxis.__dict__
+
+
+def test_layout_transaction_restores_after_exception():
+    """
+    Temporary hooks and active stores must be cleaned up after draw failures.
+    """
+    fig, axs = uplt.subplots()
+    axis = axs[0].xaxis
+
+    with pytest.raises(RuntimeError, match="draw failed"):
+        with _LayoutTransaction(fig) as transaction:
+            assert fig._layout_transaction is transaction
+            assert "_update_ticks" in axis.__dict__
+            assert transaction.extents._active
+            raise RuntimeError("draw failed")
+
+    assert "_layout_transaction" not in fig.__dict__
+    assert "_axis_tick_cache" not in fig.__dict__
+    assert "_update_ticks" not in axis.__dict__
+    assert not fig._layout_extent_store._active
+
+
+def test_layout_invalidation_has_one_lifecycle():
+    """
+    Normal invalidation preserves reusable state; reset discards it.
+    """
+    fig, _ = uplt.subplots()
+    fig.canvas.draw()
+    store = fig._layout_extent_store
+
+    fig._invalidate_layout()
+    assert fig._layout_dirty
+    assert fig._layout_initialized
+    assert fig._layout_extent_store is store
+
+    fig._invalidate_layout(reset=True)
+    assert fig._layout_dirty
+    assert not fig._layout_initialized
+    assert "_layout_extent_store" not in fig.__dict__
 
 
 def test_layout_extent_store_reuses_unmodified_axes():
