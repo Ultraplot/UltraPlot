@@ -42,6 +42,7 @@ from .internals import (
     labels,
     warnings,
 )
+from ._layout import _AxisTickCache, _LayoutExtentStore
 from ._subplots import SubplotManager
 from .utils import _Crawler, units
 
@@ -618,6 +619,7 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
 
         skip_autolayout = getattr(fig, "_skip_autolayout", False)
         layout_dirty = getattr(fig, "_layout_dirty", False)
+        needs_layout = not getattr(fig, "_layout_initialized", False) or layout_dirty
         saving_frame_count = getattr(fig, "_saving_frame_count", 0)
         lock_tight_during_save = (
             getattr(self, "_is_saving", False)
@@ -639,7 +641,19 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         ctx1 = fig._context_adjusting(cache=cache)
         ctx2 = fig._context_authorized()  # skip backend set_constrained_layout()
         ctx3 = rc.context(fig._render_context)  # draw with figure-specific setting
-        with ctx1, ctx2, ctx3:
+        ctx4 = (
+            _AxisTickCache(fig)
+            if needs_layout and not getattr(fig, "_disable_axis_tick_cache", False)
+            else context._empty_context()
+        )
+        if needs_layout and not getattr(fig, "_disable_layout_extent_cache", False):
+            store = getattr(fig, "_layout_extent_store", None)
+            if store is None:
+                store = fig._layout_extent_store = _LayoutExtentStore(fig)
+            ctx5 = store
+        else:
+            ctx5 = context._empty_context()
+        with ctx1, ctx2, ctx3, ctx4, ctx5:
             needs_post_layout = False
             if not fig._layout_initialized or layout_dirty:
                 fig.auto_layout(tight=False if lock_tight_during_save else None)
@@ -673,6 +687,9 @@ def _clear_border_cache(func):
         result = func(self, *args, **kwargs)
         if hasattr(self, "_cached_border_axes"):
             delattr(self, "_cached_border_axes")
+        store = getattr(self, "_layout_extent_store", None)
+        if store is not None:
+            store.invalidate_topology()
         return result
 
     return wrapper
@@ -1089,6 +1106,7 @@ class Figure(mfigure.Figure):
         self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
         self._layout_initialized = False
         self._layout_dirty = True
+        self.__dict__.pop("_layout_extent_store", None)
         self._init_super_labels()
 
     @override
@@ -1971,8 +1989,11 @@ class Figure(mfigure.Figure):
                 if label.get_text() and not label.get_text().strip():
                     label.set_visible(False)
             if isinstance(obj, paxes.Axes):
-                bbox = obj.get_tightbbox(
-                    renderer, include_subset_titles=include_subset_titles
+                bbox = self._get_layout_axes_bbox(
+                    obj,
+                    renderer,
+                    include_subset_titles=include_subset_titles,
+                    use_cache=not exclude_spanning_axis_labels,
                 )
             else:
                 bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
@@ -1989,6 +2010,83 @@ class Figure(mfigure.Figure):
             pad = self._suplabel_pad[side] / 72
             pad = pad / width if side in ("left", "right") else pad / height
         return min(cs) - pad if side in ("left", "bottom") else max(cs) + pad
+
+    def _get_layout_axes_bbox(
+        self,
+        axes,
+        renderer,
+        *,
+        include_subset_titles=True,
+        use_cache=True,
+    ):
+        """Return an axes bbox using the active relative-outset store."""
+        store = getattr(self, "_layout_extent_store", None)
+        if store is not None and store._active:
+            return store.get_tightbbox(
+                axes,
+                renderer,
+                include_subset_titles=include_subset_titles,
+                use_cache=use_cache,
+            )
+        try:
+            return axes.get_tightbbox(
+                renderer, include_subset_titles=include_subset_titles
+            )
+        except TypeError:
+            return axes.get_tightbbox(renderer)
+
+    def _get_layout_tightbbox(self, renderer):
+        """
+        Return the figure tight bbox while reusing relative axes outsets.
+
+        This mirrors matplotlib's ``Figure.get_tightbbox`` but routes axes
+        measurements through the active dependency store and reduction tree.
+        """
+        artists = [
+            artist
+            for artist in self.get_children()
+            if (
+                artist not in self.axes
+                and artist.get_visible()
+                and artist.get_in_layout()
+            )
+        ]
+        bboxes = []
+        for artist in artists:
+            bbox = artist.get_tightbbox(renderer)
+            if bbox is not None:
+                bboxes.append(bbox)
+
+        store = getattr(self, "_layout_extent_store", None)
+        if store is not None and store._active:
+            store.clear_union()
+        for axes in self.axes:
+            if not axes.get_visible():
+                if store is not None and store._active:
+                    store.update_union(axes, None)
+                continue
+            bbox = self._get_layout_axes_bbox(axes, renderer)
+            if store is None or not store._active:
+                if bbox is not None:
+                    bboxes.append(bbox)
+        if store is not None and store._active:
+            bbox = store.get_union()
+            if bbox is not None:
+                bboxes.append(bbox)
+
+        bboxes = [
+            bbox
+            for bbox in bboxes
+            if (
+                np.isfinite(bbox.width)
+                and np.isfinite(bbox.height)
+                and (bbox.width != 0 or bbox.height != 0)
+            )
+        ]
+        if not bboxes:
+            return self.bbox_inches
+        bbox = mtransforms.Bbox.union(bboxes)
+        return mtransforms.TransformedBbox(bbox, self.dpi_scale_trans.inverted())
 
     def _get_renderer(self):
         """
@@ -3366,6 +3464,12 @@ class Figure(mfigure.Figure):
         # WARNING: Tried to avoid two figure resizes but made
         # subsequent tight layout really weird. Have to resize twice.
         _draw_content()
+        manager = getattr(self, "_axis_tick_cache", None)
+        if manager is not None:
+            manager.refresh()
+        store = getattr(self, "_layout_extent_store", None)
+        if store is not None and store._active:
+            store.refresh()
         if not gs:
             return
         if aspect:
