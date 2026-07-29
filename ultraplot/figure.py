@@ -51,6 +51,11 @@ __all__ = [
 ]
 
 
+def _any_not_none(*values):
+    """Return whether at least one value is not ``None``."""
+    return any(value is not None for value in values)
+
+
 # Preset figure widths or sizes based on academic journal recommendations
 # NOTE: Please feel free to add to this!
 JOURNAL_SIZES = {
@@ -3551,7 +3556,7 @@ class Figure(mfigure.Figure):
         explicit_format_keys.update(signature_axis_kwargs)
         explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
-        figure_layout_values = (
+        figure_layout_requested = _any_not_none(
             figtitle,
             suptitle,
             suptitle_kw,
@@ -3572,7 +3577,7 @@ class Figure(mfigure.Figure):
             includepanels,
         )
         if (
-            any(value is not None for value in figure_layout_values)
+            figure_layout_requested
             or bool(rc_kw)
             or axis_format_requires_layout(explicit_format_keys)
         ):
