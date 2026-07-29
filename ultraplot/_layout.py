@@ -104,7 +104,7 @@ class _AxisTickCache:
 
     def refresh(self):
         """Patch axes added while queued guides and panels are materialized."""
-        for axes in self.figure.axes:
+        for axes in self.figure._iter_axes(hidden=True, children=True):
             axis_map = getattr(axes, "_axis_map", {})
             for axis in axis_map.values():
                 if axis is not None and axis not in self._patched:
