@@ -1,13 +1,20 @@
 """
 Private helpers for reducing repeated layout work.
 
-The objects in this module are deliberately scoped to a single canvas draw.
-They do not change matplotlib's persistent axis state or public API.
+There are two cache lifetimes:
+
+- Tick computations are reused only within one layout-and-render transaction.
+- Relative axes outsets persist across transactions until their dependencies
+  change.
+
+``_LayoutTransaction`` owns both lifecycles. Temporary matplotlib method
+overrides are restored when the transaction exits, including after exceptions.
 """
 
 from __future__ import annotations
 
 from collections import OrderedDict
+from contextlib import ExitStack
 from dataclasses import dataclass
 
 import matplotlib.transforms as mtransforms
@@ -214,47 +221,6 @@ class _AxesExtentRecord:
     outsets: tuple
 
 
-class _ExtentReductionTree:
-    """Small mutable min/max tree for the union of axes extents."""
-
-    def __init__(self, axes):
-        self.axes = tuple(axes)
-        self._indices = {axis: index for index, axis in enumerate(self.axes)}
-        capacity = 1
-        while capacity < max(1, len(self.axes)):
-            capacity *= 2
-        self._capacity = capacity
-        self._values = np.empty((2 * capacity, 4), dtype=float)
-        self.clear()
-
-    def clear(self):
-        self._values[:, :2] = np.inf
-        self._values[:, 2:] = -np.inf
-
-    def update(self, axis, bbox):
-        index = self._indices.get(axis)
-        if index is None:
-            return
-        node = self._capacity + index
-        if bbox is None:
-            self._values[node] = (np.inf, np.inf, -np.inf, -np.inf)
-        else:
-            self._values[node] = (bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax)
-        node //= 2
-        while node:
-            left = self._values[2 * node]
-            right = self._values[2 * node + 1]
-            self._values[node, :2] = np.minimum(left[:2], right[:2])
-            self._values[node, 2:] = np.maximum(left[2:], right[2:])
-            node //= 2
-
-    def get_bbox(self):
-        xmin, ymin, xmax, ymax = self._values[1]
-        if not np.all(np.isfinite((xmin, ymin, xmax, ymax))):
-            return None
-        return mtransforms.Bbox.from_extents(xmin, ymin, xmax, ymax)
-
-
 class _LayoutExtentStore:
     """
     Persist relative axes outsets and dependency versions between layouts.
@@ -270,8 +236,7 @@ class _LayoutExtentStore:
         self.figure = figure
         self._records = {}
         self._versions = {}
-        self._tree = None
-        self._topology = {}
+        self._axes = ()
         self._active = False
         self.hits = 0
         self.misses = 0
@@ -289,9 +254,8 @@ class _LayoutExtentStore:
     def refresh(self):
         """Synchronize axes added by queued guide and panel creation."""
         axes = tuple(self.figure.axes)
-        if self._tree is None or self._tree.axes != axes:
-            self._tree = _ExtentReductionTree(axes)
-            self._topology.clear()
+        if self._axes != axes:
+            self._axes = axes
             current = set(axes)
             self._records = {
                 key: value for key, value in self._records.items() if key[0] in current
@@ -324,9 +288,7 @@ class _LayoutExtentStore:
     ):
         """Return an exact or reconstructed tight bbox in display units."""
         if not self._active or not use_cache or not self._is_cacheable_axes(axes):
-            bbox = self._measure_tightbbox(axes, renderer, include_subset_titles)
-            self.update_union(axes, bbox)
-            return bbox
+            return self._measure_tightbbox(axes, renderer, include_subset_titles)
 
         version = self._versions.setdefault(axes, 1)
         state = self._get_state(axes, include_subset_titles)
@@ -345,39 +307,7 @@ class _LayoutExtentStore:
                     state=self._get_state(axes, include_subset_titles),
                     outsets=self._get_outsets(axes.bbox, bbox),
                 )
-        self.update_union(axes, bbox)
         return bbox
-
-    def clear_union(self):
-        if self._tree is not None:
-            self._tree.clear()
-
-    def update_union(self, axes, bbox):
-        if self._tree is not None:
-            self._tree.update(axes, bbox)
-
-    def get_union(self):
-        return None if self._tree is None else self._tree.get_bbox()
-
-    def get_subplot_ranges(self, axes, along, across):
-        """Return compact topology arrays used by boundary reductions."""
-        key = (tuple(axes), along, across)
-        cached = self._topology.get(key)
-        if cached is not None:
-            return cached
-        along_ranges = np.asarray(
-            [axis._range_subplotspec(along) for axis in axes], dtype=int
-        )
-        across_ranges = np.asarray(
-            [axis._range_subplotspec(across) for axis in axes], dtype=int
-        )
-        result = (along_ranges, across_ranges)
-        self._topology[key] = result
-        return result
-
-    def invalidate_topology(self):
-        """Discard structural row/column range lookups."""
-        self._topology.clear()
 
     def _get_state(self, axes, include_subset_titles=True):
         bbox = axes.bbox
@@ -597,3 +527,52 @@ class _LayoutExtentStore:
             )
         except TypeError:
             return axes.get_tightbbox(renderer)
+
+
+class _LayoutTransaction:
+    """
+    Own temporary and persistent caches for one dirty canvas draw.
+
+    Figure code only needs to know whether a transaction is active. Cache setup,
+    dynamic-axes refresh, and exception-safe cleanup stay private to this object.
+    """
+
+    def __init__(self, figure, *, cache_ticks=True, cache_extents=True):
+        self.figure = figure
+        self.ticks = _AxisTickCache(figure) if cache_ticks else None
+        if cache_extents:
+            extents = getattr(figure, "_layout_extent_store", None)
+            if extents is None:
+                extents = figure._layout_extent_store = _LayoutExtentStore(figure)
+            self.extents = extents
+        else:
+            self.extents = None
+        self._stack = None
+
+    def __enter__(self):
+        stack = self._stack = ExitStack()
+        self.figure._layout_transaction = self
+        try:
+            if self.ticks is not None:
+                stack.enter_context(self.ticks)
+            if self.extents is not None:
+                stack.enter_context(self.extents)
+        except Exception:
+            self.figure.__dict__.pop("_layout_transaction", None)
+            stack.close()
+            raise
+        return self
+
+    def __exit__(self, *args):
+        try:
+            return self._stack.__exit__(*args)
+        finally:
+            self._stack = None
+            self.figure.__dict__.pop("_layout_transaction", None)
+
+    def refresh(self):
+        """Synchronize caches after queued guides create axes or panels."""
+        if self.ticks is not None:
+            self.ticks.refresh()
+        if self.extents is not None:
+            self.extents.refresh()
