@@ -209,6 +209,29 @@ def test_tick_cache_lru_is_bounded():
     assert cache.evictions == 3
 
 
+def test_tick_cache_includes_child_axes():
+    """
+    Colorbar child axes created during layout should share tick computations.
+    """
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.colorbar("magma", loc="r")
+    ax._add_queued_guides()
+    child_axes = [
+        child
+        for child in fig._iter_axes(hidden=True, children=True)
+        if child not in fig.axes
+    ]
+    assert child_axes
+
+    with _AxisTickCache(fig) as cache:
+        child_axes[0].xaxis._update_ticks()
+        child_axes[0].xaxis._update_ticks()
+        assert (cache.hits, cache.misses) == (1, 1)
+
+    assert "_update_ticks" not in child_axes[0].xaxis.__dict__
+
+
 def test_layout_extent_store_reuses_unmodified_axes():
     """
     A one-axes title edit should only remeasure that axes.
