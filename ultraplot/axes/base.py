@@ -3336,7 +3336,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         ultraplot.config.Configurator.context
         """
         if self.figure is not None:
-            self.figure._layout_dirty = True
+            self.figure._mark_layout_dirty()
         skip_figure = kwargs.pop("skip_figure", False)  # internal keyword arg
         params = _pop_params(kwargs, self.figure._format_signature)
 
