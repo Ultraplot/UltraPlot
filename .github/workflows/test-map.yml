@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: mamba-org/setup-micromamba@v3.0.0
+      - uses: mamba-org/setup-micromamba@v3.1.0
         with:
           environment-file: ./environment.yml
           init-shell: bash
