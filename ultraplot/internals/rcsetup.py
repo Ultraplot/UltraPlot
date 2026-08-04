@@ -981,6 +981,13 @@ _addendum_font = (
     "interpreted by `~ultraplot.utils.units`. Numeric units are points."
 )
 _rc_ultraplot_table = {
+    # Interactive navigation settings
+    "navigation.preview": (
+        True,
+        _validate_bool,
+        "Whether to simplify dense artists and ticks while interactively panning "
+        "or rotating. Disable for exact rendering during navigation.",
+    ),
     # Curved quiver settings
     "curved_quiver.arrowsize": (
         1.0,
