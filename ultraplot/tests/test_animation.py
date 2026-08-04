@@ -1354,3 +1354,32 @@ def test_animation_save_only_tightens_first_frame(tmp_path):
     assert auto_layout_calls
     assert auto_layout_calls[0] is not False
     assert auto_layout_calls[1:] == [False] * (len(auto_layout_calls) - 1)
+
+
+def test_selective_draw_region_covers_unclipped_stroke_overhang():
+    """Thick unclipped strokes paint past the tight bbox and must not ghost."""
+    fig, axs = uplt.subplots(ncols=2, figsize=(6, 3), tight=False)
+    lines = []
+    for index, ax in enumerate(axs):
+        ax.plot([0, 1, 2], [0.2, 0.8, 0.3])
+        ax.format(xlim=(0, 2), ylim=(0, 1))
+        # Line2D.get_window_extent() ignores linewidth, so this paints well
+        # outside the measured region it is captured with.
+        lines.append(ax.plot([0, 2], [-3, 4], clip_on=False, color="red", lw=20)[0])
+    for _ in range(3):
+        fig.canvas.draw()
+    manager = fig._selective_draw_manager
+    assert manager._cache_mode == "axes"
+
+    for value in (6.0, 1.5, 9.0, 0.5):
+        lines[0].set_ydata([-value, value])
+        fig.canvas.draw()
+        retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+        with manager.save_context():
+            fig.canvas.draw()
+            complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+        assert np.array_equal(retained, complete)
+
+        for _ in range(2):
+            fig.canvas.draw()
