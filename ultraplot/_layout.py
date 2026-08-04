@@ -78,6 +78,9 @@ class _AxisTickCache:
     cache because they may rely on repeated side effects.
     """
 
+    #: Distinct tick states retained per axis within one transaction. A layout
+    #: pass measures, adjusts, and re-measures, so a handful of states covers
+    #: the repeats while bounding memory on figures with many axes.
     _MAX_STATES_PER_AXIS = 4
 
     def __init__(self, figure):

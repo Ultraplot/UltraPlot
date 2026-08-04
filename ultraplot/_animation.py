@@ -21,12 +21,24 @@ from matplotlib.backend_bases import DrawEvent
 
 from ._interaction import _NavigationInteractionManager
 
-# A stroke reaches half its width perpendicular to the path, and caps plus
-# right-angle joins add a further half width along it. On a diagonal segment both
-# project onto the same axis, hence sqrt(2) half-widths. An acute miter join
-# reaches further, but Agg clamps it to its miter limit.
+#: Points per inch, for converting artist stroke widths to device pixels.
+_POINTS_PER_INCH = 72.0
+
+#: A stroke is centred on its path, so half its width lies outside.
+_STROKE_HALF_WIDTH = 0.5
+
+#: Caps and right-angle joins add a further half width along the path. On a
+#: diagonal segment both that and the perpendicular half width project onto the
+#: same axis, so an axis-aligned overhang spans sqrt(2) half-widths.
 _SQRT2 = np.sqrt(2.0)
+
+#: An acute miter join reaches past sqrt(2) half-widths, bounded only by the
+#: renderer's miter limit. Agg's default is 4 half-widths; matplotlib neither
+#: exposes nor overrides it.
 _MITER_LIMIT = 4.0
+
+#: Slack for float comparisons between display-space bounding boxes.
+_BBOX_TOLERANCE = 1e-6
 
 
 class _SelectiveDrawManager:
@@ -42,7 +54,12 @@ class _SelectiveDrawManager:
     """
 
     _data_artist_types = (mlines.Line2D, mcollections.Collection, mimage.AxesImage)
+    #: Safety pixels added around every retained region, absorbing sub-pixel
+    #: antialiasing spill and the rounding done by ``copy_from_bbox``.
     _region_pad = 2
+    #: Below this many axes, the extra draw needed to measure a rotated 3D
+    #: extent costs more than simply redrawing the whole figure.
+    _min_axes_for_view_redraw = 3
 
     def __init__(self, canvas, figure=None):
         self.canvas = canvas
@@ -201,7 +218,7 @@ class _SelectiveDrawManager:
         return False
 
     @staticmethod
-    def _bbox_contains(outer, inner, tolerance=1e-6):
+    def _bbox_contains(outer, inner, tolerance=_BBOX_TOLERANCE):
         return (
             inner.x0 >= outer.x0 - tolerance
             and inner.y0 >= outer.y0 - tolerance
@@ -345,7 +362,10 @@ class _SelectiveDrawManager:
                 offset = np.hypot(*(float(value) for value in effect._offset))
             except (AttributeError, TypeError, ValueError):
                 return None
-            overhang = max(overhang, (0.5 * width + offset) * dpi / 72.0)
+            overhang = max(
+                overhang,
+                (_STROKE_HALF_WIDTH * width + offset) * dpi / _POINTS_PER_INCH,
+            )
         return overhang
 
     @staticmethod
@@ -387,7 +407,8 @@ class _SelectiveDrawManager:
                 return None
             widths.append(float(values.max()))
         factor = _MITER_LIMIT if cls._has_miter_join(artist) else _SQRT2
-        return 0.5 * factor * max(widths) * dpi / 72.0 + effects
+        half_width = _STROKE_HALF_WIDTH * max(widths) * dpi / _POINTS_PER_INCH
+        return factor * half_width + effects
 
     def _expand_for_overhang(self, ax, renderer, region):
         """
@@ -710,7 +731,7 @@ class _SelectiveDrawManager:
             if (
                 view_changed
                 and getattr(ax, "_name", None) == "three"
-                and len(axes) <= 2
+                and len(axes) < self._min_axes_for_view_redraw
             ):
                 # Measuring a rotated 3D extent requires one preliminary axes
                 # draw. With at most two axes this cannot beat a complete draw.
@@ -745,7 +766,7 @@ class _SelectiveDrawManager:
 
     def _damage_closure(self, dirty, damage):
         """Expand damage to intersecting axes and preserve figure-level order."""
-        damage = damage.padded(2)
+        damage = damage.padded(self._region_pad)
         damage = mtransforms.Bbox.intersection(damage, self.figure.bbox)
         if damage is not None:
             damage = mtransforms.Bbox.from_extents(
