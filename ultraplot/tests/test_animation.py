@@ -520,11 +520,29 @@ def test_selective_draw_full_layer_matches_normal_draw():
     assert np.array_equal(layered, normal)
 
 
+@pytest.mark.parametrize("ncols", (1, 2))
+def test_selective_draw_defers_cache_until_after_initial_display(ncols):
+    """The first display should have no retained-layer setup overhead."""
+    fig, _axs = uplt.subplots(ncols=ncols)
+    for ax in fig.axes:
+        ax.plot([0, 1], [0, 1])
+    manager = fig._selective_draw_manager
+
+    fig.canvas.draw()
+    assert manager._cache_mode is None
+    assert manager._full_draw_count == 0
+
+    fig.canvas.draw()
+    assert manager._cache_mode == ("suffix" if ncols == 1 else "axes")
+    assert manager._full_draw_count == 1
+
+
 def test_selective_draw_redraws_only_changed_axes():
     """A paint-only line update should bypass every unchanged axes."""
     fig, axs = uplt.subplots(ncols=2)
     lines = [ax.plot([0, 0.5, 1], [0.2, 0.8, 0.3])[0] for ax in axs]
     fig.canvas.draw()
+    fig.canvas.draw()  # Prime retained axes layers after the initial display.
     manager = fig._selective_draw_manager
     unchanged_draw = axs[1].draw
     axs[1].draw = MagicMock(wraps=unchanged_draw)
@@ -543,6 +561,7 @@ def test_selective_draw_stays_fast_across_consecutive_frames():
     line = axs[0].plot(x, np.sin(x))[0]
     axs[1].plot(x, np.cos(x))
     fig.canvas.draw()
+    fig.canvas.draw()  # Prime retained axes layers after the initial display.
     manager = fig._selective_draw_manager
 
     for frame in range(4):
@@ -551,6 +570,90 @@ def test_selective_draw_stays_fast_across_consecutive_frames():
 
     assert manager._selective_draw_count == 4
     assert manager._full_draw_count == 1
+
+
+def test_selective_draw_single_axes_line_suffix_matches_complete_draw():
+    """A retained line suffix should skip axes while preserving exact pixels."""
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 2 * np.pi, 200)
+    ax.scatter(x[::8], np.cos(x[::8]), s=8, zorder=1)
+    ax.plot(x, 0.4 * np.cos(x), color="orange", zorder=2)
+    line = ax.plot(x, np.sin(x), color="cerulean", zorder=2)[0]
+    ax.text(0.03, 0.96, "Annotation", transform=ax.transAxes, va="top", zorder=3.2)
+    ax.format(title="Retained suffix", xlabel="x", ylabel="y", grid=True)
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+    axis_draw = ax.xaxis.draw
+    ax.xaxis.draw = MagicMock(wraps=axis_draw)
+
+    line.set_ydata(np.sin(x + 0.1))
+    fig.canvas.draw()  # Prime the retained suffix on the first redraw.
+    ax.xaxis.draw.reset_mock()
+    for frame in range(4):
+        line.set_ydata(np.sin(x + frame / 10))
+        fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert manager._cache_mode == "suffix"
+    assert manager._selective_draw_count == 4
+    assert manager._full_draw_count == 1
+    ax.xaxis.draw.assert_not_called()
+
+    with manager.save_context():
+        fig.canvas.draw()
+        complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+    assert np.array_equal(retained, complete)
+
+
+def test_selective_draw_single_axes_savefig_matches_unretained_output():
+    """Saving must restore ordinary ordering after retained suffix updates."""
+    fig, ax = uplt.subplots()
+    line = ax.plot([0, 1, 2], [0.8, 0.2, 0.7], color="red", lw=3)[0]
+    ax.format(xlim=(0, 2), ylim=(0, 1), title="Export fidelity")
+
+    expected_buffer = io.BytesIO()
+    fig.savefig(expected_buffer, format="png")
+    expected_buffer.seek(0)
+    expected = np.asarray(Image.open(expected_buffer)).copy()
+
+    fig.canvas.draw()  # Prime the retained suffix after the initial save.
+    line.set_ydata([0.2, 0.8, 0.3])
+    fig.canvas.draw()
+    line.set_ydata([0.8, 0.2, 0.7])
+    fig.canvas.draw()
+    assert fig._selective_draw_manager._selective_draw_count == 2
+
+    retained_buffer = io.BytesIO()
+    fig.savefig(retained_buffer, format="png")
+    retained_buffer.seek(0)
+    retained = np.asarray(Image.open(retained_buffer)).copy()
+
+    assert np.array_equal(retained, expected)
+
+
+@pytest.mark.parametrize("kind", ("scatter", "low_line", "unclipped", "overlay"))
+def test_selective_draw_single_axes_falls_back_when_suffix_is_unsafe(kind):
+    """Single-axes retention requires a clipped line above the axes layer."""
+    fig, ax = uplt.subplots()
+    if kind == "scatter":
+        artist = ax.scatter([0, 1], [0, 1])
+    else:
+        artist = ax.plot([0, 1], [0, 1], zorder=1 if kind == "low_line" else 2)[0]
+        if kind == "unclipped":
+            artist.set_clip_on(False)
+        elif kind == "overlay":
+            fig.text(0.5, 0.5, "Figure overlay", zorder=10)
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+
+    if kind == "scatter":
+        artist.set_offsets([[0, 1], [1, 0]])
+    else:
+        artist.set_ydata([1, 0])
+    fig.canvas.draw()
+
+    assert manager._cache_mode is None
+    assert manager._selective_draw_count == 0
 
 
 @pytest.mark.parametrize("kind", ("line", "scatter"))
@@ -563,6 +666,7 @@ def test_selective_draw_matches_complete_data_draw(kind):
     else:
         artist = axs[0].scatter([0, 0.5, 1], [0.2, 0.8, 0.3])
     fig.canvas.draw()
+    fig.canvas.draw()  # Prime retained axes layers after the initial display.
     manager = fig._selective_draw_manager
 
     if kind == "line":

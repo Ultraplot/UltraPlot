@@ -10,15 +10,27 @@ from contextlib import contextmanager
 from weakref import WeakSet
 
 import matplotlib.artist as martist
+import matplotlib.axis as maxis
 import matplotlib.collections as mcollections
 import matplotlib.image as mimage
 import matplotlib.lines as mlines
+import matplotlib.text as mtext
 import matplotlib.transforms as mtransforms
+import numpy as np
 from matplotlib.backend_bases import DrawEvent
 
 
 class _SelectiveDrawManager:
-    """Cache axes layers and redraw only axes with paint-only data changes."""
+    """
+    Retain safe draw layers and bypass unchanged Matplotlib traversal.
+
+    Multi-axes figures retain each complete axes as one layer. Single Cartesian
+    axes retain the stable draw-order prefix below their first clipped numeric
+    line, then redraw that line and every later artist as an exact z-order suffix.
+    Unknown stale artists, geometry changes, overlapping layers, unsupported
+    artist orders, and export draws fall back to a complete draw. The first display
+    is always untouched; a later complete draw primes the retained layers.
+    """
 
     _data_artist_types = (mlines.Line2D, mcollections.Collection, mimage.AxesImage)
 
@@ -29,8 +41,13 @@ class _SelectiveDrawManager:
         self._regions = {}
         self._signatures = {}
         self._axes = ()
+        self._suffix = ()
+        self._pending_suffix = ()
+        self._cache_mode = None
+        self._capture_mode = None
         self._capturing = False
         self._selecting = False
+        self._has_drawn = False
         self._suspended = False
         self._closed = False
         self._cache_safe = False
@@ -47,7 +64,19 @@ class _SelectiveDrawManager:
 
     def _axes_signature(self, ax):
         return (
-            tuple(id(child) for child in ax.get_children()),
+            tuple(
+                (id(child), float(child.get_zorder())) for child in ax.get_children()
+            ),
+            tuple(
+                (
+                    id(line),
+                    id(line.get_transform()),
+                    bool(line.get_clip_on()),
+                    id(line.get_clip_box()),
+                    id(line.get_clip_path()),
+                )
+                for line in ax.lines
+            ),
             self._bbox_signature(ax.get_position(original=False)),
             self._bbox_signature(ax.viewLim),
             ax.get_xscale(),
@@ -64,6 +93,80 @@ class _SelectiveDrawManager:
 
     def _has_animated_artist(self, axes):
         return any(artist.get_animated() for ax in axes for artist in ax.get_children())
+
+    def _has_overlapping_figure_artist(self, suffix):
+        """Return whether a later figure artist overlaps the retained suffix."""
+        get_renderer = getattr(self.canvas, "get_renderer", None)
+        if get_renderer is None:
+            return True
+        renderer = get_renderer()
+        for artist in self.figure.get_children():
+            if (
+                artist is self.figure.patch
+                or artist in self.figure.axes
+                or not artist.get_visible()
+            ):
+                continue
+            if isinstance(artist, mtext.Text) and not artist.get_text():
+                continue
+            try:
+                overlay_bbox = artist.get_window_extent(renderer)
+            except Exception:
+                return True
+            for child in suffix:
+                if not child.get_visible():
+                    continue
+                try:
+                    child_bbox = child.get_window_extent(renderer)
+                except Exception:
+                    return True
+                overlap = mtransforms.Bbox.intersection(overlay_bbox, child_bbox)
+                if overlap is not None and overlap.width > 0 and overlap.height > 0:
+                    return True
+        return False
+
+    @staticmethod
+    def _has_numeric_line_data(line):
+        """Return whether line conversion cannot mutate categorical/date axes."""
+        try:
+            xdata = np.asanyarray(line.get_xdata(orig=True))
+            ydata = np.asanyarray(line.get_ydata(orig=True))
+        except (TypeError, ValueError):
+            return False
+        return xdata.dtype.kind in "biufc" and ydata.dtype.kind in "biufc"
+
+    def _resolve_line_suffix(self, ax):
+        """Return the exact draw-order suffix starting at the first data line."""
+        if (
+            getattr(ax, "_name", None) != "cartesian"
+            or not ax.axison
+            or not ax.get_frame_on()
+            or ax.get_rasterization_zorder() is not None
+            or any(not line.get_clip_on() for line in ax.lines)
+            or any(not self._has_numeric_line_data(line) for line in ax.lines)
+        ):
+            return ()
+        artists = list(ax.get_children())
+        if ax.patch not in artists or not ax.lines:
+            return ()
+        artists.remove(ax.patch)
+        artists = sorted(artists, key=lambda artist: artist.get_zorder())
+        line_ids = {id(line) for line in ax.lines}
+        positions = [
+            index for index, artist in enumerate(artists) if id(artist) in line_ids
+        ]
+        if not positions:
+            return ()
+        suffix = tuple(artists[min(positions) :])
+        if any(
+            isinstance(artist, (maxis.Axis, mimage.AxesImage))
+            or (hasattr(artist, "_axis_map") and artist is not ax)
+            for artist in suffix
+        ):
+            return ()
+        if self._has_overlapping_figure_artist(suffix):
+            return ()
+        return suffix
 
     @staticmethod
     def _regions_overlap(regions):
@@ -100,6 +203,10 @@ class _SelectiveDrawManager:
         self._regions.clear()
         self._signatures.clear()
         self._axes = ()
+        self._suffix = ()
+        self._pending_suffix = ()
+        self._cache_mode = None
+        self._capture_mode = None
         self._cache_safe = False
 
     def _on_resize(self, event):
@@ -107,6 +214,8 @@ class _SelectiveDrawManager:
             self.invalidate()
 
     def _on_draw(self, event):
+        if event is not None and event.canvas is self.canvas and not self._selecting:
+            self._has_drawn = True
         if (
             self._closed
             or self._suspended
@@ -131,10 +240,16 @@ class _SelectiveDrawManager:
         else:
             backgrounds = {}
 
-        # Figure.draw() omitted these temporarily animated axes. Draw them now,
-        # in normal axes z-order, before the backend presents the frame.
-        for ax in sorted(axes, key=lambda item: item.get_zorder()):
-            self.figure.draw_artist(ax)
+        if self._capture_mode == "suffix":
+            suffix = self._pending_suffix
+            for artist in suffix:
+                self.figure.draw_artist(artist)
+        else:
+            suffix = ()
+            # Figure.draw() omitted these temporarily animated axes. Draw them now,
+            # in normal axes z-order, before the backend presents the frame.
+            for ax in sorted(axes, key=lambda item: item.get_zorder()):
+                self.figure.draw_artist(ax)
         # Axes.draw() intentionally leaves some invisible placeholder text stale.
         # Retained drawing needs a clean baseline so a later property mutation can
         # be distinguished from that permanent state.
@@ -145,16 +260,21 @@ class _SelectiveDrawManager:
 
         self._full_draw_count += 1
         self._axes = axes
+        self._suffix = suffix
         self._regions = regions if valid else {}
         self._backgrounds = backgrounds
         self._signatures = {ax: self._axes_signature(ax) for ax in axes}
-        self._cache_safe = bool(
-            valid
-            and len(axes) > 1
-            and not self._regions_overlap(regions.values())
-            and not self._has_explicit_blit_manager()
-            and not self._has_animated_artist(axes)
-        )
+        self._cache_mode = self._capture_mode
+        if self._capture_mode == "suffix":
+            self._cache_safe = bool(valid and suffix)
+        else:
+            self._cache_safe = bool(
+                valid
+                and len(axes) > 1
+                and not self._regions_overlap(regions.values())
+                and not self._has_explicit_blit_manager()
+                and not self._has_animated_artist(axes)
+            )
         for ax in axes:
             ax.stale = False
 
@@ -172,28 +292,49 @@ class _SelectiveDrawManager:
             return
 
         axes = self._visible_axes()
-        if len(axes) <= 1:
+        if not axes:
             self.invalidate()
             yield
             return
-        animated = {ax: ax.get_animated() for ax in axes}
-        if any(animated.values()) or self._has_animated_artist(axes):
+        if not self._has_drawn:
+            self.invalidate()
+            yield
+            return
+        if any(ax.get_animated() for ax in axes) or self._has_animated_artist(axes):
             self.invalidate()
             yield
             return
 
+        if len(axes) == 1:
+            suffix = self._resolve_line_suffix(axes[0])
+            if not suffix:
+                self.invalidate()
+                yield
+                return
+            targets = suffix
+            self._capture_mode = "suffix"
+            self._pending_suffix = suffix
+        else:
+            targets = axes
+            self._capture_mode = "axes"
+            self._pending_suffix = ()
+
+        animated = {artist: artist.get_animated() for artist in targets}
+
         self._capturing = True
         try:
-            for ax in axes:
+            for artist in targets:
                 # This is a transient draw-routing flag, not a user property
                 # mutation. Avoid set_animated(), which marks every axes stale
                 # and defeats the persistent layout extent cache.
-                ax._animated = True
+                artist._animated = True
             yield
         finally:
-            for ax, state in animated.items():
-                ax._animated = state
+            for artist, state in animated.items():
+                artist._animated = state
             self._capturing = False
+            self._capture_mode = None
+            self._pending_suffix = ()
 
     def _dirty_axes(self):
         axes = self._visible_axes()
@@ -214,7 +355,15 @@ class _SelectiveDrawManager:
             # paint-level signal; geometry is guarded by the signature above.
             if not stale_children:
                 continue
-            if not all(
+            if self._cache_mode == "suffix":
+                if not all(
+                    isinstance(child, mlines.Line2D)
+                    and child in self._suffix
+                    and self._has_numeric_line_data(child)
+                    for child in stale_children
+                ):
+                    return None
+            elif not all(
                 isinstance(child, self._data_artist_types) for child in stale_children
             ):
                 return None
@@ -241,8 +390,12 @@ class _SelectiveDrawManager:
         try:
             for ax in dirty:
                 self.canvas.restore_region(self._backgrounds[ax])
-            for ax in sorted(dirty, key=lambda item: item.get_zorder()):
-                self.figure.draw_artist(ax)
+            if self._cache_mode == "suffix":
+                for artist in self._suffix:
+                    self.figure.draw_artist(artist)
+            else:
+                for ax in sorted(dirty, key=lambda item: item.get_zorder()):
+                    self.figure.draw_artist(ax)
             self._mark_axes_clean(dirty)
             for ax in dirty:
                 self.canvas.blit(self._regions[ax])
