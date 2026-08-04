@@ -21,6 +21,13 @@ from matplotlib.backend_bases import DrawEvent
 
 from ._interaction import _NavigationInteractionManager
 
+# A stroke reaches half its width perpendicular to the path, and caps plus
+# right-angle joins add a further half width along it. On a diagonal segment both
+# project onto the same axis, hence sqrt(2) half-widths. An acute miter join
+# reaches further, but Agg clamps it to its miter limit.
+_SQRT2 = np.sqrt(2.0)
+_MITER_LIMIT = 4.0
+
 
 class _SelectiveDrawManager:
     """
@@ -35,6 +42,7 @@ class _SelectiveDrawManager:
     """
 
     _data_artist_types = (mlines.Line2D, mcollections.Collection, mimage.AxesImage)
+    _region_pad = 2
 
     def __init__(self, canvas, figure=None):
         self.canvas = canvas
@@ -281,6 +289,103 @@ class _SelectiveDrawManager:
                     return True
         return False
 
+    # Path effects whose painted overhang is bounded by their offset and stroke
+    # width. UltraPlot applies ``Stroke`` to every label for the title border, so
+    # these must be measured rather than rejected.
+    _bounded_path_effects = frozenset(("Normal", "Stroke", "withStroke"))
+
+    @classmethod
+    def _path_effect_overhang(cls, artist, dpi):
+        """Return pixels *artist*'s path effects add, or ``None`` if unbounded."""
+        overhang = 0.0
+        # set_path_effects(None) is a supported way to clear them, so the getter
+        # does not always return a sequence.
+        for effect in artist.get_path_effects() or ():
+            if type(effect).__name__ not in cls._bounded_path_effects:
+                return None
+            gc = getattr(effect, "_gc", None) or {}
+            try:
+                width = float(gc.get("linewidth", 0) or 0)
+                offset = np.hypot(*(float(value) for value in effect._offset))
+            except (AttributeError, TypeError, ValueError):
+                return None
+            overhang = max(overhang, (0.5 * width + offset) * dpi / 72.0)
+        return overhang
+
+    @staticmethod
+    def _has_miter_join(artist):
+        """Return whether *artist* joins segments with an unbounded miter."""
+        for name in ("get_joinstyle", "get_solid_joinstyle", "get_dash_joinstyle"):
+            getter = getattr(artist, name, None)
+            if getter is None:
+                continue
+            try:
+                style = getter()
+            except Exception:
+                return True
+            if getattr(style, "name", style) == "miter":
+                return True
+        return False
+
+    @classmethod
+    def _stroke_overhang(cls, artist, dpi):
+        """Return pixels *artist* can paint beyond its measured extent."""
+        # Tight bboxes are layout measurements. Line2D.get_window_extent() pads
+        # for marker size but never for stroke width, and Collection extents are
+        # measured from paths alone, so a stroke overhangs by half its width.
+        effects = cls._path_effect_overhang(artist, dpi)
+        if effects is None:
+            return None
+        widths = [0.0]
+        for name in ("get_linewidth", "get_linewidths", "get_markeredgewidth"):
+            getter = getattr(artist, name, None)
+            if getter is None:
+                continue
+            try:
+                values = np.atleast_1d(np.asanyarray(getter(), dtype=float)).ravel()
+            except (TypeError, ValueError):
+                return None
+            if not values.size:
+                continue
+            if not np.all(np.isfinite(values)):
+                return None
+            widths.append(float(values.max()))
+        factor = _MITER_LIMIT if cls._has_miter_join(artist) else _SQRT2
+        return 0.5 * factor * max(widths) * dpi / 72.0 + effects
+
+    def _expand_for_overhang(self, ax, renderer, region):
+        """
+        Grow an already padded *region* to cover strokes painting past their
+        measured extents. Artist extents carry the same safety pad, so the result
+        clears every painted pixel by ``_region_pad`` on all sides.
+        """
+        dpi = float(self.figure.dpi)
+        bounds = [region]
+        for artist in ax.get_children():
+            if not artist.get_visible():
+                continue
+            # Clipping is exact, so fully clipped artists cannot paint beyond
+            # the axes rectangle and never need extra room.
+            fully_clipped = getattr(artist, "_fully_clipped_to_axes", None)
+            if fully_clipped is not None and fully_clipped():
+                continue
+            overhang = self._stroke_overhang(artist, dpi)
+            if overhang is None:
+                return None
+            if overhang <= 0:
+                continue
+            # Pad each artist individually rather than the whole region. An
+            # artist sitting well inside the axes then costs nothing, which
+            # matters for projections that draw every artist unclipped.
+            try:
+                extent = artist.get_window_extent(renderer)
+            except Exception:
+                return None
+            if extent.width <= 0 and extent.height <= 0:
+                continue
+            bounds.append(extent.padded(overhang + self._region_pad))
+        return mtransforms.Bbox.union(bounds)
+
     def _resolve_region(self, ax, renderer, cached_regions):
         # UltraLayout already measured this exact region. Reconstructing it
         # from cached outsets avoids a second tick/text traversal.
@@ -289,7 +394,20 @@ class _SelectiveDrawManager:
             region = ax.get_tightbbox(renderer)
         if region is None:
             return None
-        region = region.padded(2)
+        region = self._expand_for_overhang(
+            ax, renderer, region.padded(self._region_pad)
+        )
+        if region is None:
+            return None
+        # copy_from_bbox() and restore_region() address whole pixels and truncate
+        # fractional bounds. Snap outward so the outermost painted pixel column
+        # and row are actually captured and later restored.
+        region = mtransforms.Bbox.from_extents(
+            np.floor(region.x0),
+            np.floor(region.y0),
+            np.ceil(region.x1),
+            np.ceil(region.y1),
+        )
         return mtransforms.Bbox.intersection(region, self.figure.bbox)
 
     @staticmethod
@@ -572,10 +690,11 @@ class _SelectiveDrawManager:
             for ax in self._axes:
                 if ax in redraw:
                     continue
-                # Retained regions include two safety pixels. Only propagate
-                # through overlap with the actual painted extent, otherwise
-                # adjacent subplot padding forms an unnecessary redraw chain.
-                painted_region = self._regions[ax].padded(-2)
+                # Retained regions include safety pixels. Only propagate through
+                # overlap with the actual painted extent, otherwise adjacent
+                # subplot padding forms an unnecessary redraw chain. Shrinking by
+                # less than the true padding stays conservative.
+                painted_region = self._regions[ax].padded(-self._region_pad)
                 overlap = mtransforms.Bbox.intersection(damage, painted_region)
                 if overlap is not None and overlap.width > 0 and overlap.height > 0:
                     redraw.add(ax)
