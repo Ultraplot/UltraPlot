@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from contextlib import contextmanager
+import time
 from weakref import WeakSet
 
 import matplotlib.artist as martist
@@ -17,7 +18,429 @@ import matplotlib.lines as mlines
 import matplotlib.text as mtext
 import matplotlib.transforms as mtransforms
 import numpy as np
-from matplotlib.backend_bases import DrawEvent
+from matplotlib.backend_bases import DrawEvent, TimerBase
+from matplotlib.ticker import MaxNLocator, NullLocator
+
+
+class _NavigationInteractionManager:
+    """Temporarily simplify dense scenes during interactive navigation."""
+
+    _frame_interval = 1 / 60
+    _line_limit = 2_000
+    _scatter_limit = 2_000
+
+    def __init__(self, canvas, figure, selective):
+        self.canvas = canvas
+        self.figure = figure
+        self.selective = selective
+        self._state = None
+        self._building_state = None
+        self._closed = False
+        self._draw_pending = False
+        self._draw_requested = False
+        self._frame_timer = None
+        self._idle_draw = None
+        self._last_frame_started = 0.0
+        callbacks = figure._canvas_callbacks
+        self._press_cid = callbacks.connect("button_press_event", self._on_press)
+        self._release_cid = callbacks.connect("button_release_event", self._on_release)
+        self._draw_cid = callbacks.connect("draw_event", self._on_draw)
+        self._close_cid = callbacks.connect("close_event", self._on_close)
+
+    @staticmethod
+    def _is_three_axes(ax):
+        return getattr(ax, "_name", None) == "three"
+
+    @staticmethod
+    def _subset_indices(arrays, limit):
+        size = min(len(array) for array in arrays)
+        if size <= limit:
+            return None
+        indices = list(np.linspace(0, size - 1, limit, dtype=int))
+        for array in arrays:
+            values = np.asanyarray(array)
+            if values.dtype.kind not in "biufc":
+                continue
+            try:
+                indices.extend((int(np.nanargmin(values)), int(np.nanargmax(values))))
+            except ValueError:
+                pass
+        return np.unique(np.clip(indices, 0, size - 1))
+
+    @staticmethod
+    def _shared_view_axes(ax):
+        grouper = getattr(ax, "_shared_axes", {}).get("view")
+        if grouper is None:
+            return (ax,)
+        return tuple(
+            item
+            for item in grouper.get_siblings(ax)
+            if getattr(item, "_name", None) == "three"
+        )
+
+    @staticmethod
+    def _simplify_locators(axis, state):
+        """Reduce tick work for plain numeric axes and retain exact locators."""
+        major = axis.get_major_locator()
+        minor = axis.get_minor_locator()
+        state["locators"].append((axis, major, minor))
+        axis.set_minor_locator(NullLocator())
+        # Converter-backed axes include dates, categories, and custom units. Their
+        # specialized tick semantics matter more than a temporary frame-rate gain.
+        get_converter = getattr(axis, "get_converter", None)
+        converter = get_converter() if get_converter is not None else axis.converter
+        if axis.get_scale() == "linear" and converter is None:
+            axis.set_major_locator(MaxNLocator(nbins=3, min_n_ticks=3))
+
+    def _cancel_scheduled_draw(self):
+        """Cancel a queued navigation frame without affecting exact draws."""
+        if self._frame_timer is not None:
+            self._frame_timer.stop()
+        self._frame_timer = None
+        self._idle_draw = None
+        self._draw_pending = False
+        self._draw_requested = False
+
+    def _submit_draw(self):
+        """Submit the newest coalesced view to the backend event loop."""
+        self._frame_timer = None
+        if self._closed or self._state is None or not self._draw_requested:
+            return False
+        draw, self._idle_draw = self._idle_draw, None
+        self._draw_requested = False
+        self._draw_pending = True
+        self._last_frame_started = time.monotonic()
+        draw()
+        return False
+
+    def _schedule_draw(self):
+        """Schedule the next frame on a stable 60 Hz cadence."""
+        delay = max(
+            0.0,
+            self._frame_interval - (time.monotonic() - self._last_frame_started),
+        )
+        timer = self.canvas.new_timer(interval=max(1, int(np.ceil(1_000 * delay))))
+        # Non-interactive canvases use TimerBase's inert implementation. Preserve
+        # their normal synchronous draw_idle behavior instead of swallowing draws.
+        if type(timer)._timer_start is TimerBase._timer_start:
+            return False
+        timer.single_shot = True
+        timer.add_callback(self._submit_draw)
+        self._frame_timer = timer
+        timer.start()
+        return True
+
+    def request_draw(self, draw):
+        """Coalesce rapid navigation updates and retain only the newest view."""
+        if self._closed or self._state is None:
+            return False
+        self._idle_draw = draw
+        self._draw_requested = True
+        if self._draw_pending or self._frame_timer is not None:
+            return True
+        return self._schedule_draw()
+
+    def _simplify_axes(self, ax):
+        from mpl_toolkits.mplot3d.art3d import Path3DCollection
+
+        state = {
+            "ax": ax,
+            "grid3d": getattr(ax, "_draw_grid", True),
+            "locators": [],
+            "lines": [],
+            "scatters": [],
+            "surfaces": [],
+        }
+        self._building_state = state
+        ax._draw_grid = False
+        for axis in ax._axis_map.values():
+            self._simplify_locators(axis, state)
+
+        for line in ax.lines:
+            get_data = getattr(line, "get_data_3d", None)
+            set_data = getattr(line, "set_data_3d", None)
+            if get_data is None or set_data is None:
+                continue
+            try:
+                data = tuple(np.asanyarray(array) for array in get_data())
+                indices = self._subset_indices(data, self._line_limit)
+            except (IndexError, TypeError, ValueError):
+                continue
+            if indices is None:
+                continue
+            state["lines"].append((line, data, "3d"))
+            set_data(*(array[indices] for array in data))
+
+        # Iterate over a snapshot because surface previews temporarily replace
+        # their exact collections in the axes child list.
+        for artist in tuple(ax.collections):
+            proxy = getattr(artist, "_ultraplot_lod_proxy", None)
+            if proxy is not None and proxy is not True:
+                attached = proxy.axes is ax
+                try:
+                    child_index = ax._children.index(artist)
+                except ValueError:
+                    child_index = None
+                state["surfaces"].append(
+                    (
+                        artist,
+                        proxy,
+                        artist.get_visible(),
+                        proxy.get_visible(),
+                        attached,
+                        child_index,
+                    )
+                )
+                if not attached:
+                    ax.add_collection(proxy, autolim=False)
+                # Axes3D projects collections before testing visibility, so merely
+                # hiding the exact surface still pays its full depth-sort cost.
+                # Detach it for the gesture and restore its child position later.
+                artist.remove()
+                proxy.set_visible(True)
+                continue
+            if not isinstance(artist, Path3DCollection):
+                continue
+            offsets = getattr(artist, "_offsets3d", None)
+            if offsets is None:
+                continue
+            arrays = tuple(np.asanyarray(array) for array in offsets)
+            indices = self._subset_indices(arrays, self._scatter_limit)
+            if indices is None:
+                continue
+            attributes = {}
+            for name in (
+                "_offsets3d",
+                "_sizes",
+                "_sizes3d",
+                "_linewidths",
+                "_linewidths3d",
+                "_facecolors",
+                "_edgecolors",
+                "_depthshade",
+                "_offset_zordered",
+                "_z_markers_idx",
+            ):
+                if hasattr(artist, name):
+                    attributes[name] = getattr(artist, name)
+            state["scatters"].append((artist, attributes))
+            artist._offsets3d = tuple(array[indices] for array in arrays)
+            for name in (
+                "_sizes",
+                "_sizes3d",
+                "_linewidths",
+                "_linewidths3d",
+                "_facecolors",
+                "_edgecolors",
+            ):
+                values = getattr(artist, name, None)
+                if values is None:
+                    continue
+                values = np.asanyarray(values)
+                if values.ndim and len(values) == len(arrays[0]):
+                    setattr(artist, name, values[indices])
+            artist._depthshade = False
+            artist._offset_zordered = None
+            artist._z_markers_idx = slice(None)
+            artist.stale = True
+        ax.stale = True
+        self._building_state = None
+        return state
+
+    def _simplify_two_axes(self, ax):
+        """Reduce dense 2D data while the toolbar pan gesture is active."""
+        state = {
+            "ax": ax,
+            "grid3d": None,
+            "locators": [],
+            "lines": [],
+            "scatters": [],
+            "surfaces": [],
+        }
+        self._building_state = state
+        for axis in (ax.xaxis, ax.yaxis):
+            self._simplify_locators(axis, state)
+        for line in ax.lines:
+            try:
+                data = (
+                    np.asanyarray(line.get_xdata(orig=True)),
+                    np.asanyarray(line.get_ydata(orig=True)),
+                )
+                indices = self._subset_indices(data, self._line_limit)
+            except (IndexError, TypeError, ValueError):
+                continue
+            if indices is None:
+                continue
+            state["lines"].append((line, data, "2d"))
+            line.set_data(*(array[indices] for array in data))
+        for artist in ax.collections:
+            if not isinstance(artist, mcollections.PathCollection):
+                continue
+            offsets = np.asanyarray(artist.get_offsets())
+            if offsets.ndim != 2 or offsets.shape[1] != 2:
+                continue
+            indices = self._subset_indices(
+                (offsets[:, 0], offsets[:, 1]), self._scatter_limit
+            )
+            if indices is None:
+                continue
+            attributes = {}
+            for name in (
+                "_offsets",
+                "_sizes",
+                "_linewidths",
+                "_facecolors",
+                "_edgecolors",
+            ):
+                if hasattr(artist, name):
+                    attributes[name] = getattr(artist, name)
+            state["scatters"].append((artist, attributes))
+            artist.set_offsets(offsets[indices])
+            for name in ("_sizes", "_linewidths", "_facecolors", "_edgecolors"):
+                values = getattr(artist, name, None)
+                if values is None:
+                    continue
+                values = np.asanyarray(values)
+                if values.ndim and len(values) == len(offsets):
+                    setattr(artist, name, values[indices])
+            artist.stale = True
+        ax.stale = True
+        self._building_state = None
+        return state
+
+    @staticmethod
+    def _shared_two_axes(ax):
+        axes = {ax}
+        for grouper in (ax.get_shared_x_axes(), ax.get_shared_y_axes()):
+            axes.update(grouper.get_siblings(ax))
+        return tuple(
+            item
+            for item in ax.figure.axes
+            if item in axes
+            and getattr(item, "_name", None) in ("cartesian", "cartopy", "basemap")
+        )
+
+    def activate(self, ax):
+        """Activate preview quality for the navigated axes and shared siblings."""
+        is_three = self._is_three_axes(ax)
+        is_two = getattr(ax, "_name", None) in ("cartesian", "cartopy", "basemap")
+        if self._closed or self._state is not None or not (is_three or is_two):
+            return False
+        states = []
+        try:
+            axes = self._shared_view_axes(ax) if is_three else self._shared_two_axes(ax)
+            for item in axes:
+                simplify = self._simplify_axes if is_three else self._simplify_two_axes
+                states.append(simplify(item))
+        except Exception:
+            if self._building_state is not None:
+                states.append(self._building_state)
+            self._restore_states(states)
+            self._building_state = None
+            return False
+        self._state = states
+        self._last_frame_started = 0.0
+        self.selective.invalidate()
+        return True
+
+    @staticmethod
+    def _restore_states(states):
+        for state in reversed(states):
+            ax = state["ax"]
+            if state["grid3d"] is not None:
+                ax._draw_grid = state["grid3d"]
+            for axis, major, minor in state["locators"]:
+                axis.set_major_locator(major)
+                axis.set_minor_locator(minor)
+            for line, data, dimensions in state["lines"]:
+                if dimensions == "3d":
+                    line.set_data_3d(*data)
+                else:
+                    line.set_data(*data)
+            for artist, attributes in state["scatters"]:
+                for name, value in attributes.items():
+                    setattr(artist, name, value)
+                artist.stale = True
+            for (
+                artist,
+                proxy,
+                visible,
+                proxy_visible,
+                attached,
+                child_index,
+            ) in state["surfaces"]:
+                if artist.axes is not ax:
+                    ax.add_collection(artist, autolim=False)
+                if child_index is not None:
+                    try:
+                        ax._children.remove(artist)
+                    except ValueError:
+                        pass
+                    ax._children.insert(min(child_index, len(ax._children)), artist)
+                artist.set_visible(visible)
+                proxy.set_visible(proxy_visible)
+                if not attached and proxy.axes is ax:
+                    proxy.remove()
+            ax.stale = True
+
+    def deactivate(self, *, redraw=True):
+        """Restore exact artists and formatting after interactive rotation."""
+        if self._state is None:
+            return False
+        self._cancel_scheduled_draw()
+        states, self._state = self._state, None
+        self._restore_states(states)
+        self.selective.invalidate()
+        if redraw:
+            self.canvas.draw_idle()
+        return True
+
+    @contextmanager
+    def full_quality_context(self):
+        """Temporarily restore exact artists for save/export operations."""
+        active_ax = None if self._state is None else self._state[0]["ax"]
+        if active_ax is not None:
+            self.deactivate(redraw=False)
+        try:
+            yield
+        finally:
+            if active_ax is not None and not self._closed:
+                self.activate(active_ax)
+
+    def _on_press(self, event):
+        ax = event.inaxes
+        if self._is_three_axes(ax):
+            buttons = (*ax._rotate_btn, *ax._pan_btn, *ax._zoom_btn)
+            if event.button in buttons:
+                self.activate(ax)
+        elif getattr(ax, "_name", None) in ("cartesian", "cartopy", "basemap") and str(
+            ax.get_navigate_mode()
+        ).upper().endswith("PAN"):
+            self.activate(ax)
+
+    def _on_release(self, event):
+        self.deactivate(redraw=True)
+
+    def _on_draw(self, event):
+        if self._state is None or not self._draw_pending:
+            return
+        self._draw_pending = False
+        if self._draw_requested and self._frame_timer is None:
+            self._schedule_draw()
+
+    def _on_close(self, event):
+        self.close()
+
+    def close(self):
+        if self._closed:
+            return
+        self.deactivate(redraw=False)
+        callbacks = self.figure._canvas_callbacks
+        callbacks.disconnect(self._press_cid)
+        callbacks.disconnect(self._release_cid)
+        callbacks.disconnect(self._draw_cid)
+        callbacks.disconnect(self._close_cid)
+        self._closed = True
 
 
 class _SelectiveDrawManager:
@@ -38,8 +461,11 @@ class _SelectiveDrawManager:
         self.canvas = canvas
         self.figure = figure if figure is not None else canvas.figure
         self._backgrounds = {}
+        self._figure_background = None
         self._regions = {}
         self._signatures = {}
+        self._camera_signatures = {}
+        self._view_signatures = {}
         self._axes = ()
         self._suffixes = {}
         self._pending_suffixes = {}
@@ -60,6 +486,9 @@ class _SelectiveDrawManager:
         callbacks = self.figure._canvas_callbacks
         self._draw_cid = callbacks.connect("draw_event", self._on_draw)
         self._resize_cid = callbacks.connect("resize_event", self._on_resize)
+        self._navigation_preview = _NavigationInteractionManager(
+            canvas, self.figure, self
+        )
 
     @staticmethod
     def _bbox_signature(bbox):
@@ -81,11 +510,17 @@ class _SelectiveDrawManager:
                 for line in ax.lines
             ),
             self._bbox_signature(ax.get_position(original=False)),
+            bool(ax.get_visible()),
+            float(ax.get_zorder()),
+        )
+
+    def _axes_view_signature(self, ax):
+        """Return paint-only limits, scales, and projection camera state."""
+        return (
             self._bbox_signature(ax.viewLim),
             ax.get_xscale(),
             ax.get_yscale(),
-            bool(ax.get_visible()),
-            float(ax.get_zorder()),
+            self._camera_signature(ax),
         )
 
     def _current_canvas_signature(self):
@@ -111,12 +546,30 @@ class _SelectiveDrawManager:
         return tuple(
             (
                 id(ax),
-                self._bbox_signature(ax.viewLim),
-                ax.get_xscale(),
-                ax.get_yscale(),
+                self._axes_view_signature(ax),
             )
             for ax in axes
         )
+
+    @staticmethod
+    def _camera_signature(ax):
+        """Return 3D camera and limits, or ``None`` for ordinary 2D axes."""
+        if getattr(ax, "_name", None) != "three":
+            return None
+        try:
+            return (
+                float(ax.elev),
+                float(ax.azim),
+                float(ax.roll),
+                int(ax._vertical_axis),
+                tuple(float(value) for value in ax.get_xlim3d()),
+                tuple(float(value) for value in ax.get_ylim3d()),
+                tuple(float(value) for value in ax.get_zlim3d()),
+                float(ax._focal_length),
+                tuple(float(value) for value in ax.get_box_aspect()),
+            )
+        except (AttributeError, TypeError, ValueError):
+            return None
 
     def _visible_axes(self):
         return tuple(ax for ax in self.figure.axes if ax.get_visible())
@@ -273,8 +726,11 @@ class _SelectiveDrawManager:
     def invalidate(self):
         """Discard all retained axes layers."""
         self._backgrounds.clear()
+        self._figure_background = None
         self._regions.clear()
         self._signatures.clear()
+        self._camera_signatures.clear()
+        self._view_signatures.clear()
         self._axes = ()
         self._suffixes = {}
         self._pending_suffixes = {}
@@ -316,6 +772,10 @@ class _SelectiveDrawManager:
         else:
             backgrounds = {}
 
+        figure_background = None
+        if self._capture_mode == "axes":
+            figure_background = self.canvas.copy_from_bbox(self.figure.bbox)
+
         if self._capture_mode == "suffix":
             suffixes = self._pending_suffixes
             for ax in sorted(axes, key=lambda item: item.get_zorder()):
@@ -340,7 +800,10 @@ class _SelectiveDrawManager:
         self._suffixes = suffixes
         self._regions = regions if valid else {}
         self._backgrounds = backgrounds
+        self._figure_background = figure_background
         self._signatures = {ax: self._axes_signature(ax) for ax in axes}
+        self._camera_signatures = {ax: self._camera_signature(ax) for ax in axes}
+        self._view_signatures = {ax: self._axes_view_signature(ax) for ax in axes}
         self._canvas_signature = self._current_canvas_signature()
         self._cache_mode = self._capture_mode
         if self._capture_mode == "suffix":
@@ -359,7 +822,6 @@ class _SelectiveDrawManager:
                 valid
                 and self._canvas_signature is not None
                 and len(axes) > 1
-                and not self._regions_overlap(regions.values())
                 and not self._has_explicit_blit_manager()
                 and not self._has_animated_artist(axes)
             )
@@ -477,13 +939,31 @@ class _SelectiveDrawManager:
             return None
 
         dirty = []
+        view_dirty = []
         for ax in axes:
+            view_changed = self._axes_view_signature(ax) != self._view_signatures.get(
+                ax
+            )
+            if view_changed and self._cache_mode != "axes":
+                return None
+            if (
+                view_changed
+                and getattr(ax, "_name", None) == "three"
+                and len(axes) <= 2
+            ):
+                # Measuring a rotated 3D extent requires one preliminary axes
+                # draw. With at most two axes this cannot beat a complete draw.
+                return None
             if self._axes_signature(ax) != self._signatures.get(ax):
                 return None
             stale_children = [child for child in ax.get_children() if child.stale]
             # Layout/tick cache cleanup can leave the Axes container stale even
             # though every drawable child is clean. Child flags carry the useful
             # paint-level signal; geometry is guarded by the signature above.
+            if view_changed:
+                dirty.append(ax)
+                view_dirty.append(ax)
+                continue
             if not stale_children:
                 continue
             if self._cache_mode == "suffix":
@@ -500,7 +980,76 @@ class _SelectiveDrawManager:
             ):
                 return None
             dirty.append(ax)
-        return tuple(dirty)
+        return tuple(dirty), tuple(view_dirty)
+
+    def _damage_closure(self, dirty, damage):
+        """Expand damage to intersecting axes and preserve figure-level order."""
+        damage = damage.padded(2)
+        damage = mtransforms.Bbox.intersection(damage, self.figure.bbox)
+        if damage is not None:
+            damage = mtransforms.Bbox.from_extents(
+                np.floor(damage.x0),
+                np.floor(damage.y0),
+                np.ceil(damage.x1),
+                np.ceil(damage.y1),
+            )
+        if damage is None or self._has_overlapping_figure_artist((damage,)):
+            return None
+
+        redraw = set(dirty)
+        changed = True
+        while changed:
+            changed = False
+            for ax in self._axes:
+                if ax in redraw:
+                    continue
+                # Retained regions include two safety pixels. Only propagate
+                # through overlap with the actual painted extent, otherwise
+                # adjacent subplot padding forms an unnecessary redraw chain.
+                painted_region = self._regions[ax].padded(-2)
+                overlap = mtransforms.Bbox.intersection(damage, painted_region)
+                if overlap is not None and overlap.width > 0 and overlap.height > 0:
+                    redraw.add(ax)
+                    damage = mtransforms.Bbox.union([damage, self._regions[ax]])
+                    changed = True
+        return damage, tuple(
+            ax
+            for ax in sorted(self._axes, key=lambda item: item.get_zorder())
+            if ax in redraw
+        )
+
+    def _view_damage(self, dirty, renderer):
+        """Resolve exact damage after view changes and axes needing repaint."""
+        new_regions = {}
+        needs_measurement_draw = any(
+            getattr(ax, "_name", None) == "three" for ax in dirty
+        )
+        measurement_background = (
+            self.canvas.copy_from_bbox(self.figure.bbox)
+            if needs_measurement_draw
+            else None
+        )
+        try:
+            for ax in dirty:
+                if getattr(ax, "_name", None) == "three":
+                    # Axis3D tick positions are updated only by draw(). Draw once
+                    # to measure the new camera extent, then undo that probe.
+                    self.figure.draw_artist(ax)
+                region = self._resolve_region(ax, renderer, {})
+                if region is None:
+                    return None
+                new_regions[ax] = region
+        finally:
+            if measurement_background is not None:
+                self.canvas.restore_region(measurement_background)
+        damage = mtransforms.Bbox.union(
+            [self._regions[ax] for ax in dirty] + [new_regions[ax] for ax in dirty]
+        )
+        resolved = self._damage_closure(dirty, damage)
+        if resolved is None:
+            return None
+        damage, redraw = resolved
+        return damage, redraw, new_regions
 
     def draw_if_possible(self):
         """Use retained axes layers for paint-only data changes."""
@@ -522,24 +1071,64 @@ class _SelectiveDrawManager:
                 self.invalidate()
             return False
 
-        dirty = self._dirty_axes()
+        dirty_state = self._dirty_axes()
+        if dirty_state is None:
+            return False
+        dirty, view_dirty = dirty_state
         if not dirty:
             return False
 
         self._selecting = True
         try:
-            for ax in dirty:
-                self.canvas.restore_region(self._backgrounds[ax])
-            if self._cache_mode == "suffix":
+            renderer = self.canvas.get_renderer()
+            if view_dirty:
+                if self._figure_background is None:
+                    return False
+                resolved = self._view_damage(view_dirty, renderer)
+                if resolved is None:
+                    return False
+                damage, redraw, new_regions = resolved
+                # Each exact region buffer has backend-correct integer bounds.
+                # Restoring every axes in the overlap closure clears old paint;
+                # pixels in newly exposed areas already contain the static frame.
+                for ax in redraw:
+                    self.canvas.restore_region(self._backgrounds[ax])
+                for ax in redraw:
+                    self.figure.draw_artist(ax)
+                for ax, region in new_regions.items():
+                    self._regions[ax] = region
+                blit_regions = (damage,)
+                painted = redraw
+            elif self._cache_mode == "suffix":
+                for ax in dirty:
+                    self.canvas.restore_region(self._backgrounds[ax])
                 for ax in sorted(dirty, key=lambda item: item.get_zorder()):
                     for artist in self._suffixes[ax]:
                         self.figure.draw_artist(artist)
+                blit_regions = tuple(self._regions[ax] for ax in dirty)
+                painted = dirty
             else:
-                for ax in sorted(dirty, key=lambda item: item.get_zorder()):
+                damage = mtransforms.Bbox.union([self._regions[ax] for ax in dirty])
+                resolved = self._damage_closure(dirty, damage)
+                if resolved is None:
+                    return False
+                damage, redraw = resolved
+                for ax in redraw:
+                    self.canvas.restore_region(self._backgrounds[ax])
+                for ax in redraw:
                     self.figure.draw_artist(ax)
-            self._mark_axes_clean(dirty)
-            for ax in dirty:
-                self.canvas.blit(self._regions[ax])
+                blit_regions = (damage,)
+                painted = redraw
+            self._mark_axes_clean(painted)
+            for ax in painted:
+                # Complete 3D axes draws can update collection zorders and other
+                # renderer-facing state. Refresh signatures from the exact frame.
+                self._signatures[ax] = self._axes_signature(ax)
+                self._camera_signatures[ax] = self._camera_signature(ax)
+                self._view_signatures[ax] = self._axes_view_signature(ax)
+            self._drawn_view_signature = self._view_signature()
+            for region in blit_regions:
+                self.canvas.blit(region)
             self.figure.stale = False
             self._selective_draw_count += 1
             DrawEvent("draw_event", self.canvas, self.canvas.get_renderer())._process()
@@ -552,7 +1141,8 @@ class _SelectiveDrawManager:
         """Suspend retained drawing while producing external output."""
         self._suspended = True
         try:
-            yield
+            with self._navigation_preview.full_quality_context():
+                yield
         finally:
             self._suspended = False
             self.invalidate()
@@ -563,6 +1153,7 @@ class _SelectiveDrawManager:
         callbacks = self.figure._canvas_callbacks
         callbacks.disconnect(self._draw_cid)
         callbacks.disconnect(self._resize_cid)
+        self._navigation_preview.close()
         self.invalidate()
         self._closed = True
 
