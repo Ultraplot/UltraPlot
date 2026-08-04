@@ -4211,6 +4211,12 @@ class Figure(mfigure.Figure):
                 fig = self.figure
                 if fig is not None:
                     fig._skip_autolayout = True
+                    selective = getattr(fig, "_selective_draw_manager", None)
+                    preview = getattr(selective, "_navigation_preview", None)
+                    if preview is not None and preview.request_draw(
+                        lambda: orig_draw_idle(self, *args, **kwargs)
+                    ):
+                        return None
                 return orig_draw_idle(self, *args, **kwargs)
 
             canvas.draw_idle = _draw_idle.__get__(canvas)

@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from matplotlib import ticker as mticker
 from matplotlib.animation import FuncAnimation
-from matplotlib.backend_bases import FigureCanvasBase
+from matplotlib.backend_bases import FigureCanvasBase, MouseEvent, TimerBase
 from PIL import Image
 
 import ultraplot as uplt
@@ -804,6 +804,249 @@ def test_selective_draw_does_not_recapture_during_pan_frames():
     line.set_ydata(np.sin(np.linspace(0, 10, 1000)))
     fig.canvas.draw()
     assert manager._selective_draw_count == 1
+
+
+def test_selective_draw_retains_unchanged_three_axes_during_rotation():
+    """A rotated 3D subplot should preserve exact pixels and distant axes."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, proj="3d", share=False)
+    t = np.linspace(0, 6 * np.pi, 500)
+    for index, ax in enumerate(axs):
+        ax.plot(np.cos(t), np.sin(t), t + index)
+    fig.canvas.draw()
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+    distant_draw = axs[-1].draw
+    axs[-1].draw = MagicMock(wraps=distant_draw)
+
+    axs[0].view_init(elev=35, azim=55, roll=5)
+    fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert manager._selective_draw_count == 1
+    axs[-1].draw.assert_not_called()
+    with manager.save_context():
+        fig.canvas.draw()
+        complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+    assert np.array_equal(retained, complete)
+
+
+def test_selective_draw_three_axes_rotation_falls_back_when_not_profitable():
+    """Measuring a rotated extent must not slow down a two-axes figure."""
+    fig, axs = uplt.subplots(ncols=2, proj="3d", share=False)
+    for ax in axs:
+        ax.plot([0, 1], [0, 1], [0, 1])
+    fig.canvas.draw()
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+
+    axs[0].view_init(elev=40, azim=20)
+    fig.canvas.draw()
+
+    assert manager._selective_draw_count == 0
+    assert manager._cache_mode is None
+
+
+def test_selective_draw_axes_mode_handles_view_limit_changes():
+    """Whole-axes retention should support 2D and geographic-style view changes."""
+    fig, axs = uplt.subplots(ncols=3)
+    for ax in axs:
+        ax.scatter([0, 1, 2], [0, 1, 0])
+    fig.canvas.draw()
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+
+    axs[0].set_xlim(0.25, 1.75)
+    fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert manager._selective_draw_count == 1
+    with manager.save_context():
+        fig.canvas.draw()
+        complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+    assert np.array_equal(retained, complete)
+
+
+def test_three_d_interaction_preview_restores_exact_artist_state():
+    """Dense preview artists and decorations must be completely reversible."""
+    fig, ax = uplt.subplots(proj="3d")
+    ax = fig.axes[0]
+    t = np.linspace(0, 8 * np.pi, 5_000)
+    line = ax.plot(np.cos(t), np.sin(t), t)[0]
+    scatter = ax.scatter(np.cos(t), np.sin(t), t, s=np.linspace(1, 3, len(t)))
+    values = np.linspace(-2, 2, 30)
+    xx, yy = np.meshgrid(values, values)
+    surface = ax.plot_surface(xx, yy, np.sin(xx * yy), rcount=30, ccount=30)
+    fig.canvas.draw()
+    preview = fig._selective_draw_manager._navigation_preview
+    line_data = tuple(np.asanyarray(array).copy() for array in line.get_data_3d())
+    offsets = tuple(np.asanyarray(array).copy() for array in scatter._offsets3d)
+    locators = tuple(
+        (axis.get_major_locator(), axis.get_minor_locator())
+        for axis in ax._axis_map.values()
+    )
+    grid = ax._draw_grid
+    proxy = surface._ultraplot_lod_proxy
+    assert proxy.axes is None
+
+    assert preview.activate(ax)
+    assert len(line.get_data_3d()[0]) <= preview._line_limit + 2
+    assert len(scatter._offsets3d[0]) <= preview._scatter_limit + 2
+    assert surface.axes is None
+    assert proxy.get_visible() and proxy.axes is ax
+    assert not ax._draw_grid
+    assert all(
+        isinstance(axis.get_minor_locator(), mticker.NullLocator)
+        for axis in ax._axis_map.values()
+    )
+
+    assert preview.deactivate(redraw=False)
+    assert all(
+        np.array_equal(expected, actual)
+        for expected, actual in zip(line_data, line.get_data_3d())
+    )
+    assert all(
+        np.array_equal(expected, actual)
+        for expected, actual in zip(offsets, scatter._offsets3d)
+    )
+    assert surface.get_visible() and surface.axes is ax
+    assert not proxy.get_visible()
+    assert proxy.axes is None
+    assert ax._draw_grid is grid
+    assert all(
+        axis.get_major_locator() is major and axis.get_minor_locator() is minor
+        for axis, (major, minor) in zip(ax._axis_map.values(), locators)
+    )
+
+
+def test_three_d_interaction_preview_exports_full_quality():
+    """Saving during rotation must temporarily restore the exact dense scene."""
+    fig, ax = uplt.subplots(proj="3d")
+    ax = fig.axes[0]
+    t = np.linspace(0, 8 * np.pi, 5_000)
+    line = ax.plot(np.cos(t), np.sin(t), t)[0]
+    fig.canvas.draw()
+
+    expected_buffer = io.BytesIO()
+    fig.savefig(expected_buffer, format="png")
+    expected_buffer.seek(0)
+    expected = np.asarray(Image.open(expected_buffer)).copy()
+
+    preview = fig._selective_draw_manager._navigation_preview
+    assert preview.activate(ax)
+    assert len(line.get_data_3d()[0]) < len(t)
+    preview_buffer = io.BytesIO()
+    fig.savefig(preview_buffer, format="png")
+    preview_buffer.seek(0)
+    exported = np.asarray(Image.open(preview_buffer)).copy()
+
+    assert np.array_equal(exported, expected)
+    assert preview._state is not None
+    assert len(line.get_data_3d()[0]) < len(t)
+    preview.deactivate(redraw=False)
+
+
+def test_two_d_interaction_preview_restores_exact_artist_state():
+    """Toolbar pan preview should reversibly reduce dense 2D artists."""
+    fig, _ = uplt.subplots()
+    ax = fig.axes[0]
+    x = np.linspace(0, 100, 5_000)
+    line = ax.plot(x, np.sin(x))[0]
+    scatter = ax.scatter(x, np.cos(x), s=np.linspace(1, 3, len(x)))
+    fig.canvas.draw()
+    preview = fig._selective_draw_manager._navigation_preview
+    line_data = tuple(np.asanyarray(array).copy() for array in line.get_data())
+    offsets = np.asanyarray(scatter.get_offsets()).copy()
+    locators = tuple(
+        (axis.get_major_locator(), axis.get_minor_locator())
+        for axis in (ax.xaxis, ax.yaxis)
+    )
+
+    assert preview.activate(ax)
+    assert len(line.get_xdata()) <= preview._line_limit + 2
+    assert len(scatter.get_offsets()) <= preview._scatter_limit + 2
+    assert isinstance(ax.xaxis.get_minor_locator(), mticker.NullLocator)
+    assert isinstance(ax.yaxis.get_minor_locator(), mticker.NullLocator)
+
+    assert preview.deactivate(redraw=False)
+    assert all(
+        np.array_equal(expected, actual)
+        for expected, actual in zip(line_data, line.get_data())
+    )
+    assert np.array_equal(offsets, scatter.get_offsets())
+    assert all(
+        axis.get_major_locator() is major and axis.get_minor_locator() is minor
+        for axis, (major, minor) in zip((ax.xaxis, ax.yaxis), locators)
+    )
+
+
+@pytest.mark.parametrize("projection", (None, "3d"))
+def test_navigation_preview_tracks_mouse_press_and_release(projection):
+    """Canvas callbacks should activate previews and always restore on release."""
+    kwargs = {} if projection is None else {"proj": projection}
+    fig, _ = uplt.subplots(**kwargs)
+    ax = fig.axes[0]
+    values = np.linspace(0, 10, 5_000)
+    if projection is None:
+        line = ax.plot(values, np.sin(values))[0]
+        ax.set_navigate_mode("PAN")
+        original_size = len(line.get_xdata())
+    else:
+        line = ax.plot(np.cos(values), np.sin(values), values)[0]
+        original_size = len(line.get_data_3d()[0])
+    fig.canvas.draw()
+    x, y = ax.transAxes.transform((0.5, 0.5))
+
+    MouseEvent("button_press_event", fig.canvas, x, y, button=1)._process()
+    preview = fig._selective_draw_manager._navigation_preview
+    assert preview._state is not None
+
+    MouseEvent("button_release_event", fig.canvas, x, y, button=1)._process()
+    assert preview._state is None
+    size = len(line.get_xdata()) if projection is None else len(line.get_data_3d()[0])
+    assert size == original_size
+
+
+def test_navigation_preview_coalesces_fast_draw_idle_requests():
+    """Rapid motion updates should present only the newest scheduled frame."""
+
+    class TestTimer(TimerBase):
+        def _timer_start(self):
+            self.started = True
+
+        def _timer_stop(self):
+            self.started = False
+
+    fig, ax = uplt.subplots()
+    ax = fig.axes[0]
+    values = np.linspace(0, 10, 5_000)
+    ax.plot(values, np.sin(values))
+    fig.canvas.draw()
+    preview = fig._selective_draw_manager._navigation_preview
+    assert preview.activate(ax)
+
+    timers = []
+
+    def new_timer(interval):
+        timer = TestTimer(interval=interval)
+        timers.append(timer)
+        return timer
+
+    fig.canvas.new_timer = new_timer
+    draws = []
+    cid = fig.canvas.mpl_connect("draw_event", lambda event: draws.append(event))
+    fig.canvas.draw_idle()
+    ax.set_xlim(1, 9)
+    fig.canvas.draw_idle()
+
+    assert len(timers) == 1
+    assert not draws
+    timers[0]._on_timer()
+    # Agg draws synchronously; GUI backends enqueue the submitted idle draw.
+    assert not preview._draw_requested
+    assert preview._draw_pending or len(draws) == 1
+
+    fig.canvas.mpl_disconnect(cid)
+    preview.deactivate(redraw=False)
 
 
 @pytest.mark.parametrize("kind", ("scatter", "low_line", "unclipped", "overlay"))
