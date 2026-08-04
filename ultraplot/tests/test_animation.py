@@ -567,7 +567,7 @@ def test_selective_draw_defers_cache_until_after_initial_display(ncols):
     assert manager._full_draw_count == 0
 
     fig.canvas.draw()
-    assert manager._cache_mode == ("suffix" if ncols == 1 else "axes")
+    assert manager._cache_mode == "suffix"
     assert manager._full_draw_count == 1
 
 
@@ -586,6 +586,68 @@ def test_selective_draw_redraws_only_changed_axes():
 
     assert manager._selective_draw_count == 1
     axs[1].draw.assert_not_called()
+
+
+def test_selective_draw_multi_axes_suffix_matches_complete_draw():
+    """Each dirty axes should redraw only its exact artist suffix."""
+    fig, axs = uplt.subplots(ncols=2)
+    x = np.linspace(0, 2 * np.pi, 500)
+    lines = []
+    for index, ax in enumerate(axs):
+        ax.scatter(x[::20], np.cos(x[::20]), s=6, zorder=1)
+        lines.append(ax.plot(x, np.sin(x + index), zorder=2)[0])
+        ax.format(title=f"Axis {index}", grid=True)
+    fig.canvas.draw()
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+    axis_draws = [ax.xaxis.draw for ax in axs]
+    for ax, draw in zip(axs, axis_draws):
+        ax.xaxis.draw = MagicMock(wraps=draw)
+
+    lines[0].set_ydata(np.cos(x))
+    fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert manager._cache_mode == "suffix"
+    assert manager._selective_draw_count == 1
+    for ax in axs:
+        ax.xaxis.draw.assert_not_called()
+    with manager.save_context():
+        fig.canvas.draw()
+        complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+    assert np.array_equal(retained, complete)
+
+
+def test_selective_draw_multi_axes_suffix_updates_multiple_dirty_axes():
+    """Simultaneous line changes should restore and redraw every dirty suffix."""
+    fig, axs = uplt.subplots(ncols=2)
+    x = np.linspace(0, 2 * np.pi, 500)
+    lines = [ax.plot(x, np.sin(x + index))[0] for index, ax in enumerate(axs)]
+    fig.canvas.draw()
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+
+    for index, line in enumerate(lines):
+        line.set_ydata(np.cos(x + index))
+    fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert manager._selective_draw_count == 1
+    with manager.save_context():
+        fig.canvas.draw()
+        complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+    assert np.array_equal(retained, complete)
+
+
+def test_selective_draw_multi_axes_uses_axes_mode_without_safe_suffixes():
+    """A figure must not mix suffix and whole-axes retained layers."""
+    fig, axs = uplt.subplots(ncols=2)
+    axs[0].plot([0, 1], [0, 1])
+    axs[1].scatter([0, 1], [1, 0])
+    fig.canvas.draw()
+    fig.canvas.draw()
+
+    assert fig._selective_draw_manager._cache_mode == "axes"
 
 
 def test_selective_draw_stays_fast_across_consecutive_frames():

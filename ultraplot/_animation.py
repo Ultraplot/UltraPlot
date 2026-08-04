@@ -41,8 +41,8 @@ class _SelectiveDrawManager:
         self._regions = {}
         self._signatures = {}
         self._axes = ()
-        self._suffix = ()
-        self._pending_suffix = ()
+        self._suffixes = {}
+        self._pending_suffixes = {}
         self._pending_regions = {}
         self._cache_mode = None
         self._capture_mode = None
@@ -276,8 +276,8 @@ class _SelectiveDrawManager:
         self._regions.clear()
         self._signatures.clear()
         self._axes = ()
-        self._suffix = ()
-        self._pending_suffix = ()
+        self._suffixes = {}
+        self._pending_suffixes = {}
         self._pending_regions = {}
         self._cache_mode = None
         self._capture_mode = None
@@ -317,11 +317,12 @@ class _SelectiveDrawManager:
             backgrounds = {}
 
         if self._capture_mode == "suffix":
-            suffix = self._pending_suffix
-            for artist in suffix:
-                self.figure.draw_artist(artist)
+            suffixes = self._pending_suffixes
+            for ax in sorted(axes, key=lambda item: item.get_zorder()):
+                for artist in suffixes[ax]:
+                    self.figure.draw_artist(artist)
         else:
-            suffix = ()
+            suffixes = {}
             # Figure.draw() omitted these temporarily animated axes. Draw them now,
             # in normal axes z-order, before the backend presents the frame.
             for ax in sorted(axes, key=lambda item: item.get_zorder()):
@@ -336,7 +337,7 @@ class _SelectiveDrawManager:
 
         self._full_draw_count += 1
         self._axes = axes
-        self._suffix = suffix
+        self._suffixes = suffixes
         self._regions = regions if valid else {}
         self._backgrounds = backgrounds
         self._signatures = {ax: self._axes_signature(ax) for ax in axes}
@@ -345,9 +346,13 @@ class _SelectiveDrawManager:
         if self._capture_mode == "suffix":
             self._cache_safe = bool(
                 valid
-                and suffix
+                and len(suffixes) == len(axes)
                 and self._canvas_signature is not None
-                and self._suffix_fits_region(suffix, regions[axes[0]], renderer)
+                and not self._regions_overlap(regions.values())
+                and all(
+                    self._suffix_fits_region(suffixes[ax], regions[ax], renderer)
+                    for ax in axes
+                )
             )
         else:
             self._cache_safe = bool(
@@ -400,15 +405,32 @@ class _SelectiveDrawManager:
             yield
             return
 
-        if len(axes) == 1:
-            suffix = self._resolve_line_suffix(axes[0])
-            if not suffix:
+        suffixes = {ax: self._resolve_line_suffix(ax) for ax in axes}
+        if all(suffixes.values()):
+            renderer = self.canvas.get_renderer()
+            store = getattr(self.figure, "_layout_extent_store", None)
+            cached_regions = {} if store is None else store._get_retained_bboxes(axes)
+            regions = {
+                ax: self._resolve_region(ax, renderer, cached_regions) for ax in axes
+            }
+            if any(region is None for region in regions.values()) or (
+                len(axes) > 1 and self._regions_overlap(regions.values())
+            ):
                 self.invalidate()
                 yield
                 return
-            targets = suffix
+            targets = tuple(
+                artist
+                for ax in sorted(axes, key=lambda item: item.get_zorder())
+                for artist in suffixes[ax]
+            )
             self._capture_mode = "suffix"
-            self._pending_suffix = suffix
+            self._pending_suffixes = suffixes
+            self._pending_regions = regions
+        elif len(axes) == 1:
+            self.invalidate()
+            yield
+            return
         else:
             renderer = self.canvas.get_renderer()
             store = getattr(self.figure, "_layout_extent_store", None)
@@ -424,7 +446,7 @@ class _SelectiveDrawManager:
                 return
             targets = axes
             self._capture_mode = "axes"
-            self._pending_suffix = ()
+            self._pending_suffixes = {}
             self._pending_regions = regions
 
         animated = {artist: artist.get_animated() for artist in targets}
@@ -442,7 +464,7 @@ class _SelectiveDrawManager:
                 artist._animated = state
             self._capturing = False
             self._capture_mode = None
-            self._pending_suffix = ()
+            self._pending_suffixes = {}
             self._pending_regions = {}
 
     def _dirty_axes(self):
@@ -465,9 +487,10 @@ class _SelectiveDrawManager:
             if not stale_children:
                 continue
             if self._cache_mode == "suffix":
+                suffix = self._suffixes.get(ax, ())
                 if not all(
                     isinstance(child, mlines.Line2D)
-                    and child in self._suffix
+                    and child in suffix
                     and self._has_numeric_line_data(child)
                     for child in stale_children
                 ):
@@ -508,8 +531,9 @@ class _SelectiveDrawManager:
             for ax in dirty:
                 self.canvas.restore_region(self._backgrounds[ax])
             if self._cache_mode == "suffix":
-                for artist in self._suffix:
-                    self.figure.draw_artist(artist)
+                for ax in sorted(dirty, key=lambda item: item.get_zorder()):
+                    for artist in self._suffixes[ax]:
+                        self.figure.draw_artist(artist)
             else:
                 for ax in sorted(dirty, key=lambda item: item.get_zorder()):
                     self.figure.draw_artist(ax)
