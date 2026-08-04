@@ -1439,12 +1439,24 @@ def test_selective_draw_reuses_regions_for_unchanged_axes():
     assert not any(call.called for call in calls)
 
     manager = fig._selective_draw_manager
-    # An unchanged axes resolves from the memo, which requires a usable
-    # signature matching the stored one.
-    for ax in axs:
-        signature = manager._region_signature(ax)
-        assert signature is not None
-        assert manager._resolved_regions[ax][0] == signature
+    renderer = fig.canvas.get_renderer()
+
+    # Resolving twice with nothing changed must reuse the memo rather than
+    # measure again. Exercised directly: a fully unchanged draw never reaches
+    # region resolution at all, since it keeps the retained layers as they are.
+    manager._resolved_regions.clear()
+    first = manager._resolve_region(axs[0], renderer, {})
+    assert first is not None
+    assert axs[0] in manager._resolved_regions
+
+    # Measuring a tight bbox marks the axis stale through the shared-axis tick
+    # parameters. A real draw ends with the same baseline reset, so apply it here
+    # before asking for the region again.
+    manager._mark_axes_clean(axs)
+
+    axs[0].get_tightbbox = MagicMock(wraps=axs[0].get_tightbbox)
+    assert manager._resolve_region(axs[0], renderer, {}) is first
+    assert not axs[0].get_tightbbox.called
 
     # A changed axes must not be served from the memo. Which cache then supplies
     # the measurement is deliberately not asserted: the layout extent store can
