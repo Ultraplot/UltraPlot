@@ -369,6 +369,20 @@ class _LayoutExtentStore:
             ):
                 record.state = state
 
+    def _get_retained_bboxes(self, axes):
+        """Return exact cached display bboxes for retained axes drawing."""
+        self._rebase_records()
+        bboxes = {}
+        for axis in axes:
+            record = self._records.get((axis, True))
+            if (
+                record is not None
+                and record.version == self._versions.get(axis)
+                and record.state == self._get_state(axis, True)
+            ):
+                bboxes[axis] = self._bbox_from_outsets(axis.bbox, record.outsets)
+        return bboxes
+
     @staticmethod
     def _get_decoration_state(axes):
         texts = []

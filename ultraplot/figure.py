@@ -664,10 +664,26 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
                 needs_post_layout = (
                     not lock_tight_during_save and _needs_post_tight_layout(fig)
                 )
-            result = func(self, *args, **kwargs)
+            selective = getattr(fig, "_selective_draw_manager", None)
+            if (
+                method != "print_figure"
+                and selective is not None
+                and not needs_layout
+                and selective.draw_if_possible()
+            ):
+                return None
+
+            def _draw_context():
+                if method != "print_figure" and selective is not None:
+                    return selective.full_draw_context()
+                return context._empty_context()
+
+            with _draw_context():
+                result = func(self, *args, **kwargs)
             if needs_post_layout:
                 fig.auto_layout()
-                result = func(self, *args, **kwargs)
+                with _draw_context():
+                    result = func(self, *args, **kwargs)
             if method == "print_figure" and getattr(self, "_is_saving", False):
                 fig._saving_frame_count = saving_frame_count + 1
             elif not getattr(self, "_is_saving", False):
@@ -4145,6 +4161,9 @@ class Figure(mfigure.Figure):
         # so savefig includes them in normal z-order.
         managers = tuple(getattr(self, "_blit_managers", ()))
         with ExitStack() as stack:
+            selective = getattr(self, "_selective_draw_manager", None)
+            if selective is not None:
+                stack.enter_context(selective.save_context())
             for manager in managers:
                 stack.enter_context(manager._save_context())
             # NOTE: this draw ensures that we are applying ultraplots layout
@@ -4180,6 +4199,9 @@ class Figure(mfigure.Figure):
         # around this by forcing additional draw() call in this function before
         # proceeding with print_figure). Set the canvas and add monkey patches
         # to the instance-level draw and print_figure methods.
+        previous = getattr(self, "_selective_draw_manager", None)
+        if previous is not None:
+            previous.close()
         method = "draw"
         # if getattr(canvas, "_draw", None):
         # method = "_draw"
@@ -4198,6 +4220,9 @@ class Figure(mfigure.Figure):
 
             canvas.draw_idle = _draw_idle.__get__(canvas)
         super().set_canvas(canvas)
+        from ._animation import _SelectiveDrawManager
+
+        self._selective_draw_manager = _SelectiveDrawManager(canvas, self)
 
     def _is_same_size(self, figsize, eps=None):
         """
