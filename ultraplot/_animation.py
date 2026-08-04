@@ -40,6 +40,9 @@ _MITER_LIMIT = 4.0
 #: Slack for float comparisons between display-space bounding boxes.
 _BBOX_TOLERANCE = 1e-6
 
+#: Sentinel for a per-draw cache that has not been populated yet.
+_MISSING = object()
+
 
 class _SelectiveDrawManager:
     """
@@ -67,6 +70,7 @@ class _SelectiveDrawManager:
         self._backgrounds = {}
         self._regions = {}
         self._resolved_regions = {}
+        self._overlay_bboxes = _MISSING
         self._signatures = {}
         self._view_signatures = {}
         self._axes = ()
@@ -183,25 +187,45 @@ class _SelectiveDrawManager:
     def _has_animated_artist(self, axes):
         return any(artist.get_animated() for ax in axes for artist in ax.get_children())
 
-    def _has_overlapping_figure_artist(self, targets):
-        """Return whether a figure artist overlaps retained artists or regions."""
-        get_renderer = getattr(self.canvas, "get_renderer", None)
-        if get_renderer is None:
-            return True
-        renderer = get_renderer()
+    def _figure_overlay_bboxes(self, renderer):
+        """
+        Return display bboxes of figure artists that can paint over an axes, or
+        ``None`` if any of them cannot be measured.
+
+        Every axes queries the same set within one draw pass, so measure the
+        figure once and let each query reuse it.
+        """
+        if self._overlay_bboxes is not _MISSING:
+            return self._overlay_bboxes
+        axes_ids = {id(ax) for ax in self.figure.axes}
+        bboxes = []
         for artist in self.figure.get_children():
             if (
                 artist is self.figure.patch
-                or artist in self.figure.axes
+                or id(artist) in axes_ids
                 or not artist.get_visible()
             ):
                 continue
             if isinstance(artist, mtext.Text) and not artist.get_text():
                 continue
             try:
-                overlay_bbox = artist.get_window_extent(renderer)
+                bboxes.append(artist.get_window_extent(renderer))
             except Exception:
-                return True
+                bboxes = None
+                break
+        self._overlay_bboxes = bboxes
+        return bboxes
+
+    def _has_overlapping_figure_artist(self, targets):
+        """Return whether a figure artist overlaps retained artists or regions."""
+        get_renderer = getattr(self.canvas, "get_renderer", None)
+        if get_renderer is None:
+            return True
+        renderer = get_renderer()
+        overlay_bboxes = self._figure_overlay_bboxes(renderer)
+        if overlay_bboxes is None:
+            return True
+        for overlay_bbox in overlay_bboxes:
             for target in targets:
                 if isinstance(target, martist.Artist):
                     if not target.get_visible():
@@ -613,6 +637,8 @@ class _SelectiveDrawManager:
     @contextmanager
     def full_draw_context(self):
         """Temporarily split a full draw into static and axes layers."""
+        # Figure artists do not move within one draw pass; measure them once.
+        self._overlay_bboxes = _MISSING
         if (
             self._closed
             or self._suspended
@@ -854,6 +880,7 @@ class _SelectiveDrawManager:
                 self.invalidate()
             return False
 
+        self._overlay_bboxes = _MISSING
         dirty_state = self._dirty_axes()
         if dirty_state is None:
             return False
