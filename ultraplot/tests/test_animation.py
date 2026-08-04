@@ -6,6 +6,7 @@ import matplotlib
 import numpy as np
 import pytest
 from matplotlib import ticker as mticker
+from matplotlib import transforms as mtransforms
 from matplotlib.animation import FuncAnimation
 from matplotlib.backend_bases import FigureCanvasBase, MouseEvent, TimerBase
 from PIL import Image
@@ -1419,3 +1420,56 @@ def test_paint_only_format_keeps_layout_clean_when_nothing_pending():
 
     ax.format(xcolor="red")
     assert not fig._layout_dirty
+
+
+def test_selective_draw_reuses_regions_for_unchanged_axes():
+    """An unchanged axes must not repeat its tight bbox measurement."""
+    fig, axs = uplt.subplots(ncols=2, nrows=2, refwidth=1.0)
+    lines = [ax.plot([0, 1, 2], [0.2, 0.8, 0.3])[0] for ax in axs]
+    for _ in range(4):
+        fig.canvas.draw()
+
+    calls = []
+    for ax in axs:
+        original = ax.get_tightbbox
+        ax.get_tightbbox = MagicMock(wraps=original)
+        calls.append(ax.get_tightbbox)
+
+    fig.canvas.draw()
+    assert not any(call.called for call in calls)
+
+    # A changed axes must still be re-measured.
+    lines[0].set_ydata([0.8, 0.2, 0.7])
+    fig.canvas.draw()
+    fig._selective_draw_manager.invalidate()
+    fig.canvas.draw()
+    assert calls[0].called
+
+
+def test_regions_overlap_matches_exhaustive_comparison():
+    """The sweep must agree with a direct all-pairs rectangle comparison."""
+    from ultraplot._animation import _SelectiveDrawManager
+
+    def exhaustive(regions):
+        regions = tuple(regions)
+        for index, left in enumerate(regions):
+            for right in regions[index + 1 :]:
+                overlap = mtransforms.Bbox.intersection(left, right)
+                if overlap is not None and overlap.width > 0 and overlap.height > 0:
+                    return True
+        return False
+
+    state = np.random.RandomState(0)
+    for trial in range(400):
+        count = state.randint(0, 8)
+        if trial % 3 == 0:  # a single column keeps every x span open at once
+            boxes = [
+                mtransforms.Bbox.from_extents(0, index * 2, 10, index * 2 + width)
+                for index, width in enumerate(state.randint(0, 3, count))
+            ]
+        else:
+            boxes = [
+                mtransforms.Bbox.from_extents(x0, y0, x0 + w, y0 + h)
+                for x0, y0, w, h in state.randint(0, 6, (count, 4))
+            ]
+        assert _SelectiveDrawManager._regions_overlap(boxes) == exhaustive(boxes)

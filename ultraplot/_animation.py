@@ -49,6 +49,7 @@ class _SelectiveDrawManager:
         self.figure = figure if figure is not None else canvas.figure
         self._backgrounds = {}
         self._regions = {}
+        self._resolved_regions = {}
         self._signatures = {}
         self._view_signatures = {}
         self._axes = ()
@@ -280,13 +281,48 @@ class _SelectiveDrawManager:
         return suffix
 
     @staticmethod
-    def _regions_overlap(regions):
-        regions = tuple(regions)
-        for idx, left in enumerate(regions):
-            for right in regions[idx + 1 :]:
-                overlap = mtransforms.Bbox.intersection(left, right)
-                if overlap is not None and overlap.width > 0 and overlap.height > 0:
+    def _max_concurrent(intervals):
+        """Return the largest number of intervals open at any one coordinate."""
+        events = sorted(
+            [(start, 1) for start, _ in intervals] + [(end, 0) for _, end in intervals]
+        )
+        best = open_count = 0
+        for _, opening in events:
+            open_count += 1 if opening else -1
+            best = max(best, open_count)
+        return best
+
+    @classmethod
+    def _regions_overlap(cls, regions):
+        """Return whether any two regions share a positive-area intersection."""
+        # This asks whether axis-aligned rectangles intersect, not which point is
+        # nearest, so a sweep beats a spatial point index. Sort by leading edge
+        # and compare each region only against those still open at that
+        # coordinate. Subplot regions are near-disjoint, so the active set stays
+        # small and the quadratic pair scan disappears.
+        boxes = [
+            (min(b.x0, b.x1), max(b.x0, b.x1), min(b.y0, b.y1), max(b.y0, b.y1))
+            for b in regions
+        ]
+        if len(boxes) < 2:
+            return False
+        # Sweeping a single column of subplots along x would leave every region
+        # open at once. Sweep whichever axis separates them best.
+        if cls._max_concurrent(
+            [(x0, x1) for x0, x1, _, _ in boxes]
+        ) > cls._max_concurrent([(y0, y1) for _, _, y0, y1 in boxes]):
+            boxes = [(y0, y1, x0, x1) for x0, x1, y0, y1 in boxes]
+        boxes.sort()
+        active = []
+        for start, end, low, high in boxes:
+            active = [item for item in active if item[0] > start]
+            for other_end, other_low, other_high in active:
+                if (
+                    min(other_end, end) > start
+                    and min(other_high, high) - max(other_low, low) > 0
+                ):
                     return True
+            active.append((end, low, high))
         return False
 
     # Path effects whose painted overhang is bounded by their offset and stroke
@@ -374,6 +410,11 @@ class _SelectiveDrawManager:
                 return None
             if overhang <= 0:
                 continue
+            # An in-layout artist already contributes its extent to the tight
+            # bbox, so an overhang no larger than the safety pad is absorbed by
+            # it. Skipping those avoids measuring text metrics for every label.
+            if overhang <= self._region_pad and artist.get_in_layout():
+                continue
             # Pad each artist individually rather than the whole region. An
             # artist sitting well inside the axes then costs nothing, which
             # matters for projections that draw every artist unclipped.
@@ -386,7 +427,36 @@ class _SelectiveDrawManager:
             bounds.append(extent.padded(overhang + self._region_pad))
         return mtransforms.Bbox.union(bounds)
 
+    def _region_signature(self, ax):
+        """Return a cheap key for a resolved region, or ``None`` if unusable."""
+        # Every input to the region is either geometry covered by these
+        # signatures or an artist property, and a property change marks its
+        # artist stale. As in ``_dirty_axes``, only the child flags are read: the
+        # Axes container is left stale by layout and tick cache cleanup even when
+        # every drawable child is clean.
+        if any(child.stale for child in ax.get_children()):
+            return None
+        canvas_signature = self._current_canvas_signature()
+        if canvas_signature is None:
+            return None
+        return (
+            self._axes_signature(ax),
+            self._axes_view_signature(ax),
+            canvas_signature,
+            bool(ax.axison),
+            bool(ax.get_frame_on()),
+        )
+
     def _resolve_region(self, ax, renderer, cached_regions):
+        # Re-measuring a tight bbox costs a full tick and text traversal. An
+        # unchanged axes resolves to the region it resolved to last time, so
+        # settle that with signature comparisons before measuring anything.
+        signature = self._region_signature(ax)
+        if signature is not None:
+            resolved = self._resolved_regions.get(ax)
+            if resolved is not None and resolved[0] == signature:
+                return resolved[1]
+
         # UltraLayout already measured this exact region. Reconstructing it
         # from cached outsets avoids a second tick/text traversal.
         region = cached_regions.get(ax)
@@ -408,7 +478,10 @@ class _SelectiveDrawManager:
             np.ceil(region.x1),
             np.ceil(region.y1),
         )
-        return mtransforms.Bbox.intersection(region, self.figure.bbox)
+        region = mtransforms.Bbox.intersection(region, self.figure.bbox)
+        if signature is not None and region is not None:
+            self._resolved_regions[ax] = (signature, region)
+        return region
 
     @staticmethod
     def _mark_axes_clean(axes):
@@ -422,6 +495,7 @@ class _SelectiveDrawManager:
         """Discard all retained axes layers."""
         self._backgrounds.clear()
         self._regions.clear()
+        self._resolved_regions.clear()
         self._signatures.clear()
         self._view_signatures.clear()
         self._axes = ()
