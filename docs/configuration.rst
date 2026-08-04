@@ -93,6 +93,10 @@ Here's a broad overview of the new settings:
 
 * The ``subplots`` category includes settings that control the default
   subplot layout and padding.
+* The ``navigation`` category controls temporary lower-detail previews during
+  interactive panning and 3D rotation. Set :rcraw:`navigation.preview` to
+  ``False`` when exact fidelity is preferred during mouse gestures. This setting
+  does not affect ordinary draws, animations, or saved figures.
 * The ``geo`` category contains settings related to geographic plotting, including the
   geographic backend, gridline label settings, and map bound settings.
 * The ``abc``, ``title``, and ``label`` categories control a-b-c labels, axes

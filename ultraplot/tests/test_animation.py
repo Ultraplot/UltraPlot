@@ -986,6 +986,37 @@ def test_two_d_interaction_preview_restores_exact_artist_state():
 
 
 @pytest.mark.parametrize("projection", (None, "3d"))
+def test_navigation_preview_rc_disables_approximation(projection):
+    """The runtime rc setting should preserve exact interactive frames."""
+    kwargs = {} if projection is None else {"proj": projection}
+    fig, _ = uplt.subplots(**kwargs)
+    ax = fig.axes[0]
+    values = np.linspace(0, 10, 5_000)
+    if projection is None:
+        line = ax.plot(values, np.sin(values))[0]
+    else:
+        line = ax.plot(np.cos(values), np.sin(values), values)[0]
+
+    def get_size():
+        data = line.get_xdata() if projection is None else line.get_data_3d()[0]
+        return len(data)
+
+    fig.canvas.draw()
+    preview = fig._selective_draw_manager._navigation_preview
+
+    with uplt.rc.context({"navigation.preview": False}):
+        assert not preview.activate(ax)
+        assert get_size() == len(values)
+
+    assert preview.activate(ax)
+    assert get_size() < len(values)
+    with uplt.rc.context({"navigation.preview": False}):
+        assert not preview.request_draw(fig.canvas.draw_idle)
+        assert preview._state is None
+        assert get_size() == len(values)
+
+
+@pytest.mark.parametrize("projection", (None, "3d"))
 def test_navigation_preview_preserves_updates_during_gesture(projection):
     """Release must not overwrite artist or locator changes made while active."""
     kwargs = {} if projection is None else {"proj": projection}

@@ -15,6 +15,14 @@ from matplotlib.ticker import MaxNLocator, NullLocator
 _MISSING = object()
 
 
+def _preview_enabled():
+    """Return the current runtime setting for approximate navigation frames."""
+    # Keep this local to avoid config -> figure -> animation import cycles.
+    from .config import rc_ultraplot
+
+    return rc_ultraplot["navigation.preview"]
+
+
 def _state_equal(left, right):
     """Return whether an artist property still matches our preview value."""
     if left is right:
@@ -598,7 +606,12 @@ class _NavigationInteractionManager:
         """Activate preview quality for the navigated axes and shared siblings."""
         is_three = self._is_three_axes(ax)
         is_two = getattr(ax, "_name", None) in ("cartesian", "cartopy", "basemap")
-        if self._closed or self._state is not None or not (is_three or is_two):
+        if (
+            self._closed
+            or self._state is not None
+            or not _preview_enabled()
+            or not (is_three or is_two)
+        ):
             return False
         states = []
         try:
@@ -633,6 +646,9 @@ class _NavigationInteractionManager:
         return True
 
     def request_draw(self, draw):
+        if self._state is not None and not _preview_enabled():
+            self.deactivate(redraw=False)
+            return False
         return self._pacer.request(draw)
 
     @contextmanager
