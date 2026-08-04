@@ -1698,6 +1698,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         or `datetime.datetime` array as the x or y axis coordinate, the axis ticks
         and tick labels will be automatically formatted as dates.
         """
+        # An axes that is already stale carries a change we did not classify,
+        # such as a set_ylabel() call since the last draw. format() has always
+        # flushed those into the layout, so keep doing that.
+        pending_layout = bool(self.stale)
         explicit_format_keys = set(kwargs.pop("_explicit_format_keys", ()))
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
             kwargs, self._format_signatures[CartesianAxes]
@@ -1756,8 +1760,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # remaining conservative for rc changes and unknown formatting keys.
         sentinel = object()
         previous = getattr(self, "_format_layout_required", sentinel)
-        self._format_layout_required = bool(rc_kw) or axis_format_requires_layout(
-            explicit_format_keys
+        self._format_layout_required = (
+            pending_layout
+            or bool(rc_kw)
+            or axis_format_requires_layout(explicit_format_keys)
         )
         try:
             super().format(rc_kw=rc_kw, rc_mode=rc_mode, **base_kwargs)

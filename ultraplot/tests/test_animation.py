@@ -1383,3 +1383,39 @@ def test_selective_draw_region_covers_unclipped_stroke_overhang():
 
         for _ in range(2):
             fig.canvas.draw()
+
+
+def test_paint_only_format_flushes_pending_layout_changes():
+    """format() must still pick up layout changes made through plain setters."""
+    fig, axs = uplt.subplots(ncols=2, refwidth=1.8)
+    for index, ax in enumerate(axs):
+        ax.plot([0, 1, 2], [0.2, 0.8, 0.3])
+    fig.canvas.draw()
+
+    axs[0].set_ylabel("a very long y axis label")
+    axs[0].format(xcolor="red")  # paint-only on its own
+    assert fig._layout_dirty
+    fig.canvas.draw()
+
+    expected, expected_axs = uplt.subplots(ncols=2, refwidth=1.8)
+    for index, ax in enumerate(expected_axs):
+        ax.plot([0, 1, 2], [0.2, 0.8, 0.3])
+    expected_axs[0].set_ylabel("a very long y axis label")
+    expected_axs[0].format(xcolor="red")
+    expected.canvas.draw()
+
+    assert fig.get_size_inches() == pytest.approx(expected.get_size_inches())
+    assert axs[0].get_position().bounds == pytest.approx(
+        expected_axs[0].get_position().bounds
+    )
+
+
+def test_paint_only_format_keeps_layout_clean_when_nothing_pending():
+    """A paint-only format() on a clean figure must not force a relayout."""
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1, 2], [0.2, 0.8, 0.3])
+    fig.canvas.draw()
+    assert not fig._layout_dirty
+
+    ax.format(xcolor="red")
+    assert not fig._layout_dirty
