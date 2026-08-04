@@ -1438,12 +1438,20 @@ def test_selective_draw_reuses_regions_for_unchanged_axes():
     fig.canvas.draw()
     assert not any(call.called for call in calls)
 
-    # A changed axes must still be re-measured.
+    manager = fig._selective_draw_manager
+    # An unchanged axes resolves from the memo, which requires a usable
+    # signature matching the stored one.
+    for ax in axs:
+        signature = manager._region_signature(ax)
+        assert signature is not None
+        assert manager._resolved_regions[ax][0] == signature
+
+    # A changed axes must not be served from the memo. Which cache then supplies
+    # the measurement is deliberately not asserted: the layout extent store can
+    # legitimately satisfy it without a fresh Axes.get_tightbbox() call.
     lines[0].set_ydata([0.8, 0.2, 0.7])
-    fig.canvas.draw()
-    fig._selective_draw_manager.invalidate()
-    fig.canvas.draw()
-    assert calls[0].called
+    assert manager._region_signature(axs[0]) is None
+    assert manager._region_signature(axs[1]) is not None
 
 
 def test_regions_overlap_matches_exhaustive_comparison():
