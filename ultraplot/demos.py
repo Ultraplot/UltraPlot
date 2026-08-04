@@ -602,7 +602,6 @@ def show_colorspaces(*, luminance=None, saturation=None, hue=None, refwidth=2):
     return fig, axs
 
 
-@warnings._rename_kwargs("0.8.0", categories="include")
 @warnings._rename_kwargs("0.10.0", rasterize="rasterized")
 def _draw_bars(
     cmaps,

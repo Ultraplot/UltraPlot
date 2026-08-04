@@ -192,6 +192,7 @@ _GEOMETRY_SHAPE_PATHS = {
     "rectangle": mpath.Path(
         [[0, 0], [2, 0], [2, 1], [0, 1], [0, 0]], closed=True, readonly=True
     ),
+    "line": mpath.Path([[0, 0], [1, 0]], readonly=True),
 }
 _GEOMETRY_SHAPE_ALIASES = {
     "box": "square",
