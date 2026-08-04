@@ -102,24 +102,33 @@ class _SelectiveDrawManager:
         return tuple(float(value) for value in bbox.bounds)
 
     def _axes_signature(self, ax):
-        return (
-            tuple(
-                (id(child), float(child.get_zorder())) for child in ax.get_children()
-            ),
-            tuple(
-                (
-                    id(line),
-                    id(line.get_transform()),
-                    bool(line.get_clip_on()),
-                    id(line.get_clip_box()),
-                    id(line.get_clip_path()),
-                )
-                for line in ax.lines
-            ),
-            self._bbox_signature(ax.get_position(original=False)),
-            bool(ax.get_visible()),
-            float(ax.get_zorder()),
-        )
+        # get_position(original=False) applies the aspect, which marks the axes
+        # stale even when nothing moved. Inspecting an axes must not dirty it, or
+        # the layout extent store bumps every version and never reuses a record.
+        was_stale = ax.stale
+        try:
+            return (
+                tuple(
+                    (id(child), float(child.get_zorder()))
+                    for child in ax.get_children()
+                ),
+                tuple(
+                    (
+                        id(line),
+                        id(line.get_transform()),
+                        bool(line.get_clip_on()),
+                        id(line.get_clip_box()),
+                        id(line.get_clip_path()),
+                    )
+                    for line in ax.lines
+                ),
+                self._bbox_signature(ax.get_position(original=False)),
+                bool(ax.get_visible()),
+                float(ax.get_zorder()),
+            )
+        finally:
+            if not was_stale:
+                ax.stale = False
 
     def _axes_view_signature(self, ax):
         """Return paint-only limits, scales, and projection camera state."""
@@ -953,7 +962,11 @@ class _SelectiveDrawManager:
                 # renderer-facing state. Refresh signatures from the exact frame.
                 self._signatures[ax] = self._axes_signature(ax)
                 self._view_signatures[ax] = self._axes_view_signature(ax)
-            self._drawn_view_signature = self._view_signature()
+            # Every entry was just compared by _dirty_axes and refreshed above for
+            # the painted axes, so reuse them instead of re-deriving each one.
+            self._drawn_view_signature = tuple(
+                (id(ax), self._view_signatures[ax]) for ax in self._axes
+            )
             for region in blit_regions:
                 self.canvas.blit(region)
             self.figure.stale = False
