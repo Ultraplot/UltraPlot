@@ -153,7 +153,7 @@ class SubplotManager:
         The driver function for adding single subplots.
         """
         fig = self.figure
-        fig._layout_dirty = True
+        fig._invalidate_layout()
         kwargs = self.parse_proj(**kwargs)
 
         args = args or (1, 1, 1)

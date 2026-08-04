@@ -41,3 +41,33 @@ class ThreeAxes(shared._SharedAxes, base.Axes, Axes3D):
         from .plot import PlotAxes
 
         return PlotAxes.graph(self, *args, **kwargs)
+
+    def draw(self, renderer):
+        """Draw while suppressing exact surfaces replaced by navigation proxies."""
+        from .._interaction import _prepare_surface_preview
+
+        hidden = tuple(
+            artist
+            for artist in self.collections
+            if getattr(artist, "_ultraplot_navigation_hidden", False)
+            and _prepare_surface_preview(artist)
+        )
+        draw_grid = self._draw_grid
+        try:
+            for artist in hidden:
+                artist.set_visible(False)
+            if getattr(self, "_ultraplot_navigation_hide_grid", False):
+                self._draw_grid = False
+            super().draw(renderer)
+        finally:
+            self._draw_grid = draw_grid
+            for artist in hidden:
+                artist.set_visible(True)
+
+    def plot_surface(self, X, Y, Z, *args, **kwargs):
+        """Plot a surface and register a lazy private interaction preview."""
+        surface = super().plot_surface(X, Y, Z, *args, **kwargs)
+        from .._interaction import _register_surface_preview
+
+        _register_surface_preview(surface, X, Y, Z, args, kwargs)
+        return surface
