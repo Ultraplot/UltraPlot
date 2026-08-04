@@ -43,6 +43,7 @@ class _SelectiveDrawManager:
         self._axes = ()
         self._suffix = ()
         self._pending_suffix = ()
+        self._pending_regions = {}
         self._cache_mode = None
         self._capture_mode = None
         self._capturing = False
@@ -51,6 +52,8 @@ class _SelectiveDrawManager:
         self._suspended = False
         self._closed = False
         self._cache_safe = False
+        self._canvas_signature = None
+        self._drawn_view_signature = None
         self._selective_draw_count = 0
         self._full_draw_count = 0
         self._supports_blit = bool(canvas.supports_blit)
@@ -85,6 +88,36 @@ class _SelectiveDrawManager:
             float(ax.get_zorder()),
         )
 
+    def _current_canvas_signature(self):
+        """Return framebuffer properties that invalidate copied pixel regions."""
+        get_renderer = getattr(self.canvas, "get_renderer", None)
+        if get_renderer is None:
+            return None
+        try:
+            renderer = get_renderer()
+        except Exception:
+            return None
+        return (
+            float(self.figure.dpi),
+            self._bbox_signature(self.figure.bbox),
+            float(renderer.width),
+            float(renderer.height),
+            float(getattr(self.canvas, "device_pixel_ratio", 1)),
+        )
+
+    def _view_signature(self, axes=None):
+        """Return the view state last presented by a complete canvas draw."""
+        axes = self._visible_axes() if axes is None else axes
+        return tuple(
+            (
+                id(ax),
+                self._bbox_signature(ax.viewLim),
+                ax.get_xscale(),
+                ax.get_yscale(),
+            )
+            for ax in axes
+        )
+
     def _visible_axes(self):
         return tuple(ax for ax in self.figure.axes if ax.get_visible())
 
@@ -94,8 +127,8 @@ class _SelectiveDrawManager:
     def _has_animated_artist(self, axes):
         return any(artist.get_animated() for ax in axes for artist in ax.get_children())
 
-    def _has_overlapping_figure_artist(self, suffix):
-        """Return whether a later figure artist overlaps the retained suffix."""
+    def _has_overlapping_figure_artist(self, targets):
+        """Return whether a figure artist overlaps retained artists or regions."""
         get_renderer = getattr(self.canvas, "get_renderer", None)
         if get_renderer is None:
             return True
@@ -113,17 +146,57 @@ class _SelectiveDrawManager:
                 overlay_bbox = artist.get_window_extent(renderer)
             except Exception:
                 return True
-            for child in suffix:
-                if not child.get_visible():
-                    continue
-                try:
-                    child_bbox = child.get_window_extent(renderer)
-                except Exception:
-                    return True
-                overlap = mtransforms.Bbox.intersection(overlay_bbox, child_bbox)
+            for target in targets:
+                if isinstance(target, martist.Artist):
+                    if not target.get_visible():
+                        continue
+                    try:
+                        target_bbox = target.get_window_extent(renderer)
+                    except Exception:
+                        return True
+                else:
+                    target_bbox = target
+                overlap = mtransforms.Bbox.intersection(overlay_bbox, target_bbox)
                 if overlap is not None and overlap.width > 0 and overlap.height > 0:
                     return True
         return False
+
+    @staticmethod
+    def _bbox_contains(outer, inner, tolerance=1e-6):
+        return (
+            inner.x0 >= outer.x0 - tolerance
+            and inner.y0 >= outer.y0 - tolerance
+            and inner.x1 <= outer.x1 + tolerance
+            and inner.y1 <= outer.y1 + tolerance
+        )
+
+    def _suffix_fits_region(self, suffix, region, renderer):
+        """Return whether restoring *region* clears every suffix paint extent."""
+        for artist in suffix:
+            if not artist.get_visible():
+                continue
+            try:
+                extent = artist.get_window_extent(renderer)
+            except Exception:
+                return False
+            # Invisible placeholder labels commonly have zero-area extents just
+            # outside the axes tight bbox. They cannot damage any pixels.
+            if extent.width <= 0 or extent.height <= 0:
+                continue
+            if artist.get_path_effects():
+                return False
+            if artist.get_clip_on():
+                clip_box = artist.get_clip_box()
+                if clip_box is not None:
+                    extent = mtransforms.Bbox.intersection(extent, clip_box)
+                    if extent is None:
+                        continue
+                if artist.get_clip_path() is not None:
+                    # Arbitrary clip paths cannot be bounded reliably here.
+                    return False
+            if not self._bbox_contains(region, extent):
+                return False
+        return True
 
     @staticmethod
     def _has_numeric_line_data(line):
@@ -205,9 +278,11 @@ class _SelectiveDrawManager:
         self._axes = ()
         self._suffix = ()
         self._pending_suffix = ()
+        self._pending_regions = {}
         self._cache_mode = None
         self._capture_mode = None
         self._cache_safe = False
+        self._canvas_signature = None
 
     def _on_resize(self, event):
         if event is None or event.canvas is self.canvas:
@@ -216,6 +291,7 @@ class _SelectiveDrawManager:
     def _on_draw(self, event):
         if event is not None and event.canvas is self.canvas and not self._selecting:
             self._has_drawn = True
+            self._drawn_view_signature = self._view_signature()
         if (
             self._closed
             or self._suspended
@@ -229,7 +305,7 @@ class _SelectiveDrawManager:
         renderer = event.renderer
         store = getattr(self.figure, "_layout_extent_store", None)
         cached_regions = {} if store is None else store._get_retained_bboxes(axes)
-        regions = {
+        regions = self._pending_regions or {
             ax: self._resolve_region(ax, renderer, cached_regions) for ax in axes
         }
         valid = all(region is not None for region in regions.values())
@@ -264,12 +340,19 @@ class _SelectiveDrawManager:
         self._regions = regions if valid else {}
         self._backgrounds = backgrounds
         self._signatures = {ax: self._axes_signature(ax) for ax in axes}
+        self._canvas_signature = self._current_canvas_signature()
         self._cache_mode = self._capture_mode
         if self._capture_mode == "suffix":
-            self._cache_safe = bool(valid and suffix)
+            self._cache_safe = bool(
+                valid
+                and suffix
+                and self._canvas_signature is not None
+                and self._suffix_fits_region(suffix, regions[axes[0]], renderer)
+            )
         else:
             self._cache_safe = bool(
                 valid
+                and self._canvas_signature is not None
                 and len(axes) > 1
                 and not self._regions_overlap(regions.values())
                 and not self._has_explicit_blit_manager()
@@ -305,6 +388,18 @@ class _SelectiveDrawManager:
             yield
             return
 
+        # A changing view is normally an interactive pan. Rebuilding retained
+        # layers on every motion frame adds work that the next frame discards.
+        # Draw it normally; an unchanged later draw can prime the cache again.
+        view_signature = self._view_signature(axes)
+        if (
+            self._drawn_view_signature is not None
+            and view_signature != self._drawn_view_signature
+        ):
+            self.invalidate()
+            yield
+            return
+
         if len(axes) == 1:
             suffix = self._resolve_line_suffix(axes[0])
             if not suffix:
@@ -315,9 +410,22 @@ class _SelectiveDrawManager:
             self._capture_mode = "suffix"
             self._pending_suffix = suffix
         else:
+            renderer = self.canvas.get_renderer()
+            store = getattr(self.figure, "_layout_extent_store", None)
+            cached_regions = {} if store is None else store._get_retained_bboxes(axes)
+            regions = {
+                ax: self._resolve_region(ax, renderer, cached_regions) for ax in axes
+            }
+            if any(
+                region is None for region in regions.values()
+            ) or self._has_overlapping_figure_artist(regions.values()):
+                self.invalidate()
+                yield
+                return
             targets = axes
             self._capture_mode = "axes"
             self._pending_suffix = ()
+            self._pending_regions = regions
 
         animated = {artist: artist.get_animated() for artist in targets}
 
@@ -335,6 +443,7 @@ class _SelectiveDrawManager:
             self._capturing = False
             self._capture_mode = None
             self._pending_suffix = ()
+            self._pending_regions = {}
 
     def _dirty_axes(self):
         axes = self._visible_axes()
@@ -372,6 +481,11 @@ class _SelectiveDrawManager:
 
     def draw_if_possible(self):
         """Use retained axes layers for paint-only data changes."""
+        canvas_signature = self._current_canvas_signature()
+        canvas_changed = (
+            self._canvas_signature is not None
+            and canvas_signature != self._canvas_signature
+        )
         if (
             self._closed
             or self._suspended
@@ -379,7 +493,10 @@ class _SelectiveDrawManager:
             or not self._cache_safe
             or self._has_explicit_blit_manager()
             or getattr(self.figure, "_layout_dirty", False)
+            or canvas_changed
         ):
+            if canvas_changed:
+                self.invalidate()
             return False
 
         dirty = self._dirty_axes()
