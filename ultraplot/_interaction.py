@@ -14,6 +14,23 @@ from matplotlib.ticker import MaxNLocator, NullLocator
 
 _MISSING = object()
 
+#: Smallest surface, in grid cells, worth building a coarse preview for. Below
+#: this the exact surface already draws fast enough to rotate interactively.
+_MIN_PREVIEW_SURFACE_CELLS = 625
+
+#: Rows and columns sampled from a dense surface to build its preview.
+_PREVIEW_SURFACE_SAMPLES = 10
+
+#: Major ticks kept per axis while navigating, so labels stay readable without
+#: re-running a full locator every frame.
+_PREVIEW_TICK_COUNT = 3
+
+#: Frames per second the pacer aims for when coalescing GUI draw requests.
+_TARGET_FRAME_RATE = 60
+
+#: Milliseconds per second, for backend timer intervals.
+_MS_PER_SECOND = 1_000
+
 
 def _preview_enabled():
     """Return the current runtime setting for approximate navigation frames."""
@@ -202,10 +219,11 @@ def _register_surface_preview(surface, X, Y, Z, args, kwargs):
         if any(array.ndim != 2 for array in arrays):
             return
         rows, cols = arrays[2].shape
-        if rows * cols <= 625:
+        if rows * cols <= _MIN_PREVIEW_SURFACE_CELLS:
             return
-        row_idx = np.unique(np.linspace(0, rows - 1, min(10, rows), dtype=int))
-        col_idx = np.unique(np.linspace(0, cols - 1, min(10, cols), dtype=int))
+        samples = _PREVIEW_SURFACE_SAMPLES
+        row_idx = np.unique(np.linspace(0, rows - 1, min(samples, rows), dtype=int))
+        col_idx = np.unique(np.linspace(0, cols - 1, min(samples, cols), dtype=int))
         sampled = tuple(
             np.array(array[np.ix_(row_idx, col_idx)], copy=True) for array in arrays
         )
@@ -314,7 +332,7 @@ def _resolve_surface_proxy(surface):
 class _FramePacer:
     """Coalesce GUI draws and submit the newest view near a 60 Hz cadence."""
 
-    _interval = 1 / 60
+    _interval = 1 / _TARGET_FRAME_RATE
 
     def __init__(self, canvas, is_active):
         self.canvas = canvas
@@ -346,7 +364,7 @@ class _FramePacer:
 
     def _schedule(self):
         delay = max(0.0, self._interval - (time.monotonic() - self._last_frame_started))
-        timer = self.canvas.new_timer(interval=max(1, round(1_000 * delay)))
+        timer = self.canvas.new_timer(interval=max(1, round(_MS_PER_SECOND * delay)))
         if type(timer)._timer_start is TimerBase._timer_start:
             return False
         timer.single_shot = True
@@ -375,6 +393,9 @@ class _FramePacer:
 class _NavigationInteractionManager:
     """Temporarily simplify dense scenes during interactive navigation."""
 
+    #: Vertices kept per line and per scatter while navigating. Beyond roughly
+    #: this many points a gesture stops tracking the mouse, and below it the
+    #: subsampled shape is visually indistinguishable at screen resolution.
     _line_limit = 2_000
     _scatter_limit = 2_000
 
@@ -458,7 +479,9 @@ class _NavigationInteractionManager:
         get_converter = getattr(axis, "get_converter", None)
         converter = get_converter() if get_converter is not None else axis.converter
         if axis.get_scale() == "linear" and converter is None:
-            axis.set_major_locator(MaxNLocator(nbins=3, min_n_ticks=3))
+            axis.set_major_locator(
+                MaxNLocator(nbins=_PREVIEW_TICK_COUNT, min_n_ticks=_PREVIEW_TICK_COUNT)
+            )
             locator_state.preview_major = axis.get_major_locator()
 
     def _simplify_line(self, line, dimensions, state):
