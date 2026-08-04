@@ -520,6 +520,40 @@ def test_selective_draw_full_layer_matches_normal_draw():
     assert np.array_equal(layered, normal)
 
 
+@pytest.mark.parametrize("overlay", ("text", "patch"))
+def test_selective_draw_falls_back_for_overlapping_figure_artist(overlay):
+    """Figure-level overlays must retain their normal ordering above axes."""
+    fig, axs = uplt.subplots(ncols=2)
+    for ax in axs:
+        ax.plot([0, 1], [0.2, 0.8], lw=5)
+    if overlay == "text":
+        fig.text(0.32, 0.5, "OVERLAY", fontsize=28, zorder=20)
+    else:
+        from matplotlib.patches import Rectangle
+
+        artist = Rectangle(
+            (0.2, 0.25),
+            0.3,
+            0.5,
+            transform=fig.transFigure,
+            color="red",
+            alpha=0.35,
+            zorder=20,
+        )
+        fig.add_artist(artist)
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+
+    with manager.save_context():
+        fig.canvas.draw()
+        normal = np.asarray(fig.canvas.buffer_rgba()).copy()
+    fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert manager._cache_mode is None
+    assert np.array_equal(retained, normal)
+
+
 @pytest.mark.parametrize("ncols", (1, 2))
 def test_selective_draw_defers_cache_until_after_initial_display(ncols):
     """The first display should have no retained-layer setup overhead."""
@@ -631,6 +665,85 @@ def test_selective_draw_single_axes_savefig_matches_unretained_output():
     assert np.array_equal(retained, expected)
 
 
+def test_selective_draw_invalidates_on_dpi_change_without_resize():
+    """Copied pixel regions must never survive a silent DPI change."""
+    fig, ax = uplt.subplots()
+    line = ax.plot([0, 1, 2], [0.2, 0.8, 0.3], lw=4)[0]
+    fig.canvas.draw()
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+    assert manager._cache_safe
+
+    fig.set_dpi(fig.dpi * 1.5)
+    line.set_ydata([0.8, 0.2, 0.7])
+    fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    with manager.save_context():
+        fig.canvas.draw()
+        complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+    assert np.array_equal(retained, complete)
+
+
+def test_selective_draw_rejects_suffix_outside_damage_region():
+    """Unclipped translucent suffix artists must not accumulate outside cache."""
+    from matplotlib.patches import Rectangle
+
+    fig, ax = uplt.subplots()
+    x = np.linspace(0, 1, 100)
+    line = ax.plot(x, x, zorder=2)[0]
+    patch = Rectangle(
+        (-0.2, 0.3),
+        1.4,
+        0.4,
+        transform=ax.transAxes,
+        clip_on=False,
+        in_layout=False,
+        alpha=0.2,
+        color="red",
+        zorder=3,
+    )
+    ax.add_patch(patch)
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+
+    for offset in (0.1, 0.2, 0.3):
+        line.set_ydata(x + offset)
+        fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert not manager._cache_safe
+    assert manager._selective_draw_count == 0
+    with manager.save_context():
+        fig.canvas.draw()
+        complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+    assert np.array_equal(retained, complete)
+
+
+def test_selective_draw_does_not_recapture_during_pan_frames():
+    """Changing views should not rebuild a cache discarded by the next motion."""
+    fig, ax = uplt.subplots()
+    line = ax.plot(np.linspace(0, 10, 1000), np.sin(np.linspace(0, 10, 1000)))[0]
+    fig.canvas.draw()
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+    assert manager._cache_safe
+    full_count = manager._full_draw_count
+
+    for left in (1, 2, 3):
+        ax.set_xlim(left, left + 5)
+        fig.canvas.draw()
+
+    assert manager._cache_mode is None
+    assert manager._full_draw_count == full_count
+
+    line.set_ydata(np.cos(np.linspace(0, 10, 1000)))
+    fig.canvas.draw()  # Stable view primes retention once after navigation.
+    line.set_ydata(np.sin(np.linspace(0, 10, 1000)))
+    fig.canvas.draw()
+    assert manager._selective_draw_count == 1
+
+
 @pytest.mark.parametrize("kind", ("scatter", "low_line", "unclipped", "overlay"))
 def test_selective_draw_single_axes_falls_back_when_suffix_is_unsafe(kind):
     """Single-axes retention requires a clipped line above the axes layer."""
@@ -704,7 +817,7 @@ def test_selective_draw_falls_back_for_unsafe_changes(change):
     fig.canvas.draw()
 
     assert manager._selective_draw_count == 0
-    assert manager._full_draw_count == full_count + 1
+    assert manager._full_draw_count == full_count + (change != "limits")
 
 
 def test_layout_array_no_crash():
