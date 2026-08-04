@@ -885,15 +885,19 @@ def test_three_d_interaction_preview_restores_exact_artist_state():
         for axis in ax._axis_map.values()
     )
     grid = ax._draw_grid
-    proxy = surface._ultraplot_lod_proxy
-    assert proxy.axes is None
+    recipe = surface._ultraplot_lod_recipe
+    assert recipe.proxy is None
+    assert surface.axes is ax and surface in ax.collections
 
     assert preview.activate(ax)
+    proxy = recipe.proxy
     assert len(line.get_data_3d()[0]) <= preview._line_limit + 2
     assert len(scatter._offsets3d[0]) <= preview._scatter_limit + 2
-    assert surface.axes is None
+    assert surface.axes is ax and surface.get_visible()
+    assert surface._ultraplot_navigation_hidden
     assert proxy.get_visible() and proxy.axes is ax
-    assert not ax._draw_grid
+    assert ax._draw_grid is grid
+    assert ax._ultraplot_navigation_hide_grid
     assert all(
         isinstance(axis.get_minor_locator(), mticker.NullLocator)
         for axis in ax._axis_map.values()
@@ -909,9 +913,11 @@ def test_three_d_interaction_preview_restores_exact_artist_state():
         for expected, actual in zip(offsets, scatter._offsets3d)
     )
     assert surface.get_visible() and surface.axes is ax
+    assert not hasattr(surface, "_ultraplot_navigation_hidden")
     assert not proxy.get_visible()
     assert proxy.axes is None
     assert ax._draw_grid is grid
+    assert not hasattr(ax, "_ultraplot_navigation_hide_grid")
     assert all(
         axis.get_major_locator() is major and axis.get_minor_locator() is minor
         for axis, (major, minor) in zip(ax._axis_map.values(), locators)
@@ -980,6 +986,135 @@ def test_two_d_interaction_preview_restores_exact_artist_state():
 
 
 @pytest.mark.parametrize("projection", (None, "3d"))
+def test_navigation_preview_preserves_updates_during_gesture(projection):
+    """Release must not overwrite artist or locator changes made while active."""
+    kwargs = {} if projection is None else {"proj": projection}
+    fig, _ = uplt.subplots(**kwargs)
+    ax = fig.axes[0]
+    values = np.linspace(0, 10, 5_000)
+    if projection is None:
+        line = ax.plot(values, np.sin(values))[0]
+        scatter = ax.scatter(values, np.cos(values), s=1)
+        axes = (ax.xaxis, ax.yaxis)
+    else:
+        line = ax.plot(np.cos(values), np.sin(values), values)[0]
+        scatter = ax.scatter(np.cos(values), np.sin(values), values, s=1)
+        axes = tuple(ax._axis_map.values())
+    fig.canvas.draw()
+    preview = fig._selective_draw_manager._navigation_preview
+    assert preview.activate(ax)
+
+    updated = np.linspace(0, 12, 6_000)
+    if projection is None:
+        line.set_data(updated, np.sin(updated))
+        scatter.set_offsets(np.column_stack((updated, np.cos(updated))))
+    else:
+        line.set_data_3d(np.cos(updated), np.sin(updated), updated)
+        scatter._offsets3d = (np.cos(updated), np.sin(updated), updated)
+    locator = mticker.MaxNLocator(nbins=7)
+    axes[0].set_major_locator(locator)
+    line.set_color("red")
+    if projection == "3d":
+        ax.grid(False)
+
+    assert preview.deactivate(redraw=False)
+    line_size = (
+        len(line.get_xdata()) if projection is None else len(line.get_data_3d()[0])
+    )
+    scatter_size = (
+        len(scatter.get_offsets()) if projection is None else len(scatter._offsets3d[0])
+    )
+    assert line_size == scatter_size == len(updated)
+    assert axes[0].get_major_locator() is locator
+    assert line.get_color() == "red"
+    if projection == "3d":
+        assert not ax._draw_grid
+
+
+def test_navigation_preview_preserves_partial_line_update():
+    """Updating only y data must restore exact x data without losing new y data."""
+    fig, _ = uplt.subplots()
+    ax = fig.axes[0]
+    values = np.linspace(0, 10, 5_000)
+    line = ax.plot(values, np.sin(values))[0]
+    fig.canvas.draw()
+    preview = fig._selective_draw_manager._navigation_preview
+    assert preview.activate(ax)
+
+    updated_y = np.cos(values)
+    line.set_ydata(updated_y)
+    assert preview.deactivate(redraw=False)
+    assert np.array_equal(line.get_xdata(), values)
+    assert np.array_equal(line.get_ydata(), updated_y)
+
+
+def test_three_d_hidden_surface_stays_hidden_during_preview():
+    """Navigation must not expose a surface hidden by the user."""
+    fig, _ = uplt.subplots(proj="3d")
+    ax = fig.axes[0]
+    values = np.linspace(-2, 2, 30)
+    xx, yy = np.meshgrid(values, values)
+    surface = ax.plot_surface(xx, yy, np.sin(xx * yy), rcount=30, ccount=30)
+    surface.set_visible(False)
+    fig.canvas.draw()
+    recipe = surface._ultraplot_lod_recipe
+    preview = fig._selective_draw_manager._navigation_preview
+
+    assert preview.activate(ax)
+    assert not surface.get_visible() and surface in ax.collections
+    assert recipe.proxy is None
+    assert preview.deactivate(redraw=False)
+    assert not surface.get_visible() and surface in ax.collections
+
+
+def test_three_d_surface_preview_tracks_active_updates():
+    """Surface visibility and style changes should reach the active proxy."""
+    fig, _ = uplt.subplots(proj="3d")
+    ax = fig.axes[0]
+    values = np.linspace(-2, 2, 30)
+    xx, yy = np.meshgrid(values, values)
+    surface = ax.plot_surface(xx, yy, np.sin(xx * yy), rcount=30, ccount=30)
+    fig.canvas.draw()
+    preview = fig._selective_draw_manager._navigation_preview
+    assert preview.activate(ax)
+    proxy = surface._ultraplot_lod_recipe.proxy
+
+    surface.set_alpha(0.25)
+    surface.set_facecolor("blue")
+    surface.set_visible(False)
+    fig.canvas.draw()
+    assert proxy.get_alpha() == 0.25
+    assert np.allclose(proxy._facecolor3d, [[0.0, 0.0, 1.0, 0.25]])
+    assert not proxy.get_visible()
+
+    assert preview.deactivate(redraw=False)
+    assert surface.get_alpha() == 0.25
+    assert np.allclose(surface._facecolor3d, [[0.0, 0.0, 1.0, 0.25]])
+    assert not surface.get_visible()
+
+
+def test_three_d_surface_geometry_change_disables_stale_proxy():
+    """Changed surface geometry should fall back to the exact collection."""
+    fig, _ = uplt.subplots(proj="3d")
+    ax = fig.axes[0]
+    values = np.linspace(-2, 2, 30)
+    xx, yy = np.meshgrid(values, values)
+    surface = ax.plot_surface(xx, yy, np.sin(xx * yy), rcount=30, ccount=30)
+    fig.canvas.draw()
+    preview = fig._selective_draw_manager._navigation_preview
+    assert preview.activate(ax)
+    proxy = surface._ultraplot_lod_recipe.proxy
+
+    surface.set_verts([np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.5]])])
+    fig.canvas.draw()
+    assert surface.get_visible()
+    assert not proxy.get_visible()
+
+    assert preview.deactivate(redraw=False)
+    assert surface.get_visible() and surface in ax.collections
+
+
+@pytest.mark.parametrize("projection", (None, "3d"))
 def test_navigation_preview_tracks_mouse_press_and_release(projection):
     """Canvas callbacks should activate previews and always restore on release."""
     kwargs = {} if projection is None else {"proj": projection}
@@ -1042,8 +1177,8 @@ def test_navigation_preview_coalesces_fast_draw_idle_requests():
     assert not draws
     timers[0]._on_timer()
     # Agg draws synchronously; GUI backends enqueue the submitted idle draw.
-    assert not preview._draw_requested
-    assert preview._draw_pending or len(draws) == 1
+    assert not preview._pacer._draw_requested
+    assert preview._pacer._draw_pending or len(draws) == 1
 
     fig.canvas.mpl_disconnect(cid)
     preview.deactivate(redraw=False)
