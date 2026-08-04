@@ -663,6 +663,24 @@ class _SelectiveDrawManager:
             yield
             return
 
+        # Nothing has changed since the layers were captured, so this draw
+        # reproduces the frame they were copied from and they stay valid. Let it
+        # render normally instead of copying every region again for an identical
+        # result. ``_dirty_axes`` returning no dirty axes is the same guarantee
+        # the retained fast path relies on.
+        if self._cache_safe:
+            dirty_state = self._dirty_axes()
+            if dirty_state is not None and not dirty_state[0]:
+                yield
+                # The capture path normally clears the placeholder staleness that
+                # Axes.draw() leaves behind. Retained layers need that same clean
+                # baseline, or the next draw cannot tell a real mutation from it.
+                self._mark_axes_clean(axes)
+                for artist in self.figure.get_children():
+                    if artist not in axes:
+                        artist.stale = False
+                return
+
         # A changing view is normally an interactive pan. Rebuilding retained
         # layers on every motion frame adds work that the next frame discards.
         # Draw it normally; an unchanged later draw can prime the cache again.
