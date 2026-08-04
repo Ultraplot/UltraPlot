@@ -377,6 +377,13 @@ class _LayoutExtentStore:
         self._rebase_records()
         bboxes = {}
         for axis in axes:
+            # Versions are bumped only when a layout transaction opens, so a
+            # mutation that changes the tight bbox without dirtying layout, such
+            # as tick_params(labelsize=...), leaves a record that looks current.
+            # The state key holds no tick geometry and cannot catch it either.
+            # Staleness can, and refusing here just sends the caller to measure.
+            if axis.stale or any(child.stale for child in axis.get_children()):
+                continue
             record = self._records.get((axis, True))
             if (
                 record is not None

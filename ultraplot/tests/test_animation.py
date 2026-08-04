@@ -1493,3 +1493,52 @@ def test_regions_overlap_matches_exhaustive_comparison():
                 for x0, y0, w, h in state.randint(0, 6, (count, 4))
             ]
         assert _SelectiveDrawManager._regions_overlap(boxes) == exhaustive(boxes)
+
+
+def test_layout_extent_store_refuses_stale_axes():
+    """A tick change that does not dirty layout must not serve a cached bbox."""
+    # Tight layout must be on, or the extent store is never populated.
+    fig, axs = uplt.subplots(ncols=2, refwidth=1.6, share=False)
+    for ax in axs:
+        ax.plot([0, 1, 2], [0.2, 0.8, 0.3])
+        ax.format(xlim=(0, 2), ylim=(0, 1))
+    for _ in range(3):
+        fig.canvas.draw()
+
+    store = fig._layout_extent_store
+    # Start from the clean baseline a completed draw leaves behind.
+    fig._selective_draw_manager._mark_axes_clean(axs)
+    assert len(store._get_retained_bboxes(tuple(axs))) == len(axs)
+
+    # Grows the tight bbox without touching any layout-dirty flag, and the state
+    # key carries no tick geometry, so staleness is the only available signal.
+    axs[1].tick_params(axis="y", labelsize=34, pad=90)
+    assert not fig._layout_dirty
+    retained = store._get_retained_bboxes(tuple(axs))
+    assert axs[1] not in retained
+
+    renderer = fig.canvas.get_renderer()
+    region = fig._selective_draw_manager._resolve_region(axs[1], renderer, retained)
+    assert region.x0 <= axs[1].get_tightbbox(renderer).x0
+
+
+def test_axes_signature_does_not_dirty_a_clean_axes():
+    """Inspecting an axes must not mark it stale, or extent records never reuse."""
+    fig, axs = uplt.subplots(ncols=2, nrows=2, refwidth=1.0)
+    for ax in axs:
+        ax.plot([0, 1, 2], [0.2, 0.8, 0.3])
+    for _ in range(3):
+        fig.canvas.draw()
+
+    manager = fig._selective_draw_manager
+    manager._mark_axes_clean(axs)
+    assert not any(ax.stale for ax in axs)
+
+    for ax in axs:
+        manager._axes_signature(ax)
+    assert not any(ax.stale for ax in axs)
+
+    # A genuinely stale axes must stay stale.
+    axs[0].stale = True
+    manager._axes_signature(axs[0])
+    assert axs[0].stale
