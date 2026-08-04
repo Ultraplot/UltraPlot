@@ -502,6 +502,107 @@ def test_blit_manager_rejects_artist_from_another_figure():
         fig1._blit_manager(line)
 
 
+def test_selective_draw_full_layer_matches_normal_draw():
+    """Splitting a full draw into static and axes layers must preserve pixels."""
+    fig, axs = uplt.subplots(ncols=2)
+    for index, ax in enumerate(axs):
+        ax.plot([0, 0.5, 1], [0.2, 0.8 - 0.1 * index, 0.3])
+        ax.format(xlabel=f"x {index}", ylabel=f"y {index}", title=f"axis {index}")
+    fig.format(suptitle="Layer fidelity")
+    manager = fig._selective_draw_manager
+
+    with manager.save_context():
+        fig.canvas.draw()
+        normal = np.asarray(fig.canvas.buffer_rgba()).copy()
+    fig.canvas.draw()
+    layered = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert np.array_equal(layered, normal)
+
+
+def test_selective_draw_redraws_only_changed_axes():
+    """A paint-only line update should bypass every unchanged axes."""
+    fig, axs = uplt.subplots(ncols=2)
+    lines = [ax.plot([0, 0.5, 1], [0.2, 0.8, 0.3])[0] for ax in axs]
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+    unchanged_draw = axs[1].draw
+    axs[1].draw = MagicMock(wraps=unchanged_draw)
+
+    lines[0].set_ydata([0.8, 0.2, 0.7])
+    fig.canvas.draw()
+
+    assert manager._selective_draw_count == 1
+    axs[1].draw.assert_not_called()
+
+
+def test_selective_draw_stays_fast_across_consecutive_frames():
+    """Placeholder staleness must not force alternating full redraws."""
+    fig, axs = uplt.subplots(ncols=2)
+    x = np.linspace(0, 2 * np.pi, 100)
+    line = axs[0].plot(x, np.sin(x))[0]
+    axs[1].plot(x, np.cos(x))
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+
+    for frame in range(4):
+        line.set_ydata(np.sin(x + frame / 10))
+        fig.canvas.draw()
+
+    assert manager._selective_draw_count == 4
+    assert manager._full_draw_count == 1
+
+
+@pytest.mark.parametrize("kind", ("line", "scatter"))
+def test_selective_draw_matches_complete_data_draw(kind):
+    """Retained line and collection updates must match a complete Agg draw."""
+    fig, axs = uplt.subplots(ncols=2)
+    axs[1].plot([0, 1], [1, 0])
+    if kind == "line":
+        artist = axs[0].plot([0, 0.5, 1], [0.2, 0.8, 0.3])[0]
+    else:
+        artist = axs[0].scatter([0, 0.5, 1], [0.2, 0.8, 0.3])
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+
+    if kind == "line":
+        artist.set_ydata([0.8, 0.2, 0.7])
+    else:
+        artist.set_offsets([[0, 0.8], [0.5, 0.2], [1, 0.7]])
+    fig.canvas.draw()
+    selective = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    with manager.save_context():
+        fig.canvas.draw()
+        complete = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    assert manager._selective_draw_count == 1
+    assert np.array_equal(selective, complete)
+
+
+@pytest.mark.parametrize("change", ("limits", "text", "structure"))
+def test_selective_draw_falls_back_for_unsafe_changes(change):
+    """Geometry, text, and artist-tree changes must retain full-draw semantics."""
+    fig, axs = uplt.subplots(ncols=2)
+    ax = axs[0]
+    ax.plot([0, 1], [0, 1])
+    axs[1].plot([0, 1], [1, 0])
+    fig.canvas.draw()
+    manager = fig._selective_draw_manager
+    full_count = manager._full_draw_count
+
+    if change == "limits":
+        ax.set_xlim(-1, 2)
+    elif change == "text":
+        ax.set_title("Changed")
+    else:
+        ax.plot([0, 1], [1, 0])
+    fig.canvas.draw()
+
+    assert manager._selective_draw_count == 0
+    assert manager._full_draw_count == full_count + 1
+
+
 def test_layout_array_no_crash():
     """
     Test that using layout_array with FuncAnimation does not crash.
