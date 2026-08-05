@@ -7,13 +7,11 @@ from typing import TYPE_CHECKING
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
-import matplotlib.projections as mproj
 import numpy as np
 
-from . import axes as paxes
-from . import constructor
 from . import gridspec as pgridspec
 from .internals import _not_none, _pop_params, warnings
+from .internals.projections import resolve_projection_kwargs
 
 if TYPE_CHECKING:
     from .figure import Figure
@@ -85,68 +83,16 @@ class SubplotManager:
         """
         Translate user-input projection into a registered matplotlib axes class.
         """
-        # Parse arguments
         proj = _not_none(proj=proj, projection=projection, default="cartesian")
         proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
         backend = self.parse_backend(backend, basemap)
-        if isinstance(proj, str):
-            proj = proj.lower()
-
-        # Search axes projections
-        name = None
-
-        # Handle cartopy/basemap Projection objects directly
-        # These should be converted to Ultraplot GeoAxes
-        if not isinstance(proj, str):
-            if constructor.Projection is not object and isinstance(
-                proj, constructor.Projection
-            ):
-                name = "ultraplot_cartopy"
-                kwargs["map_projection"] = proj
-            elif constructor.Basemap is not object and isinstance(
-                proj, constructor.Basemap
-            ):
-                name = "ultraplot_basemap"
-                kwargs["map_projection"] = proj
-
-        if name is None and isinstance(proj, str):
-            try:
-                mproj.get_projection_class("ultraplot_" + proj)
-            except (KeyError, ValueError):
-                pass
-            else:
-                name = "ultraplot_" + proj
-        if name is None and isinstance(proj, str):
-            # Try geographic projections first if cartopy/basemap available
-            if (
-                constructor.Projection is not object
-                or constructor.Basemap is not object
-            ):
-                try:
-                    proj_obj = constructor.Proj(
-                        proj, backend=backend, include_axes=True, **proj_kw
-                    )
-                    name = "ultraplot_" + proj_obj._proj_backend
-                    kwargs["map_projection"] = proj_obj
-                except ValueError:
-                    pass  # not a geographic projection, try matplotlib registry below
-
-            # If not geographic, check if registered globally in matplotlib
-            # (e.g., 'ternary', 'polar', '3d')
-            if name is None and proj in mproj.get_projection_names():
-                name = proj
-
-        if name is None and isinstance(proj, str):
-            raise ValueError(
-                f"Invalid projection name {proj!r}. If you are trying to generate a "
-                "GeoAxes with a cartopy.crs.Projection or mpl_toolkits.basemap.Basemap "
-                "then cartopy or basemap must be installed. Otherwise the known axes "
-                f"subclasses are:\n{paxes._cls_table}"
-            )
-
-        if name is not None:
-            kwargs["projection"] = name
-        return kwargs
+        return resolve_projection_kwargs(
+            self.figure,
+            proj,
+            proj_kw=proj_kw,
+            backend=backend,
+            kwargs=kwargs,
+        )
 
     def add_subplot(self, *args, **kwargs):
         """
@@ -229,45 +175,11 @@ class SubplotManager:
         kwargs.setdefault("number", 1 + max(self.subplot_dict, default=0))
         kwargs.pop("refwidth", None)  # TODO: remove this
 
-        # Use container approach for external projections to make them
-        # ultraplot-compatible. Skip projections that start with "ultraplot_"
-        # as these are already Ultraplot axes classes.
-        projection_name = kwargs.get("projection")
-        external_axes_class = None
-        external_axes_kwargs = {}
-
-        if projection_name and isinstance(projection_name, str):
-            if not projection_name.startswith("ultraplot_"):
-                try:
-                    proj_class = mproj.get_projection_class(projection_name)
-                    if not issubclass(proj_class, paxes.Axes):
-                        external_axes_class = proj_class
-                        external_axes_kwargs["projection"] = projection_name
-
-                        from .axes.container import create_external_axes_container
-
-                        container_name = f"_ultraplot_container_{projection_name}"
-                        if container_name not in mproj.get_projection_names():
-                            container_class = create_external_axes_container(
-                                proj_class, projection_name=container_name
-                            )
-                            mproj.register_projection(container_class)
-
-                        kwargs["projection"] = container_name
-                        kwargs["external_axes_class"] = external_axes_class
-                        kwargs["external_axes_kwargs"] = external_axes_kwargs
-                except (KeyError, ValueError):
-                    pass
-
         kwargs.pop("_subplot_spec", None)
 
-        # NOTE: Skip past Figure.add_subplot (which routes back here) to the
-        # matplotlib implementation. Using super() rather than naming the
-        # matplotlib class keeps any mixin between Figure and matplotlib's
-        # Figure in a subclass MRO from being bypassed.
-        from .figure import Figure
-
-        ax = super(Figure, fig).add_subplot(ss, **kwargs)
+        # Figure.add_subplot routes back here, so use the dedicated hook that
+        # subclasses can override before dispatching to matplotlib.
+        ax = fig._add_subplot_mpl(ss, **kwargs)
         if ax.number:
             self.subplot_dict[ax.number] = ax
         return ax

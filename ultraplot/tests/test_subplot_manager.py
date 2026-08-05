@@ -4,6 +4,7 @@ Tests for SubplotManager (ultraplot._subplots).
 
 import inspect
 
+import matplotlib.axes as maxes
 import matplotlib.projections as mproj
 import numpy as np
 import pytest
@@ -337,6 +338,45 @@ def test_add_subplot_external_projection_reuses_container():
     # The container class is registered once and shared, not rebuilt per subplot
     assert type(ax1) is type(ax2)
     assert isinstance(ax1, ExternalAxesContainer)
+    uplt.close(fig)
+
+
+def test_case_sensitive_matplotlib_projection_name():
+    """Registered matplotlib projection names retain their exact spelling."""
+
+    class CaseSensitiveAxes(maxes.Axes):
+        name = "UltraPlot.CaseSensitive.Test"
+
+    mproj.register_projection(CaseSensitiveAxes)
+    fig = uplt.figure()
+    ax = fig.add_axes([0.1, 0.1, 0.35, 0.8], projection=CaseSensitiveAxes.name)
+    sax = fig.add_subplot(122, projection=CaseSensitiveAxes.name)
+
+    assert isinstance(ax, ExternalAxesContainer)
+    assert isinstance(sax, ExternalAxesContainer)
+    assert isinstance(ax.get_external_child(), CaseSensitiveAxes)
+    assert isinstance(sax.get_external_child(), CaseSensitiveAxes)
+    uplt.close(fig)
+
+
+def test_add_subplot_mpl_extension_hook():
+    """Figure subclasses can intercept matplotlib subplot creation safely."""
+
+    class SubplotHookMixin:
+        def _add_subplot_mpl(self, *args, **kwargs):
+            self.subplot_hook_calls += 1
+            return super()._add_subplot_mpl(*args, **kwargs)
+
+    class HookFigure(SubplotHookMixin, pfigure.Figure):
+        def __init__(self, *args, **kwargs):
+            self.subplot_hook_calls = 0
+            super().__init__(*args, **kwargs)
+
+    fig = HookFigure()
+    ax = fig.add_subplot(111)
+
+    assert ax.figure is fig
+    assert fig.subplot_hook_calls == 1
     uplt.close(fig)
 
 
