@@ -1484,6 +1484,17 @@ def Scale(scale, *args, **kwargs):
     return scale(*args, **kwargs)
 
 
+def _warn_basemap_deprecated():
+    """
+    Warn that the basemap backend is deprecated.
+    """
+    warnings._warn_ultraplot(
+        "The basemap backend was deprecated in version 3.0.0 and may be removed "
+        "in a future release. Please use the cartopy backend instead. "
+        "See https://github.com/Ultraplot/ultraplot/pull/243"
+    )
+
+
 def Proj(
     name,
     backend=None,
@@ -1574,6 +1585,10 @@ def Proj(
     backend : {'cartopy', 'basemap'}, default: :rc:`geo.backend`
         Whether to return a cartopy `~cartopy.crs.Projection` instance
         or a basemap `~mpl_toolkits.basemap.Basemap` instance.
+
+        .. deprecated:: 3.0.0
+            The ``'basemap'`` backend is deprecated and may be removed in a
+            future release. Please use the ``'cartopy'`` backend instead.
     lon0, lat0 : float, optional
         The central projection longitude and latitude. These are translated to
         `central_longitude`, `central_latitude` for cartopy projections.
@@ -1670,6 +1685,8 @@ def Proj(
                 f"Unexpected projection {name!r}. Must be PROJ string name, "
                 "cartopy.crs.Projection, or mpl_toolkits.basemap.Basemap."
             )
+        if backend == "basemap":
+            _warn_basemap_deprecated()
     for key_proj, key_cartopy, value in (
         ("lon_0", "central_longitude", lon0),
         ("lat_0", "central_latitude", lat0),
@@ -1692,6 +1709,8 @@ def Proj(
             warnings._warn_ultraplot(f"Ignoring Proj() keyword arg(s): {kwargs!r}.")
         proj = name
         backend = "cartopy" if is_crs else "basemap"
+        if is_basemap:
+            _warn_basemap_deprecated()
 
     # Cartopy name
     # NOTE: Error message matches basemap invalid projection message

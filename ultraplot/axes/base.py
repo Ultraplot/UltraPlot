@@ -104,6 +104,10 @@ _backend_docstring = """
 backend : {'cartopy', 'basemap'}, default: :rc:`geo.backend`
     Whether to use `~mpl_toolkits.basemap.Basemap` or
     `~cartopy.crs.Projection` for map projections.
+
+    .. deprecated:: 3.0.0
+        The ``'basemap'`` backend is deprecated and may be removed in a
+        future release. Please use the ``'cartopy'`` backend instead.
 """
 docstring._snippet_manager["axes.proj"] = _proj_docstring
 docstring._snippet_manager["axes.proj_kw"] = _proj_kw_docstring
