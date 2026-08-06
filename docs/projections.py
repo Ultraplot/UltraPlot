@@ -289,11 +289,10 @@ axs.format(
 #      when they are omitted (e.g., ``lon0=0`` as the default for most projections).
 #
 # .. warning::
-#    The `basemap`_ package is now being actively maintained again with a short hiatus for a few years. We originally
-#    included basemap support because its gridline labeling was more powerful
-#    than cartopy gridline labeling. While cartopy gridline labeling has
-#    significantly improved since version 0.18, UltraPlot continues to support
-#    both mapping libraries to give users flexibility in their visualization choices.
+#    The basemap backend is deprecated as of version 3.0.0 and may be removed in a
+#    future release. Please use the cartopy backend instead. Cartopy gridline
+#    labeling has significantly improved since version 0.18 and now covers the
+#    features we originally included basemap support for.
 
 # %%
 import ultraplot as uplt

@@ -66,10 +66,7 @@ class SubplotManager:
         Handle deprecation of basemap and cartopy package.
         """
         if backend == "basemap":
-            warnings._warn_ultraplot(
-                f"{backend=} will be deprecated in next major release (v2.0). "
-                "See https://github.com/Ultraplot/ultraplot/pull/243"
-            )
+            constructor._warn_basemap_deprecated()
         return backend
 
     def parse_proj(
@@ -108,6 +105,7 @@ class SubplotManager:
             ):
                 name = "ultraplot_basemap"
                 kwargs["map_projection"] = proj
+                constructor._warn_basemap_deprecated()
 
         if name is None and isinstance(proj, str):
             try:
