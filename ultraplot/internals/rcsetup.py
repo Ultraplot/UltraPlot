@@ -1764,7 +1764,9 @@ _rc_ultraplot_table = {
         "cartopy",
         _validate_belongs("cartopy", "basemap"),
         "The backend used for `~ultraplot.axes.GeoAxes`. Must be "
-        "either 'cartopy' or 'basemap'.",
+        "either 'cartopy' or 'basemap'. "
+        ".. deprecated:: 3.0.0 The 'basemap' backend is deprecated and may be "
+        "removed in a future release. Please use 'cartopy' instead.",
     ),
     "geo.extent": (
         "globe",

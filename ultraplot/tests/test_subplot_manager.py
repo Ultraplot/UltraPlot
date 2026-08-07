@@ -33,7 +33,7 @@ def test_gridspec_setter_accepts_ultraplot():
 
 def test_parse_backend_basemap_warns():
     """parse_backend emits a deprecation warning for basemap."""
-    with pytest.warns(match="basemap"):
+    with pytest.warns(match="basemap backend was deprecated"):
         SubplotManager.parse_backend(backend="basemap")
 
 
@@ -41,6 +41,25 @@ def test_parse_backend_passthrough():
     """parse_backend returns backend unchanged for non-basemap values."""
     assert SubplotManager.parse_backend(backend="cartopy") == "cartopy"
     assert SubplotManager.parse_backend(backend=None) is None
+
+
+def test_subplots_basemap_backend_warns():
+    """Requesting the basemap backend emits a deprecation warning."""
+    pytest.importorskip("mpl_toolkits.basemap")
+    with pytest.warns(match="basemap backend was deprecated"):
+        fig, axs = uplt.subplots(proj="cyl", backend="basemap")
+    assert axs[0]._name == "basemap"
+    uplt.close(fig)
+
+
+def test_subplots_basemap_instance_warns():
+    """Passing a Basemap instance as proj emits a deprecation warning."""
+    pytest.importorskip("mpl_toolkits.basemap")
+    with pytest.warns(match="basemap backend was deprecated"):
+        proj = uplt.Proj("npstere", backend="basemap")
+        fig, axs = uplt.subplots(proj=proj)
+    assert axs[0]._name == "basemap"
+    uplt.close(fig)
 
 
 def test_add_subplot_integer_arg():

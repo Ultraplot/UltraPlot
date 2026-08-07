@@ -2,6 +2,7 @@
 """Additional branch coverage for constructor helpers."""
 
 import importlib
+import warnings
 
 import cycler
 import matplotlib.colors as mcolors
@@ -195,3 +196,35 @@ def test_proj_constructor_branches():
         constructor.Proj("merc", backend="cartopy", round=True)
     with pytest.raises(ValueError, match="unknown cartopy projection class"):
         constructor.Proj("not-a-proj", backend="cartopy")
+
+
+def test_proj_basemap_backend_deprecated():
+    pytest.importorskip("mpl_toolkits.basemap")
+    with pytest.warns(UltraPlotWarning, match="deprecated in version 3\\.0\\.0"):
+        proj = constructor.Proj("npstere", backend="basemap")
+    assert proj._proj_backend == "basemap"
+
+
+def test_proj_basemap_instance_deprecated():
+    pytest.importorskip("mpl_toolkits.basemap")
+    with pytest.warns(UltraPlotWarning, match="basemap backend was deprecated"):
+        basemap_proj = constructor.Proj("npstere", backend="basemap")
+        proj = constructor.Proj(basemap_proj)
+    assert proj is basemap_proj
+    assert proj._proj_backend == "basemap"
+
+
+def test_proj_basemap_rc_backend_deprecated():
+    pytest.importorskip("mpl_toolkits.basemap")
+    with uplt.rc.context({"geo.backend": "basemap"}):
+        with pytest.warns(UltraPlotWarning, match="basemap backend was deprecated"):
+            proj = constructor.Proj("npstere")
+    assert proj._proj_backend == "basemap"
+
+
+def test_proj_cartopy_backend_no_warning():
+    pytest.importorskip("cartopy")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UltraPlotWarning)
+        proj = constructor.Proj("npstere", backend="cartopy")
+    assert proj._proj_backend == "cartopy"
