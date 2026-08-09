@@ -566,7 +566,20 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 border_sides,
                 border_axes,
             )
-            axis.set_tick_params(which="both", **label_visibility)
+            # Like the formatter below, this runs on every draw and every tight
+            # bbox measurement, and set_tick_params() marks the axis stale
+            # unconditionally. Only apply it when something actually differs.
+            get_tick_params = getattr(axis, "get_tick_params", None)
+            if get_tick_params is None:
+                axis.set_tick_params(which="both", **label_visibility)
+            else:
+                current = (get_tick_params("major"), get_tick_params("minor"))
+                if any(
+                    params.get(key) != value
+                    for params in current
+                    for key, value in label_visibility.items()
+                ):
+                    axis.set_tick_params(which="both", **label_visibility)
         # Turn minor ticks off. This runs on every draw and every tight bbox
         # measurement, so only replace a formatter that is not already null:
         # set_minor_formatter() marks the axis stale and installs a new object

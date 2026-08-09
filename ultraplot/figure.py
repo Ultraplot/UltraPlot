@@ -3553,7 +3553,11 @@ class Figure(mfigure.Figure):
         # A stale figure carries a change we did not classify, such as a
         # set_ylabel() call since the last draw. format() has always flushed
         # those into the layout, so keep doing that.
-        pending_layout = bool(self.stale)
+        # Axes.format() has already applied its paint changes by the time it
+        # reaches us, so trust the verdict it took on entry when it supplies one.
+        pending_layout = kwargs.pop("_pending_layout", None)
+        if pending_layout is None:
+            pending_layout = bool(self.stale)
         axs = axs or self._iter_subplots()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         explicit_format_keys = set(kwargs)

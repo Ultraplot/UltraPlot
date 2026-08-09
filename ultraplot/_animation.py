@@ -20,6 +20,7 @@ import numpy as np
 from matplotlib.backend_bases import DrawEvent
 
 from ._interaction import _NavigationInteractionManager
+from ._layout import _is_internal_ticker
 
 #: Points per inch, for converting artist stroke widths to device pixels.
 _POINTS_PER_INCH = 72.0
@@ -42,6 +43,11 @@ _BBOX_TOLERANCE = 1e-6
 
 #: Sentinel for a per-draw cache that has not been populated yet.
 _MISSING = object()
+
+#: Ticker types that wrap arbitrary user code. Their output can change with no
+#: attribute changing at all, such as a closure the caller rebinds, so retained
+#: layers cannot tell that tick labels went out of date.
+_OPAQUE_TICKER_TYPES = frozenset(("FuncFormatter", "FuncScale", "FuncScaleLog"))
 
 
 class _SelectiveDrawManager:
@@ -130,6 +136,51 @@ class _SelectiveDrawManager:
             if not was_stale:
                 ax.stale = False
 
+    @staticmethod
+    def _ticker_fingerprint(ticker):
+        """Return a value that changes when a locator or formatter is retuned."""
+        # Tickers are commonly reconfigured in place, e.g. set_useOffset(), which
+        # alters every tick label without touching an artist's stale flag. Fold
+        # their scalar attributes into the signature so those changes are seen.
+        state = []
+        for name, value in sorted(vars(ticker).items()):
+            if isinstance(value, (str, bytes, bool, int, float, type(None))):
+                state.append((name, value))
+        return (type(ticker).__module__, type(ticker).__qualname__, tuple(state))
+
+    @classmethod
+    def _ticker_signature(cls, ax):
+        """Return the tuned state of every locator and formatter on an axes."""
+        return tuple(
+            (
+                name,
+                cls._ticker_fingerprint(axis.major.locator),
+                cls._ticker_fingerprint(axis.major.formatter),
+                cls._ticker_fingerprint(axis.minor.locator),
+                cls._ticker_fingerprint(axis.minor.formatter),
+            )
+            for name, axis in sorted(getattr(ax, "_axis_map", {}).items())
+            if axis is not None
+        )
+
+    @classmethod
+    def _has_untrusted_ticker(cls, ax):
+        """Return whether any ticker on *ax* can change without being noticed."""
+        for axis in getattr(ax, "_axis_map", {}).values():
+            if axis is None:
+                continue
+            for ticker in (
+                axis.major.locator,
+                axis.major.formatter,
+                axis.minor.locator,
+                axis.minor.formatter,
+            ):
+                if not _is_internal_ticker(ticker):
+                    return True
+                if type(ticker).__qualname__ in _OPAQUE_TICKER_TYPES:
+                    return True
+        return False
+
     def _axes_view_signature(self, ax):
         """Return paint-only limits, scales, and projection camera state."""
         return (
@@ -137,6 +188,7 @@ class _SelectiveDrawManager:
             ax.get_xscale(),
             ax.get_yscale(),
             self._camera_signature(ax),
+            self._ticker_signature(ax),
         )
 
     def _current_canvas_signature(self):
@@ -666,8 +718,17 @@ class _SelectiveDrawManager:
         if not self._has_drawn:
             self.invalidate()
             yield
+            # This first display draws every artist, so nothing is genuinely out
+            # of date afterwards. Clear the placeholder staleness Axes.draw()
+            # leaves behind, or the next draw treats every axes as changed and
+            # re-measures each tight bbox that layout has already established.
+            self._mark_axes_clean(axes)
             return
         if any(ax.get_animated() for ax in axes) or self._has_animated_artist(axes):
+            self.invalidate()
+            yield
+            return
+        if any(self._has_untrusted_ticker(ax) for ax in axes):
             self.invalidate()
             yield
             return
@@ -789,9 +850,14 @@ class _SelectiveDrawManager:
                 # Measuring a rotated 3D extent requires one preliminary axes
                 # draw. With at most two axes this cannot beat a complete draw.
                 return None
-            if self._axes_signature(ax) != self._signatures.get(ax):
-                return None
             stale_children = [child for child in ax.get_children() if child.stale]
+            # Everything the geometry signature covers, such as adding or moving
+            # a child, marks either the axes or a child stale. A fully quiet axes
+            # therefore cannot have changed geometry, and rebuilding its signature
+            # is the single largest cost of this scan on figures with many axes.
+            quiet = not view_changed and not ax.stale and not stale_children
+            if not quiet and self._axes_signature(ax) != self._signatures.get(ax):
+                return None
             # Layout/tick cache cleanup can leave the Axes container stale even
             # though every drawable child is clean. Child flags carry the useful
             # paint-level signal; geometry is guarded by the signature above.
@@ -831,23 +897,44 @@ class _SelectiveDrawManager:
         if damage is None or self._has_overlapping_figure_artist((damage,)):
             return None
 
+        # Run the fixed point on plain floats. Rebuilding a padded Bbox and an
+        # intersection object for every axes on every pass dominates this loop,
+        # and axes already pulled in drop out of the scan instead of being
+        # revisited. Retained regions include safety pixels, so propagate only
+        # through the actual painted extent: shrinking by less than the true
+        # padding stays conservative, while the full region would chain through
+        # adjacent subplot padding.
+        pad = self._region_pad
+        damage_x0, damage_y0, damage_x1, damage_y1 = damage.extents
         redraw = set(dirty)
+        pending = [
+            (ax, *self._regions[ax].extents) for ax in self._axes if ax not in redraw
+        ]
         changed = True
         while changed:
             changed = False
-            for ax in self._axes:
-                if ax in redraw:
-                    continue
-                # Retained regions include safety pixels. Only propagate through
-                # overlap with the actual painted extent, otherwise adjacent
-                # subplot padding forms an unnecessary redraw chain. Shrinking by
-                # less than the true padding stays conservative.
-                painted_region = self._regions[ax].padded(-self._region_pad)
-                overlap = mtransforms.Bbox.intersection(damage, painted_region)
-                if overlap is not None and overlap.width > 0 and overlap.height > 0:
+            remaining = []
+            for item in pending:
+                ax, region_x0, region_y0, region_x1, region_y1 = item
+                if (
+                    min(damage_x1, region_x1 - pad) - max(damage_x0, region_x0 + pad)
+                    > 0
+                    and min(damage_y1, region_y1 - pad)
+                    - max(damage_y0, region_y0 + pad)
+                    > 0
+                ):
                     redraw.add(ax)
-                    damage = mtransforms.Bbox.union([damage, self._regions[ax]])
+                    damage_x0 = min(damage_x0, region_x0)
+                    damage_y0 = min(damage_y0, region_y0)
+                    damage_x1 = max(damage_x1, region_x1)
+                    damage_y1 = max(damage_y1, region_y1)
                     changed = True
+                else:
+                    remaining.append(item)
+            pending = remaining
+        damage = mtransforms.Bbox.from_extents(
+            damage_x0, damage_y0, damage_x1, damage_y1
+        )
         return damage, tuple(
             ax
             for ax in sorted(self._axes, key=lambda item: item.get_zorder())
