@@ -286,7 +286,11 @@ def _infer_hawkeye_relation(parent_extent, inset_extent):
 def _segments_intersect(start1, end1, start2, end2):
     """Return whether two display-coordinate line segments intersect."""
 
-    def _cross(origin, point1, point2):
+    def _cross(origin: np.ndarray, point1: np.ndarray, point2: np.ndarray) -> float:
+        if len(origin) == 2:
+            diff1 = point1 - origin
+            diff2 = point2 - origin
+            return diff1[0] * diff2[1] - diff1[1] * diff2[0]
         return np.cross(point1 - origin, point2 - origin)
 
     cross1 = _cross(start1, end1, start2)
