@@ -545,12 +545,20 @@ class _SelectiveDrawManager:
         canvas_signature = self._current_canvas_signature()
         if canvas_signature is None:
             return None
+        # mplot3d shadows the public frame accessors with ``None``; the base
+        # class still stores the state in ``_frameon``.
+        get_frame_on = getattr(ax, "get_frame_on", None)
+        frame_on = (
+            bool(get_frame_on())
+            if callable(get_frame_on)
+            else bool(getattr(ax, "_frameon", True))
+        )
         return (
             self._axes_signature(ax),
             self._axes_view_signature(ax),
             canvas_signature,
             bool(ax.axison),
-            bool(ax.get_frame_on()),
+            frame_on,
         )
 
     def _resolve_region(self, ax, renderer, cached_regions):
