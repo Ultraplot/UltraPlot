@@ -1250,3 +1250,58 @@ body.wy-body-for-nav
     max-width: 100%;
     height: auto;
 }
+
+/* Why UltraPlot page: before/after comparison cards */
+.uplt-why {
+    border: 1px solid var(--uplt-color-border-muted);
+    border-radius: 0.8rem;
+    background: linear-gradient(
+        180deg,
+        var(--uplt-color-white) 0%,
+        var(--uplt-color-sidebar-bg) 100%
+    );
+    box-shadow: 0 4px 14px var(--uplt-color-shadow);
+    overflow: hidden;
+}
+
+.uplt-why-mpl {
+    border-top: 4px solid #b45309;
+}
+
+.uplt-why-uplt {
+    border-top: 4px solid #178f84;
+}
+
+.uplt-why img {
+    width: 100%;
+    height: auto;
+    border-radius: 0.45rem;
+    background: var(--uplt-color-panel-bg);
+}
+
+.uplt-why .sd-card-body > p:first-child {
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.uplt-why-mpl .sd-card-body > p:first-child strong {
+    color: #b45309;
+}
+
+.uplt-why-uplt .sd-card-body > p:first-child strong {
+    color: #178f84;
+}
+
+.uplt-why .sd-card-body > p:last-child {
+    margin-top: auto;
+    padding-top: 0.35rem;
+    color: var(--uplt-color-text-secondary);
+}
+
+html.dark .uplt-why,
+html.dark-theme .uplt-why,
+[data-color-mode="dark"] .uplt-why {
+    background: linear-gradient(180deg, #252525 0%, #1f1f1f 100%);
+}
