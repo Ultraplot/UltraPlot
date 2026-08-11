@@ -21,12 +21,14 @@ html-exec:
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
-# Make make clean ignore .git folder
-# The -f doesn't raise error when files/folders not found
+# Full reset of all build output and caches (gallery md5, executed notebooks,
+# doctrees). Use this only when you need a genuinely cold rebuild; plain
+# `make html` reuses cached figures and notebook outputs.
 clean:
 	rm -rf api/*
-	rm -rf "$(BUILDDIR)"/html/*
-	rm -rf "$(BUILDDIR)"/doctrees/*
+	rm -rf "$(BUILDDIR)"
+	rm -rf gallery
+	rm -rf sg_execution_times.rst
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option. See: https://github.com/sphinx-doc/sphinx/issues/6603
