@@ -379,3 +379,38 @@ def __dir__():
 
 # Prevent "import ultraplot.figure" from clobbering the top-level callable.
 install_module_proxy(sys.modules.get(__name__))
+
+
+def _patch_seaborn_move_legend():
+    """Compatibility shim so seaborn can move legends on single-axis grids."""
+    try:
+        import matplotlib.axes
+        import matplotlib.figure
+        import seaborn as sns
+        from seaborn.axisgrid import Grid
+
+        from .gridspec import SubplotGrid
+    except Exception:
+        return
+
+    move_legend = getattr(sns, "move_legend", None)
+    if not callable(move_legend) or getattr(move_legend, "_ultraplot", False):
+        return
+
+    def _move_legend(obj, *args, **kwargs):
+        if isinstance(obj, SubplotGrid) and len(obj) == 1:
+            obj = obj[0]
+        if not isinstance(
+            obj, (matplotlib.axes.Axes, matplotlib.figure.Figure, Grid)
+        ):
+            # Keep semantics unchanged for unsupported objects.
+            return move_legend(obj, *args, **kwargs)
+        return move_legend(obj, *args, **kwargs)
+
+    _move_legend.__name__ = "move_legend"
+    _move_legend.__doc__ = getattr(move_legend, "__doc__", None)
+    _move_legend._ultraplot = True
+    sns.move_legend = _move_legend
+
+
+_patch_seaborn_move_legend()
