@@ -179,7 +179,7 @@ Automatic dimensions and spacing
 
          x = np.arange(10)
          y = np.random.default_rng(0).normal(size=(4, 10))
-         fig, axs = plt.subplots(2, 2, figsize=(4.6 / 2.54, 3.0 / 2.54))
+         fig, axs = plt.subplots(2, 2)
          for i in range(2):
             for j in range(2):
                axs[i, j].plot(x, y[i, :] * (i + 1) + j + 0.25 * x)
@@ -209,22 +209,20 @@ Automatic dimensions and spacing
          x = np.arange(10)
          y = np.random.default_rng(1).normal(size=(4, 10))
          fig, axs = uplt.subplots(
-            2,
-            2,
-            refwidth="4.6cm",
-            refheight="3.0cm",
-            wspace="3mm",
-            hspace="4mm",
+            nrows=2,
+            ncols=2,
          )
          for ix in range(2):
             for jx in range(2):
                axs[ix, jx].plot(x, y[ix, :] * (ix + 1) + jx + 0.25 * x)
-               axs[ix, jx].format(
-                  xlabel="x",
-                  ylabel="y",
-                  title="Automatic spacing across subplot groups",
-                  abc="A.",
-               )
+
+         axs.format(
+            xlabel="x",
+            ylabel="y",
+            title="Automatic spacing across subplot groups",
+            abc="A.",
+            abcloc="ul",
+         )
 
       UltraPlot fixes the physical dimensions of a *reference subplot* (``refwidth``,
       ``refheight``, ``refaspect``) instead of the figure, so subplot size -- and the
@@ -258,7 +256,7 @@ Working with multiple subplots
          import numpy as np
 
          x = np.arange(5)
-         fig, axs = plt.subplots(2, 2, figsize=(4.6 / 2.54, 3.0 / 2.54))
+         fig, axs = plt.subplots(2, 2)
          for i in range(2):
             for j in range(2):
                axs[i, j].plot(x, x * (i + 1) + j, label=f"line_{i}_{j}")
@@ -284,11 +282,11 @@ Working with multiple subplots
          import ultraplot as uplt
 
          x = np.arange(5)
-         fig, axs = uplt.subplots(2, 2, sharex=1, sharey=1, refwidth="4.6cm", refheight="3.0cm")
+         fig, axs = uplt.subplots(nrows=2, ncols=2)
          for idx, ax in enumerate(np.ravel(axs), start=1):
-            ax.plot(x, x * ((idx % 2) + 1))
-            ax.format(abc=f"{'ABCD'[idx-1]}.")
-         axs.format(xlabel="x", ylabel="y")
+            ax.plot(x, x * ((idx % 2) + 1), label=f"line_{idx}")
+         axs.format(xlabel="x", ylabel="y", abc=True)
+         fig.legend(loc="r", ncol=1, frameon=False)
 
       Tick labels and axis labels are shared and aligned automatically (``sharex``,
       ``sharey``, ``spanx``, ``spany``), and a-b-c labels are added with a single
@@ -324,7 +322,7 @@ Simpler colorbars and legends
          import numpy as np
 
          data = np.linspace(0, 1, 200).reshape(20, 10)
-         fig, axs = plt.subplots(1, 2, figsize=(4.6 / 2.54, 3.0 / 2.54))
+         fig, axs = plt.subplots(1, 2)
          for i in range(2):
             m = axs[i].imshow(data * (i + 1), aspect="auto")
             axs[i].set_title("Left" if i == 0 else "Right")
@@ -348,11 +346,11 @@ Simpler colorbars and legends
          import ultraplot as uplt
 
          data = np.linspace(0, 1, 200).reshape(20, 10)
-         fig, axs = uplt.subplots(1, 2, refwidth="4.6cm", refheight="3.0cm", wspace=0.4)
+         fig, axs = uplt.subplots(ncols = 2)
          for idx, ax in enumerate(np.ravel(axs), start=1):
             m = ax.imshow(data * idx)
             fig.colorbar(m, ax=ax, loc="r", width="6mm")
-            ax.format(title="Right" if idx == 2 else "Left")
+         axs.format(title=["Left", "Right"])
 
       Colorbars and legends get their own space in the
       :class:`~ultraplot.gridspec.GridSpec` -- the subplots keep their exact
@@ -393,7 +391,7 @@ Improved plotting commands
 
          x = np.linspace(0, 2 * np.pi, 200)
          y = np.sin(x)
-         fig, ax = plt.subplots(figsize=(4.6 / 2.54, 3.0 / 2.54))
+         fig, ax = plt.subplots()
          ax.fill_between(x, 0, y)
          ax.plot(x, y, color="black")
          ax.set_title("Single fill color for pos/neg regions")
@@ -416,7 +414,7 @@ Improved plotting commands
 
          x = np.linspace(0, 2 * np.pi, 200)
          y = np.sin(x)
-         fig, ax = uplt.subplots(refwidth="4.6cm", refheight="3cm")
+         fig, ax = uplt.subplots()
          ax.area(x, y, negpos=True)
          ax.format(title="Automatic negative/positive fills")
 
@@ -463,9 +461,8 @@ Cartopy and basemap integration
          y = np.arange(-90, 100, 10)
          X, Y = np.meshgrid(x, y)
          Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
-         fig, ax = plt.subplots(figsize=(4.6 / 2.54, 3.0 / 2.54))
-         pcm = ax.pcolormesh(X, Y, Z, cmap="viridis")
-         fig.colorbar(pcm, ax=ax)
+         fig, ax = plt.subplots()
+         pcm = ax.pcolormesh(X, Y, Z, cmap="viridis", colorbar = "t")
          ax.set_title("Hand-built pseudo map with manual gridline work")
 
       Building a map with `cartopy`_ or `basemap`_ means importing a separate
@@ -489,15 +486,13 @@ Cartopy and basemap integration
          y = np.arange(-90, 100, 10)
          X, Y = np.meshgrid(x, y)
          Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
-         try:
-            fig, ax = uplt.subplots(proj="pcarree", refwidth="4.6cm", refheight="3cm")
-            pcm = ax.pcolormesh(X, Y, Z, cmap="batlow")
-            fig.colorbar(pcm, ax=ax, loc="r", width="6mm", label="value")
-            ax.format(lonlabels="b", latlabels="l")
-         except Exception:
-            fig, ax = uplt.subplots(refwidth="4.6cm", refheight="3cm")
-            pcm = ax.pcolormesh(X, Y, Z, cmap="batlow")
-            ax.set_title("Map-style plot (fallback without projection backends)")
+        fig, ax = uplt.subplots(proj="pcarree")
+        ax.pcolormesh(X, Y, Z,
+                cmap="batlow",
+                colorbar = "r,
+                colorbar_kw = dict(label = "Value",
+            )
+        ax.format(lonlabels="b", latlabels="l")
 
       A geographic plot is ``uplt.subplots(proj='pcarree')``. The
       :class:`~ultraplot.axes.GeoAxes` subclass unifies `cartopy`_ and `basemap`_,
@@ -548,7 +543,7 @@ Pandas and xarray integration
             columns=np.arange(18),
          )
 
-         fig, ax = plt.subplots(figsize=(4.6 / 2.54, 3.0 / 2.54))
+         fig, ax = plt.subplots()
          image = ax.imshow(df.to_numpy(), cmap="viridis", aspect="auto")
          fig.colorbar(image, ax=ax)
          ax.set_title("Matplotlib treats metadata as plain arrays")
@@ -583,7 +578,7 @@ Pandas and xarray integration
          df.index.name = "month"
          df.columns.name = "variable"
 
-         fig, ax = uplt.subplots(refwidth="4.6cm", refheight="3cm")
+         fig, ax = uplt.subplots()
          cs = ax.contourf(df, cmap="batlow", colorbar="t")
          fig.colorbar(cs, ax=ax, loc="r", width="6mm")
 
@@ -631,7 +626,7 @@ Aesthetic colors and fonts
          X, Y = np.meshgrid(x, y)
          Z = np.exp(-(X**2 + Y**2) / 4) * np.cos(X * 2) * np.sin(Y * 2)
 
-         fig, ax = plt.subplots(figsize=(4.6 / 2.54, 3.0 / 2.54))
+         fig, ax = plt.subplots()
          ax.pcolormesh(X, Y, Z, cmap="jet")
          ax.set_title("A misleading 'jet' colormap")
          ax.set_xlabel("x")
@@ -659,7 +654,7 @@ Aesthetic colors and fonts
          X, Y = np.meshgrid(x, y)
          Z = np.exp(-(X**2 + Y**2) / 4) * np.cos(X * 2) * np.sin(Y * 2)
 
-         fig, ax = uplt.subplots(refwidth="4.6cm", refheight="3cm")
+         fig, ax = uplt.subplots()
          ax.pcolormesh(X, Y, Z, cmap="batlow")
          ax.format(title="Perceptually uniform batlow colormap")
 

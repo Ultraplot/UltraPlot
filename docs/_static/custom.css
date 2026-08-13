@@ -1294,6 +1294,7 @@ body.wy-body-for-nav
     display: flex;
     justify-content: space-between;
     gap: 0.6rem;
+    padding: 0.4rem 0.75rem 0;
     font-weight: 700;
     font-size: 0.85rem;
     text-transform: uppercase;
@@ -1318,34 +1319,56 @@ body.wy-body-for-nav
 .uplt-compare-frame {
     position: relative;
     width: 100%;
+    max-width: 100%;
     overflow: hidden;
     border-radius: 0.45rem;
     border: 1px solid var(--uplt-color-border-muted);
     background: var(--uplt-color-panel-bg);
-}
-
-.uplt-compare-frame {
     --uplt-compare-position: 50%;
-    aspect-ratio: 4 / 3;
 }
 
-.uplt-compare-img {
+.uplt-compare-frame .uplt-compare-side {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.uplt-compare-frame .uplt-compare-side .sd-card-body {
+    margin: 0;
+    padding: 0.75rem;
+    color: inherit;
+}
+
+.uplt-compare-frame .uplt-compare-side .sd-card-body figure {
+    width: 100%;
+    margin: 0;
+}
+
+.uplt-compare-frame .uplt-compare-side .sd-card-body figure.align-default {
+    text-align: left;
+}
+
+.uplt-compare-frame .uplt-compare-side .sd-card-body figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0;
+}
+
+.uplt-compare-frame .uplt-compare-side.uplt-compare-uplt {
+    position: relative;
+    z-index: 1;
+    clip-path: inset(0 0 0 var(--uplt-compare-position));
+}
+
+.uplt-compare-frame .uplt-compare-side.uplt-compare-mpl {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.uplt-compare-mpl {
-    position: relative;
-}
-
-.uplt-compare-uplt {
     clip-path: inset(0 calc(100% - var(--uplt-compare-position)) 0 0);
+    z-index: 2;
 }
 
-.uplt-compare-handle {
+.uplt-compare-frame .uplt-compare-handle {
     position: absolute;
     top: 0;
     left: var(--uplt-compare-position);
@@ -1355,6 +1378,7 @@ body.wy-body-for-nav
     background: var(--uplt-color-text-secondary);
     opacity: 0.95;
     pointer-events: none;
+    z-index: 3;
 }
 
 .uplt-compare-slider {
@@ -1366,6 +1390,49 @@ body.wy-body-for-nav
     width: 100%;
     margin: 0;
 }
+
+.uplt-compare-label-btn {
+    appearance: none;
+    border: 1px solid var(--uplt-color-border-muted);
+    border-radius: 9999px;
+    background: var(--uplt-color-panel-bg);
+    color: inherit;
+    padding: 0.1rem 0.6rem;
+    margin: 0;
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.uplt-compare-label-btn:focus-visible {
+    outline: 2px solid var(--uplt-color-accent);
+    outline-offset: 2px;
+}
+
+.uplt-compare-col {
+    grid-column: 1 / -1;
+}
+
+.uplt-why-compare-row {
+    align-items: stretch;
+}
+
+.uplt-why-compare-row .uplt-why-compare-col,
+.uplt-why-compare-row .uplt-why-compare-col.sd-col {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-column: 1 / -1;
+}
+
+.uplt-why-compare-row .uplt-why-compare-hide-col {
+    display: none !important;
+}
+
 
 .uplt-why .sd-card-body > p:first-child {
     font-weight: 700;

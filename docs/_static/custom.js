@@ -58,9 +58,9 @@ function initWhyCompareSliders() {
     }
     i += 1;
 
-    const mplImg = mplCard.querySelector("img");
-    const upltImg = upltCard.querySelector("img");
-    if (!mplImg || !upltImg) {
+    const mplBody = mplCard.querySelector(".sd-card-body");
+    const upltBody = upltCard.querySelector(".sd-card-body");
+    if (!mplBody || !upltBody) {
       continue;
     }
 
@@ -73,12 +73,23 @@ function initWhyCompareSliders() {
 
     const labels = document.createElement("div");
     labels.className = "uplt-compare-labels";
-    const leftLabel = document.createElement("span");
-    leftLabel.className = "uplt-label uplt-label-mpl";
+    const leftLabel = document.createElement("button");
+    leftLabel.type = "button";
+    leftLabel.className = "uplt-label uplt-label-mpl uplt-compare-label-btn";
     leftLabel.textContent = "Matplotlib";
-    const rightLabel = document.createElement("span");
-    rightLabel.className = "uplt-label uplt-label-uplt";
+    leftLabel.addEventListener("click", () => {
+      sliderInput.value = "100";
+      onInput();
+    });
+
+    const rightLabel = document.createElement("button");
+    rightLabel.type = "button";
+    rightLabel.className = "uplt-label uplt-label-uplt uplt-compare-label-btn";
     rightLabel.textContent = "UltraPlot";
+    rightLabel.addEventListener("click", () => {
+      sliderInput.value = "0";
+      onInput();
+    });
     labels.appendChild(leftLabel);
     labels.appendChild(rightLabel);
     body.appendChild(labels);
@@ -90,13 +101,15 @@ function initWhyCompareSliders() {
       "Matplotlib and UltraPlot before/after comparison",
     );
 
-    const mplClone = mplImg.cloneNode(true);
-    mplClone.className = "uplt-compare-img uplt-compare-mpl";
-    frame.appendChild(mplClone);
+    const mplLayer = document.createElement("div");
+    mplLayer.className = "uplt-compare-side uplt-compare-mpl";
+    mplLayer.appendChild(mplBody.cloneNode(true));
+    frame.appendChild(mplLayer);
 
-    const upltClone = upltImg.cloneNode(true);
-    upltClone.className = "uplt-compare-img uplt-compare-uplt";
-    frame.appendChild(upltClone);
+    const upltLayer = document.createElement("div");
+    upltLayer.className = "uplt-compare-side uplt-compare-uplt";
+    upltLayer.appendChild(upltBody.cloneNode(true));
+    frame.appendChild(upltLayer);
 
     const handle = document.createElement("div");
     handle.className = "uplt-compare-handle";
@@ -119,21 +132,29 @@ function initWhyCompareSliders() {
     body.appendChild(frame);
     body.appendChild(sliderInput);
 
-    const probe = new Image();
-    const onLoad = () => {
-      if (probe.naturalWidth && probe.naturalHeight) {
-        frame.style.aspectRatio = `${probe.naturalWidth} / ${probe.naturalHeight}`;
-      }
-    };
-    probe.addEventListener("load", onLoad);
-    probe.src = mplImg.src;
-    if (probe.complete) {
-      onLoad();
-    }
-
     mplCard.className = "sd-card uplt-why uplt-why-compare";
     mplCard.replaceChildren();
     mplCard.appendChild(body);
+
+    const compareCol = mplCard.closest(".sd-col");
+    if (compareCol) {
+      compareCol.classList.add("uplt-why-compare-col");
+      compareCol.style.width = "100%";
+      compareCol.style.maxWidth = "100%";
+      compareCol.style.flex = "0 0 100%";
+    }
+
+    const compareRow = mplCard.closest(".sd-row");
+    if (compareRow) {
+      compareRow.classList.add("uplt-why-compare-row");
+      compareRow.style.display = "block";
+    }
+
+    const upltCol = upltCard.closest(".sd-col");
+    if (upltCol) {
+      upltCol.classList.add("uplt-why-compare-hide-col");
+      upltCol.style.display = "none";
+    }
 
     upltCard.style.display = "none";
   }
