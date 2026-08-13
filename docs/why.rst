@@ -179,7 +179,7 @@ Automatic dimensions and spacing
 
          x = np.arange(10)
          y = np.random.default_rng(0).normal(size=(4, 10))
-         fig, axs = plt.subplots(2, 2, figsize=(4.6, 3.0))
+         fig, axs = plt.subplots(2, 2, figsize=(4.6 / 2.54, 3.0 / 2.54))
          for i in range(2):
             for j in range(2):
                axs[i, j].plot(x, y[i, :] * (i + 1) + j + 0.25 * x)
@@ -258,7 +258,7 @@ Working with multiple subplots
          import numpy as np
 
          x = np.arange(5)
-         fig, axs = plt.subplots(2, 2, figsize=(4.6, 3.0))
+         fig, axs = plt.subplots(2, 2, figsize=(4.6 / 2.54, 3.0 / 2.54))
          for i in range(2):
             for j in range(2):
                axs[i, j].plot(x, x * (i + 1) + j, label=f"line_{i}_{j}")
@@ -324,7 +324,7 @@ Simpler colorbars and legends
          import numpy as np
 
          data = np.linspace(0, 1, 200).reshape(20, 10)
-         fig, axs = plt.subplots(1, 2, figsize=(4.6, 3.0))
+         fig, axs = plt.subplots(1, 2, figsize=(4.6 / 2.54, 3.0 / 2.54))
          for i in range(2):
             m = axs[i].imshow(data * (i + 1), aspect="auto")
             axs[i].set_title("Left" if i == 0 else "Right")
@@ -393,7 +393,7 @@ Improved plotting commands
 
          x = np.linspace(0, 2 * np.pi, 200)
          y = np.sin(x)
-         fig, ax = plt.subplots(figsize=(4.6, 3.0))
+         fig, ax = plt.subplots(figsize=(4.6 / 2.54, 3.0 / 2.54))
          ax.fill_between(x, 0, y)
          ax.plot(x, y, color="black")
          ax.set_title("Single fill color for pos/neg regions")
@@ -463,7 +463,7 @@ Cartopy and basemap integration
          y = np.arange(-90, 100, 10)
          X, Y = np.meshgrid(x, y)
          Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
-         fig, ax = plt.subplots(figsize=(4.6, 3.0))
+         fig, ax = plt.subplots(figsize=(4.6 / 2.54, 3.0 / 2.54))
          pcm = ax.pcolormesh(X, Y, Z, cmap="viridis")
          fig.colorbar(pcm, ax=ax)
          ax.set_title("Hand-built pseudo map with manual gridline work")
@@ -548,7 +548,7 @@ Pandas and xarray integration
             columns=np.arange(18),
          )
 
-         fig, ax = plt.subplots(figsize=(4.6, 3.0))
+         fig, ax = plt.subplots(figsize=(4.6 / 2.54, 3.0 / 2.54))
          image = ax.imshow(df.to_numpy(), cmap="viridis", aspect="auto")
          fig.colorbar(image, ax=ax)
          ax.set_title("Matplotlib treats metadata as plain arrays")
@@ -631,7 +631,7 @@ Aesthetic colors and fonts
          X, Y = np.meshgrid(x, y)
          Z = np.exp(-(X**2 + Y**2) / 4) * np.cos(X * 2) * np.sin(Y * 2)
 
-         fig, ax = plt.subplots(figsize=(4.6, 3.0))
+         fig, ax = plt.subplots(figsize=(4.6 / 2.54, 3.0 / 2.54))
          ax.pcolormesh(X, Y, Z, cmap="jet")
          ax.set_title("A misleading 'jet' colormap")
          ax.set_xlabel("x")
