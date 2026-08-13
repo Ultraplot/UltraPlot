@@ -3792,47 +3792,37 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         align = kwargs.pop("align", None)
         align = _translate_loc(align, "align", default="center")
         label_order = kwargs.pop("label_order", None)
-        order = label_order if isinstance(label_order, str) and label_order in {"C", "F"} else None
 
         # Seaborn passes ``label_order`` as a label sequence. UltraPlot's
         # legend API does not expose this parameter, so we coerce it by
         # reordering explicit handle/label inputs when possible.
         if label_order is not None and not isinstance(label_order, str):
             if labels is None and isinstance(handles, dict):
-                handles_dict = handles
-                handles, labels = zip(
-                    *[
-                        (handles_dict[key], key)
-                        for key in label_order
-                        if key in handles_dict
-                    ]
-                )
-                handles, labels = list(handles), list(labels)
-            elif handles is not None and labels is not None:
-                label_to_handle = {label: handle for handle, label in zip(handles, labels)}
-                label_to_handle_keys = set(label_to_handle)
-                label_order_set = set(label_order)
-                ordered_pairs = [
-                    (label_to_handle[label], label)
-                    for label in label_order
-                    if label in label_to_handle_keys
+                pairs = [
+                    (handles[key], key) for key in label_order if key in handles
                 ]
-                if ordered_pairs:
+                handles, labels = map(list, zip(*pairs)) if pairs else ([], [])
+            elif handles is not None and labels is not None:
+                pairs = list(zip(handles, labels))
+                ordered_pairs = []
+                remaining_pairs = list(pairs)
+                for label in label_order:
+                    matches = [pair for pair in remaining_pairs if pair[1] == label]
+                    ordered_pairs.extend(matches)
                     remaining_pairs = [
-                        (handle, label)
-                        for handle, label in zip(handles, labels)
-                        if label not in label_order_set
+                        pair for pair in remaining_pairs if pair[1] != label
                     ]
-                    handles, labels = zip(*((*ordered_pairs, *remaining_pairs),))
-                    handles, labels = list(handles), list(labels)
+                pairs = [*ordered_pairs, *remaining_pairs]
+                handles, labels = map(list, zip(*pairs)) if pairs else ([], [])
+
+        if isinstance(label_order, str) and label_order in {"C", "F"}:
+            kwargs["order"] = label_order
 
         # Either draw right now or queue up for later. Handles can be successively
         # added to a single location this way. Used for on-the-fly legends.
         queue = kwargs.pop("queue", False)
         if queue:
-            self._register_guide(
-                "legend", (handles, labels), (loc, align), order=order, **kwargs
-            )
+            self._register_guide("legend", (handles, labels), (loc, align), **kwargs)
         else:
             return self._add_legend(
                 handles,
@@ -3844,7 +3834,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 col=col,
                 rows=rows,
                 cols=cols,
-                order=order,
                 **kwargs,
             )
 
