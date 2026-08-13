@@ -308,6 +308,25 @@ def test_legend_remove_clears_internal_dict_state():
     uplt.close(fig)
 
 
+def test_legend_remove_without_remove_method_uses_visibility_fallback():
+    """
+    If a legend does not expose a private remove method, ``remove`` should still
+    fall back to a safe hide-only path.
+    """
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1, 2], label="line")
+    leg = ax.legend(loc="lower right")
+
+    # Force the compatibility path used by wrappers that do not implement a
+    # remove backend on the internal legend object.
+    setattr(leg, "_remove_method", None)
+
+    assert leg.remove() is None
+    assert not any(v is leg for v in ax[0]._legend_dict.values())
+    assert getattr(ax[0], "legend_", None) is None
+    uplt.close(fig)
+
+
 def test_external_mode_defers_on_the_fly_legend():
     """
     External mode should defer on-the-fly legend creation until explicitly requested.
