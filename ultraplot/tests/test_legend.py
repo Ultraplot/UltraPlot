@@ -330,9 +330,9 @@ def test_legend_remove_without_remove_method_uses_visibility_fallback():
 def test_legend_label_order_preserves_duplicate_labels():
     """A Seaborn-style label order should retain every matching handle."""
     fig, ax = uplt.subplots()
-    first, = ax.plot([0, 1], label="duplicate")
-    second, = ax.plot([1, 0], label="duplicate")
-    third, = ax.plot([0.5, 0.5], label="other")
+    (first,) = ax.plot([0, 1], label="duplicate")
+    (second,) = ax.plot([1, 0], label="duplicate")
+    (third,) = ax.plot([0.5, 0.5], label="other")
 
     legend = ax.legend(
         [first, second, third],
@@ -351,7 +351,7 @@ def test_legend_label_order_preserves_duplicate_labels():
 def test_legend_label_order_allows_no_matching_dict_labels():
     """An empty Seaborn-style ordering should create an empty legend cleanly."""
     fig, ax = uplt.subplots()
-    line, = ax.plot([0, 1], label="line")
+    (line,) = ax.plot([0, 1], label="line")
 
     legend = ax.legend({"line": line}, label_order=["missing"])
 

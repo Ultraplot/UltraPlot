@@ -3798,9 +3798,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # reordering explicit handle/label inputs when possible.
         if label_order is not None and not isinstance(label_order, str):
             if labels is None and isinstance(handles, dict):
-                pairs = [
-                    (handles[key], key) for key in label_order if key in handles
-                ]
+                pairs = [(handles[key], key) for key in label_order if key in handles]
                 handles, labels = map(list, zip(*pairs)) if pairs else ([], [])
             elif handles is not None and labels is not None:
                 pairs = list(zip(handles, labels))
