@@ -111,7 +111,8 @@ def _wrap_external_projection(figure, projection):
 
     external_axes_class = None
     external_axes_kwargs = {}
-    if isinstance(projection, str):
+    projection_name = projection if isinstance(projection, str) else None
+    if projection_name is not None:
         if projection.startswith("ultraplot_") or projection.startswith(
             "_ultraplot_container_"
         ):
@@ -139,7 +140,10 @@ def _wrap_external_projection(figure, projection):
 
     from ..axes.container import create_external_axes_container
 
-    container_name = _container_projection_name(external_axes_class)
+    if projection_name is None:
+        container_name = _container_projection_name(external_axes_class)
+    else:
+        container_name = "_ultraplot_container_" + projection_name
     if container_name not in mproj.get_projection_names():
         container_class = create_external_axes_container(
             external_axes_class, projection_name=container_name

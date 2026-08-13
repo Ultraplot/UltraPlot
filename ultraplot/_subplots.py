@@ -7,10 +7,8 @@ from typing import TYPE_CHECKING
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
-import matplotlib.projections as mproj
 import numpy as np
 
-from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
 from .internals import _not_none, _pop_params, warnings
