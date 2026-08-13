@@ -383,12 +383,13 @@ install_module_proxy(sys.modules.get(__name__))
 
 def _patch_seaborn_move_legend():
     """Compatibility shim so seaborn can move legends on single-axis grids."""
-    try:
-        import seaborn as sns
+    import sys
 
-        from .gridspec import SubplotGrid
-    except ImportError:
+    sns = sys.modules.get("seaborn")
+    if sns is None:
         return
+
+    from .gridspec import SubplotGrid
 
     move_legend = getattr(sns, "move_legend", None)
     if not callable(move_legend) or getattr(move_legend, "_ultraplot", False):
@@ -404,5 +405,3 @@ def _patch_seaborn_move_legend():
     _move_legend._ultraplot = True
     sns.move_legend = _move_legend
 
-
-_patch_seaborn_move_legend()

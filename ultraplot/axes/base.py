@@ -873,6 +873,9 @@ class _ExternalModeMixin:
         """
         Context manager toggling external mode during the block.
         """
+        from .. import _patch_seaborn_move_legend
+
+        _patch_seaborn_move_legend()
         return _ExternalModeMixin._ExternalContext(self, value)
 
     def _in_external_context(self):
