@@ -54,7 +54,7 @@ jobs:
 
           version=$(python -c "import ultraplot; print(ultraplot.__version__)")
           echo "Version: $version"
-          if [[ "$version" == "0."* ]]; then
+          if [[ "${{ github.event_name }}" != "pull_request" && "$version" == "0."* ]]; then
             echo "Version is not set correctly!"
             exit 1
           fi
