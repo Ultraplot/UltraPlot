@@ -22,6 +22,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Pin version from tag on release builds
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Using tagged version: $VERSION"
+          echo "SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION" >> "$GITHUB_ENV"
+        shell: bash
+
       - name: Ensure clean tree before build
         run: |
           git diff --quiet || (git status --short && git diff && exit 1)
