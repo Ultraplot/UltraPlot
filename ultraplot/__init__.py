@@ -382,7 +382,13 @@ install_module_proxy(sys.modules.get(__name__))
 
 
 def _patch_seaborn_move_legend():
-    """Compatibility shim so seaborn can move legends on single-axis grids."""
+    """
+    Let ``sns.move_legend(ax, ...)`` accept singleton :class:`SubplotGrid` objects.
+
+    Seaborn only accepts native Matplotlib axes, figures, and its own grids. The
+    wrapper unwraps a singleton grid to its underlying axes; callers can avoid
+    this compatibility patch by passing ``ax[0]`` directly.
+    """
     import sys
 
     sns = sys.modules.get("seaborn")
