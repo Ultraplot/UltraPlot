@@ -38,6 +38,107 @@ function getCodeDetailsBlocks() {
   return Array.from(document.querySelectorAll("details.uplt-code-details"));
 }
 
+function initWhyCompareSliders() {
+  const isWhyPage = /\/why(?:\.html)?$|\/why\.htm$/.test(
+    (window.location.pathname || "").toLowerCase(),
+  );
+  if (!isWhyPage) return;
+
+  const cards = Array.from(document.querySelectorAll(".sd-card.uplt-why"));
+  for (let i = 0; i < cards.length - 1; i += 1) {
+    const mplCard = cards[i];
+    const upltCard = cards[i + 1];
+    if (
+      !mplCard ||
+      !upltCard ||
+      !mplCard.classList.contains("uplt-why-mpl") ||
+      !upltCard.classList.contains("uplt-why-uplt")
+    ) {
+      continue;
+    }
+    i += 1;
+
+    const mplImg = mplCard.querySelector("img");
+    const upltImg = upltCard.querySelector("img");
+    if (!mplImg || !upltImg) {
+      continue;
+    }
+
+    const slider = document.createElement("div");
+    slider.className = "uplt-why-compare";
+
+    const body = document.createElement("div");
+    body.className = "sd-card-body";
+    slider.appendChild(body);
+
+    const labels = document.createElement("div");
+    labels.className = "uplt-compare-labels";
+    const leftLabel = document.createElement("span");
+    leftLabel.className = "uplt-label uplt-label-mpl";
+    leftLabel.textContent = "Matplotlib";
+    const rightLabel = document.createElement("span");
+    rightLabel.className = "uplt-label uplt-label-uplt";
+    rightLabel.textContent = "UltraPlot";
+    labels.appendChild(leftLabel);
+    labels.appendChild(rightLabel);
+    body.appendChild(labels);
+
+    const frame = document.createElement("div");
+    frame.className = "uplt-compare-frame";
+    frame.setAttribute(
+      "aria-label",
+      "Matplotlib and UltraPlot before/after comparison",
+    );
+
+    const mplClone = mplImg.cloneNode(true);
+    mplClone.className = "uplt-compare-img uplt-compare-mpl";
+    frame.appendChild(mplClone);
+
+    const upltClone = upltImg.cloneNode(true);
+    upltClone.className = "uplt-compare-img uplt-compare-uplt";
+    frame.appendChild(upltClone);
+
+    const handle = document.createElement("div");
+    handle.className = "uplt-compare-handle";
+    frame.appendChild(handle);
+
+    const sliderInput = document.createElement("input");
+    sliderInput.className = "uplt-compare-slider";
+    sliderInput.type = "range";
+    sliderInput.min = "0";
+    sliderInput.max = "100";
+    sliderInput.value = "50";
+    sliderInput.setAttribute("aria-label", "Comparison reveal amount");
+
+    const onInput = () => {
+      frame.style.setProperty("--uplt-compare-position", `${sliderInput.value}%`);
+    };
+    sliderInput.addEventListener("input", onInput);
+    onInput();
+
+    body.appendChild(frame);
+    body.appendChild(sliderInput);
+
+    const probe = new Image();
+    const onLoad = () => {
+      if (probe.naturalWidth && probe.naturalHeight) {
+        frame.style.aspectRatio = `${probe.naturalWidth} / ${probe.naturalHeight}`;
+      }
+    };
+    probe.addEventListener("load", onLoad);
+    probe.src = mplImg.src;
+    if (probe.complete) {
+      onLoad();
+    }
+
+    mplCard.className = "sd-card uplt-why uplt-why-compare";
+    mplCard.replaceChildren();
+    mplCard.appendChild(body);
+
+    upltCard.style.display = "none";
+  }
+}
+
 function initScrollChromeFade() {
   const topBar = document.querySelector(".sy-head");
   const leftBar = document.querySelector(".sy-lside");
@@ -711,6 +812,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Re-sync right TOC controls now that code wrappers exist.
   initShibuyaRightToc();
+  initWhyCompareSliders();
 
   const navLinks = document.querySelectorAll(
     ".wy-menu-vertical a.reference.internal",
