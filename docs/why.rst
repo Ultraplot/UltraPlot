@@ -171,9 +171,24 @@ Automatic dimensions and spacing
 
       **Matplotlib**
 
-      .. image:: _static/why_plots/spacing_mpl.svg
-         :alt: A 2x2 matplotlib figure where the bottom-row titles overlap the top-row tick labels
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import matplotlib.pyplot as plt
+         import numpy as np
+
+         x = np.arange(10)
+         y = np.random.default_rng(0).normal(size=(4, 10))
+         fig, axs = plt.subplots(2, 2, figsize=(4.6, 3.8))
+         for i in range(2):
+            for j in range(2):
+               axs[i, j].plot(x, y[i, :] * (i + 1) + j + 0.25 * x)
+               axs[i, j].set_title(
+                  "A long title that collides with neighboring labels",
+                  fontsize=10,
+               )
+               axs[i, j].set_xlabel("x axis", fontsize=10)
+               axs[i, j].set_ylabel("y axis", fontsize=10)
 
       The figure size is fixed, the margins are tuned by hand, and the bottom-row
       titles collide with the tick labels above them. Add a subplot or change the
@@ -185,9 +200,31 @@ Automatic dimensions and spacing
 
       **UltraPlot**
 
-      .. image:: _static/why_plots/spacing_uplt.svg
-         :alt: The same 2x2 layout made with UltraPlot with clean, automatic spacing
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import numpy as np
+         import ultraplot as uplt
+
+         x = np.arange(10)
+         y = np.random.default_rng(1).normal(size=(4, 10))
+         fig, axs = uplt.subplots(
+            2,
+            2,
+            refwidth="2.8cm",
+            refheight="2.2cm",
+            wspace="3mm",
+            hspace="4mm",
+         )
+         for ix in range(2):
+            for jx in range(2):
+               axs[ix, jx].plot(x, y[ix, :] * (ix + 1) + jx + 0.25 * x)
+               axs[ix, jx].format(
+                  xlabel="x",
+                  ylabel="y",
+                  title="Automatic spacing across subplot groups",
+                  abc="A.",
+               )
 
       UltraPlot fixes the physical dimensions of a *reference subplot* (``refwidth``,
       ``refheight``, ``refaspect``) instead of the figure, so subplot size -- and the
@@ -214,9 +251,21 @@ Working with multiple subplots
 
       **Matplotlib**
 
-      .. image:: _static/why_plots/subplots_mpl.svg
-         :alt: A 2x2 matplotlib figure with repeated tick labels on every subplot and no subplot labels
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import matplotlib.pyplot as plt
+         import numpy as np
+
+         x = np.arange(5)
+         fig, axs = plt.subplots(2, 2, figsize=(4.6, 3.8))
+         for i in range(2):
+            for j in range(2):
+               axs[i, j].plot(x, x * (i + 1) + j, label=f"line_{i}_{j}")
+               axs[i, j].set_xlabel("x")
+               axs[i, j].set_ylabel("y")
+               axs[i, j].set_title("Panel label")
+         fig.legend(loc="upper right", ncol=1, frameon=False)
 
       Every subplot repeats its own tick labels and axis labels, wasting page
       space. Adding "a-b-c" labels -- required for most publications -- is
@@ -228,9 +277,18 @@ Working with multiple subplots
 
       **UltraPlot**
 
-      .. image:: _static/why_plots/subplots_uplt.svg
-         :alt: The same 2x2 layout made with UltraPlot with shared tick labels and a-b-c labels
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import numpy as np
+         import ultraplot as uplt
+
+         x = np.arange(5)
+         fig, axs = uplt.subplots(2, 2, sharex=1, sharey=1, refwidth="2.8cm", refheight="2.2cm")
+         for idx, ax in enumerate(np.ravel(axs), start=1):
+            ax.plot(x, x * ((idx % 2) + 1))
+            ax.format(abc=f"{'ABCD'[idx-1]}.")
+         axs.format(xlabel="x", ylabel="y")
 
       Tick labels and axis labels are shared and aligned automatically (``sharex``,
       ``sharey``, ``spanx``, ``spany``), and a-b-c labels are added with a single
@@ -259,9 +317,19 @@ Simpler colorbars and legends
 
       **Matplotlib**
 
-      .. image:: _static/why_plots/colorbars_mpl.svg
-         :alt: Two matplotlib panels where the colorbar steals space from its parent subplot, making the panels unequal widths
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import matplotlib.pyplot as plt
+         import numpy as np
+
+         data = np.linspace(0, 1, 200).reshape(20, 10)
+         fig, axs = plt.subplots(1, 2, figsize=(4.6, 3.0))
+         for i in range(2):
+            m = axs[i].imshow(data * (i + 1), aspect="auto")
+            axs[i].set_title("Left" if i == 0 else "Right")
+            if i == 0:
+               fig.colorbar(m, ax=axs[i])
 
       Drawing a colorbar with ``fig.colorbar(m, ax=ax)`` *steals space* from the
       parent subplot -- here the left panel is visibly narrower than the right
@@ -273,9 +341,18 @@ Simpler colorbars and legends
 
       **UltraPlot**
 
-      .. image:: _static/why_plots/colorbars_uplt.svg
-         :alt: The same two panels with outer colorbars drawn in dedicated space, keeping the panels equal width
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import numpy as np
+         import ultraplot as uplt
+
+         data = np.linspace(0, 1, 200).reshape(20, 10)
+         fig, axs = uplt.subplots(1, 2, refwidth="3.2cm", refheight="2.4cm", wspace=0.4)
+         for idx, ax in enumerate(np.ravel(axs), start=1):
+            m = ax.imshow(data * idx)
+            fig.colorbar(m, ax=ax, loc="r", width="6mm")
+            ax.format(title="Right" if idx == 2 else "Left")
 
       Colorbars and legends get their own space in the
       :class:`~ultraplot.gridspec.GridSpec` -- the subplots keep their exact
@@ -308,9 +385,18 @@ Improved plotting commands
 
       **Matplotlib**
 
-      .. image:: _static/why_plots/plotting_mpl.svg
-         :alt: A matplotlib line plot where the fill under the curve uses a single color for both positive and negative regions
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import matplotlib.pyplot as plt
+         import numpy as np
+
+         x = np.linspace(0, 2 * np.pi, 200)
+         y = np.sin(x)
+         fig, ax = plt.subplots(figsize=(4.6, 3.0))
+         ax.fill_between(x, 0, y)
+         ax.plot(x, y, color="black")
+         ax.set_title("Single fill color for pos/neg regions")
 
       Filling under a curve means writing :func:`~matplotlib.axes.Axes.fill_between`
       yourself, and the obvious call paints the positive and negative regions the
@@ -322,9 +408,17 @@ Improved plotting commands
 
       **UltraPlot**
 
-      .. image:: _static/why_plots/plotting_uplt.svg
-         :alt: The same data made with UltraPlot's area command, which colors positive regions blue and negative regions red
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import numpy as np
+         import ultraplot as uplt
+
+         x = np.linspace(0, 2 * np.pi, 200)
+         y = np.sin(x)
+         fig, ax = uplt.subplots(figsize="4.6cm x 3cm")
+         ax.area(x, y, negpos=True)
+         ax.format(title="Automatic negative/positive fills")
 
       ``ax.area(x, y, negpos=True)`` colors the positive and negative regions
       automatically. The :class:`~ultraplot.axes.PlotAxes` commands bundle many
@@ -359,9 +453,20 @@ Cartopy and basemap integration
 
       **Matplotlib**
 
-      .. image:: _static/why_plots/geo_mpl.svg
-         :alt: A cartopy map built by hand, with default gridlines and overlapping edge labels
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import matplotlib.pyplot as plt
+         import numpy as np
+
+         x = np.arange(0, 360, 10)
+         y = np.arange(-90, 100, 10)
+         X, Y = np.meshgrid(x, y)
+         Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
+         fig, ax = plt.subplots(figsize=(4.6, 2.8))
+         pcm = ax.pcolormesh(X, Y, Z, cmap="viridis")
+         fig.colorbar(pcm, ax=ax)
+         ax.set_title("Hand-built pseudo map with manual gridline work")
 
       Building a map with `cartopy`_ or `basemap`_ means importing a separate
       package, configuring the projection, and adding gridlines and labels line
@@ -374,9 +479,25 @@ Cartopy and basemap integration
 
       **UltraPlot**
 
-      .. image:: _static/why_plots/geo_uplt.svg
-         :alt: The same map made with UltraPlot's GeoAxes, with clean labeled gridlines
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import numpy as np
+         import ultraplot as uplt
+
+         x = np.arange(0, 360, 10)
+         y = np.arange(-90, 100, 10)
+         X, Y = np.meshgrid(x, y)
+         Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
+         try:
+            fig, ax = uplt.subplots(proj="pcarree", refwidth="4.2cm", refheight="2.8cm")
+            pcm = ax.pcolormesh(X, Y, Z, cmap="batlow")
+            fig.colorbar(pcm, ax=ax, loc="r", width="6mm", label="value")
+            ax.format(lonlabels="b", latlabels="l")
+         except Exception:
+            fig, ax = uplt.subplots(figsize="4.6cm x 2.8cm")
+            pcm = ax.pcolormesh(X, Y, Z, cmap="batlow")
+            ax.set_title("Map-style plot (fallback without projection backends)")
 
       A geographic plot is ``uplt.subplots(proj='pcarree')``. The
       :class:`~ultraplot.axes.GeoAxes` subclass unifies `cartopy`_ and `basemap`_,
@@ -412,9 +533,27 @@ Pandas and xarray integration
 
       **Matplotlib**
 
-      .. image:: _static/why_plots/metadata_mpl.svg
-         :alt: A matplotlib plot of an xarray DataArray with no legend and generic axis labels
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import matplotlib.pyplot as plt
+         import numpy as np
+         import pandas as pd
+
+         rng = np.random.RandomState(0)
+         data = (rng.normal(size=(12, 18)).cumsum(axis=1).cumsum(axis=0))
+         df = pd.DataFrame(
+            (data - data.min()) / (data.max() - data.min()),
+            index=pd.date_range("2026-01-01", periods=12, freq="MS"),
+            columns=np.arange(18),
+         )
+
+         fig, ax = plt.subplots(figsize=(4.6, 3.0))
+         image = ax.imshow(df.to_numpy(), cmap="viridis", aspect="auto")
+         fig.colorbar(image, ax=ax)
+         ax.set_title("Matplotlib treats metadata as plain arrays")
+         ax.set_xlabel("generic x")
+         ax.set_ylabel("generic y")
 
       Matplotlib treats a :class:`~xarray.DataArray` or :class:`~pandas.DataFrame`
       as a plain array and ignores its metadata -- so no legend, no title, and
@@ -427,9 +566,26 @@ Pandas and xarray integration
 
       **UltraPlot**
 
-      .. image:: _static/why_plots/metadata_uplt.svg
-         :alt: The same DataArray plotted with UltraPlot, automatically labeled with its title, coordinates, and legend
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import pandas as pd
+         import numpy as np
+         import ultraplot as uplt
+
+         rng = np.random.RandomState(0)
+         df = pd.DataFrame(
+            (rng.normal(size=(12, 18)).cumsum(axis=1).cumsum(axis=0) - 1),
+            index=pd.date_range("2026-01-01", periods=12, freq="MS"),
+            columns=np.arange(18),
+         )
+         df.name = "temperature (\N{DEGREE SIGN}C)"
+         df.index.name = "month"
+         df.columns.name = "variable"
+
+         fig, ax = uplt.subplots(figsize="4.6cm x 3.0")
+         cs = ax.contourf(df, cmap="batlow", colorbar="t")
+         fig.colorbar(cs, ax=ax, loc="r", width="6mm")
 
       The same data plotted with UltraPlot is labeled automatically: the axis
       labels, subplot title, and colorbar and legend labels are all taken from the
@@ -464,9 +620,22 @@ Aesthetic colors and fonts
 
       **Matplotlib**
 
-      .. image:: _static/why_plots/aesthetics_mpl.svg
-         :alt: A jet-colored matplotlib plot with the default DejaVu font
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import matplotlib.pyplot as plt
+         import numpy as np
+
+         x = np.linspace(-4, 4, 180)
+         y = np.linspace(-4, 4, 180)
+         X, Y = np.meshgrid(x, y)
+         Z = np.exp(-(X**2 + Y**2) / 4) * np.cos(X * 2) * np.sin(Y * 2)
+
+         fig, ax = plt.subplots(figsize=(4.6, 3.0))
+         ax.pcolormesh(X, Y, Z, cmap="jet")
+         ax.set_title("A misleading 'jet' colormap")
+         ax.set_xlabel("x")
+         ax.set_ylabel("y")
 
       "Misleading" colormaps like ``'jet'`` have jarring jumps in hue,
       saturation, and luminance that can trick the eye into seeing patterns that
@@ -479,9 +648,20 @@ Aesthetic colors and fonts
 
       **UltraPlot**
 
-      .. image:: _static/why_plots/aesthetics_uplt.svg
-         :alt: The same field plotted with a perceptually uniform batlow colormap and the TeX Gyre font
-         :width: 100%
+      .. plot::
+         :include-source: true
+
+         import numpy as np
+         import ultraplot as uplt
+
+         x = np.linspace(-4, 4, 180)
+         y = np.linspace(-4, 4, 180)
+         X, Y = np.meshgrid(x, y)
+         Z = np.exp(-(X**2 + Y**2) / 4) * np.cos(X * 2) * np.sin(Y * 2)
+
+         fig, ax = uplt.subplots(figsize="4.6cm x 3.0")
+         ax.pcolormesh(X, Y, Z, cmap="batlow")
+         ax.format(title="Perceptually uniform batlow colormap")
 
       UltraPlot ships "perceptually uniform" colormaps from the `seaborn <seacolor_>`_,
       `cmocean <cmocean_>`_, `SciVisColor <sciviscolor_>`_, and
