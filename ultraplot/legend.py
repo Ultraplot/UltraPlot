@@ -1729,6 +1729,25 @@ class Legend(mlegend.Legend):
             where, type = old_loc
             self.axes._legend_dict[(loc, type)] = value
 
+    def remove(self):
+        """
+        Remove the legend and sync Ultraplot guide tracking state.
+
+        Matplotlib's base ``Legend.remove`` leaves Ultraplot's internal
+        ``_legend_dict`` and ``legend_`` pointers untouched. When callers
+        remove a legend (e.g., ``sns.move_legend``), stale entries can keep
+        showing old legends alongside newly added ones. Keep both systems in
+        sync before delegating to Matplotlib's removal logic.
+        """
+        ax = self.axes
+        if ax is not None and getattr(ax, "_legend_dict", None) is not None:
+            for loc_align, value in tuple(ax._legend_dict.items()):
+                if value is self:
+                    ax._legend_dict.pop(loc_align, None)
+        if ax is not None and getattr(ax, "legend_", None) is self:
+            ax.legend_ = None
+        return super().remove()
+
 
 def _normalize_em_kwargs(kwargs: dict[str, Any], *, fontsize: float) -> dict[str, Any]:
     """
