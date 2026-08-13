@@ -287,6 +287,27 @@ def test_sync_label_dict(rng):
     uplt.close(fig)
 
 
+def test_legend_remove_clears_internal_dict_state():
+    """
+    Removing a legend should clear Ultraplot guide-tracking state.
+
+    This prevents stale legends from staying registered when wrappers like
+    ``sns.move_legend`` remove and recreate legends.
+    """
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1, 2], label="line")
+    leg = ax.legend(loc="lower right")
+
+    # Confirm the new legend is tracked.
+    assert any(v is leg for v in ax[0]._legend_dict.values())
+
+    # Remove it directly and verify Ultraplot state is cleaned up.
+    leg.remove()
+    assert not any(v is leg for v in ax[0]._legend_dict.values())
+    assert ax[0].legend_ is None
+    uplt.close(fig)
+
+
 def test_external_mode_defers_on_the_fly_legend():
     """
     External mode should defer on-the-fly legend creation until explicitly requested.

@@ -1746,6 +1746,25 @@ class Legend(mlegend.Legend):
                     ax._legend_dict.pop(loc_align, None)
         if ax is not None and getattr(ax, "legend_", None) is self:
             ax.legend_ = None
+        if getattr(self, "_remove_method", None) is None:
+            try:
+                self.set_visible(False)
+            except Exception:
+                pass
+            try:
+                if getattr(self, "_legend_box", None) is not None:
+                    self._legend_box.set_visible(False)
+            except Exception:
+                pass
+            try:
+                for child in list(self.get_children()):
+                    try:
+                        child.set_visible(False)
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+            return None
         return super().remove()
 
 
