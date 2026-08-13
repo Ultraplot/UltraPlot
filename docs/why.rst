@@ -416,7 +416,7 @@ Improved plotting commands
 
          x = np.linspace(0, 2 * np.pi, 200)
          y = np.sin(x)
-         fig, ax = uplt.subplots(figsize="4.6cm x 3cm")
+         fig, ax = uplt.subplots(refwidth="4.6cm", refheight="3cm")
          ax.area(x, y, negpos=True)
          ax.format(title="Automatic negative/positive fills")
 
@@ -495,7 +495,7 @@ Cartopy and basemap integration
             fig.colorbar(pcm, ax=ax, loc="r", width="6mm", label="value")
             ax.format(lonlabels="b", latlabels="l")
          except Exception:
-            fig, ax = uplt.subplots(figsize="4.6cm x 2.8cm")
+            fig, ax = uplt.subplots(refwidth="4.6cm", refheight="2.8cm")
             pcm = ax.pcolormesh(X, Y, Z, cmap="batlow")
             ax.set_title("Map-style plot (fallback without projection backends)")
 
@@ -583,7 +583,7 @@ Pandas and xarray integration
          df.index.name = "month"
          df.columns.name = "variable"
 
-         fig, ax = uplt.subplots(figsize="4.6cm x 3.0")
+         fig, ax = uplt.subplots(refwidth="4.6cm", refheight="3cm")
          cs = ax.contourf(df, cmap="batlow", colorbar="t")
          fig.colorbar(cs, ax=ax, loc="r", width="6mm")
 
@@ -659,7 +659,7 @@ Aesthetic colors and fonts
          X, Y = np.meshgrid(x, y)
          Z = np.exp(-(X**2 + Y**2) / 4) * np.cos(X * 2) * np.sin(Y * 2)
 
-         fig, ax = uplt.subplots(figsize="4.6cm x 3.0")
+         fig, ax = uplt.subplots(refwidth="4.6cm", refheight="3cm")
          ax.pcolormesh(X, Y, Z, cmap="batlow")
          ax.format(title="Perceptually uniform batlow colormap")
 
