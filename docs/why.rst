@@ -167,7 +167,7 @@ Automatic dimensions and spacing
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-mpl
-      :text-align: center
+      :text-align: left
 
       **Matplotlib**
 
@@ -179,7 +179,7 @@ Automatic dimensions and spacing
 
          x = np.arange(10)
          y = np.random.default_rng(0).normal(size=(4, 10))
-         fig, axs = plt.subplots(2, 2, figsize=(4.6, 3.8))
+         fig, axs = plt.subplots(2, 2, figsize=(4.6, 3.0))
          for i in range(2):
             for j in range(2):
                axs[i, j].plot(x, y[i, :] * (i + 1) + j + 0.25 * x)
@@ -196,7 +196,7 @@ Automatic dimensions and spacing
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-uplt
-      :text-align: center
+      :text-align: left
 
       **UltraPlot**
 
@@ -211,8 +211,8 @@ Automatic dimensions and spacing
          fig, axs = uplt.subplots(
             2,
             2,
-            refwidth="2.8cm",
-            refheight="2.2cm",
+            refwidth="4.6cm",
+            refheight="3.0cm",
             wspace="3mm",
             hspace="4mm",
          )
@@ -247,7 +247,7 @@ Working with multiple subplots
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-mpl
-      :text-align: center
+      :text-align: left
 
       **Matplotlib**
 
@@ -258,7 +258,7 @@ Working with multiple subplots
          import numpy as np
 
          x = np.arange(5)
-         fig, axs = plt.subplots(2, 2, figsize=(4.6, 3.8))
+         fig, axs = plt.subplots(2, 2, figsize=(4.6, 3.0))
          for i in range(2):
             for j in range(2):
                axs[i, j].plot(x, x * (i + 1) + j, label=f"line_{i}_{j}")
@@ -273,7 +273,7 @@ Working with multiple subplots
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-uplt
-      :text-align: center
+      :text-align: left
 
       **UltraPlot**
 
@@ -284,7 +284,7 @@ Working with multiple subplots
          import ultraplot as uplt
 
          x = np.arange(5)
-         fig, axs = uplt.subplots(2, 2, sharex=1, sharey=1, refwidth="2.8cm", refheight="2.2cm")
+         fig, axs = uplt.subplots(2, 2, sharex=1, sharey=1, refwidth="4.6cm", refheight="3.0cm")
          for idx, ax in enumerate(np.ravel(axs), start=1):
             ax.plot(x, x * ((idx % 2) + 1))
             ax.format(abc=f"{'ABCD'[idx-1]}.")
@@ -313,7 +313,7 @@ Simpler colorbars and legends
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-mpl
-      :text-align: center
+      :text-align: left
 
       **Matplotlib**
 
@@ -337,7 +337,7 @@ Simpler colorbars and legends
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-uplt
-      :text-align: center
+      :text-align: left
 
       **UltraPlot**
 
@@ -348,7 +348,7 @@ Simpler colorbars and legends
          import ultraplot as uplt
 
          data = np.linspace(0, 1, 200).reshape(20, 10)
-         fig, axs = uplt.subplots(1, 2, refwidth="3.2cm", refheight="2.4cm", wspace=0.4)
+         fig, axs = uplt.subplots(1, 2, refwidth="4.6cm", refheight="3.0cm", wspace=0.4)
          for idx, ax in enumerate(np.ravel(axs), start=1):
             m = ax.imshow(data * idx)
             fig.colorbar(m, ax=ax, loc="r", width="6mm")
@@ -381,7 +381,7 @@ Improved plotting commands
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-mpl
-      :text-align: center
+      :text-align: left
 
       **Matplotlib**
 
@@ -404,7 +404,7 @@ Improved plotting commands
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-uplt
-      :text-align: center
+      :text-align: left
 
       **UltraPlot**
 
@@ -449,7 +449,7 @@ Cartopy and basemap integration
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-mpl
-      :text-align: center
+      :text-align: left
 
       **Matplotlib**
 
@@ -463,7 +463,7 @@ Cartopy and basemap integration
          y = np.arange(-90, 100, 10)
          X, Y = np.meshgrid(x, y)
          Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
-         fig, ax = plt.subplots(figsize=(4.6, 2.8))
+         fig, ax = plt.subplots(figsize=(4.6, 3.0))
          pcm = ax.pcolormesh(X, Y, Z, cmap="viridis")
          fig.colorbar(pcm, ax=ax)
          ax.set_title("Hand-built pseudo map with manual gridline work")
@@ -475,7 +475,7 @@ Cartopy and basemap integration
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-uplt
-      :text-align: center
+      :text-align: left
 
       **UltraPlot**
 
@@ -490,12 +490,12 @@ Cartopy and basemap integration
          X, Y = np.meshgrid(x, y)
          Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
          try:
-            fig, ax = uplt.subplots(proj="pcarree", refwidth="4.2cm", refheight="2.8cm")
+            fig, ax = uplt.subplots(proj="pcarree", refwidth="4.6cm", refheight="3cm")
             pcm = ax.pcolormesh(X, Y, Z, cmap="batlow")
             fig.colorbar(pcm, ax=ax, loc="r", width="6mm", label="value")
             ax.format(lonlabels="b", latlabels="l")
          except Exception:
-            fig, ax = uplt.subplots(refwidth="4.6cm", refheight="2.8cm")
+            fig, ax = uplt.subplots(refwidth="4.6cm", refheight="3cm")
             pcm = ax.pcolormesh(X, Y, Z, cmap="batlow")
             ax.set_title("Map-style plot (fallback without projection backends)")
 
@@ -529,7 +529,7 @@ Pandas and xarray integration
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-mpl
-      :text-align: center
+      :text-align: left
 
       **Matplotlib**
 
@@ -562,7 +562,7 @@ Pandas and xarray integration
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-uplt
-      :text-align: center
+      :text-align: left
 
       **UltraPlot**
 
@@ -616,7 +616,7 @@ Aesthetic colors and fonts
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-mpl
-      :text-align: center
+      :text-align: left
 
       **Matplotlib**
 
@@ -644,7 +644,7 @@ Aesthetic colors and fonts
 
    .. grid-item-card::
       :class-card: uplt-why uplt-why-uplt
-      :text-align: center
+      :text-align: left
 
       **UltraPlot**
 
