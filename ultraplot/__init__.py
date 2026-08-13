@@ -404,4 +404,3 @@ def _patch_seaborn_move_legend():
     _move_legend.__doc__ = getattr(move_legend, "__doc__", None)
     _move_legend._ultraplot = True
     sns.move_legend = _move_legend
-
