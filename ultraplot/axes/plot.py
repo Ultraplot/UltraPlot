@@ -7114,6 +7114,8 @@ class PlotAxes(base.Axes):
         filled=None,
         histtype=None,
         orientation="vertical",
+        kde=False,
+        kde_kw=None,
         **kwargs,
     ):
         """
@@ -7157,6 +7159,24 @@ class PlotAxes(base.Axes):
                 if type(sub) is list:
                     res[i] = cbook.silent_list("Polygon", sub)
         self._update_guide(res, **guide_kw)
+        # add kde line
+        if not kde:
+            return obj
+        from scipy.stats import gaussian_kde
+        edges = obj[1]
+        kde_kw = dict(kde_kw or {})
+        density = kw.get('density', False)
+        data2d = xs if xs.ndim > 1 else xs[:, None] # (M, N) data
+        stepsize = kde_kw.pop('stepsize', 300)
+        for i in range(data2d.shape[1]):
+            _x = data2d[:, i]
+            xa = np.linspace(_x.min(), _x.max(), stepsize)
+            ya = gaussian_kde(_x)(xa)
+            if not density:
+                idx = np.clip(np.digitize(xa, edges)-1, 0, len(edges)-2)
+                ya = ya * len(_x) * np.diff(edges)[idx]
+            x_line, y_line = (xa, ya) if orientation=="vertical" else (ya, xa)
+            self._call_native("plot", x_line, y_line, **kde_kw)
         return obj
 
     @inputs._preprocess_or_redirect("x", "bins", keywords="weights")
