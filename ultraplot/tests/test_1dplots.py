@@ -243,6 +243,42 @@ def test_histogram_types(rng):
         ax.hist(data, ec="k", **kw)
     return fig
 
+def test_hist_kde_lines(rng):
+    """
+    Test kde for hist.
+    """
+    data = rng.normal(size=200)
+    # No kde if no kde is not given
+    fig, ax = uplt.subplot()
+    ax.hist(data, bins=20)
+    assert len(ax.lines) == 0
+    # No kde if kde=False
+    ax.hist(data, bins=20, kde=False)
+    assert len(ax.lines) == 0
+    # One kde line with
+    ax.hist(data, bins=20, kde=True)
+    assert len(ax.lines) == 1
+    # test step size
+    line = ax.lines[-1]
+    # default stepsize is 300
+    assert line.get_xdata().size == 300
+    assert line.get_ydata().size == 300
+    assert line.get_xdata()[0] == pytest.approx(data.min())
+    assert line.get_xdata()[-1] == pytest.approx(data.max())
+    # use kde_kw to set stepsize=150
+    ax.hist(data, bins=20, kde=True, density=True, 
+        kde_kw={'stepsize': 150})
+    density_line = ax.lines[-1]
+    assert density_line.get_xdata().size == 150
+    assert density_line.get_ydata().size == 150
+    # test density, default is False, but to to test accurate?    
+    assert line.get_ydata().max() > 1.0
+    assert density_line.get_ydata().max() <= 1.0
+    # test area==1
+    area = np.trapezoid(density_line.get_ydata(), density_line.get_xdata())
+    assert area == pytest.approx(1.0, rel=1e-2)
+    uplt.close(fig)
+
 
 @pytest.mark.mpl_image_compare
 def test_invalid_plot(rng):
