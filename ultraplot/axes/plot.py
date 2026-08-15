@@ -1514,7 +1514,7 @@ stack, stacked : bool, optional
     Whether to "stack" successive columns of {y} data for bar-type histograms
     or show side-by-side in groups. Setting this to ``False`` is equivalent to
     ``histtype='bar'`` and to ``True`` is equivalent to ``histtype='barstacked'``.
-kde : book, optional, default: False
+kde : bool, optional, default: False
     Whether to compute and draw a kernel density line to estimate and smooth the
     distribution on the plot.
 kde_kw : dict, optional
