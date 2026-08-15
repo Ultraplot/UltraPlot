@@ -1514,6 +1514,11 @@ stack, stacked : bool, optional
     Whether to "stack" successive columns of {y} data for bar-type histograms
     or show side-by-side in groups. Setting this to ``False`` is equivalent to
     ``histtype='bar'`` and to ``True`` is equivalent to ``histtype='barstacked'``.
+kde : book, optional
+    Whether to compute and draw a kernel density line to estimate and smooth the
+    distribution on the plot.
+kde_kw : dict, optional
+    Parameters to control the kde line plotting, passed to `matplotlib.axes.Axes.plot()`
 fill, filled : bool, optional
     Whether to "fill" step-type histograms or just plot the edges. Setting
     this to ``False`` is equivalent to ``histtype='step'`` and to ``True``
