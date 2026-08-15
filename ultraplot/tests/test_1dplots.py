@@ -248,14 +248,14 @@ def test_hist_kde_lines(rng):
     Test kde for hist.
     """
     data = rng.normal(size=200)
-    # No kde if no kde is not given
+    # No kde line if no kde arg is not given
     fig, ax = uplt.subplot()
     ax.hist(data, bins=20)
     assert len(ax.lines) == 0
     # No kde if kde=False
     ax.hist(data, bins=20, kde=False)
     assert len(ax.lines) == 0
-    # One kde line with
+    # One kde line with density=False and stepsize=300 by default
     ax.hist(data, bins=20, kde=True)
     assert len(ax.lines) == 1
     # test step size
@@ -265,18 +265,42 @@ def test_hist_kde_lines(rng):
     assert line.get_ydata().size == 300
     assert line.get_xdata()[0] == pytest.approx(data.min())
     assert line.get_xdata()[-1] == pytest.approx(data.max())
-    # use kde_kw to set stepsize=150
-    ax.hist(data, bins=20, kde=True, density=True, 
+    # Another line with stepsize=150 and density=True
+    ax.hist(data, bins=20, kde=True, density=True,
         kde_kw={'stepsize': 150})
     density_line = ax.lines[-1]
     assert density_line.get_xdata().size == 150
     assert density_line.get_ydata().size == 150
-    # test density, default is False, but to to test accurate?    
+    # Do we need to test accurate counts when density=False?
     assert line.get_ydata().max() > 1.0
     assert density_line.get_ydata().max() <= 1.0
-    # test area==1
+    # test area==1 when density=True
     area = np.trapezoid(density_line.get_ydata(), density_line.get_xdata())
     assert area == pytest.approx(1.0, rel=1e-2)
+    uplt.close(fig)
+
+
+def test_hist_kde_multiple_columns(rng):
+    """
+    Test data with multiple columns
+    """
+    data = rng.normal(size=(100, 3))
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True)
+    assert len(ax.lines) == 3
+    uplt.close(fig)
+
+
+def test_hist_kde_orientation(rng):
+    """
+    Test when orientation='horizontal'
+    """
+    data = rng.normal(size=200)
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True, orientation="horizontal")
+    line = ax.lines[0]
+    assert line.get_ydata()[0] == pytest.approx(data.min())
+    assert line.get_ydata()[-1] == pytest.approx(data.max())
     uplt.close(fig)
 
 
