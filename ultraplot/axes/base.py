@@ -996,6 +996,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         self._title_loc = None
         self._title_pad = rc["title.pad"]
         self._title_pad_current = None
+        self._use_sticky_edges = rc["axes.sticky_edges"]
         self._altx_parent = None  # for cartesian axes only
         self._alty_parent = None
         self._colorbar_fill = None
@@ -4700,6 +4701,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self._number = num
         else:
             raise ValueError(f"Invalid number {num!r}. Must be integer >=1.")
+
+    @property
+    def use_sticky_edges(self):
+        """
+        Whether plotting commands like `plot`, `plotx`, `vlines`, `hlines`,
+        `fill_between`, and `fill_betweenx` add "sticky" edges to their artists,
+        i.e. whether the default axis limits are the artist bounds with no padding.
+        Initialized from :rcraw:`axes.sticky_edges`.
+        """
+        return self._use_sticky_edges
+
+    @use_sticky_edges.setter
+    def use_sticky_edges(self, value):
+        self._use_sticky_edges = rcsetup._validate_bool(value)
 
 
 # Apply signature obfuscation after storing previous signature
