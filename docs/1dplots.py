@@ -276,6 +276,8 @@ with uplt.rc.context({"lines.linewidth": 3}):
 # Also, the default *x* bounds for lines drawn with :func:`~ultraplot.axes.PlotAxes.plot`
 # and *y* bounds for lines drawn with :func:`~ultraplot.axes.PlotAxes.plotx` are now
 # "sticky", i.e. there is no padding between the lines and axes edges by default.
+# This can be disabled globally with :rcraw:`axes.sticky_edges` or per-axes with
+# the ``use_sticky_edges`` attribute.
 #
 # Step and stem plots can be drawn with :func:`~ultraplot.axes.PlotAxes.step`,
 # :func:`~ultraplot.axes.PlotAxes.stepx`, :func:`~ultraplot.axes.PlotAxes.stem`, and
@@ -505,7 +507,8 @@ ax.colorbar(m, loc="b", locator=2, label="parametric coordinate")
 # ``stacked=True``. Also note the default *x* bounds for shading drawn with
 # :func:`~ultraplot.axes.PlotAxes.area` and *y* bounds for shading drawn with
 # :func:`~ultraplot.axes.PlotAxes.areax` is now "sticky", i.e. there is no padding
-# between the shading and axes edges by default.
+# between the shading and axes edges by default. This can be disabled globally with
+# :rcraw:`axes.sticky_edges` or per-axes with the ``use_sticky_edges`` attribute.
 
 # .. important::
 #

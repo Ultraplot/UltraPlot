@@ -1244,6 +1244,14 @@ _rc_ultraplot_table = {
         _validate_float,
         "The fractional *x* and *y* axis margins when limits are unset.",
     ),
+    "axes.sticky_edges": (
+        True,
+        _validate_bool,
+        "Whether artists added by plotting commands like `plot`, `plotx`, "
+        "`vlines`, `hlines`, `fill_between`, and `fill_betweenx` are given "
+        '"sticky" edges, i.e. whether the default axis limits are the artist '
+        "bounds with no padding. See also `Axes.use_sticky_edges`.",
+    ),
     "bar.bar_labels": (
         False,
         _validate_bool,

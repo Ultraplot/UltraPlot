@@ -52,6 +52,61 @@ def test_bar_absolute_width_manual_override():
     assert pytest.approx(w_abs[0], rel=1e-6) == 0.8
 
 
+def test_sticky_edges_rc_and_attribute():
+    """
+    Sticky edges for line and area plots can be disabled globally with the
+    ``axes.sticky_edges`` setting or per-axes with ``use_sticky_edges``.
+    See https://github.com/Ultraplot/UltraPlot/issues/631.
+    """
+    x = y = np.arange(10.0)
+
+    # Default: sticky edges enabled, no padding
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    assert ax.use_sticky_edges is True
+    ax.plot(x, y)
+    assert np.allclose(ax.get_xlim(), (0, 9))
+
+    # Disabled globally via rc setting
+    with uplt.rc.context({"axes.sticky_edges": False}):
+        fig, axs = uplt.subplots()
+        ax = axs[0]
+        assert ax.use_sticky_edges is False
+        ax.plot(x, y)
+        xmin, xmax = ax.get_xlim()
+        assert xmin < 0 and xmax > 9
+
+        # plotx, area, and vlines also respect the setting
+        fig, axs = uplt.subplots(nrows=3)
+        axs[0].plotx(y, x)
+        ymin, ymax = axs[0].get_ylim()
+        assert ymin < 0 and ymax > 9
+        axs[1].area(x, y)
+        xmin, xmax = axs[1].get_xlim()
+        assert xmin < 0 and xmax > 9
+        axs[2].vlines(x, 0, y)
+        ymin, ymax = axs[2].get_ylim()
+        assert ymin < 0 and ymax > 9
+
+    # Setting is restored after the context exits
+    fig, axs = uplt.subplots()
+    assert axs[0].use_sticky_edges is True
+
+    # Disabled per-axes via attribute
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.use_sticky_edges = False
+    ax.plot(x, y)
+    xmin, xmax = ax.get_xlim()
+    assert xmin < 0 and xmax > 9
+
+    # Attribute values are validated as booleans
+    ax.use_sticky_edges = "true"
+    assert ax.use_sticky_edges is True
+    with pytest.raises(ValueError):
+        ax.use_sticky_edges = "bogus"
+
+
 import pytest
 
 
