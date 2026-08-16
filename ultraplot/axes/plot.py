@@ -2115,14 +2115,15 @@ class PlotAxes(base.Axes):
             arrows.append(p)
 
         lc = mcollections.LineCollection(streamlines, transform=transform, **line_kw)
-        lc.sticky_edges.x[:] = [
-            solver.grid.x_origin,
-            solver.grid.x_origin + solver.grid.width,
-        ]
-        lc.sticky_edges.y[:] = [
-            solver.grid.y_origin,
-            solver.grid.y_origin + solver.grid.height,
-        ]
+        if self.use_sticky_edges:
+            lc.sticky_edges.x[:] = [
+                solver.grid.x_origin,
+                solver.grid.x_origin + solver.grid.width,
+            ]
+            lc.sticky_edges.y[:] = [
+                solver.grid.y_origin,
+                solver.grid.y_origin + solver.grid.height,
+            ]
 
         if use_multicolor_lines:
             lc.set_array(np.ma.hstack(line_colors))
@@ -3506,6 +3507,8 @@ class PlotAxes(base.Axes):
         Fix sticky edges for the input artists using the minimum and maximum of the
         input coordinates. This is used to copy `bar` behavior to `area` and `lines`.
         """
+        if not self.use_sticky_edges:
+            return
         for array in args:
             min_, max_ = inputs._safe_range(array)
             if min_ is None or max_ is None:
