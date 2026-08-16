@@ -72,6 +72,37 @@ def test_user_labeled_shading_appears_in_legend():
     assert "CI band" in labels
 
 
+def test_sns_move_legend_clears_ultraplot_legend_cache():
+    """
+    ``sns.move_legend`` should not leave stale entries in ``_legend_dict``.
+    """
+    sns = pytest.importorskip("seaborn")
+    pd = pytest.importorskip("pandas")
+
+    rng = np.random.default_rng(0)
+    fig, ax = uplt.subplots()
+
+    df = pd.DataFrame(rng.normal(size=1000) + 3, columns=["Test Values"])
+    with ax.external():
+        sns.histplot(df, ax=ax, kde=True, legend=True)
+
+    assert ax[0]._legend_dict
+    old_keys = set(ax[0]._legend_dict.keys())
+    old_key = next(iter(old_keys))
+    sns.move_legend(ax, "upper right")
+
+    new_keys = set(ax[0]._legend_dict.keys())
+    assert new_keys != set()
+    assert len(new_keys) == len(old_keys)
+    if old_key[0] != "upper right":
+        assert old_key not in new_keys
+    assert ("upper right", "center") in new_keys
+
+    # there should be exactly one legend entry cached
+    assert len(ax[0]._legend_dict) == 1
+    uplt.close(fig)
+
+
 @pytest.mark.mpl_image_compare
 def test_pint_quantities(rng):
     """
