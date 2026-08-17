@@ -7170,7 +7170,12 @@ class PlotAxes(base.Axes):
         # add kde line
         if not kde:
             return obj
-        from scipy.stats import gaussian_kde
+        try:
+            from scipy.stats import gaussian_kde
+        except ModuleNotFoundError:
+            raise ImportError(
+                "scipy is required for histogram kde line. Install it with: pip install scipy"
+            )
         edges = obj[1]
         kde_kw = dict(kde_kw or {})
         density = kw.get('density', False)

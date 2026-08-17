@@ -302,6 +302,7 @@ def test_hist_kde_lines(rng):
     """
     Test kde for hist.
     """
+    scipy = pytest.importorskip("scipy")
     data = rng.normal(size=200)
     # No kde line if no kde arg is not given
     fig, ax = uplt.subplot()
@@ -339,6 +340,7 @@ def test_hist_kde_multiple_columns(rng):
     """
     Test data with multiple columns
     """
+    scipy = pytest.importorskip("scipy")
     data = rng.normal(size=(100, 3))
     fig, ax = uplt.subplots()
     ax.hist(data, bins=20, kde=True)
@@ -350,6 +352,7 @@ def test_hist_kde_orientation(rng):
     """
     Test when orientation='horizontal'
     """
+    scipy = pytest.importorskip("scipy")
     data = rng.normal(size=200)
     fig, ax = uplt.subplots()
     ax.hist(data, bins=20, kde=True, orientation="horizontal")
