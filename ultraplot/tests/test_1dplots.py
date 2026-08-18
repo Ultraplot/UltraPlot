@@ -315,8 +315,8 @@ def test_hist_kde_lines(rng):
     ax.hist(data, bins=20, kde=True)
     assert len(ax.lines) == 1
     line = ax.lines[-1]
-    assert line.get_xdata().size == uplt.internals.inputs.KDE_POINTS
-    assert line.get_ydata().size == uplt.internals.inputs.KDE_POINTS
+    assert line.get_xdata().size == uplt.rc["kde.points"]
+    assert line.get_ydata().size == uplt.rc["kde.points"]
     assert line.get_xdata()[0] == pytest.approx(data.min())
     assert line.get_xdata()[-1] == pytest.approx(data.max())
     # Another line with a custom resolution and density=True
@@ -330,6 +330,28 @@ def test_hist_kde_lines(rng):
     area = np.trapezoid(density_line.get_ydata(), density_line.get_xdata())
     assert area == pytest.approx(1.0, rel=1e-2)
     uplt.close(fig)
+
+
+def test_hist_kde_points_rc(rng):
+    """
+    Test that the kde resolution follows the rc setting and that an explicit
+    keyword still wins over it.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=200)
+    with uplt.rc.context({"kde.points": 57}):
+        fig, ax = uplt.subplots()
+        ax.hist(data, bins=20, kde=True)
+        assert ax.lines[-1].get_xdata().size == 57
+        ax.hist(data, bins=20, kde=True, kde_kw={"points": 21})
+        assert ax.lines[-1].get_xdata().size == 21
+        uplt.close(fig)
+    # Ridgeline reads the same setting
+    with uplt.rc.context({"kde.points": 64}):
+        fig, ax = uplt.subplots()
+        ax.ridgeline([rng.normal(i, 1, 300) for i in range(3)], fill=False)
+        assert ax.lines[0].get_xdata().size == 64
+        uplt.close(fig)
 
 
 def test_hist_kde_points_alias(rng):

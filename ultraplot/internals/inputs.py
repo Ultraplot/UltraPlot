@@ -23,9 +23,6 @@ except ModuleNotFoundError:
 
 
 # Constants
-# NOTE: Shared by every command that draws a kernel density estimate so that
-# 'hist' and 'ridgeline' curves are sampled identically by default.
-KDE_POINTS = 200
 BASEMAP_FUNCS = (  # default latlon=True
     "barbs",
     "contour",
@@ -434,7 +431,7 @@ def _dist_kde(
     distribution,
     *,
     coords=None,
-    points=KDE_POINTS,
+    points=None,
     margin=0.0,
     bw_method=None,
     weights=None,
@@ -452,7 +449,7 @@ def _dist_kde(
     coords : array-like, optional
         The coordinates to evaluate the estimate on. If ``None`` an evenly
         spaced grid is built from the data range (see `points` and `margin`).
-    points : int, default: 200
+    points : int, default: :rc:`kde.points`
         The number of evenly spaced evaluation coordinates. Larger values give
         smoother curves at the cost of speed. Ignored if `coords` was passed.
     margin : float, default: 0
@@ -488,8 +485,10 @@ def _dist_kde(
             f"but got {distribution.size}."
         )
     if coords is None:
+        from ..config import rc  # avoid a circular import at module load
+
         try:
-            points = int(points)
+            points = int(_not_none(points, rc["kde.points"]))
         except (TypeError, ValueError):
             raise ValueError(
                 f"Number of evaluation points must be an integer but got {points!r}."

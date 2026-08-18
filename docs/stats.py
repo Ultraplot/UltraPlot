@@ -253,7 +253,6 @@ res = ax.hist(
     labels=list("abc"),
     legend="ul",
     kde=True,
-    kde_kw={"lw": 2},
 )
 
 # %%

@@ -1436,7 +1436,7 @@ kde_kw : dict, optional
     The remaining keys style the resulting curve and are passed to
     `matplotlib.axes.Axes.plot`, e.g. ``color``, ``linestyle``, ``linewidth``.
     Only used when hist=False.
-points : int, default: 200
+points : int, default: :rc:`kde.points`
     Number of evaluation points for KDE curves. Higher values create smoother
     curves but take longer to compute. Only used when hist=False.
 hist : bool, default: False
@@ -1530,7 +1530,7 @@ kde_kw : dict, optional
 
     * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
     * ``weights`` : Array of weights for each data point, defaults to `weights`
-    * ``points`` : Number of evaluation points, default ``200``
+    * ``points`` : Number of evaluation points, default :rc:`kde.points`
       (``stepsize`` is accepted as an alias)
 
     The remaining keys style the resulting curve and are passed to
@@ -1930,7 +1930,8 @@ def _parse_kde_kw(kde_kw=None, *, points=None, weights=None):
         else is treated as a line property.
     points, weights : optional
         The defaults inherited from the parent command, used when the
-        corresponding key is absent from `kde_kw`.
+        corresponding key is absent from `kde_kw`. Leaving `points` as ``None``
+        defers to :rc:`kde.points`.
 
     Returns
     -------
@@ -1944,7 +1945,7 @@ def _parse_kde_kw(kde_kw=None, *, points=None, weights=None):
         "points": _not_none(
             points=kw_line.pop("points", None),
             stepsize=kw_line.pop("stepsize", None),  # backwards compatible alias
-            default=_not_none(points, inputs.KDE_POINTS),
+            default=points,
         ),
         "bw_method": kw_line.pop("bw_method", None),
         "weights": _not_none(kw_line.pop("weights", None), weights),
@@ -3834,7 +3835,9 @@ class PlotAxes(base.Axes):
         colors : sequence, optional
             The line color for each column, generally the color of the
             corresponding histogram artists.
-        points, bw_method, weights : optional
+        points : int, default: :rc:`kde.points`
+            The number of coordinates used to evaluate each estimate.
+        bw_method, weights : optional
             Passed to `~ultraplot.internals.inputs._dist_kde`.
         **kwargs
             Passed to `~matplotlib.axes.Axes.plot`.
@@ -3847,7 +3850,7 @@ class PlotAxes(base.Axes):
         # Sanitize the data and record the sample mass of each column. The mass
         # is the number of valid points, or their total weight if weighted, and
         # converts the probability densities back into histogram bin counts.
-        points = _not_none(points, inputs.KDE_POINTS)
+        points = _not_none(points, rc["kde.points"])
         xs = inputs._to_numpy_array(xs)
         xs = xs[:, None] if xs.ndim == 1 else xs
         weights = None if weights is None else inputs._to_numpy_array(weights)
@@ -6872,7 +6875,7 @@ class PlotAxes(base.Axes):
             for the latter) control the estimate and the remaining keys style
             the resulting curve, e.g. ``color``, ``linestyle``, ``linewidth``.
             Only used when hist=False.
-        points : int, default: 200
+        points : int, default: :rc:`kde.points`
             Number of points to evaluate the KDE at. Higher values create smoother curves
             but take longer to compute. Only used when hist=False.
         hist : bool, default: False
