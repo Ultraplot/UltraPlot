@@ -22,6 +22,5 @@ dependencies:
   - cftime
   - markdown
   - requests
-  - scipy
   - pip:
       - pycirclize
