@@ -462,7 +462,8 @@ Cartopy and basemap integration
          X, Y = np.meshgrid(x, y)
          Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
          fig, ax = plt.subplots()
-         pcm = ax.pcolormesh(X, Y, Z, cmap="viridis", colorbar = "t")
+         pcm = ax.pcolormesh(X, Y, Z, cmap="viridis")
+         plt.colorbar(pcm, ax = ax, location = "top")
          ax.set_title("Hand-built pseudo map with manual gridline work")
 
       Building a map with `cartopy`_ or `basemap`_ means importing a separate
@@ -486,13 +487,13 @@ Cartopy and basemap integration
          y = np.arange(-90, 100, 10)
          X, Y = np.meshgrid(x, y)
          Z = np.sin(np.deg2rad(X)) * np.cos(np.deg2rad(Y))
-        fig, ax = uplt.subplots(proj="pcarree")
-        ax.pcolormesh(X, Y, Z,
+         fig, ax = uplt.subplots(proj="pcarree")
+         ax.pcolormesh(X, Y, Z,
                 cmap="batlow",
-                colorbar = "r,
-                colorbar_kw = dict(label = "Value",
-            )
-        ax.format(lonlabels="b", latlabels="l")
+                colorbar = "r",
+                colorbar_kw = dict(label = "Value"),
+         )
+         ax.format(lonlabels="b", latlabels="l")
 
       A geographic plot is ``uplt.subplots(proj='pcarree')``. The
       :class:`~ultraplot.axes.GeoAxes` subclass unifies `cartopy`_ and `basemap`_,
