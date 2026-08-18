@@ -315,8 +315,8 @@ def test_hist_kde_lines(rng):
     ax.hist(data, bins=20, kde=True)
     assert len(ax.lines) == 1
     line = ax.lines[-1]
-    assert line.get_xdata().size == uplt.axes.plot.KDE_POINTS
-    assert line.get_ydata().size == uplt.axes.plot.KDE_POINTS
+    assert line.get_xdata().size == uplt.internals.inputs.KDE_POINTS
+    assert line.get_ydata().size == uplt.internals.inputs.KDE_POINTS
     assert line.get_xdata()[0] == pytest.approx(data.min())
     assert line.get_xdata()[-1] == pytest.approx(data.max())
     # Another line with a custom resolution and density=True

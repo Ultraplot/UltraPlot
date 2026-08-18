@@ -23,6 +23,9 @@ except ModuleNotFoundError:
 
 
 # Constants
+# NOTE: Shared by every command that draws a kernel density estimate so that
+# 'hist' and 'ridgeline' curves are sampled identically by default.
+KDE_POINTS = 200
 BASEMAP_FUNCS = (  # default latlon=True
     "barbs",
     "contour",
@@ -431,7 +434,7 @@ def _dist_kde(
     distribution,
     *,
     coords=None,
-    points=200,
+    points=KDE_POINTS,
     margin=0.0,
     bw_method=None,
     weights=None,

@@ -65,10 +65,6 @@ __all__ = ["PlotAxes"]
 # This is half of rc['patch.linewidth'] of 0.6. Half seems like a nice default.
 EDGEWIDTH = 0.3
 
-# NOTE: Shared by every command that draws a kernel density estimate so that
-# 'hist' and 'ridgeline' curves are sampled identically by default.
-KDE_POINTS = 200
-
 DataInput: TypeAlias = ArrayLike
 ColorTupleRGB: TypeAlias = tuple[float, float, float]
 ColorTupleRGBA: TypeAlias = tuple[float, float, float, float]
@@ -1948,7 +1944,7 @@ def _parse_kde_kw(kde_kw=None, *, points=None, weights=None):
         "points": _not_none(
             points=kw_line.pop("points", None),
             stepsize=kw_line.pop("stepsize", None),  # backwards compatible alias
-            default=_not_none(points, KDE_POINTS),
+            default=_not_none(points, inputs.KDE_POINTS),
         ),
         "bw_method": kw_line.pop("bw_method", None),
         "weights": _not_none(kw_line.pop("weights", None), weights),
@@ -3799,6 +3795,98 @@ class PlotAxes(base.Axes):
                 "Failed to restrict automatic y (x) axis limit algorithm to "
                 f"data within locked x (y) limits only. Error message: {err}"
             )
+
+    def _add_kde_lines(
+        self,
+        xs,
+        *,
+        edges=None,
+        density=None,
+        stack=False,
+        orientation="vertical",
+        colors=None,
+        points=None,
+        bw_method=None,
+        weights=None,
+        **kwargs,
+    ):
+        """
+        Add a gaussian kernel density estimate line for each column of `xs`.
+
+        Parameters
+        ----------
+        xs : array-like
+            The sample data. 1D arrays are treated as a single column and 2D
+            arrays produce one line per column.
+        edges : array-like, optional
+            The histogram bin edges. When passed, the estimates are rescaled
+            from probability densities to bin counts (see `density`).
+        density : bool, optional
+            The `~matplotlib.axes.Axes.hist` normalization. When ``False`` and
+            `edges` was passed, each estimate is scaled by the sample mass and
+            the local bin width so the curve tracks the bin counts.
+        stack : bool, default: False
+            Whether the parent histogram is stacked. If so the estimates share
+            one evaluation grid and are accumulated like the bin counts.
+        orientation : {'vertical', 'horizontal'}, optional
+            The parent histogram orientation. Coordinates are swapped for
+            horizontal histograms.
+        colors : sequence, optional
+            The line color for each column, generally the color of the
+            corresponding histogram artists.
+        points, bw_method, weights : optional
+            Passed to `~ultraplot.internals.inputs._dist_kde`.
+        **kwargs
+            Passed to `~matplotlib.axes.Axes.plot`.
+
+        Returns
+        -------
+        list of `~matplotlib.lines.Line2D`
+            The kernel density estimate lines.
+        """
+        # Sanitize the data and record the sample mass of each column. The mass
+        # is the number of valid points, or their total weight if weighted, and
+        # converts the probability densities back into histogram bin counts.
+        points = _not_none(points, inputs.KDE_POINTS)
+        xs = inputs._to_numpy_array(xs)
+        xs = xs[:, None] if xs.ndim == 1 else xs
+        weights = None if weights is None else inputs._to_numpy_array(weights)
+        if weights is not None and weights.ndim == 1:
+            weights = np.repeat(weights[:, None], xs.shape[1], axis=1)
+        dists = [
+            inputs._dist_finite(xs[:, i], None if weights is None else weights[:, i])
+            for i in range(xs.shape[1])
+        ]
+        masses = np.array(
+            [dist.size if w is None else w.sum() for dist, w in dists], dtype=float
+        )
+
+        # Share one evaluation grid between stacked columns so the estimates can
+        # be accumulated the same way matplotlib accumulates the bin counts.
+        coords = None
+        if stack and len(dists) > 1:
+            valid = np.concatenate([dist for dist, _ in dists])
+            coords = np.linspace(valid.min(), valid.max(), int(points))
+
+        objs, accum = [], 0
+        for i, (dist, w) in enumerate(dists):
+            x, y = inputs._dist_kde(
+                dist, coords=coords, points=points, bw_method=bw_method, weights=w
+            )
+            if stack and density:  # each column contributes its share of the total
+                y = y * masses[i] / masses.sum()
+            elif edges is not None and not density:  # rescale to the bin counts
+                idxs = np.clip(np.digitize(x, edges) - 1, 0, len(edges) - 2)
+                y = y * masses[i] * np.diff(edges)[idxs]
+            if coords is not None:
+                y = accum = accum + y
+            kw = kwargs.copy()
+            if colors is not None and i < len(colors):
+                kw.setdefault("color", colors[i])
+            if orientation == "horizontal":
+                x, y = y, x
+            objs.extend(self._call_native("plot", x, y, **kw))
+        return objs
 
     def _parse_1d_args(self, x, *ys, **kwargs):
         """
@@ -6748,7 +6836,7 @@ class PlotAxes(base.Axes):
         height=None,
         overlap=0.5,
         kde_kw=None,
-        points=200,
+        points=None,
         hist=False,
         bins="auto",
         histtype=None,
@@ -7158,6 +7246,7 @@ class PlotAxes(base.Axes):
                 if type(sub) is list:
                     res[i] = cbook.silent_list("Polygon", sub)
         self._update_guide(res, **guide_kw)
+
         # Overlay the kernel density estimate of each column
         if kde:
             kw_kde, kw_line = _parse_kde_kw(kde_kw, weights=kw.get("weights", None))
@@ -7172,97 +7261,6 @@ class PlotAxes(base.Axes):
                 **kw_line,
             )
         return obj
-
-    def _add_kde_lines(
-        self,
-        xs,
-        *,
-        edges=None,
-        density=None,
-        stack=False,
-        orientation="vertical",
-        colors=None,
-        points=None,
-        bw_method=None,
-        weights=None,
-        **kwargs,
-    ):
-        """
-        Add a gaussian kernel density estimate line for each column of `xs`.
-
-        Parameters
-        ----------
-        xs : array-like
-            The sample data. 1D arrays are treated as a single column and 2D
-            arrays produce one line per column.
-        edges : array-like, optional
-            The histogram bin edges. When passed, the estimates are rescaled
-            from probability densities to bin counts (see `density`).
-        density : bool, optional
-            The `~matplotlib.axes.Axes.hist` normalization. When ``False`` and
-            `edges` was passed, each estimate is scaled by the sample mass and
-            the local bin width so the curve tracks the bin counts.
-        stack : bool, default: False
-            Whether the parent histogram is stacked. If so the estimates share
-            one evaluation grid and are accumulated like the bin counts.
-        orientation : {'vertical', 'horizontal'}, optional
-            The parent histogram orientation. Coordinates are swapped for
-            horizontal histograms.
-        colors : sequence, optional
-            The line color for each column, generally the color of the
-            corresponding histogram artists.
-        points, bw_method, weights : optional
-            Passed to `~ultraplot.internals.inputs._dist_kde`.
-        **kwargs
-            Passed to `~matplotlib.axes.Axes.plot`.
-
-        Returns
-        -------
-        list of `~matplotlib.lines.Line2D`
-            The kernel density estimate lines.
-        """
-        # Sanitize the data and record the sample mass of each column. The mass
-        # is the number of valid points, or their total weight if weighted, and
-        # converts the probability densities back into histogram bin counts.
-        xs = inputs._to_numpy_array(xs)
-        xs = xs[:, None] if xs.ndim == 1 else xs
-        weights = None if weights is None else inputs._to_numpy_array(weights)
-        if weights is not None and weights.ndim == 1:
-            weights = np.repeat(weights[:, None], xs.shape[1], axis=1)
-        dists = [
-            inputs._dist_finite(xs[:, i], None if weights is None else weights[:, i])
-            for i in range(xs.shape[1])
-        ]
-        masses = np.array(
-            [dist.size if w is None else w.sum() for dist, w in dists], dtype=float
-        )
-
-        # Share one evaluation grid between stacked columns so the estimates can
-        # be accumulated the same way matplotlib accumulates the bin counts.
-        coords = None
-        if stack and len(dists) > 1:
-            valid = np.concatenate([dist for dist, _ in dists])
-            coords = np.linspace(valid.min(), valid.max(), int(points or KDE_POINTS))
-
-        objs, accum = [], 0
-        for i, (dist, w) in enumerate(dists):
-            x, y = inputs._dist_kde(
-                dist, coords=coords, points=points, bw_method=bw_method, weights=w
-            )
-            if stack and density:  # each column contributes its share of the total
-                y = y * masses[i] / masses.sum()
-            elif edges is not None and not density:  # rescale to the bin counts
-                idxs = np.clip(np.digitize(x, edges) - 1, 0, len(edges) - 2)
-                y = y * masses[i] * np.diff(edges)[idxs]
-            if coords is not None:
-                y = accum = accum + y
-            kw = kwargs.copy()
-            if colors is not None and i < len(colors):
-                kw.setdefault("color", colors[i])
-            if orientation == "horizontal":
-                x, y = y, x
-            objs.extend(self._call_native("plot", x, y, **kw))
-        return objs
 
     @inputs._preprocess_or_redirect("x", "bins", keywords="weights")
     @docstring._concatenate_inherited
