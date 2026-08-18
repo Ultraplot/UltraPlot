@@ -216,8 +216,18 @@ ax.format(title="Multiple colors", ymargin=0.15)
 # the :ref:`2D plotting section <ug_apply_cmap>`). Marginal distributions
 # for the 2D histograms can be added using :ref:`panel axes <ug_panels>`.
 #
-# Histograms support a ``kde=True`` option to draw a kernel density overlay.
-# Separate :func:`~ultraplot.axes.PlotAxes.kde` and
+# Histograms accept a ``kde=True`` keyword that overlays a smooth
+# `kernel density estimate <https://en.wikipedia.org/wiki/Kernel_density_estimation>`__
+# of each column of data. The curve follows the histogram -- it is scaled to
+# the bin counts unless ``density=True``, accumulated when the histogram is
+# stacked, and drawn in the color of the histogram it belongs to. Use the
+# `kde_kw` keyword to control the estimate (``bw_method``, ``weights``,
+# ``points``) and to style the curve (any `~matplotlib.axes.Axes.plot`
+# property). The same keyword is used by
+# :func:`~ultraplot.axes.PlotAxes.ridgeline` (see :ref:`ug_ridgeline`).
+# This requires `scipy <https://scipy.org>`__, which is installed with
+# ``pip install ultraplot[stats]``. Separate
+# :func:`~ultraplot.axes.PlotAxes.kde` and
 # :func:`~ultraplot.axes.PlotAxes.kde2d` commands are still planned.
 
 # %%
@@ -242,6 +252,8 @@ res = ax.hist(
     cycle=("indigo9", "gray3", "red9"),
     labels=list("abc"),
     legend="ul",
+    kde=True,
+    kde_kw={"lw": 2},
 )
 
 # %%

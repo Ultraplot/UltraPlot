@@ -65,6 +65,10 @@ __all__ = ["PlotAxes"]
 # This is half of rc['patch.linewidth'] of 0.6. Half seems like a nice default.
 EDGEWIDTH = 0.3
 
+# NOTE: Shared by every command that draws a kernel density estimate so that
+# 'hist' and 'ridgeline' curves are sampled identically by default.
+KDE_POINTS = 200
+
 DataInput: TypeAlias = ArrayLike
 ColorTupleRGB: TypeAlias = tuple[float, float, float]
 ColorTupleRGBA: TypeAlias = tuple[float, float, float, float]
@@ -1425,11 +1429,16 @@ overlap : float, default: 0.5
     Higher values create more dramatic visual overlapping. Only used in categorical
     positioning mode (when positions is None).
 kde_kw : dict, optional
-    Keyword arguments passed to `scipy.stats.gaussian_kde`. Common parameters include:
+    Settings for the kernel density estimate. The following keys control the
+    estimate itself and are passed to `scipy.stats.gaussian_kde`:
 
     * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
     * ``weights`` : Array of weights for each data point
+    * ``points`` : Number of evaluation points, overriding `points`
+      (``stepsize`` is accepted as an alias)
 
+    The remaining keys style the resulting curve and are passed to
+    `matplotlib.axes.Axes.plot`, e.g. ``color``, ``linestyle``, ``linewidth``.
     Only used when hist=False.
 points : int, default: 200
     Number of evaluation points for KDE curves. Higher values create smoother
@@ -1514,11 +1523,23 @@ stack, stacked : bool, optional
     Whether to "stack" successive columns of {y} data for bar-type histograms
     or show side-by-side in groups. Setting this to ``False`` is equivalent to
     ``histtype='bar'`` and to ``True`` is equivalent to ``histtype='barstacked'``.
-kde : bool, optional, default: False
-    Whether to compute and draw a kernel density line to estimate and smooth the
-    distribution on the plot.
+kde : bool, default: False
+    Whether to overlay a gaussian kernel density estimate of each column of
+    data. The curve tracks the histogram, i.e. it is scaled to the bin counts
+    unless ``density=True`` and accumulated when the histogram is stacked.
+    Requires `scipy <https://scipy.org>`__.
 kde_kw : dict, optional
-    Parameters to control the kde line plotting, passed to `matplotlib.axes.Axes.plot()`
+    Settings for the kernel density estimate. The following keys control the
+    estimate itself and are passed to `scipy.stats.gaussian_kde`:
+
+    * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
+    * ``weights`` : Array of weights for each data point, defaults to `weights`
+    * ``points`` : Number of evaluation points, default ``200``
+      (``stepsize`` is accepted as an alias)
+
+    The remaining keys style the resulting curve and are passed to
+    `matplotlib.axes.Axes.plot`, e.g. ``color``, ``linestyle``, ``linewidth``.
+    By default each curve takes the color of its histogram.
 fill, filled : bool, optional
     Whether to "fill" step-type histograms or just plot the edges. Setting
     this to ``False`` is equivalent to ``histtype='step'`` and to ``True``
@@ -1899,34 +1920,71 @@ def _parse_vert(
     return kwargs
 
 
-def _kde_eval1d(x, points, bw_method=None, weights=None, margin=0.0):
+def _parse_kde_kw(kde_kw=None, *, points=None, weights=None):
     """
-    Evaluate Gaussian KDE on an evenly spaced 1D grid.
+    Split the `kde_kw` keyword arguments shared by the commands that draw kernel
+    density estimates into arguments that control the estimate itself and
+    arguments that style the resulting line.
+
+    Parameters
+    ----------
+    kde_kw : dict, optional
+        The user input. The ``points`` (or its ``stepsize`` alias),
+        ``bw_method``, and ``weights`` keys control the estimate and everything
+        else is treated as a line property.
+    points, weights : optional
+        The defaults inherited from the parent command, used when the
+        corresponding key is absent from `kde_kw`.
+
+    Returns
+    -------
+    kw_kde : dict
+        The keyword arguments accepted by `~ultraplot.internals.inputs._dist_kde`.
+    kw_line : dict
+        The remaining keyword arguments, meant for `~matplotlib.axes.Axes.plot`.
     """
-    try:
-        from scipy.stats import gaussian_kde
-    except ModuleNotFoundError:
-        raise ImportError(
-            "scipy is required for KDE line generation. Install with: pip install \"ultraplot[stats]\""
-        )
+    kw_line = dict(kde_kw or {})
+    kw_kde = {
+        "points": _not_none(
+            points=kw_line.pop("points", None),
+            stepsize=kw_line.pop("stepsize", None),  # backwards compatible alias
+            default=_not_none(points, KDE_POINTS),
+        ),
+        "bw_method": kw_line.pop("bw_method", None),
+        "weights": _not_none(kw_line.pop("weights", None), weights),
+    }
+    return kw_kde, kw_line
 
-    try:
-        points = int(points)
-    except Exception as exc:
-        raise TypeError("`points` must be an integer") from exc
-    if points < 2:
-        raise ValueError("`points` must be at least 2")
 
-    x = np.asarray(x)
-    if x.size < 2:
-        raise ValueError("KDE requires at least two points")
+def _get_hist_colors(res, n):
+    """
+    Return one color per column of a histogram drawn by
+    `~matplotlib.axes.Axes.hist`, so that overlays can be colored to match.
 
-    x_min, x_max = x.min(), x.max()
-    x_span = x_max - x_min
-    x_margin = x_span * margin
-    x_eval = np.linspace(x_min - x_margin, x_max + x_margin, points)
-    y_eval = gaussian_kde(x, bw_method=bw_method, weights=weights)(x_eval)
-    return x_eval, y_eval
+    Parameters
+    ----------
+    res : sequence
+        The artists returned by the histogram, i.e. one `~matplotlib.container.BarContainer`
+        or list of `~matplotlib.patches.Polygon` per column. A single column is
+        returned unnested by matplotlib and is handled here.
+    n : int
+        The number of columns.
+    """
+    # NOTE: 'step' histograms leave the faces transparent and carry the cycle
+    # color on the edges instead, so fall back to the edge color.
+    colors = []
+    for group in [res] if n == 1 else res:
+        artists = list(group)
+        if not artists:
+            colors.append(None)
+            continue
+        color = np.atleast_2d(artists[0].get_facecolor())
+        if not color.size or not np.any(color[:, -1]):
+            color = np.atleast_2d(artists[0].get_edgecolor())
+        # NOTE: Drop the alpha channel so that overlays stay opaque even when
+        # the histogram itself was drawn translucent.
+        colors.append(None if not color.size else tuple(color[0, :3]))
+    return colors
 
 
 class PlotAxes(base.Axes):
@@ -6721,16 +6779,11 @@ class PlotAxes(base.Axes):
             Amount of overlap between ridges (0-1). Higher values create more overlap.
             Only used in categorical mode.
         kde_kw : dict, optional
-            Keyword arguments used by the KDE generator and ridge outline styling.
-            Common ``gaussian_kde`` parameters:
-
-            * ``bw_method`` : Bandwidth selection method
-            * ``weights`` : Array of weights for each data point
-            * ``stepsize`` : alias for ``points`` when provided.
-
-            Remaining keys are forwarded to the ridge line styling call
-            (for example ``color``, ``linestyle``, ``linewidth``). Only used
-            when hist=False.
+            Settings for the kernel density estimate. The ``bw_method``,
+            ``weights``, and ``points`` keys (``stepsize`` is an accepted alias
+            for the latter) control the estimate and the remaining keys style
+            the resulting curve, e.g. ``color``, ``linestyle``, ``linewidth``.
+            Only used when hist=False.
         points : int, default: 200
             Number of points to evaluate the KDE at. Higher values create smoother curves
             but take longer to compute. Only used when hist=False.
@@ -6798,19 +6851,8 @@ class PlotAxes(base.Axes):
             colors = colors * (n_ridges // len(colors) + 1)
         colors = colors[:n_ridges]
 
-        # Prepare KDE kwargs
-        if kde_kw is None:
-            kde_kw = {}
-        kde_kw = dict(kde_kw)
-        kde_kw_plot = dict(kde_kw)
-        kde_points = int(kde_kw_plot.pop("stepsize", points))
-        kde_points = int(kde_kw_plot.pop("points", kde_points))
-        kde_kw_gen = {
-            "bw_method": kde_kw_plot.pop("bw_method", None),
-            "weights": kde_kw_plot.pop("weights", None),
-        }
-        if kde_points < 2:
-            raise ValueError("`points` must be at least 2")
+        # Split the KDE settings into estimator and line style arguments
+        kw_kde, kw_line = _parse_kde_kw(kde_kw, points=points)
 
         # Calculate KDE or histogram for each distribution
         ridges = []
@@ -6823,8 +6865,7 @@ class PlotAxes(base.Axes):
                     f"Invalid histtype={histtype!r}. Options are {allowed}."
                 )
         for i, dist in enumerate(data):
-            dist = np.asarray(dist).ravel()
-            dist = dist[~np.isnan(dist)]  # Remove NaNs
+            dist, _ = inputs._dist_finite(dist)
 
             if len(dist) < 2:
                 warnings._warn_ultraplot(
@@ -6858,8 +6899,10 @@ class PlotAxes(base.Axes):
             else:
                 # Perform KDE
                 try:
-                    x, y = _kde_eval1d(dist, points=kde_points, margin=0.1, **kde_kw_gen)
+                    x, y = inputs._dist_kde(dist, margin=0.1, **kw_kde)
                     ridges.append({"x": x, "y": y, "hist": False})
+                except ImportError:  # scipy is missing, no point continuing
+                    raise
                 except Exception as e:
                     warnings._warn_ultraplot(
                         f"KDE failed for distribution {i}: {e}, skipping"
@@ -6935,6 +6978,21 @@ class PlotAxes(base.Axes):
             fill_zorder = base_zorder + (n_ridges - i - 1) * 2
             outline_zorder = fill_zorder + 1
 
+            # Outline style. Ridges drawn without a fill carry the ridge color on
+            # the outline instead, and KDE ridges additionally honor the line
+            # properties left over in `kde_kw`.
+            stepped = is_hist and histtype in ("step", "stepfilled")
+            filled = histtype == "stepfilled" if stepped else fill
+            line_kw = dict(
+                color=edgecolor if filled or stepped else colors[i],
+                linewidth=linewidth,
+                zorder=outline_zorder,
+            )
+            if stepped:
+                line_kw["drawstyle"] = "steps-mid"
+            if not is_hist:
+                line_kw.update(kw_line)
+
             if is_hist and histtype == "bar":
                 counts = ridge["counts"]
                 bin_edges = ridge["bin_edges"]
@@ -6973,132 +7031,29 @@ class PlotAxes(base.Axes):
                         label=labels[i],
                         zorder=fill_zorder,
                     )
-            elif is_hist and histtype in ("step", "stepfilled"):
-                stepline_kw = dict(
-                    color=edgecolor, linewidth=linewidth, zorder=outline_zorder
-                )
-                stepline_kw.update(kde_kw_plot)
-                if vert:
-                    if histtype == "stepfilled":
-                        poly = self.fill_between(
-                            x,
-                            offset,
-                            y_plot,
-                            facecolor=colors[i],
-                            alpha=alpha,
-                            edgecolor="none",
-                            label=labels[i],
-                            step="mid",
-                            zorder=fill_zorder,
-                        )
-                    else:
-                        poly = self.plot(
-                            x,
-                            y_plot,
-                            label=labels[i],
-                            drawstyle="steps-mid",
-                            **stepline_kw,
-                        )[0]
-                    self.plot(
-                        x,
-                        y_plot,
-                        drawstyle="steps-mid",
-                        **stepline_kw,
-                    )
-                else:
-                    if histtype == "stepfilled":
-                        poly = self.fill_betweenx(
-                            x,
-                            offset,
-                            y_plot,
-                            facecolor=colors[i],
-                            alpha=alpha,
-                            edgecolor="none",
-                            label=labels[i],
-                            step="mid",
-                            zorder=fill_zorder,
-                        )
-                    else:
-                        poly = self.plot(
-                            y_plot,
-                            x,
-                            label=labels[i],
-                            drawstyle="steps-mid",
-                            **stepline_kw,
-                        )[0]
-                    self.plot(
-                        y_plot,
-                        x,
-                        drawstyle="steps-mid",
-                        **stepline_kw,
-                    )
             else:
-                if vert:
-                    line_kw = dict(color=edgecolor, linewidth=linewidth, zorder=outline_zorder)
-                    line_kw.update(kde_kw_plot)
-                    # Traditional horizontal ridges
-                    if fill:
-                        # Fill without edge
-                        poly = self.fill_between(
-                            x,
-                            offset,
-                            y_plot,
-                            facecolor=colors[i],
-                            alpha=alpha,
-                            edgecolor="none",
-                            label=labels[i],
-                            zorder=fill_zorder,
-                        )
-                        # Draw outline on top (excluding baseline)
-                        self.plot(
-                            x,
-                            y_plot,
-                            **line_kw,
-                        )
-                    else:
-                        line_kw = dict(
-                            color=colors[i], linewidth=linewidth, zorder=outline_zorder
-                        )
-                        line_kw.update(kde_kw_plot)
-                        poly = self.plot(
-                            x,
-                            y_plot,
-                            label=labels[i],
-                            **line_kw,
-                        )[0]
+                # Curve ridges, i.e. a KDE curve or a filled histogram outline.
+                # Both orientations take the same fill arguments and only differ
+                # in the order of the line coordinates.
+                fill_func = self.fill_between if vert else self.fill_betweenx
+                line_args = (x, y_plot) if vert else (y_plot, x)
+                if filled:
+                    # Fill without an edge and draw the outline on top so that
+                    # the baseline is excluded from the outline
+                    poly = fill_func(
+                        x,
+                        offset,
+                        y_plot,
+                        facecolor=colors[i],
+                        alpha=alpha,
+                        edgecolor="none",
+                        label=labels[i],
+                        step="mid" if stepped else None,
+                        zorder=fill_zorder,
+                    )
+                    self.plot(*line_args, **line_kw)
                 else:
-                    # Vertical ridges
-                    line_kw = dict(color=edgecolor, linewidth=linewidth, zorder=outline_zorder)
-                    line_kw.update(kde_kw_plot)
-                    if fill:
-                        # Fill without edge
-                        poly = self.fill_betweenx(
-                            x,
-                            offset,
-                            y_plot,
-                            facecolor=colors[i],
-                            alpha=alpha,
-                            edgecolor="none",
-                            label=labels[i],
-                            zorder=fill_zorder,
-                        )
-                        # Draw outline on top (excluding baseline)
-                        self.plot(
-                            y_plot,
-                            x,
-                            **line_kw,
-                        )
-                    else:
-                        line_kw = dict(
-                            color=colors[i], linewidth=linewidth, zorder=outline_zorder
-                        )
-                        line_kw.update(kde_kw_plot)
-                        poly = self.plot(
-                            y_plot,
-                            x,
-                            label=labels[i],
-                            **line_kw,
-                        )[0]
+                    poly = self.plot(*line_args, label=labels[i], **line_kw)[0]
 
             artists.append(poly)
 
@@ -7203,102 +7158,111 @@ class PlotAxes(base.Axes):
                 if type(sub) is list:
                     res[i] = cbook.silent_list("Polygon", sub)
         self._update_guide(res, **guide_kw)
-        # add kde line
-        if not kde:
-            return obj
-
-        kde_kw = dict(kde_kw or {})
-        # kde_kw includes both kde line generating args and kde line plotting args:
-        # 1. for kde line generating: stepsize, bw_method...
-        # 2. for line plotting, passed to ax.plot, controlling line style.
-        # The following code supposed to extract the 1st kind, and leave the 2nd.
-        _kde_kw_only = {
-            "density": kw.get("density", False),  # kde share the density arg with hist
-            "stepsize": kde_kw.pop("stepsize", 300),  # stepsize only works for kde line
-            "weights": kw.get("weights", None),  # share arg with hist
-            "bw_method": kde_kw.pop(
-                "bw_method", None
-            ),  # kde arg passed to gaussian_kde
-            "orientation": orientation,  # share arg with hist
-        }
-        lines = self._kde_line1d(xs, obj, _kde_kw_only)
-        for x_line, y_line in lines:
-            self._call_native("plot", x_line, y_line, **kde_kw)
+        # Overlay the kernel density estimate of each column
+        if kde:
+            kw_kde, kw_line = _parse_kde_kw(kde_kw, weights=kw.get("weights", None))
+            self._add_kde_lines(
+                xs,
+                edges=obj[1],
+                density=kw.get("density", None),
+                stack=histtype == "barstacked",
+                orientation=orientation,
+                colors=_get_hist_colors(res, n),
+                **kw_kde,
+                **kw_line,
+            )
         return obj
 
-    def _kde_line1d(self, x, obj, kw):
+    def _add_kde_lines(
+        self,
+        xs,
+        *,
+        edges=None,
+        density=None,
+        stack=False,
+        orientation="vertical",
+        colors=None,
+        points=None,
+        bw_method=None,
+        weights=None,
+        **kwargs,
+    ):
         """
-        Compute Gaussian kernel density estimate (KDE) lines for 1D/2D data.
-
-        This helper is called by :meth:`_apply_hist` to draw KDE curves on
-        top of a 1d histogram. It evaluates :func:`scipy.stats.gaussian_kde` on
-        a regular grid spanning each data column and, when ``density=False``,
-        rescales each estimate so its area matches the histogram bin counts.
-        For horizontal histograms the coordinates are swapped. One ``(x, y)``
-        line is produced per column of ``x``.
+        Add a gaussian kernel density estimate line for each column of `xs`.
 
         Parameters
         ----------
-        x : array-like
-            The input data. A 1D array is treated as a single sample column;
-            a 2D array is interpreted as ``(M, N)``, producing one KDE line
-            per column.
-        obj : tuple
-            The return value of the native ``hist`` call. ``obj[1]`` holds the
-            bin edges, which are used to rescale each KDE so it matches the
-            histogram bin counts.
-        kw : dict
-            Options controlling the KDE computation. Recognized keys:
-
-            ``density`` : bool, default False
-                Whether to return the raw probability density. If False, each
-                estimate is rescaled by the sample size and bin width so the
-                curve matches the histogram bin counts.
-            ``stepsize`` : int, default 300
-                Number of points in the evaluation grid spanning each column's
-                data range.
-            ``weights`` : array-like or None, optional
-                Sample weights passed to :func:`scipy.stats.gaussian_kde`.
-            ``bw_method`` : str, scalar or callable, optional
-                Bandwidth method passed to :func:`scipy.stats.gaussian_kde`.
-            ``orientation`` : {'vertical', 'horizontal'}
-                Line orientation. Coordinates are swapped for horizontal
-                histograms.
+        xs : array-like
+            The sample data. 1D arrays are treated as a single column and 2D
+            arrays produce one line per column.
+        edges : array-like, optional
+            The histogram bin edges. When passed, the estimates are rescaled
+            from probability densities to bin counts (see `density`).
+        density : bool, optional
+            The `~matplotlib.axes.Axes.hist` normalization. When ``False`` and
+            `edges` was passed, each estimate is scaled by the sample mass and
+            the local bin width so the curve tracks the bin counts.
+        stack : bool, default: False
+            Whether the parent histogram is stacked. If so the estimates share
+            one evaluation grid and are accumulated like the bin counts.
+        orientation : {'vertical', 'horizontal'}, optional
+            The parent histogram orientation. Coordinates are swapped for
+            horizontal histograms.
+        colors : sequence, optional
+            The line color for each column, generally the color of the
+            corresponding histogram artists.
+        points, bw_method, weights : optional
+            Passed to `~ultraplot.internals.inputs._dist_kde`.
+        **kwargs
+            Passed to `~matplotlib.axes.Axes.plot`.
 
         Returns
         -------
-        lines : list of tuple of ndarray
-            One ``(x_line, y_line)`` tuple of coordinates per column of
-            ``x``.
-
-        Raises
-        ------
-        ImportError
-            If scipy is not installed.
-        ValueError
-            If ``kw['orientation']`` is neither 'vertical' nor 'horizontal'.
+        list of `~matplotlib.lines.Line2D`
+            The kernel density estimate lines.
         """
-        edges = obj[1]
-        data2d = x if x.ndim > 1 else x[:, None]
-        lines = []
-        for i in range(data2d.shape[1]):
-            _x = data2d[:, i]
-            xa, ya = _kde_eval1d(
-                _x, points=kw["stepsize"], bw_method=kw["bw_method"], weights=kw["weights"]
+        # Sanitize the data and record the sample mass of each column. The mass
+        # is the number of valid points, or their total weight if weighted, and
+        # converts the probability densities back into histogram bin counts.
+        xs = inputs._to_numpy_array(xs)
+        xs = xs[:, None] if xs.ndim == 1 else xs
+        weights = None if weights is None else inputs._to_numpy_array(weights)
+        if weights is not None and weights.ndim == 1:
+            weights = np.repeat(weights[:, None], xs.shape[1], axis=1)
+        dists = [
+            inputs._dist_finite(xs[:, i], None if weights is None else weights[:, i])
+            for i in range(xs.shape[1])
+        ]
+        masses = np.array(
+            [dist.size if w is None else w.sum() for dist, w in dists], dtype=float
+        )
+
+        # Share one evaluation grid between stacked columns so the estimates can
+        # be accumulated the same way matplotlib accumulates the bin counts.
+        coords = None
+        if stack and len(dists) > 1:
+            valid = np.concatenate([dist for dist, _ in dists])
+            coords = np.linspace(valid.min(), valid.max(), int(points or KDE_POINTS))
+
+        objs, accum = [], 0
+        for i, (dist, w) in enumerate(dists):
+            x, y = inputs._dist_kde(
+                dist, coords=coords, points=points, bw_method=bw_method, weights=w
             )
-            if not kw["density"]:
-                idx = np.clip(np.digitize(xa, edges) - 1, 0, len(edges) - 2)
-                ya = ya * len(_x) * np.diff(edges)[idx]
-            if kw["orientation"] == "vertical":
-                x_line, y_line = xa, ya
-            elif kw["orientation"] == "horizontal":
-                x_line, y_line = ya, xa
-            else:
-                raise ValueError(
-                    f"Invalid orientation: {kw['orientation']}, must be 'vertical' or 'horizontal'"
-                )
-            lines.append((x_line, y_line))
-        return lines
+            if stack and density:  # each column contributes its share of the total
+                y = y * masses[i] / masses.sum()
+            elif edges is not None and not density:  # rescale to the bin counts
+                idxs = np.clip(np.digitize(x, edges) - 1, 0, len(edges) - 2)
+                y = y * masses[i] * np.diff(edges)[idxs]
+            if coords is not None:
+                y = accum = accum + y
+            kw = kwargs.copy()
+            if colors is not None and i < len(colors):
+                kw.setdefault("color", colors[i])
+            if orientation == "horizontal":
+                x, y = y, x
+            objs.extend(self._call_native("plot", x, y, **kw))
+        return objs
 
     @inputs._preprocess_or_redirect("x", "bins", keywords="weights")
     @docstring._concatenate_inherited

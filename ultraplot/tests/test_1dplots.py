@@ -298,41 +298,84 @@ def test_histogram_types(rng):
         ax.hist(data, ec="k", **kw)
     return fig
 
+
 def test_hist_kde_lines(rng):
     """
-    Test kde for hist.
+    Test the kde overlay drawn by hist.
     """
-    scipy = pytest.importorskip("scipy")
+    pytest.importorskip("scipy")
     data = rng.normal(size=200)
-    # No kde line if no kde arg is not given
+    # No kde line unless kde=True
     fig, ax = uplt.subplot()
     ax.hist(data, bins=20)
     assert len(ax.lines) == 0
-    # No kde if kde=False
     ax.hist(data, bins=20, kde=False)
     assert len(ax.lines) == 0
-    # One kde line with density=False and stepsize=300 by default
+    # One kde line spanning the data range, sampled at the default resolution
     ax.hist(data, bins=20, kde=True)
     assert len(ax.lines) == 1
-    # test step size
     line = ax.lines[-1]
-    # default stepsize is 300
-    assert line.get_xdata().size == 300
-    assert line.get_ydata().size == 300
+    assert line.get_xdata().size == uplt.axes.plot.KDE_POINTS
+    assert line.get_ydata().size == uplt.axes.plot.KDE_POINTS
     assert line.get_xdata()[0] == pytest.approx(data.min())
     assert line.get_xdata()[-1] == pytest.approx(data.max())
-    # Another line with stepsize=150 and density=True
-    ax.hist(data, bins=20, kde=True, density=True,
-        kde_kw={'stepsize': 150})
+    # Another line with a custom resolution and density=True
+    ax.hist(data, bins=20, kde=True, density=True, kde_kw={"points": 150})
     density_line = ax.lines[-1]
     assert density_line.get_xdata().size == 150
     assert density_line.get_ydata().size == 150
-    # Do we need to test accurate counts when density=False?
+    # The default curve tracks the bin counts, the density curve integrates to 1
     assert line.get_ydata().max() > 1.0
     assert density_line.get_ydata().max() <= 1.0
-    # test area==1 when density=True
     area = np.trapezoid(density_line.get_ydata(), density_line.get_xdata())
     assert area == pytest.approx(1.0, rel=1e-2)
+    uplt.close(fig)
+
+
+def test_hist_kde_points_alias(rng):
+    """
+    Test that 'stepsize' remains accepted as an alias for 'points'.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=200)
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True, kde_kw={"stepsize": 42})
+    assert ax.lines[-1].get_xdata().size == 42
+    uplt.close(fig)
+
+
+def test_hist_kde_line_style(rng):
+    """
+    Test that leftover kde_kw keys style the kde line and that the line
+    otherwise inherits the color of its histogram.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=(100, 3))
+    fig, ax = uplt.subplots()
+    obj = ax.hist(data, bins=20, kde=True)
+    assert len(ax.lines) == 3
+    for line, container in zip(ax.lines, obj[2]):
+        assert np.allclose(line.get_color(), container[0].get_facecolor()[:3])
+    ax.hist(data[:, 0], bins=20, kde=True, kde_kw={"color": "k", "ls": "--"})
+    assert ax.lines[-1].get_linestyle() == "--"
+    assert uplt.colors.to_rgba(ax.lines[-1].get_color()) == uplt.colors.to_rgba("k")
+    uplt.close(fig)
+
+
+def test_hist_kde_stacked(rng):
+    """
+    Test that stacked histograms accumulate their kde lines.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=(100, 3))
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True, stack=True)
+    assert len(ax.lines) == 3
+    # Stacked curves share one grid and increase monotonically
+    xs = [line.get_xdata() for line in ax.lines]
+    assert all(np.allclose(x, xs[0]) for x in xs)
+    ys = [line.get_ydata() for line in ax.lines]
+    assert np.all(ys[1] >= ys[0]) and np.all(ys[2] >= ys[1])
     uplt.close(fig)
 
 
@@ -340,7 +383,7 @@ def test_hist_kde_multiple_columns(rng):
     """
     Test data with multiple columns
     """
-    scipy = pytest.importorskip("scipy")
+    pytest.importorskip("scipy")
     data = rng.normal(size=(100, 3))
     fig, ax = uplt.subplots()
     ax.hist(data, bins=20, kde=True)
@@ -352,13 +395,42 @@ def test_hist_kde_orientation(rng):
     """
     Test when orientation='horizontal'
     """
-    scipy = pytest.importorskip("scipy")
+    pytest.importorskip("scipy")
     data = rng.normal(size=200)
     fig, ax = uplt.subplots()
     ax.hist(data, bins=20, kde=True, orientation="horizontal")
     line = ax.lines[0]
     assert line.get_ydata()[0] == pytest.approx(data.min())
     assert line.get_ydata()[-1] == pytest.approx(data.max())
+    uplt.close(fig)
+
+
+def test_hist_kde_nan_and_weights(rng):
+    """
+    Test that non-finite values are dropped and weights are shared with hist.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=200)
+    data[::10] = np.nan
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True)
+    line = ax.lines[-1]
+    assert np.all(np.isfinite(line.get_ydata()))
+    assert line.get_xdata()[0] == pytest.approx(np.nanmin(data))
+    # Weighted counts scale the curve by the total weight rather than the count
+    ax.hist(data, bins=20, kde=True, weights=np.full(data.size, 2.0))
+    assert ax.lines[-1].get_ydata().max() > 1.5 * line.get_ydata().max()
+    uplt.close(fig)
+
+
+def test_hist_kde_requires_variation(rng):
+    """
+    Test that a degenerate distribution raises a helpful error.
+    """
+    pytest.importorskip("scipy")
+    fig, ax = uplt.subplots()
+    with pytest.raises(ValueError, match="zero variance"):
+        ax.hist(np.ones(50), bins=5, kde=True)
     uplt.close(fig)
 
 
