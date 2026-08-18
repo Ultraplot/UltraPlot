@@ -7170,6 +7170,78 @@ class PlotAxes(base.Axes):
         # add kde line
         if not kde:
             return obj
+
+        kde_kw = dict(kde_kw or {})
+        # kde_kw includes both kde line generating args and kde line plotting args:
+        # 1. for kde line generating: stepsize, bw_method...
+        # 2. for line plotting, passed to ax.plot, controlling line style.
+        # The following code supposed to extract the 1st kind, and leave the 2nd.
+        _kde_kw_only = {
+            "density": kw.get("density", False),  # kde share the density arg with hist
+            "stepsize": kde_kw.pop("stepsize", 300),  # stepsize only works for kde line
+            "weights": kw.get("weights", None),  # share arg with hist
+            "bw_method": kde_kw.pop(
+                "bw_method", None
+            ),  # kde arg passed to gaussian_kde
+            "orientation": orientation,  # share arg with hist
+        }
+        lines = self._kde_line1d(xs, obj, _kde_kw_only)
+        for x_line, y_line in lines:
+            self._call_native("plot", x_line, y_line, **kde_kw)
+        return obj
+
+    def _kde_line1d(self, x, obj, kw):
+        """
+        Compute Gaussian kernel density estimate (KDE) lines for 1D/2D data.
+
+        This helper is called by :meth:`_apply_hist` to draw KDE curves on
+        top of a 1d histogram. It evaluates :func:`scipy.stats.gaussian_kde` on
+        a regular grid spanning each data column and, when ``density=False``,
+        rescales each estimate so its area matches the histogram bin counts.
+        For horizontal histograms the coordinates are swapped. One ``(x, y)``
+        line is produced per column of ``x``.
+
+        Parameters
+        ----------
+        x : array-like
+            The input data. A 1D array is treated as a single sample column;
+            a 2D array is interpreted as ``(M, N)``, producing one KDE line
+            per column.
+        obj : tuple
+            The return value of the native ``hist`` call. ``obj[1]`` holds the
+            bin edges, which are used to rescale each KDE so it matches the
+            histogram bin counts.
+        kw : dict
+            Options controlling the KDE computation. Recognized keys:
+
+            ``density`` : bool, default False
+                Whether to return the raw probability density. If False, each
+                estimate is rescaled by the sample size and bin width so the
+                curve matches the histogram bin counts.
+            ``stepsize`` : int, default 300
+                Number of points in the evaluation grid spanning each column's
+                data range.
+            ``weights`` : array-like or None, optional
+                Sample weights passed to :func:`scipy.stats.gaussian_kde`.
+            ``bw_method`` : str, scalar or callable, optional
+                Bandwidth method passed to :func:`scipy.stats.gaussian_kde`.
+            ``orientation`` : {'vertical', 'horizontal'}
+                Line orientation. Coordinates are swapped for horizontal
+                histograms.
+
+        Returns
+        -------
+        lines : list of tuple of ndarray
+            One ``(x_line, y_line)`` tuple of coordinates per column of
+            ``x``.
+
+        Raises
+        ------
+        ImportError
+            If scipy is not installed.
+        ValueError
+            If ``kw['orientation']`` is neither 'vertical' nor 'horizontal'.
+        """
         try:
             from scipy.stats import gaussian_kde
         except ModuleNotFoundError:
@@ -7177,20 +7249,25 @@ class PlotAxes(base.Axes):
                 "scipy is required for histogram kde line. Install it with: pip install scipy"
             )
         edges = obj[1]
-        kde_kw = dict(kde_kw or {})
-        density = kw.get('density', False)
-        data2d = xs if xs.ndim > 1 else xs[:, None] # (M, N) data
-        stepsize = kde_kw.pop('stepsize', 300)
+        data2d = x if x.ndim > 1 else x[:, None]
+        lines = []
         for i in range(data2d.shape[1]):
             _x = data2d[:, i]
-            xa = np.linspace(_x.min(), _x.max(), stepsize)
-            ya = gaussian_kde(_x)(xa)
-            if not density:
-                idx = np.clip(np.digitize(xa, edges)-1, 0, len(edges)-2)
+            xa = np.linspace(_x.min(), _x.max(), kw["stepsize"])
+            ya = gaussian_kde(_x, bw_method=kw["bw_method"], weights=kw["weights"])(xa)
+            if not kw["density"]:
+                idx = np.clip(np.digitize(xa, edges) - 1, 0, len(edges) - 2)
                 ya = ya * len(_x) * np.diff(edges)[idx]
-            x_line, y_line = (xa, ya) if orientation=="vertical" else (ya, xa)
-            self._call_native("plot", x_line, y_line, **kde_kw)
-        return obj
+            if kw["orientation"] == "vertical":
+                x_line, y_line = xa, ya
+            elif kw["orientation"] == "horizontal":
+                x_line, y_line = ya, xa
+            else:
+                raise ValueError(
+                    f"Invalid orientation: {kw['orientation']}, must be 'vertical' or 'horizontal'"
+                )
+            lines.append((x_line, y_line))
+        return lines
 
     @inputs._preprocess_or_redirect("x", "bins", keywords="weights")
     @docstring._concatenate_inherited
