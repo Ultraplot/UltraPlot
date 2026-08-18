@@ -1985,6 +1985,13 @@ _rc_ultraplot_table = {
         _validate_float,
         "Z-order for internal political border lines.",
     ),
+    # Kernel density settings
+    "kde.points": (
+        200,
+        _validate_int,
+        "Number of evenly spaced coordinates used to evaluate kernel density "
+        "estimates. Larger values give smoother curves at the cost of speed.",
+    ),
     # Axis label settings
     "label.color": (BLACK, _validate_color, "Alias for :rcraw:`axes.labelcolor`."),
     "label.pad": (
