@@ -416,15 +416,16 @@ def _dist_finite(distribution, weights=None):
     subset of the weights. Used to sanitize input for `_dist_kde`.
     """
     distribution = _to_numpy_array(distribution).ravel()
-    mask = np.isfinite(distribution)
     if weights is not None:
         weights = _to_numpy_array(weights).ravel()
         if weights.size != distribution.size:
             raise ValueError(
                 f"Got {weights.size} weights but {distribution.size} data points."
             )
-        weights = weights[mask]
-    return distribution[mask], weights
+    mask = np.isfinite(distribution)
+    if mask.all():  # no copy needed, and makes repeated calls cheap
+        return distribution, weights
+    return distribution[mask], None if weights is None else weights[mask]
 
 
 def _dist_kde(

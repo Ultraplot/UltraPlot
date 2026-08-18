@@ -1918,38 +1918,15 @@ def _parse_vert(
 
 def _parse_kde_kw(kde_kw=None, *, points=None, weights=None):
     """
-    Split the `kde_kw` keyword arguments shared by the commands that draw kernel
-    density estimates into arguments that control the estimate itself and
-    arguments that style the resulting line.
-
-    Parameters
-    ----------
-    kde_kw : dict, optional
-        The user input. The ``points`` (or its ``stepsize`` alias),
-        ``bw_method``, and ``weights`` keys control the estimate and everything
-        else is treated as a line property.
-    points, weights : optional
-        The defaults inherited from the parent command, used when the
-        corresponding key is absent from `kde_kw`. Leaving `points` as ``None``
-        defers to :rc:`kde.points`.
-
-    Returns
-    -------
-    kw_kde : dict
-        The keyword arguments accepted by `~ultraplot.internals.inputs._dist_kde`.
-    kw_line : dict
-        The remaining keyword arguments, meant for `~matplotlib.axes.Axes.plot`.
+    Split `kde_kw` into the keyword arguments that control the kernel density
+    estimate, i.e. those accepted by `~ultraplot.internals.inputs._dist_kde`, and
+    the remaining line properties meant for `~matplotlib.axes.Axes.plot`. The
+    `points` and `weights` arguments supply defaults from the parent command.
     """
     kw_line = dict(kde_kw or {})
-    kw_kde = {
-        "points": _not_none(
-            points=kw_line.pop("points", None),
-            stepsize=kw_line.pop("stepsize", None),  # backwards compatible alias
-            default=points,
-        ),
-        "bw_method": kw_line.pop("bw_method", None),
-        "weights": _not_none(kw_line.pop("weights", None), weights),
-    }
+    kw_kde = _pop_kwargs(kw_line, "bw_method", "weights", points="stepsize")
+    kw_kde.setdefault("points", points)  # ``None`` defers to :rc:`kde.points`
+    kw_kde.setdefault("weights", weights)
     return kw_kde, kw_line
 
 
@@ -1957,30 +1934,17 @@ def _get_hist_colors(res, n):
     """
     Return one color per column of a histogram drawn by
     `~matplotlib.axes.Axes.hist`, so that overlays can be colored to match.
-
-    Parameters
-    ----------
-    res : sequence
-        The artists returned by the histogram, i.e. one `~matplotlib.container.BarContainer`
-        or list of `~matplotlib.patches.Polygon` per column. A single column is
-        returned unnested by matplotlib and is handled here.
-    n : int
-        The number of columns.
     """
-    # NOTE: 'step' histograms leave the faces transparent and carry the cycle
-    # color on the edges instead, so fall back to the edge color.
+    # NOTE: A single column is returned unnested by matplotlib. Also 'step'
+    # histograms leave the faces transparent and carry the color on the edges
+    # instead, and the alpha is dropped so that overlays stay opaque.
     colors = []
     for group in [res] if n == 1 else res:
-        artists = list(group)
-        if not artists:
-            colors.append(None)
-            continue
-        color = np.atleast_2d(artists[0].get_facecolor())
-        if not color.size or not np.any(color[:, -1]):
-            color = np.atleast_2d(artists[0].get_edgecolor())
-        # NOTE: Drop the alpha channel so that overlays stay opaque even when
-        # the histogram itself was drawn translucent.
-        colors.append(None if not color.size else tuple(color[0, :3]))
+        artist = next(iter(group))
+        color = artist.get_facecolor()
+        if not mcolors.to_rgba(color)[3]:
+            color = artist.get_edgecolor()
+        colors.append(mcolors.to_rgb(color))
     return colors
 
 
@@ -3801,94 +3765,70 @@ class PlotAxes(base.Axes):
         self,
         xs,
         *,
-        edges=None,
+        edges,
+        colors,
         density=None,
         stack=False,
         orientation="vertical",
-        colors=None,
         points=None,
         bw_method=None,
         weights=None,
         **kwargs,
     ):
         """
-        Add a gaussian kernel density estimate line for each column of `xs`.
+        Add a gaussian kernel density estimate line for each column of `xs`, drawn
+        in `colors` and passing `**kwargs` to `~matplotlib.axes.Axes.plot`.
 
-        Parameters
-        ----------
-        xs : array-like
-            The sample data. 1D arrays are treated as a single column and 2D
-            arrays produce one line per column.
-        edges : array-like, optional
-            The histogram bin edges. When passed, the estimates are rescaled
-            from probability densities to bin counts (see `density`).
-        density : bool, optional
-            The `~matplotlib.axes.Axes.hist` normalization. When ``False`` and
-            `edges` was passed, each estimate is scaled by the sample mass and
-            the local bin width so the curve tracks the bin counts.
-        stack : bool, default: False
-            Whether the parent histogram is stacked. If so the estimates share
-            one evaluation grid and are accumulated like the bin counts.
-        orientation : {'vertical', 'horizontal'}, optional
-            The parent histogram orientation. Coordinates are swapped for
-            horizontal histograms.
-        colors : sequence, optional
-            The line color for each column, generally the color of the
-            corresponding histogram artists.
-        points : int, default: :rc:`kde.points`
-            The number of coordinates used to evaluate each estimate.
-        bw_method, weights : optional
-            Passed to `~ultraplot.internals.inputs._dist_kde`.
-        **kwargs
-            Passed to `~matplotlib.axes.Axes.plot`.
-
-        Returns
-        -------
-        list of `~matplotlib.lines.Line2D`
-            The kernel density estimate lines.
+        Unless `density` is ``True`` each estimate is rescaled from a probability
+        density to the bin counts implied by the histogram bin `edges`. Stacked
+        histograms share a single evaluation grid so that the estimates accumulate
+        the way the bin counts do. Remaining arguments go to
+        `~ultraplot.internals.inputs._dist_kde`.
         """
-        # Sanitize the data and record the sample mass of each column. The mass
-        # is the number of valid points, or their total weight if weighted, and
-        # converts the probability densities back into histogram bin counts.
-        points = _not_none(points, rc["kde.points"])
+        # Filter invalid points up front. The sample mass, i.e. the number of valid
+        # points or their total weight, converts densities back into bin counts.
         xs = inputs._to_numpy_array(xs)
         xs = xs[:, None] if xs.ndim == 1 else xs
-        weights = None if weights is None else inputs._to_numpy_array(weights)
-        if weights is not None and weights.ndim == 1:
-            weights = np.repeat(weights[:, None], xs.shape[1], axis=1)
+        if weights is not None:
+            weights = inputs._to_numpy_array(weights)
+            if weights.ndim == 1:  # the same weights apply to every column
+                weights = np.broadcast_to(weights[:, None], xs.shape)
         dists = [
             inputs._dist_finite(xs[:, i], None if weights is None else weights[:, i])
             for i in range(xs.shape[1])
         ]
-        masses = np.array(
-            [dist.size if w is None else w.sum() for dist, w in dists], dtype=float
-        )
 
-        # Share one evaluation grid between stacked columns so the estimates can
-        # be accumulated the same way matplotlib accumulates the bin counts.
-        coords = None
+        # Share one evaluation grid between stacked columns so that the estimates
+        # can be accumulated, and scale by the bin widths to recover bin counts.
+        coords = total = widths = None
         if stack and len(dists) > 1:
-            valid = np.concatenate([dist for dist, _ in dists])
-            coords = np.linspace(valid.min(), valid.max(), int(points))
+            lo = min(dist.min() for dist, _ in dists)
+            hi = max(dist.max() for dist, _ in dists)
+            coords = np.linspace(lo, hi, int(_not_none(points, rc["kde.points"])))
+            if density:  # each column contributes its share of the total
+                total = sum(dist.size if w is None else w.sum() for dist, w in dists)
+        if not density:
+            widths = np.diff(edges)
 
         objs, accum = [], 0
-        for i, (dist, w) in enumerate(dists):
+        for color, (dist, w) in zip(colors, dists):
             x, y = inputs._dist_kde(
                 dist, coords=coords, points=points, bw_method=bw_method, weights=w
             )
-            if stack and density:  # each column contributes its share of the total
-                y = y * masses[i] / masses.sum()
-            elif edges is not None and not density:  # rescale to the bin counts
-                idxs = np.clip(np.digitize(x, edges) - 1, 0, len(edges) - 2)
-                y = y * masses[i] * np.diff(edges)[idxs]
+            mass = dist.size if w is None else w.sum()
+            if total is not None:
+                y = y * mass / total
+            elif widths is not None:
+                y = (
+                    y
+                    * mass
+                    * widths[np.clip(np.digitize(x, edges) - 1, 0, widths.size - 1)]
+                )  # noqa: E501
             if coords is not None:
                 y = accum = accum + y
-            kw = kwargs.copy()
-            if colors is not None and i < len(colors):
-                kw.setdefault("color", colors[i])
             if orientation == "horizontal":
                 x, y = y, x
-            objs.extend(self._call_native("plot", x, y, **kw))
+            objs.extend(self._call_native("plot", x, y, **{"color": color, **kwargs}))
         return objs
 
     def _parse_1d_args(self, x, *ys, **kwargs):
@@ -7044,10 +6984,20 @@ class PlotAxes(base.Axes):
         base_zorder = kwargs.pop("zorder", 2)
         n_ridges = len(ridges)
 
+        # Outline style, identical for every ridge. Ridges drawn without a fill
+        # carry the ridge color on the outline instead, and KDE ridges also honor
+        # the line properties left over in `kde_kw`.
+        stepped = hist and histtype in ("step", "stepfilled")
+        filled = histtype == "stepfilled" if stepped else fill
+        outline_kw = {"linewidth": linewidth}
+        if stepped:
+            outline_kw["drawstyle"] = "steps-mid"
+        if not hist:
+            outline_kw.update(kw_line)
+
         for i, ridge in enumerate(ridges):
             x = ridge["x"]
             y = ridge["y"]
-            is_hist = ridge.get("hist", False)
             if continuous_mode:
                 # Continuous mode: scale to specified height and position at coordinate
                 y_max = y.max()
@@ -7069,22 +7019,13 @@ class PlotAxes(base.Axes):
             fill_zorder = base_zorder + (n_ridges - i - 1) * 2
             outline_zorder = fill_zorder + 1
 
-            # Outline style. Ridges drawn without a fill carry the ridge color on
-            # the outline instead, and KDE ridges additionally honor the line
-            # properties left over in `kde_kw`.
-            stepped = is_hist and histtype in ("step", "stepfilled")
-            filled = histtype == "stepfilled" if stepped else fill
-            line_kw = dict(
-                color=edgecolor if filled or stepped else colors[i],
-                linewidth=linewidth,
-                zorder=outline_zorder,
-            )
-            if stepped:
-                line_kw["drawstyle"] = "steps-mid"
-            if not is_hist:
-                line_kw.update(kw_line)
+            line_kw = {
+                "color": edgecolor if filled or stepped else colors[i],
+                "zorder": outline_zorder,
+                **outline_kw,  # a 'color' from kde_kw wins over the default
+            }
 
-            if is_hist and histtype == "bar":
+            if hist and histtype == "bar":
                 counts = ridge["counts"]
                 bin_edges = ridge["bin_edges"]
                 if continuous_mode:
@@ -7257,6 +7198,8 @@ class PlotAxes(base.Axes):
                 xs,
                 edges=obj[1],
                 density=kw.get("density", None),
+                # NOTE: 'histtype' rather than 'stack' since users may stack by
+                # passing histtype='barstacked' directly.
                 stack=histtype == "barstacked",
                 orientation=orientation,
                 colors=_get_hist_colors(res, n),
