@@ -1899,6 +1899,36 @@ def _parse_vert(
     return kwargs
 
 
+def _kde_eval1d(x, points, bw_method=None, weights=None, margin=0.0):
+    """
+    Evaluate Gaussian KDE on an evenly spaced 1D grid.
+    """
+    try:
+        from scipy.stats import gaussian_kde
+    except ModuleNotFoundError:
+        raise ImportError(
+            "scipy is required for KDE line generation. Install with: pip install \"ultraplot[stats]\""
+        )
+
+    try:
+        points = int(points)
+    except Exception as exc:
+        raise TypeError("`points` must be an integer") from exc
+    if points < 2:
+        raise ValueError("`points` must be at least 2")
+
+    x = np.asarray(x)
+    if x.size < 2:
+        raise ValueError("KDE requires at least two points")
+
+    x_min, x_max = x.min(), x.max()
+    x_span = x_max - x_min
+    x_margin = x_span * margin
+    x_eval = np.linspace(x_min - x_margin, x_max + x_margin, points)
+    y_eval = gaussian_kde(x, bw_method=bw_method, weights=weights)(x_eval)
+    return x_eval, y_eval
+
+
 class PlotAxes(base.Axes):
     """
     The second lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
@@ -6691,12 +6721,16 @@ class PlotAxes(base.Axes):
             Amount of overlap between ridges (0-1). Higher values create more overlap.
             Only used in categorical mode.
         kde_kw : dict, optional
-            Keyword arguments passed to `scipy.stats.gaussian_kde`. Common parameters:
+            Keyword arguments used by the KDE generator and ridge outline styling.
+            Common ``gaussian_kde`` parameters:
 
             * ``bw_method`` : Bandwidth selection method
             * ``weights`` : Array of weights for each data point
+            * ``stepsize`` : alias for ``points`` when provided.
 
-            Only used when hist=False.
+            Remaining keys are forwarded to the ridge line styling call
+            (for example ``color``, ``linestyle``, ``linewidth``). Only used
+            when hist=False.
         points : int, default: 200
             Number of points to evaluate the KDE at. Higher values create smoother curves
             but take longer to compute. Only used when hist=False.
@@ -6732,8 +6766,6 @@ class PlotAxes(base.Axes):
         list
             List of PolyCollection objects for each ridge.
         """
-        from scipy.stats import gaussian_kde
-
         # Validate input
         if not isinstance(data, (list, tuple)):
             data = [data]
@@ -6769,6 +6801,16 @@ class PlotAxes(base.Axes):
         # Prepare KDE kwargs
         if kde_kw is None:
             kde_kw = {}
+        kde_kw = dict(kde_kw)
+        kde_kw_plot = dict(kde_kw)
+        kde_points = int(kde_kw_plot.pop("stepsize", points))
+        kde_points = int(kde_kw_plot.pop("points", kde_points))
+        kde_kw_gen = {
+            "bw_method": kde_kw_plot.pop("bw_method", None),
+            "weights": kde_kw_plot.pop("weights", None),
+        }
+        if kde_points < 2:
+            raise ValueError("`points` must be at least 2")
 
         # Calculate KDE or histogram for each distribution
         ridges = []
@@ -6816,13 +6858,7 @@ class PlotAxes(base.Axes):
             else:
                 # Perform KDE
                 try:
-                    kde = gaussian_kde(dist, **kde_kw)
-                    # Create smooth x values
-                    x_min, x_max = dist.min(), dist.max()
-                    x_range = x_max - x_min
-                    x_margin = x_range * 0.1  # 10% margin
-                    x = np.linspace(x_min - x_margin, x_max + x_margin, points)
-                    y = kde(x)
+                    x, y = _kde_eval1d(dist, points=kde_points, margin=0.1, **kde_kw_gen)
                     ridges.append({"x": x, "y": y, "hist": False})
                 except Exception as e:
                     warnings._warn_ultraplot(
@@ -6938,6 +6974,10 @@ class PlotAxes(base.Axes):
                         zorder=fill_zorder,
                     )
             elif is_hist and histtype in ("step", "stepfilled"):
+                stepline_kw = dict(
+                    color=edgecolor, linewidth=linewidth, zorder=outline_zorder
+                )
+                stepline_kw.update(kde_kw_plot)
                 if vert:
                     if histtype == "stepfilled":
                         poly = self.fill_between(
@@ -6955,19 +6995,15 @@ class PlotAxes(base.Axes):
                         poly = self.plot(
                             x,
                             y_plot,
-                            color=edgecolor,
-                            linewidth=linewidth,
                             label=labels[i],
                             drawstyle="steps-mid",
-                            zorder=outline_zorder,
+                            **stepline_kw,
                         )[0]
                     self.plot(
                         x,
                         y_plot,
-                        color=edgecolor,
-                        linewidth=linewidth,
                         drawstyle="steps-mid",
-                        zorder=outline_zorder,
+                        **stepline_kw,
                     )
                 else:
                     if histtype == "stepfilled":
@@ -6986,22 +7022,20 @@ class PlotAxes(base.Axes):
                         poly = self.plot(
                             y_plot,
                             x,
-                            color=edgecolor,
-                            linewidth=linewidth,
                             label=labels[i],
                             drawstyle="steps-mid",
-                            zorder=outline_zorder,
+                            **stepline_kw,
                         )[0]
                     self.plot(
                         y_plot,
                         x,
-                        color=edgecolor,
-                        linewidth=linewidth,
                         drawstyle="steps-mid",
-                        zorder=outline_zorder,
+                        **stepline_kw,
                     )
             else:
                 if vert:
+                    line_kw = dict(color=edgecolor, linewidth=linewidth, zorder=outline_zorder)
+                    line_kw.update(kde_kw_plot)
                     # Traditional horizontal ridges
                     if fill:
                         # Fill without edge
@@ -7019,21 +7053,23 @@ class PlotAxes(base.Axes):
                         self.plot(
                             x,
                             y_plot,
-                            color=edgecolor,
-                            linewidth=linewidth,
-                            zorder=outline_zorder,
+                            **line_kw,
                         )
                     else:
+                        line_kw = dict(
+                            color=colors[i], linewidth=linewidth, zorder=outline_zorder
+                        )
+                        line_kw.update(kde_kw_plot)
                         poly = self.plot(
                             x,
                             y_plot,
-                            color=colors[i],
-                            linewidth=linewidth,
                             label=labels[i],
-                            zorder=outline_zorder,
+                            **line_kw,
                         )[0]
                 else:
                     # Vertical ridges
+                    line_kw = dict(color=edgecolor, linewidth=linewidth, zorder=outline_zorder)
+                    line_kw.update(kde_kw_plot)
                     if fill:
                         # Fill without edge
                         poly = self.fill_betweenx(
@@ -7050,18 +7086,18 @@ class PlotAxes(base.Axes):
                         self.plot(
                             y_plot,
                             x,
-                            color=edgecolor,
-                            linewidth=linewidth,
-                            zorder=outline_zorder,
+                            **line_kw,
                         )
                     else:
+                        line_kw = dict(
+                            color=colors[i], linewidth=linewidth, zorder=outline_zorder
+                        )
+                        line_kw.update(kde_kw_plot)
                         poly = self.plot(
                             y_plot,
                             x,
-                            color=colors[i],
-                            linewidth=linewidth,
                             label=labels[i],
-                            zorder=outline_zorder,
+                            **line_kw,
                         )[0]
 
             artists.append(poly)
@@ -7242,19 +7278,14 @@ class PlotAxes(base.Axes):
         ValueError
             If ``kw['orientation']`` is neither 'vertical' nor 'horizontal'.
         """
-        try:
-            from scipy.stats import gaussian_kde
-        except ModuleNotFoundError:
-            raise ImportError(
-                "scipy is required for histogram kde line. Install it with: pip install scipy"
-            )
         edges = obj[1]
         data2d = x if x.ndim > 1 else x[:, None]
         lines = []
         for i in range(data2d.shape[1]):
             _x = data2d[:, i]
-            xa = np.linspace(_x.min(), _x.max(), kw["stepsize"])
-            ya = gaussian_kde(_x, bw_method=kw["bw_method"], weights=kw["weights"])(xa)
+            xa, ya = _kde_eval1d(
+                _x, points=kw["stepsize"], bw_method=kw["bw_method"], weights=kw["weights"]
+            )
             if not kw["density"]:
                 idx = np.clip(np.digitize(xa, edges) - 1, 0, len(edges) - 2)
                 ya = ya * len(_x) * np.diff(edges)[idx]

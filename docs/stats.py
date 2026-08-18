@@ -216,11 +216,9 @@ ax.format(title="Multiple colors", ymargin=0.15)
 # the :ref:`2D plotting section <ug_apply_cmap>`). Marginal distributions
 # for the 2D histograms can be added using :ref:`panel axes <ug_panels>`.
 #
-# In the future, UltraPlot will include options for adding "smooth" kernel density
-# estimations to histograms plots using a `kde` keyword. It will also include
-# separate `ultraplot.axes.PlotAxes.kde` and `ultraplot.axes.PlotAxes.kde2d` commands.
-# The :func:`~ultraplot.axes.PlotAxes.violin` and :func:`~ultraplot.axes.PlotAxes.violinh` commands
-# will use the same algorithm for kernel density estimation as the `kde` commands.
+# Histograms support a ``kde=True`` option to draw a kernel density overlay.
+# Separate :func:`~ultraplot.axes.PlotAxes.kde` and
+# :func:`~ultraplot.axes.PlotAxes.kde2d` commands are still planned.
 
 # %%
 import numpy as np

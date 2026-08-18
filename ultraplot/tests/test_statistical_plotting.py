@@ -369,6 +369,20 @@ def test_ridgeline_kde_kw(rng):
     assert len(artists) == 3
     uplt.close(fig)
 
+    # Test style and stepsize passthrough (compatibility with histogram naming)
+    fig, ax = uplt.subplots()
+    artists = ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        fill=False,
+        kde_kw={"stepsize": 80, "color": "k", "linestyle": "--"},
+    )
+    assert len(artists) == 3
+    assert len(ax.lines[0].get_xdata()) == 80
+    assert ax.lines[0].get_linestyle() == "--"
+    uplt.close(fig)
+
 
 def test_ridgeline_points(rng):
     """
