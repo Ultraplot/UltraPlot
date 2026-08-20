@@ -129,6 +129,34 @@ function initWhyCompareSliders() {
     sliderInput.addEventListener("input", onInput);
     onInput();
 
+    const moveHandle = (clientX) => {
+      const rect = frame.getBoundingClientRect();
+      if (!rect.width) return;
+      const ratio = (clientX - rect.left) / rect.width;
+      const clamped = Math.max(0, Math.min(1, ratio));
+      sliderInput.value = `${Math.round(clamped * 100)}`;
+      onInput();
+    };
+
+    handle.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      handle.setPointerCapture?.(event.pointerId);
+      moveHandle(event.clientX);
+
+      const onPointerMove = (moveEvent) => {
+        moveHandle(moveEvent.clientX);
+      };
+      const onPointerUp = () => {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+        window.removeEventListener("pointercancel", onPointerUp);
+      };
+
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp, { once: true });
+      window.addEventListener("pointercancel", onPointerUp, { once: true });
+    });
+
     body.appendChild(frame);
     body.appendChild(sliderInput);
 

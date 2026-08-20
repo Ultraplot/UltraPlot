@@ -1377,17 +1377,29 @@ body.wy-body-for-nav
     height: 100%;
     background: var(--uplt-color-text-secondary);
     opacity: 0.95;
-    pointer-events: none;
+    pointer-events: all;
+    cursor: ew-resize;
     z-index: 3;
 }
 
+.uplt-compare-frame .uplt-compare-handle::after {
+    content: "";
+    position: absolute;
+    inset: 0 -8px;
+    width: 16px;
+}
+
 .uplt-compare-slider {
-    display: block;
-    width: 100%;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+    overflow: hidden;
 }
 
 .uplt-compare-slider input[type="range"] {
-    width: 100%;
+    width: 1px;
     margin: 0;
 }
 
