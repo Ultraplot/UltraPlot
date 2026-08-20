@@ -38,6 +38,128 @@ function getCodeDetailsBlocks() {
   return Array.from(document.querySelectorAll("details.uplt-code-details"));
 }
 
+function initWhyCompareSliders() {
+  const isWhyPage = /\/why(?:\.html)?$|\/why\.htm$/.test(
+    (window.location.pathname || "").toLowerCase(),
+  );
+  if (!isWhyPage) return;
+
+  const cards = Array.from(document.querySelectorAll(".sd-card.uplt-why"));
+  for (let i = 0; i < cards.length - 1; i += 1) {
+    const mplCard = cards[i];
+    const upltCard = cards[i + 1];
+    if (
+      !mplCard ||
+      !upltCard ||
+      !mplCard.classList.contains("uplt-why-mpl") ||
+      !upltCard.classList.contains("uplt-why-uplt")
+    ) {
+      continue;
+    }
+    i += 1;
+
+    const mplBody = mplCard.querySelector(".sd-card-body");
+    const upltBody = upltCard.querySelector(".sd-card-body");
+    if (!mplBody || !upltBody) {
+      continue;
+    }
+
+    const slider = document.createElement("div");
+    slider.className = "uplt-why-compare";
+
+    const body = document.createElement("div");
+    body.className = "sd-card-body";
+    slider.appendChild(body);
+
+    const labels = document.createElement("div");
+    labels.className = "uplt-compare-labels";
+    const leftLabel = document.createElement("button");
+    leftLabel.type = "button";
+    leftLabel.className = "uplt-label uplt-label-mpl uplt-compare-label-btn";
+    leftLabel.textContent = "Matplotlib";
+    leftLabel.addEventListener("click", () => {
+      sliderInput.value = "100";
+      onInput();
+    });
+
+    const rightLabel = document.createElement("button");
+    rightLabel.type = "button";
+    rightLabel.className = "uplt-label uplt-label-uplt uplt-compare-label-btn";
+    rightLabel.textContent = "UltraPlot";
+    rightLabel.addEventListener("click", () => {
+      sliderInput.value = "0";
+      onInput();
+    });
+    labels.appendChild(leftLabel);
+    labels.appendChild(rightLabel);
+    body.appendChild(labels);
+
+    const frame = document.createElement("div");
+    frame.className = "uplt-compare-frame";
+    frame.setAttribute(
+      "aria-label",
+      "Matplotlib and UltraPlot before/after comparison",
+    );
+
+    const mplLayer = document.createElement("div");
+    mplLayer.className = "uplt-compare-side uplt-compare-mpl";
+    mplLayer.appendChild(mplBody.cloneNode(true));
+    frame.appendChild(mplLayer);
+
+    const upltLayer = document.createElement("div");
+    upltLayer.className = "uplt-compare-side uplt-compare-uplt";
+    upltLayer.appendChild(upltBody.cloneNode(true));
+    frame.appendChild(upltLayer);
+
+    const handle = document.createElement("div");
+    handle.className = "uplt-compare-handle";
+    frame.appendChild(handle);
+
+    const sliderInput = document.createElement("input");
+    sliderInput.className = "uplt-compare-slider";
+    sliderInput.type = "range";
+    sliderInput.min = "0";
+    sliderInput.max = "100";
+    sliderInput.value = "50";
+    sliderInput.setAttribute("aria-label", "Comparison reveal amount");
+
+    const onInput = () => {
+      frame.style.setProperty("--uplt-compare-position", `${sliderInput.value}%`);
+    };
+    sliderInput.addEventListener("input", onInput);
+    onInput();
+
+    body.appendChild(frame);
+    body.appendChild(sliderInput);
+
+    mplCard.className = "sd-card uplt-why uplt-why-compare";
+    mplCard.replaceChildren();
+    mplCard.appendChild(body);
+
+    const compareCol = mplCard.closest(".sd-col");
+    if (compareCol) {
+      compareCol.classList.add("uplt-why-compare-col");
+      compareCol.style.width = "100%";
+      compareCol.style.maxWidth = "100%";
+      compareCol.style.flex = "0 0 100%";
+    }
+
+    const compareRow = mplCard.closest(".sd-row");
+    if (compareRow) {
+      compareRow.classList.add("uplt-why-compare-row");
+      compareRow.style.display = "block";
+    }
+
+    const upltCol = upltCard.closest(".sd-col");
+    if (upltCol) {
+      upltCol.classList.add("uplt-why-compare-hide-col");
+      upltCol.style.display = "none";
+    }
+
+    upltCard.style.display = "none";
+  }
+}
+
 function initScrollChromeFade() {
   const topBar = document.querySelector(".sy-head");
   const leftBar = document.querySelector(".sy-lside");
@@ -711,6 +833,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Re-sync right TOC controls now that code wrappers exist.
   initShibuyaRightToc();
+  initWhyCompareSliders();
 
   const navLinks = document.querySelectorAll(
     ".wy-menu-vertical a.reference.internal",

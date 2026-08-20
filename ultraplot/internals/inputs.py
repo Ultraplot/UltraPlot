@@ -410,6 +410,110 @@ def _preprocess_or_redirect(
 
 
 # Stats utiltiies
+def _dist_finite(distribution, weights=None):
+    """
+    Return the finite subset of the distribution together with the matching
+    subset of the weights. Used to sanitize input for `_dist_kde`.
+    """
+    distribution = _to_numpy_array(distribution).ravel()
+    if weights is not None:
+        weights = _to_numpy_array(weights).ravel()
+        if weights.size != distribution.size:
+            raise ValueError(
+                f"Got {weights.size} weights but {distribution.size} data points."
+            )
+    mask = np.isfinite(distribution)
+    if mask.all():  # no copy needed, and makes repeated calls cheap
+        return distribution, weights
+    return distribution[mask], None if weights is None else weights[mask]
+
+
+def _dist_kde(
+    distribution,
+    *,
+    coords=None,
+    points=None,
+    margin=0.0,
+    bw_method=None,
+    weights=None,
+):
+    """
+    Return the coordinates and gaussian kernel density estimate of the input
+    distribution. This is the single entry point for the kernel density
+    estimates drawn by `~ultraplot.axes.PlotAxes.hist` and
+    `~ultraplot.axes.PlotAxes.ridgeline`.
+
+    Parameters
+    ----------
+    distribution : array-like
+        The sample. Flattened to 1D and stripped of non-finite values.
+    coords : array-like, optional
+        The coordinates to evaluate the estimate on. If ``None`` an evenly
+        spaced grid is built from the data range (see `points` and `margin`).
+    points : int, default: :rc:`kde.points`
+        The number of evenly spaced evaluation coordinates. Larger values give
+        smoother curves at the cost of speed. Ignored if `coords` was passed.
+    margin : float, default: 0
+        The fraction of the data range used to pad either side of the
+        evaluation grid. Ignored if `coords` was passed.
+    bw_method : str, float, or callable, optional
+        The bandwidth selector passed to `scipy.stats.gaussian_kde`. Can be
+        ``'scott'``, ``'silverman'``, a scalar, or a callable.
+    weights : array-like, optional
+        The per-sample weights passed to `scipy.stats.gaussian_kde`.
+
+    Returns
+    -------
+    coords : ndarray
+        The evaluation coordinates.
+    density : ndarray
+        The probability density evaluated on `coords`. Integrates to ``1``.
+    """
+    # NOTE: scipy is an optional dependency so it is imported lazily here rather
+    # than at the top of the module. This is the only place ultraplot needs it.
+    try:
+        from scipy.stats import gaussian_kde
+    except ModuleNotFoundError:
+        raise ImportError(
+            "Kernel density estimation requires scipy. Install it with "
+            "'pip install scipy' or 'pip install ultraplot[stats]'."
+        ) from None
+
+    distribution, weights = _dist_finite(distribution, weights)
+    if distribution.size < 2:
+        raise ValueError(
+            "Kernel density estimation requires at least 2 finite data points "
+            f"but got {distribution.size}."
+        )
+    if coords is None:
+        from ..config import rc  # avoid a circular import at module load
+
+        try:
+            points = int(_not_none(points, rc["kde.points"]))
+        except (TypeError, ValueError):
+            raise ValueError(
+                f"Number of evaluation points must be an integer but got {points!r}."
+            ) from None
+        if points < 2:
+            raise ValueError(
+                f"Number of evaluation points must be at least 2 but got {points}."
+            )
+        lo, hi = distribution.min(), distribution.max()
+        pad = margin * (hi - lo)
+        coords = np.linspace(lo - pad, hi + pad, points)
+    else:
+        coords = _to_numpy_array(coords).ravel()
+
+    try:
+        density = gaussian_kde(distribution, bw_method=bw_method, weights=weights)
+    except np.linalg.LinAlgError:
+        raise ValueError(
+            "Kernel density estimation failed because the distribution has zero "
+            "variance. Pass varying data or use hist=True instead."
+        ) from None
+    return coords, density(coords)
+
+
 def _dist_clean(distribution):
     """
     Clean the distribution data for processing by `boxplot` or `violinplot`.

@@ -379,3 +379,34 @@ def __dir__():
 
 # Prevent "import ultraplot.figure" from clobbering the top-level callable.
 install_module_proxy(sys.modules.get(__name__))
+
+
+def _patch_seaborn_move_legend():
+    """
+    Let ``sns.move_legend(ax, ...)`` accept singleton :class:`SubplotGrid` objects.
+
+    Seaborn only accepts native Matplotlib axes, figures, and its own grids. The
+    wrapper unwraps a singleton grid to its underlying axes; callers can avoid
+    this compatibility patch by passing ``ax[0]`` directly.
+    """
+    import sys
+
+    sns = sys.modules.get("seaborn")
+    if sns is None:
+        return
+
+    from .gridspec import SubplotGrid
+
+    move_legend = getattr(sns, "move_legend", None)
+    if not callable(move_legend) or getattr(move_legend, "_ultraplot", False):
+        return
+
+    def _move_legend(obj, *args, **kwargs):
+        if isinstance(obj, SubplotGrid) and len(obj) == 1:
+            obj = obj[0]
+        return move_legend(obj, *args, **kwargs)
+
+    _move_legend.__name__ = "move_legend"
+    _move_legend.__doc__ = getattr(move_legend, "__doc__", None)
+    _move_legend._ultraplot = True
+    sns.move_legend = _move_legend

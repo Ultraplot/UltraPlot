@@ -52,6 +52,61 @@ def test_bar_absolute_width_manual_override():
     assert pytest.approx(w_abs[0], rel=1e-6) == 0.8
 
 
+def test_sticky_edges_rc_and_attribute():
+    """
+    Sticky edges for line and area plots can be disabled globally with the
+    ``axes.sticky_edges`` setting or per-axes with ``use_sticky_edges``.
+    See https://github.com/Ultraplot/UltraPlot/issues/631.
+    """
+    x = y = np.arange(10.0)
+
+    # Default: sticky edges enabled, no padding
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    assert ax.use_sticky_edges is True
+    ax.plot(x, y)
+    assert np.allclose(ax.get_xlim(), (0, 9))
+
+    # Disabled globally via rc setting
+    with uplt.rc.context({"axes.sticky_edges": False}):
+        fig, axs = uplt.subplots()
+        ax = axs[0]
+        assert ax.use_sticky_edges is False
+        ax.plot(x, y)
+        xmin, xmax = ax.get_xlim()
+        assert xmin < 0 and xmax > 9
+
+        # plotx, area, and vlines also respect the setting
+        fig, axs = uplt.subplots(nrows=3)
+        axs[0].plotx(y, x)
+        ymin, ymax = axs[0].get_ylim()
+        assert ymin < 0 and ymax > 9
+        axs[1].area(x, y)
+        xmin, xmax = axs[1].get_xlim()
+        assert xmin < 0 and xmax > 9
+        axs[2].vlines(x, 0, y)
+        ymin, ymax = axs[2].get_ylim()
+        assert ymin < 0 and ymax > 9
+
+    # Setting is restored after the context exits
+    fig, axs = uplt.subplots()
+    assert axs[0].use_sticky_edges is True
+
+    # Disabled per-axes via attribute
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    ax.use_sticky_edges = False
+    ax.plot(x, y)
+    xmin, xmax = ax.get_xlim()
+    assert xmin < 0 and xmax > 9
+
+    # Attribute values are validated as booleans
+    ax.use_sticky_edges = "true"
+    assert ax.use_sticky_edges is True
+    with pytest.raises(ValueError):
+        ax.use_sticky_edges = "bogus"
+
+
 import pytest
 
 
@@ -242,6 +297,163 @@ def test_histogram_types(rng):
     for ax, kw in zip(axs, kws):
         ax.hist(data, ec="k", **kw)
     return fig
+
+
+def test_hist_kde_lines(rng):
+    """
+    Test the kde overlay drawn by hist.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=200)
+    # No kde line unless kde=True
+    fig, ax = uplt.subplot()
+    ax.hist(data, bins=20)
+    assert len(ax.lines) == 0
+    ax.hist(data, bins=20, kde=False)
+    assert len(ax.lines) == 0
+    # One kde line spanning the data range, sampled at the default resolution
+    ax.hist(data, bins=20, kde=True)
+    assert len(ax.lines) == 1
+    line = ax.lines[-1]
+    assert line.get_xdata().size == uplt.rc["kde.points"]
+    assert line.get_ydata().size == uplt.rc["kde.points"]
+    assert line.get_xdata()[0] == pytest.approx(data.min())
+    assert line.get_xdata()[-1] == pytest.approx(data.max())
+    # Another line with a custom resolution and density=True
+    ax.hist(data, bins=20, kde=True, density=True, kde_kw={"points": 150})
+    density_line = ax.lines[-1]
+    assert density_line.get_xdata().size == 150
+    assert density_line.get_ydata().size == 150
+    # The default curve tracks the bin counts, the density curve integrates to 1
+    assert line.get_ydata().max() > 1.0
+    assert density_line.get_ydata().max() <= 1.0
+    area = np.trapezoid(density_line.get_ydata(), density_line.get_xdata())
+    assert area == pytest.approx(1.0, rel=1e-2)
+    uplt.close(fig)
+
+
+def test_hist_kde_points_rc(rng):
+    """
+    Test that the kde resolution follows the rc setting and that an explicit
+    keyword still wins over it.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=200)
+    with uplt.rc.context({"kde.points": 57}):
+        fig, ax = uplt.subplots()
+        ax.hist(data, bins=20, kde=True)
+        assert ax.lines[-1].get_xdata().size == 57
+        ax.hist(data, bins=20, kde=True, kde_kw={"points": 21})
+        assert ax.lines[-1].get_xdata().size == 21
+        uplt.close(fig)
+    # Ridgeline reads the same setting
+    with uplt.rc.context({"kde.points": 64}):
+        fig, ax = uplt.subplots()
+        ax.ridgeline([rng.normal(i, 1, 300) for i in range(3)], fill=False)
+        assert ax.lines[0].get_xdata().size == 64
+        uplt.close(fig)
+
+
+def test_hist_kde_points_alias(rng):
+    """
+    Test that 'stepsize' remains accepted as an alias for 'points'.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=200)
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True, kde_kw={"stepsize": 42})
+    assert ax.lines[-1].get_xdata().size == 42
+    uplt.close(fig)
+
+
+def test_hist_kde_line_style(rng):
+    """
+    Test that leftover kde_kw keys style the kde line and that the line
+    otherwise inherits the color of its histogram.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=(100, 3))
+    fig, ax = uplt.subplots()
+    obj = ax.hist(data, bins=20, kde=True)
+    assert len(ax.lines) == 3
+    for line, container in zip(ax.lines, obj[2]):
+        assert np.allclose(line.get_color(), container[0].get_facecolor()[:3])
+    ax.hist(data[:, 0], bins=20, kde=True, kde_kw={"color": "k", "ls": "--"})
+    assert ax.lines[-1].get_linestyle() == "--"
+    assert uplt.colors.to_rgba(ax.lines[-1].get_color()) == uplt.colors.to_rgba("k")
+    uplt.close(fig)
+
+
+def test_hist_kde_stacked(rng):
+    """
+    Test that stacked histograms accumulate their kde lines.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=(100, 3))
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True, stack=True)
+    assert len(ax.lines) == 3
+    # Stacked curves share one grid and increase monotonically
+    xs = [line.get_xdata() for line in ax.lines]
+    assert all(np.allclose(x, xs[0]) for x in xs)
+    ys = [line.get_ydata() for line in ax.lines]
+    assert np.all(ys[1] >= ys[0]) and np.all(ys[2] >= ys[1])
+    uplt.close(fig)
+
+
+def test_hist_kde_multiple_columns(rng):
+    """
+    Test data with multiple columns
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=(100, 3))
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True)
+    assert len(ax.lines) == 3
+    uplt.close(fig)
+
+
+def test_hist_kde_orientation(rng):
+    """
+    Test when orientation='horizontal'
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=200)
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True, orientation="horizontal")
+    line = ax.lines[0]
+    assert line.get_ydata()[0] == pytest.approx(data.min())
+    assert line.get_ydata()[-1] == pytest.approx(data.max())
+    uplt.close(fig)
+
+
+def test_hist_kde_nan_and_weights(rng):
+    """
+    Test that non-finite values are dropped and weights are shared with hist.
+    """
+    pytest.importorskip("scipy")
+    data = rng.normal(size=200)
+    data[::10] = np.nan
+    fig, ax = uplt.subplots()
+    ax.hist(data, bins=20, kde=True)
+    line = ax.lines[-1]
+    assert np.all(np.isfinite(line.get_ydata()))
+    assert line.get_xdata()[0] == pytest.approx(np.nanmin(data))
+    # Weighted counts scale the curve by the total weight rather than the count
+    ax.hist(data, bins=20, kde=True, weights=np.full(data.size, 2.0))
+    assert ax.lines[-1].get_ydata().max() > 1.5 * line.get_ydata().max()
+    uplt.close(fig)
+
+
+def test_hist_kde_requires_variation(rng):
+    """
+    Test that a degenerate distribution raises a helpful error.
+    """
+    pytest.importorskip("scipy")
+    fig, ax = uplt.subplots()
+    with pytest.raises(ValueError, match="zero variance"):
+        ax.hist(np.ones(50), bins=5, kde=True)
+    uplt.close(fig)
 
 
 @pytest.mark.mpl_image_compare
