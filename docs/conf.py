@@ -427,6 +427,10 @@ nbsphinx_execute_arguments = [
     "}",
 ]
 
+# Prefer vector graphics for sphinx ``plot`` directives so plots stay sharp
+# without high-DPI raster scaling.
+plot_formats = ["svg"]
+
 # Control notebook execution from env for predictable local/CI builds.
 # Use values: auto, always, never.
 nbsphinx_execute = os.environ.get("UPLT_DOCS_EXECUTE", "auto").strip().lower()

@@ -88,3 +88,6 @@ docs = [
     "sphinx-sitemap",
     "typing-extensions"
 ]
+stats = [
+    "scipy",
+]

@@ -287,6 +287,78 @@ def test_sync_label_dict(rng):
     uplt.close(fig)
 
 
+def test_legend_remove_clears_internal_dict_state():
+    """
+    Removing a legend should clear Ultraplot guide-tracking state.
+
+    This prevents stale legends from staying registered when wrappers like
+    ``sns.move_legend`` remove and recreate legends.
+    """
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1, 2], label="line")
+    leg = ax.legend(loc="lower right")
+
+    # Confirm the new legend is tracked.
+    assert any(v is leg for v in ax[0]._legend_dict.values())
+
+    # Remove it directly and verify Ultraplot state is cleaned up.
+    leg.remove()
+    assert not any(v is leg for v in ax[0]._legend_dict.values())
+    assert ax[0].legend_ is None
+    uplt.close(fig)
+
+
+def test_legend_remove_without_remove_method_uses_visibility_fallback():
+    """
+    If a legend does not expose a private remove method, ``remove`` should still
+    fall back to a safe hide-only path.
+    """
+    fig, ax = uplt.subplots()
+    ax.plot([0, 1, 2], label="line")
+    leg = ax.legend(loc="lower right")
+
+    # Force the compatibility path used by wrappers that do not implement a
+    # remove backend on the internal legend object.
+    setattr(leg, "_remove_method", None)
+
+    assert leg.remove() is None
+    assert not any(v is leg for v in ax[0]._legend_dict.values())
+    assert getattr(ax[0], "legend_", None) is None
+    uplt.close(fig)
+
+
+def test_legend_label_order_preserves_duplicate_labels():
+    """A Seaborn-style label order should retain every matching handle."""
+    fig, ax = uplt.subplots()
+    (first,) = ax.plot([0, 1], label="duplicate")
+    (second,) = ax.plot([1, 0], label="duplicate")
+    (third,) = ax.plot([0.5, 0.5], label="other")
+
+    legend = ax.legend(
+        [first, second, third],
+        ["duplicate", "duplicate", "other"],
+        label_order=["other", "duplicate"],
+    )
+
+    assert [text.get_text() for text in legend.get_texts()] == [
+        "other",
+        "duplicate",
+        "duplicate",
+    ]
+    uplt.close(fig)
+
+
+def test_legend_label_order_allows_no_matching_dict_labels():
+    """An empty Seaborn-style ordering should create an empty legend cleanly."""
+    fig, ax = uplt.subplots()
+    (line,) = ax.plot([0, 1], label="line")
+
+    legend = ax.legend({"line": line}, label_order=["missing"])
+
+    assert legend.get_texts() == []
+    uplt.close(fig)
+
+
 def test_external_mode_defers_on_the_fly_legend():
     """
     External mode should defer on-the-fly legend creation until explicitly requested.

@@ -369,6 +369,41 @@ def test_ridgeline_kde_kw(rng):
     assert len(artists) == 3
     uplt.close(fig)
 
+    # Test that leftover keys style the curve and that 'points' overrides the
+    # 'points' argument of the command itself
+    fig, ax = uplt.subplots()
+    artists = ax.ridgeline(
+        data,
+        labels=labels,
+        overlap=0.5,
+        fill=False,
+        points=200,
+        kde_kw={"points": 80, "color": "k", "linestyle": "--"},
+    )
+    assert len(artists) == 3
+    assert len(ax.lines[0].get_xdata()) == 80
+    assert ax.lines[0].get_linestyle() == "--"
+    uplt.close(fig)
+
+    # Test that 'stepsize' remains accepted as an alias for 'points'
+    fig, ax = uplt.subplots()
+    ax.ridgeline(data, labels=labels, fill=False, kde_kw={"stepsize": 42})
+    assert len(ax.lines[0].get_xdata()) == 42
+    uplt.close(fig)
+
+
+def test_ridgeline_histogram_step(rng):
+    """
+    Test that step histogram ridges draw exactly one outline each.
+    """
+    data = [rng.normal(i, 1, 300) for i in range(3)]
+    for histtype, nlines in (("step", 3), ("stepfilled", 3)):
+        fig, ax = uplt.subplots()
+        artists = ax.ridgeline(data, hist=True, histtype=histtype)
+        assert len(artists) == 3
+        assert len(ax.lines) == nlines
+        uplt.close(fig)
+
 
 def test_ridgeline_points(rng):
     """

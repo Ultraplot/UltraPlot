@@ -1250,3 +1250,213 @@ body.wy-body-for-nav
     max-width: 100%;
     height: auto;
 }
+
+/* Why UltraPlot page: before/after comparison cards */
+.uplt-why {
+    border: 1px solid var(--uplt-color-border-muted);
+    border-radius: 0.8rem;
+    background: linear-gradient(
+        180deg,
+        var(--uplt-color-white) 0%,
+        var(--uplt-color-sidebar-bg) 100%
+    );
+    box-shadow: 0 4px 14px var(--uplt-color-shadow);
+    overflow: hidden;
+}
+
+.uplt-why-mpl {
+    border-top: 4px solid #b45309;
+}
+
+.uplt-why-uplt {
+    border-top: 4px solid #178f84;
+}
+
+.uplt-why img {
+    width: 100%;
+    height: auto;
+    border-radius: 0.45rem;
+    background: var(--uplt-color-panel-bg);
+}
+
+.uplt-why-compare {
+    margin-bottom: 0.75rem;
+}
+
+.uplt-why-compare .sd-card-body {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.uplt-why-compare .uplt-compare-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.4rem 0.75rem 0;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.uplt-why-compare .uplt-compare-labels .uplt-label {
+    background: var(--uplt-color-panel-bg);
+    border: 1px solid var(--uplt-color-border-muted);
+    border-radius: 9999px;
+    padding: 0.1rem 0.6rem;
+}
+
+.uplt-why-compare .uplt-compare-labels .uplt-label-mpl {
+    color: #b45309;
+}
+
+.uplt-why-compare .uplt-compare-labels .uplt-label-uplt {
+    color: #178f84;
+}
+
+.uplt-compare-frame {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 0.45rem;
+    border: 1px solid var(--uplt-color-border-muted);
+    background: var(--uplt-color-panel-bg);
+    --uplt-compare-position: 50%;
+}
+
+.uplt-compare-frame .uplt-compare-side {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.uplt-compare-frame .uplt-compare-side .sd-card-body {
+    margin: 0;
+    padding: 0.75rem;
+    color: inherit;
+}
+
+.uplt-compare-frame .uplt-compare-side .sd-card-body figure {
+    width: 100%;
+    margin: 0;
+}
+
+.uplt-compare-frame .uplt-compare-side .sd-card-body figure.align-default {
+    text-align: left;
+}
+
+.uplt-compare-frame .uplt-compare-side .sd-card-body figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0;
+}
+
+.uplt-compare-frame .uplt-compare-side.uplt-compare-uplt {
+    position: relative;
+    z-index: 1;
+    clip-path: inset(0 0 0 var(--uplt-compare-position));
+}
+
+.uplt-compare-frame .uplt-compare-side.uplt-compare-mpl {
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 calc(100% - var(--uplt-compare-position)) 0 0);
+    z-index: 2;
+}
+
+.uplt-compare-frame .uplt-compare-handle {
+    position: absolute;
+    top: 0;
+    left: var(--uplt-compare-position);
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: var(--uplt-color-text-secondary);
+    opacity: 0.95;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.uplt-compare-slider {
+    display: block;
+    width: 100%;
+}
+
+.uplt-compare-slider input[type="range"] {
+    width: 100%;
+    margin: 0;
+}
+
+.uplt-compare-label-btn {
+    appearance: none;
+    border: 1px solid var(--uplt-color-border-muted);
+    border-radius: 9999px;
+    background: var(--uplt-color-panel-bg);
+    color: inherit;
+    padding: 0.1rem 0.6rem;
+    margin: 0;
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.uplt-compare-label-btn:focus-visible {
+    outline: 2px solid var(--uplt-color-accent);
+    outline-offset: 2px;
+}
+
+.uplt-compare-col {
+    grid-column: 1 / -1;
+}
+
+.uplt-why-compare-row {
+    align-items: stretch;
+}
+
+.uplt-why-compare-row .uplt-why-compare-col,
+.uplt-why-compare-row .uplt-why-compare-col.sd-col {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-column: 1 / -1;
+}
+
+.uplt-why-compare-row .uplt-why-compare-hide-col {
+    display: none !important;
+}
+
+
+.uplt-why .sd-card-body > p:first-child {
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.uplt-why-mpl .sd-card-body > p:first-child strong {
+    color: #b45309;
+}
+
+.uplt-why-uplt .sd-card-body > p:first-child strong {
+    color: #178f84;
+}
+
+.uplt-why .sd-card-body > p:last-child {
+    margin-top: auto;
+    padding-top: 0.35rem;
+    color: var(--uplt-color-text-secondary);
+}
+
+html.dark .uplt-why,
+html.dark-theme .uplt-why,
+[data-color-mode="dark"] .uplt-why {
+    background: linear-gradient(180deg, #252525 0%, #1f1f1f 100%);
+}

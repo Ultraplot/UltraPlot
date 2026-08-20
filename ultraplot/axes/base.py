@@ -873,6 +873,9 @@ class _ExternalModeMixin:
         """
         Context manager toggling external mode during the block.
         """
+        from .. import _patch_seaborn_move_legend
+
+        _patch_seaborn_move_legend()
         return _ExternalModeMixin._ExternalContext(self, value)
 
     def _in_external_context(self):
@@ -993,6 +996,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         self._title_loc = None
         self._title_pad = rc["title.pad"]
         self._title_pad_current = None
+        self._use_sticky_edges = rc["axes.sticky_edges"]
         self._altx_parent = None  # for cartesian axes only
         self._alty_parent = None
         self._colorbar_fill = None
@@ -3804,6 +3808,30 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         loc = _translate_loc(loc, "legend", default=rc["legend.loc"])
         align = kwargs.pop("align", None)
         align = _translate_loc(align, "align", default="center")
+        label_order = kwargs.pop("label_order", None)
+
+        # Seaborn passes ``label_order`` as a label sequence. UltraPlot's
+        # legend API does not expose this parameter, so we coerce it by
+        # reordering explicit handle/label inputs when possible.
+        if label_order is not None and not isinstance(label_order, str):
+            if labels is None and isinstance(handles, dict):
+                pairs = [(handles[key], key) for key in label_order if key in handles]
+                handles, labels = map(list, zip(*pairs)) if pairs else ([], [])
+            elif handles is not None and labels is not None:
+                pairs = list(zip(handles, labels))
+                ordered_pairs = []
+                remaining_pairs = list(pairs)
+                for label in label_order:
+                    matches = [pair for pair in remaining_pairs if pair[1] == label]
+                    ordered_pairs.extend(matches)
+                    remaining_pairs = [
+                        pair for pair in remaining_pairs if pair[1] != label
+                    ]
+                pairs = [*ordered_pairs, *remaining_pairs]
+                handles, labels = map(list, zip(*pairs)) if pairs else ([], [])
+
+        if isinstance(label_order, str) and label_order in {"C", "F"}:
+            kwargs["order"] = label_order
 
         # Either draw right now or queue up for later. Handles can be successively
         # added to a single location this way. Used for on-the-fly legends.
@@ -3823,6 +3851,16 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 cols=cols,
                 **kwargs,
             )
+
+    def add_legend(self, *args, **kwargs):
+        """
+        Back-compatibility alias for older Matplotlib/Seaborn integrations that call
+        ``add_legend``.
+
+        Newer code should call :meth:`legend`, but some callers still rely on this
+        Matplotlib-internal entry point.
+        """
+        return self.legend(*args, **kwargs)
 
     @docstring._snippet_manager
     def catlegend(self, categories, **kwargs):
@@ -4676,6 +4714,20 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self._number = num
         else:
             raise ValueError(f"Invalid number {num!r}. Must be integer >=1.")
+
+    @property
+    def use_sticky_edges(self):
+        """
+        Whether plotting commands like `plot`, `plotx`, `vlines`, `hlines`,
+        `fill_between`, and `fill_betweenx` add "sticky" edges to their artists,
+        i.e. whether the default axis limits are the artist bounds with no padding.
+        Initialized from :rcraw:`axes.sticky_edges`.
+        """
+        return self._use_sticky_edges
+
+    @use_sticky_edges.setter
+    def use_sticky_edges(self, value):
+        self._use_sticky_edges = rcsetup._validate_bool(value)
 
 
 # Apply signature obfuscation after storing previous signature
