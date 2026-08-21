@@ -6,6 +6,7 @@ The figure class used for all ultraplot figures.
 import functools
 import inspect
 import os
+from contextlib import ExitStack
 
 try:
     from typing import Any, Iterable, List, Optional, Tuple, Union
@@ -24,7 +25,7 @@ except:
     from typing_extensions import override
 
 from . import axes as paxes
-from .axes._formatting import pop_axis_format_kwargs
+from .axes._formatting import axis_format_requires_layout, pop_axis_format_kwargs
 from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
@@ -41,12 +42,18 @@ from .internals import (
     labels,
     warnings,
 )
+from ._layout import _LayoutTransaction
 from ._subplots import SubplotManager
 from .utils import _Crawler, units
 
 __all__ = [
     "Figure",
 ]
+
+
+def _any_not_none(*values):
+    """Return whether at least one value is not ``None``."""
+    return any(value is not None for value in values)
 
 
 # Preset figure widths or sizes based on academic journal recommendations
@@ -617,6 +624,7 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
 
         skip_autolayout = getattr(fig, "_skip_autolayout", False)
         layout_dirty = getattr(fig, "_layout_dirty", False)
+        needs_layout = not getattr(fig, "_layout_initialized", False) or layout_dirty
         saving_frame_count = getattr(fig, "_saving_frame_count", 0)
         lock_tight_during_save = (
             getattr(self, "_is_saving", False)
@@ -638,7 +646,16 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
         ctx1 = fig._context_adjusting(cache=cache)
         ctx2 = fig._context_authorized()  # skip backend set_constrained_layout()
         ctx3 = rc.context(fig._render_context)  # draw with figure-specific setting
-        with ctx1, ctx2, ctx3:
+        ctx4 = (
+            _LayoutTransaction(
+                fig,
+                cache_ticks=not getattr(fig, "_disable_axis_tick_cache", False),
+                cache_extents=not getattr(fig, "_disable_layout_extent_cache", False),
+            )
+            if needs_layout
+            else context._empty_context()
+        )
+        with ctx1, ctx2, ctx3, ctx4:
             needs_post_layout = False
             if not fig._layout_initialized or layout_dirty:
                 fig.auto_layout(tight=False if lock_tight_during_save else None)
@@ -647,10 +664,26 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
                 needs_post_layout = (
                     not lock_tight_during_save and _needs_post_tight_layout(fig)
                 )
-            result = func(self, *args, **kwargs)
+            selective = getattr(fig, "_selective_draw_manager", None)
+            if (
+                method != "print_figure"
+                and selective is not None
+                and not needs_layout
+                and selective.draw_if_possible()
+            ):
+                return None
+
+            def _draw_context():
+                if method != "print_figure" and selective is not None:
+                    return selective.full_draw_context()
+                return context._empty_context()
+
+            with _draw_context():
+                result = func(self, *args, **kwargs)
             if needs_post_layout:
                 fig.auto_layout()
-                result = func(self, *args, **kwargs)
+                with _draw_context():
+                    result = func(self, *args, **kwargs)
             if method == "print_figure" and getattr(self, "_is_saving", False):
                 fig._saving_frame_count = saving_frame_count + 1
             elif not getattr(self, "_is_saving", False):
@@ -1060,6 +1093,13 @@ class Figure(mfigure.Figure):
         d["bottom"] = rc["bottomlabel.sharedpad"]
         d["top"] = rc["toplabel.sharedpad"]
 
+    def _invalidate_layout(self, *, reset=False):
+        """Mark automatic layout stale, optionally discarding persistent state."""
+        self._layout_dirty = True
+        if reset:
+            self._layout_initialized = False
+            self.__dict__.pop("_layout_extent_store", None)
+
     @_clear_border_cache
     def clear(self, keep_observers=False):
         """
@@ -1081,8 +1121,7 @@ class Figure(mfigure.Figure):
         super().clear(keep_observers=keep_observers)
         self._subplots.reset()
         self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
-        self._layout_initialized = False
-        self._layout_dirty = True
+        self._invalidate_layout(reset=True)
         self._init_super_labels()
 
     @override
@@ -1110,6 +1149,28 @@ class Figure(mfigure.Figure):
         finally:
             if self.dpi != dpi:
                 mfigure.Figure.set_dpi(self, dpi)
+
+    def _blit_manager(self, *artists, bbox=None):
+        """
+        Return a manager for efficient updates of changing artists.
+
+        Parameters
+        ----------
+        *artists : `~matplotlib.artist.Artist`
+            Artists that will change between updates.
+        bbox : `~matplotlib.transforms.Bbox` or object with a ``bbox`` attribute, optional
+            Region to cache and blit. By default, the union of the artists'
+            axes bounding boxes is used.
+
+        Returns
+        -------
+        `~ultraplot._animation._BlitManager`
+            Manager that restores the cached static background and redraws only
+            the supplied artists.
+        """
+        from ._animation import _BlitManager
+
+        return _BlitManager(self.canvas, artists, bbox=bbox)
 
     def _is_auto_share_mode(self, which: str) -> bool:
         """Return whether a given axis uses auto-share mode."""
@@ -1943,8 +2004,11 @@ class Figure(mfigure.Figure):
                 if label.get_text() and not label.get_text().strip():
                     label.set_visible(False)
             if isinstance(obj, paxes.Axes):
-                bbox = obj.get_tightbbox(
-                    renderer, include_subset_titles=include_subset_titles
+                bbox = self._get_layout_axes_bbox(
+                    obj,
+                    renderer,
+                    include_subset_titles=include_subset_titles,
+                    use_cache=not exclude_spanning_axis_labels,
                 )
             else:
                 bbox = obj.get_tightbbox(renderer)  # cannot use cached bbox
@@ -1961,6 +2025,74 @@ class Figure(mfigure.Figure):
             pad = self._suplabel_pad[side] / 72
             pad = pad / width if side in ("left", "right") else pad / height
         return min(cs) - pad if side in ("left", "bottom") else max(cs) + pad
+
+    def _get_layout_axes_bbox(
+        self,
+        axes,
+        renderer,
+        *,
+        include_subset_titles=True,
+        use_cache=True,
+    ):
+        """Return an axes bbox using the active relative-outset store."""
+        transaction = getattr(self, "_layout_transaction", None)
+        store = transaction.extents if transaction is not None else None
+        if store is not None:
+            return store.get_tightbbox(
+                axes,
+                renderer,
+                include_subset_titles=include_subset_titles,
+                use_cache=use_cache,
+            )
+        try:
+            return axes.get_tightbbox(
+                renderer, include_subset_titles=include_subset_titles
+            )
+        except TypeError:
+            return axes.get_tightbbox(renderer)
+
+    def _get_layout_tightbbox(self, renderer):
+        """
+        Return the figure tight bbox while reusing relative axes outsets.
+
+        This mirrors matplotlib's ``Figure.get_tightbbox`` but routes axes
+        measurements through the active relative-outset store.
+        """
+        artists = [
+            artist
+            for artist in self.get_children()
+            if (
+                artist not in self.axes
+                and artist.get_visible()
+                and artist.get_in_layout()
+            )
+        ]
+        bboxes = []
+        for artist in artists:
+            bbox = artist.get_tightbbox(renderer)
+            if bbox is not None:
+                bboxes.append(bbox)
+
+        for axes in self.axes:
+            if not axes.get_visible():
+                continue
+            bbox = self._get_layout_axes_bbox(axes, renderer)
+            if bbox is not None:
+                bboxes.append(bbox)
+
+        bboxes = [
+            bbox
+            for bbox in bboxes
+            if (
+                np.isfinite(bbox.width)
+                and np.isfinite(bbox.height)
+                and (bbox.width != 0 or bbox.height != 0)
+            )
+        ]
+        if not bboxes:
+            return self.bbox_inches
+        bbox = mtransforms.Bbox.union(bboxes)
+        return mtransforms.TransformedBbox(bbox, self.dpi_scale_trans.inverted())
 
     def _get_renderer(self):
         """
@@ -2145,7 +2277,7 @@ class Figure(mfigure.Figure):
         """
         Add a figure panel.
         """
-        self._layout_dirty = True
+        self._invalidate_layout()
         # Interpret args and enforce sensible keyword args
         side = _translate_loc(side, "panel", default="right")
         if side in ("left", "right"):
@@ -3338,6 +3470,9 @@ class Figure(mfigure.Figure):
         # WARNING: Tried to avoid two figure resizes but made
         # subsequent tight layout really weird. Have to resize twice.
         _draw_content()
+        transaction = getattr(self, "_layout_transaction", None)
+        if transaction is not None:
+            transaction.refresh()
         if not gs:
             return
         if aspect:
@@ -3414,8 +3549,15 @@ class Figure(mfigure.Figure):
         ultraplot.gridspec.SubplotGrid.format
         ultraplot.config.Configurator.context
         """
-        self._layout_dirty = True
         # Initiate context block
+        # A stale figure carries a change we did not classify, such as a
+        # set_ylabel() call since the last draw. format() has always flushed
+        # those into the layout, so keep doing that.
+        # Axes.format() has already applied its paint changes by the time it
+        # reaches us, so trust the verdict it took on entry when it supplies one.
+        pending_layout = kwargs.pop("_pending_layout", None)
+        if pending_layout is None:
+            pending_layout = bool(self.stale)
         axs = axs or self._iter_subplots()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         explicit_format_keys = set(kwargs)
@@ -3425,6 +3567,33 @@ class Figure(mfigure.Figure):
         explicit_format_keys.update(signature_axis_kwargs)
         explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
+        figure_layout_requested = _any_not_none(
+            figtitle,
+            suptitle,
+            suptitle_kw,
+            llabels,
+            leftlabels,
+            leftlabels_kw,
+            rlabels,
+            rightlabels,
+            rightlabels_kw,
+            blabels,
+            bottomlabels,
+            bottomlabels_kw,
+            tlabels,
+            toplabels,
+            toplabels_kw,
+            rowlabels,
+            collabels,
+            includepanels,
+        )
+        if (
+            pending_layout
+            or figure_layout_requested
+            or bool(rc_kw)
+            or axis_format_requires_layout(explicit_format_keys)
+        ):
+            self._invalidate_layout()
         kwargs.update(signature_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
             # Update background patch
@@ -3991,9 +4160,21 @@ class Figure(mfigure.Figure):
         # do not want to overwrite the matplotlib docstring.
         if isinstance(filename, str):
             filename = os.path.expanduser(filename)
-        # NOTE: this draw ensures that we are applying ultraplots layout adjustment. It is unclear what changed with ultraplot's history that makes this necessary, but it seems to cause no issues. Future devs, if unnecessary remove this line and test.
-        self.canvas.draw()
-        super().savefig(filename, **kwargs)
+        # Blitting marks managed artists as animated so full interactive draws can
+        # cache the static background. Temporarily restore their original states
+        # so savefig includes them in normal z-order.
+        managers = tuple(getattr(self, "_blit_managers", ()))
+        with ExitStack() as stack:
+            selective = getattr(self, "_selective_draw_manager", None)
+            if selective is not None:
+                stack.enter_context(selective.save_context())
+            for manager in managers:
+                stack.enter_context(manager._save_context())
+            # NOTE: this draw ensures that we are applying ultraplots layout
+            # adjustment. It is unclear what changed with ultraplot's history that
+            # makes this necessary, but it seems to cause no issues.
+            self.canvas.draw()
+            super().savefig(filename, **kwargs)
 
     @docstring._concatenate_inherited
     def set_canvas(self, canvas):
@@ -4022,6 +4203,9 @@ class Figure(mfigure.Figure):
         # around this by forcing additional draw() call in this function before
         # proceeding with print_figure). Set the canvas and add monkey patches
         # to the instance-level draw and print_figure methods.
+        previous = getattr(self, "_selective_draw_manager", None)
+        if previous is not None:
+            previous.close()
         method = "draw"
         # if getattr(canvas, "_draw", None):
         # method = "_draw"
@@ -4036,10 +4220,19 @@ class Figure(mfigure.Figure):
                 fig = self.figure
                 if fig is not None:
                     fig._skip_autolayout = True
+                    selective = getattr(fig, "_selective_draw_manager", None)
+                    preview = getattr(selective, "_navigation_preview", None)
+                    if preview is not None and preview.request_draw(
+                        lambda: orig_draw_idle(self, *args, **kwargs)
+                    ):
+                        return None
                 return orig_draw_idle(self, *args, **kwargs)
 
             canvas.draw_idle = _draw_idle.__get__(canvas)
         super().set_canvas(canvas)
+        from ._animation import _SelectiveDrawManager
+
+        self._selective_draw_manager = _SelectiveDrawManager(canvas, self)
 
     def _is_same_size(self, figsize, eps=None):
         """
@@ -4106,7 +4299,7 @@ class Figure(mfigure.Figure):
         if not samesize:  # gridspec positions will resolve differently
             self.gridspec.update()
             if not backend and not internal:
-                self._layout_dirty = True
+                self._invalidate_layout()
 
     def _iter_axes(self, hidden=False, children=False, panels=True):
         """

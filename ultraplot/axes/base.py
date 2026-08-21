@@ -3343,8 +3343,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         ultraplot.gridspec.SubplotGrid.format
         ultraplot.config.Configurator.context
         """
-        if self.figure is not None:
-            self.figure._layout_dirty = True
+        if self.figure is not None and getattr(self, "_format_layout_required", True):
+            invalidate = getattr(self.figure, "_invalidate_layout", None)
+            if invalidate is None:
+                self.figure._layout_dirty = True
+            else:
+                invalidate()
         skip_figure = kwargs.pop("skip_figure", False)  # internal keyword arg
         params = _pop_params(kwargs, self.figure._format_signature)
 
@@ -3427,7 +3431,16 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             return
         if self._inset_parent is not None or self._panel_parent is not None:
             return
-        self.figure.format(rc_kw=rc_kw, rc_mode=rc_mode, skip_axes=True, **params)
+        # Pass our own entry-time verdict. Figure.format() reads figure
+        # staleness to catch layout changes made outside format(), but by now
+        # this call has applied its own paint changes and dirtied the figure.
+        self.figure.format(
+            rc_kw=rc_kw,
+            rc_mode=rc_mode,
+            skip_axes=True,
+            _pending_layout=getattr(self, "_format_layout_required", True),
+            **params,
+        )
 
     def draw(self, renderer=None, *args, **kwargs):
         # Perform extra post-processing steps
