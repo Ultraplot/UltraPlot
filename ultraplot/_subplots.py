@@ -3,7 +3,7 @@ Subplot creation and management for ultraplot figures.
 """
 
 from numbers import Integral
-from typing import TYPE_CHECKING
+from typing import Protocol
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
@@ -15,22 +15,136 @@ from . import constructor
 from . import gridspec as pgridspec
 from .internals import _not_none, _pop_params, warnings
 
-if TYPE_CHECKING:
-    from .figure import Figure
+
+def parse_backend(backend=None, basemap=None):
+    """
+    Handle deprecation of basemap and cartopy package.
+    """
+    if backend == "basemap":
+        constructor._warn_basemap_deprecated()
+    return backend
+
+
+def parse_proj(
+    proj=None,
+    projection=None,
+    proj_kw=None,
+    projection_kw=None,
+    backend=None,
+    basemap=None,
+    **kwargs,
+):
+    """
+    Translate user-input projection into a registered matplotlib axes class.
+    """
+    # Parse arguments
+    proj = _not_none(proj=proj, projection=projection, default="cartesian")
+    proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
+    backend = parse_backend(backend, basemap)
+    if isinstance(proj, str):
+        proj = proj.lower()
+
+    # Search axes projections
+    name = None
+
+    # Handle cartopy/basemap Projection objects directly
+    # These should be converted to Ultraplot GeoAxes
+    if not isinstance(proj, str):
+        if constructor.Projection is not object and isinstance(
+            proj, constructor.Projection
+        ):
+            name = "ultraplot_cartopy"
+            kwargs["map_projection"] = proj
+        elif constructor.Basemap is not object and isinstance(
+            proj, constructor.Basemap
+        ):
+            name = "ultraplot_basemap"
+            kwargs["map_projection"] = proj
+            constructor._warn_basemap_deprecated()
+
+    if name is None and isinstance(proj, str):
+        try:
+            mproj.get_projection_class("ultraplot_" + proj)
+        except (KeyError, ValueError):
+            pass
+        else:
+            name = "ultraplot_" + proj
+    if name is None and isinstance(proj, str):
+        # Try geographic projections first if cartopy/basemap available
+        if constructor.Projection is not object or constructor.Basemap is not object:
+            try:
+                proj_obj = constructor.Proj(
+                    proj, backend=backend, include_axes=True, **proj_kw
+                )
+                name = "ultraplot_" + proj_obj._proj_backend
+                kwargs["map_projection"] = proj_obj
+            except ValueError:
+                pass  # not a geographic projection, try matplotlib registry below
+
+        # If not geographic, check if registered globally in matplotlib
+        # (e.g., 'ternary', 'polar', '3d')
+        if name is None and proj in mproj.get_projection_names():
+            name = proj
+
+    if name is None and isinstance(proj, str):
+        raise ValueError(
+            f"Invalid projection name {proj!r}. If you are trying to generate a "
+            "GeoAxes with a cartopy.crs.Projection or mpl_toolkits.basemap.Basemap "
+            "then cartopy or basemap must be installed. Otherwise the known axes "
+            f"subclasses are:\n{paxes._cls_table}"
+        )
+
+    if name is not None:
+        kwargs["projection"] = name
+    return kwargs
+
+
+class FigureHost(Protocol):
+    """
+    The members of `~ultraplot.figure.Figure` that `SubplotManager` calls *directly*.
+
+    Naming them keeps the upward dependency deliberate: a change to `Figure` reaches
+    the manager through these four names and nowhere else, and adding a fifth is a
+    visible edit here rather than a new attribute poke buried in a method.
+
+    WARNING: This is not a sufficient interface -- satisfying it is not enough to
+    drive a `SubplotManager`. `gridspec` assigns ``gs.figure = self.figure``, and
+    `~ultraplot.gridspec.GridSpec.figure` rejects anything that is not a real
+    `Figure`, then reads ``_gridspec_params`` and calls ``set_size_inches``. So the
+    manager still requires a concrete `Figure`; that requirement simply arrives
+    through `GridSpec` rather than through this protocol.
+    """
+
+    def _native_add_subplot(self, *args, **kwargs):
+        """Create an axes with matplotlib's ``add_subplot``, skipping overrides."""
+
+    def _mark_layout_dirty(self) -> None:
+        """Record that the layout must be recomputed before the next draw."""
+
+    def _pop_format_params(self, kwargs: dict) -> dict:
+        """Remove and return the figure-level ``format`` keywords in *kwargs*."""
+
+    def format(self, **kwargs) -> None:
+        """Apply figure-level formatting."""
 
 
 class SubplotManager:
     """
-    Manages subplot creation, gridspec ownership, and projection parsing
-    for a Figure instance.
+    Manages subplot creation and gridspec ownership for a figure.
 
     Parameters
     ----------
     figure : `~ultraplot.figure.Figure`
-        The parent figure.
+        The parent figure. `FigureHost` documents which of its members are used.
     """
 
-    def __init__(self, figure: "Figure"):
+    # Projection parsing is a pure function of its arguments -- aliased here
+    # because `ultraplot.ui` introspects these signatures to split figure
+    # keywords from subplot keywords.
+    parse_backend = staticmethod(parse_backend)
+    parse_proj = staticmethod(parse_proj)
+
+    def __init__(self, figure: FigureHost):
         self.figure = figure
         self.subplot_dict: dict = {}
         self.counter: int = 0
@@ -60,99 +174,13 @@ class SubplotManager:
         self._gridspec = gs
         gs.figure = self.figure  # gridspec.figure should reference the real Figure
 
-    @staticmethod
-    def parse_backend(backend=None, basemap=None):
-        """
-        Handle deprecation of basemap and cartopy package.
-        """
-        if backend == "basemap":
-            constructor._warn_basemap_deprecated()
-        return backend
-
-    def parse_proj(
-        self,
-        proj=None,
-        projection=None,
-        proj_kw=None,
-        projection_kw=None,
-        backend=None,
-        basemap=None,
-        **kwargs,
-    ):
-        """
-        Translate user-input projection into a registered matplotlib axes class.
-        """
-        # Parse arguments
-        proj = _not_none(proj=proj, projection=projection, default="cartesian")
-        proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
-        backend = self.parse_backend(backend, basemap)
-        if isinstance(proj, str):
-            proj = proj.lower()
-
-        # Search axes projections
-        name = None
-
-        # Handle cartopy/basemap Projection objects directly
-        # These should be converted to Ultraplot GeoAxes
-        if not isinstance(proj, str):
-            if constructor.Projection is not object and isinstance(
-                proj, constructor.Projection
-            ):
-                name = "ultraplot_cartopy"
-                kwargs["map_projection"] = proj
-            elif constructor.Basemap is not object and isinstance(
-                proj, constructor.Basemap
-            ):
-                name = "ultraplot_basemap"
-                kwargs["map_projection"] = proj
-                constructor._warn_basemap_deprecated()
-
-        if name is None and isinstance(proj, str):
-            try:
-                mproj.get_projection_class("ultraplot_" + proj)
-            except (KeyError, ValueError):
-                pass
-            else:
-                name = "ultraplot_" + proj
-        if name is None and isinstance(proj, str):
-            # Try geographic projections first if cartopy/basemap available
-            if (
-                constructor.Projection is not object
-                or constructor.Basemap is not object
-            ):
-                try:
-                    proj_obj = constructor.Proj(
-                        proj, backend=backend, include_axes=True, **proj_kw
-                    )
-                    name = "ultraplot_" + proj_obj._proj_backend
-                    kwargs["map_projection"] = proj_obj
-                except ValueError:
-                    pass  # not a geographic projection, try matplotlib registry below
-
-            # If not geographic, check if registered globally in matplotlib
-            # (e.g., 'ternary', 'polar', '3d')
-            if name is None and proj in mproj.get_projection_names():
-                name = proj
-
-        if name is None and isinstance(proj, str):
-            raise ValueError(
-                f"Invalid projection name {proj!r}. If you are trying to generate a "
-                "GeoAxes with a cartopy.crs.Projection or mpl_toolkits.basemap.Basemap "
-                "then cartopy or basemap must be installed. Otherwise the known axes "
-                f"subclasses are:\n{paxes._cls_table}"
-            )
-
-        if name is not None:
-            kwargs["projection"] = name
-        return kwargs
-
     def add_subplot(self, *args, **kwargs):
         """
         The driver function for adding single subplots.
         """
         fig = self.figure
-        fig._layout_dirty = True
-        kwargs = self.parse_proj(**kwargs)
+        fig._mark_layout_dirty()
+        kwargs = parse_proj(**kwargs)
 
         args = args or (1, 1, 1)
         gs = self.gridspec
@@ -259,13 +287,9 @@ class SubplotManager:
 
         kwargs.pop("_subplot_spec", None)
 
-        # NOTE: Skip past Figure.add_subplot (which routes back here) to the
-        # matplotlib implementation. Using super() rather than naming the
-        # matplotlib class keeps any mixin between Figure and matplotlib's
-        # Figure in a subclass MRO from being bypassed.
-        from .figure import Figure
-
-        ax = super(Figure, fig).add_subplot(ss, **kwargs)
+        # NOTE: The host skips past its own add_subplot (which routes back here)
+        # to the matplotlib implementation.
+        ax = fig._native_add_subplot(ss, **kwargs)
         if ax.number:
             self.subplot_dict[ax.number] = ax
         return ax
@@ -350,7 +374,7 @@ class SubplotManager:
         proj = _axes_dict(naxs, proj, kw=False, default="cartesian")
         proj_kw = _not_none(projection_kw=projection_kw, proj_kw=proj_kw) or {}
         proj_kw = _axes_dict(naxs, proj_kw, kw=True)
-        backend = self.parse_backend(backend, basemap)
+        backend = parse_backend(backend, basemap)
         backend = _axes_dict(naxs, backend, kw=False)
         axes_kw = {
             num: {"proj": proj[num], "proj_kw": proj_kw[num], "backend": backend[num]}
@@ -365,7 +389,7 @@ class SubplotManager:
                 "parameters as keyword arguments instead."
             )
             kwargs.update(kw or {})
-        figure_kw = _pop_params(kwargs, fig._format_signature)
+        figure_kw = fig._pop_format_params(kwargs)
         gridspec_kw = _pop_params(kwargs, pgridspec.GridSpec._update_params)
 
         # Create or update the gridspec and add subplots with subplotspecs
@@ -386,7 +410,7 @@ class SubplotManager:
             y0, y1 = axrows[idx, 0], axrows[idx, 1]
             ss = gs[y0 : y1 + 1, x0 : x1 + 1]
             kw = {**kwargs, **axes_kw[num], "number": num}
-            axs[idx] = fig.add_subplot(ss, **kw)
+            axs[idx] = self.add_subplot(ss, **kw)
         fig.format(skip_axes=True, **figure_kw)
         return pgridspec.SubplotGrid(axs)
 

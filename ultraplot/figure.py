@@ -41,7 +41,7 @@ from .internals import (
     labels,
     warnings,
 )
-from ._subplots import SubplotManager
+from ._subplots import SubplotManager, parse_backend, parse_proj
 from .utils import _Crawler, units
 
 __all__ = [
@@ -1082,7 +1082,7 @@ class Figure(mfigure.Figure):
         self._subplots.reset()
         self._panel_dict = {"left": [], "right": [], "bottom": [], "top": []}
         self._layout_initialized = False
-        self._layout_dirty = True
+        self._mark_layout_dirty()
         self._init_super_labels()
 
     @override
@@ -1726,12 +1726,33 @@ class Figure(mfigure.Figure):
 
     @staticmethod
     def _parse_backend(backend=None, basemap=None):
-        """Delegate to SubplotManager."""
-        return SubplotManager.parse_backend(backend, basemap)
+        """Delegate to the projection parser."""
+        return parse_backend(backend, basemap)
 
     def _parse_proj(self, *args, **kwargs):
-        """Delegate to SubplotManager."""
-        return self._subplots.parse_proj(*args, **kwargs)
+        """Delegate to the projection parser."""
+        return parse_proj(*args, **kwargs)
+
+    # Implementation of `ultraplot._subplots.FigureHost` -- the only members
+    # `SubplotManager` is permitted to reach for. Keep this seam narrow: anything
+    # else the manager needs should become an explicit method here first.
+    def _native_add_subplot(self, *args, **kwargs):
+        """
+        Add a subplot with matplotlib's implementation, skipping this class's
+        `add_subplot` (which routes back into `SubplotManager`).
+
+        NOTE: Uses ``super()`` rather than naming `matplotlib.figure.Figure` so a
+        mixin between this class and matplotlib's in a subclass MRO is not bypassed.
+        """
+        return super().add_subplot(*args, **kwargs)
+
+    def _mark_layout_dirty(self):
+        """Record that the layout must be recomputed before the next draw."""
+        self._layout_dirty = True
+
+    def _pop_format_params(self, kwargs):
+        """Remove and return the figure-level `format` keywords in *kwargs*."""
+        return _pop_params(kwargs, self._format_signature)
 
     def _get_align_axes(self, side):
         """
@@ -2145,7 +2166,7 @@ class Figure(mfigure.Figure):
         """
         Add a figure panel.
         """
-        self._layout_dirty = True
+        self._mark_layout_dirty()
         # Interpret args and enforce sensible keyword args
         side = _translate_loc(side, "panel", default="right")
         if side in ("left", "right"):
@@ -2258,6 +2279,10 @@ class Figure(mfigure.Figure):
                     else:
                         ref._shared_axes[which].join(ref, other)
 
+    # NOTE: The manager builds each subplot through its own `add_subplot`, not
+    # this class's, so the border cache is invalidated once here rather than
+    # once per subplot.
+    @_clear_border_cache
     def _add_subplots(self, *args, **kwargs):
         """Delegate to SubplotManager."""
         return self._subplots.add_subplots(*args, **kwargs)
@@ -3414,7 +3439,7 @@ class Figure(mfigure.Figure):
         ultraplot.gridspec.SubplotGrid.format
         ultraplot.config.Configurator.context
         """
-        self._layout_dirty = True
+        self._mark_layout_dirty()
         # Initiate context block
         axs = axs or self._iter_subplots()
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
@@ -4106,7 +4131,7 @@ class Figure(mfigure.Figure):
         if not samesize:  # gridspec positions will resolve differently
             self.gridspec.update()
             if not backend and not internal:
-                self._layout_dirty = True
+                self._mark_layout_dirty()
 
     def _iter_axes(self, hidden=False, children=False, panels=True):
         """
