@@ -898,6 +898,8 @@ class _GeoAxis(object):
         # giant lists of 10,000 gridline locations.
         if len(ticks) == 0:
             return ticks
+        if len(ticks) == 1:
+            return ticks
         range_ = np.max(ticks) - np.min(ticks)
         vmin = max(vmin, ticks[0] - range_)
         vmax = min(vmax, ticks[-1] + range_)
@@ -984,7 +986,6 @@ class _GeoAxis(object):
                 setter = getattr(other, f"set_{func}")
                 setter(getter())
                 setattr(other, prop, this_prop)
-
 
 class _GridlinerAdapter(Protocol):
     """
@@ -1594,6 +1595,46 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self._edge_lon_labels: list[mtext.Text] = []
         self._edge_lat_labels: list[mtext.Text] = []
         super().__init__(*args, **kwargs)
+
+    def _sync_shared_tick_state(
+        self,
+        which: str,
+        *,
+        copy_major_locator: bool = False,
+        copy_minor_locator: bool = False,
+        copy_major_formatter: bool = False,
+    ) -> None:
+        """
+        Copy explicit tick-state changes from this axis to shared GeoAxes siblings.
+        """
+        if which not in {"x", "y"}:
+            raise ValueError(f"Invalid axis: {which!r}")
+        if not any((copy_major_locator, copy_minor_locator, copy_major_formatter)):
+            return
+        if which == "x":
+            if self.figure._sharex < 2:
+                return
+            this_axis = self._lonaxis
+            siblings = list(self._shared_axes["x"].get_siblings(self))
+        else:
+            if self.figure._sharey < 2:
+                return
+            this_axis = self._lataxis
+            siblings = list(self._shared_axes["y"].get_siblings(self))
+        for sibling in siblings:
+            if sibling is self or not isinstance(sibling, GeoAxes):
+                continue
+            sibling_axis = sibling._lataxis if which == "y" else sibling._lonaxis
+            if copy_major_locator:
+                sibling_axis.set_major_locator(this_axis.get_major_locator())
+            if copy_minor_locator:
+                sibling_axis.set_minor_locator(this_axis.get_minor_locator())
+            if copy_major_formatter:
+                sibling_axis.set_major_formatter(this_axis.get_major_formatter())
+            if copy_major_locator or copy_major_formatter:
+                sibling._update_major_gridlines()
+            if copy_minor_locator:
+                sibling._update_minor_gridlines()
 
     @docstring._snippet_manager
     def hawkeye(
@@ -3087,6 +3128,22 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 labelpad=labelpad,
                 nsteps=nsteps,
             )
+            if _not_none(lonlocator=lonlocator, lonlines=lonlines) is not None:
+                self._sync_shared_tick_state("x", copy_major_locator=True)
+            if _not_none(latlocator=latlocator, latlines=latlines) is not None:
+                self._sync_shared_tick_state("y", copy_major_locator=True)
+            if _not_none(
+                lonminorlocator=lonminorlocator, lonminorlines=lonminorlines
+            ) is not None:
+                self._sync_shared_tick_state("x", copy_minor_locator=True)
+            if _not_none(
+                latminorlocator=latminorlocator, latminorlines=latminorlines
+            ) is not None:
+                self._sync_shared_tick_state("y", copy_minor_locator=True)
+            if lonformatter is not None:
+                self._sync_shared_tick_state("x", copy_major_formatter=True)
+            if latformatter is not None:
+                self._sync_shared_tick_state("y", copy_major_formatter=True)
         self._format_apply_ticklen(
             lonlim=lonlim,
             latlim=latlim,

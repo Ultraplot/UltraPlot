@@ -795,6 +795,37 @@ def test_copy_locator_props():
         assert getattr(g1, prop) == getattr(g2, prop)
 
 
+def test_format_shared_ticks_sync():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(ncols=2, proj="cyl", share="all")
+    ax.format(lonlim=(100, 105), latlim=(30, 35), labels=True)
+
+    before_lon = ax[0]._get_lonticklocs()
+    before_lat = ax[0]._get_latticklocs()
+
+    ax[1].format(lonlines=2, latlines=1)
+
+    after_left_lon = ax[0]._get_lonticklocs()
+    after_left_lat = ax[0]._get_latticklocs()
+    after_right_lon = ax[1]._get_lonticklocs()
+    after_right_lat = ax[1]._get_latticklocs()
+    left_gridliner = ax[0]._gridliner_adapters["major"].gridliner
+
+    assert np.asarray(after_left_lon).shape != np.asarray(before_lon).shape or not np.allclose(
+        after_left_lon,
+        before_lon,
+    )
+    assert np.asarray(after_left_lat).shape != np.asarray(before_lat).shape or not np.allclose(
+        after_left_lat,
+        before_lat,
+    )
+    assert np.allclose(after_left_lon, after_right_lon)
+    assert np.allclose(after_left_lat, after_right_lat)
+    assert np.allclose(left_gridliner.xlocator.tick_values(100, 105), after_left_lon)
+    assert np.allclose(left_gridliner.ylocator.tick_values(30, 35), after_left_lat)
+    uplt.close(fig)
+
+
 def test_turn_off_tick_labels_basemap():
     """
     Check if we can toggle the labels off for GeoAxes
