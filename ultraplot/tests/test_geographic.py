@@ -3,6 +3,7 @@ from unittest import mock
 
 import numpy as np
 import pytest
+from matplotlib import ticker as mticker
 
 import ultraplot as uplt
 
@@ -827,6 +828,35 @@ def test_format_shared_ticks_sync():
     assert np.allclose(after_left_lat, after_right_lat)
     assert np.allclose(left_gridliner.xlocator.tick_values(100, 105), after_left_lon)
     assert np.allclose(left_gridliner.ylocator.tick_values(30, 35), after_left_lat)
+
+    ax[1].format(lonminorlines=0.5, latminorlines=0.5)
+    assert np.allclose(
+        ax[0]._lonaxis.get_minorticklocs(), ax[1]._lonaxis.get_minorticklocs()
+    )
+    assert np.allclose(
+        ax[0]._lataxis.get_minorticklocs(), ax[1]._lataxis.get_minorticklocs()
+    )
+
+    formatter = mticker.FormatStrFormatter("%.1f")
+    ax[1].format(lonformatter=formatter, latformatter=formatter)
+    lonformatter = ax[1]._lonaxis.get_major_formatter()
+    latformatter = ax[1]._lataxis.get_major_formatter()
+    assert ax[0]._lonaxis.get_major_formatter() is lonformatter
+    assert ax[0]._lataxis.get_major_formatter() is latformatter
+    assert left_gridliner.xformatter is lonformatter
+    assert left_gridliner.yformatter is latformatter
+    uplt.close(fig)
+
+
+def test_sync_shared_tick_state_guards():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(ncols=2, proj="cyl")
+
+    ax[0]._sync_shared_tick_state("x")
+    ax[0]._sync_shared_tick_state("x", copy_major_locator=True)
+    ax[0]._sync_shared_tick_state("y", copy_major_locator=True)
+    with pytest.raises(ValueError, match="Invalid axis"):
+        ax[0]._sync_shared_tick_state("z", copy_major_locator=True)
     uplt.close(fig)
 
 
