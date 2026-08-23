@@ -3,6 +3,7 @@ from unittest import mock
 
 import numpy as np
 import pytest
+from matplotlib import ticker as mticker
 
 import ultraplot as uplt
 
@@ -793,6 +794,70 @@ def test_copy_locator_props():
     for prop in props:
         assert getattr(g1, prop) == False
         assert getattr(g1, prop) == getattr(g2, prop)
+
+
+def test_format_shared_ticks_sync():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(ncols=2, proj="cyl", share="all")
+    ax.format(lonlim=(100, 105), latlim=(30, 35), labels=True)
+
+    before_lon = ax[0]._get_lonticklocs()
+    before_lat = ax[0]._get_latticklocs()
+
+    ax[1].format(lonlines=2, latlines=1)
+
+    after_left_lon = ax[0]._get_lonticklocs()
+    after_left_lat = ax[0]._get_latticklocs()
+    after_right_lon = ax[1]._get_lonticklocs()
+    after_right_lat = ax[1]._get_latticklocs()
+    left_gridliner = ax[0]._gridliner_adapters["major"].gridliner
+
+    assert np.asarray(after_left_lon).shape != np.asarray(
+        before_lon
+    ).shape or not np.allclose(
+        after_left_lon,
+        before_lon,
+    )
+    assert np.asarray(after_left_lat).shape != np.asarray(
+        before_lat
+    ).shape or not np.allclose(
+        after_left_lat,
+        before_lat,
+    )
+    assert np.allclose(after_left_lon, after_right_lon)
+    assert np.allclose(after_left_lat, after_right_lat)
+    assert np.allclose(left_gridliner.xlocator.tick_values(100, 105), after_left_lon)
+    assert np.allclose(left_gridliner.ylocator.tick_values(30, 35), after_left_lat)
+
+    ax[1].format(lonminorlines=0.5, latminorlines=0.5)
+    assert np.allclose(
+        ax[0]._lonaxis.get_minorticklocs(), ax[1]._lonaxis.get_minorticklocs()
+    )
+    assert np.allclose(
+        ax[0]._lataxis.get_minorticklocs(), ax[1]._lataxis.get_minorticklocs()
+    )
+
+    formatter = mticker.FormatStrFormatter("%.1f")
+    ax[1].format(lonformatter=formatter, latformatter=formatter)
+    lonformatter = ax[1]._lonaxis.get_major_formatter()
+    latformatter = ax[1]._lataxis.get_major_formatter()
+    assert ax[0]._lonaxis.get_major_formatter() is lonformatter
+    assert ax[0]._lataxis.get_major_formatter() is latformatter
+    assert left_gridliner.xformatter is lonformatter
+    assert left_gridliner.yformatter is latformatter
+    uplt.close(fig)
+
+
+def test_sync_shared_tick_state_guards():
+    pytest.importorskip("cartopy")
+    fig, ax = uplt.subplots(ncols=2, proj="cyl")
+
+    ax[0]._sync_shared_tick_state("x")
+    ax[0]._sync_shared_tick_state("x", copy_major_locator=True)
+    ax[0]._sync_shared_tick_state("y", copy_major_locator=True)
+    with pytest.raises(ValueError, match="Invalid axis"):
+        ax[0]._sync_shared_tick_state("z", copy_major_locator=True)
+    uplt.close(fig)
 
 
 def test_turn_off_tick_labels_basemap():
