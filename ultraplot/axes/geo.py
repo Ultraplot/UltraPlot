@@ -3129,24 +3129,26 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 labelpad=labelpad,
                 nsteps=nsteps,
             )
-            if _not_none(lonlocator=lonlocator, lonlines=lonlines) is not None:
-                self._sync_shared_tick_state("x", copy_major_locator=True)
-            if _not_none(latlocator=latlocator, latlines=latlines) is not None:
-                self._sync_shared_tick_state("y", copy_major_locator=True)
-            if (
-                _not_none(lonminorlocator=lonminorlocator, lonminorlines=lonminorlines)
-                is not None
-            ):
-                self._sync_shared_tick_state("x", copy_minor_locator=True)
-            if (
-                _not_none(latminorlocator=latminorlocator, latminorlines=latminorlines)
-                is not None
-            ):
-                self._sync_shared_tick_state("y", copy_minor_locator=True)
-            if lonformatter is not None:
-                self._sync_shared_tick_state("x", copy_major_formatter=True)
-            if latformatter is not None:
-                self._sync_shared_tick_state("y", copy_major_formatter=True)
+            self._sync_shared_tick_state(
+                "x",
+                copy_major_locator=_not_none(lonlocator=lonlocator, lonlines=lonlines)
+                is not None,
+                copy_minor_locator=_not_none(
+                    lonminorlocator=lonminorlocator, lonminorlines=lonminorlines
+                )
+                is not None,
+                copy_major_formatter=lonformatter is not None,
+            )
+            self._sync_shared_tick_state(
+                "y",
+                copy_major_locator=_not_none(latlocator=latlocator, latlines=latlines)
+                is not None,
+                copy_minor_locator=_not_none(
+                    latminorlocator=latminorlocator, latminorlines=latminorlines
+                )
+                is not None,
+                copy_major_formatter=latformatter is not None,
+            )
         self._format_apply_ticklen(
             lonlim=lonlim,
             latlim=latlim,
