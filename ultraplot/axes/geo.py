@@ -987,6 +987,7 @@ class _GeoAxis(object):
                 setter(getter())
                 setattr(other, prop, this_prop)
 
+
 class _GridlinerAdapter(Protocol):
     """
     Lightweight facade used to normalize cartopy and basemap gridliner behavior.
@@ -3132,13 +3133,15 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 self._sync_shared_tick_state("x", copy_major_locator=True)
             if _not_none(latlocator=latlocator, latlines=latlines) is not None:
                 self._sync_shared_tick_state("y", copy_major_locator=True)
-            if _not_none(
-                lonminorlocator=lonminorlocator, lonminorlines=lonminorlines
-            ) is not None:
+            if (
+                _not_none(lonminorlocator=lonminorlocator, lonminorlines=lonminorlines)
+                is not None
+            ):
                 self._sync_shared_tick_state("x", copy_minor_locator=True)
-            if _not_none(
-                latminorlocator=latminorlocator, latminorlines=latminorlines
-            ) is not None:
+            if (
+                _not_none(latminorlocator=latminorlocator, latminorlines=latminorlines)
+                is not None
+            ):
                 self._sync_shared_tick_state("y", copy_minor_locator=True)
             if lonformatter is not None:
                 self._sync_shared_tick_state("x", copy_major_formatter=True)

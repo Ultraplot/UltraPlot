@@ -811,11 +811,15 @@ def test_format_shared_ticks_sync():
     after_right_lat = ax[1]._get_latticklocs()
     left_gridliner = ax[0]._gridliner_adapters["major"].gridliner
 
-    assert np.asarray(after_left_lon).shape != np.asarray(before_lon).shape or not np.allclose(
+    assert np.asarray(after_left_lon).shape != np.asarray(
+        before_lon
+    ).shape or not np.allclose(
         after_left_lon,
         before_lon,
     )
-    assert np.asarray(after_left_lat).shape != np.asarray(before_lat).shape or not np.allclose(
+    assert np.asarray(after_left_lat).shape != np.asarray(
+        before_lat
+    ).shape or not np.allclose(
         after_left_lat,
         before_lat,
     )
