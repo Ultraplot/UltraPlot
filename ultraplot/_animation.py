@@ -139,6 +139,7 @@ class _SelectiveDrawManager:
     @staticmethod
     def _ticker_fingerprint(ticker):
         """Return a value that changes when a locator or formatter is retuned."""
+
         # Tickers are commonly reconfigured in place, e.g. set_useOffset(), which
         # alters every tick label without touching an artist's stale flag. Fold
         # their simple attributes into the signature so those changes are seen.

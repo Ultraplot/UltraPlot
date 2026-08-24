@@ -1542,6 +1542,8 @@ def test_axes_signature_does_not_dirty_a_clean_axes():
     axs[0].stale = True
     manager._axes_signature(axs[0])
     assert axs[0].stale
+
+
 def test_selective_draw_detects_mutable_ticker_state():
     """Retained layers must notice array-valued ticker parameter changes."""
     import matplotlib.ticker as mticker
