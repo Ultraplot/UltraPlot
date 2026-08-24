@@ -1249,7 +1249,7 @@ class GridSpec(mgridspec.GridSpec):
         # computed bounding boxes used by _range_tightbbox below.
         pad = self._outerpad
         obox = fig.bbox_inches  # original bbox
-        bbox = fig.get_tightbbox(renderer)
+        bbox = fig._get_layout_tightbbox(renderer)
 
         # Calculate new figure margins
         # NOTE: Negative spaces are common where entire rows/columns of gridspec

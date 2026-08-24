@@ -50,6 +50,22 @@ _AXIS_STYLE_FIELD_TEMPLATES = {
     "labelweight": ("{axis}labelweight", "labelweight"),
 }
 
+# These fields change only how existing geometry is painted. They do not change
+# tick locations, text metrics, padding, or another layout input. Keep this list
+# deliberately conservative: unknown fields must continue to invalidate layout.
+_PAINT_ONLY_AXIS_STYLE_FIELDS = {
+    "color",
+    "linewidth",
+    "grid",
+    "gridminor",
+    "gridcolor",
+    "tickcolor",
+    "tickwidth",
+    "tickwidthratio",
+    "ticklabelcolor",
+    "labelcolor",
+}
+
 
 def _dedupe(items):
     return tuple(dict.fromkeys(items))
@@ -62,6 +78,13 @@ GENERIC_AXIS_FORMAT_KEYS = _dedupe(
     if "{axis}" not in name
 )
 
+PAINT_ONLY_AXIS_FORMAT_KEYS = frozenset(
+    name.format(axis=axis)
+    for field in _PAINT_ONLY_AXIS_STYLE_FIELDS
+    for name in _AXIS_STYLE_FIELD_TEMPLATES[field]
+    for axis in ("x", "y")
+)
+
 
 CARTESIAN_PARENT_FILTER_KEYS = GENERIC_AXIS_FORMAT_KEYS + (
     "label_kw",
@@ -70,6 +93,26 @@ CARTESIAN_PARENT_FILTER_KEYS = GENERIC_AXIS_FORMAT_KEYS + (
     "formatter_kw",
     "minorlocator_kw",
 )
+
+
+def axis_format_requires_layout(keys):
+    """
+    Return whether explicit Cartesian formatting keys can affect layout.
+
+    Unknown keys are treated as layout-affecting so new formatting options
+    remain correct until they are deliberately classified.
+    """
+    keys = set(keys)
+    keys.difference_update(
+        {
+            "_explicit_format_keys",
+            "rc_kw",
+            "rc_mode",
+            "skip_axes",
+            "skip_figure",
+        }
+    )
+    return bool(keys - PAINT_ONLY_AXIS_FORMAT_KEYS)
 
 
 def get_axis_style_fields(axis):

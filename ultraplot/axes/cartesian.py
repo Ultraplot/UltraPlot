@@ -32,6 +32,7 @@ from ..internals import (
 from ..utils import units
 from ._formatting import (
     CARTESIAN_PARENT_FILTER_KEYS,
+    axis_format_requires_layout,
     get_axis_style_fields,
     pop_axis_format_kwargs,
 )
@@ -565,9 +566,26 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 border_sides,
                 border_axes,
             )
-            axis.set_tick_params(which="both", **label_visibility)
-        # Turn minor ticks off
-        axis.set_minor_formatter(mticker.NullFormatter())
+            # Like the formatter below, this runs on every draw and every tight
+            # bbox measurement, and set_tick_params() marks the axis stale
+            # unconditionally. Only apply it when something actually differs.
+            get_tick_params = getattr(axis, "get_tick_params", None)
+            if get_tick_params is None:
+                axis.set_tick_params(which="both", **label_visibility)
+            else:
+                current = (get_tick_params("major"), get_tick_params("minor"))
+                if any(
+                    params.get(key) != value
+                    for params in current
+                    for key, value in label_visibility.items()
+                ):
+                    axis.set_tick_params(which="both", **label_visibility)
+        # Turn minor ticks off. This runs on every draw and every tight bbox
+        # measurement, so only replace a formatter that is not already null:
+        # set_minor_formatter() marks the axis stale and installs a new object
+        # each time, which defeats caches keyed on formatter identity.
+        if not isinstance(axis.get_minor_formatter(), mticker.NullFormatter):
+            axis.set_minor_formatter(mticker.NullFormatter())
 
     def _determine_tick_label_visibility(
         self,
@@ -1697,8 +1715,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         or `datetime.datetime` array as the x or y axis coordinate, the axis ticks
         and tick labels will be automatically formatted as dates.
         """
-        explicit_format_keys = set(kwargs)
-        explicit_format_keys.update(kwargs.pop("_explicit_format_keys", ()))
+        # An axes that is already stale carries a change we did not classify,
+        # such as a set_ylabel() call since the last draw. format() has always
+        # flushed those into the layout, so keep doing that.
+        pending_layout = bool(self.stale)
+        explicit_format_keys = set(kwargs.pop("_explicit_format_keys", ()))
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
             kwargs, self._format_signatures[CartesianAxes]
         )
@@ -1750,7 +1771,24 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         if aspect is not None:
             self.set_aspect(aspect)
-        super().format(rc_kw=rc_kw, rc_mode=rc_mode, **base_kwargs)
+
+        # Base Axes.format() historically invalidated layout on every call. Let
+        # clearly paint-only Cartesian updates bypass that invalidation while
+        # remaining conservative for rc changes and unknown formatting keys.
+        sentinel = object()
+        previous = getattr(self, "_format_layout_required", sentinel)
+        self._format_layout_required = (
+            pending_layout
+            or bool(rc_kw)
+            or axis_format_requires_layout(explicit_format_keys)
+        )
+        try:
+            super().format(rc_kw=rc_kw, rc_mode=rc_mode, **base_kwargs)
+        finally:
+            if previous is sentinel:
+                del self._format_layout_required
+            else:
+                self._format_layout_required = previous
 
     @docstring._snippet_manager
     def altx(self, **kwargs):
