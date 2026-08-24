@@ -1542,3 +1542,30 @@ def test_axes_signature_does_not_dirty_a_clean_axes():
     axs[0].stale = True
     manager._axes_signature(axs[0])
     assert axs[0].stale
+def test_selective_draw_detects_mutable_ticker_state():
+    """Retained layers must notice array-valued ticker parameter changes."""
+    import matplotlib.ticker as mticker
+    import numpy as np
+    import ultraplot as uplt
+
+    x = np.geomspace(1, 1000, 1000)
+    fig, ax = uplt.subplots(figwidth=5, figheight=3)
+    (line,) = ax.plot(x, np.sin(np.log(x)))
+    ax.format(xscale="log", xlim=(1, 1000), grid=True)
+    locator = mticker.LogLocator(base=10, subs=(1,))
+    ax.xaxis.set_major_locator(locator)
+    fig.canvas.draw()
+    fig.canvas.draw()
+
+    manager = fig._selective_draw_manager
+    signature = manager._ticker_signature(ax)
+    locator.set_params(subs=(1, 2, 5))
+    assert manager._ticker_signature(ax) != signature
+    line.set_ydata(np.cos(np.log(x)))
+    fig.canvas.draw()
+    retained = np.asarray(fig.canvas.buffer_rgba()).copy()
+
+    fig._selective_draw_manager.close()
+    fig.canvas.draw()
+    full = np.asarray(fig.canvas.buffer_rgba()).copy()
+    assert np.array_equal(retained, full)

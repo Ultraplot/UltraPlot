@@ -141,12 +141,44 @@ class _SelectiveDrawManager:
         """Return a value that changes when a locator or formatter is retuned."""
         # Tickers are commonly reconfigured in place, e.g. set_useOffset(), which
         # alters every tick label without touching an artist's stale flag. Fold
-        # their scalar attributes into the signature so those changes are seen.
+        # their simple attributes into the signature so those changes are seen.
+        # Several matplotlib setters store values as arrays without marking the
+        # owning axis stale, notably LogLocator.set_params(subs=...).
+        def freeze(value):
+            if isinstance(value, (str, bytes, bool, int, float, type(None))):
+                return value
+            if isinstance(value, np.generic):
+                return value.item()
+            if isinstance(value, np.ndarray):
+                if value.dtype.hasobject:
+                    items = tuple(freeze(item) for item in value.flat)
+                    if any(item is _MISSING for item in items):
+                        return _MISSING
+                    return ("array", value.shape, value.dtype.str, items)
+                return ("array", value.shape, value.dtype.str, value.tobytes())
+            if isinstance(value, (list, tuple)):
+                items = tuple(freeze(item) for item in value)
+                if any(item is _MISSING for item in items):
+                    return _MISSING
+                return (type(value).__name__, items)
+            return _MISSING
+
         state = []
         for name, value in sorted(vars(ticker).items()):
-            if isinstance(value, (str, bytes, bool, int, float, type(None))):
+            value = freeze(value)
+            if value is not _MISSING:
                 state.append((name, value))
         return (type(ticker).__module__, type(ticker).__qualname__, tuple(state))
+
+    @staticmethod
+    def _ticker_axes(ax):
+        """Return the named axis objects that own locators and formatters."""
+        axes = dict(getattr(ax, "_axis_map", {}))
+        for name in ("x", "y", "z"):
+            axis = getattr(ax, f"{name}axis", None)
+            if axis is not None:
+                axes[name] = axis
+        return tuple(sorted(axes.items()))
 
     @classmethod
     def _ticker_signature(cls, ax):
@@ -159,16 +191,14 @@ class _SelectiveDrawManager:
                 cls._ticker_fingerprint(axis.minor.locator),
                 cls._ticker_fingerprint(axis.minor.formatter),
             )
-            for name, axis in sorted(getattr(ax, "_axis_map", {}).items())
+            for name, axis in cls._ticker_axes(ax)
             if axis is not None
         )
 
     @classmethod
     def _has_untrusted_ticker(cls, ax):
         """Return whether any ticker on *ax* can change without being noticed."""
-        for axis in getattr(ax, "_axis_map", {}).values():
-            if axis is None:
-                continue
+        for _, axis in cls._ticker_axes(ax):
             for ticker in (
                 axis.major.locator,
                 axis.major.formatter,
