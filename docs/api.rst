@@ -60,6 +60,16 @@ Top-level functions
    :toctree: api
 
 
+Animation tools
+===============
+
+.. automodule:: ultraplot.animation
+   :no-private-members:
+
+.. automodsumm:: ultraplot.animation
+   :toctree: api
+
+
 Configuration tools
 ===================
 
