@@ -12,6 +12,7 @@ from matplotlib.backend_bases import FigureCanvasBase, MouseEvent, TimerBase
 from PIL import Image
 
 import ultraplot as uplt
+from ultraplot import animation as uplt_animation
 from ultraplot._animation import _BlitManager
 from ultraplot._layout import _AxisTickCache, _LayoutTransaction
 
@@ -1571,3 +1572,316 @@ def test_selective_draw_detects_mutable_ticker_state():
     fig.canvas.draw()
     full = np.asarray(fig.canvas.buffer_rgba()).copy()
     assert np.array_equal(retained, full)
+
+
+# --- ultraplot.animation fast writers ------------------------------------
+
+
+#: Keeps the fast path deterministic. Without this, ``.gif`` resolves through
+#: :rc:`animation.writer` (``ffmpeg`` by default) and silently falls back to
+#: matplotlib on a machine with no ffmpeg, so the tests would stop covering
+#: this module at all.
+FAST = {"writer": "pillow"}
+
+
+def _fast_animation(nframes=4, **kwargs):
+    """
+    Return a simple figure, its animated line, and an UltraPlot animation.
+    """
+    fig, ax = uplt.subplots(refwidth=1.5)
+    x = np.linspace(0, 2 * np.pi, 50)
+    (line,) = ax.plot(x, np.sin(x))
+
+    def update(frame):
+        line.set_ydata(np.sin(x + frame))
+        return (line,)
+
+    return fig, line, uplt_animation.FuncAnimation(fig, update, nframes, **kwargs)
+
+
+def test_fast_save_actually_takes_the_fast_path(tmp_path, monkeypatch):
+    """
+    Guard against the tests above silently exercising matplotlib instead.
+
+    Every other test here would still pass if `save` fell back, so this one
+    asserts that the fast renderer is what ran.
+    """
+    matplotlib.use("Agg")
+    calls = []
+    original = uplt_animation._FastSaveMixin._fast_save
+
+    def spy(self, *args, **kwargs):
+        calls.append(args[0])
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(uplt_animation._FastSaveMixin, "_fast_save", spy)
+    fig, _, ani = _fast_animation(nframes=2)
+    path = tmp_path / "movie.gif"
+    ani.save(path, **FAST)
+    assert calls == [path]
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("blit", (True, False))
+def test_fast_save_gif_frame_count(tmp_path, blit):
+    """The fast Pillow path writes one image frame per animation frame."""
+    matplotlib.use("Agg")
+    path = tmp_path / "movie.gif"
+    fig, _, ani = _fast_animation(nframes=5, blit=blit)
+    ani.save(path, **FAST)
+    with Image.open(path) as image:
+        assert image.n_frames == 5
+    uplt.close(fig)
+
+
+def test_fast_save_frames_differ(tmp_path):
+    """Blitted frames must actually show the updated artist."""
+    matplotlib.use("Agg")
+    path = tmp_path / "movie.gif"
+    fig, _, ani = _fast_animation(nframes=3)
+    ani.save(path, **FAST)
+    with Image.open(path) as image:
+        frames = []
+        for index in range(image.n_frames):
+            image.seek(index)
+            frames.append(np.asarray(image.convert("RGB")).copy())
+    assert not np.array_equal(frames[0], frames[1])
+    assert not np.array_equal(frames[1], frames[2])
+    uplt.close(fig)
+
+
+def test_fast_save_matches_full_draw(tmp_path):
+    """Blitting must reproduce what a full redraw of every frame produces."""
+    matplotlib.use("Agg")
+    outputs = []
+    for blit in (True, False):
+        path = tmp_path / f"movie-{blit}.gif"
+        fig, _, ani = _fast_animation(nframes=3, blit=blit)
+        ani.save(path, **FAST)
+        with Image.open(path) as image:
+            image.seek(image.n_frames - 1)
+            outputs.append(np.asarray(image.convert("RGB")).astype(int))
+        uplt.close(fig)
+    # Blitting always draws the animated artist last, so a handful of pixels
+    # where it crosses the spines can differ. Everything else must match.
+    differing = (np.abs(outputs[0] - outputs[1]).sum(axis=-1) > 0).sum()
+    assert differing < 0.005 * outputs[0][..., 0].size
+
+
+def test_fast_save_falls_back_for_unsupported_targets(tmp_path):
+    """Unknown containers and writer instances use the matplotlib path."""
+    matplotlib.use("Agg")
+    from matplotlib.animation import PillowWriter
+
+    fig, _, ani = _fast_animation(nframes=2)
+    assert ani._resolve_writer(tmp_path / "movie.htm", None, {}, None) is None
+    assert (
+        ani._resolve_writer(tmp_path / "movie.gif", PillowWriter(fps=5), {}, None)
+        is None
+    )
+    assert (
+        ani._resolve_writer(tmp_path / "movie.gif", None, {"bbox_inches": "t"}, None)
+        is None
+    )
+    assert ani._resolve_writer(tmp_path / "movie.gif", "pillow", {}, None) == "pillow"
+    uplt.close(fig)
+
+
+def test_fast_save_picks_the_writer_matplotlib_would(tmp_path):
+    """The rc writer decides the encoder, exactly as in matplotlib."""
+    matplotlib.use("Agg")
+    from ultraplot.animation import _RawFFMpegWriter
+
+    fig, _, ani = _fast_animation(nframes=2)
+    gif = tmp_path / "movie.gif"
+    with matplotlib.rc_context({"animation.writer": "pillow"}):
+        assert ani._resolve_writer(gif, None, {}, None) == "pillow"
+    with matplotlib.rc_context({"animation.writer": "ffmpeg"}):
+        expected = "ffmpeg" if _RawFFMpegWriter.available() else None
+        assert ani._resolve_writer(gif, None, {}, None) is expected
+    with matplotlib.rc_context({"animation.writer": "html"}):
+        assert ani._resolve_writer(gif, None, {}, None) is None
+    uplt.close(fig)
+
+
+def test_fast_save_falls_back_to_matplotlib_implementation(tmp_path, monkeypatch):
+    """A rejected target really does reach ``Animation.save``."""
+    matplotlib.use("Agg")
+    from matplotlib.animation import Animation
+
+    calls = []
+    original = Animation.save
+
+    def spy(self, *args, **kwargs):
+        calls.append(args[0])
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(Animation, "save", spy)
+    fig, _, ani = _fast_animation(nframes=2)
+    path = tmp_path / "movie.gif"
+    ani.save(path, writer=matplotlib.animation.PillowWriter(fps=5))
+    assert calls == [path]
+    assert path.exists()
+    uplt.close(fig)
+
+
+def test_fast_save_writes_mp4_through_ffmpeg(tmp_path):
+    """The ffmpeg path produces a readable video with every frame."""
+    matplotlib.use("Agg")
+    pytest.importorskip("matplotlib.animation")
+    from ultraplot.animation import _RawFFMpegWriter
+
+    if not _RawFFMpegWriter.available():
+        pytest.skip("ffmpeg is not installed")
+    import subprocess
+
+    fig, _, ani = _fast_animation(nframes=5)
+    path = tmp_path / "movie.mp4"
+    ani.save(path, fps=10)
+    probe = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-count_frames",
+            "-show_entries",
+            "stream=nb_read_frames",
+            "-of",
+            "csv=p=0",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert probe.stdout.strip().rstrip(",") == "5"
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("writer", ("pillow", "ffmpeg"))
+def test_fast_save_failure_leaves_no_output(tmp_path, writer):
+    """A failing update function must not leave a truncated movie behind."""
+    matplotlib.use("Agg")
+    from ultraplot.animation import _RawFFMpegWriter
+
+    if writer == "ffmpeg" and not _RawFFMpegWriter.available():
+        pytest.skip("ffmpeg is not installed")
+    fig, ax = uplt.subplots(refwidth=1.5)
+    x = np.linspace(0, 2 * np.pi, 50)
+    (line,) = ax.plot(x, np.sin(x))
+
+    def update(frame):
+        if frame == 3:
+            raise RuntimeError("update failed")
+        line.set_ydata(np.sin(x + frame))
+        return (line,)
+
+    ani = uplt_animation.FuncAnimation(fig, update, 6)
+    path = tmp_path / "movie.gif"
+    with pytest.raises(RuntimeError, match="update failed"):
+        ani.save(path, writer=writer)
+    assert not path.exists()
+    uplt.close(fig)
+
+
+def test_fast_save_honors_dpi(tmp_path):
+    """``dpi`` scales the frames and is restored afterwards."""
+    matplotlib.use("Agg")
+    sizes = {}
+    for dpi in (50, 100):
+        fig, _, ani = _fast_animation(nframes=2)
+        path = tmp_path / f"movie-{dpi}.gif"
+        ani.save(path, dpi=dpi, **FAST)
+        with Image.open(path) as image:
+            sizes[dpi] = image.size
+        assert fig.dpi == 100
+        uplt.close(fig)
+    assert sizes[100][0] > sizes[50][0]
+
+
+def test_fast_save_reports_progress(tmp_path):
+    """``progress_callback`` fires once per frame, in order."""
+    matplotlib.use("Agg")
+    seen = []
+    fig, _, ani = _fast_animation(nframes=4)
+    ani.save(
+        tmp_path / "movie.gif",
+        progress_callback=lambda i, n: seen.append((i, n)),
+        **FAST,
+    )
+    assert [index for index, _ in seen] == [0, 1, 2, 3]
+    assert all(total == 4 for _, total in seen)
+    uplt.close(fig)
+
+
+def test_fast_save_restores_the_event_source(tmp_path):
+    """The interactive draw callback survives a save."""
+    matplotlib.use("Agg")
+    fig, _, ani = _fast_animation(nframes=3)
+    canvas = fig.canvas
+    ani.save(tmp_path / "movie.gif", **FAST)
+    assert fig.canvas is canvas
+    assert ani._first_draw_id is not None
+    connected = canvas.callbacks.callbacks.get("draw_event", {})
+    assert ani._first_draw_id in connected
+    uplt.close(fig)
+
+
+def test_fast_save_rejects_an_empty_frame_sequence(tmp_path):
+    """Saving nothing is an error, not an empty file."""
+    matplotlib.use("Agg")
+    fig, _, ani = _fast_animation(nframes=0)
+    with pytest.raises(ValueError, match="no frames"):
+        ani.save(tmp_path / "movie.gif", **FAST)
+    uplt.close(fig)
+
+
+def test_fast_save_requires_fast_path_when_requested(tmp_path):
+    """``fast=True`` is an assertion, not a hint."""
+    matplotlib.use("Agg")
+    fig, _, ani = _fast_animation(nframes=2)
+    with pytest.raises(ValueError, match="fast animation writer"):
+        ani.save(tmp_path / "movie.htm", fast=True)
+    uplt.close(fig)
+
+
+def test_fast_save_restores_artist_state(tmp_path):
+    """Saving must not leave the animated artists flagged as animated."""
+    matplotlib.use("Agg")
+    fig, line, ani = _fast_animation(nframes=3)
+    before = line.get_animated()
+    ani.save(tmp_path / "movie.gif", **FAST)
+    assert line.get_animated() is before
+    uplt.close(fig)
+
+
+def test_fast_save_runs_tight_layout_once(tmp_path):
+    """The layout solver runs for the first frame only."""
+    matplotlib.use("Agg")
+    fig, _, ani = _fast_animation(nframes=6, blit=False)
+    calls = []
+    original = fig.auto_layout
+
+    def wrapped(*args, **kwargs):
+        calls.append(kwargs.get("tight", None))
+        return original(*args, **kwargs)
+
+    fig.auto_layout = wrapped
+    ani.save(tmp_path / "movie.gif", **FAST)
+    assert len(calls) == 1
+    uplt.close(fig)
+
+
+def test_artist_animation_fast_save(tmp_path):
+    """``ArtistAnimation`` uses the same fast writer."""
+    matplotlib.use("Agg")
+    fig, ax = uplt.subplots(refwidth=1.5)
+    x = np.linspace(0, 2 * np.pi, 50)
+    frames = [ax.plot(x, np.sin(x + shift)) for shift in (0, 1, 2)]
+    ani = uplt_animation.ArtistAnimation(fig, frames, interval=100)
+    path = tmp_path / "movie.gif"
+    ani.save(path, **FAST)
+    with Image.open(path) as image:
+        assert image.n_frames == 3
+    uplt.close(fig)

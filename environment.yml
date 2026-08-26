@@ -5,6 +5,7 @@ dependencies:
   - python>=3.10,<3.15
   - numpy
   - matplotlib>=3.9
+  - ffmpeg  # animation encoder for ultraplot.animation
   - basemap >=1.4.1
   - cartopy
   - xarray
