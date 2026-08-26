@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     # __all__ — that is the only maintenance burden.
     import matplotlib.pyplot as pyplot
 
-    from .animation import animate as animate
     from .animation import ArtistAnimation as ArtistAnimation
     from .animation import FuncAnimation as FuncAnimation
     from .axes import Axes as Axes
