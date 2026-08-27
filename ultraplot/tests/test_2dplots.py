@@ -396,6 +396,63 @@ def test_tricontour_levels_respect_explicit_vmin_vmax():
     assert m.norm(0.5) == pytest.approx(0.625)
 
 
+def _triangulation():
+    """
+    Return a two-triangle unit square, for the tripcolor tests below.
+    """
+    from matplotlib.tri import Triangulation
+
+    return Triangulation(
+        [0.0, 1.0, 0.0, 1.0],
+        [0.0, 0.0, 1.0, 1.0],
+        [[0, 1, 2], [1, 3, 2]],
+    )
+
+
+def test_tripcolor_facecolors_without_z():
+    """
+    Coloring the faces needs no z, and must not warn about a positional c.
+
+    The input parser pads absent positional arguments with None, and forwarding
+    that null z made matplotlib warn that the positional parameter had no
+    effect. See the tripcolor override in `ultraplot.axes.plot`.
+    """
+    facecolors = np.array([1.0, 2.0])
+    _, ax = uplt.subplots()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        m = ax.tripcolor(_triangulation(), facecolors=facecolors)
+    assert np.array_equal(m.get_array(), facecolors)
+    assert m.get_clim() == pytest.approx((1.0, 2.0))
+
+
+def test_tripcolor_vertex_values_unaffected():
+    """
+    Passing z still colors the vertices, and still sets the color limits.
+    """
+    z = np.array([0.0, 1.0, 2.0, 3.0])
+    _, ax = uplt.subplots()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        m = ax.tripcolor(_triangulation(), z)
+    vmin, vmax = m.get_clim()
+    assert vmin == pytest.approx(0.0)
+    assert vmax == pytest.approx(3.0, abs=1e-6)
+
+
+def test_tripcolor_warns_when_z_and_facecolors_given():
+    """
+    Supplying both is a real conflict: matplotlib discards z, and says so.
+    """
+    _, ax = uplt.subplots()
+    with pytest.warns(UserWarning, match="Positional parameter c has no effect"):
+        ax.tripcolor(
+            _triangulation(),
+            np.array([0.0, 1.0, 2.0, 3.0]),
+            facecolors=np.array([1.0, 2.0]),
+        )
+
+
 def test_tricontour_explicit_colors_match_levels():
     """
     Explicit triangular contour colors should map one-to-one with levels.
