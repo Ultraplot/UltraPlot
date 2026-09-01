@@ -7632,9 +7632,16 @@ class PlotAxes(base.Axes):
         # Update kwargs and handle cmap
         kw.update(_pop_props(kw, "collection"))
 
+        # NOTE: Matplotlib colors either the vertices, from the positional z, or
+        # the faces, from the 'facecolors' keyword. Since the input parser pads
+        # missing positional arguments with None, forwarding a null z would make
+        # matplotlib warn that the positional parameter has no effect.
+        values = z
+        if z is None:
+            values = kw.get("facecolors", None)
         center_levels = kw.pop("center_levels", None)
         kw = self._parse_cmap(
-            triangulation.x, triangulation.y, z, center_levels=center_levels, **kw
+            triangulation.x, triangulation.y, values, center_levels=center_levels, **kw
         )
 
         # Handle patch edges, labels, and guide parameters
@@ -7643,8 +7650,9 @@ class PlotAxes(base.Axes):
         guide_kw = _pop_params(kw, self._update_guide)
 
         # Plot with the native tripcolor method
+        zs = () if z is None else (z,)
         with self._keep_grid_bools():
-            m = self._call_native("tripcolor", triangulation, z, **kw)
+            m = self._call_native("tripcolor", triangulation, *zs, **kw)
 
         # Fix edges and add labels
         self._fix_patch_edges(m, **edgefix_kw, **kw)
