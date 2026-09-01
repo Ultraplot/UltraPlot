@@ -50,7 +50,7 @@ jobs:
 
       - name: Build test map on cache miss
         if: steps.restore-map.outputs.cache-hit != 'true'
-        uses: mamba-org/setup-micromamba@v3.1.0
+        uses: mamba-org/setup-micromamba@v3.2.1
         with:
           environment-file: ./environment.yml
           init-shell: bash
@@ -157,7 +157,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: mamba-org/setup-micromamba@v3.1.0
+      - uses: mamba-org/setup-micromamba@v3.2.1
         with:
           environment-file: ./environment.yml
           init-shell: bash
