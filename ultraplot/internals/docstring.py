@@ -59,9 +59,7 @@ def _obfuscate_signature(func: _F, dummy: Callable[..., Any]) -> _F:
     return func
 
 
-def _concatenate_inherited(
-    func: _F, prepend_summary: bool = False
-) -> _F:
+def _concatenate_inherited(func: _F, prepend_summary: bool = False) -> _F:
     """
     Concatenate docstrings from a matplotlib axes method with a ultraplot
     axes method and mark its generated-documentation signature as compact.
@@ -163,7 +161,9 @@ class _SnippetManager(dict):
             obj %= self  # add snippets to a string
         else:
             documented = cast(Any, obj)
-            documented.__doc__ = inspect.getdoc(documented)  # also dedents the docstring
+            documented.__doc__ = inspect.getdoc(
+                documented
+            )  # also dedents the docstring
             if documented.__doc__:
                 documented.__doc__ %= self  # insert snippets after dedent
         return obj
