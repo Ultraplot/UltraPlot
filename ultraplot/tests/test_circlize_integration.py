@@ -211,3 +211,51 @@ def test_alias_methods(fake_pycirclize, tmp_path):
     circos = ax.bed(bed_path, plot=False)
     assert hasattr(circos, "sectors")
     uplt.close(fig)
+
+
+def test_import_pycirclize_restores_savefig_settings():
+    """
+    Importing pycirclize must not change how unrelated figures are saved.
+
+    ``pycirclize.config`` runs ``mpl.rcParams.update(...)`` at import time,
+    setting ``savefig.bbox='tight'`` and ``savefig.pad_inches=0.5``. UltraPlot
+    imports it lazily, so without a guard the first chord or radar plot in a
+    session would silently pad and resize every figure saved afterwards.
+    """
+    import matplotlib as mpl
+
+    pytest.importorskip("pycirclize")
+    watched = ("savefig.bbox", "savefig.pad_inches", "svg.fonttype")
+    before = {key: mpl.rcParams[key] for key in watched}
+    try:
+        circlize_mod._import_pycirclize()
+        assert {key: mpl.rcParams[key] for key in watched} == before
+    finally:
+        for key, value in before.items():
+            mpl.rcParams[key] = value
+
+
+def test_chord_diagram_does_not_resize_later_figures():
+    """
+    A figure made after a chord diagram keeps the size it was asked for.
+    """
+    import matplotlib as mpl
+
+    pytest.importorskip("pycirclize")
+    pandas = pytest.importorskip("pandas")
+    numpy = pytest.importorskip("numpy")
+
+    watched = ("savefig.bbox", "savefig.pad_inches")
+    before = {key: mpl.rcParams[key] for key in watched}
+    try:
+        names = list("ABCD")
+        matrix = pandas.DataFrame(
+            numpy.arange(16).reshape(4, 4) + 1, index=names, columns=names
+        )
+        fig, ax = uplt.subplots(figwidth="26mm", figheight="26mm", proj="polar")
+        ax.chord_diagram(matrix, ticks_interval=None)
+        uplt.close(fig)
+        assert {key: mpl.rcParams[key] for key in watched} == before
+    finally:
+        for key, value in before.items():
+            mpl.rcParams[key] = value
