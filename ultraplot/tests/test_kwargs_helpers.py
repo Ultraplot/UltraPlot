@@ -1,9 +1,11 @@
 """Tests for the keyword-argument / alias helpers in ``ultraplot.internals.kwargs``."""
 
+import inspect
 import warnings
 
 from ultraplot import internals
 from ultraplot.internals import kwargs as ikwargs
+from ultraplot.internals import warnings as uwarnings
 
 
 def test_kwargs_helpers_reexported_from_package() -> None:
@@ -45,6 +47,15 @@ def test_alias_kwargs_folds_synonym_to_canonical() -> None:
     assert func(width=5) == (1, 5, {})  # synonym folded to canonical
     assert func(ref=2, figwidth=3) == (2, 3, {})  # mix of alias + canonical
     assert func(other=9) == (1, None, {"other": 9})  # unrelated kwargs pass through
+    assert str(inspect.signature(func)) == "(*, refnum=1, figwidth=None, **kwargs)"
+
+
+def test_rename_kwargs_preserves_callable_signature() -> None:
+    @uwarnings._rename_kwargs("0.1.0", old="current")
+    def func(*, current=None):
+        return current
+
+    assert str(inspect.signature(func)) == "(*, current=None)"
 
 
 def test_alias_kwargs_none_synonym_defers_to_default() -> None:

@@ -5,6 +5,7 @@ Utilities for processing input data passed to plotting commands.
 
 import functools
 import sys
+from typing import Any, Callable, TypeVar, cast
 
 import numpy as np
 import numpy.ma as ma
@@ -20,6 +21,8 @@ try:
     from matplotlib.tri import Triangulation
 except ModuleNotFoundError:
     Triangulation = object
+
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 
 # Constants
@@ -289,13 +292,15 @@ def _parse_triangulation_inputs(*args, **kwargs):
     return triangulation, z, args[1:], kwargs
 
 
-def _parse_triangulation_with_preprocess(*keys, keywords=None, allow_extra=True):
+def _parse_triangulation_with_preprocess(
+    *keys, keywords=None, allow_extra=True
+) -> Callable[[_F], _F]:
     """
     Combines _parse_triangulation with _preprocess_or_redirect for backwards compatibility.
     """
 
-    def _decorator(func):
-        def triangulation_wrapper(self, *args, **kwargs):
+    def _decorator(func: _F) -> _F:
+        def triangulation_wrapper(self, *args, **kwargs) -> Any:
             triangulation, z, remaining_args, updated_kwargs = (
                 _parse_triangulation_inputs(*args, **kwargs)
             )
@@ -318,14 +323,14 @@ def _parse_triangulation_with_preprocess(*keys, keywords=None, allow_extra=True)
 
         # Finally make sure all other metadata is correct
         functools.update_wrapper(final_wrapper, func)
-        return final_wrapper
+        return cast(_F, final_wrapper)
 
     return _decorator
 
 
 def _preprocess_or_redirect(
     *keys, keywords=None, allow_extra=True, cartopy_default_transform=True
-):
+) -> Callable[[_F], _F]:
     """
     Redirect internal plotting calls to native matplotlib methods. Also convert
     keyword args to positional and pass arguments through 'data' dictionary.
@@ -336,12 +341,12 @@ def _preprocess_or_redirect(
     if isinstance(keywords, str):
         keywords = (keywords,)
 
-    def _decorator(func):
+    def _decorator(func: _F) -> _F:
         name = func.__name__
         from . import _kwargs_to_args
 
         @functools.wraps(func)
-        def _preprocess_or_redirect(self, *args, **kwargs):
+        def _preprocess_or_redirect(self, *args, **kwargs) -> Any:
             if getattr(self, "_internal_call", None):
                 # Redirect internal matplotlib call to native function
                 from ..axes import PlotAxes
@@ -404,7 +409,7 @@ def _preprocess_or_redirect(
                 # Call main function
                 return func(self, *args, **kwargs)  # call unbound method
 
-        return _preprocess_or_redirect
+        return cast(_F, _preprocess_or_redirect)
 
     return _decorator
 

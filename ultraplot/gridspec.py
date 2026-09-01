@@ -9,7 +9,7 @@ import re
 from collections.abc import MutableSequence
 from functools import wraps
 from numbers import Integral
-from typing import List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, TypeVar, Union, cast, overload
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
@@ -122,8 +122,23 @@ def _disable_method(attr):
     return _dummy_method
 
 
-def _apply_to_all(func=None, *, doc_key=None):
-    def decorator(f):
+_F = TypeVar("_F", bound=Callable[..., object])
+
+
+@overload
+def _apply_to_all(func: _F, *, doc_key: Optional[str] = None) -> _F: ...
+
+
+@overload
+def _apply_to_all(
+    func: None = None, *, doc_key: Optional[str] = None
+) -> Callable[[_F], _F]: ...
+
+
+def _apply_to_all(
+    func: Optional[_F] = None, *, doc_key: Optional[str] = None
+) -> Union[_F, Callable[[_F], _F]]:
+    def decorator(f: _F) -> _F:
         @wraps(f)
         def wrapper(self, *args, **kwargs):
             objs = self._apply_command(f.__name__, *args, **kwargs)
@@ -158,7 +173,7 @@ def _apply_to_all(func=None, *, doc_key=None):
 
             wrapper.__doc__ = doc
 
-        return wrapper
+        return cast(_F, wrapper)
 
     if func is not None:
         return decorator(func)
@@ -2051,7 +2066,7 @@ class SubplotGrid(MutableSequence, list):
         return items
 
     @docstring._snippet_manager
-    def format(self, **kwargs):
+    def format(self, **kwargs) -> None:
         """
         Call the ``format`` command for the `~SubplotGrid.figure`
         and every axes in the grid.

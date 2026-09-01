@@ -1,6 +1,16 @@
 """Tests for the shared style docstrings in ``ultraplot.internals.docstring``."""
 
+import inspect
+
 import ultraplot as uplt
+from ultraplot.axes import (
+    Axes,
+    CartesianAxes,
+    GeoAxes,
+    PolarAxes,
+    TaylorAxes,
+)
+from ultraplot.figure import Figure
 from ultraplot.internals import docstring
 
 
@@ -61,3 +71,65 @@ def test_geo_format_folds_alias_entries() -> None:
     assert (
         "Aliases: ``lonminorlines_kw`` and ``latminorlines_kw``, respectively." in geo
     )
+
+
+def test_compact_doc_markers_preserve_runtime_signatures() -> None:
+    """Documentation presentation must not alter callable introspection."""
+
+    def keyword_only(*, explicit=None, **kwargs):
+        return explicit, kwargs
+
+    def positional(first, second=None):
+        return first, second
+
+    keyword_signature = inspect.signature(keyword_only)
+    positional_signature = inspect.signature(positional)
+    assert docstring._obfuscate_kwargs(keyword_only) is keyword_only
+    assert docstring._obfuscate_params(positional) is positional
+    assert inspect.signature(keyword_only) == keyword_signature
+    assert inspect.signature(positional) == positional_signature
+    assert keyword_only.__ultraplot_doc_signature__ == "(**kwargs)"
+    assert positional.__ultraplot_doc_signature__ == "(*args, **kwargs)"
+
+
+def test_format_implementation_signatures_remain_visible() -> None:
+    """Format methods retain their declared signatures for tools and editors."""
+    cases = (
+        (Axes, "title"),
+        (CartesianAxes, "xlim"),
+        (PolarAxes, "r0"),
+        (GeoAxes, "lonlim"),
+        (TaylorAxes, "corrlabel"),
+    )
+    for cls, representative_parameter in cases:
+        signature = inspect.signature(cls.format)
+        assert signature == cls._format_signatures[cls]
+        assert representative_parameter in signature.parameters
+        assert cls.format.__ultraplot_doc_signature__ == "(**kwargs)"
+
+    assert inspect.signature(Figure.format) == Figure._format_signature
+    assert "suptitle" in inspect.signature(Figure.format).parameters
+    assert Figure.format.__ultraplot_doc_signature__ == "(**kwargs)"
+
+    figure_signature = inspect.signature(Figure)
+    assert "refnum" in figure_signature.parameters
+    assert Figure.__init__.__ultraplot_doc_signature__ == "(**kwargs)"
+
+
+def test_snippet_manager_preserves_callable_signature() -> None:
+    """Docstring expansion acts as a typed identity decorator."""
+
+    @docstring._snippet_manager
+    def documented(value, *, option=None):
+        """Return the input value."""
+        return value, option
+
+    assert str(inspect.signature(documented)) == "(value, *, option=None)"
+
+
+def test_inherited_docstrings_preserve_callable_signature() -> None:
+    """Matplotlib docstring concatenation only compacts the Sphinx heading."""
+    signature = inspect.signature(Axes.legend)
+    assert "handles" in signature.parameters
+    assert "labels" in signature.parameters
+    assert Axes.legend.__ultraplot_doc_signature__ == "(*args, **kwargs)"
