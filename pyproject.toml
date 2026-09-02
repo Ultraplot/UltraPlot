@@ -80,12 +80,16 @@ docs = [
     "lxml-html-clean",
     "markdown",
     "mpltern",
-    "nbsphinx",
+    # Floors below are the versions that work with Sphinx 9, which removed
+    # sphinx.ext.autosummary.get_documenter. Without them pip is free to pair a
+    # current Sphinx with an extension that cannot import it, and the build
+    # dies with "Extension error (sphinx_automodapi.automodsumm)".
+    "nbsphinx>=0.9.8",          # 0.9.7 declares sphinx<8.2
     "sphinx",
     "sphinx-autoapi",
-    "sphinx-automodapi",
+    "sphinx-automodapi>=0.22",  # 0.19 imports the removed get_documenter
     "sphinx-copybutton",
-    "sphinx-design",
+    "sphinx-design>=0.7",       # 0.6.1 declares sphinx<9
     "sphinx-gallery",
     "shibuya",
     "sphinx-sitemap",

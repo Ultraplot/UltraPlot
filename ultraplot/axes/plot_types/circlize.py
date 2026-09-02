@@ -15,8 +15,34 @@ from matplotlib.projections.polar import PolarAxes as MplPolarAxes
 from ... import constructor
 from ...config import rc
 
+#: Settings ``pycirclize.config`` writes into the global rcParams the moment it
+#: is imported. Importing a library must not change how unrelated figures are
+#: saved, so `_import_pycirclize` puts these back.
+_PYCIRCLIZE_RC_LEAKS = ("savefig.bbox", "savefig.pad_inches", "svg.fonttype")
+
 
 def _import_pycirclize():
+    """
+    Import pycirclize without letting it restyle the session.
+
+    ``pycirclize.config`` runs ``mpl.rcParams.update(...)`` at import time,
+    setting ``savefig.bbox='tight'`` and ``savefig.pad_inches=0.5``. Since the
+    import is lazy, the first chord, radar, phylogeny or circos plot in a
+    session would otherwise silently change the size and padding of every
+    figure saved afterwards.
+    """
+    import matplotlib as mpl
+
+    restore = {key: mpl.rcParams[key] for key in _PYCIRCLIZE_RC_LEAKS}
+    try:
+        return _import_pycirclize_unguarded()
+    finally:
+        for key, value in restore.items():
+            if mpl.rcParams[key] != value:
+                mpl.rcParams[key] = value
+
+
+def _import_pycirclize_unguarded():
     try:
         import pycirclize
     except ImportError as exc:
