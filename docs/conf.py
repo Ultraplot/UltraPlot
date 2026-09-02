@@ -65,6 +65,8 @@ FAST_PREVIEW = os.environ.get("UPLT_DOCS_FAST_PREVIEW", "").strip().lower() in {
 }
 if not FAST_PREVIEW:
     run([sys.executable, "_scripts/fetch_releases.py"], check=False)
+    # Visual plot-type index: thumbnails plus the page that arranges them.
+    run([sys.executable, "_scripts/build_plot_types.py"], check=False)
 
 # Docs theme selector. Default to Shibuya, but keep env override for A/B checks.
 DOCS_THEME = os.environ.get("UPLT_DOCS_THEME", "shibuya").strip().lower()
