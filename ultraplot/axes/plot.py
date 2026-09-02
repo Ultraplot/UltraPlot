@@ -7700,11 +7700,18 @@ class PlotAxes(base.Axes):
         """
         kw = kwargs.copy()
         kw.update(_pop_props(kw, "line"))  # takes valid Line2D properties
-        default_cmap = pcolors.DiscreteColormap(["w", "k"], "_no_name")
-        center_levels = kw.pop("center_levels", None)
-        kw = self._parse_cmap(
-            z, center_levels=center_levels, default_cmap=default_cmap, **kw
-        )
+        # NOTE: Matplotlib's spy draws an image when no marker is given, and a
+        # Line2D of markers otherwise. Only the image understands a colormap, so
+        # parsing one for the marker path would hand 'cmap' to a Line2D.
+        markers = kw.get("marker", None) is not None or kw.get("markersize") is not None
+        if not markers:
+            default_cmap = pcolors.DiscreteColormap(["w", "k"], "_no_name")
+            center_levels = kw.pop("center_levels", None)
+            kw = self._parse_cmap(
+                z, center_levels=center_levels, default_cmap=default_cmap, **kw
+            )
+        else:
+            kw.pop("center_levels", None)
         guide_kw = _pop_params(kw, self._update_guide)
         m = self._call_native("spy", z, **kw)
         self._update_guide(m, queue_colorbar=False, **guide_kw)
