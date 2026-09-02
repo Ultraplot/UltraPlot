@@ -163,6 +163,7 @@ class UltraColorbar:
         # NOTE: The inset axes function needs 'label' to know how to pad the box
         # TODO: Use seperate keywords for frame properties vs. colorbar edge properties?
         frame = _not_none(frame=frame, frameon=frameon)
+        bbox_to_anchor = kwargs.pop("bbox_to_anchor", None)
         inset_side = loc in ("left", "right", "top", "bottom") and getattr(
             ax, "_inset_parent", None
         )
@@ -197,7 +198,14 @@ class UltraColorbar:
                     **kwargs,
                 )
             else:
-                kwargs.update({"label": label, "length": length, "width": width})
+                kwargs.update(
+                    {
+                        "bbox_to_anchor": bbox_to_anchor,
+                        "label": label,
+                        "length": length,
+                        "width": width,
+                    }
+                )
                 extendsize = _not_none(extendsize, rc["colorbar.insetextend"])
                 cax, kwargs = ax._parse_colorbar_inset(
                     loc=loc,
@@ -366,9 +374,7 @@ class UltraColorbar:
             cax._inset_colorbar_obj = obj
             cax._inset_colorbar_labelloc = labelloc
             cax._inset_colorbar_ticklen = ticklen
-            has_frame = getattr(cax, "_inset_colorbar_frame", None) is not None
-            if has_frame:
-                _register_inset_colorbar_reflow(ax.figure)
+            _register_inset_colorbar_reflow(ax.figure)
         kw_outline = {"edgecolor": color, "linewidth": linewidth}
         if obj.outline is not None:
             obj.outline.update(kw_outline)
@@ -806,6 +812,52 @@ def _solve_inset_colorbar_bounds(
     return list(layout["inset"]), list(layout["frame"])
 
 
+def _anchor_inset_colorbar_bounds(
+    bounds_inset: list[float],
+    bounds_frame: list[float],
+    loc: str,
+    bbox_to_anchor,
+) -> Tuple[list[float], list[float]]:
+    """Align an inset colorbar footprint to a legend-style anchor box."""
+    if bbox_to_anchor is None:
+        return bounds_inset, bounds_frame
+    if isinstance(bbox_to_anchor, mtransforms.BboxBase):
+        bbox = bbox_to_anchor
+    else:
+        try:
+            values = tuple(bbox_to_anchor)
+        except TypeError as exc:
+            raise ValueError(
+                "bbox_to_anchor must be a 2- or 4-tuple, or a matplotlib Bbox."
+            ) from exc
+        if len(values) == 2:
+            bbox = mtransforms.Bbox.from_bounds(*values, 0, 0)
+        elif len(values) == 4:
+            bbox = mtransforms.Bbox.from_bounds(*values)
+        else:
+            raise ValueError(
+                "bbox_to_anchor must be a 2- or 4-tuple, or a matplotlib Bbox."
+            )
+
+    x, y, width, height = bounds_frame
+    if loc == "upper left":
+        source, target = (x, y + height), (bbox.x0, bbox.y1)
+    elif loc == "lower left":
+        source, target = (x, y), (bbox.x0, bbox.y0)
+    elif loc == "lower right":
+        source, target = (x + width, y), (bbox.x1, bbox.y0)
+    else:  # ``best`` resolves to upper right in the inset layout.
+        source, target = (x + width, y + height), (bbox.x1, bbox.y1)
+    dx, dy = target[0] - source[0], target[1] - source[1]
+    inset = list(bounds_inset)
+    frame = list(bounds_frame)
+    inset[0] += dx
+    inset[1] += dy
+    frame[0] += dx
+    frame[1] += dy
+    return inset, frame
+
+
 def _legacy_inset_colorbar_bounds(
     *,
     axes: maxes.Axes,
@@ -1089,9 +1141,15 @@ def _reflow_inset_colorbar_frame(
         bounds = solver.solve()
     except Exception:
         return
+    bounds_inset, bounds_frame = _anchor_inset_colorbar_bounds(
+        list(bounds["inset"]),
+        list(bounds["frame"]),
+        loc,
+        layout.get("bbox_to_anchor"),
+    )
     _apply_inset_colorbar_layout(
         cax,
-        bounds_inset=list(bounds["inset"]),
-        bounds_frame=list(bounds["frame"]),
+        bounds_inset=bounds_inset,
+        bounds_frame=bounds_frame,
         frame=frame,
     )

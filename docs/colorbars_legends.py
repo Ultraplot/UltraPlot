@@ -54,6 +54,9 @@
 #   (e.g., ``loc='upper right'`` or the shorthand ``loc='ur'``). Inset
 #   colorbars have optional background "frames" that can be configured
 #   with various :func:`~ultraplot.axes.Axes.colorbar` keywords.
+#   They also accept ``bbox_to_anchor`` with the same two- or four-value
+#   anchor semantics as inset legends when the default edge-aware placement
+#   should be explicitly overridden.
 
 # :func:`~ultraplot.axes.Axes.colorbar` and :meth:`~ultraplot.axes.Axes.legend` also both accept
 # `space` and `pad` keywords. `space` controls the absolute separation of the
@@ -92,6 +95,7 @@ m = ax.heatmap(data, cmap="dusk")
 ax.colorbar(m, loc="r")
 ax.colorbar(m, loc="t")  # title is automatically adjusted
 ax.colorbar(m, loc="ll", label="colorbar label")  # inset colorbar demonstration
+ax.colorbar(m, loc="ur", bbox_to_anchor=(0.92, 0.92))
 
 # Legends
 ax = fig.subplot(122, title="Axes legends", titlepad="0em")
