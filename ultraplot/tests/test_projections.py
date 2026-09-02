@@ -320,9 +320,7 @@ def test_taylor_projection_validation_errors():
 
 def test_taylor_single_axes_skips_shared_ticklabel_baseline():
     fig, axs = uplt.subplots(proj="taylor")
-    baseline, skip = fig._compute_baseline_tick_state(
-        [axs[0]], "x", ("labelbottom", "labeltop")
-    )
+    baseline, skip = fig._compute_baseline_tick_state([axs[0]], "x")
 
     assert baseline == {}
     assert skip
