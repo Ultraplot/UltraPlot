@@ -6,6 +6,8 @@ import argparse
 import ast
 import builtins
 import copy
+import importlib
+import inspect
 import os
 import re
 import shutil
@@ -419,11 +421,55 @@ def _run_pyrefly(executable: str) -> tuple[dict[Path, ast.Module], list[Path]]:
         return trees, invalid
 
 
+def _module_name(source_path: Path) -> str:
+    """Return the dotted Python module name for a package file."""
+    relative = source_path.relative_to(ROOT).with_suffix("")
+    parts = list(relative.parts)
+    if parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(parts)
+
+
+def _load_module(name: str):
+    """Safely import a module from the package for runtime inspection."""
+    os.environ.setdefault("MPLCONFIGDIR", "/tmp/ultraplot-matplotlib")
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    try:
+        return importlib.import_module(name)
+    except Exception:
+        return None
+
+
+def _resolve_runtime_doc(module: Any, qualname: str) -> str | None:
+    """Retrieve the fully expanded runtime docstring for a given qualified name."""
+    if module is None or not qualname:
+        return None
+    try:
+        obj = module
+        for part in qualname.split("."):
+            if isinstance(obj, type) and part in obj.__dict__:
+                candidate = obj.__dict__[part]
+                if isinstance(candidate, property):
+                    doc = inspect.getdoc(candidate) or inspect.getdoc(candidate.fget)
+                    if doc:
+                        return doc
+            obj = getattr(obj, part)
+        doc = inspect.getdoc(obj)
+        if doc:
+            return doc
+    except Exception:
+        pass
+    return None
+
+
 class _StubTransformer(ast.NodeTransformer):
     """Reduce implementation syntax to declarations suitable for ``.pyi`` files."""
 
-    def __init__(self, expand_docstring):
+    def __init__(self, expand_docstring, module: Any = None):
         self._expand_docstring = expand_docstring
+        self._module = module
+        self._scope: list[str] = []
 
     def _decorators(self, nodes: list[ast.expr]) -> list[ast.expr]:
         kept = []
@@ -433,11 +479,22 @@ class _StubTransformer(ast.NodeTransformer):
                 kept.append(node)
         return kept
 
-    def _doc_body(self, node: ast.AST) -> list[ast.stmt]:
-        doc = ast.get_docstring(node, clean=True)
+    def _doc_body(
+        self, node: ast.AST, qualname: str | None = None
+    ) -> list[ast.stmt]:
+        doc = None
+        if qualname:
+            doc = _resolve_runtime_doc(self._module, qualname)
+        if not doc:
+            ast_doc = ast.get_docstring(node, clean=True)
+            if ast_doc:
+                doc = self._expand_docstring(ast_doc)
+        elif "%(" in doc:
+            doc = self._expand_docstring(doc)
+
         body = []
         if doc:
-            body.append(ast.Expr(value=ast.Constant(self._expand_docstring(doc))))
+            body.append(ast.Expr(value=ast.Constant(doc)))
         body.append(ast.Expr(value=ast.Constant(Ellipsis)))
         return body
 
@@ -480,21 +537,34 @@ class _StubTransformer(ast.NodeTransformer):
 
     def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
         node.decorator_list = self._decorators(node.decorator_list)
-        node.body = self._scope_body(node.body)
+        self._scope.append(node.name)
+        try:
+            node.body = self._scope_body(node.body)
+        finally:
+            self._scope.pop()
+        if node.body and _is_docstring_statement(node.body[0]):
+            qualname = ".".join((*self._scope, node.name))
+            doc = _resolve_runtime_doc(self._module, qualname)
+            if doc:
+                if "%(" in doc:
+                    doc = self._expand_docstring(doc)
+                node.body[0] = ast.Expr(value=ast.Constant(doc))
         if not node.body:
             node.body = [ast.Expr(value=ast.Constant(Ellipsis))]
         return node
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
         node.decorator_list = self._decorators(node.decorator_list)
-        node.body = self._doc_body(node)
+        qualname = ".".join((*self._scope, node.name))
+        node.body = self._doc_body(node, qualname)
         return node
 
     def visit_AsyncFunctionDef(
         self, node: ast.AsyncFunctionDef
     ) -> ast.AsyncFunctionDef:
         node.decorator_list = self._decorators(node.decorator_list)
-        node.body = self._doc_body(node)
+        qualname = ".".join((*self._scope, node.name))
+        node.body = self._doc_body(node, qualname)
         return node
 
     def visit_Expr(self, node: ast.Expr) -> ast.Expr | None:
@@ -613,7 +683,9 @@ def _render(
     source = source_path.read_text()
     tree = ast.parse(source, filename=str(source_path))
     annotation_counts = _merge_annotations(tree, inferred)
-    tree = _StubTransformer(expand_docstring).visit(copy.deepcopy(tree))
+    module_name = _module_name(source_path)
+    module = _load_module(module_name)
+    tree = _StubTransformer(expand_docstring, module=module).visit(copy.deepcopy(tree))
     ast.fix_missing_locations(tree)
     rendered = ast.unparse(tree).rstrip() + "\n"
     return HEADER + rendered, annotation_counts
