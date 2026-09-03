@@ -22,6 +22,7 @@ jobs:
               - 'environment.yml'
               - '.github/workflows/**'
               - 'tools/ci/**'
+              - 'tools/generate_stubs.py'
 
   select-tests:
     runs-on: ubuntu-latest
@@ -99,6 +100,7 @@ jobs:
             --always-full 'pyproject.toml' \
             --always-full 'environment.yml' \
             --always-full 'ultraplot/__init__.py' \
+            --always-full 'tools/generate_stubs.py' \
             --ignore 'docs/**' \
             --ignore 'README.rst'
           echo "Selection output:"
@@ -137,6 +139,42 @@ jobs:
           echo "Detected Matplotlib versions: $(echo "$OUTPUT" | jq -c '.matplotlib_versions')"
           echo "Detected test matrix: $(echo "$OUTPUT" | jq -c '.test_matrix')"
           python tools/ci/version_support.py --format github-output >> $GITHUB_OUTPUT
+
+  stubs:
+    name: Static API stubs
+    runs-on: ubuntu-latest
+    needs:
+      - run-if-changes
+    if: always() && needs.run-if-changes.outputs.run == 'true'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install UltraPlot and typing tools
+        run: pip install -e ".[typing]"
+
+      - name: Verify generated stubs
+        run: python tools/generate_stubs.py --check
+
+      - name: Check Pylance-compatible consumption
+        run: basedpyright tools/ci/stub_consumer.py --level error
+
+      - name: Check Pyrefly consumption and generated syntax
+        run: |
+          pyrefly check tools/ci/stub_consumer.py \
+            --search-path . \
+            --python-interpreter-path "$(command -v python)" \
+            --progress-bar no
+          pyrefly check 'ultraplot/**/*.pyi' \
+            --search-path . \
+            --python-interpreter-path "$(command -v python)" \
+            --ignore-missing-imports icecream \
+            --ignore-missing-imports matplotlib.fontconfig_pattern \
+            --progress-bar no
 
   coverage:
     name: Coverage
@@ -213,6 +251,7 @@ jobs:
     needs:
       - build
       - run-if-changes
+      - stubs
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -220,7 +259,7 @@ jobs:
           if [[ '${{ needs.run-if-changes.outputs.run }}' == 'false' ]]; then
             echo "No changes detected, tests skipped."
           else
-            if [[ '${{ needs.build.result }}' == 'success' ]]; then
+            if [[ '${{ needs.build.result }}' == 'success' && '${{ needs.stubs.result }}' == 'success' ]]; then
               echo "All tests passed successfully!"
             else
               echo "Tests failed!"

@@ -2486,6 +2486,7 @@ class PlotAxes(base.Axes):
             topic_label_box=topic_label_box,
         )
 
+    @docstring._snippet_manager
     def circos(
         self,
         sectors: Mapping[str, Any],
@@ -2741,6 +2742,7 @@ class PlotAxes(base.Axes):
         """
         return self.radar_chart(*args, **kwargs)
 
+    @docstring._snippet_manager
     def circos(
         self,
         sectors: Mapping[str, Any],

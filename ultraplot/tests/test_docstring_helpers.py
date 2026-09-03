@@ -61,6 +61,20 @@ def test_method_docstring_fully_substituted() -> None:
     assert "%(artist" not in doc
 
 
+def test_public_docstrings_with_snippets_are_fully_substituted() -> None:
+    """Public methods must not expose internal snippet placeholders."""
+    for obj in (uplt.axes.PlotAxes.circos, uplt.Configurator.register_handler):
+        doc = obj.__doc__ or ""
+        assert "%(" not in doc
+
+    assert "Create a Circos instance using pyCirclize." in (
+        uplt.axes.PlotAxes.circos.__doc__ or ""
+    )
+    assert "Register a callback function to be executed" in (
+        uplt.Configurator.register_handler.__doc__ or ""
+    )
+
+
 def test_geo_format_folds_alias_entries() -> None:
     # The geo format docstring folded its standalone "Aliases for ..." blocks
     # into trailing notes on the canonical locator entries.
