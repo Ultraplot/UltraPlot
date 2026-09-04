@@ -18,31 +18,30 @@
 # Why UltraPlot?
 # =============
 #
-# Matplotlib is a powerful plotting library. UltraPlot keeps its familiar
-# object-oriented plotting methods and adds a small layer for arranging and
-# formatting complete figures. This page uses one deterministic, two-panel
-# example to make that distinction concrete.
+# Matplotlib is an incredibly powerful plotting engine, but creating multi-panel,
+# publication-ready figures often requires repetitive boilerplate code. UltraPlot
+# solves this by adding a concise, intuitive layer for layout and formatting,
+# while letting you keep the familiar Matplotlib object-oriented methods you
+# already know.
 #
 # .. note::
 #
-#    UltraPlot is most useful when a figure has several panels or needs
-#    repeated, publication-oriented formatting. A one-panel exploratory plot
-#    may not need UltraPlot at all; plain Matplotlib is an excellent choice.
+#    If you just need a quick, exploratory plot, vanilla Matplotlib is perfect.
+#    UltraPlot truly shines when you are managing multi-panel figures or need
+#    consistent, publication-quality styling across your work.
 #
-# The comparison below is intentionally fair: both versions plot the same
-# line and image, use the same labels, and add the same colorbar. The point is
-# not to count lines of code. Matplotlib and UltraPlot have different
-# responsibilities: Matplotlib supplies the plotting primitives, while
-# UltraPlot makes figure-level layout and consistent formatting easier to
-# express.
+# The comparison below uses a straightforward two-panel figure to illustrate the
+# difference. This isn't about code golf or minimizing lines; it's about the
+# separation of concerns. Matplotlib handles the plotting primitives, while
+# UltraPlot gives you a streamlined syntax to orchestrate the broader figure layout.
 
 # %% [raw] raw_mimetype="text/restructuredtext"
-# The shared data
-# ---------------
+# Setting up the data
+# -------------------
 #
-# The data are generated locally so the examples are reproducible and do not
-# require a download. The line and image are deliberately simple enough to
-# understand before looking at the plotting code.
+# To keep things fully reproducible without needing external downloads, we will
+# generate some basic synthetic data locally. The data itself is intentionally
+# simple so we can focus entirely on the plotting mechanics.
 
 # %%
 import numpy as np
@@ -55,16 +54,15 @@ image = np.outer(np.sin(x / 2), np.cos(x / 3))
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
-# Matplotlib
-# ----------
+# The Matplotlib approach
+# -----------------------
 #
-# Matplotlib's explicit axes and figure calls are a good fit when you want
-# fine-grained control over each artist. The code below is a complete,
-# conventional Matplotlib solution.
+# Matplotlib's explicit API is fantastic when you need surgical control over every
+# individual artist on the canvas. Here is how you would conventionally build and
+# format this two-panel figure using standard Matplotlib.
 #
-# See the `Matplotlib subplots tutorial
-# <https://matplotlib.org/stable/plot_types/subplots.html>`__ for the
-# underlying interface.
+# For a deep dive into this approach, see the `Matplotlib subplots tutorial
+# <https://matplotlib.org/stable/plot_types/subplots.html>`__.
 
 # %%
 import matplotlib.pyplot as plt
@@ -81,17 +79,19 @@ mpl_fig.show()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
-# UltraPlot
-# ---------
+# The UltraPlot approach
+# ----------------------
 #
-# The plotting calls remain ordinary axes methods. The difference is that
-# ``uplt.subplots`` and ``format`` let the figure layout and shared labels be
-# described together. This is particularly handy when the number of panels
-# grows: the intent of the figure stays in one place instead of being spread
-# over many setter calls.
+# Notice that the actual drawing commands (``plot`` and ``imshow``) are identical
+# to the Matplotlib version above. The magic happens with ``uplt.subplots`` and
+# the ``format`` method.
 #
-# See the :ref:`format command <ug_format>` and the
-# :func:`~ultraplot.ui.subplots` API reference for more options.
+# Instead of scattering setter methods across your script, UltraPlot lets you
+# define figure layouts and shared labels cohesively. As your figures grow in
+# complexity, this centralized formatting keeps your code clean and readable.
+#
+# Discover more in the :ref:`format command <ug_format>` guide and the
+# :func:`~ultraplot.ui.subplots` API reference.
 
 # %%
 import ultraplot as uplt
@@ -108,16 +108,15 @@ uplt_fig.show()
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
-# What to take away
-# -----------------
+# The takeaway
+# ------------
 #
-# UltraPlot does not replace Matplotlib's plotting vocabulary. A useful mental
-# model is:
+# UltraPlot does not reinvent the wheel—it just makes it easier to steer. A good
+# mental model for your workflow looks like this:
 #
-# * use normal axes methods such as ``plot`` and ``imshow`` to draw data;
-# * use ``axs.format`` for consistent panel-level labels and styling; and
-# * use ``fig.format`` and figure guides when the whole figure must agree.
+# * Use standard Matplotlib axes methods (``plot``, ``imshow``, ``scatter``) to draw the data.
+# * Use ``axs.format()`` to apply consistent labels, ticks, and styling at the panel level.
+# * Use ``fig.format()`` for global aesthetics and unified figure guides (like shared colorbars).
 #
-# For a quick one-panel question, start with Matplotlib. When layout and
-# formatting become the recurring work, UltraPlot can remove that friction
-# while keeping the Matplotlib object model.
+# For a single, fast plot, stick with Matplotlib. When layout scaling and repetitive
+# formatting become a chore, let UltraPlot handle the heavy lifting.
