@@ -9,6 +9,7 @@ from . import axes as paxes
 from . import figure as pfigure
 from . import gridspec as pgridspec
 from ._subplots import SubplotManager
+from .figure import Figure
 from .internals import (
     _not_none,
     _pop_params,
@@ -125,7 +126,7 @@ def isinteractive():
 
 
 @docstring._snippet_manager
-def figure(**kwargs):
+def figure(**kwargs) -> Figure:
     """
     Create an empty figure. Subplots can be subsequently added using
     `~ultraplot.figure.Figure.add_subplot` or `~ultraplot.figure.Figure.subplots`.
@@ -153,7 +154,7 @@ def figure(**kwargs):
 
 
 @docstring._snippet_manager
-def subplot(**kwargs):
+def subplot(**kwargs) -> tuple[Figure, paxes.Axes]:
     """
     Return a figure and a single subplot.
     This command is analogous to `matplotlib.pyplot.subplot`,
@@ -196,7 +197,7 @@ def subplot(**kwargs):
 
 
 @docstring._snippet_manager
-def subplots(*args, **kwargs):
+def subplots(*args, **kwargs) -> tuple[Figure, pgridspec.SubplotGrid]:
     """
     Return a figure and an arbitrary grid of subplots.
     This command is analogous to `matplotlib.pyplot.subplots`,

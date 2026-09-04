@@ -7,6 +7,7 @@ import functools
 import inspect
 import os
 from contextlib import ExitStack
+from typing import Callable, TypeVar, cast
 
 try:
     from typing import Any, Iterable, List, Optional, Tuple, Union
@@ -49,6 +50,8 @@ from .utils import _Crawler, units
 __all__ = [
     "Figure",
 ]
+
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 
 def _any_not_none(*values):
@@ -695,7 +698,7 @@ def _add_canvas_preprocessor(canvas, method, cache=False):
     return canvas
 
 
-def _clear_border_cache(func):
+def _clear_border_cache(func: _F) -> _F:
     """
     Decorator that clears the border cache after function execution.
     """
@@ -707,7 +710,7 @@ def _clear_border_cache(func):
             delattr(self, "_cached_border_axes")
         return result
 
-    return wrapper
+    return cast(_F, wrapper)
 
 
 class Figure(mfigure.Figure):
@@ -3387,28 +3390,28 @@ class Figure(mfigure.Figure):
 
     @docstring._concatenate_inherited
     @docstring._snippet_manager
-    def add_subplot(self, *args, **kwargs):
+    def add_subplot(self, *args, **kwargs) -> paxes.Axes:
         """
         %(figure.subplot)s
         """
         return self._add_subplot(*args, **kwargs)
 
     @docstring._snippet_manager
-    def subplot(self, *args, **kwargs):  # shorthand
+    def subplot(self, *args, **kwargs) -> paxes.Axes:  # shorthand
         """
         %(figure.subplot)s
         """
         return self._add_subplot(*args, **kwargs)
 
     @docstring._snippet_manager
-    def add_subplots(self, *args, **kwargs):
+    def add_subplots(self, *args, **kwargs) -> pgridspec.SubplotGrid:
         """
         %(figure.subplots)s
         """
         return self._add_subplots(*args, **kwargs)
 
     @docstring._snippet_manager
-    def subplots(self, *args, **kwargs):
+    def subplots(self, *args, **kwargs) -> pgridspec.SubplotGrid:
         """
         %(figure.subplots)s
         """

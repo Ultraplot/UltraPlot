@@ -49,6 +49,9 @@ dynamic = ["version"]
 packages = {find = {exclude=["docs*", "baseline*", "logo*"]}}
 include-package-data = true
 
+[tool.setuptools.package-data]
+ultraplot = ["py.typed", "*.pyi", "**/*.pyi"]
+
 [tool.setuptools_scm]
 write_to = "ultraplot/_version.py"
 write_to_template = "__version__ = '{version}'\n"
@@ -71,6 +74,10 @@ filterwarnings = [
 ]
 mpl-default-style = { axes.prop_cycle = "cycler('color', ['#4c72b0ff', '#55a868ff', '#c44e52ff', '#8172b2ff', '#ccb974ff', '#64b5cdff'])" }
 [project.optional-dependencies]
+typing = [
+    "basedpyright==1.31.4",
+    "pyrefly==1.2.0",
+]
 docs = [
     "jupyter",
     "jupytext",

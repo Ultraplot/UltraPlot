@@ -111,7 +111,7 @@ _args_2d_docstring = """
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or `:func:`~ultraplot.utils.edges2d`` if *centers* were provided.
+      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
     * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
       to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
@@ -1185,11 +1185,12 @@ Inputs such as arrays (`x` or `y`) or dataframes (`pandas` or `xarray`) are pass
 Parameters
 ----------
 %(plot.args_1d_{which})s
-stemlinewdith: str, default `rc["lollipop.stemlinewidth"]`
-stemcolor: str, default `rc["lollipop.stemcolor"]`
-    Line color of the lines connecting the dots to the {which}-axis. Defaults to `rc["lollipop.linecolor"]`.
-stemlinestyle: str, default: `rc["lollipop.stemlinestyle"]`
-    The style of the lines connecting the dots to the {which}-axis. Defaults to `rc["lollipop.linestyle"]`.
+stemlinewidth : str, default: :rc:`lollipop.stemlinewidth`
+    The width of the lines connecting the dots to the {which}-axis.
+stemcolor : str, default: :rc:`lollipop.stemcolor`
+    Line color of the lines connecting the dots to the {which}-axis. Defaults to :rc:`lollipop.linecolor`.
+stemlinestyle : str, default: :rc:`lollipop.stemlinestyle`
+    The style of the lines connecting the dots to the {which}-axis. Defaults to :rc:`lollipop.linestyle`.
 s, size, ms, markersize : float or array-like or unit-spec, optional
     The marker size area(s). If this is an array matching the shape of `x` and `y`,
     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
@@ -1695,13 +1696,13 @@ g : networkx.Graph
 layout : callable or dict, optional
     A layout function or a precomputed dict mapping nodes to 2D positions. If a function
     is given, it is called as ``layout(g, **layout_kw)`` to compute positions. See :func:`networkx.drawing.nx_pylab.draw` for more information.
-nodes : bool or iterable, default: rc["graph.draw_nodes"]
+nodes : bool or iterable, default: :rc:`graph.draw_nodes`
     Which nodes to draw. If `True`, all nodes are drawn. If an iterable is provided, only
     the specified nodes are included. This effectively acts as `nodelist` in :func:`networkx.drawing.nx_pylab.draw_networkx_nodes`.
-edges : bool or iterable, default: rc["graph.draw_edges"]
+edges : bool or iterable, default: :rc:`graph.draw_edges`
     Which edges to draw. If `True`, all edges are drawn. If an iterable of edge tuples is
     provided, only those edges are included. This effectively acts as `edgelist` in :func:`networkx.drawing.nx_pylab.draw_networkx_edges`.
-labels : bool or iterable, default: `rc["graph.draw_labels`]
+labels : bool or iterable, default: :rc:`graph.draw_labels`
     Whether to show node labels. If `True`, labels are drawn using node names. If an
     iterable is given, only those nodes are labeled.
 layout_kw : dict, default: {}
@@ -2486,6 +2487,7 @@ class PlotAxes(base.Axes):
             topic_label_box=topic_label_box,
         )
 
+    @docstring._snippet_manager
     def circos(
         self,
         sectors: Mapping[str, Any],
@@ -2741,6 +2743,7 @@ class PlotAxes(base.Axes):
         """
         return self.radar_chart(*args, **kwargs)
 
+    @docstring._snippet_manager
     def circos(
         self,
         sectors: Mapping[str, Any],

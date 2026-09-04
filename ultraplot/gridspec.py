@@ -9,7 +9,7 @@ import re
 from collections.abc import MutableSequence
 from functools import wraps
 from numbers import Integral
-from typing import List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, TypeVar, Union, cast, overload
 
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
@@ -122,8 +122,23 @@ def _disable_method(attr):
     return _dummy_method
 
 
-def _apply_to_all(func=None, *, doc_key=None):
-    def decorator(f):
+_F = TypeVar("_F", bound=Callable[..., object])
+
+
+@overload
+def _apply_to_all(func: _F, *, doc_key: Optional[str] = None) -> _F: ...
+
+
+@overload
+def _apply_to_all(
+    func: None = None, *, doc_key: Optional[str] = None
+) -> Callable[[_F], _F]: ...
+
+
+def _apply_to_all(
+    func: Optional[_F] = None, *, doc_key: Optional[str] = None
+) -> Union[_F, Callable[[_F], _F]]:
+    def decorator(f: _F) -> _F:
         @wraps(f)
         def wrapper(self, *args, **kwargs):
             objs = self._apply_command(f.__name__, *args, **kwargs)
@@ -158,7 +173,7 @@ def _apply_to_all(func=None, *, doc_key=None):
 
             wrapper.__doc__ = doc
 
-        return wrapper
+        return cast(_F, wrapper)
 
     if func is not None:
         return decorator(func)
@@ -1817,7 +1832,7 @@ class GridSpec(mgridspec.GridSpec):
     wpad_total = property(lambda self: list(self._wpad_total))
 
 
-class SubplotGrid(MutableSequence, list):
+class SubplotGrid(MutableSequence[paxes.Axes], list[paxes.Axes]):
     """
     List-like, array-like object used to store subplots returned by
     `~ultraplot.figure.Figure.subplots`. 1D indexing uses the underlying list of
@@ -1868,7 +1883,7 @@ class SubplotGrid(MutableSequence, list):
         sequence = self._validate_item(sequence, scalar=False)
         super().__init__(sequence, **kwargs)
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         """
         Get a missing attribute. Simply redirects to the axes if the `SubplotGrid`
         is singleton and raises an error otherwise. This can be convenient for
@@ -1911,7 +1926,19 @@ class SubplotGrid(MutableSequence, list):
         else:
             raise AttributeError(f"Found mixed types for attribute {attr!r}.")
 
-    def __getitem__(self, key):
+    @overload
+    def __getitem__(self, key: int) -> paxes.Axes: ...
+
+    @overload
+    def __getitem__(
+        self,
+        key: Union[slice, List[int], np.ndarray, Tuple[Union[int, slice], ...]],
+    ) -> "SubplotGrid": ...
+
+    def __getitem__(
+        self,
+        key: Union[int, slice, List[int], np.ndarray, Tuple[Union[int, slice], ...]],
+    ) -> Union[paxes.Axes, "SubplotGrid"]:
         """
         Get an axes.
 
@@ -2051,7 +2078,7 @@ class SubplotGrid(MutableSequence, list):
         return items
 
     @docstring._snippet_manager
-    def format(self, **kwargs):
+    def format(self, **kwargs) -> None:
         """
         Call the ``format`` command for the `~SubplotGrid.figure`
         and every axes in the grid.
