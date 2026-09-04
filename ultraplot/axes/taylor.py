@@ -566,7 +566,7 @@ class TaylorAxes(PolarAxes):
                 corrlabel_kw=corrlabel_kw,
             )
 
-        super()._format_impl(
+        super().format(
             rc_kw=rc_kw,
             rc_mode=rc_mode,
             labelpad=labelpad,
@@ -581,6 +581,5 @@ class TaylorAxes(PolarAxes):
         self._update_taylor_std_ticklabels()
 
 
-TaylorAxes._format_impl = TaylorAxes.format.__wrapped__
-TaylorAxes._format_signatures[TaylorAxes] = inspect.signature(TaylorAxes._format_impl)
+TaylorAxes._format_signatures[TaylorAxes] = inspect.signature(TaylorAxes.format)
 TaylorAxes.format = docstring._obfuscate_kwargs(TaylorAxes.format)

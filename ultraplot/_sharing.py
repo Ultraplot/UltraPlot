@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Axis-sharing policy and format-plan construction."""
 
+import contextlib
+import contextvars
 from dataclasses import dataclass
 from numbers import Integral
 
@@ -117,6 +119,22 @@ AXIS_SHARING_FORMAT_KEYS = frozenset(
 )
 
 _LIMIT_KEYS = {"xlim", "ylim", "lonlim", "latlim"}
+_axis_sharing_updates = contextvars.ContextVar("axis_sharing_updates", default=True)
+
+
+@contextlib.contextmanager
+def preserve_axis_sharing():
+    """Prevent automatic formatting from changing the declared sharing policy."""
+    token = _axis_sharing_updates.set(False)
+    try:
+        yield
+    finally:
+        _axis_sharing_updates.reset(token)
+
+
+def axis_sharing_updates_enabled():
+    """Return whether the current format call may update axis sharing."""
+    return _axis_sharing_updates.get()
 
 
 def get_axis_sharing_format_keys(*mappings, exclude=()):

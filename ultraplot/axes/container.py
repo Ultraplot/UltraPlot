@@ -756,7 +756,7 @@ class ExternalAxesContainer(CartesianAxes):
 
         # Apply container formatting (for ultraplot-specific features)
         if container_kwargs:
-            super()._format_impl(**container_kwargs)
+            super().format(**container_kwargs)
 
         # Apply external axes formatting
         if external_kwargs and self._external_axes is not None:
@@ -870,9 +870,6 @@ class ExternalAxesContainer(CartesianAxes):
         if self._external_axes is not None:
             attrs.update(dir(self._external_axes))
         return sorted(attrs)
-
-
-ExternalAxesContainer._format_impl = ExternalAxesContainer.format.__wrapped__
 
 
 def create_external_axes_container(external_axes_class, projection_name=None):

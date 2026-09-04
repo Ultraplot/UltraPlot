@@ -4753,7 +4753,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__
-Axes._format_impl = Axes.format
 Axes._format_signatures = {Axes: inspect.signature(Axes.format)}
 Axes.format = docstring._obfuscate_kwargs(Axes.format)
 

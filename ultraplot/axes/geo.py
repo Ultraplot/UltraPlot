@@ -3173,7 +3173,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._abc_anchor = abcanchor
 
         # Parent format method
-        super()._format_impl(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
+        super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
 
     @docstring._snippet_manager
     def choropleth(
@@ -4753,8 +4753,7 @@ def _choropleth_edge_collection_kw(
 
 
 # Apply signature obfuscation after storing previous signature
-GeoAxes._format_impl = GeoAxes.format.__wrapped__
-GeoAxes._format_signatures[GeoAxes] = inspect.signature(GeoAxes._format_impl)
+GeoAxes._format_signatures[GeoAxes] = inspect.signature(GeoAxes.format)
 GeoAxes.format = docstring._obfuscate_kwargs(GeoAxes.format)
 
 

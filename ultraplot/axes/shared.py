@@ -5,6 +5,7 @@ An axes used to jointly format Cartesian and polar axes.
 
 # NOTE: We could define these in base.py but idea is projection-specific formatters
 # should never be defined on the base class. Might add to this class later anyway.
+import contextvars
 import functools
 
 import numpy as np
@@ -13,6 +14,7 @@ from ..config import rc
 from .._sharing import (
     AXIS_LABEL_FORMAT_KEYS,
     axis_supports_format_key,
+    axis_sharing_updates_enabled,
     get_axis_sharing_format_keys,
     restore_axis_sharing,
     snapshot_axis_sharing,
@@ -32,6 +34,9 @@ except ImportError:
     from typing_extensions import override
 
 
+_active_format_axes = contextvars.ContextVar("active_format_axes", default=())
+
+
 def _format_wrapper(method=None, *, exclude=(), capture_explicit=False):
     """Decorate a public format method with transactional sharing updates."""
     if method is None:
@@ -46,15 +51,20 @@ def _format_wrapper(method=None, *, exclude=(), capture_explicit=False):
         if capture_explicit:
             kwargs.setdefault("_explicit_format_keys", set(kwargs))
         validate_axis_format_values(kwargs)
+        active = _active_format_axes.get()
+        if any(ax is self for ax in active):
+            return method(self, *args, **kwargs)
+
         keys = {
             key
             for key in get_axis_sharing_format_keys(kwargs, exclude=exclude)
             if axis_supports_format_key(self, key)
         }
-        if kwargs.get("skip_figure", False):
+        if not axis_sharing_updates_enabled() or kwargs.get("skip_figure", False):
             keys.clear()
         figure = self.figure
         state = snapshot_axis_sharing(figure) if figure is not None and keys else None
+        token = _active_format_axes.set((*active, self))
         try:
             self._update_format_sharing(keys)
             return method(self, *args, **kwargs)
@@ -62,6 +72,8 @@ def _format_wrapper(method=None, *, exclude=(), capture_explicit=False):
             if state is not None:
                 restore_axis_sharing(figure, state)
             raise
+        finally:
+            _active_format_axes.reset(token)
 
     return wrapper
 

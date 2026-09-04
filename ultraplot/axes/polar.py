@@ -739,11 +739,10 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 self._update_polar_label(kind, text, **kw)
 
         # Parent format method
-        super()._format_impl(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
+        super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
 
 
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__
-PolarAxes._format_impl = PolarAxes.format.__wrapped__
-PolarAxes._format_signatures[PolarAxes] = inspect.signature(PolarAxes._format_impl)
+PolarAxes._format_signatures[PolarAxes] = inspect.signature(PolarAxes.format)
 PolarAxes.format = docstring._obfuscate_kwargs(PolarAxes.format)

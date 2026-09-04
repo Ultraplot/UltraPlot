@@ -14,6 +14,7 @@ import matplotlib.ticker as mticker
 import numpy as np
 from packaging import version
 
+from .. import _sharing as psharing
 from .. import constructor
 from .. import scale as pscale
 from .. import ticker as pticker
@@ -717,9 +718,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._twinned_axes.join(self, ax)
 
         # Format parent and child axes
-        self._format_impl(
-            **{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)},
-        )
+        with psharing.preserve_axis_sharing():
+            self.format(
+                **{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)},
+            )
         setattr(ax, f"_alt{sx}_parent", self)
         getattr(ax, f"{sy}axis").set_visible(False)
         getattr(ax, "patch").set_visible(False)
@@ -1783,7 +1785,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             or axis_format_requires_layout(explicit_format_keys)
         )
         try:
-            super()._format_impl(rc_kw=rc_kw, rc_mode=rc_mode, **base_kwargs)
+            super().format(rc_kw=rc_kw, rc_mode=rc_mode, **base_kwargs)
         finally:
             if previous is sentinel:
                 del self._format_layout_required
@@ -1862,8 +1864,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__, altx, and alty
-CartesianAxes._format_impl = CartesianAxes.format.__wrapped__
 CartesianAxes._format_signatures[CartesianAxes] = inspect.signature(
-    CartesianAxes._format_impl
+    CartesianAxes.format
 )  # noqa: E501
 CartesianAxes.format = docstring._obfuscate_kwargs(CartesianAxes.format)

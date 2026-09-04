@@ -7,8 +7,8 @@ import locale, numpy as np, ultraplot as uplt, pytest
 import warnings
 
 
-def test_format_public_entry_point_owns_internal_implementation():
-    """Classes define public format; private implementations are generated aliases."""
+def test_format_is_the_only_entry_point():
+    """Axes classes define and compose the public format method directly."""
     from ultraplot.axes import (
         Axes,
         CartesianAxes,
@@ -27,13 +27,9 @@ def test_format_public_entry_point_owns_internal_implementation():
         TaylorAxes,
     ):
         assert "format" in cls.__dict__
+        assert not hasattr(cls, "_format_impl")
         assert cls.format.__name__ == "format"
         assert cls.format.__qualname__ == f"{cls.__qualname__}.format"
-        assert cls.format.__doc__ == cls._format_impl.__doc__
-        if cls is Axes:
-            assert cls._format_impl is cls.format
-        else:
-            assert cls._format_impl is cls.format.__wrapped__
 
     fig, axs = uplt.subplots()
     axs[0].format(title="Public format")
@@ -53,6 +49,22 @@ def test_super_format_uses_exact_base_implementation():
     assert fig.get_axis_sharing() == before
     assert axs[0].get_xlim() == (0, 1)
     assert axs[1].get_xlim() == (0, 1)
+
+
+def test_nested_format_uses_one_sharing_transaction(monkeypatch):
+    """Projection inheritance composes format without repeating sharing updates."""
+    fig, axs = uplt.subplots(proj="taylor")
+    calls = []
+    update = axs[0]._update_format_sharing
+
+    def record(keys):
+        calls.append(keys)
+        return update(keys)
+
+    monkeypatch.setattr(axs[0], "_update_format_sharing", record)
+    axs[0].format(title="Taylor diagram")
+
+    assert len(calls) == 1
 
 
 # def test_colormap_assign():
