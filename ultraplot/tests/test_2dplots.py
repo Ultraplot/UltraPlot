@@ -453,6 +453,38 @@ def test_tripcolor_warns_when_z_and_facecolors_given():
         )
 
 
+def test_spy_marker_path_takes_no_colormap():
+    """
+    Marker-style spy must not be handed a colormap.
+
+    Matplotlib's spy draws an image when no marker is given and a Line2D of
+    markers otherwise; only the image understands `cmap`, so parsing one for
+    the marker path raised `Line2D.set() got an unexpected keyword argument`.
+    """
+    from matplotlib.image import AxesImage
+    from matplotlib.lines import Line2D
+
+    matrix = np.random.default_rng(51423).random((12, 12)) > 0.8
+    _, axs = uplt.subplots(ncols=4)
+    assert isinstance(axs[0].spy(matrix), AxesImage)
+    assert isinstance(axs[1].spy(matrix, markersize=2), Line2D)
+    assert isinstance(axs[2].spy(matrix, marker="s"), Line2D)
+    assert isinstance(axs[3].spy(matrix, color="denim", markersize=3), Line2D)
+
+
+def test_spy_image_path_still_takes_a_colormap():
+    """
+    The image path keeps its colormap handling, including the discrete default.
+    """
+    from matplotlib.image import AxesImage
+
+    matrix = np.random.default_rng(51423).random((12, 12)) > 0.8
+    _, ax = uplt.subplots()
+    image = ax.spy(matrix, cmap="Greys")
+    assert isinstance(image, AxesImage)
+    assert "greys" in image.get_cmap().name.lower()
+
+
 def test_tricontour_explicit_colors_match_levels():
     """
     Explicit triangular contour colors should map one-to-one with levels.

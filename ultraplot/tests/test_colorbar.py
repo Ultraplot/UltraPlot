@@ -5,6 +5,7 @@ Test colorbars.
 
 import numpy as np
 import pytest
+from matplotlib.transforms import Bbox
 
 import ultraplot as uplt
 
@@ -77,6 +78,49 @@ def test_inset_colorbar_frame_alias_still_controls_frame(rng, kwargs):
     m = ax.imshow(rng.random((10, 10)))
     cb = ax.colorbar(m, loc="ur", **kwargs)
     assert cb.ax._inset_colorbar_frame is None
+
+
+@pytest.mark.parametrize(
+    "loc, bbox_to_anchor, corners",
+    [
+        ("ur", (0.8, 0.75), ("x1", "y1", 0.8, 0.75)),
+        ("ll", (0.2, 0.15, 0.5, 0.4), ("x0", "y0", 0.2, 0.15)),
+    ],
+)
+def test_inset_colorbar_bbox_to_anchor(rng, loc, bbox_to_anchor, corners):
+    fig, ax = uplt.subplots()
+    mappable = ax.pcolormesh(rng.random((8, 8)))
+    colorbar = ax.colorbar(
+        mappable,
+        loc=loc,
+        label="A label that must be included",
+        bbox_to_anchor=bbox_to_anchor,
+    )
+    fig.canvas.draw()
+    frame = Bbox.from_bounds(*colorbar.ax._inset_colorbar_bounds["frame"])
+    xattr, yattr, xanchor, yanchor = corners
+    assert getattr(frame, xattr) == pytest.approx(xanchor)
+    assert getattr(frame, yattr) == pytest.approx(yanchor)
+    fig.set_size_inches(7, 4.5)
+    fig.canvas.draw()
+    frame = Bbox.from_bounds(*colorbar.ax._inset_colorbar_bounds["frame"])
+    assert getattr(frame, xattr) == pytest.approx(xanchor)
+    assert getattr(frame, yattr) == pytest.approx(yanchor)
+
+
+def test_unanchored_inset_colorbar_label_stays_inside_axes(rng):
+    fig, ax = uplt.subplots()
+    mappable = ax.pcolormesh(rng.random((8, 8)))
+    colorbar = ax.colorbar(
+        mappable, loc="ur", label="Inset colorbar label", frame=False
+    )
+    fig.canvas.draw()
+    fig.set_size_inches(7, 4.5)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    bbox = colorbar.ax.get_tightbbox(renderer).transformed(ax.transAxes.inverted())
+    assert bbox.x1 <= 1
+    assert bbox.y1 <= 1
 
 
 def test_colorbar_side_locations_work_on_inset_axes(rng):

@@ -43,6 +43,7 @@ from .. import legend as plegend
 from .. import ticker as pticker
 from ..colorbar import (
     UltraColorbar,
+    _anchor_inset_colorbar_bounds,
     _apply_inset_colorbar_layout,
     _determine_label_rotation,
     _get_axis_for,
@@ -2041,6 +2042,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
     def _parse_colorbar_inset(
         self,
         loc=None,
+        bbox_to_anchor=None,
         width=None,
         length=None,
         shrink=None,
@@ -2117,6 +2119,9 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 tick_fontsize=tick_fontsize,
                 label_fontsize=label_fontsize,
             )
+        bounds_inset, bounds_frame = _anchor_inset_colorbar_bounds(
+            bounds_inset, bounds_frame, loc, bbox_to_anchor
+        )
 
         # Create axes and frame
         ax = self._add_colorbar_child_axes(bounds_inset)
@@ -2137,6 +2142,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             "length_raw": length_raw,
             "width_raw": width_raw,
             "pad_raw": pad_raw,
+            "bbox_to_anchor": bbox_to_anchor,
         }
         ax._inset_colorbar_frame = frame_artist
 
@@ -3455,9 +3461,13 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self.indicate_inset_zoom()
         self._apply_align_text(renderer)
         needs_inset_reflow = bool(getattr(self, "_inset_colorbar_needs_reflow", False))
+        has_inset_colorbar = bool(
+            getattr(self, "_inset_colorbar_layout", None)
+            and getattr(self, "_inset_colorbar_obj", None)
+        )
         has_inset_frame = bool(
             getattr(self, "_inset_colorbar_frame", None) is not None
-            and getattr(self, "_inset_colorbar_obj", None)
+            and has_inset_colorbar
         )
         super().draw(renderer, *args, **kwargs)
         if has_inset_frame:
@@ -3467,7 +3477,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     labelloc=getattr(self, "_inset_colorbar_labelloc", None),
                     renderer=renderer,
                 )
-        if has_inset_frame and needs_inset_reflow:
+        if has_inset_colorbar and needs_inset_reflow:
             _reflow_inset_colorbar_frame(
                 self._inset_colorbar_obj,
                 labelloc=getattr(self, "_inset_colorbar_labelloc", None),
@@ -3706,6 +3716,11 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 Strings are interpreted by `~ultraplot.utils.units`.
             %(axes.colorbar_space)s
                 Has no visible effect if `length` is ``1``.
+            bbox_to_anchor : 2-tuple, 4-tuple, or `matplotlib.transforms.Bbox`, optional
+                For inset colorbars, anchor the full colorbar footprint using the
+                same semantics as `~matplotlib.axes.Axes.legend`. The colorbar
+                `loc` selects the corresponding anchor corner. Outer colorbar
+                placement is unchanged.
             Other parameters
             ----------------
             %(axes.colorbar_kwargs)s
@@ -5423,9 +5438,15 @@ def _reflow_inset_colorbar_frame(
         bounds = solver.solve()
     except Exception:
         return
+    bounds_inset, bounds_frame = _anchor_inset_colorbar_bounds(
+        list(bounds["inset"]),
+        list(bounds["frame"]),
+        loc,
+        layout.get("bbox_to_anchor"),
+    )
     _apply_inset_colorbar_layout(
         cax,
-        bounds_inset=list(bounds["inset"]),
-        bounds_frame=list(bounds["frame"]),
+        bounds_inset=bounds_inset,
+        bounds_frame=bounds_frame,
         frame=frame,
     )
