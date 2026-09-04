@@ -86,6 +86,9 @@ Topics
       **Data-aware plotting**
       ^^^
 
+      .. image:: _static/example_plots/cartesian_example.svg
+         :align: center
+
       Plot labelled pandas and xarray data with metadata-aware labels and
       coordinates.
 
