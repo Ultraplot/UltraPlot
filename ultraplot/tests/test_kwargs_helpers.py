@@ -103,7 +103,9 @@ def test_registry_translates_explicit_format_keys() -> None:
 def test_ambiguous_alias_uses_call_context() -> None:
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        axes = ikwargs._canonicalize_kwargs(ikwargs._format_alias_scopes, {"rlabels": 5})
+        axes = ikwargs._canonicalize_kwargs(
+            ikwargs._format_alias_scopes, {"rlabels": 5}
+        )
         figure = ikwargs._canonicalize_kwargs(
             ikwargs._figure_format_alias_scopes, {"rlabels": ["right"]}
         )

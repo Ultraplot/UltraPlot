@@ -680,13 +680,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         sig = self._format_signatures[CartesianAxes]
         keys = tuple(key[1:] for key in sig.parameters if key[0] == sx)
         kwargs = {
-            (
-                f"{sx}spineloc"
-                if key == "loc"
-                else sx + key
-                if key in keys
-                else key
-            ): val
+            (f"{sx}spineloc" if key == "loc" else sx + key if key in keys else key): val
             for key, val in kwargs.items()
         }  # noqa: E501
         kwargs.setdefault(f"{sy}spineloc", "neither")
@@ -711,11 +705,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         # Format parent and child axes
         self.format(
-            **{
-                f"{sx}spineloc": OPPOSITE_SIDE.get(
-                    kwargs[f"{sx}spineloc"], None
-                )
-            }
+            **{f"{sx}spineloc": OPPOSITE_SIDE.get(kwargs[f"{sx}spineloc"], None)}
         )
         setattr(ax, f"_alt{sx}_parent", self)
         getattr(ax, f"{sy}axis").set_visible(False)

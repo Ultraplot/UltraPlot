@@ -26,8 +26,7 @@ def _parameter_names(signature):
         name
         for name, parameter in signature.parameters.items()
         if name != "self"
-        and parameter.kind
-        not in (parameter.VAR_POSITIONAL, parameter.VAR_KEYWORD)
+        and parameter.kind not in (parameter.VAR_POSITIONAL, parameter.VAR_KEYWORD)
     }
 
 

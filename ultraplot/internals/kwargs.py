@@ -222,9 +222,7 @@ def _get_alias_groups(scope=None, aliases=None):
     }
 
 
-def _canonicalize_kwargs(
-    scope, kwargs, *, aliases=None, provided=(), warn=False
-):
+def _canonicalize_kwargs(scope, kwargs, *, aliases=None, provided=(), warn=False):
     """
     Return a copy of *kwargs* with legacy names translated to canonical names.
 
@@ -239,9 +237,7 @@ def _canonicalize_kwargs(
             raise TypeError("Inline aliases cannot be combined with multiple scopes.")
         output = dict(kwargs)
         for item in scope:
-            output = _canonicalize_kwargs(
-                item, output, provided=provided, warn=warn
-            )
+            output = _canonicalize_kwargs(item, output, provided=provided, warn=warn)
         return output
     groups = _get_alias_groups(scope, aliases)
     lookup = {
@@ -252,9 +248,7 @@ def _canonicalize_kwargs(
     output = dict(kwargs)
     explicit = output.get("_explicit_format_keys")
     if explicit is not None:
-        output["_explicit_format_keys"] = {
-            lookup.get(name, name) for name in explicit
-        }
+        output["_explicit_format_keys"] = {lookup.get(name, name) for name in explicit}
     seen = {
         canonical: canonical
         for canonical in groups
