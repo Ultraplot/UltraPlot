@@ -368,22 +368,111 @@ def test_label_settings():
 
 def test_format_distributes_axis_label_sequences_and_reduces_sharing():
     """Per-axes labels retain shared limits but override label sharing."""
-    fig, axs = uplt.subplots(ncols=2, share=True)
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
     axs.format(
-        title=["First", "Second"],
-        xlabel=["First x", "Second x"],
-        ylabel=["First y", "Second y"],
+        title=["First", "Second", "Third", "Fourth"],
+        xlabel=["First x", "Second x", "Third x", "Fourth x"],
+        ylabel=["First y", "Second y", "Third y", "Fourth y"],
     )
     fig.canvas.draw()
 
-    assert [ax.get_title() for ax in axs] == ["First", "Second"]
-    assert [ax.get_xlabel() for ax in axs] == ["First x", "Second x"]
-    assert [ax.get_ylabel() for ax in axs] == ["First y", "Second y"]
-    assert fig._sharex == fig._sharey == 2
+    assert [ax.get_title() for ax in axs] == ["First", "Second", "Third", "Fourth"]
+    assert [ax.get_xlabel() for ax in axs] == [
+        "First x",
+        "Second x",
+        "Third x",
+        "Fourth x",
+    ]
+    assert [ax.get_ylabel() for ax in axs] == [
+        "First y",
+        "Second y",
+        "Third y",
+        "Fourth y",
+    ]
+    assert fig._sharex_limits and fig._sharey_limits
+    assert not fig._sharex_labels and not fig._sharey_labels
     assert all(ax.xaxis.label.get_visible() for ax in axs)
     assert all(ax.yaxis.label.get_visible() for ax in axs)
     axs[0].set_xlim(1, 2)
+    axs[0].set_ylim(3, 4)
+    assert axs[2].get_xlim() == (1, 2)
+    assert axs[1].get_ylim() == (3, 4)
+
+
+def test_format_short_title_sequence_formats_prefix():
+    """Short title sequences format the first axes and leave the rest alone."""
+    fig, axs = uplt.subplots(ncols=4)
+    axs[2].format(title="Existing")
+    axs[3].format(title="Existing")
+    axs.format(title=["First", "Second"])
+
+    assert [ax.get_title() for ax in axs] == [
+        "First",
+        "Second",
+        "Existing",
+        "Existing",
+    ]
+
+
+def test_orthogonal_axis_sharing_controls():
+    """Limits can be shared while axis-title and tick-label sharing stay off."""
+    fig, axs = uplt.subplots(
+        nrows=2,
+        share=0,
+        sharexlimits=True,
+        sharexlabels=False,
+        sharexticklabels=False,
+    )
+    axs.format(xlabel=["Upper x", "Lower x"])
+    fig.canvas.draw()
+
+    assert fig._sharex == 0
+    assert fig._sharex_limits
+    assert not fig._sharex_labels
+    assert not fig._sharex_ticklabels
+    assert [ax.get_xlabel() for ax in axs] == ["Upper x", "Lower x"]
+    axs[0].set_xlim(1, 2)
     assert axs[1].get_xlim() == (1, 2)
+
+
+@pytest.mark.parametrize(
+    ("key", "limits", "shared_attr", "unaffected_attr", "getter", "sibling"),
+    (
+        (
+            "xlim",
+            [(0, 1), (0, 2), (0, 3), (0, 4)],
+            "_sharex",
+            "_sharey",
+            "get_xlim",
+            2,
+        ),
+        (
+            "ylim",
+            [(0, 5), (0, 6), (0, 7), (0, 8)],
+            "_sharey",
+            "_sharex",
+            "get_ylim",
+            1,
+        ),
+    ),
+)
+def test_format_distributes_limit_sequences_and_unshares(
+    key, limits, shared_attr, unaffected_attr, getter, sibling
+):
+    """Per-axes limits disable sharing only in the corresponding direction."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    axs.format(**{key: limits})
+    fig.canvas.draw()
+
+    assert getattr(fig, shared_attr) == 3
+    assert getattr(fig, unaffected_attr) == 3
+    assert not getattr(fig, f"{shared_attr}_limits")
+    assert not getattr(fig, f"{shared_attr}_ticklabels")
+    assert getattr(fig, f"{shared_attr}_labels")
+    assert getattr(fig, f"{unaffected_attr}_limits")
+    assert [getattr(ax, getter)() for ax in axs] == limits
+    shared = getattr(axs[0], f"get_shared_{key[0]}_axes")()
+    assert not shared.joined(axs[0], axs[sibling])
 
 
 def test_colormap_parsing():

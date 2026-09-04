@@ -1073,21 +1073,23 @@ class GridSpec(mgridspec.GridSpec):
             space = self._labelspace + self._xticklabelspace + self._xtickspace
         elif key == "wspace_total":
             pad = _not_none(pad, self._innerpad)
-            share = _not_none(share, fig._sharey, 0)
+            share_labels = fig._sharey_labels if share is None else share >= 1
+            share_ticklabels = fig._sharey_ticklabels if share is None else share >= 3
             space = self._ytickspace
-            if share < 3:
+            if not share_ticklabels:
                 space += self._yticklabelspace
-            if share < 1:
+            if not share_labels:
                 space += self._labelspace
         elif key == "hspace_total":
             pad = _not_none(pad, self._innerpad)
-            share = _not_none(share, fig._sharex, 0)
+            share_labels = fig._sharex_labels if share is None else share >= 1
+            share_ticklabels = fig._sharex_ticklabels if share is None else share >= 3
             space = self._xtickspace
             if title:
                 space += self._titlespace
-            if share < 3:
+            if not share_ticklabels:
                 space += self._xticklabelspace
-            if share < 1:
+            if not share_labels:
                 space += self._labelspace
         else:
             raise ValueError(f"Invalid space key {key!r}.")

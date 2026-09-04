@@ -1485,7 +1485,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     iax._panel_sharex_group = True
                     iax._sharex_setup(bottom)  # parent is bottom-most
             paxs = shared(self._panel_dict["top"])
-            if paxs and self.figure._sharex > 0:
+            if paxs and self.figure._axis_sharing_enabled("x"):
                 self._panel_sharex_group = True
             for iax in paxs:
                 iax._panel_sharex_group = True
@@ -1501,7 +1501,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     iax._panel_sharey_group = True
                     iax._sharey_setup(left)  # parent is left-most
             paxs = shared(self._panel_dict["right"])
-            if paxs and self.figure._sharey > 0:
+            if paxs and self.figure._axis_sharing_enabled("y"):
                 self._panel_sharey_group = True
             for iax in paxs:
                 iax._panel_sharey_group = True
@@ -1509,7 +1509,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         # External axes sharing, sometimes overrides panel axes sharing
         # Share x axes within compatible groups
-        if self.figure._sharex > 0:
+        if self.figure._axis_sharing_enabled("x"):
             axes_x = self._get_share_axes("x")
             for group in self.figure._partition_share_axes(axes_x, "x"):
                 if not group:
@@ -1519,7 +1519,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     child._sharex_setup(parent)
 
         # Share y axes within compatible groups
-        if self.figure._sharey > 0:
+        if self.figure._axis_sharing_enabled("y"):
             axes_y = self._get_share_axes("y")
             for group in self.figure._partition_share_axes(axes_y, "y"):
                 if not group:
@@ -2966,10 +2966,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             if self.number is None:
                 pass
             elif self.number > len(title):
-                raise ValueError(
-                    f"Invalid title list length {len(title)} "
-                    f"for axes with number {self.number}."
-                )
+                pass
             else:
                 kw["text"] = title[self.number - 1]
         else:

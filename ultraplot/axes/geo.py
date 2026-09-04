@@ -1613,12 +1613,12 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         if not any((copy_major_locator, copy_minor_locator, copy_major_formatter)):
             return
         if which == "x":
-            if self.figure._sharex < 2:
+            if not self.figure._sharex_limits:
                 return
             this_axis = self._lonaxis
             siblings = list(self._shared_axes["x"].get_siblings(self))
         else:
-            if self.figure._sharey < 2:
+            if not self.figure._sharey_limits:
                 return
             this_axis = self._lataxis
             siblings = list(self._shared_axes["y"].get_siblings(self))
@@ -1880,24 +1880,25 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         labels: bool,
         limits: bool,
     ) -> None:
-        level = getattr(self.figure, f"_share{which}")
-        if getattr(self, f"_panel_share{which}_group") and self._is_panel_group_member(
-            other
-        ):
-            level = 3
-        if level not in range(5):  # must be internal error
-            raise ValueError(f"Invalid sharing level sharex={level!r}.")
+        panel_group = getattr(
+            self, f"_panel_share{which}_group"
+        ) and self._is_panel_group_member(other)
         if other in (None, self) or not isinstance(other, GeoAxes):
             return
         # Share future axis label changes. Implemented in _apply_axis_sharing().
         # Matplotlib only uses these attributes in __init__() and cla() to share
         # tickers -- all other builtin sharing features derives from shared x axes
-        if level > 0 and labels:
+        share_labels = panel_group or getattr(self.figure, f"_share{which}_labels")
+        share_limits = panel_group or getattr(self.figure, f"_share{which}_limits")
+        share_ticklabels = panel_group or getattr(
+            self.figure, f"_share{which}_ticklabels"
+        )
+        if (share_labels and labels) or (share_limits and limits) or share_ticklabels:
             setattr(self, f"_share{which}", other)
         # Share future axis tickers, limits, and scales
         # NOTE: Only difference between levels 2 and 3 is level 3 hides ticklabels
         # labels. But this is done after the fact -- tickers are still shared.
-        if level > 1 and limits:
+        if share_limits and limits:
             self._share_limits_with(other, which=which)
 
     @override
@@ -2078,11 +2079,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         """
 
         # Share axis labels
-        if (
-            self._sharex
-            and self.figure._sharex >= 1
-            and getattr(self.figure, "_sharex_labels", True)
-        ):
+        if self._sharex and self.figure._sharex_labels:
             if self.figure._is_share_label_group_member(self, "x"):
                 pass
             elif self.figure._is_share_label_group_member(self._sharex, "x"):
@@ -2090,11 +2087,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             else:
                 labels._transfer_label(self.xaxis.label, self._sharex.xaxis.label)
                 self.xaxis.label.set_visible(False)
-        if (
-            self._sharey
-            and self.figure._sharey >= 1
-            and getattr(self.figure, "_sharey_labels", True)
-        ):
+        if self._sharey and self.figure._sharey_labels:
             if self.figure._is_share_label_group_member(self, "y"):
                 pass
             elif self.figure._is_share_label_group_member(self._sharey, "y"):
@@ -2104,12 +2097,12 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 self.yaxis.label.set_visible(False)
 
         # Share interval x
-        if self._sharex and self.figure._sharex >= 2:
+        if self._sharex and self.figure._sharex_limits:
             self._lonaxis.set_view_interval(*self._sharex._lonaxis.get_view_interval())
             self._lonaxis.set_minor_locator(self._sharex._lonaxis.get_minor_locator())
 
         # Share interval y
-        if self._sharey and self.figure._sharey >= 2:
+        if self._sharey and self.figure._sharey_limits:
             self._lataxis.set_view_interval(*self._sharey._lataxis.get_view_interval())
             self._lataxis.set_minor_locator(self._sharey._lataxis.get_minor_locator())
 

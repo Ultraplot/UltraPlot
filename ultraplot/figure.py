@@ -130,6 +130,15 @@ default: :rc:`subplots.share`
 
     Explicit sharing levels (``0`` to ``4`` and aliases) still force sharing
     attempts and can emit warnings for incompatible axes.
+sharexlabels, shareylabels : bool, optional
+    Override whether the x or y axis-title text (``xlabel`` or ``ylabel``) is
+    shared. By default this is enabled by sharing levels 1 and above.
+sharexlimits, shareylimits : bool, optional
+    Override whether limits, scales, tick locations, and formatters are shared.
+    By default this is enabled by sharing levels 2 and above.
+sharexticklabels, shareyticklabels : bool, optional
+    Override whether tick labels are suppressed on interior axes. By default
+    this is enabled by sharing levels 3 and above.
 
 spanx, spany, span : bool or {0, 1}, default: :rc:`subplots.span`
     Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both
@@ -774,6 +783,12 @@ class Figure(mfigure.Figure):
         sharex=None,
         sharey=None,
         share=None,  # used for default spaces
+        sharexlabels=None,
+        shareylabels=None,
+        sharexlimits=None,
+        shareylimits=None,
+        sharexticklabels=None,
+        shareyticklabels=None,
         spanx=None,
         spany=None,
         span=None,
@@ -855,6 +870,12 @@ class Figure(mfigure.Figure):
             sharex=sharex,
             sharey=sharey,
             share=share,
+            sharexlabels=sharexlabels,
+            shareylabels=shareylabels,
+            sharexlimits=sharexlimits,
+            shareylimits=shareylimits,
+            sharexticklabels=sharexticklabels,
+            shareyticklabels=shareyticklabels,
             spanx=spanx,
             spany=spany,
             span=span,
@@ -1003,7 +1024,23 @@ class Figure(mfigure.Figure):
         return int(value), False
 
     def _init_sharing(
-        self, *, sharex, sharey, share, spanx, spany, span, alignx, aligny, align
+        self,
+        *,
+        sharex,
+        sharey,
+        share,
+        sharexlabels,
+        shareylabels,
+        sharexlimits,
+        shareylimits,
+        sharexticklabels,
+        shareyticklabels,
+        spanx,
+        spany,
+        span,
+        alignx,
+        aligny,
+        align,
     ):
         """
         Resolve share, span, and align settings.
@@ -1014,16 +1051,32 @@ class Figure(mfigure.Figure):
         sharey, sharey_auto = self._normalize_share(sharey)
         self._sharex = int(sharex)
         self._sharey = int(sharey)
+        self._sharex_labels = bool(sharex > 0 if sharexlabels is None else sharexlabels)
+        self._sharey_labels = bool(sharey > 0 if shareylabels is None else shareylabels)
+        self._sharex_limits = bool(sharex > 1 if sharexlimits is None else sharexlimits)
+        self._sharey_limits = bool(sharey > 1 if shareylimits is None else shareylimits)
+        self._sharex_ticklabels = bool(
+            sharex > 2 if sharexticklabels is None else sharexticklabels
+        )
+        self._sharey_ticklabels = bool(
+            sharey > 2 if shareyticklabels is None else shareyticklabels
+        )
         self._sharex_auto = bool(sharex_auto)
         self._sharey_auto = bool(sharey_auto)
         self._share_incompat_warned = False
 
         # Span and align settings
         spanx = _not_none(
-            spanx, span, False if not sharex else None, rc["subplots.span"]
+            spanx,
+            span,
+            False if not self._sharex_labels else None,
+            rc["subplots.span"],
         )
         spany = _not_none(
-            spany, span, False if not sharey else None, rc["subplots.span"]
+            spany,
+            span,
+            False if not self._sharey_labels else None,
+            rc["subplots.span"],
         )
         if spanx and (alignx or align):
             warnings._warn_ultraplot('"alignx" has no effect when spanx=True.')
@@ -1354,8 +1407,7 @@ class Figure(mfigure.Figure):
         if which not in ("x", "y"):
             return
 
-        share_level = self._sharex if which == "x" else self._sharey
-        if share_level <= 1:
+        if not getattr(self, f"_share{which}_limits"):
             return
 
         get_auto = f"get_autoscale{which}_on"
@@ -1729,9 +1781,10 @@ class Figure(mfigure.Figure):
         adjacent panels. Fixes the original variable leak by checking any relevant side.
         """
         level = getattr(self, f"_share{axis}")
-        # If figure-level sharing is disabled (0/False), don't promote due to panels
-        if not level or (isinstance(level, (int, float)) and level < 1):
-            return level
+        ticklabels = getattr(self, f"_share{axis}_ticklabels")
+        # If tick-label suppression is disabled, don't promote due to panels.
+        if not ticklabels:
+            return min(level, 2)
 
         # Panel group-level sharing
         if getattr(axi, f"_panel_share{axis}_group", None):
@@ -2323,6 +2376,23 @@ class Figure(mfigure.Figure):
             if isinstance(ax, paxes.GeoAxes) and hasattr(ax, "set_global"):
                 ax.set_global()
 
+    def _axis_sharing_enabled(self, which):
+        """Return whether any sharing component is enabled for an axis."""
+        return any(
+            getattr(self, f"_share{which}_{component}")
+            for component in ("labels", "limits", "ticklabels")
+        )
+
+    def _rebuild_axis_sharing(self, which):
+        """Rebuild axis relationships from the orthogonal sharing flags."""
+        axes = list(self._iter_axes(hidden=False, children=False, panels=False))
+        for ax in axes:
+            if hasattr(ax, "_unshare"):
+                ax._unshare(which=which)
+        for ax in axes:
+            if hasattr(ax, "_apply_auto_share"):
+                ax._apply_auto_share()
+
     def _toggle_axis_sharing(
         self,
         *,
@@ -2349,10 +2419,16 @@ class Figure(mfigure.Figure):
             return
         axes = list(self._iter_axes(hidden=hidden, children=children, panels=panels))
 
+        if which in ("x", "y"):
+            share, _ = self._normalize_share(share)
         if which == "x":
             self._sharex = share
         elif which == "y":
             self._sharey = share
+        if which in ("x", "y"):
+            setattr(self, f"_share{which}_labels", bool(share > 0))
+            setattr(self, f"_share{which}_limits", bool(share > 1))
+            setattr(self, f"_share{which}_ticklabels", bool(share > 2))
 
         # Unshare first if needed
         if share == 0:
@@ -3579,16 +3655,36 @@ class Figure(mfigure.Figure):
             label_sequences[key] = value
             kwargs[key] = value
             if len(value) > 1:
-                if getattr(self, f"_share{axis}", 0):
-                    # Rebuild at level 2: preserve the shared limits, scales,
-                    # and tickers but remove label sharing (level 1).
-                    self._toggle_axis_sharing(which=axis, share=0)
-                    self._toggle_axis_sharing(which=axis, share=2)
                 setattr(self, f"_share{axis}_labels", False)
                 # Spanning labels are enabled by default with shared axes, but
                 # would replace the per-axes labels with a single figure artist.
                 setattr(self, f"_span{axis}", False)
                 self._clear_share_label_groups(target=axis)
+
+        # A sequence of limit pairs requests independent numeric axes in that
+        # direction. Preserve axis-title sharing, but detach limits/tickers and
+        # stop suppressing interior tick labels.
+        limit_sequences = {}
+        for key, axis in (("xlim", "x"), ("ylim", "y")):
+            value = kwargs.get(key)
+            if value is None or isinstance(value, str) or not np.iterable(value):
+                continue
+            value = tuple(value)
+            if not all(
+                np.iterable(item) and not isinstance(item, str) for item in value
+            ):
+                continue
+            if len(value) != len(axs):
+                raise ValueError(
+                    f"Invalid {key} list length {len(value)} "
+                    f"for {len(axs)} formatted axes."
+                )
+            limit_sequences[key] = value
+            kwargs[key] = value
+            if len(value) > 1:
+                setattr(self, f"_share{axis}_limits", False)
+                setattr(self, f"_share{axis}_ticklabels", False)
+                self._rebuild_axis_sharing(axis)
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         explicit_format_keys = set(kwargs)
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
@@ -3717,11 +3813,16 @@ class Figure(mfigure.Figure):
             # sequence as one label object and converts it to its repr.
             for key, values in label_sequences.items():
                 supports_label = any(
-                    key in cls_kw
-                    for cls, cls_kw in kws.items()
-                    if isinstance(ax, cls)
+                    key in cls_kw for cls, cls_kw in kws.items() if isinstance(ax, cls)
                 )
                 if supports_label:
+                    kw[key] = values[number - 1]
+                    getattr(ax, f"{key[0]}axis").label.set_visible(True)
+            for key, values in limit_sequences.items():
+                supports_limit = any(
+                    key in cls_kw for cls, cls_kw in kws.items() if isinstance(ax, cls)
+                )
+                if supports_limit:
                     kw[key] = values[number - 1]
             if kw.get("xlabel") is not None and self._has_share_label_groups("x"):
                 if _axis_has_share_label_text(ax, "x") or _axis_has_label_text(ax, "x"):
