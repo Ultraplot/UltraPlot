@@ -3066,7 +3066,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             format_keys.difference_update(
                 {"labelpad", "labelcolor", "labelsize", "labelweight"}
             )
-            self.figure._update_sharing_for_format_keys(format_keys)
+            self.figure._update_sharing_for_format_keys(format_keys, axes=(self,))
             if format_keys & AXIS_LABEL_FORMAT_KEYS["x"]:
                 self.xaxis.label.set_visible(True)
             if format_keys & AXIS_LABEL_FORMAT_KEYS["y"]:

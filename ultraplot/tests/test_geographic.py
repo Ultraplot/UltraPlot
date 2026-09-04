@@ -804,7 +804,9 @@ def test_format_shared_ticks_sync():
     before_lon = ax[0]._get_lonticklocs()
     before_lat = ax[0]._get_latticklocs()
 
-    ax[1].format(lonlines=2, latlines=1)
+    # This test exercises synchronized shared ticks, so format the whole grid.
+    # Formatting ax[1] now deliberately requests independent local tick state.
+    ax.format(lonlines=2, latlines=1)
 
     after_left_lon = ax[0]._get_lonticklocs()
     after_left_lat = ax[0]._get_latticklocs()
@@ -829,7 +831,7 @@ def test_format_shared_ticks_sync():
     assert np.allclose(left_gridliner.xlocator.tick_values(100, 105), after_left_lon)
     assert np.allclose(left_gridliner.ylocator.tick_values(30, 35), after_left_lat)
 
-    ax[1].format(lonminorlines=0.5, latminorlines=0.5)
+    ax.format(lonminorlines=0.5, latminorlines=0.5)
     assert np.allclose(
         ax[0]._lonaxis.get_minorticklocs(), ax[1]._lonaxis.get_minorticklocs()
     )
@@ -838,7 +840,7 @@ def test_format_shared_ticks_sync():
     )
 
     formatter = mticker.FormatStrFormatter("%.1f")
-    ax[1].format(lonformatter=formatter, latformatter=formatter)
+    ax.format(lonformatter=formatter, latformatter=formatter)
     lonformatter = ax[1]._lonaxis.get_major_formatter()
     latformatter = ax[1]._lataxis.get_major_formatter()
     assert ax[0]._lonaxis.get_major_formatter() is lonformatter

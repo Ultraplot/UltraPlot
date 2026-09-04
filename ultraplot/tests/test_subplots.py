@@ -25,7 +25,9 @@ def test_align_labels():
         [[2, 1, 4], [2, 3, 5]], refnum=2, refwidth=1.5, align=1, span=0
     )
     fig.format(xlabel="xlabel", ylabel="ylabel", abc="A.", abcloc="ul")
-    axs[0].format(ylim=(10000, 20000))
+    # This is plotting setup for the label-alignment comparison, so retain the
+    # existing y-sharing group instead of requesting a local format override.
+    axs[0].set_ylim(10000, 20000)
     axs[-1].panel_axes("bottom", share=False)
     return fig
 
@@ -98,19 +100,21 @@ def test_complex_ticks():
     axs[0].format(
         xtickloc="both",
         xticklabelloc="top",
-        xlabelloc="top",
         title="title",
-        xlabel="xlabel",
         suptitle="Test",
     )
     axs[1].format(
         xtickloc="both",
         xticklabelloc="top",
         # xlabelloc='top',
-        xlabel="xlabel",
         title="title",
         suptitle="Test",
     )
+    # Use direct setters because this test exercises title positioning, not
+    # indexed format() unsharing. Keep the legacy shared-label layout.
+    axs[0].xaxis.set_label_position("top")
+    for ax in axs:
+        ax.set_xlabel("xlabel")
     return fig
 
 

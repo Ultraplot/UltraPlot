@@ -2546,33 +2546,72 @@ class Figure(mfigure.Figure):
         if (limits or ticklabels) and restore_ticklabels:
             self._restore_axis_ticklabels(which)
 
-    def _update_sharing_for_format_keys(self, keys):
+    def _axes_participate_in_sharing(self, axes, which):
+        """Return whether any axes belongs to an actual sharing group."""
+        main_axes = tuple(self._iter_subplots())
+        main_set = set(main_axes)
+        for ax in axes:
+            if ax not in main_set:
+                continue
+            get_shared = getattr(ax, f"get_shared_{which}_axes", None)
+            if get_shared is not None:
+                try:
+                    if len(get_shared().get_siblings(ax)) > 1:
+                        return True
+                except (AttributeError, TypeError):
+                    pass
+            # Label-only sharing does not necessarily register with
+            # Matplotlib's limit-sharing grouper, so also inspect UltraPlot's
+            # directional parent links in both directions.
+            parent = getattr(ax, f"_share{which}", None)
+            if parent in main_set or any(
+                getattr(other, f"_share{which}", None) is ax for other in main_axes
+            ):
+                return True
+        return False
+
+    def _update_sharing_for_format_keys(self, keys, *, axes=None):
         """Update sharing for axes-specific format keyword names."""
         keys = set(keys)
         for which in "xy":
+            participates = axes is None or self._axes_participate_in_sharing(
+                axes, which
+            )
             self._update_axis_sharing_for_format(
                 which,
                 labels=bool(keys & AXIS_LABEL_FORMAT_KEYS[which]),
-                limits=bool(keys & AXIS_SHARED_STATE_FORMAT_KEYS[which]),
-                ticklabels=bool(keys & AXIS_TICKLABEL_SHARING_FORMAT_KEYS[which]),
+                limits=bool(
+                    participates and keys & AXIS_SHARED_STATE_FORMAT_KEYS[which]
+                ),
+                ticklabels=bool(
+                    participates and keys & AXIS_TICKLABEL_SHARING_FORMAT_KEYS[which]
+                ),
             )
 
     def _restore_axis_ticklabels(self, which):
         """Restore labels hidden only by subplot tick-label sharing."""
         sides = ("bottom", "top") if which == "x" else ("left", "right")
-        labels = tuple(f"label{side}" for side in sides)
         for ax in self._iter_axes(hidden=False, children=False, panels=False):
             axis = getattr(ax, f"{which}axis", None)
             if axis is None or not hasattr(axis, "get_tick_params"):
                 continue
+            # Matplotlib <= 3.9 reports x-axis tick parameters using the
+            # generic ``left``/``right`` names, while newer versions use
+            # ``bottom``/``top``. Use the same compatibility mapping as the
+            # sharing code both to inspect the tick side and to restore its
+            # corresponding label side.
+            labels = tuple(ax._label_key(f"label{side}") for side in sides)
+            tick_sides = tuple(label.removeprefix("label") for label in labels)
             params = axis.get_tick_params()
             state_getter = getattr(ax, "_get_axis_style_state", None)
             state = state_getter(which) if state_getter is not None else {}
             loc = state.get("ticklabelloc")
             if loc is None:
                 visibility = {
-                    label: bool(params.get(label, False) or params.get(side, False))
-                    for side, label in zip(sides, labels)
+                    label: bool(
+                        params.get(label, False) or params.get(tick_side, False)
+                    )
+                    for tick_side, label in zip(tick_sides, labels)
                 }
             else:
                 aliases = {side[0]: side for side in sides}
@@ -3904,7 +3943,13 @@ class Figure(mfigure.Figure):
         formatted_main_axes = set(axs) & all_axes
         can_reduce_sharing = len(all_axes) > 1 and bool(formatted_main_axes)
         if axis_mappings and can_reduce_sharing:
-            self._update_sharing_for_format_keys(axis_mappings)
+            for key, mapping in axis_mappings.items():
+                targets = [
+                    axs[number - 1]
+                    for number, value in mapping.items()
+                    if value is not None
+                ]
+                self._update_sharing_for_format_keys({key}, axes=targets)
         is_subset = bool(axs) and all_axes and set(axs) != all_axes
         if is_subset and can_reduce_sharing:
             local_keys = {
@@ -3924,7 +3969,7 @@ class Figure(mfigure.Figure):
                 for key, value in kwargs.items()
                 if value is not None and key in local_keys
             }
-            self._update_sharing_for_format_keys(local_state_keys)
+            self._update_sharing_for_format_keys(local_state_keys, axes=axs)
 
         # Unlike titles, axis labels are normally forwarded verbatim to every
         # axes. Accept a sequence of strings here as a request for one label per

@@ -473,8 +473,8 @@ def test_ridgeline_continuous_vs_categorical(rng):
     axs[1].ridgeline(
         data, labels=labels, positions=positions, height=4, cmap="viridis", alpha=0.7
     )
-    axs[1].format(title="Continuous Positioning", ylabel="Coordinate", grid=True)
-    axs.format(xlabel="Value")
+    axs[1].format(title="Continuous Positioning", grid=True)
+    axs.format(xlabel="Value", ylabel="Coordinate")
 
     return fig
 

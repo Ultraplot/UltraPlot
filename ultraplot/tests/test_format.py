@@ -494,6 +494,31 @@ def test_indexed_limit_format_restores_interior_ticklabels():
     assert "1" in [label.get_text() for label in axs[0].get_xticklabels()]
 
 
+def test_indexed_formatter_restores_interior_ticklabels():
+    """Local formatters restore labels hidden by sharing on every mpl version."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    fig.canvas.draw()
+    assert not axs[0]._is_ticklabel_on("labelbottom")
+
+    axs[1].format(xformatter="null")
+    fig.canvas.draw()
+
+    assert axs[0]._is_ticklabel_on("labelbottom")
+    assert axs[1]._is_ticklabel_on("labelbottom")
+    assert all(not label.get_text() for label in axs[1].get_xticklabels())
+
+
+def test_indexed_unshared_direction_preserves_figure_sharing():
+    """Local formatting only reduces a direction with actual shared siblings."""
+    fig, axs = uplt.subplots(ncols=2, share=True)
+    before = fig.get_axis_sharing("x")
+
+    axs[1].format(xformatter="null")
+
+    assert fig.get_axis_sharing("x") == before
+    assert len(axs[1].get_shared_x_axes().get_siblings(axs[1])) == 1
+
+
 def test_indexed_ylim_restores_interior_ticklabels():
     """The ticker-detachment behavior is symmetric for y axes."""
     fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
