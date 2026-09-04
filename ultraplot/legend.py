@@ -16,7 +16,15 @@ from matplotlib import legend_handler as mhandler
 from matplotlib.markers import MarkerStyle
 
 from .config import rc
-from .internals import _not_none, _pop_props, docstring, guides, inputs, rcsetup
+from .internals import (
+    _alias_kwargs,
+    _not_none,
+    _pop_props,
+    docstring,
+    guides,
+    inputs,
+    rcsetup,
+)
 from .utils import _fontsize_to_pt, units
 
 try:
@@ -2247,6 +2255,7 @@ class UltraLegend:
         """
         return ALIGN_OPTS
 
+    @_alias_kwargs("legend")
     def _resolve_inputs(
         self,
         handles=None,
@@ -2257,9 +2266,7 @@ class UltraLegend:
         width=None,
         pad=None,
         space=None,
-        frame=None,
         frameon=None,
-        ncol=None,
         ncols=None,
         alphabetize=False,
         center=None,
@@ -2284,9 +2291,9 @@ class UltraLegend:
         """
         Normalize inputs, apply rc defaults, and convert units.
         """
-        ncol = _not_none(ncols=ncols, ncol=ncol)
+        ncol = ncols
         order = _not_none(order, "C")
-        frameon = _not_none(frame=frame, frameon=frameon, default=rc["legend.frameon"])
+        frameon = _not_none(frameon, default=rc["legend.frameon"])
         fontsize = _not_none(fontsize, rc["legend.fontsize"])
         titlefontsize = _not_none(
             title_fontsize=kwargs.pop("title_fontsize", None),
@@ -2468,6 +2475,7 @@ class UltraLegend:
         ax._register_guide("legend", obj, (loc, align))
         return obj
 
+    @_alias_kwargs("legend")
     def add(
         self,
         handles=None,
@@ -2478,9 +2486,7 @@ class UltraLegend:
         width=None,
         pad=None,
         space=None,
-        frame=None,
         frameon=None,
-        ncol=None,
         ncols=None,
         alphabetize=False,
         center=None,
@@ -2513,9 +2519,7 @@ class UltraLegend:
             width=width,
             pad=pad,
             space=space,
-            frame=frame,
             frameon=frameon,
-            ncol=ncol,
             ncols=ncols,
             alphabetize=alphabetize,
             center=center,

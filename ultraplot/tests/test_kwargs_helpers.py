@@ -2,7 +2,10 @@
 
 import warnings
 
+import pytest
+
 from ultraplot import internals
+from ultraplot.internals import guides
 from ultraplot.internals import kwargs as ikwargs
 
 
@@ -12,6 +15,11 @@ def test_kwargs_helpers_reexported_from_package() -> None:
     for name in (
         "_not_none",
         "_alias_kwargs",
+        "_alias_registry",
+        "_canonicalize_kwargs",
+        "_format_alias_reference",
+        "_figure_format_alias_scopes",
+        "_format_alias_scopes",
         "_alias_maps",
         "_get_aliases",
         "_kwargs_to_args",
@@ -56,25 +64,82 @@ def test_alias_kwargs_none_synonym_defers_to_default() -> None:
     assert func(width=None) == 42
 
 
-def test_alias_kwargs_conflict_keeps_canonical_and_warns() -> None:
+def test_alias_kwargs_conflict_raises() -> None:
     @ikwargs._alias_kwargs(figwidth=("width",))
     def func(*, figwidth=None):
         return figwidth
 
-    with warnings.catch_warnings(record=True) as record:
-        warnings.simplefilter("always")
-        value = func(figwidth=1, width=2)
-    assert value == 1  # canonical wins, matching _not_none precedence
-    assert any("conflicting" in str(w.message).lower() for w in record)
+    with pytest.raises(TypeError, match="aliases"):
+        func(figwidth=1, width=2)
 
 
-def test_alias_kwargs_multiple_synonyms_first_wins() -> None:
+def test_alias_kwargs_multiple_synonyms_raise() -> None:
     @ikwargs._alias_kwargs(saturation=("s", "c", "chroma"))
     def func(*, saturation=None):
         return saturation
 
     assert func(chroma=0.5) == 0.5
-    with warnings.catch_warnings(record=True):
-        warnings.simplefilter("always")
-        # Two synonyms: the first one encountered in declaration order wins.
-        assert func(s=0.1, chroma=0.9) == 0.1
+    with pytest.raises(TypeError, match="aliases"):
+        func(s=0.1, chroma=0.9)
+
+
+def test_registry_scope_translates_without_mutating_input() -> None:
+    kwargs = {"xticks": [1, 2], "color": "red"}
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        result = ikwargs._canonicalize_kwargs("cartesian.format", kwargs)
+    assert kwargs == {"xticks": [1, 2], "color": "red"}
+    assert result == {"xlocator": [1, 2], "color": "red"}
+
+
+def test_registry_translates_explicit_format_keys() -> None:
+    kwargs = {"xticks": [1, 2], "_explicit_format_keys": {"xticks"}}
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        result = ikwargs._canonicalize_kwargs("cartesian.format", kwargs)
+    assert result["_explicit_format_keys"] == {"xlocator"}
+
+
+def test_ambiguous_alias_uses_call_context() -> None:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        axes = ikwargs._canonicalize_kwargs(ikwargs._format_alias_scopes, {"rlabels": 5})
+        figure = ikwargs._canonicalize_kwargs(
+            ikwargs._figure_format_alias_scopes, {"rlabels": ["right"]}
+        )
+    assert axes == {"rformatter": 5}
+    assert figure == {"rightlabels": ["right"]}
+
+
+def test_alias_kwargs_combines_registered_scopes() -> None:
+    @ikwargs._alias_kwargs(("plot.statistics", "plot.boxplot"))
+    def func(*, means=None, medians=None, fill=None):
+        return means, medians, fill
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        assert func(showmeans=True) == (True, None, None)
+        assert func(filled=True) == (None, None, True)
+    assert func._ultraplot_alias_scopes == ("plot.statistics", "plot.boxplot")
+    assert func._ultraplot_aliases["fill"] == ("filled",)
+
+
+def test_alias_kwargs_rejects_inline_aliases_with_registered_scopes() -> None:
+    with pytest.raises(TypeError, match="Inline aliases"):
+        ikwargs._alias_kwargs(("plot.statistics", "plot.boxplot"), old="new")
+
+
+def test_alias_reference_is_generated_from_registry() -> None:
+    reference = ikwargs._format_alias_reference()
+    assert "Function keyword aliases" in reference
+    assert "Artist property aliases" in reference
+    assert "Dotless rc aliases" in reference
+    assert "cartesian.format" in reference
+    assert "xticks" in reference
+    assert "xlocator" in reference
+
+
+def test_guide_defaults_do_not_duplicate_accepted_aliases() -> None:
+    kwargs = {"length": 0.5, "minorlocator": "minor"}
+    guides._update_kw(kwargs, overwrite=False, shrink=1.0, minorticks=True)
+    assert kwargs == {"length": 0.5, "minorlocator": "minor"}

@@ -550,11 +550,11 @@ htmlhelp_basename = "ultraplotdoc"
 
 
 if HAVE_ULTRAPLOT_THEME_EXT:
-    html_css_files = []
-    html_js_files = []
+    html_css_files = ["alias-explorer-v3.css"]
+    html_js_files = ["alias-explorer-v3.js"]
 else:
-    html_css_files = ["custom.css"]
-    html_js_files = ["custom.js"]
+    html_css_files = ["custom.css", "alias-explorer-v3.css"]
+    html_js_files = ["custom.js", "alias-explorer-v3.js"]
 
 # -- Options for LaTeX output ------------------------------------------------
 

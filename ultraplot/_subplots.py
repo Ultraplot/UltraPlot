@@ -13,7 +13,14 @@ import numpy as np
 from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
-from .internals import _not_none, _pop_params, warnings
+from .internals import (
+    _alias_kwargs,
+    _canonicalize_kwargs,
+    _figure_format_alias_scopes,
+    _not_none,
+    _pop_params,
+    warnings,
+)
 
 if TYPE_CHECKING:
     from .figure import Figure
@@ -69,11 +76,10 @@ class SubplotManager:
             constructor._warn_basemap_deprecated()
         return backend
 
+    @_alias_kwargs("subplot")
     def parse_proj(
         self,
-        proj=None,
         projection=None,
-        proj_kw=None,
         projection_kw=None,
         backend=None,
         basemap=None,
@@ -83,8 +89,8 @@ class SubplotManager:
         Translate user-input projection into a registered matplotlib axes class.
         """
         # Parse arguments
-        proj = _not_none(proj=proj, projection=projection, default="cartesian")
-        proj_kw = _not_none(proj_kw=proj_kw, projection_kw=projection_kw, default={})
+        proj = _not_none(projection, "cartesian")
+        proj_kw = projection_kw or {}
         backend = self.parse_backend(backend, basemap)
         if isinstance(proj, str):
             proj = proj.lower()
@@ -270,15 +276,14 @@ class SubplotManager:
             self.subplot_dict[ax.number] = ax
         return ax
 
+    @_alias_kwargs("subplot")
     def add_subplots(
         self,
         array=None,
         nrows=1,
         ncols=1,
         order="C",
-        proj=None,
         projection=None,
-        proj_kw=None,
         projection_kw=None,
         backend=None,
         basemap=None,
@@ -288,6 +293,8 @@ class SubplotManager:
         The driver function for adding multiple subplots.
         """
         fig = self.figure
+        kwargs = _canonicalize_kwargs(_figure_format_alias_scopes, kwargs)
+        kwargs = _canonicalize_kwargs("gridspec", kwargs)
 
         # Helper to normalize per-axes arguments into {num: value} dicts.
         # Accepts 'string', {1: 'string1', (2, 3): 'string2'}, or lists.
@@ -346,14 +353,18 @@ class SubplotManager:
         naxs = len(nums)
         if any(num < 0 or not isinstance(num, Integral) for num in nums.flat):
             raise ValueError(f"Expected array of positive integers. Got {array}.")
-        proj = _not_none(projection=projection, proj=proj)
+        proj = projection
         proj = _axes_dict(naxs, proj, kw=False, default="cartesian")
-        proj_kw = _not_none(projection_kw=projection_kw, proj_kw=proj_kw) or {}
+        proj_kw = projection_kw or {}
         proj_kw = _axes_dict(naxs, proj_kw, kw=True)
         backend = self.parse_backend(backend, basemap)
         backend = _axes_dict(naxs, backend, kw=False)
         axes_kw = {
-            num: {"proj": proj[num], "proj_kw": proj_kw[num], "backend": backend[num]}
+            num: {
+                "projection": proj[num],
+                "projection_kw": proj_kw[num],
+                "backend": backend[num],
+            }
             for num in proj
         }
         for key in ("gridspec_kw", "subplot_kw"):

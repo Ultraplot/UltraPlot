@@ -150,6 +150,7 @@ For more details, check the full :doc:`User guide <usage>` and :doc:`API Referen
    :hidden:
 
    api
+   aliases
    lazy_loading
    external-links
    whats_new

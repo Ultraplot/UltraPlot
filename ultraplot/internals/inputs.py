@@ -11,6 +11,7 @@ import numpy.ma as ma
 
 from . import ic  # noqa: F401
 from . import _not_none, warnings
+from .kwargs import _alias_kwargs
 
 try:
     from cartopy.crs import PlateCarree
@@ -549,14 +550,13 @@ def _dist_clean(distribution):
         raise ValueError("Input must be a numpy array or a list of lists")
 
 
-def _dist_reduce(data, *, mean=None, means=None, median=None, medians=None, **kwargs):
+@_alias_kwargs("plot.statistics")
+def _dist_reduce(data, *, means=None, medians=None, **kwargs):
     """
     Reduce statistical distributions to means and medians. Tack on a
     distribution keyword argument for processing down the line.
     """
     # TODO: Permit 3D array with error dimension coming first
-    means = _not_none(mean=mean, means=means)
-    medians = _not_none(median=median, medians=medians)
     if means and medians:
         warnings._warn_ultraplot(
             "Cannot have both means=True and medians=True. Using former."

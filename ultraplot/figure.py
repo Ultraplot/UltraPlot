@@ -32,6 +32,7 @@ from . import legend as plegend
 from .config import rc, rc_matplotlib
 from .internals import (
     _alias_kwargs,
+    _canonicalize_kwargs,
     _not_none,
     _pop_params,
     _pop_rc,
@@ -98,15 +99,10 @@ refwidth, refheight : unit-spec, default: :rc:`subplots.refwidth`
     %(units.in)s
     Ignored if `figwidth`, `figheight`, or `figsize` was passed. If you
     specify just one, `refaspect` will be respected.
-ref, aspect, axwidth, axheight
-    Aliases for `refnum`, `refaspect`, `refwidth`, `refheight`.
-    *These may be deprecated in a future release.*
 figwidth, figheight : unit-spec, optional
     The figure width and height. Default behavior is to use `refwidth`.
     %(units.in)s
     If you specify just one, `refaspect` will be respected.
-width, height
-    Aliases for `figwidth`, `figheight`.
 figsize : 2-tuple, optional
     Tuple specifying the figure ``(width, height)``.
 sharex, sharey, share \
@@ -229,25 +225,25 @@ order : {'C', 'F'}, default: 'C'
     two options:
 
     * Pass a *list* of projection specifications, one for each subplot.
-      For example, ``uplt.subplots(ncols=2, proj=('cart', 'robin'))``.
+      For example, ``uplt.subplots(ncols=2, projection=('cart', 'robin'))``.
     * Pass a *dictionary* of projection specifications, where the
       keys are integers or tuples of integers that indicate the projection
       to use for the corresponding subplot number(s). If a key is not
       provided, the default projection ``'cartesian'`` is used. For example,
-      ``uplt.subplots(ncols=4, proj={2: 'cyl', (3, 4): 'stere'})`` creates
+      ``uplt.subplots(ncols=4, projection={2: 'cyl', (3, 4): 'stere'})`` creates
       a figure with a default Cartesian axes for the first subplot, a Mercator
       projection for the second subplot, and a Stereographic projection
       for the third and fourth subplots.
 
 %(axes.proj_kw)s
     If dictionary of properties, applies globally. If list or dictionary of
-    dictionaries, applies to specific subplots, as with `proj`. For example,
-    ``uplt.subplots(ncols=2, proj='cyl', proj_kw=({'lon_0': 0}, {'lon_0': 180})``
+    dictionaries, applies to specific subplots, as with `projection`. For example,
+    ``uplt.subplots(ncols=2, projection='cyl', projection_kw=({'lon0': 0}, {'lon0': 180})``
     centers the projection in the left subplot on the prime meridian and in the
     right subplot on the international dateline.
 %(axes.backend)s
     If string, applies to all subplots. If list or dict, applies to specific
-    subplots, as with `proj`.
+    subplots, as with `projection`.
 %(gridspec.shared)s
 %(gridspec.vector)s
 %(gridspec.tight)s
@@ -753,14 +749,7 @@ class Figure(mfigure.Figure):
 
     @docstring._obfuscate_kwargs
     @docstring._snippet_manager
-    @_alias_kwargs(
-        refnum=("ref",),
-        refaspect=("aspect",),
-        refwidth=("axwidth",),
-        refheight=("axheight",),
-        figwidth=("width",),
-        figheight=("height",),
-    )
+    @_alias_kwargs("figure.init")
     def __init__(
         self,
         *,
@@ -1050,6 +1039,7 @@ class Figure(mfigure.Figure):
         self._skip_autolayout = False
         self._includepanels = None
         self._render_context = {}
+        kwargs = _canonicalize_kwargs("figure.format", kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
         kw_format = _pop_params(kwargs, self._format_signature)
         if figwidth is not None and figheight is not None:
@@ -3488,27 +3478,26 @@ class Figure(mfigure.Figure):
         "0.10.0", mathtext_fallback="uplt.rc.mathtext_fallback = {}"
     )
     @docstring._snippet_manager
+    @_alias_kwargs("figure.format")
+    @_alias_kwargs("axes.format")
+    @_alias_kwargs("cartesian.format")
+    @_alias_kwargs("geo.format")
+    @_alias_kwargs("polar.format")
+    @_alias_kwargs("taylor.format")
     def format(
         self,
         axs=None,
         *,
-        figtitle=None,
         suptitle=None,
         suptitle_kw=None,
-        llabels=None,
         leftlabels=None,
         leftlabels_kw=None,
-        rlabels=None,
         rightlabels=None,
         rightlabels_kw=None,
-        blabels=None,
         bottomlabels=None,
         bottomlabels_kw=None,
-        tlabels=None,
         toplabels=None,
         toplabels_kw=None,
-        rowlabels=None,
-        collabels=None,  # aliases
         includepanels=None,
         **kwargs,
     ):
@@ -3568,23 +3557,16 @@ class Figure(mfigure.Figure):
         explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
         figure_layout_requested = _any_not_none(
-            figtitle,
             suptitle,
             suptitle_kw,
-            llabels,
             leftlabels,
             leftlabels_kw,
-            rlabels,
             rightlabels,
             rightlabels_kw,
-            blabels,
             bottomlabels,
             bottomlabels_kw,
-            tlabels,
             toplabels,
             toplabels_kw,
-            rowlabels,
-            collabels,
             includepanels,
         )
         if (
@@ -3620,30 +3602,11 @@ class Figure(mfigure.Figure):
             rightlabels_kw = rightlabels_kw or {}
             bottomlabels_kw = bottomlabels_kw or {}
             toplabels_kw = toplabels_kw or {}
-            self._update_super_title(
-                _not_none(figtitle=figtitle, suptitle=suptitle),
-                **suptitle_kw,
-            )
-            self._update_super_labels(
-                "left",
-                _not_none(rowlabels=rowlabels, leftlabels=leftlabels, llabels=llabels),
-                **leftlabels_kw,
-            )
-            self._update_super_labels(
-                "right",
-                _not_none(rightlabels=rightlabels, rlabels=rlabels),
-                **rightlabels_kw,
-            )
-            self._update_super_labels(
-                "bottom",
-                _not_none(bottomlabels=bottomlabels, blabels=blabels),
-                **bottomlabels_kw,
-            )
-            self._update_super_labels(
-                "top",
-                _not_none(collabels=collabels, toplabels=toplabels, tlabels=tlabels),
-                **toplabels_kw,
-            )
+            self._update_super_title(suptitle, **suptitle_kw)
+            self._update_super_labels("left", leftlabels, **leftlabels_kw)
+            self._update_super_labels("right", rightlabels, **rightlabels_kw)
+            self._update_super_labels("bottom", bottomlabels, **bottomlabels_kw)
+            self._update_super_labels("top", toplabels, **toplabels_kw)
 
         # Update the main axes
         if skip_axes:  # avoid recursion
@@ -3717,12 +3680,12 @@ class Figure(mfigure.Figure):
 
     @docstring._concatenate_inherited
     @docstring._snippet_manager
+    @_alias_kwargs("colorbar")
     def colorbar(
         self,
         mappable,
         values=None,
         loc: Optional[str] = None,
-        location: Optional[str] = None,
         row: Optional[int] = None,
         col: Optional[int] = None,
         rows: Optional[Union[int, Tuple[int, int]]] = None,
@@ -3739,17 +3702,14 @@ class Figure(mfigure.Figure):
         Parameters
         ----------
         %(axes.colorbar_args)s
-        length : float, default: :rc:`colorbar.length`
+        shrink : float, default: :rc:`colorbar.length`
             The colorbar length. Units are relative to the span of the rows and
             columns of subplots.
-        shrink : float, optional
-            Alias for `length`. This is included for consistency with
-            `matplotlib.figure.Figure.colorbar`.
         width : unit-spec, default: :rc:`colorbar.width`
             The colorbar width.
             %(units.in)s
         %(figure.colorbar_space)s
-            Has no visible effect if `length` is ``1``.
+            Has no visible effect if `shrink` is ``1``.
 
         Other parameters
         ----------------
@@ -3913,7 +3873,7 @@ class Figure(mfigure.Figure):
             )
         # Figure panel colorbar
         else:
-            loc = _not_none(loc=loc, location=location, default="r")
+            loc = _not_none(loc, "r")
             ax = self._add_figure_panel(
                 loc,
                 row=row,
@@ -3930,12 +3890,12 @@ class Figure(mfigure.Figure):
 
     @docstring._concatenate_inherited
     @docstring._snippet_manager
+    @_alias_kwargs("legend")
     def legend(
         self,
         handles=None,
         labels=None,
         loc=None,
-        location=None,
         row=None,
         col=None,
         rows=None,
@@ -4128,7 +4088,7 @@ class Figure(mfigure.Figure):
             )
         # Figure panel legend
         else:
-            loc = _not_none(loc=loc, location=location, default="r")
+            loc = _not_none(loc, "r")
             ax = self._add_figure_panel(
                 loc,
                 row=row,
