@@ -426,7 +426,7 @@ def test_orthogonal_axis_sharing_controls():
     axs.format(xlabel=["Upper x", "Lower x"])
     fig.canvas.draw()
 
-    assert fig._sharex == 0
+    assert fig._sharex == 2
     assert fig._sharex_limits
     assert not fig._sharex_labels
     assert not fig._sharex_ticklabels
@@ -457,6 +457,7 @@ def test_format_axes_mapping_uses_one_based_selectors():
     assert not fig._sharex_labels
     assert not fig._sharey_labels
     assert not fig._sharey_limits
+    assert fig._sharey == 0
 
 
 def test_indexed_format_updates_axis_sharing():
@@ -471,6 +472,7 @@ def test_indexed_format_updates_axis_sharing():
     axs[0].format(ylim=(3, 4))
     assert not fig._sharey_limits
     assert not fig._sharey_ticklabels
+    assert fig._sharey == 0
     assert axs[0].get_ylim() == (3, 4)
     assert axs[1].get_ylim() == (1, 2)
 
@@ -485,8 +487,111 @@ def test_indexed_limit_format_restores_interior_ticklabels():
     fig.canvas.draw()
 
     assert axs[0].xaxis.get_tick_params()["labelbottom"]
+    assert fig._sharex == 1
     assert axs[0].get_xlim() == (0, 1)
     assert axs[2].get_xlim() == (-1, 0)
+    assert 1 in axs[0].get_xticks()
+    assert "1" in [label.get_text() for label in axs[0].get_xticklabels()]
+
+
+def test_indexed_ylim_restores_interior_ticklabels():
+    """The ticker-detachment behavior is symmetric for y axes."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    fig.canvas.draw()
+    assert not axs[1].yaxis.get_tick_params()["labelleft"]
+
+    axs[1].format(ylim=(-1, 0))
+    fig.canvas.draw()
+
+    assert fig._sharey == 1
+    assert axs[1].yaxis.get_tick_params()["labelleft"]
+    assert axs[0].get_ylim() == (0, 1)
+    assert axs[1].get_ylim() == (-1, 0)
+    assert 1 in axs[0].get_yticks()
+    assert "1" in [label.get_text() for label in axs[0].get_yticklabels()]
+
+
+@pytest.mark.parametrize("which", ("x", "y"))
+def test_unshared_tickers_are_independent_and_bound_to_owner(which):
+    """Detached tickers must not retain another axes as their data source."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    axs[2 if which == "x" else 1].format(**{f"{which}lim": (-1, 0)})
+
+    tickers = [getattr(ax, f"{which}axis").major for ax in axs]
+    assert len({id(ticker) for ticker in tickers}) == len(axs)
+    for ax, ticker in zip(axs, tickers):
+        axis = getattr(ax, f"{which}axis")
+        assert ticker.locator.axis is axis
+        assert ticker.formatter.axis is axis
+
+
+def test_local_limits_remain_independent_after_repeated_updates():
+    """Later limit updates cannot leak after an indexed format call detaches axes."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    axs[1].format(xlim=(-1, 0))
+    axs[0].set_xlim(2, 3)
+    assert axs[0].get_xlim() == (2, 3)
+    assert axs[1].get_xlim() == (-1, 0)
+
+    axs[1].set_xlim(-3, -2)
+    assert axs[0].get_xlim() == (2, 3)
+    assert axs[1].get_xlim() == (-3, -2)
+
+
+def test_sparse_limit_mapping_detaches_tickers_for_every_axes():
+    """Sparse dict formatting gives selected and unselected axes valid locators."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    axs.format(xlim={3: (-1, 0)})
+    fig.canvas.draw()
+
+    assert fig._sharex == 1
+    assert [ax.get_xlim() for ax in axs] == [(0, 1), (0, 1), (-1, 0), (0, 1)]
+    assert 1 in axs[0].get_xticks()
+    assert -1 in axs[2].get_xticks()
+    assert all(ax.xaxis.major.locator.axis is ax.xaxis for ax in axs)
+
+
+def test_limit_sequence_gives_every_axes_an_independent_ticker():
+    """Each item in a limit sequence gets an independently evaluated ticker."""
+    limits = [(0, 1), (1, 2), (2, 3), (3, 4)]
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    axs.format(xlim=limits)
+    fig.canvas.draw()
+
+    for ax, lim in zip(axs, limits):
+        assert ax.get_xlim() == lim
+        assert np.isclose(ax.get_xticks(), lim[0]).any()
+        assert np.isclose(ax.get_xticks(), lim[1]).any()
+        assert ax.xaxis.major.locator.axis is ax.xaxis
+
+
+def test_sharing_level_tracks_each_indexed_component_transition():
+    """The numeric level follows the highest active orthogonal component."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    axs[0].format(xlabel="Local x")
+    assert fig._sharex == 3
+    assert not fig._sharex_labels
+
+    axs[0].format(xticklabelloc="bottom")
+    assert fig._sharex == 2
+    assert not fig._sharex_ticklabels
+
+    axs[0].format(xlim=(-1, 0))
+    assert fig._sharex == 0
+    assert not fig._sharex_limits
+
+
+def test_explicit_ticklabel_location_survives_later_limit_detach():
+    """Restoring shared tick labels must preserve an explicit local opt-out."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    fig.canvas.draw()
+    axs[1].format(xticklabelloc="neither")
+    axs[2].format(xlim=(-1, 0))
+    fig.canvas.draw()
+
+    assert axs[0].xaxis.get_tick_params()["labelbottom"]
+    assert not axs[1].xaxis.get_tick_params()["labelbottom"]
+    assert not axs[1].xaxis.get_tick_params()["labeltop"]
 
 
 def test_indexed_tick_location_only_disables_ticklabel_sharing():
@@ -499,6 +604,7 @@ def test_indexed_tick_location_only_disables_ticklabel_sharing():
 
     assert fig._sharex_limits
     assert not fig._sharex_ticklabels
+    assert fig._sharex == 2
     assert axs[0].xaxis.get_tick_params()["labelbottom"]
     axs[0].set_xlim(2, 3)
     assert axs[2].get_xlim() == (2, 3)
@@ -544,7 +650,7 @@ def test_format_distributes_limit_sequences_and_unshares(
     axs.format(**{key: limits})
     fig.canvas.draw()
 
-    assert getattr(fig, shared_attr) == 3
+    assert getattr(fig, shared_attr) == 1
     assert getattr(fig, unaffected_attr) == 3
     assert not getattr(fig, f"{shared_attr}_limits")
     assert not getattr(fig, f"{shared_attr}_ticklabels")

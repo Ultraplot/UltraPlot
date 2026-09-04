@@ -2565,21 +2565,22 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 self._shared_axes[which].remove(sibling)
                 if which in "xy":
                     setattr(sibling, f"_share{which}", None)
-                this_ax = getattr(self, f"{which}axis")
-                sib_ax = getattr(sibling, f"{which}axis")
-                # Reset formatters by creating new Ticker objects.
-                # A deepcopy can trigger redraws.
-                new_major = maxis.Ticker()
-                if this_ax.major:
-                    new_major.locator = copy.copy(this_ax.major.locator)
-                    new_major.formatter = copy.copy(this_ax.major.formatter)
-                this_ax.major = new_major
-
-                new_minor = maxis.Ticker()
-                if this_ax.minor:
-                    new_minor.locator = copy.copy(this_ax.minor.locator)
-                    new_minor.formatter = copy.copy(this_ax.minor.formatter)
-                this_ax.minor = new_minor
+        if which in "xy" and len(siblings) > 1:
+            # Matplotlib shares the actual Ticker objects, not just their state.
+            # Give every detached axes independent copies so that subsequent
+            # limits select tick locations from that axes' own view interval.
+            # A deepcopy can trigger redraws, so shallow-copy each component.
+            for sibling in siblings:
+                axis = getattr(sibling, f"{which}axis")
+                for name in ("major", "minor"):
+                    ticker = getattr(axis, name)
+                    new_ticker = maxis.Ticker()
+                    if ticker:
+                        new_ticker.locator = copy.copy(ticker.locator)
+                        new_ticker.formatter = copy.copy(ticker.formatter)
+                        new_ticker.locator.set_axis(axis)
+                        new_ticker.formatter.set_axis(axis)
+                    setattr(axis, name, new_ticker)
 
     def _sharex_setup(self, sharex, **kwargs):
         """

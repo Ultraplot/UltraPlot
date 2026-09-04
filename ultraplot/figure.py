@@ -1069,6 +1069,8 @@ class Figure(mfigure.Figure):
         self._sharey_ticklabels = bool(
             sharey > 2 if shareyticklabels is None else shareyticklabels
         )
+        self._sync_axis_sharing_level("x")
+        self._sync_axis_sharing_level("y")
         self._sharex_auto = bool(sharex_auto)
         self._sharey_auto = bool(sharey_auto)
         self._share_incompat_warned = False
@@ -2391,6 +2393,17 @@ class Figure(mfigure.Figure):
             for component in ("labels", "limits", "ticklabels")
         )
 
+    def _sync_axis_sharing_level(self, which):
+        """Synchronize the legacy level with the active sharing components."""
+        previous = getattr(self, f"_share{which}")
+        labels = getattr(self, f"_share{which}_labels")
+        limits = getattr(self, f"_share{which}_limits")
+        ticklabels = getattr(self, f"_share{which}_ticklabels")
+        level = max(1 if labels else 0, 2 if limits else 0, 3 if ticklabels else 0)
+        if previous == 4 and limits:
+            level = 4
+        setattr(self, f"_share{which}", level)
+
     def _update_axis_sharing_for_format(
         self, which, *, labels=False, limits=False, ticklabels=False
     ):
@@ -2404,6 +2417,9 @@ class Figure(mfigure.Figure):
             setattr(self, f"_share{which}_ticklabels", False)
         if limits:
             setattr(self, f"_share{which}_limits", False)
+        if labels or limits or ticklabels:
+            self._sync_axis_sharing_level(which)
+        if limits:
             self._rebuild_axis_sharing(which)
         if (limits or ticklabels) and restore_ticklabels:
             self._restore_axis_ticklabels(which)
