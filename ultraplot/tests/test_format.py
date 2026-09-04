@@ -610,6 +610,21 @@ def test_failed_scale_format_restores_sharing(syntax):
     assert axs[0].get_shared_x_axes().joined(axs[0], axs[1])
 
 
+def test_failed_format_restores_manual_sharing_and_limits():
+    """Late failures restore manual grouper topology and pre-call limits."""
+    fig, axs = uplt.subplots(nrows=2, share=0)
+    axs[1].sharex(axs[0])
+    before = fig.get_axis_sharing()
+    limits = [ax.get_xlim() for ax in axs]
+
+    with pytest.raises(ValueError):
+        axs[0].format(xlim=(2, 3), xtickloc="bogus")
+
+    assert fig.get_axis_sharing() == before
+    assert axs[0].get_shared_x_axes().joined(axs[0], axs[1])
+    assert [ax.get_xlim() for ax in axs] == limits
+
+
 def test_local_label_in_singleton_direction_preserves_sharing_state():
     """A local label only reduces a direction with actual shared siblings."""
     fig, axs = uplt.subplots(ncols=2, share=True)

@@ -233,8 +233,25 @@ def update_sharing_for_format_keys(figure, keys, *, axes=None):
 
 def snapshot_axis_sharing(figure):
     """Capture figure sharing policy so a failed format call can restore it."""
+    axes = tuple(
+        dict.fromkeys(figure._iter_axes(hidden=True, children=True, panels=True))
+    )
+    axis_set = set(axes)
     state = {}
     for which in "xy":
+        seen = set()
+        topology = []
+        for ax in axes:
+            if ax in seen:
+                continue
+            siblings = tuple(
+                sibling
+                for sibling in ax._shared_axes[which].get_siblings(ax)
+                if sibling in axis_set
+            )
+            seen.update(siblings)
+            if len(siblings) > 1:
+                topology.append(siblings)
         state[which] = {
             name: getattr(figure, f"_share{which}_{name}")
             for name in ("labels", "limits", "ticklabels", "auto")
@@ -249,6 +266,14 @@ def snapshot_axis_sharing(figure):
             }
             for key, group in figure._share_label_groups[which].items()
         }
+        state[which]["topology"] = topology
+        state[which]["axis_states"] = {
+            ax: {
+                "limits": getattr(ax, f"get_{which}lim")(),
+                "autoscale": getattr(ax, f"get_autoscale{which}_on")(),
+            }
+            for ax in axes
+        }
     return state
 
 
@@ -261,6 +286,18 @@ def restore_axis_sharing(figure, state):
             setattr(figure, f"_share{which}_{name}", values[name])
         figure._share_label_groups[which] = values["groups"]
         rebuild_axis_sharing(figure, which)
+        for siblings in values["topology"]:
+            anchor = siblings[0]
+            shared = anchor._shared_axes[which]
+            for ax in siblings[1:]:
+                if not shared.joined(anchor, ax):
+                    ax._share_axis_with(anchor, which=which)
+        for ax, axis_state in values["axis_states"].items():
+            getattr(ax, f"set_{which}lim")(
+                *axis_state["limits"],
+                emit=False,
+                auto=axis_state["autoscale"],
+            )
 
 
 def rebuild_axis_sharing(figure, which):
