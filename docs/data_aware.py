@@ -43,10 +43,10 @@ data = pd.DataFrame(
 )
 data.index.name = "Date"
 
-fig, ax = uplt.subplots(refwidth=3.4)
+fig, ax = uplt.subplots()
 ax.plot(data)
 ax.format(title="Monthly temperature", ylabel="Temperature (°C)")
-ax.legend(loc="r")
+ax.legend(loc="ur", ncols=1)
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
