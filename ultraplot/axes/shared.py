@@ -5,9 +5,22 @@ An axes used to jointly format Cartesian and polar axes.
 
 # NOTE: We could define these in base.py but idea is projection-specific formatters
 # should never be defined on the base class. Might add to this class later anyway.
+import contextvars
+import functools
+
 import numpy as np
 
 from ..config import rc
+from .._sharing import (
+    AXIS_LABEL_FORMAT_KEYS,
+    axis_supports_format_key,
+    axis_sharing_updates_enabled,
+    get_axis_sharing_format_keys,
+    restore_axis_sharing,
+    snapshot_axis_sharing,
+    update_sharing_for_format_keys,
+    validate_axis_format_values,
+)
 from ..internals import ic  # noqa: F401
 from ..internals import _pop_kwargs
 from ..utils import _fontsize_to_pt, _not_none, units
@@ -21,11 +34,67 @@ except ImportError:
     from typing_extensions import override
 
 
+_active_format_axes = contextvars.ContextVar("active_format_axes", default=())
+
+
+def _format_wrapper(method=None, *, exclude=(), capture_explicit=False):
+    """Decorate a public format method with transactional sharing updates."""
+    if method is None:
+        return lambda method: _format_wrapper(
+            method,
+            exclude=exclude,
+            capture_explicit=capture_explicit,
+        )
+
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if capture_explicit:
+            kwargs.setdefault("_explicit_format_keys", set(kwargs))
+        validate_axis_format_values(kwargs)
+        active = _active_format_axes.get()
+        if any(ax is self for ax in active):
+            return method(self, *args, **kwargs)
+
+        keys = {
+            key
+            for key in get_axis_sharing_format_keys(kwargs, exclude=exclude)
+            if axis_supports_format_key(self, key)
+        }
+        if not axis_sharing_updates_enabled() or kwargs.get("skip_figure", False):
+            keys.clear()
+        figure = self.figure
+        state = snapshot_axis_sharing(figure) if figure is not None and keys else None
+        token = _active_format_axes.set((*active, self))
+        try:
+            self._update_format_sharing(keys)
+            return method(self, *args, **kwargs)
+        except Exception:
+            if state is not None:
+                restore_axis_sharing(figure, state)
+            raise
+        finally:
+            _active_format_axes.reset(token)
+
+    return wrapper
+
+
 class _SharedAxes(object):
     """
     Mix-in class with methods shared between `~ultraplot.axes.CartesianAxes`
     and :class:`~ultraplot.axes.PolarAxes`.
     """
+
+    def _update_format_sharing(self, format_keys):
+        """Apply sharing effects for one explicit axes-level format call."""
+        if self.figure is None or not format_keys:
+            return
+        main_subplots = tuple(self.figure._iter_subplots())
+        if len(main_subplots) < 2 or not any(self is ax for ax in main_subplots):
+            return
+        update_sharing_for_format_keys(self.figure, format_keys, axes=(self,))
+        for which in "xy":
+            if format_keys & AXIS_LABEL_FORMAT_KEYS[which]:
+                getattr(self, f"{which}axis").label.set_visible(True)
 
     @staticmethod
     def _min_max_lim(key, min_=None, max_=None, lim=None):

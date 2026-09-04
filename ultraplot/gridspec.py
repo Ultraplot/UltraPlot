@@ -1073,21 +1073,23 @@ class GridSpec(mgridspec.GridSpec):
             space = self._labelspace + self._xticklabelspace + self._xtickspace
         elif key == "wspace_total":
             pad = _not_none(pad, self._innerpad)
-            share = _not_none(share, fig._sharey, 0)
+            share_labels = fig._sharey_labels if share is None else share >= 1
+            share_ticklabels = fig._sharey_ticklabels if share is None else share >= 3
             space = self._ytickspace
-            if share < 3:
+            if not share_ticklabels:
                 space += self._yticklabelspace
-            if share < 1:
+            if not share_labels:
                 space += self._labelspace
         elif key == "hspace_total":
             pad = _not_none(pad, self._innerpad)
-            share = _not_none(share, fig._sharex, 0)
+            share_labels = fig._sharex_labels if share is None else share >= 1
+            share_ticklabels = fig._sharex_ticklabels if share is None else share >= 3
             space = self._xtickspace
             if title:
                 space += self._titlespace
-            if share < 3:
+            if not share_ticklabels:
                 space += self._xticklabelspace
-            if share < 1:
+            if not share_labels:
                 space += self._labelspace
         else:
             raise ValueError(f"Invalid space key {key!r}.")
@@ -2062,6 +2064,20 @@ class SubplotGrid(MutableSequence, list):
         **kwargs
             Passed to the projection-specific ``format`` command for each axes.
             Valid only if every axes in the grid belongs to the same class.
+            Axes-format arguments may be dictionaries mapping one-based positions
+            in this grid to values, for example ``title={1: 'First', (2, 3):
+            'Others'}``. Dictionaries with string keys remain ordinary style
+            dictionaries.
+
+        Notes
+        -----
+        Formatting a subset with parameters that require independent axis labels,
+        limits, scales, locators, formatters, or tick locations may reduce the
+        corresponding sharing component for the entire figure. A scalar label on a
+        multi-axes subset can instead form a shared label group for that subset.
+        Inspect or restore sharing with
+        `~ultraplot.figure.Figure.get_axis_sharing` and
+        `~ultraplot.figure.Figure.set_axis_sharing`.
 
         Other parameters
         ----------------
@@ -2081,20 +2097,8 @@ class SubplotGrid(MutableSequence, list):
         ultraplot.config.Configurator.context
         """
 
-        def _supports_implicit_label_share(target):
-            compatible_sides = {
-                "x": {"top", "bottom"},
-                "y": {"left", "right"},
-            }
-            for ax in axes:
-                side = getattr(ax, "_panel_side", None)
-                if side is None:
-                    continue
-                if side not in compatible_sides[target]:
-                    return False
-            return True
-
-        # Implicit label sharing for subset format calls
+        # Explicit group clearing is grid-owned. Figure.format handles implicit
+        # scalar subset groups after it successfully dispatches all axes values.
         share_xlabels = kwargs.get("share_xlabels", None)
         share_ylabels = kwargs.get("share_ylabels", None)
         xlabel = kwargs.get("xlabel", None)
@@ -2122,18 +2126,6 @@ class SubplotGrid(MutableSequence, list):
         kwargs.update(signature_axis_kwargs)
         kwargs.update(generic_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
-            implicit_share_xlabels = (
-                is_subset
-                and share_xlabels is None
-                and xlabel is not None
-                and _supports_implicit_label_share("x")
-            )
-            implicit_share_ylabels = (
-                is_subset
-                and share_ylabels is None
-                and ylabel is not None
-                and _supports_implicit_label_share("y")
-            )
             if len(self) > 1:
                 if share_xlabels is False:
                     self.figure._clear_share_label_groups(self, target="x")
@@ -2143,10 +2135,6 @@ class SubplotGrid(MutableSequence, list):
                     self.figure._clear_share_label_groups(self, target="x")
                 if not is_subset and share_ylabels is None and ylabel is not None:
                     self.figure._clear_share_label_groups(self, target="y")
-                if implicit_share_xlabels:
-                    self.figure._register_share_label_group(self, target="x")
-                if implicit_share_ylabels:
-                    self.figure._register_share_label_group(self, target="y")
             self.figure.format(axs=self, **kwargs)
             if shared_subset_title:
                 self.figure._update_subset_title(
@@ -2156,12 +2144,6 @@ class SubplotGrid(MutableSequence, list):
                     pad=shared_title_pad,
                     **(shared_title_kw or {}),
                 )
-            # Refresh groups after labels are set
-            if len(self) > 1:
-                if implicit_share_xlabels:
-                    self.figure._register_share_label_group(self, target="x")
-                if implicit_share_ylabels:
-                    self.figure._register_share_label_group(self, target="y")
 
     def share_labels(self, *, axis="x"):
         """

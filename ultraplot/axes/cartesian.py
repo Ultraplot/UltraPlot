@@ -4,7 +4,6 @@ The standard Cartesian axes used for most ultraplot figures.
 """
 
 import copy
-import functools
 import inspect
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple, Union
@@ -15,6 +14,7 @@ import matplotlib.ticker as mticker
 import numpy as np
 from packaging import version
 
+from .. import _sharing as psharing
 from .. import constructor
 from .. import scale as pscale
 from .. import ticker as pticker
@@ -545,8 +545,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         level = 3 if panel_group else sharing_level
 
-        # Handle axis label sharing (level > 0)
-        if level > 0:
+        # Handle axis-title sharing independently from numeric sharing.
+        share_labels = panel_group or getattr(
+            self.figure, f"_share{axis_name}_labels", level > 0
+        )
+        if share_labels:
             if self.figure._is_share_label_group_member(self, axis_name):
                 pass
             elif self.figure._is_share_label_group_member(shared_axis, axis_name):
@@ -556,8 +559,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 labels._transfer_label(axis.label, shared_axis_obj.label)
                 axis.label.set_visible(False)
 
-        # Handle tick label sharing (level > 2)
-        if level > 2:
+        # Handle tick-label suppression independently from numeric sharing.
+        share_ticklabels = panel_group or getattr(
+            self.figure, f"_share{axis_name}_ticklabels", level > 2
+        )
+        if share_ticklabels:
             label_visibility = self._determine_tick_label_visibility(
                 axis,
                 shared_axis,
@@ -712,7 +718,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._twinned_axes.join(self, ax)
 
         # Format parent and child axes
-        self.format(**{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)})
+        with psharing.preserve_axis_sharing():
+            self.format(
+                **{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)},
+            )
         setattr(ax, f"_alt{sx}_parent", self)
         getattr(ax, f"{sy}axis").set_visible(False)
         getattr(ax, "patch").set_visible(False)
@@ -874,25 +883,21 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         """
         # Share panels across *different* subplots
         super()._sharex_setup(sharex)
-        # Get the axis sharing level
-        level = (
-            3
-            if self._panel_sharex_group and self._is_panel_group_member(sharex)
-            else self.figure._sharex
-        )
-        if level not in range(5):  # must be internal error
-            raise ValueError(f"Invalid sharing level sharex={level!r}.")
+        panel_group = self._panel_sharex_group and self._is_panel_group_member(sharex)
         if sharex in (None, self) or not isinstance(sharex, CartesianAxes):
             return
         # Share future axis label changes. Implemented in _apply_axis_sharing().
         # Matplotlib only uses these attributes in __init__() and cla() to share
         # tickers -- all other builtin sharing features derives from shared x axes
-        if level > 0 and labels:
+        share_labels = panel_group or self.figure._sharex_labels
+        share_limits = panel_group or self.figure._sharex_limits
+        share_ticklabels = panel_group or self.figure._sharex_ticklabels
+        if (share_labels and labels) or (share_limits and limits) or share_ticklabels:
             self._sharex = sharex
         # Share future axis tickers, limits, and scales
         # NOTE: Only difference between levels 2 and 3 is level 3 hides tick
         # labels. But this is done after the fact -- tickers are still shared.
-        if level > 1 and limits:
+        if share_limits and limits:
             self._sharex_limits(sharex)
 
     def _sharey_setup(self, sharey, *, labels=True, limits=True):
@@ -902,18 +907,15 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         """
         # NOTE: See _sharex_setup for notes
         super()._sharey_setup(sharey)
-        level = (
-            3
-            if self._panel_sharey_group and self._is_panel_group_member(sharey)
-            else self.figure._sharey
-        )
-        if level not in range(5):  # must be internal error
-            raise ValueError(f"Invalid sharing level sharey={level!r}.")
+        panel_group = self._panel_sharey_group and self._is_panel_group_member(sharey)
         if sharey in (None, self) or not isinstance(sharey, CartesianAxes):
             return
-        if level > 0 and labels:
+        share_labels = panel_group or self.figure._sharey_labels
+        share_limits = panel_group or self.figure._sharey_limits
+        share_ticklabels = panel_group or self.figure._sharey_ticklabels
+        if (share_labels and labels) or (share_limits and limits) or share_ticklabels:
             self._sharey = sharey
-        if level > 1 and limits:
+        if share_limits and limits:
             self._sharey_limits(sharey)
 
     def _apply_log_formatter_on_scale(self, s):
@@ -1222,7 +1224,6 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             labelloc = _validate_loc(labelloc, label_opts, "axis label")
             axis.set_label_position(labelloc)
         if offsetloc is not None:
-            offsetloc = _not_none(offsetloc, options[0])
             if hasattr(axis, "set_offset_position"):  # y axis (and future x axis?)
                 axis.set_offset_position(offsetloc)
             elif s == "x" and _version_mpl >= "3.3":  # ugly x axis kludge
@@ -1581,6 +1582,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         return _AxisFormatConfig(**config_kwargs)
 
+    @shared._format_wrapper(capture_explicit=True)
     @docstring._snippet_manager
     def format(
         self,
@@ -1860,24 +1862,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         return super().get_tightbbox(renderer, *args, **kwargs)
 
 
-def _capture_explicit_format_keys(func):
-    """
-    Preserve raw keyword names before Python binds them to the format signature.
-    """
-
-    @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        kwargs.setdefault("_explicit_format_keys", set(kwargs))
-        return func(self, *args, **kwargs)
-
-    return wrapper
-
-
-# tmp
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__, altx, and alty
 CartesianAxes._format_signatures[CartesianAxes] = inspect.signature(
     CartesianAxes.format
 )  # noqa: E501
-CartesianAxes.format = _capture_explicit_format_keys(CartesianAxes.format)
 CartesianAxes.format = docstring._obfuscate_kwargs(CartesianAxes.format)

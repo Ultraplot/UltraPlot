@@ -12,6 +12,7 @@ import numpy as np
 
 from ..config import rc
 from ..internals import _not_none, _pop_rc, docstring
+from . import shared
 from .polar import PolarAxes
 
 __all__ = ["TaylorAxes"]
@@ -491,6 +492,7 @@ class TaylorAxes(PolarAxes):
         self._update_taylor_std_ticklabels()
         super().draw(renderer, *args, **kwargs)
 
+    @shared._format_wrapper
     @docstring._snippet_manager
     def format(
         self,

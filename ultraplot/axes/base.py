@@ -1485,7 +1485,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     iax._panel_sharex_group = True
                     iax._sharex_setup(bottom)  # parent is bottom-most
             paxs = shared(self._panel_dict["top"])
-            if paxs and self.figure._sharex > 0:
+            if paxs and self.figure._axis_sharing_enabled("x"):
                 self._panel_sharex_group = True
             for iax in paxs:
                 iax._panel_sharex_group = True
@@ -1501,7 +1501,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     iax._panel_sharey_group = True
                     iax._sharey_setup(left)  # parent is left-most
             paxs = shared(self._panel_dict["right"])
-            if paxs and self.figure._sharey > 0:
+            if paxs and self.figure._axis_sharing_enabled("y"):
                 self._panel_sharey_group = True
             for iax in paxs:
                 iax._panel_sharey_group = True
@@ -1509,7 +1509,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         # External axes sharing, sometimes overrides panel axes sharing
         # Share x axes within compatible groups
-        if self.figure._sharex > 0:
+        if self.figure._axis_sharing_enabled("x"):
             axes_x = self._get_share_axes("x")
             for group in self.figure._partition_share_axes(axes_x, "x"):
                 if not group:
@@ -1519,7 +1519,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     child._sharex_setup(parent)
 
         # Share y axes within compatible groups
-        if self.figure._sharey > 0:
+        if self.figure._axis_sharing_enabled("y"):
             axes_y = self._get_share_axes("y")
             for group in self.figure._partition_share_axes(axes_y, "y"):
                 if not group:
@@ -2565,21 +2565,22 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 self._shared_axes[which].remove(sibling)
                 if which in "xy":
                     setattr(sibling, f"_share{which}", None)
-                this_ax = getattr(self, f"{which}axis")
-                sib_ax = getattr(sibling, f"{which}axis")
-                # Reset formatters by creating new Ticker objects.
-                # A deepcopy can trigger redraws.
-                new_major = maxis.Ticker()
-                if this_ax.major:
-                    new_major.locator = copy.copy(this_ax.major.locator)
-                    new_major.formatter = copy.copy(this_ax.major.formatter)
-                this_ax.major = new_major
-
-                new_minor = maxis.Ticker()
-                if this_ax.minor:
-                    new_minor.locator = copy.copy(this_ax.minor.locator)
-                    new_minor.formatter = copy.copy(this_ax.minor.formatter)
-                this_ax.minor = new_minor
+        if which in "xy" and len(siblings) > 1:
+            # Matplotlib shares the actual Ticker objects, not just their state.
+            # Give every detached axes independent copies so that subsequent
+            # limits select tick locations from that axes' own view interval.
+            # A deepcopy can trigger redraws, so shallow-copy each component.
+            for sibling in siblings:
+                axis = getattr(sibling, f"{which}axis")
+                for name in ("major", "minor"):
+                    ticker = getattr(axis, name)
+                    new_ticker = maxis.Ticker()
+                    if ticker:
+                        new_ticker.locator = copy.copy(ticker.locator)
+                        new_ticker.formatter = copy.copy(ticker.formatter)
+                        new_ticker.locator.set_axis(axis)
+                        new_ticker.formatter.set_axis(axis)
+                    setattr(axis, name, new_ticker)
 
     def _sharex_setup(self, sharex, **kwargs):
         """
@@ -2966,10 +2967,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             if self.number is None:
                 pass
             elif self.number > len(title):
-                raise ValueError(
-                    f"Invalid title list length {len(title)} "
-                    f"for axes with number {self.number}."
-                )
+                pass
             else:
                 kw["text"] = title[self.number - 1]
         else:
@@ -3334,6 +3332,14 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         We explicitly document these arguments here because it is common to
         change them for specific axes. But many :ref:`other configuration
         settings <ug_format>` can be passed to ``format`` too.
+
+        Notes
+        -----
+        Formatting an indexed axes with parameters that require independent axis
+        labels, limits, scales, locators, formatters, or tick locations may reduce
+        the corresponding sharing component for the entire figure. Inspect or
+        restore sharing with `~ultraplot.figure.Figure.get_axis_sharing` and
+        `~ultraplot.figure.Figure.set_axis_sharing`.
 
         Other parameters
         ----------------

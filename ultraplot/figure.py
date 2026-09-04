@@ -25,7 +25,12 @@ except:
     from typing_extensions import override
 
 from . import axes as paxes
-from .axes._formatting import axis_format_requires_layout, pop_axis_format_kwargs
+from .axes._formatting import (
+    GENERIC_AXIS_FORMAT_KEYS,
+    axis_format_requires_layout,
+    pop_axis_format_kwargs,
+)
+from . import _sharing as psharing
 from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
@@ -130,6 +135,15 @@ default: :rc:`subplots.share`
 
     Explicit sharing levels (``0`` to ``4`` and aliases) still force sharing
     attempts and can emit warnings for incompatible axes.
+sharexlabels, shareylabels : bool, optional
+    Override whether the x or y axis-title text (``xlabel`` or ``ylabel``) is
+    shared. By default this is enabled by sharing levels 1 and above.
+sharexlimits, shareylimits : bool, optional
+    Override whether limits, scales, tick locations, and formatters are shared.
+    By default this is enabled by sharing levels 2 and above.
+sharexticklabels, shareyticklabels : bool, optional
+    Override whether tick labels are suppressed on interior axes. By default
+    this is enabled by sharing levels 3 and above.
 
 spanx, spany, span : bool or {0, 1}, default: :rc:`subplots.span`
     Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both
@@ -774,6 +788,12 @@ class Figure(mfigure.Figure):
         sharex=None,
         sharey=None,
         share=None,  # used for default spaces
+        sharexlabels=None,
+        shareylabels=None,
+        sharexlimits=None,
+        shareylimits=None,
+        sharexticklabels=None,
+        shareyticklabels=None,
         spanx=None,
         spany=None,
         span=None,
@@ -855,6 +875,12 @@ class Figure(mfigure.Figure):
             sharex=sharex,
             sharey=sharey,
             share=share,
+            sharexlabels=sharexlabels,
+            shareylabels=shareylabels,
+            sharexlimits=sharexlimits,
+            shareylimits=shareylimits,
+            sharexticklabels=sharexticklabels,
+            shareyticklabels=shareyticklabels,
             spanx=spanx,
             spany=spany,
             span=span,
@@ -1003,7 +1029,23 @@ class Figure(mfigure.Figure):
         return int(value), False
 
     def _init_sharing(
-        self, *, sharex, sharey, share, spanx, spany, span, alignx, aligny, align
+        self,
+        *,
+        sharex,
+        sharey,
+        share,
+        sharexlabels,
+        shareylabels,
+        sharexlimits,
+        shareylimits,
+        sharexticklabels,
+        shareyticklabels,
+        spanx,
+        spany,
+        span,
+        alignx,
+        aligny,
+        align,
     ):
         """
         Resolve share, span, and align settings.
@@ -1014,16 +1056,34 @@ class Figure(mfigure.Figure):
         sharey, sharey_auto = self._normalize_share(sharey)
         self._sharex = int(sharex)
         self._sharey = int(sharey)
+        self._sharex_labels = bool(sharex > 0 if sharexlabels is None else sharexlabels)
+        self._sharey_labels = bool(sharey > 0 if shareylabels is None else shareylabels)
+        self._sharex_limits = bool(sharex > 1 if sharexlimits is None else sharexlimits)
+        self._sharey_limits = bool(sharey > 1 if shareylimits is None else shareylimits)
+        self._sharex_ticklabels = bool(
+            sharex > 2 if sharexticklabels is None else sharexticklabels
+        )
+        self._sharey_ticklabels = bool(
+            sharey > 2 if shareyticklabels is None else shareyticklabels
+        )
+        self._sync_axis_sharing_level("x")
+        self._sync_axis_sharing_level("y")
         self._sharex_auto = bool(sharex_auto)
         self._sharey_auto = bool(sharey_auto)
         self._share_incompat_warned = False
 
         # Span and align settings
         spanx = _not_none(
-            spanx, span, False if not sharex else None, rc["subplots.span"]
+            spanx,
+            span,
+            False if not self._sharex_labels else None,
+            rc["subplots.span"],
         )
         spany = _not_none(
-            spany, span, False if not sharey else None, rc["subplots.span"]
+            spany,
+            span,
+            False if not self._sharey_labels else None,
+            rc["subplots.span"],
         )
         if spanx and (alignx or align):
             warnings._warn_ultraplot('"alignx" has no effect when spanx=True.')
@@ -1354,8 +1414,7 @@ class Figure(mfigure.Figure):
         if which not in ("x", "y"):
             return
 
-        share_level = self._sharex if which == "x" else self._sharey
-        if share_level <= 1:
+        if not getattr(self, f"_share{which}_limits"):
             return
 
         get_auto = f"get_autoscale{which}_on"
@@ -1729,9 +1788,10 @@ class Figure(mfigure.Figure):
         adjacent panels. Fixes the original variable leak by checking any relevant side.
         """
         level = getattr(self, f"_share{axis}")
-        # If figure-level sharing is disabled (0/False), don't promote due to panels
-        if not level or (isinstance(level, (int, float)) and level < 1):
-            return level
+        ticklabels = getattr(self, f"_share{axis}_ticklabels")
+        # If tick-label suppression is disabled, don't promote due to panels.
+        if not ticklabels:
+            return min(level, 2)
 
         # Panel group-level sharing
         if getattr(axi, f"_panel_share{axis}_group", None):
@@ -2323,6 +2383,212 @@ class Figure(mfigure.Figure):
             if isinstance(ax, paxes.GeoAxes) and hasattr(ax, "set_global"):
                 ax.set_global()
 
+    def _axis_sharing_enabled(self, which):
+        """Return whether any sharing component is enabled for an axis."""
+        return any(
+            getattr(self, f"_share{which}_{component}")
+            for component in ("labels", "limits", "ticklabels")
+        )
+
+    @staticmethod
+    def _normalize_axis_directions(axis):
+        """Normalize a public x/y axis selector."""
+        if axis in (None, "both", "xy", "yx"):
+            return ("x", "y")
+        if axis in ("x", "y"):
+            return (axis,)
+        raise ValueError(
+            f"Invalid axis {axis!r}. Expected 'x', 'y', 'both', 'xy', or 'yx'."
+        )
+
+    def get_axis_sharing(self, axis=None):
+        """
+        Return the active axis-sharing state.
+
+        Parameters
+        ----------
+        axis : {'x', 'y', 'both', 'xy', 'yx'}, optional
+            Axis direction. Passing ``None`` or ``'both'`` returns states for
+            both directions.
+
+        Returns
+        -------
+        dict
+            For one direction, a dictionary containing ``level``, ``labels``,
+            ``limits``, ``ticklabels``, and ``auto``. For both directions, a
+            dictionary mapping ``'x'`` and ``'y'`` to those state dictionaries.
+
+        Notes
+        -----
+        ``labels`` refers to axis-title text (``xlabel`` and ``ylabel``), while
+        ``ticklabels`` controls suppression of tick labels on interior axes.
+        The component booleans are authoritative. ``level`` is the highest active
+        legacy sharing level and may not fully describe non-cumulative overrides.
+
+        See also
+        --------
+        Figure.set_axis_sharing
+        """
+
+        def _get(which):
+            return {
+                "level": getattr(self, f"_share{which}"),
+                "labels": getattr(self, f"_share{which}_labels"),
+                "limits": getattr(self, f"_share{which}_limits"),
+                "ticklabels": getattr(self, f"_share{which}_ticklabels"),
+                "auto": getattr(self, f"_share{which}_auto"),
+            }
+
+        directions = self._normalize_axis_directions(axis)
+        states = {which: _get(which) for which in directions}
+        return states[directions[0]] if len(directions) == 1 else states
+
+    def set_axis_sharing(
+        self,
+        axis="both",
+        *,
+        level=None,
+        labels=None,
+        limits=None,
+        ticklabels=None,
+    ):
+        """
+        Set or restore axis-sharing components after figure creation.
+
+        Parameters
+        ----------
+        axis : {'x', 'y', 'both', 'xy', 'yx'}, default: 'both'
+            Axis direction to update.
+        level : {0, False, 1, 'labels', 'labs', 2, 'limits', 'lims', 3, True, 4, 'all', 'auto'}, optional
+            Apply a standard sharing preset. Individual component arguments
+            override the corresponding part of the preset.
+        labels : bool, optional
+            Share axis-title text (``xlabel`` or ``ylabel``).
+        limits : bool, optional
+            Share limits, scales, tick locations, and formatters.
+        ticklabels : bool, optional
+            Suppress tick labels on interior axes.
+
+        Notes
+        -----
+        Local or sparse ``format`` calls can reduce sharing in the affected
+        direction. Use this method to deliberately restore it, for example
+        ``fig.set_axis_sharing('x', level=3)``.
+
+        See also
+        --------
+        Figure.get_axis_sharing
+        Figure.format
+        """
+        if all(value is None for value in (level, labels, limits, ticklabels)):
+            return
+        directions = self._normalize_axis_directions(axis)
+        normalized = auto = None
+        if level is not None:
+            normalized, auto = self._normalize_share(level)
+        for which in directions:
+            old_ticklabels = getattr(self, f"_share{which}_ticklabels")
+            if normalized is not None:
+                setattr(self, f"_share{which}", normalized)
+                setattr(self, f"_share{which}_labels", normalized > 0)
+                setattr(self, f"_share{which}_limits", normalized > 1)
+                setattr(self, f"_share{which}_ticklabels", normalized > 2)
+                setattr(self, f"_share{which}_auto", auto)
+            else:
+                setattr(self, f"_share{which}_auto", False)
+            for component, value in (
+                ("labels", labels),
+                ("limits", limits),
+                ("ticklabels", ticklabels),
+            ):
+                if value is not None:
+                    setattr(self, f"_share{which}_{component}", bool(value))
+            if not getattr(self, f"_share{which}_labels"):
+                setattr(self, f"_span{which}", False)
+                self._clear_share_label_groups(target=which)
+            self._sync_axis_sharing_level(which)
+            self._rebuild_axis_sharing(which)
+            if old_ticklabels and not getattr(self, f"_share{which}_ticklabels"):
+                self._restore_axis_ticklabels(which)
+        self._invalidate_layout()
+
+    def _sync_axis_sharing_level(self, which):
+        """Synchronize the legacy level with the active sharing components."""
+        previous = getattr(self, f"_share{which}")
+        labels = getattr(self, f"_share{which}_labels")
+        limits = getattr(self, f"_share{which}_limits")
+        ticklabels = getattr(self, f"_share{which}_ticklabels")
+        level = max(1 if labels else 0, 2 if limits else 0, 3 if ticklabels else 0)
+        if previous == 4 and limits:
+            level = 4
+        setattr(self, f"_share{which}", level)
+
+    def _update_axis_sharing_for_format(
+        self, which, *, labels=False, limits=False, ticklabels=False
+    ):
+        """Disable sharing components contradicted by local format values."""
+        if labels:
+            setattr(self, f"_share{which}_labels", False)
+            setattr(self, f"_span{which}", False)
+            self._clear_share_label_groups(target=which)
+        if limits or ticklabels:
+            restore_ticklabels = getattr(self, f"_share{which}_ticklabels")
+            setattr(self, f"_share{which}_ticklabels", False)
+        if limits:
+            setattr(self, f"_share{which}_limits", False)
+        if labels or limits or ticklabels:
+            self._sync_axis_sharing_level(which)
+        if limits:
+            self._rebuild_axis_sharing(which)
+        if (limits or ticklabels) and restore_ticklabels:
+            self._restore_axis_ticklabels(which)
+
+    def _restore_axis_ticklabels(self, which):
+        """Restore labels hidden only by subplot tick-label sharing."""
+        sides = ("bottom", "top") if which == "x" else ("left", "right")
+        for ax in self._iter_axes(hidden=False, children=False, panels=False):
+            axis = getattr(ax, f"{which}axis", None)
+            if axis is None or not hasattr(axis, "get_tick_params"):
+                continue
+            # Matplotlib <= 3.9 reports x-axis tick parameters using the
+            # generic ``left``/``right`` names, while newer versions use
+            # ``bottom``/``top``. Use the same compatibility mapping as the
+            # sharing code both to inspect the tick side and to restore its
+            # corresponding label side.
+            labels = tuple(ax._label_key(f"label{side}") for side in sides)
+            tick_sides = tuple(label.removeprefix("label") for label in labels)
+            params = axis.get_tick_params()
+            state_getter = getattr(ax, "_get_axis_style_state", None)
+            state = state_getter(which) if state_getter is not None else {}
+            loc = state.get("ticklabelloc")
+            if loc is None:
+                visibility = {
+                    label: bool(
+                        params.get(label, False) or params.get(tick_side, False)
+                    )
+                    for tick_side, label in zip(tick_sides, labels)
+                }
+            else:
+                aliases = {side[0]: side for side in sides}
+                if isinstance(loc, str):
+                    loc = loc.lower()
+                    if loc in ("none", "neither"):
+                        active = ()
+                    elif loc == "both":
+                        active = sides
+                    else:
+                        active = (aliases.get(loc, loc),)
+                else:
+                    active = tuple(loc)
+                visibility = {
+                    label: side in active for side, label in zip(sides, labels)
+                }
+            axis.set_tick_params(which="both", **visibility)
+
+    def _rebuild_axis_sharing(self, which):
+        """Rebuild axis relationships from the orthogonal sharing flags."""
+        psharing.rebuild_axis_sharing(self, which)
+
     def _toggle_axis_sharing(
         self,
         *,
@@ -2349,10 +2615,16 @@ class Figure(mfigure.Figure):
             return
         axes = list(self._iter_axes(hidden=hidden, children=children, panels=panels))
 
+        if which in ("x", "y"):
+            share, _ = self._normalize_share(share)
         if which == "x":
             self._sharex = share
         elif which == "y":
             self._sharey = share
+        if which in ("x", "y"):
+            setattr(self, f"_share{which}_labels", bool(share > 0))
+            setattr(self, f"_share{which}_limits", bool(share > 1))
+            setattr(self, f"_share{which}_ticklabels", bool(share > 2))
 
         # Unshare first if needed
         if share == 0:
@@ -3520,6 +3792,10 @@ class Figure(mfigure.Figure):
         ----------
         axs : sequence of `~ultraplot.axes.Axes`, optional
             The axes to format. Default is the numbered subplots.
+            Axes-format arguments may be dictionaries mapping one-based positions
+            in this sequence to values, for example ``xlabel={1: 'First',
+            (2, 3): 'Others'}``. Dictionaries with string keys remain ordinary
+            style dictionaries.
         %(figure.format)s
 
         Important
@@ -3531,6 +3807,14 @@ class Figure(mfigure.Figure):
         We explicitly document these arguments here because it is common to
         change them for specific figures. But many :ref:`other configuration
         settings <ug_format>` can be passed to ``format`` too.
+
+        Notes
+        -----
+        When formatting fewer than all axes, parameters that require independent
+        axis labels, limits, scales, locators, formatters, or tick locations may
+        reduce the corresponding sharing component for the entire figure. This
+        treats the local values as intentional. Inspect or restore sharing with
+        `Figure.get_axis_sharing` and `Figure.set_axis_sharing`.
 
         Other parameters
         ----------------
@@ -3558,7 +3842,18 @@ class Figure(mfigure.Figure):
         pending_layout = kwargs.pop("_pending_layout", None)
         if pending_layout is None:
             pending_layout = bool(self.stale)
-        axs = axs or self._iter_subplots()
+
+        # Phase 1: normalize and validate every per-axis request.
+        axs = list(axs or self._iter_subplots())
+        plan = psharing.AxisFormatPlan.build(
+            axs,
+            kwargs,
+            paxes.Axes._format_signatures,
+            GENERIC_AXIS_FORMAT_KEYS,
+        )
+        kwargs = plan.kwargs
+
+        implicit_label_directions = plan.implicit_label_directions(self)
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         explicit_format_keys = set(kwargs)
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
@@ -3567,6 +3862,8 @@ class Figure(mfigure.Figure):
         explicit_format_keys.update(signature_axis_kwargs)
         explicit_format_keys.update(generic_axis_kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
+
+        # Phase 2: update figure-owned layout and label state.
         figure_layout_requested = _any_not_none(
             figtitle,
             suptitle,
@@ -3645,9 +3942,14 @@ class Figure(mfigure.Figure):
                 **toplabels_kw,
             )
 
-        # Update the main axes
+        # Phase 3: reconcile sharing and dispatch to each projection.
         if skip_axes:  # avoid recursion
             return
+
+        # Reconcile sharing immediately before axes mutation. If projection-level
+        # formatting rejects a value, restore the original policy and topology.
+        sharing_state = psharing.snapshot_axis_sharing(self)
+        plan.update_sharing(self)
 
         # Collect each class's matching kwargs without popping, then drop the union —
         # shared params (e.g. xlabel/ylabel, accepted by both CartesianAxes and
@@ -3682,6 +3984,8 @@ class Figure(mfigure.Figure):
                 for key, value in kw.items()
                 if isinstance(ax, cls) and not classes.add(cls)
             }
+            generic_kw = generic_axis_kwargs.copy()
+            plan.apply_overrides(number, ax, kw, generic_kw)
             if kw.get("xlabel") is not None and self._has_share_label_groups("x"):
                 if _axis_has_share_label_text(ax, "x") or _axis_has_label_text(ax, "x"):
                     kw.pop("xlabel", None)
@@ -3691,16 +3995,23 @@ class Figure(mfigure.Figure):
             explicit_kw = {}
             if isinstance(ax, paxes.CartesianAxes):
                 explicit_kw["_explicit_format_keys"] = explicit_format_keys
-            ax.format(
-                rc_kw=rc_kw,
-                rc_mode=rc_mode,
-                skip_figure=True,
-                **explicit_kw,
-                **kw,
-                **kwargs,
-                **generic_axis_kwargs,
-            )
-            ax.number = store_old_number
+            try:
+                ax.format(
+                    rc_kw=rc_kw,
+                    rc_mode=rc_mode,
+                    skip_figure=True,
+                    **explicit_kw,
+                    **kw,
+                    **kwargs,
+                    **generic_kw,
+                )
+            except Exception:
+                psharing.restore_axis_sharing(self, sharing_state)
+                raise
+            finally:
+                ax.number = store_old_number
+        for which in implicit_label_directions:
+            self._register_share_label_group(axs, target=which)
         # Warn unused keyword argument(s). Shared params (those in multiple
         # signatures) are considered "used" if any matched class consumed them.
         used_keys = {k for cls in classes for k in kws[cls]}

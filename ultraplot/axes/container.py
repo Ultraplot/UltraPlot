@@ -13,6 +13,7 @@ from matplotlib import cbook, container
 
 from ..config import rc
 from ..internals import _pop_rc, warnings
+from . import shared
 from .cartesian import CartesianAxes
 
 __all__ = ["ExternalAxesContainer"]
@@ -710,6 +711,7 @@ class ExternalAxesContainer(CartesianAxes):
         if self._external_axes is not None:
             self._external_axes.clear()
 
+    @shared._format_wrapper
     def format(self, **kwargs):
         """
         Format the container and delegate to external axes where appropriate.

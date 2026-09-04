@@ -59,6 +59,150 @@ def test_unsharing_on_creation():
             assert axi in siblings
 
 
+@pytest.mark.parametrize("kind", ("inset", "panel", "alternate"))
+@pytest.mark.parametrize("wrapped", (False, True))
+def test_auxiliary_axes_format_does_not_change_figure_sharing(kind, wrapped):
+    """Only numbered main subplots may reduce figure-wide sharing."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    ax = axs[:1] if wrapped else axs[0]
+    if kind == "inset":
+        other = ax.inset_axes((0.2, 0.2, 0.4, 0.4))
+    elif kind == "panel":
+        other = ax.panel_axes("right")
+    else:
+        other = ax.altx()
+    before = fig.get_axis_sharing()
+
+    other.format(xlim=(-1, 0), ylim=(-2, 0), xlabel="local", ylabel="local")
+
+    assert fig.get_axis_sharing() == before
+
+
+def test_single_subplot_format_does_not_change_nominal_sharing():
+    """There is no sharing contradiction when a figure has only one subplot."""
+    fig, axs = uplt.subplots(share=True)
+    before = fig.get_axis_sharing()
+
+    axs[0].format(xlim=(-1, 0), ylim=(-2, 0), xlabel="x", ylabel="y")
+
+    assert fig.get_axis_sharing() == before
+
+
+def test_public_axis_sharing_state_and_restore():
+    """Sharing reduced by local formatting can be inspected and restored."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    assert fig.get_axis_sharing("x") == {
+        "level": 3,
+        "labels": True,
+        "limits": True,
+        "ticklabels": True,
+        "auto": False,
+    }
+    assert set(fig.get_axis_sharing()) == {"x", "y"}
+
+    axs[1].format(xlim=(-1, 0))
+    assert fig.get_axis_sharing("x") == {
+        "level": 1,
+        "labels": True,
+        "limits": False,
+        "ticklabels": False,
+        "auto": False,
+    }
+
+    fig.set_axis_sharing("x", level=3)
+    assert fig.get_axis_sharing("x") == {
+        "level": 3,
+        "labels": True,
+        "limits": True,
+        "ticklabels": True,
+        "auto": False,
+    }
+    assert axs[0].get_shared_x_axes().joined(axs[0], axs[1])
+    assert axs[0].get_xlim() == axs[1].get_xlim() == (-1, 0)
+    fig.canvas.draw()
+    assert not axs[0]._is_ticklabel_on("labelbottom")
+
+
+def test_public_axis_sharing_component_overrides():
+    """Component setters support non-cumulative sharing combinations."""
+    fig, axs = uplt.subplots(nrows=2, share=0)
+    fig.set_axis_sharing("x", limits=True)
+    assert fig.get_axis_sharing("x") == {
+        "level": 2,
+        "labels": False,
+        "limits": True,
+        "ticklabels": False,
+        "auto": False,
+    }
+    axs[0].set_xlim(2, 3)
+    assert axs[1].get_xlim() == (2, 3)
+
+    fig.set_axis_sharing("both", level="labels")
+    for state in fig.get_axis_sharing().values():
+        assert state == {
+            "level": 1,
+            "labels": True,
+            "limits": False,
+            "ticklabels": False,
+            "auto": False,
+        }
+
+
+def test_public_axis_sharing_rejects_invalid_axis():
+    """Public sharing methods reject ambiguous direction selectors."""
+    fig, _ = uplt.subplots()
+    with pytest.raises(ValueError, match="Invalid axis"):
+        fig.get_axis_sharing("z")
+    with pytest.raises(ValueError, match="Invalid axis"):
+        fig.set_axis_sharing("z", level=1)
+
+
+def test_internal_plot_formatting_does_not_reduce_sharing():
+    """Automatic locator and label formatting from plot commands stays shared."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    before = fig.get_axis_sharing()
+
+    axs[0].heatmap(np.arange(4).reshape(2, 2))
+
+    assert fig.get_axis_sharing() == before
+
+
+@pytest.mark.parametrize(
+    ("alternate", "which", "limits"),
+    (("altx", "y", (-2, -1)), ("alty", "x", (2, 3))),
+)
+def test_rebuilding_sharing_preserves_alternate_axis_link(alternate, which, limits):
+    """Figure sharing changes must not detach a twin from its parent."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    child = getattr(axs[0], alternate)()
+    shared = getattr(axs[0], f"get_shared_{which}_axes")()
+
+    axs[0].format(**{f"{which}lim": limits})
+
+    assert shared.joined(axs[0], child)
+    assert getattr(child, f"get_{which}lim")() == limits
+    shifted = tuple(value + 2 for value in limits)
+    getattr(axs[0], f"set_{which}lim")(*shifted)
+    assert getattr(child, f"get_{which}lim")() == shifted
+
+    fig.set_axis_sharing(which, level=3)
+    assert shared.joined(axs[0], child)
+
+
+def test_rebuilding_sharing_preserves_panel_alternate_axis_link():
+    """Rebuilding a main group must preserve twins owned by its panels."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    panel = axs[0].panel_axes("bottom")
+    child = panel.alty()
+    shared = panel.get_shared_x_axes()
+
+    axs[0].format(xlim=(-1, 0))
+
+    assert shared.joined(panel, child)
+    panel.set_xlim(2, 3)
+    assert child.get_xlim() == (2, 3)
+
+
 def test_unsharing_different_rectilinear():
     """
     Even if the projections are rectilinear, the coordinates systems may be different, as such we only allow sharing for the same kind of projections.
@@ -461,13 +605,15 @@ def test_auto_share_splits_mixed_x_unit_domains_after_refresh():
     assert _share_sibling_count(axs[1], "x") == 1
 
 
-def test_explicit_sharey_propagates_scale_changes():
+def test_explicit_sharey_local_scale_change_unshares():
     fig, axs = uplt.subplots(ncols=2, sharey=True)
     axs[0].format(yscale="log")
     fig.canvas.draw()
 
     assert axs[0].get_yscale() == "log"
-    assert axs[1].get_yscale() == "log"
+    assert axs[1].get_yscale() == "linear"
+    assert not fig._sharey_limits
+    assert not fig._sharey_ticklabels
 
 
 @pytest.mark.parametrize("va", ["bottom", "center", "top"])
