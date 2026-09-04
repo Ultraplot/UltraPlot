@@ -170,6 +170,7 @@ For details, see the full :doc:`User guide <usage>` and
    :hidden:
 
    api
+   keyword_aliases
    lazy_loading
    external-links
    faq
