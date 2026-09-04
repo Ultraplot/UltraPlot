@@ -173,6 +173,17 @@ jobs:
             --search-path . \
             --python-interpreter-path "$(command -v python)" \
             --ignore-missing-imports icecream \
+            --ignore-missing-imports cartopy \
+            --ignore-missing-imports cartopy.crs \
+            --ignore-missing-imports cartopy.feature \
+            --ignore-missing-imports cartopy.io \
+            --ignore-missing-imports cartopy.mpl.feature_artist \
+            --ignore-missing-imports cartopy.mpl.geoaxes \
+            --ignore-missing-imports cartopy.mpl.gridliner \
+            --ignore-missing-imports cartopy.mpl.path \
+            --ignore-missing-imports cartopy.mpl.ticker \
+            --ignore-missing-imports cftime \
+            --ignore-missing-imports mpl_toolkits.basemap \
             --ignore-missing-imports matplotlib.fontconfig_pattern \
             --progress-bar no
 
