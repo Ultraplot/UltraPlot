@@ -58,6 +58,53 @@ AXIS_TICKLABEL_SHARING_FORMAT_KEYS = {
     for axis in "xy"
 }
 
+# Geographic axes use longitude as their x-like coordinate and latitude as
+# their y-like coordinate. Keep these aliases in the shared classifier so
+# sparse Figure.format() calls and direct GeoAxes.format() calls make the same
+# sharing decision as their Cartesian counterparts.
+AXIS_SHARED_STATE_FORMAT_KEYS["x"].update(
+    {
+        "extent",
+        "lonlim",
+        "lonlocator",
+        "lonlines",
+        "lonminorlocator",
+        "lonminorlines",
+        "lonformatter",
+        "lonlocator_kw",
+        "lonlines_kw",
+        "lonminorlocator_kw",
+        "lonminorlines_kw",
+        "lonformatter_kw",
+        "dms",
+    }
+)
+AXIS_SHARED_STATE_FORMAT_KEYS["y"].update(
+    {
+        "extent",
+        "latlim",
+        "boundinglat",
+        "latmax",
+        "latlocator",
+        "latlines",
+        "latminorlocator",
+        "latminorlines",
+        "latformatter",
+        "latlocator_kw",
+        "latlines_kw",
+        "latminorlocator_kw",
+        "latminorlines_kw",
+        "latformatter_kw",
+        "dms",
+    }
+)
+AXIS_TICKLABEL_SHARING_FORMAT_KEYS["x"].update(
+    {"labels", "lonlabels", "loninline", "inlinelabels"}
+)
+AXIS_TICKLABEL_SHARING_FORMAT_KEYS["y"].update(
+    {"labels", "latlabels", "latinline", "inlinelabels"}
+)
+
 _AXIS_STYLE_FIELD_TEMPLATES = {
     "color": (
         "{axis}color",

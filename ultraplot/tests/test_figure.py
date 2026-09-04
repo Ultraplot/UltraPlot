@@ -59,6 +59,113 @@ def test_unsharing_on_creation():
             assert axi in siblings
 
 
+@pytest.mark.parametrize("kind", ("inset", "panel", "alternate"))
+def test_auxiliary_axes_format_does_not_change_figure_sharing(kind):
+    """Only numbered main subplots may reduce figure-wide sharing."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    ax = axs[0]
+    if kind == "inset":
+        other = ax.inset_axes((0.2, 0.2, 0.4, 0.4))
+    elif kind == "panel":
+        other = ax.panel_axes("right")
+    else:
+        other = ax.altx()
+    before = fig.get_axis_sharing()
+
+    other.format(xlim=(-1, 0), ylim=(-2, 0), xlabel="local", ylabel="local")
+
+    assert fig.get_axis_sharing() == before
+
+
+def test_single_subplot_format_does_not_change_nominal_sharing():
+    """There is no sharing contradiction when a figure has only one subplot."""
+    fig, axs = uplt.subplots(share=True)
+    before = fig.get_axis_sharing()
+
+    axs[0].format(xlim=(-1, 0), ylim=(-2, 0), xlabel="x", ylabel="y")
+
+    assert fig.get_axis_sharing() == before
+
+
+def test_public_axis_sharing_state_and_restore():
+    """Sharing reduced by local formatting can be inspected and restored."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    assert fig.get_axis_sharing("x") == {
+        "level": 3,
+        "labels": True,
+        "limits": True,
+        "ticklabels": True,
+        "auto": False,
+    }
+    assert set(fig.get_axis_sharing()) == {"x", "y"}
+
+    axs[1].format(xlim=(-1, 0))
+    assert fig.get_axis_sharing("x") == {
+        "level": 1,
+        "labels": True,
+        "limits": False,
+        "ticklabels": False,
+        "auto": False,
+    }
+
+    fig.set_axis_sharing("x", level=3)
+    assert fig.get_axis_sharing("x") == {
+        "level": 3,
+        "labels": True,
+        "limits": True,
+        "ticklabels": True,
+        "auto": False,
+    }
+    assert axs[0].get_shared_x_axes().joined(axs[0], axs[1])
+    assert axs[0].get_xlim() == axs[1].get_xlim() == (-1, 0)
+    fig.canvas.draw()
+    assert not axs[0]._is_ticklabel_on("labelbottom")
+
+
+def test_public_axis_sharing_component_overrides():
+    """Component setters support non-cumulative sharing combinations."""
+    fig, axs = uplt.subplots(nrows=2, share=0)
+    fig.set_axis_sharing("x", limits=True)
+    assert fig.get_axis_sharing("x") == {
+        "level": 2,
+        "labels": False,
+        "limits": True,
+        "ticklabels": False,
+        "auto": False,
+    }
+    axs[0].set_xlim(2, 3)
+    assert axs[1].get_xlim() == (2, 3)
+
+    fig.set_axis_sharing("both", level="labels")
+    for state in fig.get_axis_sharing().values():
+        assert state == {
+            "level": 1,
+            "labels": True,
+            "limits": False,
+            "ticklabels": False,
+            "auto": False,
+        }
+
+
+def test_public_axis_sharing_rejects_invalid_axis():
+    """Public sharing methods reject ambiguous direction selectors."""
+    fig, _ = uplt.subplots()
+    with pytest.raises(ValueError, match="Invalid axis"):
+        fig.get_axis_sharing("z")
+    with pytest.raises(ValueError, match="Invalid axis"):
+        fig.set_axis_sharing("z", level=1)
+
+
+def test_internal_plot_formatting_does_not_reduce_sharing():
+    """Automatic locator and label formatting from plot commands stays shared."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    before = fig.get_axis_sharing()
+
+    axs[0].heatmap(np.arange(4).reshape(2, 2))
+
+    assert fig.get_axis_sharing() == before
+
+
 def test_unsharing_different_rectilinear():
     """
     Even if the projections are rectilinear, the coordinates systems may be different, as such we only allow sharing for the same kind of projections.

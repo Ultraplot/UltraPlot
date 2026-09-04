@@ -2393,6 +2393,128 @@ class Figure(mfigure.Figure):
             for component in ("labels", "limits", "ticklabels")
         )
 
+    @staticmethod
+    def _normalize_axis_directions(axis):
+        """Normalize a public x/y axis selector."""
+        if axis in (None, "both", "xy", "yx"):
+            return ("x", "y")
+        if axis in ("x", "y"):
+            return (axis,)
+        raise ValueError(
+            f"Invalid axis {axis!r}. Expected 'x', 'y', 'both', 'xy', or 'yx'."
+        )
+
+    def get_axis_sharing(self, axis=None):
+        """
+        Return the active axis-sharing state.
+
+        Parameters
+        ----------
+        axis : {'x', 'y', 'both', 'xy', 'yx'}, optional
+            Axis direction. Passing ``None`` or ``'both'`` returns states for
+            both directions.
+
+        Returns
+        -------
+        dict
+            For one direction, a dictionary containing ``level``, ``labels``,
+            ``limits``, ``ticklabels``, and ``auto``. For both directions, a
+            dictionary mapping ``'x'`` and ``'y'`` to those state dictionaries.
+
+        Notes
+        -----
+        ``labels`` refers to axis-title text (``xlabel`` and ``ylabel``), while
+        ``ticklabels`` controls suppression of tick labels on interior axes.
+        The component booleans are authoritative. ``level`` is the highest active
+        legacy sharing level and may not fully describe non-cumulative overrides.
+
+        See also
+        --------
+        Figure.set_axis_sharing
+        """
+
+        def _get(which):
+            return {
+                "level": getattr(self, f"_share{which}"),
+                "labels": getattr(self, f"_share{which}_labels"),
+                "limits": getattr(self, f"_share{which}_limits"),
+                "ticklabels": getattr(self, f"_share{which}_ticklabels"),
+                "auto": getattr(self, f"_share{which}_auto"),
+            }
+
+        directions = self._normalize_axis_directions(axis)
+        states = {which: _get(which) for which in directions}
+        return states[directions[0]] if len(directions) == 1 else states
+
+    def set_axis_sharing(
+        self,
+        axis="both",
+        *,
+        level=None,
+        labels=None,
+        limits=None,
+        ticklabels=None,
+    ):
+        """
+        Set or restore axis-sharing components after figure creation.
+
+        Parameters
+        ----------
+        axis : {'x', 'y', 'both', 'xy', 'yx'}, default: 'both'
+            Axis direction to update.
+        level : {0, False, 1, 'labels', 'labs', 2, 'limits', 'lims', 3, True, 4, 'all', 'auto'}, optional
+            Apply a standard sharing preset. Individual component arguments
+            override the corresponding part of the preset.
+        labels : bool, optional
+            Share axis-title text (``xlabel`` or ``ylabel``).
+        limits : bool, optional
+            Share limits, scales, tick locations, and formatters.
+        ticklabels : bool, optional
+            Suppress tick labels on interior axes.
+
+        Notes
+        -----
+        Local or sparse ``format`` calls can reduce sharing in the affected
+        direction. Use this method to deliberately restore it, for example
+        ``fig.set_axis_sharing('x', level=3)``.
+
+        See also
+        --------
+        Figure.get_axis_sharing
+        Figure.format
+        """
+        if all(value is None for value in (level, labels, limits, ticklabels)):
+            return
+        directions = self._normalize_axis_directions(axis)
+        normalized = auto = None
+        if level is not None:
+            normalized, auto = self._normalize_share(level)
+        for which in directions:
+            old_ticklabels = getattr(self, f"_share{which}_ticklabels")
+            if normalized is not None:
+                setattr(self, f"_share{which}", normalized)
+                setattr(self, f"_share{which}_labels", normalized > 0)
+                setattr(self, f"_share{which}_limits", normalized > 1)
+                setattr(self, f"_share{which}_ticklabels", normalized > 2)
+                setattr(self, f"_share{which}_auto", auto)
+            else:
+                setattr(self, f"_share{which}_auto", False)
+            for component, value in (
+                ("labels", labels),
+                ("limits", limits),
+                ("ticklabels", ticklabels),
+            ):
+                if value is not None:
+                    setattr(self, f"_share{which}_{component}", bool(value))
+            if not getattr(self, f"_share{which}_labels"):
+                setattr(self, f"_span{which}", False)
+                self._clear_share_label_groups(target=which)
+            self._sync_axis_sharing_level(which)
+            self._rebuild_axis_sharing(which)
+            if old_ticklabels and not getattr(self, f"_share{which}_ticklabels"):
+                self._restore_axis_ticklabels(which)
+        self._invalidate_layout()
+
     def _sync_axis_sharing_level(self, which):
         """Synchronize the legacy level with the active sharing components."""
         previous = getattr(self, f"_share{which}")
@@ -3698,6 +3820,14 @@ class Figure(mfigure.Figure):
         change them for specific figures. But many :ref:`other configuration
         settings <ug_format>` can be passed to ``format`` too.
 
+        Notes
+        -----
+        When formatting fewer than all axes, parameters that require independent
+        axis labels, limits, scales, locators, formatters, or tick locations may
+        reduce the corresponding sharing component for the entire figure. This
+        treats the local values as intentional. Inspect or restore sharing with
+        `Figure.get_axis_sharing` and `Figure.set_axis_sharing`.
+
         Other parameters
         ----------------
         %(axes.format)s
@@ -3770,9 +3900,9 @@ class Figure(mfigure.Figure):
             kwargs[key] = next(
                 (item for item in mapping.values() if item is not None), None
             )
-        if axis_mappings:
-            self._update_sharing_for_format_keys(axis_mappings)
         all_axes = set(self._iter_subplots())
+        if axis_mappings and len(all_axes) > 1:
+            self._update_sharing_for_format_keys(axis_mappings)
         is_subset = bool(axs) and all_axes and set(axs) != all_axes
         if is_subset:
             local_keys = {

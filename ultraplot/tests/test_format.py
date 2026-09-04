@@ -481,12 +481,12 @@ def test_indexed_limit_format_restores_interior_ticklabels():
     """Local limits restore tick labels previously hidden by global sharing."""
     fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
     fig.canvas.draw()
-    assert not axs[0].xaxis.get_tick_params()["labelbottom"]
+    assert not axs[0]._is_ticklabel_on("labelbottom")
 
     axs[2].format(xlim=(-1, 0))
     fig.canvas.draw()
 
-    assert axs[0].xaxis.get_tick_params()["labelbottom"]
+    assert axs[0]._is_ticklabel_on("labelbottom")
     assert fig._sharex == 1
     assert axs[0].get_xlim() == (0, 1)
     assert axs[2].get_xlim() == (-1, 0)
@@ -498,13 +498,13 @@ def test_indexed_ylim_restores_interior_ticklabels():
     """The ticker-detachment behavior is symmetric for y axes."""
     fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
     fig.canvas.draw()
-    assert not axs[1].yaxis.get_tick_params()["labelleft"]
+    assert not axs[1]._is_ticklabel_on("labelleft")
 
     axs[1].format(ylim=(-1, 0))
     fig.canvas.draw()
 
     assert fig._sharey == 1
-    assert axs[1].yaxis.get_tick_params()["labelleft"]
+    assert axs[1]._is_ticklabel_on("labelleft")
     assert axs[0].get_ylim() == (0, 1)
     assert axs[1].get_ylim() == (-1, 0)
     assert 1 in axs[0].get_yticks()
@@ -589,9 +589,9 @@ def test_explicit_ticklabel_location_survives_later_limit_detach():
     axs[2].format(xlim=(-1, 0))
     fig.canvas.draw()
 
-    assert axs[0].xaxis.get_tick_params()["labelbottom"]
-    assert not axs[1].xaxis.get_tick_params()["labelbottom"]
-    assert not axs[1].xaxis.get_tick_params()["labeltop"]
+    assert axs[0]._is_ticklabel_on("labelbottom")
+    assert not axs[1]._is_ticklabel_on("labelbottom")
+    assert not axs[1]._is_ticklabel_on("labeltop")
 
 
 def test_indexed_tick_location_only_disables_ticklabel_sharing():
@@ -605,7 +605,7 @@ def test_indexed_tick_location_only_disables_ticklabel_sharing():
     assert fig._sharex_limits
     assert not fig._sharex_ticklabels
     assert fig._sharex == 2
-    assert axs[0].xaxis.get_tick_params()["labelbottom"]
+    assert axs[0]._is_ticklabel_on("labelbottom")
     axs[0].set_xlim(2, 3)
     assert axs[2].get_xlim() == (2, 3)
 

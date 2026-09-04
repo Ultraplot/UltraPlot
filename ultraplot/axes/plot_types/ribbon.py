@@ -329,7 +329,12 @@ def ribbon_diagram(
         )
         period_text.append(text)
 
-    ax.format(xlim=(0, 1), ylim=(0, 1), grid=False)
+    ax.format(
+        xlim=(0, 1),
+        ylim=(0, 1),
+        grid=False,
+        _skip_share_update=True,
+    )
     ax.axis("off")
     return {
         "node_patches": node_patches,

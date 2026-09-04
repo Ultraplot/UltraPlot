@@ -1135,6 +1135,9 @@ def test_sharing_levels(level):
             lonlim=lonlim * axi.number,
             latlim=latlim * axi.number,
         )
+    assert fig._sharex == fig._sharey == min(level, 1)
+    assert not fig._sharex_limits and not fig._sharey_limits
+    assert not fig._sharex_ticklabels and not fig._sharey_ticklabels
 
     fig.canvas.draw()
     for idx, axi in enumerate(ax):
@@ -1151,12 +1154,10 @@ def test_sharing_levels(level):
         )
 
         assert_views_are_sharing(axi)
-        # When we share the labels but not the limits,
-        # we expect all ticks to be on
-        if level > 2:
-            assert s == 2
-        else:
-            assert s == 4
+        # The explicit per-axes limits above override both limit sharing and
+        # the associated interior tick-label suppression, regardless of the
+        # sharing level requested when the figure was created.
+        assert s == 4
     uplt.close(fig)
 
 

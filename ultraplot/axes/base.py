@@ -3333,6 +3333,14 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         change them for specific axes. But many :ref:`other configuration
         settings <ug_format>` can be passed to ``format`` too.
 
+        Notes
+        -----
+        Formatting an indexed axes with parameters that require independent axis
+        labels, limits, scales, locators, formatters, or tick locations may reduce
+        the corresponding sharing component for the entire figure. Inspect or
+        restore sharing with `~ultraplot.figure.Figure.get_axis_sharing` and
+        `~ultraplot.figure.Figure.set_axis_sharing`.
+
         Other parameters
         ----------------
         %(figure.format)s

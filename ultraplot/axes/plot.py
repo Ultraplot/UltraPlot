@@ -3994,7 +3994,7 @@ class PlotAxes(base.Axes):
         # pandas DataFrame specifically is passed to hist, boxplot, or violinplot, rows
         # of data assumed! Converting to ndarray necessary.
         if kw_format:
-            self.format(**kw_format)
+            self.format(_skip_share_update=True, **kw_format)
         ys = tuple(map(inputs._to_numpy_array, ys))
         if x is not None:  # pie() and hist()
             x = inputs._to_numpy_array(x)
@@ -4102,7 +4102,7 @@ class PlotAxes(base.Axes):
 
             # Apply formatting
             if kw_format:
-                self.format(**kw_format)
+                self.format(_skip_share_update=True, **kw_format)
 
         # Apply title for legend or colorbar
         if autoguide and autoformat:
@@ -5347,6 +5347,7 @@ class PlotAxes(base.Axes):
         objs = self._call_native("loglog", *args, **kwargs)
         if rc["formatter.log"]:
             self.format(
+                _skip_share_update=True,
                 xformatter="log",
                 yformatter="log",
             )
@@ -5361,6 +5362,7 @@ class PlotAxes(base.Axes):
         objs = self._call_native("semilogy", *args, **kwargs)
         if rc["formatter.log"]:
             self.format(
+                _skip_share_update=True,
                 yformatter="log",
             )
         return objs
@@ -5373,6 +5375,7 @@ class PlotAxes(base.Axes):
         objs = self._call_native("semilogx", *args, **kwargs)
         if rc["formatter.log"]:
             self.format(
+                _skip_share_update=True,
                 xformatter="log",
             )
         return objs
@@ -7445,7 +7448,7 @@ class PlotAxes(base.Axes):
             kw["xtickminor"] = False
         if self.yaxis.isDefault_minloc:
             kw["ytickminor"] = False
-        self.format(**kw)
+        self.format(_skip_share_update=True, **kw)
         return obj
 
     @inputs._preprocess_or_redirect("x", "y", "u", "v", ("c", "color", "colors"))

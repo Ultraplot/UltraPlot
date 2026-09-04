@@ -2064,6 +2064,20 @@ class SubplotGrid(MutableSequence, list):
         **kwargs
             Passed to the projection-specific ``format`` command for each axes.
             Valid only if every axes in the grid belongs to the same class.
+            Axes-format arguments may be dictionaries mapping one-based positions
+            in this grid to values, for example ``title={1: 'First', (2, 3):
+            'Others'}``. Dictionaries with string keys remain ordinary style
+            dictionaries.
+
+        Notes
+        -----
+        Formatting a subset with parameters that require independent axis labels,
+        limits, scales, locators, formatters, or tick locations may reduce the
+        corresponding sharing component for the entire figure. A scalar label on a
+        multi-axes subset can instead form a shared label group for that subset.
+        Inspect or restore sharing with
+        `~ultraplot.figure.Figure.get_axis_sharing` and
+        `~ultraplot.figure.Figure.set_axis_sharing`.
 
         Other parameters
         ----------------

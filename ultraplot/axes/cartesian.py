@@ -721,7 +721,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._twinned_axes.join(self, ax)
 
         # Format parent and child axes
-        self.format(**{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)})
+        self.format(
+            _skip_share_update=True,
+            **{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)},
+        )
         setattr(ax, f"_alt{sx}_parent", self)
         getattr(ax, f"{sy}axis").set_visible(False)
         getattr(ax, "patch").set_visible(False)
@@ -1720,7 +1723,18 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # such as a set_ylabel() call since the last draw. format() has always
         # flushed those into the layout, so keep doing that.
         pending_layout = bool(self.stale)
-        if self.figure is not None and not kwargs.get("skip_figure", False):
+        skip_share_update = kwargs.pop("_skip_share_update", False)
+        main_subplots = (
+            tuple(self.figure._iter_subplots()) if self.figure is not None else ()
+        )
+        can_reduce_sharing = len(main_subplots) > 1 and any(
+            self is ax for ax in main_subplots
+        )
+        if (
+            can_reduce_sharing
+            and not skip_share_update
+            and not kwargs.get("skip_figure", False)
+        ):
             format_values = locals().copy()
             format_values.update(kwargs)
             format_keys = {
@@ -1743,6 +1757,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             if format_keys & AXIS_LABEL_FORMAT_KEYS["y"]:
                 self.yaxis.label.set_visible(True)
         explicit_format_keys = set(kwargs.pop("_explicit_format_keys", ()))
+        explicit_format_keys.discard("_skip_share_update")
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
             kwargs, self._format_signatures[CartesianAxes]
         )
