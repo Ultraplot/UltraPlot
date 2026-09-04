@@ -17,9 +17,7 @@ _reso_docstring = ...
 _init_docstring = ...
 
 class Aitoff(_WarpedRectangularProjection):
-    """
-    The `Aitoff <https://en.wikipedia.org/wiki/Aitoff_projection>`__ projection.
-    """
+    """The `Aitoff <https://en.wikipedia.org/wiki/Aitoff_projection>`__ projection."""
     name = 'aitoff'
 
     def __init__(self, central_longitude: Incomplete=0, globe: Incomplete=None, false_easting: Incomplete=None, false_northing: Incomplete=None) -> None:
@@ -41,9 +39,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class Hammer(_WarpedRectangularProjection):
-    """
-    The `Hammer <https://en.wikipedia.org/wiki/Hammer_projection>`__ projection.
-    """
+    """The `Hammer <https://en.wikipedia.org/wiki/Hammer_projection>`__ projection."""
     name = 'hammer'
 
     def __init__(self, central_longitude: Incomplete=0, globe: Incomplete=None, false_easting: Incomplete=None, false_northing: Incomplete=None) -> None:
@@ -65,9 +61,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class KavrayskiyVII(_WarpedRectangularProjection):
-    """
-    The `Kavrayskiy VII <https://en.wikipedia.org/wiki/Kavrayskiy_VII_projection>`__ projection.
-    """
+    """The `Kavrayskiy VII <https://en.wikipedia.org/wiki/Kavrayskiy_VII_projection>`__ projection."""
     name = 'kavrayskiyVII'
 
     def __init__(self, central_longitude: Incomplete=0, globe: Incomplete=None, false_easting: Incomplete=None, false_northing: Incomplete=None) -> None:
@@ -89,9 +83,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class WinkelTripel(_WarpedRectangularProjection):
-    """
-    The `Winkel tripel (Winkel III) <https://en.wikipedia.org/wiki/Winkel_tripel_projection>`__ projection.
-    """
+    """The `Winkel tripel (Winkel III) <https://en.wikipedia.org/wiki/Winkel_tripel_projection>`__ projection."""
     name = 'winkeltripel'
 
     def __init__(self, central_longitude: Incomplete=0, globe: Incomplete=None, false_easting: Incomplete=None, false_northing: Incomplete=None) -> None:
@@ -113,9 +105,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class NorthPolarAzimuthalEquidistant(AzimuthalEquidistant):
-    """
-    Analogous to `~cartopy.crs.NorthPolarStereo`.
-    """
+    """Analogous to `~cartopy.crs.NorthPolarStereo`."""
 
     def __init__(self, central_longitude: Incomplete=0.0, globe: Incomplete=None) -> None:
         """Parameters
@@ -131,9 +121,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class SouthPolarAzimuthalEquidistant(AzimuthalEquidistant):
-    """
-    Analogous to `~cartopy.crs.SouthPolarStereo`.
-    """
+    """Analogous to `~cartopy.crs.SouthPolarStereo`."""
 
     def __init__(self, central_longitude: Incomplete=0.0, globe: Incomplete=None) -> None:
         """Parameters
@@ -149,9 +137,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class NorthPolarLambertAzimuthalEqualArea(LambertAzimuthalEqualArea):
-    """
-    Analogous to `~cartopy.crs.NorthPolarStereo`.
-    """
+    """Analogous to `~cartopy.crs.NorthPolarStereo`."""
 
     def __init__(self, central_longitude: Incomplete=0.0, globe: Incomplete=None) -> None:
         """Parameters
@@ -167,9 +153,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class SouthPolarLambertAzimuthalEqualArea(LambertAzimuthalEqualArea):
-    """
-    Analogous to `~cartopy.crs.SouthPolarStereo`.
-    """
+    """Analogous to `~cartopy.crs.SouthPolarStereo`."""
 
     def __init__(self, central_longitude: Incomplete=0.0, globe: Incomplete=None) -> None:
         """Parameters
@@ -185,9 +169,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class NorthPolarGnomonic(Gnomonic):
-    """
-    Analogous to `~cartopy.crs.NorthPolarStereo`.
-    """
+    """Analogous to `~cartopy.crs.NorthPolarStereo`."""
 
     def __init__(self, central_longitude: Incomplete=0.0, globe: Incomplete=None) -> None:
         """Parameters
@@ -203,9 +185,7 @@ globe : `~cartopy.crs.Globe`, optional
         ...
 
 class SouthPolarGnomonic(Gnomonic):
-    """
-    Analogous to `~cartopy.crs.SouthPolarStereo`.
-    """
+    """Analogous to `~cartopy.crs.SouthPolarStereo`."""
 
     def __init__(self, central_longitude: Incomplete=0.0, globe: Incomplete=None) -> None:
         """Parameters

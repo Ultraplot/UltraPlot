@@ -579,17 +579,15 @@ the layout of axes in a GridSpec."""
 
 @dataclass
 class _Crawler:
-    """
-    A crawler is used to find edges of axes in a grid layout.
-    This is useful for determining whether to turn shared labels
-    on or depending on the position of an axis in the gridspec.
-    It crawls over the grid in all four cardinal directions and
-    checks whether it reaches a border of the grid or an axis of
-    a different type. It was created as adding colorbars will
-    change the underlying gridspec and therefore we cannot rely
-    on the original gridspec to determine whether an axis is a
-    border or not.
-    """
+    """A crawler is used to find edges of axes in a grid layout.
+This is useful for determining whether to turn shared labels
+on or depending on the position of an axis in the gridspec.
+It crawls over the grid in all four cardinal directions and
+checks whether it reaches a border of the grid or an axis of
+a different type. It was created as adding colorbars will
+change the underlying gridspec and therefore we cannot rely
+on the original gridspec to determine whether an axis is a
+border or not."""
     ax: object
     grid: np.ndarray[int, int]
     grid_axis_type: np.ndarray[int, int]

@@ -70,15 +70,14 @@ def _clear_border_cache(func: _F) -> _F:
     ...
 
 class Figure(mfigure.Figure):
-    """
-    The `~matplotlib.figure.Figure` subclass used by ultraplot.
-    """
+    """The `~matplotlib.figure.Figure` subclass used by ultraplot."""
     _share_message = "Axis sharing level can be 0 or False (share nothing), 1 or 'labels' or 'labs' (share axis labels), 2 or 'limits' or 'lims' (share axis limits and axis labels), 3 or True (share axis limits, axis labels, and tick labels), 4 or 'all' (share axis labels and tick labels in the same gridspec rows and columns and share axis limits across all subplots), or 'auto' (start unshared and share only compatible axes)."
     _space_message = 'To set the left, right, bottom, top, wspace, or hspace gridspec values, pass them as keyword arguments to uplt.figure() or uplt.subplots(). Please note they are now specified in physical units, with strings interpreted by uplt.units() and floats interpreted as font size-widths.'
     _tight_message = "ultraplot uses its own tight layout algorithm that is activated by default. To disable it, set uplt.rc['subplots.tight'] to False or pass tight=False to uplt.subplots(). For details, see fig.auto_layout()."
     _warn_interactive = True
 
     def __repr__(self) -> str:
+        """Return repr(self)."""
         ...
 
     def __init__(self, *, refnum: Incomplete=None, refaspect: Incomplete=None, refwidth: Incomplete=None, refheight: Incomplete=None, figwidth: Incomplete=None, figheight: Incomplete=None, journal: Incomplete=None, sharex: Incomplete=None, sharey: Incomplete=None, share: Incomplete=None, spanx: Incomplete=None, spany: Incomplete=None, span: Incomplete=None, alignx: Incomplete=None, aligny: Incomplete=None, align: Incomplete=None, left: Incomplete=None, right: Incomplete=None, top: Incomplete=None, bottom: Incomplete=None, wspace: Incomplete=None, hspace: Incomplete=None, space: Incomplete=None, tight: Incomplete=None, outerpad: Incomplete=None, innerpad: Incomplete=None, panelpad: Incomplete=None, wpad: Incomplete=None, hpad: Incomplete=None, pad: Incomplete=None, wequal: Incomplete=None, hequal: Incomplete=None, equal: Incomplete=None, wgroup: Incomplete=None, hgroup: Incomplete=None, group: Incomplete=None, **kwargs: Incomplete) -> None:
@@ -315,6 +314,18 @@ matplotlib.figure.Figure.clear"""
 
     @override
     def draw(self, renderer: Incomplete) -> Incomplete:
+        """Draw the Artist (and its children) using the given renderer.
+
+This has no effect if the artist is not visible (`.Artist.get_visible`
+returns False).
+
+Parameters
+----------
+renderer : `~matplotlib.backend_bases.RendererBase` subclass.
+
+Notes
+-----
+This method is overridden in the Artist subclasses."""
         ...
 
     @override
@@ -806,7 +817,144 @@ See also
 ultraplot.figure.Figure.subplot
 ultraplot.figure.Figure.add_subplot
 ultraplot.figure.Figure.subplots
-ultraplot.figure.Figure.add_subplots"""
+ultraplot.figure.Figure.add_subplots
+
+Matplotlib documentation
+
+
+Add an `~.axes.Axes` to the figure.
+
+Call signatures::
+
+    add_axes(rect, projection=None, polar=False, **kwargs)
+    add_axes(ax)
+
+Parameters
+----------
+rect : tuple (left, bottom, width, height)
+    The dimensions (left, bottom, width, height) of the new
+    `~.axes.Axes`. All quantities are in fractions of figure width and
+    height.
+
+projection : {None, 'aitoff', 'hammer', 'lambert', 'mollweide', 'polar', 'rectilinear', str}, optional
+    The projection type of the `~.axes.Axes`. *str* is the name of
+    a custom projection, see `~matplotlib.projections`. The default
+    None results in a 'rectilinear' projection.
+
+polar : bool, default: False
+    If True, equivalent to projection='polar'.
+
+axes_class : subclass type of `~.axes.Axes`, optional
+    The `.axes.Axes` subclass that is instantiated.  This parameter
+    is incompatible with *projection* and *polar*.  See
+    :ref:`axisartist_users-guide-index` for examples.
+
+sharex, sharey : `~matplotlib.axes.Axes`, optional
+    Share the x or y `~matplotlib.axis` with sharex and/or sharey.
+    The axis will have the same limits, ticks, and scale as the axis
+    of the shared Axes.
+
+label : str
+    A label for the returned Axes.
+
+Returns
+-------
+`~.axes.Axes`, or a subclass of `~.axes.Axes`
+    The returned Axes class depends on the projection used. It is
+    `~.axes.Axes` if rectilinear projection is used and
+    `.projections.polar.PolarAxes` if polar projection is used.
+
+Other Parameters
+----------------
+**kwargs
+    This method also takes the keyword arguments for
+    the returned Axes class. The keyword arguments for the
+    rectilinear Axes class `~.axes.Axes` can be found in
+    the following table but there might also be other keyword
+    arguments if another projection is used, see the actual Axes
+    class.
+
+    Properties:
+    adjustable: {'box', 'datalim'}
+    agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
+    alpha: float or None
+    anchor: (float, float) or {'C', 'SW', 'S', 'SE', 'E', 'NE', ...}
+    animated: bool
+    aspect: {'auto', 'equal'} or float
+    autoscale_on: bool
+    autoscalex_on: unknown
+    autoscaley_on: unknown
+    axes_locator: Callable[[Axes, Renderer], Bbox]
+    axisbelow: bool or 'line'
+    box_aspect: float or None
+    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_on: bool
+    clip_path: Patch or (Path, Transform) or None
+    facecolor or fc: :mpltype:`color`
+    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    forward_navigation_events: bool or "auto"
+    frame_on: bool
+    gid: str
+    in_layout: bool
+    label: object
+    mouseover: bool
+    navigate: bool
+    navigate_mode: unknown
+    path_effects: list of `.AbstractPathEffect`
+    picker: None or bool or float or callable
+    position: [left, bottom, width, height] or `~matplotlib.transforms.Bbox`
+    prop_cycle: `~cycler.Cycler`
+    rasterization_zorder: float or None
+    rasterized: bool
+    sketch_params: (scale: float, length: float, randomness: float)
+    snap: bool or None
+    subplotspec: unknown
+    title: str
+    transform: `~matplotlib.transforms.Transform`
+    url: str
+    visible: bool
+    xbound: (lower: float, upper: float)
+    xlabel: str
+    xlim: (left: float, right: float)
+    xmargin: float greater than -0.5
+    xscale: unknown
+    xticklabels: unknown
+    xticks: unknown
+    ybound: (lower: float, upper: float)
+    ylabel: str
+    ylim: (bottom: float, top: float)
+    ymargin: float greater than -0.5
+    yscale: unknown
+    yticklabels: unknown
+    yticks: unknown
+    zorder: float
+
+Notes
+-----
+In rare circumstances, `.add_axes` may be called with a single
+argument, an Axes instance already created in the present figure but
+not in the figure's list of Axes.
+
+See Also
+--------
+.Figure.add_subplot
+.pyplot.subplot
+.pyplot.axes
+.Figure.subplots
+.pyplot.subplots
+
+Examples
+--------
+Some simple examples::
+
+    rect = l, b, w, h
+    fig = plt.figure()
+    fig.add_axes(rect)
+    fig.add_axes(rect, frameon=False, facecolor='g')
+    fig.add_axes(rect, polar=True)
+    ax = fig.add_axes(rect, projection='polar')
+    fig.delaxes(ax)
+    fig.add_axes(ax)"""
         ...
 
     def add_subplot(self, *args: Incomplete, **kwargs: Incomplete) -> paxes.Axes:
@@ -875,7 +1023,160 @@ See also
 --------
 ultraplot.figure.Figure.add_axes
 ultraplot.figure.Figure.subplots
-ultraplot.figure.Figure.add_subplots"""
+ultraplot.figure.Figure.add_subplots
+
+Matplotlib documentation
+
+
+Add an `~.axes.Axes` to the figure as part of a subplot arrangement.
+
+Call signatures::
+
+   add_subplot(nrows, ncols, index, **kwargs)
+   add_subplot(pos, **kwargs)
+   add_subplot(ax)
+   add_subplot()
+
+Parameters
+----------
+*args : int, (int, int, *index*), or `.SubplotSpec`, default: (1, 1, 1)
+    The position of the subplot described by one of
+
+    - Three integers (*nrows*, *ncols*, *index*). The subplot will
+      take the *index* position on a grid with *nrows* rows and
+      *ncols* columns. *index* starts at 1 in the upper left corner
+      and increases to the right.  *index* can also be a two-tuple
+      specifying the (*first*, *last*) indices (1-based, and including
+      *last*) of the subplot, e.g., ``fig.add_subplot(3, 1, (1, 2))``
+      makes a subplot that spans the upper 2/3 of the figure.
+    - A 3-digit integer. The digits are interpreted as if given
+      separately as three single-digit integers, i.e.
+      ``fig.add_subplot(235)`` is the same as
+      ``fig.add_subplot(2, 3, 5)``. Note that this can only be used
+      if there are no more than 9 subplots.
+    - A `.SubplotSpec`.
+
+    In rare circumstances, `.add_subplot` may be called with a single
+    argument, a subplot Axes instance already created in the
+    present figure but not in the figure's list of Axes.
+
+projection : {None, 'aitoff', 'hammer', 'lambert', 'mollweide', 'polar', 'rectilinear', str}, optional
+    The projection type of the subplot (`~.axes.Axes`). *str* is the
+    name of a custom projection, see `~matplotlib.projections`. The
+    default None results in a 'rectilinear' projection.
+
+polar : bool, default: False
+    If True, equivalent to projection='polar'.
+
+axes_class : subclass type of `~.axes.Axes`, optional
+    The `.axes.Axes` subclass that is instantiated.  This parameter
+    is incompatible with *projection* and *polar*.  See
+    :ref:`axisartist_users-guide-index` for examples.
+
+sharex, sharey : `~matplotlib.axes.Axes`, optional
+    Share the x or y `~matplotlib.axis` with sharex and/or sharey.
+    The axis will have the same limits, ticks, and scale as the axis
+    of the shared Axes.
+
+label : str
+    A label for the returned Axes.
+
+Returns
+-------
+`~.axes.Axes`
+
+    The Axes of the subplot. The returned Axes can actually be an
+    instance of a subclass, such as `.projections.polar.PolarAxes` for
+    polar projections.
+
+Other Parameters
+----------------
+**kwargs
+    This method also takes the keyword arguments for the returned Axes
+    base class; except for the *figure* argument. The keyword arguments
+    for the rectilinear base class `~.axes.Axes` can be found in
+    the following table but there might also be other keyword
+    arguments if another projection is used.
+
+    Properties:
+    adjustable: {'box', 'datalim'}
+    agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
+    alpha: float or None
+    anchor: (float, float) or {'C', 'SW', 'S', 'SE', 'E', 'NE', ...}
+    animated: bool
+    aspect: {'auto', 'equal'} or float
+    autoscale_on: bool
+    autoscalex_on: unknown
+    autoscaley_on: unknown
+    axes_locator: Callable[[Axes, Renderer], Bbox]
+    axisbelow: bool or 'line'
+    box_aspect: float or None
+    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_on: bool
+    clip_path: Patch or (Path, Transform) or None
+    facecolor or fc: :mpltype:`color`
+    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    forward_navigation_events: bool or "auto"
+    frame_on: bool
+    gid: str
+    in_layout: bool
+    label: object
+    mouseover: bool
+    navigate: bool
+    navigate_mode: unknown
+    path_effects: list of `.AbstractPathEffect`
+    picker: None or bool or float or callable
+    position: [left, bottom, width, height] or `~matplotlib.transforms.Bbox`
+    prop_cycle: `~cycler.Cycler`
+    rasterization_zorder: float or None
+    rasterized: bool
+    sketch_params: (scale: float, length: float, randomness: float)
+    snap: bool or None
+    subplotspec: unknown
+    title: str
+    transform: `~matplotlib.transforms.Transform`
+    url: str
+    visible: bool
+    xbound: (lower: float, upper: float)
+    xlabel: str
+    xlim: (left: float, right: float)
+    xmargin: float greater than -0.5
+    xscale: unknown
+    xticklabels: unknown
+    xticks: unknown
+    ybound: (lower: float, upper: float)
+    ylabel: str
+    ylim: (bottom: float, top: float)
+    ymargin: float greater than -0.5
+    yscale: unknown
+    yticklabels: unknown
+    yticks: unknown
+    zorder: float
+
+See Also
+--------
+.Figure.add_axes
+.pyplot.subplot
+.pyplot.axes
+.Figure.subplots
+.pyplot.subplots
+
+Examples
+--------
+::
+
+    fig = plt.figure()
+
+    fig.add_subplot(231)
+    ax1 = fig.add_subplot(2, 3, 1)  # equivalent but more general
+
+    fig.add_subplot(232, frameon=False)  # subplot with no frame
+    fig.add_subplot(233, projection='polar')  # polar subplot
+    fig.add_subplot(234, sharex=ax1)  # subplot sharing x-axis with ax1
+    fig.add_subplot(235, facecolor="red")  # red subplot
+
+    ax1.remove()  # delete ax1 from the figure
+    fig.add_subplot(ax1)  # add ax1 back to the figure"""
         ...
 
     def subplot(self, *args: Incomplete, **kwargs: Incomplete) -> paxes.Axes:
@@ -2269,7 +2570,163 @@ labelrotation : str, float, default: None
 See also
 --------
 ultraplot.axes.Axes.colorbar
-matplotlib.figure.Figure.colorbar"""
+matplotlib.figure.Figure.colorbar
+
+Matplotlib documentation
+
+
+Add a colorbar to a plot.
+
+Parameters
+----------
+mappable
+    The `matplotlib.cm.ScalarMappable` (i.e., `.AxesImage`,
+    `.ContourSet`, etc.) described by this colorbar.  This argument is
+    mandatory for the `.Figure.colorbar` method but optional for the
+    `.pyplot.colorbar` function, which sets the default to the current
+    image.
+
+    Note that one can create a `.ScalarMappable` "on-the-fly" to
+    generate colorbars not attached to a previously drawn artist, e.g.
+    ::
+
+        fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax)
+
+cax : `~matplotlib.axes.Axes`, optional
+    Axes into which the colorbar will be drawn.  If `None`, then a new
+    Axes is created and the space for it will be stolen from the Axes(s)
+    specified in *ax*.
+
+ax : `~matplotlib.axes.Axes` or iterable or `numpy.ndarray` of Axes, optional
+    The one or more parent Axes from which space for a new colorbar Axes
+    will be stolen. This parameter is only used if *cax* is not set.
+
+    Defaults to the Axes that contains the mappable used to create the
+    colorbar.
+
+use_gridspec : bool, optional
+    If *cax* is ``None``, a new *cax* is created as an instance of
+    Axes.  If *ax* is positioned with a subplotspec and *use_gridspec*
+    is ``True``, then *cax* is also positioned with a subplotspec.
+
+Returns
+-------
+colorbar : `~matplotlib.colorbar.Colorbar`
+
+Other Parameters
+----------------
+
+location : None or {'left', 'right', 'top', 'bottom'}
+    The location, relative to the parent Axes, where the colorbar Axes
+    is created.  It also determines the *orientation* of the colorbar
+    (colorbars on the left and right are vertical, colorbars at the top
+    and bottom are horizontal).  If None, the location will come from the
+    *orientation* if it is set (vertical colorbars on the right, horizontal
+    ones at the bottom), or default to 'right' if *orientation* is unset.
+
+orientation : None or {'vertical', 'horizontal'}
+    The orientation of the colorbar.  It is preferable to set the *location*
+    of the colorbar, as that also determines the *orientation*; passing
+    incompatible values for *location* and *orientation* raises an exception.
+
+fraction : float, default: 0.15
+    Fraction of original Axes to use for colorbar.
+
+shrink : float, default: 1.0
+    Fraction by which to multiply the size of the colorbar.
+
+aspect : float, default: 20
+    Ratio of long to short dimensions.
+
+pad : float, default: 0.05 if vertical, 0.15 if horizontal
+    Fraction of original Axes between colorbar and new image Axes.
+
+anchor : (float, float), optional
+    The anchor point of the colorbar Axes.
+    Defaults to (0.0, 0.5) if vertical; (0.5, 1.0) if horizontal.
+
+panchor : (float, float), or *False*, optional
+    The anchor point of the colorbar parent Axes. If *False*, the parent
+    axes' anchor will be unchanged.
+    Defaults to (1.0, 0.5) if vertical; (0.5, 0.0) if horizontal.
+
+extend : {'neither', 'both', 'min', 'max'}
+    Make pointed end(s) for out-of-range values (unless 'neither').  These are
+    set for a given colormap using the colormap set_under and set_over methods.
+
+extendfrac : {*None*, 'auto', length, lengths}
+    If set to *None*, both the minimum and maximum triangular colorbar
+    extensions will have a length of 5% of the interior colorbar length (this
+    is the default setting).
+
+    If set to 'auto', makes the triangular colorbar extensions the same lengths
+    as the interior boxes (when *spacing* is set to 'uniform') or the same
+    lengths as the respective adjacent interior boxes (when *spacing* is set to
+    'proportional').
+
+    If a scalar, indicates the length of both the minimum and maximum
+    triangular colorbar extensions as a fraction of the interior colorbar
+    length.  A two-element sequence of fractions may also be given, indicating
+    the lengths of the minimum and maximum colorbar extensions respectively as
+    a fraction of the interior colorbar length.
+
+extendrect : bool
+    If *False* the minimum and maximum colorbar extensions will be triangular
+    (the default).  If *True* the extensions will be rectangular.
+
+ticks : None or list of ticks or Locator
+    If None, ticks are determined automatically from the input.
+
+format : None or str or Formatter
+    If None, `~.ticker.ScalarFormatter` is used.
+    Format strings, e.g., ``"%4.2e"`` or ``"{x:.2e}"``, are supported.
+    An alternative `~.ticker.Formatter` may be given instead.
+
+drawedges : bool
+    Whether to draw lines at color boundaries.
+
+label : str
+    The label on the colorbar's long axis.
+
+boundaries, values : None or a sequence
+    If unset, the colormap will be displayed on a 0-1 scale.
+    If sequences, *values* must have a length 1 less than *boundaries*.  For
+    each region delimited by adjacent entries in *boundaries*, the color mapped
+    to the corresponding value in *values* will be used.  The size of each
+    region is determined by the *spacing* parameter.
+    Normally only useful for indexed colors (i.e. ``norm=NoNorm()``) or other
+    unusual circumstances.
+
+spacing : {'uniform', 'proportional'}
+    For discrete colorbars (`.BoundaryNorm` or contours), 'uniform' gives each
+    color the same space; 'proportional' makes the space proportional to the
+    data interval.
+
+Notes
+-----
+If *mappable* is a `~.contour.ContourSet`, its *extend* kwarg is
+included automatically.
+
+The *shrink* kwarg provides a simple way to scale the colorbar with
+respect to the Axes. Note that if *cax* is specified, it determines the
+size of the colorbar, and *shrink* and *aspect* are ignored.
+
+For more precise control, you can manually specify the positions of the
+axes objects in which the mappable and the colorbar are drawn.  In this
+case, do not use any of the Axes properties kwargs.
+
+It is known that some vector graphics viewers (svg and pdf) render
+white gaps between segments of the colorbar.  This is due to bugs in
+the viewers, not Matplotlib.  As a workaround, the colorbar can be
+rendered with overlapping segments::
+
+    cbar = colorbar()
+    cbar.solids.set_edgecolor("face")
+    draw()
+
+However, this has negative consequences in other circumstances, e.g.
+with semi-transparent images (alpha < 1) and colorbar extensions;
+therefore, this workaround is not used by default (see issue #1188)."""
         ...
 
     def legend(self, handles: Incomplete=None, labels: Incomplete=None, loc: Incomplete=None, location: Incomplete=None, row: Incomplete=None, col: Incomplete=None, rows: Incomplete=None, cols: Incomplete=None, span: Incomplete=None, space: Incomplete=None, pad: Incomplete=None, width: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
@@ -2391,7 +2848,320 @@ handler_map : dict-like, optional
 See also
 --------
 ultraplot.axes.Axes.legend
-matplotlib.axes.Axes.legend"""
+matplotlib.axes.Axes.legend
+
+Matplotlib documentation
+
+
+Place a legend on the figure.
+
+Call signatures::
+
+    legend()
+    legend(handles, labels)
+    legend(handles=handles)
+    legend(labels)
+
+The call signatures correspond to the following different ways to use
+this method:
+
+**1. Automatic detection of elements to be shown in the legend**
+
+The elements to be added to the legend are automatically determined,
+when you do not pass in any extra arguments.
+
+In this case, the labels are taken from the artist. You can specify
+them either at artist creation or by calling the
+:meth:`~.Artist.set_label` method on the artist::
+
+    ax.plot([1, 2, 3], label='Inline label')
+    fig.legend()
+
+or::
+
+    line, = ax.plot([1, 2, 3])
+    line.set_label('Label via method')
+    fig.legend()
+
+Specific lines can be excluded from the automatic legend element
+selection by defining a label starting with an underscore.
+This is default for all artists, so calling `.Figure.legend` without
+any arguments and without setting the labels manually will result in
+no legend being drawn.
+
+
+**2. Explicitly listing the artists and labels in the legend**
+
+For full control of which artists have a legend entry, it is possible
+to pass an iterable of legend artists followed by an iterable of
+legend labels respectively::
+
+    fig.legend([line1, line2, line3], ['label1', 'label2', 'label3'])
+
+
+**3. Explicitly listing the artists in the legend**
+
+This is similar to 2, but the labels are taken from the artists'
+label properties. Example::
+
+    line1, = ax1.plot([1, 2, 3], label='label1')
+    line2, = ax2.plot([1, 2, 3], label='label2')
+    fig.legend(handles=[line1, line2])
+
+
+**4. Labeling existing plot elements**
+
+.. admonition:: Discouraged
+
+    This call signature is discouraged, because the relation between
+    plot elements and labels is only implicit by their order and can
+    easily be mixed up.
+
+To make a legend for all artists on all Axes, call this function with
+an iterable of strings, one for each legend item. For example::
+
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    ax1.plot([1, 3, 5], color='blue')
+    ax2.plot([2, 4, 6], color='red')
+    fig.legend(['the blues', 'the reds'])
+
+
+Parameters
+----------
+handles : list of `.Artist`, optional
+    A list of Artists (lines, patches) to be added to the legend.
+    Use this together with *labels*, if you need full control on what
+    is shown in the legend and the automatic mechanism described above
+    is not sufficient.
+
+    The length of handles and labels should be the same in this
+    case. If they are not, they are truncated to the smaller length.
+
+labels : list of str, optional
+    A list of labels to show next to the artists.
+    Use this together with *handles*, if you need full control on what
+    is shown in the legend and the automatic mechanism described above
+    is not sufficient.
+
+Returns
+-------
+`~matplotlib.legend.Legend`
+
+Other Parameters
+----------------
+
+loc : str or pair of floats, default: 'upper right'
+    The location of the legend.
+
+    The strings ``'upper left'``, ``'upper right'``, ``'lower left'``,
+    ``'lower right'`` place the legend at the corresponding corner of the
+    figure.
+
+    The strings ``'upper center'``, ``'lower center'``, ``'center left'``,
+    ``'center right'`` place the legend at the center of the corresponding edge
+    of the figure.
+
+    The string ``'center'`` places the legend at the center of the figure.
+
+    The location can also be a 2-tuple giving the coordinates of the lower-left
+    corner of the legend in figure coordinates (in which case *bbox_to_anchor*
+    will be ignored).
+
+    For back-compatibility, ``'center right'`` (but no other location) can also
+    be spelled ``'right'``, and each "string" location can also be given as a
+    numeric value:
+
+    ==================   =============
+    Location String      Location Code
+    ==================   =============
+    'best' (Axes only)   0
+    'upper right'        1
+    'upper left'         2
+    'lower left'         3
+    'lower right'        4
+    'right'              5
+    'center left'        6
+    'center right'       7
+    'lower center'       8
+    'upper center'       9
+    'center'             10
+    ==================   =============
+
+    If a figure is using the constrained layout manager, the string codes
+    of the *loc* keyword argument can get better layout behaviour using the
+    prefix 'outside'. There is ambiguity at the corners, so 'outside
+    upper right' will make space for the legend above the rest of the
+    axes in the layout, and 'outside right upper' will make space on the
+    right side of the layout.  In addition to the values of *loc*
+    listed above, we have 'outside right upper', 'outside right lower',
+    'outside left upper', and 'outside left lower'.  See
+    :ref:`legend_guide` for more details.
+
+bbox_to_anchor : `.BboxBase`, 2-tuple, or 4-tuple of floats
+    Box that is used to position the legend in conjunction with *loc*.
+    Defaults to ``axes.bbox`` (if called as a method to `.Axes.legend`) or
+    ``figure.bbox`` (if ``figure.legend``).  This argument allows arbitrary
+    placement of the legend.
+
+    Bbox coordinates are interpreted in the coordinate system given by
+    *bbox_transform*, with the default transform
+    Axes or Figure coordinates, depending on which ``legend`` is called.
+
+    If a 4-tuple or `.BboxBase` is given, then it specifies the bbox
+    ``(x, y, width, height)`` that the legend is placed in.
+    To put the legend in the best location in the bottom right
+    quadrant of the Axes (or figure)::
+
+        loc='best', bbox_to_anchor=(0.5, 0., 0.5, 0.5)
+
+    A 2-tuple ``(x, y)`` places the corner of the legend specified by *loc* at
+    x, y.  For example, to put the legend's upper right-hand corner in the
+    center of the Axes (or figure) the following keywords can be used::
+
+        loc='upper right', bbox_to_anchor=(0.5, 0.5)
+
+ncols : int, default: 1
+    The number of columns that the legend has.
+
+    For backward compatibility, the spelling *ncol* is also supported
+    but it is discouraged. If both are given, *ncols* takes precedence.
+
+prop : None or `~matplotlib.font_manager.FontProperties` or dict
+    The font properties of the legend. If None (default), the current
+    :data:`matplotlib.rcParams` will be used.
+
+fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
+    The font size of the legend. If the value is numeric the size will be the
+    absolute font size in points. String values are relative to the current
+    default font size. This argument is only used if *prop* is not specified.
+
+labelcolor : str or list, default: :rc:`legend.labelcolor`
+    The color of the text in the legend. Either a valid color string
+    (for example, 'red'), or a list of color strings. The labelcolor can
+    also be made to match the color of the line or marker using 'linecolor',
+    'markerfacecolor' (or 'mfc'), or 'markeredgecolor' (or 'mec').
+
+    Labelcolor can be set globally using :rc:`legend.labelcolor`. If None,
+    use :rc:`text.color`.
+
+numpoints : int, default: :rc:`legend.numpoints`
+    The number of marker points in the legend when creating a legend
+    entry for a `.Line2D` (line).
+
+scatterpoints : int, default: :rc:`legend.scatterpoints`
+    The number of marker points in the legend when creating
+    a legend entry for a `.PathCollection` (scatter plot).
+
+scatteryoffsets : iterable of floats, default: ``[0.375, 0.5, 0.3125]``
+    The vertical offset (relative to the font size) for the markers
+    created for a scatter plot legend entry. 0.0 is at the base the
+    legend text, and 1.0 is at the top. To draw all markers at the
+    same height, set to ``[0.5]``.
+
+markerscale : float, default: :rc:`legend.markerscale`
+    The relative size of legend markers compared to the originally drawn ones.
+
+markerfirst : bool, default: True
+    If *True*, legend marker is placed to the left of the legend label.
+    If *False*, legend marker is placed to the right of the legend label.
+
+reverse : bool, default: False
+    If *True*, the legend labels are displayed in reverse order from the input.
+    If *False*, the legend labels are displayed in the same order as the input.
+
+    .. versionadded:: 3.7
+
+frameon : bool, default: :rc:`legend.frameon`
+    Whether the legend should be drawn on a patch (frame).
+
+fancybox : bool, default: :rc:`legend.fancybox`
+    Whether round edges should be enabled around the `.FancyBboxPatch` which
+    makes up the legend's background.
+
+shadow : None, bool or dict, default: :rc:`legend.shadow`
+    Whether to draw a shadow behind the legend.
+    The shadow can be configured using `.Patch` keywords.
+    Customization via :rc:`legend.shadow` is currently not supported.
+
+framealpha : float, default: :rc:`legend.framealpha`
+    The alpha transparency of the legend's background.
+    If *shadow* is activated and *framealpha* is ``None``, the default value is
+    ignored.
+
+facecolor : "inherit" or color, default: :rc:`legend.facecolor`
+    The legend's background color.
+    If ``"inherit"``, use :rc:`axes.facecolor`.
+
+edgecolor : "inherit" or color, default: :rc:`legend.edgecolor`
+    The legend's background patch edge color.
+    If ``"inherit"``, use :rc:`axes.edgecolor`.
+
+mode : {"expand", None}
+    If *mode* is set to ``"expand"`` the legend will be horizontally
+    expanded to fill the Axes area (or *bbox_to_anchor* if defines
+    the legend's size).
+
+bbox_transform : None or `~matplotlib.transforms.Transform`
+    The transform for the bounding box (*bbox_to_anchor*). For a value
+    of ``None`` (default) the Axes'
+    :data:`~matplotlib.axes.Axes.transAxes` transform will be used.
+
+title : str or None
+    The legend's title. Default is no title (``None``).
+
+title_fontproperties : None or `~matplotlib.font_manager.FontProperties` or dict
+    The font properties of the legend's title. If None (default), the
+    *title_fontsize* argument will be used if present; if *title_fontsize* is
+    also None, the current :rc:`legend.title_fontsize` will be used.
+
+title_fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}, default: :rc:`legend.title_fontsize`
+    The font size of the legend's title.
+    Note: This cannot be combined with *title_fontproperties*. If you want
+    to set the fontsize alongside other font properties, use the *size*
+    parameter in *title_fontproperties*.
+
+alignment : {'center', 'left', 'right'}, default: 'center'
+    The alignment of the legend title and the box of entries. The entries
+    are aligned as a single block, so that markers always lined up.
+
+borderpad : float, default: :rc:`legend.borderpad`
+    The fractional whitespace inside the legend border, in font-size units.
+
+labelspacing : float, default: :rc:`legend.labelspacing`
+    The vertical space between the legend entries, in font-size units.
+
+handlelength : float, default: :rc:`legend.handlelength`
+    The length of the legend handles, in font-size units.
+
+handleheight : float, default: :rc:`legend.handleheight`
+    The height of the legend handles, in font-size units.
+
+handletextpad : float, default: :rc:`legend.handletextpad`
+    The pad between the legend handle and text, in font-size units.
+
+borderaxespad : float, default: :rc:`legend.borderaxespad`
+    The pad between the Axes and legend border, in font-size units.
+
+columnspacing : float, default: :rc:`legend.columnspacing`
+    The spacing between columns, in font-size units.
+
+handler_map : dict or None
+    The custom dictionary mapping instances or types to a legend
+    handler. This *handler_map* updates the default handler map
+    found at `matplotlib.legend.Legend.get_legend_handler_map`.
+
+draggable : bool, default: False
+    Whether the legend can be dragged with the mouse.
+
+
+See Also
+--------
+.Axes.legend
+
+Notes
+-----
+Some artists are not supported by this function.  See
+:ref:`legend_guide` for details."""
         ...
 
     def save(self, filename: Incomplete, **kwargs: Incomplete) -> None:
@@ -2425,7 +3195,125 @@ See also
 --------
 Figure.save
 Figure.savefig
-matplotlib.figure.Figure.savefig"""
+matplotlib.figure.Figure.savefig
+
+Matplotlib documentation
+
+
+Save the current figure as an image or vector graphic to a file.
+
+Call signature::
+
+  savefig(fname, *, transparent=None, dpi='figure', format=None,
+          metadata=None, bbox_inches=None, pad_inches=0.1,
+          facecolor='auto', edgecolor='auto', backend=None,
+          **kwargs
+         )
+
+The available output formats depend on the backend being used.
+
+Parameters
+----------
+fname : str or path-like or binary file-like
+    A path, or a Python file-like object, or
+    possibly some backend-dependent object such as
+    `matplotlib.backends.backend_pdf.PdfPages`.
+
+    If *format* is set, it determines the output format, and the file
+    is saved as *fname*.  Note that *fname* is used verbatim, and there
+    is no attempt to make the extension, if any, of *fname* match
+    *format*, and no extension is appended.
+
+    If *format* is not set, then the format is inferred from the
+    extension of *fname*, if there is one.  If *format* is not
+    set and *fname* has no extension, then the file is saved with
+    :rc:`savefig.format` and the appropriate extension is appended to
+    *fname*.
+
+Other Parameters
+----------------
+transparent : bool, default: :rc:`savefig.transparent`
+    If *True*, the Axes patches will all be transparent; the
+    Figure patch will also be transparent unless *facecolor*
+    and/or *edgecolor* are specified via kwargs.
+
+    If *False* has no effect and the color of the Axes and
+    Figure patches are unchanged (unless the Figure patch
+    is specified via the *facecolor* and/or *edgecolor* keyword
+    arguments in which case those colors are used).
+
+    The transparency of these patches will be restored to their
+    original values upon exit of this function.
+
+    This is useful, for example, for displaying
+    a plot on top of a colored background on a web page.
+
+dpi : float or 'figure', default: :rc:`savefig.dpi`
+    The resolution in dots per inch.  If 'figure', use the figure's
+    dpi value.
+
+format : str
+    The file format, e.g. 'png', 'pdf', 'svg', ... The behavior when
+    this is unset is documented under *fname*.
+
+metadata : dict, optional
+    Key/value pairs to store in the image metadata. The supported keys
+    and defaults depend on the image format and backend:
+
+    - 'png' with Agg backend: See the parameter ``metadata`` of
+      `~.FigureCanvasAgg.print_png`.
+    - 'pdf' with pdf backend: See the parameter ``metadata`` of
+      `~.backend_pdf.PdfPages`.
+    - 'svg' with svg backend: See the parameter ``metadata`` of
+      `~.FigureCanvasSVG.print_svg`.
+    - 'eps' and 'ps' with PS backend: Only 'Creator' is supported.
+
+    Not supported for 'pgf', 'raw', and 'rgba' as those formats do not support
+    embedding metadata.
+    Does not currently support 'jpg', 'tiff', or 'webp', but may include
+    embedding EXIF metadata in the future.
+
+bbox_inches : str or `.Bbox`, default: :rc:`savefig.bbox`
+    Bounding box in inches: only the given portion of the figure is
+    saved.  If 'tight', try to figure out the tight bbox of the figure.
+
+pad_inches : float or 'layout', default: :rc:`savefig.pad_inches`
+    Amount of padding in inches around the figure when bbox_inches is
+    'tight'. If 'layout' use the padding from the constrained or
+    compressed layout engine; ignored if one of those engines is not in
+    use.
+
+facecolor : :mpltype:`color` or 'auto', default: :rc:`savefig.facecolor`
+    The facecolor of the figure.  If 'auto', use the current figure
+    facecolor.
+
+edgecolor : :mpltype:`color` or 'auto', default: :rc:`savefig.edgecolor`
+    The edgecolor of the figure.  If 'auto', use the current figure
+    edgecolor.
+
+backend : str, optional
+    Use a non-default backend to render the file, e.g. to render a
+    png file with the "cairo" backend rather than the default "agg",
+    or a pdf file with the "pgf" backend rather than the default
+    "pdf".  Note that the default backend is normally sufficient.  See
+    :ref:`the-builtin-backends` for a list of valid backends for each
+    file format.  Custom backends can be referenced as "module://...".
+
+orientation : {'landscape', 'portrait'}
+    Currently only supported by the postscript backend.
+
+papertype : str
+    One of 'letter', 'legal', 'executive', 'ledger', 'a0' through
+    'a10', 'b0' through 'b10'. Only supported for postscript
+    output.
+
+bbox_extra_artists : list of `~matplotlib.artist.Artist`, optional
+    A list of extra artists that will be considered when the
+    tight bbox is calculated.
+
+pil_kwargs : dict, optional
+    Additional keyword arguments that are passed to
+    `PIL.Image.Image.save` when saving the figure."""
         ...
 
     def set_canvas(self, canvas: Incomplete) -> None:
@@ -2440,7 +3328,16 @@ canvas : `~matplotlib.backend_bases.FigureCanvasBase`
 
 See also
 --------
-matplotlib.figure.Figure.set_canvas"""
+matplotlib.figure.Figure.set_canvas
+
+Matplotlib documentation
+
+
+Set the canvas that contains the figure
+
+Parameters
+----------
+canvas : FigureCanvas"""
         ...
 
     def _is_same_size(self, figsize: Incomplete, eps: Incomplete=None) -> Incomplete:
@@ -2466,7 +3363,38 @@ eps : float, optional
 
 See also
 --------
-matplotlib.figure.Figure.set_size_inches"""
+matplotlib.figure.Figure.set_size_inches
+
+Matplotlib documentation
+
+
+Set the figure size in inches.
+
+Call signatures::
+
+     fig.set_size_inches(w, h)  # OR
+     fig.set_size_inches((w, h))
+
+Parameters
+----------
+w : (float, float) or float
+    Width and height in inches (if height not specified as a separate
+    argument) or width.
+h : float
+    Height in inches.
+forward : bool, default: True
+    If ``True``, the canvas size is automatically updated, e.g.,
+    you can resize the figure window from the shell.
+
+See Also
+--------
+matplotlib.figure.Figure.get_size_inches
+matplotlib.figure.Figure.set_figwidth
+matplotlib.figure.Figure.set_figheight
+
+Notes
+-----
+To transform from pixels to inches divide by `Figure.dpi`."""
         ...
 
     def _iter_axes(self, hidden: Incomplete=False, children: Incomplete=False, panels: Incomplete=True) -> Incomplete:
@@ -2497,6 +3425,14 @@ ultraplot.gridspec.SubplotGrid.gridspec"""
 
     @gridspec.setter
     def gridspec(self, gs: Incomplete) -> None:
+        """The single :class:`~ultraplot.gridspec.GridSpec` instance used for all
+subplots in the figure.
+
+See also
+--------
+ultraplot.figure.Figure.subplotgrid
+ultraplot.gridspec.GridSpec.figure
+ultraplot.gridspec.SubplotGrid.gridspec"""
         ...
 
     def _get_subplot(self, number: int) -> Incomplete:

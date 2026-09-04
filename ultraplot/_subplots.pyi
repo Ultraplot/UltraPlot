@@ -17,17 +17,16 @@ from .internals import _not_none, _pop_params, warnings
 from .figure import Figure
 
 class SubplotManager:
-    """
-    Manages subplot creation, gridspec ownership, and projection parsing
-    for a Figure instance.
+    """Manages subplot creation, gridspec ownership, and projection parsing
+for a Figure instance.
 
-    Parameters
-    ----------
-    figure : `~ultraplot.figure.Figure`
-        The parent figure.
-    """
+Parameters
+----------
+figure : `~ultraplot.figure.Figure`
+    The parent figure."""
 
     def __init__(self, figure: 'Figure') -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def reset(self) -> None:
@@ -45,6 +44,7 @@ longer attached to it."""
 
     @gridspec.setter
     def gridspec(self, gs: Incomplete) -> None:
+        """The single GridSpec used for all subplots in the figure."""
         ...
 
     @staticmethod

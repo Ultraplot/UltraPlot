@@ -24,21 +24,27 @@ def _clear_math_parse_cache() -> None:
     ...
 
 class _UnicodeFonts(UnicodeFonts):
-    """
-    A simple `~matplotlib._mathtext.UnicodeFonts` subclass that
-    interprets ``rc['mathtext.default'] != 'regular'`` in the presence of
-    ``rc['mathtext.fontset'] == 'custom'`` as possibly modifying the active font.
+    """A simple `~matplotlib._mathtext.UnicodeFonts` subclass that
+interprets ``rc['mathtext.default'] != 'regular'`` in the presence of
+``rc['mathtext.fontset'] == 'custom'`` as possibly modifying the active font.
 
-    Works by permitting the ``rc['mathtext.rm']``, ``rc['mathtext.it']``,
-    etc. settings to have the dummy value ``'regular'`` instead of a valid family
-    name, e.g. ``rc['mathtext.it'] == 'regular:italic'`` (permitted through an
-    override of the `~matplotlib.rcsetup.validate_font_properties` validator).
-    When this dummy value is detected then the font properties passed to
-    `~matplotlib._mathtext.TrueTypeFont` are taken by replacing ``'regular'``
-    in the "math" fontset with the active font name.
-    """
+Works by permitting the ``rc['mathtext.rm']``, ``rc['mathtext.it']``,
+etc. settings to have the dummy value ``'regular'`` instead of a valid family
+name, e.g. ``rc['mathtext.it'] == 'regular:italic'`` (permitted through an
+override of the `~matplotlib.rcsetup.validate_font_properties` validator).
+When this dummy value is detected then the font properties passed to
+`~matplotlib._mathtext.TrueTypeFont` are taken by replacing ``'regular'``
+in the "math" fontset with the active font name."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+        """Parameters
+----------
+default_font_prop : `~.font_manager.FontProperties`
+    The default non-math font, or the base font for Unicode (generic)
+    font rendering.
+load_glyph_flags : `.ft2font.LoadFlags`
+    Flags passed to the glyph loader (e.g. ``FT_Load_Glyph`` and
+    ``FT_Load_Char`` for FreeType-based fonts)."""
         ...
 
     def _init_computer_modern_fonts(self, *args: Incomplete, **kwargs: Incomplete) -> None:
@@ -57,6 +63,10 @@ class _UnicodeFonts(UnicodeFonts):
         ...
 
     def get_sized_alternatives_for_symbol(self, fontname: str, sym: str) -> Incomplete:
+        """Override if your font provides multiple sizes of the same
+symbol.  Should return a list of symbols matching *sym* in
+various sizes.  The expression renderer will select the most
+appropriate size for a given situation from this list."""
         ...
 try:
     mapping = MathTextParser._font_type_mapping

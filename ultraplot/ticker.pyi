@@ -42,31 +42,42 @@ def _default_precision_zerotrim(precision: Incomplete=None, zerotrim: Incomplete
     ...
 
 class IndexLocator(mticker.Locator):
-    """
-    Format numbers by assigning fixed strings to non-negative indices. The ticks
-    are restricted to the extent of plotted content when content is present.
-    """
+    """Format numbers by assigning fixed strings to non-negative indices. The ticks
+are restricted to the extent of plotted content when content is present."""
 
     def __init__(self, base: Incomplete=1, offset: Incomplete=0) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def set_params(self, base: Incomplete=None, offset: Incomplete=None) -> None:
+        """Do nothing, and raise a warning. Any locator class not supporting the
+set_params() function will call this."""
         ...
 
     def __call__(self) -> Incomplete:
+        """Return the locations of the ticks."""
         ...
 
     def tick_values(self, vmin: Incomplete, vmax: Incomplete) -> Incomplete:
+        """Return the values of the located ticks given **vmin** and **vmax**.
+
+.. note::
+    To get tick locations with the vmin and vmax values defined
+    automatically for the associated ``axis`` simply call
+    the Locator instance::
+
+        >>> print(type(loc))
+        <type 'Locator'>
+        >>> print(loc())
+        [1, 2, 3, 4]"""
         ...
 
 class DiscreteLocator(mticker.Locator):
-    """
-    A tick locator suitable for discretized colorbars. Adds ticks to some
-    subset of the location list depending on the available space determined from
-    `~matplotlib.axis.Axis.get_tick_space`. Zero will be used if it appears in the
-    location list, and step sizes along the location list are restricted to "nice"
-    intervals by default.
-    """
+    """A tick locator suitable for discretized colorbars. Adds ticks to some
+subset of the location list depending on the available space determined from
+`~matplotlib.axis.Axis.get_tick_space`. Zero will be used if it appears in the
+location list, and step sizes along the location list are restricted to "nice"
+intervals by default."""
     default_params = {'nbins': None, 'minor': False, 'steps': np.array([1, 2, 3, 4, 5, 6, 8, 10]), 'min_n_ticks': 2}
 
     def __init__(self, locs: Incomplete, **kwargs: Incomplete) -> None:
@@ -100,10 +111,8 @@ min_n_ticks : int, default: 1
         ...
 
 class DegreeLocator(mticker.MaxNLocator):
-    """
-    Locate geographic gridlines with degree-minute-second support.
-    Adapted from cartopy.
-    """
+    """Locate geographic gridlines with degree-minute-second support.
+Adapted from cartopy."""
     default_params = mticker.MaxNLocator.default_params.copy()
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
@@ -115,22 +124,40 @@ dms : bool, default: False
         ...
 
     def set_params(self, **kwargs: Incomplete) -> None:
+        """Set parameters for this locator.
+
+Parameters
+----------
+nbins : int or 'auto', optional
+    see `.MaxNLocator`
+steps : array-like, optional
+    see `.MaxNLocator`
+integer : bool, optional
+    see `.MaxNLocator`
+symmetric : bool, optional
+    see `.MaxNLocator`
+prune : {'lower', 'upper', 'both', None}, optional
+    see `.MaxNLocator`
+min_n_ticks : int, optional
+    see `.MaxNLocator`"""
         ...
 
     def _guess_steps(self, vmin: Incomplete, vmax: Incomplete) -> None:
         ...
 
     def _raw_ticks(self, vmin: Incomplete, vmax: Incomplete) -> Incomplete:
+        """Generate a list of tick locations including the range *vmin* to
+*vmax*.  In some applications, one or both of the end locations
+will not be needed, in which case they are trimmed off
+elsewhere."""
         ...
 
     def bin_boundaries(self, vmin: Incomplete, vmax: Incomplete) -> Incomplete:
         ...
 
 class LongitudeLocator(DegreeLocator):
-    """
-    Locate longitude gridlines with degree-minute-second support.
-    Adapted from cartopy.
-    """
+    """Locate longitude gridlines with degree-minute-second support.
+Adapted from cartopy."""
 
     def __init__(self, lon0: Incomplete=0, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
@@ -148,10 +175,8 @@ lon0 : float, default=0
         ...
 
 class LatitudeLocator(DegreeLocator):
-    """
-    Locate latitude gridlines with degree-minute-second support.
-    Adapted from cartopy.
-    """
+    """Locate latitude gridlines with degree-minute-second support.
+Adapted from cartopy."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
@@ -162,19 +187,32 @@ dms : bool, default: False
         ...
 
     def tick_values(self, vmin: Incomplete, vmax: Incomplete) -> Incomplete:
+        """Return the values of the located ticks given **vmin** and **vmax**.
+
+.. note::
+    To get tick locations with the vmin and vmax values defined
+    automatically for the associated ``axis`` simply call
+    the Locator instance::
+
+        >>> print(type(loc))
+        <type 'Locator'>
+        >>> print(loc())
+        [1, 2, 3, 4]"""
         ...
 
     def _guess_steps(self, vmin: Incomplete, vmax: Incomplete) -> None:
         ...
 
     def _raw_ticks(self, vmin: Incomplete, vmax: Incomplete) -> Incomplete:
+        """Generate a list of tick locations including the range *vmin* to
+*vmax*.  In some applications, one or both of the end locations
+will not be needed, in which case they are trimmed off
+elsewhere."""
         ...
 
 class AutoFormatter(mticker.ScalarFormatter):
-    """
-    The default formatter used for ultraplot tick labels.
-    Replaces `~matplotlib.ticker.ScalarFormatter`.
-    """
+    """The default formatter used for ultraplot tick labels.
+Replaces `~matplotlib.ticker.ScalarFormatter`."""
 
     def __init__(self, zerotrim: Incomplete=None, tickrange: Incomplete=None, wraprange: Incomplete=None, prefix: Incomplete=None, suffix: Incomplete=None, negpos: Incomplete=None, **kwargs: Incomplete) -> None:
         """Parameters
@@ -279,11 +317,9 @@ from true floating point precision at which we want to limit string precision.""
         ...
 
 class SimpleFormatter(mticker.Formatter):
-    """
-    A general purpose number formatter. This is similar to `AutoFormatter`
-    but suitable for arbitrary formatting not necessarily associated with
-    an `~matplotlib.axis.Axis` instance.
-    """
+    """A general purpose number formatter. This is similar to `AutoFormatter`
+but suitable for arbitrary formatting not necessarily associated with
+an `~matplotlib.axis.Axis` instance."""
 
     def __init__(self, precision: Incomplete=None, zerotrim: Incomplete=None, tickrange: Incomplete=None, wraprange: Incomplete=None, prefix: Incomplete=None, suffix: Incomplete=None, negpos: Incomplete=None) -> None:
         """Parameters
@@ -324,21 +360,20 @@ pos : float, optional
         ...
 
 class IndexFormatter(mticker.Formatter):
-    """
-    Format numbers by assigning fixed strings to non-negative indices. Generally
-    paired with `IndexLocator` or `~matplotlib.ticker.FixedLocator`.
-    """
+    """Format numbers by assigning fixed strings to non-negative indices. Generally
+paired with `IndexLocator` or `~matplotlib.ticker.FixedLocator`."""
 
     def __init__(self, labels: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, x: Incomplete, pos: Incomplete=None) -> Incomplete:
+        """Return the format for tick value *x* at position pos.
+``pos=None`` indicates an unspecified location."""
         ...
 
 class SciFormatter(mticker.Formatter):
-    """
-    Format numbers with scientific notation.
-    """
+    """Format numbers with scientific notation."""
 
     def __init__(self, precision: Incomplete=None, zerotrim: Incomplete=None) -> None:
         """Parameters
@@ -367,9 +402,7 @@ pos : float, optional
         ...
 
 class SigFigFormatter(mticker.Formatter):
-    """
-    Format numbers by retaining the specified number of significant digits.
-    """
+    """Format numbers by retaining the specified number of significant digits."""
 
     def __init__(self, sigfig: Incomplete=None, zerotrim: Incomplete=None, base: Incomplete=None) -> None:
         """Parameters
@@ -400,10 +433,8 @@ pos : float, optional
         ...
 
 class FracFormatter(mticker.Formatter):
-    """
-    Format numbers as integers or integer fractions. Optionally express the
-    values relative to some constant like `numpy.pi`.
-    """
+    """Format numbers as integers or integer fractions. Optionally express the
+values relative to some constant like `numpy.pi`."""
 
     def __init__(self, symbol: Incomplete='', number: Incomplete=1) -> None:
         """Parameters
@@ -436,9 +467,7 @@ pos : float, optional
         ...
 
 class CFDatetimeFormatter(mticker.Formatter):
-    """
-    Format dates using `cftime.datetime.strftime` format strings.
-    """
+    """Format dates using `cftime.datetime.strftime` format strings."""
 
     def __init__(self, fmt: Incomplete, calendar: Incomplete='standard', units: Incomplete='days since 2000-01-01') -> None:
         """Parameters
@@ -452,18 +481,23 @@ units : str, default: 'days since 2000-01-01'
         ...
 
     def __call__(self, x: Incomplete, pos: Incomplete=None) -> Incomplete:
+        """Return the format for tick value *x* at position pos.
+``pos=None`` indicates an unspecified location."""
         ...
 
 class AutoCFDatetimeFormatter(mticker.Formatter):
     """Automatic formatter for `cftime.datetime` data."""
 
     def __init__(self, locator: Incomplete, calendar: Incomplete, time_units: Incomplete=None) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def pick_format(self, resolution: Incomplete) -> Incomplete:
         ...
 
     def __call__(self, x: Incomplete, pos: Incomplete=0) -> Incomplete:
+        """Return the format for tick value *x* at position pos.
+``pos=None`` indicates an unspecified location."""
         ...
 
 class AutoCFDatetimeLocator(mticker.Locator):
@@ -474,6 +508,7 @@ class AutoCFDatetimeLocator(mticker.Locator):
         real_world_calendars = ()
 
     def __init__(self, maxticks: Incomplete=None, calendar: Incomplete='standard', date_unit: Incomplete=None, minticks: Incomplete=3) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def set_params(self, maxticks: Incomplete=None, minticks: Incomplete=None, max_display_ticks: Incomplete=None) -> None:
@@ -486,9 +521,21 @@ Also updates self.calendar from date1 for consistency."""
         ...
 
     def __call__(self) -> Incomplete:
+        """Return the locations of the ticks."""
         ...
 
     def tick_values(self, vmin: Incomplete, vmax: Incomplete) -> Incomplete:
+        """Return the values of the located ticks given **vmin** and **vmax**.
+
+.. note::
+    To get tick locations with the vmin and vmax values defined
+    automatically for the associated ``axis`` simply call
+    the Locator instance::
+
+        >>> print(type(loc))
+        <type 'Locator'>
+        >>> print(loc())
+        [1, 2, 3, 4]"""
         ...
 
     def _safe_num2date(self, value: Incomplete, vmax: Incomplete=None) -> Incomplete:
@@ -520,21 +567,19 @@ it returns None."""
         ...
 
 class _CartopyFormatter(object):
-    """
-    Mixin class for cartopy formatters.
-    """
+    """Mixin class for cartopy formatters."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, value: Incomplete, pos: Incomplete=None) -> Incomplete:
+        """Call self as a function."""
         ...
 
 class DegreeFormatter(_CartopyFormatter, _PlateCarreeFormatter):
-    """
-    Formatter for longitude and latitude gridline labels.
-    Adapted from cartopy.
-    """
+    """Formatter for longitude and latitude gridline labels.
+Adapted from cartopy."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
@@ -545,17 +590,23 @@ dms : bool, default: False
         ...
 
     def _apply_transform(self, value: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+        """Given a single value, a target projection and a source CRS,
+transform the value from the source CRS to the target
+projection, returning a single value."""
         ...
 
     def _hemisphere(self, value: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+        """Given both a tick value in the Plate Carree projection and the
+same value in the source CRS, return a string indicating the
+hemisphere that the value is in.
+
+Must be over-ridden by the derived class."""
         ...
 
 class LongitudeFormatter(_CartopyFormatter, LongitudeFormatter):
-    """
-    Format longitude gridline labels. Adapted from
-    `cartopy.mpl.ticker.LongitudeFormatter` with support for
-    proper centering based on lon0.
-    """
+    """Format longitude gridline labels. Adapted from
+`cartopy.mpl.ticker.LongitudeFormatter` with support for
+proper centering based on lon0."""
 
     def __init__(self, lon0: Incomplete=0, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
@@ -571,10 +622,8 @@ dms : bool, default: False
         ...
 
 class LatitudeFormatter(_CartopyFormatter, LatitudeFormatter):
-    """
-    Format latitude gridline labels. Adapted from
-    `cartopy.mpl.ticker.LatitudeFormatter`.
-    """
+    """Format latitude gridline labels. Adapted from
+`cartopy.mpl.ticker.LatitudeFormatter`."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
@@ -585,9 +634,7 @@ dms : bool, default: False
         ...
 
 class CFTimeConverter(mdates.DateConverter):
-    """
-    Converter for cftime.datetime data.
-    """
+    """Converter for cftime.datetime data."""
 
     @staticmethod
     def axisinfo(unit: Incomplete, axis: Incomplete) -> Incomplete:

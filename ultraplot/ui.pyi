@@ -9,6 +9,7 @@ from . import axes as paxes
 from . import figure as pfigure
 from . import gridspec as pgridspec
 from ._subplots import SubplotManager
+from .figure import Figure
 from .internals import _not_none, _pop_params, _pop_props, _pop_rc, docstring, ic
 __all__ = ['figure', 'subplot', 'subplots', 'show', 'close', 'switch_backend', 'ion', 'ioff', 'isinteractive']
 _pyplot_docstring = ...
@@ -62,7 +63,7 @@ def isinteractive() -> bool:
 This is included so you don't have to import `~matplotlib.pyplot`."""
     ...
 
-def figure(**kwargs: Incomplete) -> pfigure.Figure:
+def figure(**kwargs: Incomplete) -> Figure:
     """Create an empty figure. Subplots can be subsequently added using
 `~ultraplot.figure.Figure.add_subplot` or `~ultraplot.figure.Figure.subplots`.
 This command is analogous to `matplotlib.pyplot.figure`.
@@ -213,7 +214,7 @@ ultraplot.figure.Figure
 matplotlib.figure.Figure"""
     ...
 
-def subplot(**kwargs: Incomplete) -> tuple[pfigure.Figure, paxes.Axes]:
+def subplot(**kwargs: Incomplete) -> tuple[Figure, paxes.Axes]:
     """Return a figure and a single subplot.
 This command is analogous to `matplotlib.pyplot.subplot`,
 except the figure instance is also returned.
@@ -368,7 +369,7 @@ ultraplot.figure.Figure
 matplotlib.figure.Figure"""
     ...
 
-def subplots(*args: Incomplete, **kwargs: Incomplete) -> tuple[pfigure.Figure, pgridspec.SubplotGrid]:
+def subplots(*args: Incomplete, **kwargs: Incomplete) -> tuple[Figure, pgridspec.SubplotGrid]:
     """Return a figure and an arbitrary grid of subplots.
 This command is analogous to `matplotlib.pyplot.subplots`,
 except the subplots are stored in a :class:`~ultraplot.gridspec.SubplotGrid`.

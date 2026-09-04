@@ -37,7 +37,7 @@ from .. import colors as pcolors
 from .. import constructor
 from .. import legend as plegend
 from .. import ticker as pticker
-from ..colorbar import UltraColorbar, _apply_inset_colorbar_layout, _determine_label_rotation, _get_axis_for, _get_colorbar_long_axis, _legacy_inset_colorbar_bounds, _reflow_inset_colorbar_frame, _register_inset_colorbar_reflow, _solve_inset_colorbar_bounds
+from ..colorbar import UltraColorbar, _anchor_inset_colorbar_bounds, _apply_inset_colorbar_layout, _determine_label_rotation, _get_axis_for, _get_colorbar_long_axis, _legacy_inset_colorbar_bounds, _reflow_inset_colorbar_frame, _register_inset_colorbar_reflow, _solve_inset_colorbar_bounds
 from ..config import rc
 from ..internals import _kwargs_to_args, _not_none, _pop_kwargs, _pop_params, _pop_props, _pop_rc, _translate_loc, _version_mpl, docstring, guides, ic, labels, rcsetup, warnings
 from ..ultralayout import KIWI_AVAILABLE, ColorbarLayoutSolver
@@ -92,35 +92,36 @@ def _get_colorbar_aligned_position(side: Incomplete, align: Incomplete, length: 
     ...
 
 class _TransformedBoundsLocator:
-    """
-    Axes locator for `~Axes.inset_axes` and other axes.
-    """
+    """Axes locator for `~Axes.inset_axes` and other axes."""
 
     def __init__(self, bounds: Incomplete, transform: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, ax: Incomplete, renderer: Incomplete) -> Incomplete:
+        """Call self as a function."""
         ...
 
 class _AspectAwareTransformedBoundsLocator(_TransformedBoundsLocator):
     """Preserve an inset's lower-left anchor after box-aspect adjustment."""
 
     def __call__(self, ax: Incomplete, renderer: Incomplete) -> Incomplete:
+        """Call self as a function."""
         ...
 
 class _SideColorbarLocator:
     """Position a side colorbar beyond its parent axes decorations."""
 
     def __init__(self, parent: Incomplete, side: Incomplete, bounds: Incomplete, pad: Incomplete, previous: Incomplete=()) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, ax: Incomplete, renderer: Incomplete) -> Incomplete:
+        """Call self as a function."""
         ...
 
 class _ExternalModeMixin:
-    """
-    Mixin providing explicit external-mode control and a context manager.
-    """
+    """Mixin providing explicit external-mode control and a context manager."""
 
     def set_external(self, value: Incomplete=True) -> Incomplete:
         """Set explicit external-mode override for this axes.
@@ -133,6 +134,7 @@ value:
     class _ExternalContext:
 
         def __init__(self, ax: Incomplete, value: Incomplete=True) -> None:
+            """Initialize self.  See help(type(self)) for accurate signature."""
             ...
 
         def __enter__(self) -> Incomplete:
@@ -150,18 +152,18 @@ value:
         ...
 
 class Axes(_ExternalModeMixin, maxes.Axes):
-    """
-    The lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
-    Implements basic universal features.
-    """
+    """The lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
+Implements basic universal features."""
     _name = None
     _name_aliases = ()
     _make_inset_locator = _TransformedBoundsLocator
 
     def __repr__(self) -> str:
+        """Return repr(self)."""
         ...
 
     def __str__(self) -> str:
+        """Return str(self)."""
         ...
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
@@ -371,7 +373,7 @@ objects whose data values span a natural colormap range)."""
         """Return the axes and adjusted keyword args for a panel-filling colorbar."""
         ...
 
-    def _parse_colorbar_inset(self, loc: Incomplete=None, width: Incomplete=None, length: Incomplete=None, shrink: Incomplete=None, frame: Incomplete=None, frameon: Incomplete=None, label: Incomplete=None, labelsize: Incomplete=None, pad: Incomplete=None, tickloc: Incomplete=None, ticklocation: Incomplete=None, orientation: Incomplete=None, labelloc: Incomplete=None, labelrotation: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _parse_colorbar_inset(self, loc: Incomplete=None, bbox_to_anchor: Incomplete=None, width: Incomplete=None, length: Incomplete=None, shrink: Incomplete=None, frame: Incomplete=None, frameon: Incomplete=None, label: Incomplete=None, labelsize: Incomplete=None, pad: Incomplete=None, tickloc: Incomplete=None, ticklocation: Incomplete=None, orientation: Incomplete=None, labelloc: Incomplete=None, labelrotation: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Return the axes and adjusted keyword args for an inset colorbar."""
         ...
 
@@ -620,15 +622,131 @@ ultraplot.config.Configurator.context"""
         ...
 
     def draw(self, renderer: Incomplete=None, *args: Incomplete, **kwargs: Incomplete) -> None:
+        """Draw the Artist (and its children) using the given renderer.
+
+This has no effect if the artist is not visible (`.Artist.get_visible`
+returns False).
+
+Parameters
+----------
+renderer : `~matplotlib.backend_bases.RendererBase` subclass.
+
+Notes
+-----
+This method is overridden in the Artist subclasses."""
         ...
 
     def get_tightbbox(self, renderer: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+        """Return the tight bounding box of the Axes, including axis and their
+decorators (xlabel, title, etc).
+
+Artists that have ``artist.set_in_layout(False)`` are not included
+in the bbox.
+
+Parameters
+----------
+renderer : `.RendererBase` subclass
+    renderer that will be used to draw the figures (i.e.
+    ``fig.canvas.get_renderer()``)
+
+bbox_extra_artists : list of `.Artist` or ``None``
+    List of artists to include in the tight bounding box.  If
+    ``None`` (default), then all artist children of the Axes are
+    included in the tight bounding box.
+
+call_axes_locator : bool, default: True
+    If *call_axes_locator* is ``False``, it does not call the
+    ``_axes_locator`` attribute, which is necessary to get the correct
+    bounding box. ``call_axes_locator=False`` can be used if the
+    caller is only interested in the relative size of the tightbbox
+    compared to the Axes bbox.
+
+for_layout_only : default: False
+    The bounding box will *not* include the x-extent of the title and
+    the xlabel, or the y-extent of the ylabel.
+
+Returns
+-------
+`.BboxBase`
+    Bounding box in figure pixel coordinates.
+
+See Also
+--------
+matplotlib.axes.Axes.get_window_extent
+matplotlib.axis.Axis.get_tightbbox
+matplotlib.spines.Spine.get_window_extent"""
         ...
 
     def get_default_bbox_extra_artists(self) -> Incomplete:
+        """Return a default list of artists that are used for the bounding box
+calculation.
+
+Artists are excluded either by not being visible or
+``artist.set_in_layout(False)``."""
         ...
 
     def set_prop_cycle(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+        """Set the property cycle of the Axes.
+
+The property cycle controls the style properties such as color,
+marker and linestyle of future plot commands. The style properties
+of data already added to the Axes are not modified.
+
+Call signatures::
+
+  set_prop_cycle(cycler)
+  set_prop_cycle(label=values, label2=values2, ...)
+  set_prop_cycle(label, values)
+
+Form 1 sets given `~cycler.Cycler` object.
+
+Form 2 creates a `~cycler.Cycler` which cycles over one or more
+properties simultaneously and set it as the property cycle of the
+Axes. If multiple properties are given, their value lists must have
+the same length. This is just a shortcut for explicitly creating a
+cycler and passing it to the function, i.e. it's short for
+``set_prop_cycle(cycler(label=values, label2=values2, ...))``.
+
+Form 3 creates a `~cycler.Cycler` for a single property and set it
+as the property cycle of the Axes. This form exists for compatibility
+with the original `cycler.cycler` interface. Its use is discouraged
+in favor of the kwarg form, i.e. ``set_prop_cycle(label=values)``.
+
+Parameters
+----------
+cycler : `~cycler.Cycler` or ``None``
+    Set the given Cycler. *None* resets to the cycle defined by the
+    current style.
+
+    .. ACCEPTS: `~cycler.Cycler`
+
+label : str
+    The property key. Must be a valid `.Artist` property.
+    For example, 'color' or 'linestyle'. Aliases are allowed,
+    such as 'c' for 'color' and 'lw' for 'linewidth'.
+
+values : iterable
+    Finite-length iterable of the property values. These values
+    are validated and will raise a ValueError if invalid.
+
+See Also
+--------
+matplotlib.rcsetup.cycler
+    Convenience function for creating validated cyclers for properties.
+cycler.cycler
+    The original function for creating unvalidated cyclers.
+
+Examples
+--------
+Setting the property cycle for a single property:
+
+>>> ax.set_prop_cycle(color=['red', 'green', 'blue'])
+
+Setting the property cycle for simultaneously cycling over multiple
+properties (e.g. red circle, green plus, blue cross):
+
+>>> ax.set_prop_cycle(color=['red', 'green', 'blue'],
+...                   marker=['o', '+', 'x'])"""
         ...
 
     def _is_panel_group_member(self, other: 'Axes') -> bool:
@@ -1041,6 +1159,11 @@ align : {'center', 'top', 'bottom', 'left', 'right', 't', 'b', 'l', 'r'}, option
     and ``'left'`` and ``'right'`` are valid for top and bottom colorbars.
     The default is always ``'center'``.
         Has no visible effect if `length` is ``1``.
+    bbox_to_anchor : 2-tuple, 4-tuple, or `matplotlib.transforms.Bbox`, optional
+        For inset colorbars, anchor the full colorbar footprint using the
+        same semantics as `~matplotlib.axes.Axes.legend`. The colorbar
+        `loc` selects the corresponding anchor corner. Outer colorbar
+        placement is unchanged.
     Other parameters
     ----------------
     orientation : {None, 'horizontal', 'vertical'}, optional
@@ -1295,7 +1418,323 @@ handler_map : dict-like, optional
 See also
 --------
 ultraplot.figure.Figure.legend
-matplotlib.axes.Axes.legend"""
+matplotlib.axes.Axes.legend
+
+Matplotlib documentation
+
+
+Place a legend on the Axes.
+
+Call signatures::
+
+    legend()
+    legend(handles, labels)
+    legend(handles=handles)
+    legend(labels)
+
+The call signatures correspond to the following different ways to use
+this method:
+
+**1. Automatic detection of elements to be shown in the legend**
+
+The elements to be added to the legend are automatically determined,
+when you do not pass in any extra arguments.
+
+In this case, the labels are taken from the artist. You can specify
+them either at artist creation or by calling the
+:meth:`~.Artist.set_label` method on the artist::
+
+    ax.plot([1, 2, 3], label='Inline label')
+    ax.legend()
+
+or::
+
+    line, = ax.plot([1, 2, 3])
+    line.set_label('Label via method')
+    ax.legend()
+
+.. note::
+    Specific artists can be excluded from the automatic legend element
+    selection by using a label starting with an underscore, "_".
+    A string starting with an underscore is the default label for all
+    artists, so calling `.Axes.legend` without any arguments and
+    without setting the labels manually will result in a ``UserWarning``
+    and an empty legend being drawn.
+
+
+**2. Explicitly listing the artists and labels in the legend**
+
+For full control of which artists have a legend entry, it is possible
+to pass an iterable of legend artists followed by an iterable of
+legend labels respectively::
+
+    ax.legend([line1, line2, line3], ['label1', 'label2', 'label3'])
+
+
+**3. Explicitly listing the artists in the legend**
+
+This is similar to 2, but the labels are taken from the artists'
+label properties. Example::
+
+    line1, = ax.plot([1, 2, 3], label='label1')
+    line2, = ax.plot([1, 2, 3], label='label2')
+    ax.legend(handles=[line1, line2])
+
+
+**4. Labeling existing plot elements**
+
+.. admonition:: Discouraged
+
+    This call signature is discouraged, because the relation between
+    plot elements and labels is only implicit by their order and can
+    easily be mixed up.
+
+To make a legend for all artists on an Axes, call this function with
+an iterable of strings, one for each legend item. For example::
+
+    ax.plot([1, 2, 3])
+    ax.plot([5, 6, 7])
+    ax.legend(['First line', 'Second line'])
+
+
+Parameters
+----------
+handles : list of (`.Artist` or tuple of `.Artist`), optional
+    A list of Artists (lines, patches) to be added to the legend.
+    Use this together with *labels*, if you need full control on what
+    is shown in the legend and the automatic mechanism described above
+    is not sufficient.
+
+    The length of handles and labels should be the same in this
+    case. If they are not, they are truncated to the smaller length.
+
+    If an entry contains a tuple, then the legend handler for all Artists in the
+    tuple will be placed alongside a single label.
+
+labels : list of str, optional
+    A list of labels to show next to the artists.
+    Use this together with *handles*, if you need full control on what
+    is shown in the legend and the automatic mechanism described above
+    is not sufficient.
+
+Returns
+-------
+`~matplotlib.legend.Legend`
+
+Other Parameters
+----------------
+
+loc : str or pair of floats, default: :rc:`legend.loc`
+    The location of the legend.
+
+    The strings ``'upper left'``, ``'upper right'``, ``'lower left'``,
+    ``'lower right'`` place the legend at the corresponding corner of the
+    axes.
+
+    The strings ``'upper center'``, ``'lower center'``, ``'center left'``,
+    ``'center right'`` place the legend at the center of the corresponding edge
+    of the axes.
+
+    The string ``'center'`` places the legend at the center of the axes.
+
+    The string ``'best'`` places the legend at the location, among the nine
+    locations defined so far, with the minimum overlap with other drawn
+    artists.  This option can be quite slow for plots with large amounts of
+    data; your plotting speed may benefit from providing a specific location.
+
+    The location can also be a 2-tuple giving the coordinates of the lower-left
+    corner of the legend in axes coordinates (in which case *bbox_to_anchor*
+    will be ignored).
+
+    For back-compatibility, ``'center right'`` (but no other location) can also
+    be spelled ``'right'``, and each "string" location can also be given as a
+    numeric value:
+
+    ==================   =============
+    Location String      Location Code
+    ==================   =============
+    'best' (Axes only)   0
+    'upper right'        1
+    'upper left'         2
+    'lower left'         3
+    'lower right'        4
+    'right'              5
+    'center left'        6
+    'center right'       7
+    'lower center'       8
+    'upper center'       9
+    'center'             10
+    ==================   =============
+
+bbox_to_anchor : `.BboxBase`, 2-tuple, or 4-tuple of floats
+    Box that is used to position the legend in conjunction with *loc*.
+    Defaults to ``axes.bbox`` (if called as a method to `.Axes.legend`) or
+    ``figure.bbox`` (if ``figure.legend``).  This argument allows arbitrary
+    placement of the legend.
+
+    Bbox coordinates are interpreted in the coordinate system given by
+    *bbox_transform*, with the default transform
+    Axes or Figure coordinates, depending on which ``legend`` is called.
+
+    If a 4-tuple or `.BboxBase` is given, then it specifies the bbox
+    ``(x, y, width, height)`` that the legend is placed in.
+    To put the legend in the best location in the bottom right
+    quadrant of the Axes (or figure)::
+
+        loc='best', bbox_to_anchor=(0.5, 0., 0.5, 0.5)
+
+    A 2-tuple ``(x, y)`` places the corner of the legend specified by *loc* at
+    x, y.  For example, to put the legend's upper right-hand corner in the
+    center of the Axes (or figure) the following keywords can be used::
+
+        loc='upper right', bbox_to_anchor=(0.5, 0.5)
+
+ncols : int, default: 1
+    The number of columns that the legend has.
+
+    For backward compatibility, the spelling *ncol* is also supported
+    but it is discouraged. If both are given, *ncols* takes precedence.
+
+prop : None or `~matplotlib.font_manager.FontProperties` or dict
+    The font properties of the legend. If None (default), the current
+    :data:`matplotlib.rcParams` will be used.
+
+fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
+    The font size of the legend. If the value is numeric the size will be the
+    absolute font size in points. String values are relative to the current
+    default font size. This argument is only used if *prop* is not specified.
+
+labelcolor : str or list, default: :rc:`legend.labelcolor`
+    The color of the text in the legend. Either a valid color string
+    (for example, 'red'), or a list of color strings. The labelcolor can
+    also be made to match the color of the line or marker using 'linecolor',
+    'markerfacecolor' (or 'mfc'), or 'markeredgecolor' (or 'mec').
+
+    Labelcolor can be set globally using :rc:`legend.labelcolor`. If None,
+    use :rc:`text.color`.
+
+numpoints : int, default: :rc:`legend.numpoints`
+    The number of marker points in the legend when creating a legend
+    entry for a `.Line2D` (line).
+
+scatterpoints : int, default: :rc:`legend.scatterpoints`
+    The number of marker points in the legend when creating
+    a legend entry for a `.PathCollection` (scatter plot).
+
+scatteryoffsets : iterable of floats, default: ``[0.375, 0.5, 0.3125]``
+    The vertical offset (relative to the font size) for the markers
+    created for a scatter plot legend entry. 0.0 is at the base the
+    legend text, and 1.0 is at the top. To draw all markers at the
+    same height, set to ``[0.5]``.
+
+markerscale : float, default: :rc:`legend.markerscale`
+    The relative size of legend markers compared to the originally drawn ones.
+
+markerfirst : bool, default: True
+    If *True*, legend marker is placed to the left of the legend label.
+    If *False*, legend marker is placed to the right of the legend label.
+
+reverse : bool, default: False
+    If *True*, the legend labels are displayed in reverse order from the input.
+    If *False*, the legend labels are displayed in the same order as the input.
+
+    .. versionadded:: 3.7
+
+frameon : bool, default: :rc:`legend.frameon`
+    Whether the legend should be drawn on a patch (frame).
+
+fancybox : bool, default: :rc:`legend.fancybox`
+    Whether round edges should be enabled around the `.FancyBboxPatch` which
+    makes up the legend's background.
+
+shadow : None, bool or dict, default: :rc:`legend.shadow`
+    Whether to draw a shadow behind the legend.
+    The shadow can be configured using `.Patch` keywords.
+    Customization via :rc:`legend.shadow` is currently not supported.
+
+framealpha : float, default: :rc:`legend.framealpha`
+    The alpha transparency of the legend's background.
+    If *shadow* is activated and *framealpha* is ``None``, the default value is
+    ignored.
+
+facecolor : "inherit" or color, default: :rc:`legend.facecolor`
+    The legend's background color.
+    If ``"inherit"``, use :rc:`axes.facecolor`.
+
+edgecolor : "inherit" or color, default: :rc:`legend.edgecolor`
+    The legend's background patch edge color.
+    If ``"inherit"``, use :rc:`axes.edgecolor`.
+
+mode : {"expand", None}
+    If *mode* is set to ``"expand"`` the legend will be horizontally
+    expanded to fill the Axes area (or *bbox_to_anchor* if defines
+    the legend's size).
+
+bbox_transform : None or `~matplotlib.transforms.Transform`
+    The transform for the bounding box (*bbox_to_anchor*). For a value
+    of ``None`` (default) the Axes'
+    :data:`~matplotlib.axes.Axes.transAxes` transform will be used.
+
+title : str or None
+    The legend's title. Default is no title (``None``).
+
+title_fontproperties : None or `~matplotlib.font_manager.FontProperties` or dict
+    The font properties of the legend's title. If None (default), the
+    *title_fontsize* argument will be used if present; if *title_fontsize* is
+    also None, the current :rc:`legend.title_fontsize` will be used.
+
+title_fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}, default: :rc:`legend.title_fontsize`
+    The font size of the legend's title.
+    Note: This cannot be combined with *title_fontproperties*. If you want
+    to set the fontsize alongside other font properties, use the *size*
+    parameter in *title_fontproperties*.
+
+alignment : {'center', 'left', 'right'}, default: 'center'
+    The alignment of the legend title and the box of entries. The entries
+    are aligned as a single block, so that markers always lined up.
+
+borderpad : float, default: :rc:`legend.borderpad`
+    The fractional whitespace inside the legend border, in font-size units.
+
+labelspacing : float, default: :rc:`legend.labelspacing`
+    The vertical space between the legend entries, in font-size units.
+
+handlelength : float, default: :rc:`legend.handlelength`
+    The length of the legend handles, in font-size units.
+
+handleheight : float, default: :rc:`legend.handleheight`
+    The height of the legend handles, in font-size units.
+
+handletextpad : float, default: :rc:`legend.handletextpad`
+    The pad between the legend handle and text, in font-size units.
+
+borderaxespad : float, default: :rc:`legend.borderaxespad`
+    The pad between the Axes and legend border, in font-size units.
+
+columnspacing : float, default: :rc:`legend.columnspacing`
+    The spacing between columns, in font-size units.
+
+handler_map : dict or None
+    The custom dictionary mapping instances or types to a legend
+    handler. This *handler_map* updates the default handler map
+    found at `matplotlib.legend.Legend.get_legend_handler_map`.
+
+draggable : bool, default: False
+    Whether the legend can be dragged with the mouse.
+
+
+See Also
+--------
+.Figure.legend
+
+Notes
+-----
+Some artists are not supported by this function.  See
+:ref:`legend_guide` for details.
+
+Examples
+--------
+.. plot:: gallery/text_labels_and_annotations/legend.py"""
         ...
 
     def add_legend(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -1836,7 +2275,118 @@ fontsize : unit-spec or str, optional
 See also
 --------
 matplotlib.axes.Axes.text
-ultraplot.axes.Axes.auto_align_text"""
+ultraplot.axes.Axes.auto_align_text
+
+Matplotlib documentation
+
+
+Add text to the Axes.
+
+Add the text *s* to the Axes at location *x*, *y* in data coordinates,
+with a default ``horizontalalignment`` on the ``left`` and
+``verticalalignment`` at the ``baseline``. See
+:doc:`/gallery/text_labels_and_annotations/text_alignment`.
+
+Parameters
+----------
+x, y : float
+    The position to place the text. By default, this is in data
+    coordinates. The coordinate system can be changed using the
+    *transform* parameter.
+
+s : str
+    The text.
+
+fontdict : dict, default: None
+
+    .. admonition:: Discouraged
+
+       The use of *fontdict* is discouraged. Parameters should be passed as
+       individual keyword arguments or using dictionary-unpacking
+       ``text(..., **fontdict)``.
+
+    A dictionary to override the default text properties. If fontdict
+    is None, the defaults are determined by `.rcParams`.
+
+Returns
+-------
+`.Text`
+    The created `.Text` instance.
+
+Other Parameters
+----------------
+**kwargs : `~matplotlib.text.Text` properties.
+    Other miscellaneous text parameters.
+
+    Properties:
+    agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
+    alpha: float or None
+    animated: bool
+    antialiased: bool
+    backgroundcolor: :mpltype:`color`
+    bbox: dict with properties for `.patches.FancyBboxPatch`
+    clip_box: unknown
+    clip_on: unknown
+    clip_path: unknown
+    color or c: :mpltype:`color`
+    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    fontfamily or family or fontname: {FONTNAME, 'serif', 'sans-serif', 'cursive', 'fantasy', 'monospace'}
+    fontproperties or font or font_properties: `.font_manager.FontProperties` or `str` or `pathlib.Path`
+    fontsize or size: float or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
+    fontstretch or stretch: {a numeric value in range 0-1000, 'ultra-condensed', 'extra-condensed', 'condensed', 'semi-condensed', 'normal', 'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'}
+    fontstyle or style: {'normal', 'italic', 'oblique'}
+    fontvariant or variant: {'normal', 'small-caps'}
+    fontweight or weight: {a numeric value in range 0-1000, 'ultralight', 'light', 'normal', 'regular', 'book', 'medium', 'roman', 'semibold', 'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'}
+    gid: str
+    horizontalalignment or ha: {'left', 'center', 'right'}
+    in_layout: bool
+    label: object
+    linespacing: float (multiple of font size)
+    math_fontfamily: str
+    mouseover: bool
+    multialignment or ma: {'left', 'right', 'center'}
+    parse_math: bool
+    path_effects: list of `.AbstractPathEffect`
+    picker: None or bool or float or callable
+    position: (float, float)
+    rasterized: bool
+    rotation: float or {'vertical', 'horizontal'}
+    rotation_mode: {None, 'default', 'anchor'}
+    sketch_params: (scale: float, length: float, randomness: float)
+    snap: bool or None
+    text: object
+    transform: `~matplotlib.transforms.Transform`
+    transform_rotates_text: bool
+    url: str
+    usetex: bool, default: :rc:`text.usetex`
+    verticalalignment or va: {'baseline', 'bottom', 'center', 'center_baseline', 'top'}
+    visible: bool
+    wrap: bool
+    x: float
+    y: float
+    zorder: float
+
+Examples
+--------
+Individual keyword arguments can be used to override any given
+parameter::
+
+    >>> text(x, y, s, fontsize=12)
+
+The default transform specifies that text is in data coords,
+alternatively, you can specify text in axis coords ((0, 0) is
+lower-left and (1, 1) is upper-right).  The example below places
+text in the center of the Axes::
+
+    >>> text(0.5, 0.5, 'matplotlib', horizontalalignment='center',
+    ...      verticalalignment='center', transform=ax.transAxes)
+
+You can put a rectangular box around the text instance (e.g., to
+set a background color) by using the keyword *bbox*.  *bbox* is
+a dictionary of `~matplotlib.patches.Rectangle`
+properties.  For example::
+
+    >>> text(x, y, s, bbox=dict(facecolor='red', alpha=0.5))"""
         ...
 
     def _register_align_text(self, obj: Incomplete, avoid_overlap: Incomplete=None) -> Incomplete:
@@ -1910,7 +2460,171 @@ Parameters
 avoid_overlap : bool, default: :rc:`text.align`
     Whether to automatically nudge this annotation at draw time so it
     does not overlap other auto-aligned text or the plotted data. See
-    `~ultraplot.axes.Axes.auto_align_text`."""
+    `~ultraplot.axes.Axes.auto_align_text`.
+
+Matplotlib documentation
+
+
+Annotate the point *xy* with text *text*.
+
+In the simplest form, the text is placed at *xy*.
+
+Optionally, the text can be displayed in another position *xytext*.
+An arrow pointing from the text to the annotated point *xy* can then
+be added by defining *arrowprops*.
+
+Parameters
+----------
+text : str
+    The text of the annotation.
+
+xy : (float, float)
+    The point *(x, y)* to annotate. The coordinate system is determined
+    by *xycoords*.
+
+xytext : (float, float), default: *xy*
+    The position *(x, y)* to place the text at. The coordinate system
+    is determined by *textcoords*.
+
+xycoords : single or two-tuple of str or `.Artist` or `.Transform` or callable, default: 'data'
+
+    The coordinate system that *xy* is given in. The following types
+    of values are supported:
+
+    - One of the following strings:
+
+      ==================== ============================================
+      Value                Description
+      ==================== ============================================
+      'figure points'      Points from the lower left of the figure
+      'figure pixels'      Pixels from the lower left of the figure
+      'figure fraction'    Fraction of figure from lower left
+      'subfigure points'   Points from the lower left of the subfigure
+      'subfigure pixels'   Pixels from the lower left of the subfigure
+      'subfigure fraction' Fraction of subfigure from lower left
+      'axes points'        Points from lower left corner of the Axes
+      'axes pixels'        Pixels from lower left corner of the Axes
+      'axes fraction'      Fraction of Axes from lower left
+      'data'               Use the coordinate system of the object
+                           being annotated (default)
+      'polar'              *(theta, r)* if not native 'data'
+                           coordinates
+      ==================== ============================================
+
+      Note that 'subfigure pixels' and 'figure pixels' are the same
+      for the parent figure, so users who want code that is usable in
+      a subfigure can use 'subfigure pixels'.
+
+    - An `.Artist`: *xy* is interpreted as a fraction of the artist's
+      `~matplotlib.transforms.Bbox`. E.g. *(0, 0)* would be the lower
+      left corner of the bounding box and *(0.5, 1)* would be the
+      center top of the bounding box.
+
+    - A `.Transform` to transform *xy* to screen coordinates.
+
+    - A function with one of the following signatures::
+
+        def transform(renderer) -> Bbox
+        def transform(renderer) -> Transform
+
+      where *renderer* is a `.RendererBase` subclass.
+
+      The result of the function is interpreted like the `.Artist` and
+      `.Transform` cases above.
+
+    - A tuple *(xcoords, ycoords)* specifying separate coordinate
+      systems for *x* and *y*. *xcoords* and *ycoords* must each be
+      of one of the above described types.
+
+    See :ref:`plotting-guide-annotation` for more details.
+
+textcoords : single or two-tuple of str or `.Artist` or `.Transform` or callable, default: value of *xycoords*
+    The coordinate system that *xytext* is given in.
+
+    All *xycoords* values are valid as well as the following strings:
+
+    =================   =================================================
+    Value               Description
+    =================   =================================================
+    'offset points'     Offset, in points, from the *xy* value
+    'offset pixels'     Offset, in pixels, from the *xy* value
+    'offset fontsize'   Offset, relative to fontsize, from the *xy* value
+    =================   =================================================
+
+arrowprops : dict, optional
+    The properties used to draw a `.FancyArrowPatch` arrow between the
+    positions *xy* and *xytext*.  Defaults to None, i.e. no arrow is
+    drawn.
+
+    For historical reasons there are two different ways to specify
+    arrows, "simple" and "fancy":
+
+    **Simple arrow:**
+
+    If *arrowprops* does not contain the key 'arrowstyle' the
+    allowed keys are:
+
+    ==========  =================================================
+    Key         Description
+    ==========  =================================================
+    width       The width of the arrow in points
+    headwidth   The width of the base of the arrow head in points
+    headlength  The length of the arrow head in points
+    shrink      Fraction of total length to shrink from both ends
+    ?           Any `.FancyArrowPatch` property
+    ==========  =================================================
+
+    The arrow is attached to the edge of the text box, the exact
+    position (corners or centers) depending on where it's pointing to.
+
+    **Fancy arrow:**
+
+    This is used if 'arrowstyle' is provided in the *arrowprops*.
+
+    Valid keys are the following `.FancyArrowPatch` parameters:
+
+    ===============  ===================================
+    Key              Description
+    ===============  ===================================
+    arrowstyle       The arrow style
+    connectionstyle  The connection style
+    relpos           See below; default is (0.5, 0.5)
+    patchA           Default is bounding box of the text
+    patchB           Default is None
+    shrinkA          In points. Default is 2 points
+    shrinkB          In points. Default is 2 points
+    mutation_scale   Default is text size (in points)
+    mutation_aspect  Default is 1
+    ?                Any `.FancyArrowPatch` property
+    ===============  ===================================
+
+    The exact starting point position of the arrow is defined by
+    *relpos*. It's a tuple of relative coordinates of the text box,
+    where (0, 0) is the lower left corner and (1, 1) is the upper
+    right corner. Values <0 and >1 are supported and specify points
+    outside the text box. By default (0.5, 0.5), so the starting point
+    is centered in the text box.
+
+annotation_clip : bool or None, default: None
+    Whether to clip (i.e. not draw) the annotation when the annotation
+    point *xy* is outside the Axes area.
+
+    - If *True*, the annotation will be clipped when *xy* is outside
+      the Axes.
+    - If *False*, the annotation will always be drawn.
+    - If *None*, the annotation will be clipped when *xy* is outside
+      the Axes and *xycoords* is 'data'.
+
+**kwargs
+    Additional kwargs are passed to `.Text`.
+
+Returns
+-------
+`.Annotation`
+
+See Also
+--------
+:ref:`annotations`"""
         ...
 
     def curvedtext(self, x: Incomplete, y: Incomplete, text: Incomplete, *, upright: Incomplete=None, ellipsis: Incomplete=None, avoid_overlap: Incomplete=None, overlap_tol: Incomplete=None, curvature_pad: Incomplete=None, min_advance: Incomplete=None, border: Incomplete=False, bbox: Incomplete=False, bordercolor: Incomplete='w', borderwidth: Incomplete=2, borderinvert: Incomplete=False, borderstyle: Incomplete='miter', bboxcolor: Incomplete='w', bboxstyle: Incomplete='round', bboxalpha: Incomplete=0.5, bboxpad: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
@@ -2021,6 +2735,9 @@ by `~ultraplot.figure.Figure.subplots`."""
 
     @number.setter
     def number(self, num: Incomplete) -> None:
+        """The axes number. This controls the order of a-b-c labels and the
+order of appearance in the :class:`~ultraplot.gridspec.SubplotGrid` returned
+by `~ultraplot.figure.Figure.subplots`."""
         ...
 
     @property
@@ -2033,6 +2750,10 @@ Initialized from :rcraw:`axes.sticky_edges`."""
 
     @use_sticky_edges.setter
     def use_sticky_edges(self, value: Incomplete) -> None:
+        """Whether plotting commands like `plot`, `plotx`, `vlines`, `hlines`,
+`fill_between`, and `fill_betweenx` add "sticky" edges to their artists,
+i.e. whether the default axis limits are the artist bounds with no padding.
+Initialized from :rcraw:`axes.sticky_edges`."""
         ...
 
 def _get_pos_from_locator(loc: str, x_pad: float, y_pad: float) -> tuple[float, float]:

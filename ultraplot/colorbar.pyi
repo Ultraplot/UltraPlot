@@ -32,11 +32,10 @@ class _TextKw:
     kw_ticklabels: ColorbarTickKw
 
 class UltraColorbar:
-    """
-    Centralized colorbar builder for axes.
-    """
+    """Centralized colorbar builder for axes."""
 
     def __init__(self, axes: maxes.Axes) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def add(self, mappable: Any, values: Optional[Iterable[float]]=None, *, loc: Optional[str]=None, align: Optional[str]=None, space: Optional[Union[float, str]]=None, pad: Optional[Union[float, str]]=None, width: Optional[Union[float, str]]=None, length: Optional[Union[float, str]]=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, shrink: Optional[Union[float, str]]=None, label: Optional[str]=None, title: Optional[str]=None, reverse: bool=False, rotation: Optional[float]=None, grid: Optional[bool]=None, edges: Optional[bool]=None, drawedges: Optional[bool]=None, extend: Optional[str]=None, extendsize: Optional[Union[float, str]]=None, extendfrac: Optional[float]=None, ticks: Optional[Iterable[float]]=None, locator: Optional[Any]=None, locator_kw: Optional[dict[str, Any]]=None, format: Optional[str]=None, formatter: Optional[Any]=None, ticklabels: Optional[Iterable[str]]=None, formatter_kw: Optional[dict[str, Any]]=None, minorticks: Optional[bool]=None, minorlocator: Optional[Any]=None, minorlocator_kw: Optional[dict[str, Any]]=None, tickminor: Optional[bool]=None, ticklen: Optional[Union[float, str]]=None, ticklenratio: Optional[float]=None, tickdir: Optional[str]=None, tickdirection: Optional[str]=None, tickwidth: Optional[Union[float, str]]=None, tickwidthratio: Optional[float]=None, ticklabelsize: Optional[float]=None, ticklabelweight: Optional[str]=None, ticklabelcolor: Optional[str]=None, labelloc: Optional[str]=None, labellocation: Optional[str]=None, labelsize: Optional[float]=None, labelweight: Optional[str]=None, labelcolor: Optional[str]=None, c: Optional[str]=None, color: Optional[str]=None, lw: Optional[Union[float, str]]=None, linewidth: Optional[Union[float, str]]=None, edgefix: Optional[bool]=None, rasterized: Optional[bool]=None, frame: Optional[bool]=None, frameon: Optional[bool]=None, outline: Union[bool, None]=None, labelrotation: Optional[Union[str, float]]=None, center_levels: Optional[bool]=None, **kwargs: Incomplete) -> mcolorbar.Colorbar:
@@ -89,6 +88,10 @@ def _register_inset_colorbar_reflow(fig: mfigure.Figure) -> None:
     ...
 
 def _solve_inset_colorbar_bounds(*, axes: maxes.Axes, loc: str, orientation: str, length: float, width: float, xpad: float, ypad: float, ticklocation: str, labelloc: Optional[str], label: Optional[str], labelrotation: Optional[Union[str, float]], tick_fontsize: float, label_fontsize: float) -> Tuple[list[float], list[float]]:
+    ...
+
+def _anchor_inset_colorbar_bounds(bounds_inset: list[float], bounds_frame: list[float], loc: str, bbox_to_anchor: Incomplete) -> Tuple[list[float], list[float]]:
+    """Align an inset colorbar footprint to a legend-style anchor box."""
     ...
 
 def _legacy_inset_colorbar_bounds(*, axes: maxes.Axes, loc: str, orientation: str, length: float, width: float, xpad: float, ypad: float, ticklocation: str, labelloc: Optional[str], label: Optional[str], labelrotation: Optional[Union[str, float]], tick_fontsize: float, label_fontsize: float) -> Tuple[list[float], list[float]]:

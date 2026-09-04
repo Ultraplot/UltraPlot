@@ -16,10 +16,8 @@ except ImportError:
     from typing_extensions import override
 
 class _SharedAxes(object):
-    """
-    Mix-in class with methods shared between `~ultraplot.axes.CartesianAxes`
-    and :class:`~ultraplot.axes.PolarAxes`.
-    """
+    """Mix-in class with methods shared between `~ultraplot.axes.CartesianAxes`
+and :class:`~ultraplot.axes.PolarAxes`."""
 
     @staticmethod
     def _min_max_lim(key: Incomplete, min_: Incomplete=None, max_: Incomplete=None, lim: Incomplete=None) -> Incomplete:

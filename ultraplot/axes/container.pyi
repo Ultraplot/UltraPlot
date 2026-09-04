@@ -18,48 +18,46 @@ __all__ = ['ExternalAxesContainer']
 _ABOVE_AXES_TITLE_LOCS = {'left', 'center', 'right'}
 
 class ExternalAxesContainer(CartesianAxes):
-    """
-    Container axes that wraps an external axes instance.
+    """Container axes that wraps an external axes instance.
 
-    This class inherits from ultraplot's CartesianAxes and creates/manages an external
-    axes as a child. It provides ultraplot's interface while delegating
-    drawing and interaction to the wrapped external axes.
+This class inherits from ultraplot's CartesianAxes and creates/manages an external
+axes as a child. It provides ultraplot's interface while delegating
+drawing and interaction to the wrapped external axes.
 
-    Parameters
-    ----------
-    *args
-        Positional arguments passed to Axes.__init__
-    external_axes_class : type
-        The external axes class to instantiate (e.g., mpltern.TernaryAxes)
-    external_axes_kwargs : dict, optional
-        Keyword arguments to pass to the external axes constructor
-    external_shrink_factor : float, optional, default: :rc:`external.shrink`
-        The factor by which to shrink the external axes within the container
-        to leave room for labels. For ternary plots, labels extend significantly
-        beyond the plot area, so a value of 0.90 (10% padding) helps prevent
-        overlap with adjacent subplots while keeping the axes large.
-    external_padding : float, optional, default: 5.0
-        Padding in points to add around the external axes tight bbox. This creates
-        space between the external axes and adjacent subplots, preventing overlap
-        with tick labels or other elements. Set to 0 to disable padding.
-    **kwargs
-        Keyword arguments passed to Axes.__init__
+Parameters
+----------
+*args
+    Positional arguments passed to Axes.__init__
+external_axes_class : type
+    The external axes class to instantiate (e.g., mpltern.TernaryAxes)
+external_axes_kwargs : dict, optional
+    Keyword arguments to pass to the external axes constructor
+external_shrink_factor : float, optional, default: :rc:`external.shrink`
+    The factor by which to shrink the external axes within the container
+    to leave room for labels. For ternary plots, labels extend significantly
+    beyond the plot area, so a value of 0.90 (10% padding) helps prevent
+    overlap with adjacent subplots while keeping the axes large.
+external_padding : float, optional, default: 5.0
+    Padding in points to add around the external axes tight bbox. This creates
+    space between the external axes and adjacent subplots, preventing overlap
+    with tick labels or other elements. Set to 0 to disable padding.
+**kwargs
+    Keyword arguments passed to Axes.__init__
 
-    Notes
-    -----
-    When using external axes containers with multiple subplots, the external axes
-    (e.g., ternary plots) are automatically shrunk to prevent label overlap with
-    adjacent subplots. If you still experience overlap, you can:
+Notes
+-----
+When using external axes containers with multiple subplots, the external axes
+(e.g., ternary plots) are automatically shrunk to prevent label overlap with
+adjacent subplots. If you still experience overlap, you can:
 
-    1. Increase spacing with ``wspace`` or ``hspace`` in subplots()
-    2. Decrease ``external_shrink_factor`` (more aggressive shrinking)
-    3. Use tight_layout or constrained_layout for automatic spacing
+1. Increase spacing with ``wspace`` or ``hspace`` in subplots()
+2. Decrease ``external_shrink_factor`` (more aggressive shrinking)
+3. Use tight_layout or constrained_layout for automatic spacing
 
-    Example: ``uplt.subplots(ncols=2, projection=('ternary', None), wspace=5)``
+Example: ``uplt.subplots(ncols=2, projection=('ternary', None), wspace=5)``
 
-    To reduce padding between external axes and adjacent subplots, use:
-    ``external_padding=2`` or ``external_padding=0`` to disable padding entirely.
-    """
+To reduce padding between external axes and adjacent subplots, use:
+``external_padding=2`` or ``external_padding=0`` to disable padding entirely."""
     _EXTERNAL_DELEGATE_BLOCKLIST = {'format', 'colorbar', 'legend', 'set_title'}
 
     def __init__(self, *args: Incomplete, external_axes_class: Incomplete=None, external_axes_kwargs: Incomplete=None, **kwargs: Incomplete) -> None:
@@ -93,9 +91,12 @@ allocated space and overlap with adjacent subplots."""
         ...
 
     def _reposition_subplot(self) -> None:
+        """Reposition the subplot axes."""
         ...
 
     def _update_title_position(self, renderer: Incomplete) -> None:
+        """Update the position of inset titles and outer titles. This is called
+by matplotlib at drawtime."""
         ...
 
     def _title_reserves_external_space(self, loc: Incomplete) -> bool:

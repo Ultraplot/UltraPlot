@@ -8,36 +8,43 @@ from . import ic
 from . import warnings
 
 class _version(list):
-    """
-    Casual parser for ``major.minor`` style version strings. We do not want to
-    add a 'packaging' dependency and only care about major and minor tags.
-    """
+    """Casual parser for ``major.minor`` style version strings. We do not want to
+add a 'packaging' dependency and only care about major and minor tags."""
 
     def __str__(self) -> str:
+        """Return str(self)."""
         ...
 
     def __repr__(self) -> str:
+        """Return repr(self)."""
         ...
 
     def __init__(self, version: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __eq__(self, other: Incomplete) -> bool:
+        """Return self==value."""
         ...
 
     def __ne__(self, other: Incomplete) -> bool:
+        """Return self!=value."""
         ...
 
     def __gt__(self, other: Incomplete) -> bool:
+        """Return self>value."""
         ...
 
     def __lt__(self, other: Incomplete) -> bool:
+        """Return self<value."""
         ...
 
     def __ge__(self, other: Incomplete) -> bool:
+        """Return self>=value."""
         ...
 
     def __le__(self, other: Incomplete) -> bool:
+        """Return self<=value."""
         ...
 import matplotlib
 _version_mpl = _version(matplotlib.__version__)

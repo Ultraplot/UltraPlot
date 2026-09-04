@@ -136,3 +136,48 @@ def test_root_stub_exposes_lazy_public_imports():
 
     assert source_names
     assert not source_names - stub_names
+
+
+def test_generated_stubs_include_runtime_docstrings():
+    plot_stub = PACKAGE / "axes" / "plot.pyi"
+    plot_tree = ast.parse(plot_stub.read_text(encoding="utf-8"))
+    plot_doc = ""
+    for node in ast.walk(plot_tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "plot":
+            plot_doc = ast.get_docstring(node) or ""
+            break
+    assert "Matplotlib documentation" in plot_doc
+    assert "Plot standard lines" in plot_doc
+    assert "=====================\nultraplot documentation" not in plot_doc
+
+    grid_stub = PACKAGE / "gridspec.pyi"
+    grid_tree = ast.parse(grid_stub.read_text(encoding="utf-8"))
+    twiny_doc = ""
+    for node in ast.walk(grid_tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "twiny":
+            twiny_doc = ast.get_docstring(node) or ""
+            break
+    assert "for every axes in the grid" in twiny_doc
+
+
+def test_subplot_grid_stub_preserves_axes_indexing_chain():
+    """Integer indexing must lead static analyzers from a grid to an axes."""
+    grid_stub = PACKAGE / "gridspec.pyi"
+    tree = ast.parse(grid_stub.read_text(encoding="utf-8"))
+    grid = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "SubplotGrid"
+    )
+    assert "paxes.PlotAxes" in {ast.unparse(base) for base in grid.bases}
+    getitems = [
+        node
+        for node in grid.body
+        if isinstance(node, ast.FunctionDef) and node.name == "__getitem__"
+    ]
+    assert len(getitems) >= 2
+    assert any(
+        ast.unparse(node.args.args[1].annotation) == "int"
+        and ast.unparse(node.returns) == "paxes.Axes"
+        for node in getitems
+    )

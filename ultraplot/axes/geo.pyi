@@ -60,9 +60,11 @@ class _AnchoredInsetLocator:
     """Locate an inset by anchoring one of its points to a parent coordinate."""
 
     def __init__(self, parent: Incomplete, xy: Incomplete, size: Incomplete, transform: Incomplete, anchor: Incomplete, square: Incomplete=False) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, ax: Incomplete, renderer: Incomplete) -> Incomplete:
+        """Call self as a function."""
         ...
 _HAWKEYE_TRANSFORM_NAMES = frozenset({'axes', 'data', 'figure', 'subfigure', 'map'})
 
@@ -170,18 +172,16 @@ matplotlib >= 3.10 the ``InsetIndicator`` resolves its connectors in its own
 
 @dataclass
 class _HawkeyeSpec:
-    """
-    Validated inputs for :meth:`GeoAxes.hawkeye`.
+    """Validated inputs for :meth:`GeoAxes.hawkeye`.
 
-    ``extent_transform`` and ``relation`` are only fully resolved when ``extent``
-    is not ``None`` (they require a geographic extent to normalize and infer);
-    otherwise they retain their raw defaults and are never consumed. ``aspect`` is
-    intentionally not stored here because ``'projection'`` can only be resolved
-    from the live inset axes (see :meth:`GeoAxes._build_hawkeye_inset`). When
-    ``anchor_transform`` is not ``None`` the ``anchor`` is a geographic/projected
-    point rather than an axes fraction; it is converted to a fraction against the
-    live inset view limits in :meth:`GeoAxes._build_hawkeye_inset`.
-    """
+``extent_transform`` and ``relation`` are only fully resolved when ``extent``
+is not ``None`` (they require a geographic extent to normalize and infer);
+otherwise they retain their raw defaults and are never consumed. ``aspect`` is
+intentionally not stored here because ``'projection'`` can only be resolved
+from the live inset axes (see :meth:`GeoAxes._build_hawkeye_inset`). When
+``anchor_transform`` is not ``None`` the ``anchor`` is a geographic/projected
+point rather than an axes fraction; it is converted to a fraction against the
+live inset view limits in :meth:`GeoAxes._build_hawkeye_inset`."""
     xy: tuple[float, float]
     size: tuple[float, float]
     anchor: tuple[float, float]
@@ -206,9 +206,7 @@ _hawkeye_docstring = ...
 _choropleth_docstring = ...
 
 class _GeoLabel(object):
-    """
-    Optionally omit overlapping check if an rc setting is disabled.
-    """
+    """Optionally omit overlapping check if an rc setting is disabled."""
 
     def check_overlapping(self, *args: Any, **kwargs: Any) -> bool:
         ...
@@ -218,9 +216,7 @@ if cgridliner is not None and hasattr(cgridliner, 'Label'):
         """Label class with configurable overlap checks."""
 
     class _CartopyGridliner(cgridliner.Gridliner):
-        """
-        Gridliner subclass to localize cartopy quirks in one place.
-        """
+        """Gridliner subclass to localize cartopy quirks in one place."""
         LabelClass = _CartopyLabel
 
         def _generate_labels(self) -> Iterator[_CartopyLabel]:
@@ -228,21 +224,31 @@ if cgridliner is not None and hasattr(cgridliner, 'Label'):
             ...
 
         def _axes_domain(self, *args: Any, **kwargs: Any) -> tuple[Any, Any]:
+            """Return lon_range, lat_range"""
             ...
 
         def _draw_gridliner(self, *args: Any, **kwargs: Any) -> Any:
+            """Create Artists for all visible elements and add to our Axes.
+
+The following rules apply for the visibility of labels:
+
+- X-type labels are plotted along the bottom, top and geo spines.
+- Y-type labels are plotted along the left, right and geo spines.
+- A label must not overlap another label marked as visible.
+- A label must not overlap the map boundary.
+- When a label is about to be hidden, its padding is slightly
+  increase until it can be drawn or until a padding limit is reached."""
             ...
 else:
     _CartopyGridliner = None
 
 class _GeoAxis(object):
-    """
-    Dummy axis used by longitude and latitude locators and for storing view limits on
-    longitude and latitude coordinates. Modeled after how `matplotlib.ticker._DummyAxis`
-    and `matplotlib.ticker.TickHelper` are used to control tick locations and labels.
-    """
+    """Dummy axis used by longitude and latitude locators and for storing view limits on
+longitude and latitude coordinates. Modeled after how `matplotlib.ticker._DummyAxis`
+and `matplotlib.ticker.TickHelper` are used to control tick locations and labels."""
 
     def __init__(self, axes: 'GeoAxes') -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _get_extent(self) -> tuple[float, float, float, float]:
@@ -291,11 +297,9 @@ used when the @self is sharing with @other."""
         ...
 
 class _GridlinerAdapter(Protocol):
-    """
-    Lightweight facade used to normalize cartopy and basemap gridliner behavior.
-    These adapters let GeoAxes apply gridline label toggles and styles without
-    backend-specific branching.
-    """
+    """Lightweight facade used to normalize cartopy and basemap gridliner behavior.
+These adapters let GeoAxes apply gridline label toggles and styles without
+backend-specific branching."""
 
     def labels_for_sides(self, *, bottom: bool | str | None=None, top: bool | str | None=None, left: bool | str | None=None, right: bool | str | None=None) -> dict[str, list[mtext.Text]]:
         ...
@@ -313,10 +317,8 @@ class _GridlinerAdapter(Protocol):
         ...
 
 class _CartopyGridlinerProtocol(Protocol):
-    """
-    Structural protocol for the subset of cartopy Gridliner attributes we use.
-    This keeps type hints tight without importing cartopy at runtime.
-    """
+    """Structural protocol for the subset of cartopy Gridliner attributes we use.
+This keeps type hints tight without importing cartopy at runtime."""
     collection_kwargs: dict[str, Any]
     xlabel_style: dict[str, Any]
     ylabel_style: dict[str, Any]
@@ -344,12 +346,11 @@ class _CartopyGridlinerProtocol(Protocol):
         ...
 
 class _CartopyGridlinerAdapter(_GridlinerAdapter):
-    """
-    Adapter for cartopy's Gridliner, translating common label/style operations
-    into the Gridliner API while hiding cartopy version differences.
-    """
+    """Adapter for cartopy's Gridliner, translating common label/style operations
+into the Gridliner API while hiding cartopy version differences."""
 
     def __init__(self, gridliner: Optional[_CartopyGridlinerProtocol]) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @staticmethod
@@ -372,12 +373,11 @@ class _CartopyGridlinerAdapter(_GridlinerAdapter):
         ...
 
 class _BasemapGridlinerAdapter(_GridlinerAdapter):
-    """
-    Adapter for basemap meridian/parallel dictionaries, emulating the subset
-    of cartopy Gridliner behavior needed by GeoAxes (labels, toggles, styling).
-    """
+    """Adapter for basemap meridian/parallel dictionaries, emulating the subset
+of cartopy Gridliner behavior needed by GeoAxes (labels, toggles, styling)."""
 
     def __init__(self, lonlines: GridlineDict | None, latlines: GridlineDict | None) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def labels_for_sides(self, *, bottom: bool | str | None=None, top: bool | str | None=None, left: bool | str | None=None, right: bool | str | None=None) -> dict[str, list[mtext.Text]]:
@@ -396,12 +396,11 @@ class _BasemapGridlinerAdapter(_GridlinerAdapter):
         ...
 
 class _LonAxis(_GeoAxis):
-    """
-    Axis with default longitude locator.
-    """
+    """Axis with default longitude locator."""
     axis_name = 'lon'
 
     def __init__(self, axes: 'GeoAxes') -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _get_ticklocs(self, locator: mticker.Locator) -> np.ndarray:
@@ -411,12 +410,11 @@ class _LonAxis(_GeoAxis):
         ...
 
 class _LatAxis(_GeoAxis):
-    """
-    Axis with default latitude locator.
-    """
+    """Axis with default latitude locator."""
     axis_name = 'lat'
 
     def __init__(self, axes: 'GeoAxes', latmax: float=90) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _get_ticklocs(self, locator: mticker.Locator) -> np.ndarray:
@@ -445,31 +443,29 @@ include_false
     ...
 
 class GeoAxes(shared._SharedAxes, plot.PlotAxes):
-    """
-    Axes subclass for plotting in geographic projections. Uses either cartopy
-    or basemap as a "backend".
+    """Axes subclass for plotting in geographic projections. Uses either cartopy
+or basemap as a "backend".
 
-    Note
-    ----
-    This subclass uses longitude and latitude as the default coordinate system for all
-    plotting commands by internally passing ``transform=cartopy.crs.PlateCarree()`` to
-    cartopy commands and ``latlon=True`` to basemap commands. Also, when using basemap
-    as the "backend", plotting is still done "cartopy-style" by calling methods from
-    the axes instance rather than the `~mpl_toolkits.basemap.Basemap` instance.
+Note
+----
+This subclass uses longitude and latitude as the default coordinate system for all
+plotting commands by internally passing ``transform=cartopy.crs.PlateCarree()`` to
+cartopy commands and ``latlon=True`` to basemap commands. Also, when using basemap
+as the "backend", plotting is still done "cartopy-style" by calling methods from
+the axes instance rather than the `~mpl_toolkits.basemap.Basemap` instance.
 
-    Important
-    ---------
-    This axes subclass can be used by passing ``proj='proj_name'``
-    to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
-    `~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`,
-    where ``proj_name`` is a registered :ref:`PROJ projection name <proj_table>`.
-    You can also pass a `~cartopy.crs.Projection` or `~mpl_toolkits.basemap.Basemap`
-    instance instead of a projection name. Alternatively, you can pass any of the
-    matplotlib-recognized axes subclass names ``proj='cartopy'``, ``proj='geo'``, or
-    ``proj='geographic'`` with a `~cartopy.crs.Projection` `map_projection` keyword
-    argument, or pass ``proj='basemap'`` with a `~mpl_toolkits.basemap.Basemap`
-    `map_projection` keyword argument.
-    """
+Important
+---------
+This axes subclass can be used by passing ``proj='proj_name'``
+to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
+`~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`,
+where ``proj_name`` is a registered :ref:`PROJ projection name <proj_table>`.
+You can also pass a `~cartopy.crs.Projection` or `~mpl_toolkits.basemap.Basemap`
+instance instead of a projection name. Alternatively, you can pass any of the
+matplotlib-recognized axes subclass names ``proj='cartopy'``, ``proj='geo'``, or
+``proj='geographic'`` with a `~cartopy.crs.Projection` `map_projection` keyword
+argument, or pass ``proj='basemap'`` with a `~mpl_toolkits.basemap.Basemap`
+`map_projection` keyword argument."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Parameters
@@ -859,6 +855,7 @@ projected coordinates."""
 
     @override
     def _sharex_setup(self, sharex: 'GeoAxes', *, labels: bool=True, limits: bool=True) -> None:
+        """Configure x-axis sharing for panels. See also `~CartesianAxes._sharex_setup`."""
         ...
 
     def _toggle_ticks(self, label: Any, which: str) -> None:
@@ -981,6 +978,18 @@ geo : optional
 
     @override
     def draw(self, renderer: Any=None, *args: Any, **kwargs: Any) -> None:
+        """Draw the Artist (and its children) using the given renderer.
+
+This has no effect if the artist is not visible (`.Artist.get_visible`
+returns False).
+
+Parameters
+----------
+renderer : `~matplotlib.backend_bases.RendererBase` subclass.
+
+Notes
+-----
+This method is overridden in the Artist subclasses."""
         ...
 
     def _get_lonticklocs(self, which: str='major') -> np.ndarray:
@@ -1433,12 +1442,12 @@ instance associated with this axes."""
 
     @projection.setter
     def projection(self, map_projection: Any) -> None:
+        """The cartopy `~cartopy.crs.Projection` or basemap `~mpl_toolkits.basemap.Basemap`
+instance associated with this axes."""
         ...
 
 class _CartopyAxes(GeoAxes, _GeoAxes):
-    """
-    Axes subclass for plotting cartopy projections.
-    """
+    """Axes subclass for plotting cartopy projections."""
     _name = 'cartopy'
     _name_aliases = ('geo', 'geographic')
     _proj_class = Projection
@@ -1515,6 +1524,11 @@ projections. This was developed from `this cartopy example     <https://cartopy.
         ...
 
     def get_extent(self, crs: Any=None) -> Sequence[float]:
+        """Get the extent (x0, x1, y0, y1) of the map in the given coordinate
+system.
+
+If no crs is given, the returned extents' coordinate system will be
+the CRS of this Axes."""
         ...
 
     @override
@@ -1527,18 +1541,40 @@ after the main axes has applied its aspect but before the panel axes are drawn."
         ...
 
     def get_tightbbox(self, renderer: Any, *args: Any, **kwargs: Any) -> Any:
+        """Extend the standard behaviour of
+:func:`matplotlib.axes.Axes.get_tightbbox`.
+
+Adjust the axes aspect ratio and background patch location before
+calculating the tight bounding box."""
         ...
 
     def set_extent(self, extent: Sequence[float], crs: Any=None) -> Any:
+        """Set the extent (x0, x1, y0, y1) of the map in the given
+coordinate system.
+
+If no crs is given, the extents' coordinate system will be assumed
+to be the Geodetic version of this axes' projection.
+
+Parameters
+----------
+extents
+    Tuple of floats representing the required extent (x0, x1, y0, y1)."""
         ...
 
     def set_global(self) -> Any:
+        """Set the extent of the Axes to the limits of the projection.
+
+Note
+----
+    In some cases where the projection has a limited sensible range
+    the ``set_global`` method does not actually make the whole globe
+    visible. Instead, the most appropriate extents will be used (e.g.
+    Ordnance Survey UK will set the extents to be around the British
+    Isles."""
         ...
 
 class _BasemapAxes(GeoAxes):
-    """
-    Axes subclass for plotting basemap projections.
-    """
+    """Axes subclass for plotting basemap projections."""
     _name = 'basemap'
     _proj_class = Basemap
     _proj_north = ('npaeqd', 'nplaea', 'npstere')

@@ -27,21 +27,20 @@ _MISSING = object()
 _OPAQUE_TICKER_TYPES = frozenset(('FuncFormatter', 'FuncScale', 'FuncScaleLog'))
 
 class _SelectiveDrawManager:
-    """
-    Retain safe draw layers and bypass unchanged Matplotlib traversal.
+    """Retain safe draw layers and bypass unchanged Matplotlib traversal.
 
-    Multi-axes figures retain each complete axes as one layer. Single Cartesian
-    axes retain the stable draw-order prefix below their first clipped numeric
-    line, then redraw that line and every later artist as an exact z-order suffix.
-    Unknown stale artists, geometry changes, overlapping layers, unsupported
-    artist orders, and export draws fall back to a complete draw. The first display
-    is always untouched; a later complete draw primes the retained layers.
-    """
+Multi-axes figures retain each complete axes as one layer. Single Cartesian
+axes retain the stable draw-order prefix below their first clipped numeric
+line, then redraw that line and every later artist as an exact z-order suffix.
+Unknown stale artists, geometry changes, overlapping layers, unsupported
+artist orders, and export draws fall back to a complete draw. The first display
+is always untouched; a later complete draw primes the retained layers."""
     _data_artist_types = (mlines.Line2D, mcollections.Collection, mimage.AxesImage)
     _region_pad = 2
     _min_axes_for_view_redraw = 3
 
     def __init__(self, canvas: Incomplete, figure: Incomplete=None) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @staticmethod
@@ -209,31 +208,30 @@ clears every painted pixel by ``_region_pad`` on all sides."""
         ...
 
 class _BlitManager:
-    """
-    Manage efficient updates of a small set of changing artists.
+    """Manage efficient updates of a small set of changing artists.
 
-    The manager caches the static canvas background, restores it for each
-    update, redraws only the managed artists, and blits the affected region.
-    Backends without blitting support safely fall back to ``draw_idle()``.
+The manager caches the static canvas background, restores it for each
+update, redraws only the managed artists, and blits the affected region.
+Backends without blitting support safely fall back to ``draw_idle()``.
 
-    Parameters
-    ----------
-    canvas : `~matplotlib.backend_bases.FigureCanvasBase`
-        Canvas containing the artists.
-    artists : iterable of `~matplotlib.artist.Artist`, optional
-        Artists that will change between updates.
-    bbox : `~matplotlib.transforms.Bbox` or object with a ``bbox`` attribute, optional
-        Region to cache and blit. By default, the union of the managed artists'
-        axes bounding boxes is used. Figure-level artists fall back to the full
-        figure bounding box.
+Parameters
+----------
+canvas : `~matplotlib.backend_bases.FigureCanvasBase`
+    Canvas containing the artists.
+artists : iterable of `~matplotlib.artist.Artist`, optional
+    Artists that will change between updates.
+bbox : `~matplotlib.transforms.Bbox` or object with a ``bbox`` attribute, optional
+    Region to cache and blit. By default, the union of the managed artists'
+    axes bounding boxes is used. Figure-level artists fall back to the full
+    figure bounding box.
 
-    Notes
-    -----
-    Managed artists are drawn above the cached static background, matching
-    Matplotlib's standard blitting behavior.
-    """
+Notes
+-----
+Managed artists are drawn above the cached static background, matching
+Matplotlib's standard blitting behavior."""
 
     def __init__(self, canvas: Incomplete, artists: Iterable[martist.Artist]=(), bbox: Incomplete=None) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @property

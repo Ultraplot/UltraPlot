@@ -46,15 +46,66 @@ def _wedge_legend_patch(legend: Incomplete, orig_handle: Incomplete, xdescent: I
     ...
 
 class LegendEntry(mlines.Line2D):
-    """
-    Convenience artist for custom legend entries.
+    """Convenience artist for custom legend entries.
 
-    This is a lightweight wrapper around `matplotlib.lines.Line2D` that
-    initializes with empty data so it can be passed directly to
-    `Axes.legend()` or `Figure.legend()` handles.
-    """
+This is a lightweight wrapper around `matplotlib.lines.Line2D` that
+initializes with empty data so it can be passed directly to
+`Axes.legend()` or `Figure.legend()` handles."""
 
     def __init__(self, label: Incomplete=None, *, color: Incomplete=None, line: Incomplete=True, marker: Incomplete=None, linestyle: Incomplete='-', linewidth: Incomplete=2, markersize: Incomplete=6, markerfacecolor: Incomplete=None, markeredgecolor: Incomplete=None, markeredgewidth: Incomplete=None, alpha: Incomplete=None, marker_capstyle: Incomplete=None, marker_joinstyle: Incomplete=None, marker_transform: Incomplete=None, **kwargs: Incomplete) -> None:
+        """Create a `.Line2D` instance with *x* and *y* data in sequences of
+*xdata*, *ydata*.
+
+Additional keyword arguments are `.Line2D` properties:
+
+Properties:
+    agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
+    alpha: float or None
+    animated: bool
+    antialiased or aa: bool
+    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_on: bool
+    clip_path: Patch or (Path, Transform) or None
+    color or c: :mpltype:`color`
+    dash_capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
+    dash_joinstyle: `.JoinStyle` or {'miter', 'round', 'bevel'}
+    dashes: sequence of floats (on/off ink in points) or (None, None)
+    data: (2, N) array or two 1D arrays
+    drawstyle or ds: {'default', 'steps', 'steps-pre', 'steps-mid', 'steps-post'}, default: 'default'
+    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    fillstyle: {'full', 'left', 'right', 'bottom', 'top', 'none'}
+    gapcolor: :mpltype:`color` or None
+    gid: str
+    in_layout: bool
+    label: object
+    linestyle or ls: {'-', '--', '-.', ':', '', (offset, on-off-seq), ...}
+    linewidth or lw: float
+    marker: marker style string, `~.path.Path` or `~.markers.MarkerStyle`
+    markeredgecolor or mec: :mpltype:`color`
+    markeredgewidth or mew: float
+    markerfacecolor or mfc: :mpltype:`color`
+    markerfacecoloralt or mfcalt: :mpltype:`color`
+    markersize or ms: float
+    markevery: None or int or (int, int) or slice or list[int] or float or (float, float) or list[bool]
+    mouseover: bool
+    path_effects: list of `.AbstractPathEffect`
+    picker: float or callable[[Artist, Event], tuple[bool, dict]]
+    pickradius: float
+    rasterized: bool
+    sketch_params: (scale: float, length: float, randomness: float)
+    snap: bool or None
+    solid_capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
+    solid_joinstyle: `.JoinStyle` or {'miter', 'round', 'bevel'}
+    transform: unknown
+    url: str
+    visible: bool
+    xdata: 1D array
+    ydata: 1D array
+    zorder: float
+
+See :meth:`set_linestyle` for a description of the line styles,
+:meth:`set_marker` for a description of the markers, and
+:meth:`set_drawstyle` for a description of the draw styles."""
         ...
 
     @classmethod
@@ -68,11 +119,27 @@ class LegendEntry(mlines.Line2D):
         ...
 
 class _Line2DLegendHandler(mhandler.HandlerLine2D):
-    """
-    Match single-point marker plots by hiding the legend connector line.
-    """
+    """Match single-point marker plots by hiding the legend connector line."""
 
     def create_artists(self, legend: Incomplete, orig_handle: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+        """Return the legend artists generated.
+
+Parameters
+----------
+legend : `~matplotlib.legend.Legend`
+    The legend for which these legend artists are being created.
+orig_handle : `~matplotlib.artist.Artist` or similar
+    The object for which these legend artists are being created.
+xdescent, ydescent, width, height : int
+    The rectangle (*xdescent*, *ydescent*, *width*, *height*) that the
+    legend artists being created should fit within.
+fontsize : int
+    The fontsize in pixels. The legend artists being created should
+    be scaled according to the given fontsize.
+trans : `~matplotlib.transforms.Transform`
+    The transform that is applied to the legend artists being created.
+    Typically from unit coordinates in the handler box to screen
+    coordinates."""
         ...
 _GEOMETRY_SHAPE_PATHS = {'circle': mpath.Path.unit_circle(), 'square': mpath.Path.unit_rectangle(), 'triangle': mpath.Path.unit_regular_polygon(3), 'diamond': mpath.Path.unit_regular_polygon(4), 'pentagon': mpath.Path.unit_regular_polygon(5), 'hexagon': mpath.Path.unit_regular_polygon(6), 'star': mpath.Path.unit_regular_star(5), 'rectangle': mpath.Path([[0, 0], [2, 0], [2, 1], [0, 1], [0, 0]], closed=True, readonly=True), 'line': mpath.Path([[0, 0], [1, 0]], readonly=True)}
 _GEOMETRY_SHAPE_ALIASES = {'box': 'square', 'rect': 'rectangle', 'rec': 'rectangle', 'tri': 'triangle', 'pent': 'pentagon', 'hex': 'hexagon'}
@@ -158,50 +225,123 @@ def _geometry_entry_patch(legend: Incomplete, orig_handle: Incomplete, xdescent:
     ...
 
 class _FeatureArtistLegendHandler(mhandler.HandlerPatch):
-    """
-    Legend handler for cartopy FeatureArtist instances.
-    """
+    """Legend handler for cartopy FeatureArtist instances."""
 
     def __init__(self) -> None:
+        """Parameters
+----------
+patch_func : callable, optional
+    The function that creates the legend key artist.
+    *patch_func* should have the signature::
+
+        def patch_func(legend=legend, orig_handle=orig_handle,
+                       xdescent=xdescent, ydescent=ydescent,
+                       width=width, height=height, fontsize=fontsize)
+
+    Subsequently, the created artist will have its ``update_prop``
+    method called and the appropriate transform will be applied.
+
+**kwargs
+    Keyword arguments forwarded to `.HandlerBase`."""
         ...
 
     def update_prop(self, legend_handle: Incomplete, orig_handle: Incomplete, legend: Incomplete) -> Incomplete:
         ...
 
 class _ShapelyGeometryLegendHandler(mhandler.HandlerPatch):
-    """
-    Legend handler for raw shapely geometries.
-    """
+    """Legend handler for raw shapely geometries."""
 
     def __init__(self) -> None:
+        """Parameters
+----------
+patch_func : callable, optional
+    The function that creates the legend key artist.
+    *patch_func* should have the signature::
+
+        def patch_func(legend=legend, orig_handle=orig_handle,
+                       xdescent=xdescent, ydescent=ydescent,
+                       width=width, height=height, fontsize=fontsize)
+
+    Subsequently, the created artist will have its ``update_prop``
+    method called and the appropriate transform will be applied.
+
+**kwargs
+    Keyword arguments forwarded to `.HandlerBase`."""
         ...
 
     def update_prop(self, legend_handle: Incomplete, orig_handle: Incomplete, legend: Incomplete) -> Incomplete:
         ...
 
 class _GeometryEntryLegendHandler(mhandler.HandlerPatch):
-    """
-    Legend handler for `GeometryEntry` custom handles.
-    """
+    """Legend handler for `GeometryEntry` custom handles."""
 
     def __init__(self) -> None:
+        """Parameters
+----------
+patch_func : callable, optional
+    The function that creates the legend key artist.
+    *patch_func* should have the signature::
+
+        def patch_func(legend=legend, orig_handle=orig_handle,
+                       xdescent=xdescent, ydescent=ydescent,
+                       width=width, height=height, fontsize=fontsize)
+
+    Subsequently, the created artist will have its ``update_prop``
+    method called and the appropriate transform will be applied.
+
+**kwargs
+    Keyword arguments forwarded to `.HandlerBase`."""
         ...
 
     def update_prop(self, legend_handle: Incomplete, orig_handle: Incomplete, legend: Incomplete) -> Incomplete:
         ...
 
 class GeometryEntry(mpatches.PathPatch):
-    """
-    Convenience geometry legend entry.
+    """Convenience geometry legend entry.
 
-    Parameters
-    ----------
-    geometry
-        Geometry shorthand (e.g. ``'triangle'`` or ``'country:AU'``),
-        shapely geometry, or `matplotlib.path.Path`.
-    """
+Parameters
+----------
+geometry
+    Geometry shorthand (e.g. ``'triangle'`` or ``'country:AU'``),
+    shapely geometry, or `matplotlib.path.Path`."""
 
     def __init__(self, geometry: Any='square', *, country_reso: str='110m', country_territories: bool=False, country_proj: Any=None, label: Optional[str]=None, facecolor: Any='none', edgecolor: Any='0.25', linewidth: float=1.0, joinstyle: str=_DEFAULT_GEO_JOINSTYLE, alpha: Optional[float]=None, fill: Optional[bool]=None, **kwargs: Any) -> None:
+        """*path* is a `.Path` object.
+
+Valid keyword arguments are:
+
+Properties:
+    agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
+    alpha: unknown
+    animated: bool
+    antialiased or aa: bool or None
+    capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
+    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_on: bool
+    clip_path: Patch or (Path, Transform) or None
+    color: :mpltype:`color`
+    edgecolor or ec: :mpltype:`color` or None
+    facecolor or fc: :mpltype:`color` or None
+    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    fill: bool
+    gid: str
+    hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
+    hatch_linewidth: unknown
+    in_layout: bool
+    joinstyle: `.JoinStyle` or {'miter', 'round', 'bevel'}
+    label: object
+    linestyle or ls: {'-', '--', '-.', ':', '', (offset, on-off-seq), ...}
+    linewidth or lw: float or None
+    mouseover: bool
+    path_effects: list of `.AbstractPathEffect`
+    picker: None or bool or float or callable
+    rasterized: bool
+    sketch_params: (scale: float, length: float, randomness: float)
+    snap: bool or None
+    transform: `~matplotlib.transforms.Transform`
+    url: str
+    visible: bool
+    zorder: float"""
         ...
 
 def _geometry_default_label(geometry: Any, index: int) -> str:
@@ -379,6 +519,237 @@ class _LegendInputs:
 class Legend(mlegend.Legend):
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+        """Parameters
+----------
+parent : `~matplotlib.axes.Axes` or `.Figure`
+    The artist that contains the legend.
+
+handles : list of (`.Artist` or tuple of `.Artist`)
+    A list of Artists (lines, patches) to be added to the legend.
+
+labels : list of str
+    A list of labels to show next to the artists. The length of handles
+    and labels should be the same. If they are not, they are truncated
+    to the length of the shorter list.
+
+Other Parameters
+----------------
+
+loc : str or pair of floats, default: :rc:`legend.loc` for Axes, 'upper right' for Figure
+    The location of the legend.
+
+    The strings ``'upper left'``, ``'upper right'``, ``'lower left'``,
+    ``'lower right'`` place the legend at the corresponding corner of the
+    axes/figure.
+
+    The strings ``'upper center'``, ``'lower center'``, ``'center left'``,
+    ``'center right'`` place the legend at the center of the corresponding edge
+    of the axes/figure.
+
+    The string ``'center'`` places the legend at the center of the axes/figure.
+
+    The string ``'best'`` places the legend at the location, among the nine
+    locations defined so far, with the minimum overlap with other drawn
+    artists.  This option can be quite slow for plots with large amounts of
+    data; your plotting speed may benefit from providing a specific location.
+
+    The location can also be a 2-tuple giving the coordinates of the lower-left
+    corner of the legend in axes/figure coordinates (in which case *bbox_to_anchor*
+    will be ignored).
+
+    For back-compatibility, ``'center right'`` (but no other location) can also
+    be spelled ``'right'``, and each "string" location can also be given as a
+    numeric value:
+
+    ==================   =============
+    Location String      Location Code
+    ==================   =============
+    'best' (Axes only)   0
+    'upper right'        1
+    'upper left'         2
+    'lower left'         3
+    'lower right'        4
+    'right'              5
+    'center left'        6
+    'center right'       7
+    'lower center'       8
+    'upper center'       9
+    'center'             10
+    ==================   =============
+
+    If a figure is using the constrained layout manager, the string codes
+    of the *loc* keyword argument can get better layout behaviour using the
+    prefix 'outside'. There is ambiguity at the corners, so 'outside
+    upper right' will make space for the legend above the rest of the
+    axes in the layout, and 'outside right upper' will make space on the
+    right side of the layout.  In addition to the values of *loc*
+    listed above, we have 'outside right upper', 'outside right lower',
+    'outside left upper', and 'outside left lower'.  See
+    :ref:`legend_guide` for more details.
+
+bbox_to_anchor : `.BboxBase`, 2-tuple, or 4-tuple of floats
+    Box that is used to position the legend in conjunction with *loc*.
+    Defaults to ``axes.bbox`` (if called as a method to `.Axes.legend`) or
+    ``figure.bbox`` (if ``figure.legend``).  This argument allows arbitrary
+    placement of the legend.
+
+    Bbox coordinates are interpreted in the coordinate system given by
+    *bbox_transform*, with the default transform
+    Axes or Figure coordinates, depending on which ``legend`` is called.
+
+    If a 4-tuple or `.BboxBase` is given, then it specifies the bbox
+    ``(x, y, width, height)`` that the legend is placed in.
+    To put the legend in the best location in the bottom right
+    quadrant of the Axes (or figure)::
+
+        loc='best', bbox_to_anchor=(0.5, 0., 0.5, 0.5)
+
+    A 2-tuple ``(x, y)`` places the corner of the legend specified by *loc* at
+    x, y.  For example, to put the legend's upper right-hand corner in the
+    center of the Axes (or figure) the following keywords can be used::
+
+        loc='upper right', bbox_to_anchor=(0.5, 0.5)
+
+ncols : int, default: 1
+    The number of columns that the legend has.
+
+    For backward compatibility, the spelling *ncol* is also supported
+    but it is discouraged. If both are given, *ncols* takes precedence.
+
+prop : None or `~matplotlib.font_manager.FontProperties` or dict
+    The font properties of the legend. If None (default), the current
+    :data:`matplotlib.rcParams` will be used.
+
+fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
+    The font size of the legend. If the value is numeric the size will be the
+    absolute font size in points. String values are relative to the current
+    default font size. This argument is only used if *prop* is not specified.
+
+labelcolor : str or list, default: :rc:`legend.labelcolor`
+    The color of the text in the legend. Either a valid color string
+    (for example, 'red'), or a list of color strings. The labelcolor can
+    also be made to match the color of the line or marker using 'linecolor',
+    'markerfacecolor' (or 'mfc'), or 'markeredgecolor' (or 'mec').
+
+    Labelcolor can be set globally using :rc:`legend.labelcolor`. If None,
+    use :rc:`text.color`.
+
+numpoints : int, default: :rc:`legend.numpoints`
+    The number of marker points in the legend when creating a legend
+    entry for a `.Line2D` (line).
+
+scatterpoints : int, default: :rc:`legend.scatterpoints`
+    The number of marker points in the legend when creating
+    a legend entry for a `.PathCollection` (scatter plot).
+
+scatteryoffsets : iterable of floats, default: ``[0.375, 0.5, 0.3125]``
+    The vertical offset (relative to the font size) for the markers
+    created for a scatter plot legend entry. 0.0 is at the base the
+    legend text, and 1.0 is at the top. To draw all markers at the
+    same height, set to ``[0.5]``.
+
+markerscale : float, default: :rc:`legend.markerscale`
+    The relative size of legend markers compared to the originally drawn ones.
+
+markerfirst : bool, default: True
+    If *True*, legend marker is placed to the left of the legend label.
+    If *False*, legend marker is placed to the right of the legend label.
+
+reverse : bool, default: False
+    If *True*, the legend labels are displayed in reverse order from the input.
+    If *False*, the legend labels are displayed in the same order as the input.
+
+    .. versionadded:: 3.7
+
+frameon : bool, default: :rc:`legend.frameon`
+    Whether the legend should be drawn on a patch (frame).
+
+fancybox : bool, default: :rc:`legend.fancybox`
+    Whether round edges should be enabled around the `.FancyBboxPatch` which
+    makes up the legend's background.
+
+shadow : None, bool or dict, default: :rc:`legend.shadow`
+    Whether to draw a shadow behind the legend.
+    The shadow can be configured using `.Patch` keywords.
+    Customization via :rc:`legend.shadow` is currently not supported.
+
+framealpha : float, default: :rc:`legend.framealpha`
+    The alpha transparency of the legend's background.
+    If *shadow* is activated and *framealpha* is ``None``, the default value is
+    ignored.
+
+facecolor : "inherit" or color, default: :rc:`legend.facecolor`
+    The legend's background color.
+    If ``"inherit"``, use :rc:`axes.facecolor`.
+
+edgecolor : "inherit" or color, default: :rc:`legend.edgecolor`
+    The legend's background patch edge color.
+    If ``"inherit"``, use :rc:`axes.edgecolor`.
+
+mode : {"expand", None}
+    If *mode* is set to ``"expand"`` the legend will be horizontally
+    expanded to fill the Axes area (or *bbox_to_anchor* if defines
+    the legend's size).
+
+bbox_transform : None or `~matplotlib.transforms.Transform`
+    The transform for the bounding box (*bbox_to_anchor*). For a value
+    of ``None`` (default) the Axes'
+    :data:`~matplotlib.axes.Axes.transAxes` transform will be used.
+
+title : str or None
+    The legend's title. Default is no title (``None``).
+
+title_fontproperties : None or `~matplotlib.font_manager.FontProperties` or dict
+    The font properties of the legend's title. If None (default), the
+    *title_fontsize* argument will be used if present; if *title_fontsize* is
+    also None, the current :rc:`legend.title_fontsize` will be used.
+
+title_fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}, default: :rc:`legend.title_fontsize`
+    The font size of the legend's title.
+    Note: This cannot be combined with *title_fontproperties*. If you want
+    to set the fontsize alongside other font properties, use the *size*
+    parameter in *title_fontproperties*.
+
+alignment : {'center', 'left', 'right'}, default: 'center'
+    The alignment of the legend title and the box of entries. The entries
+    are aligned as a single block, so that markers always lined up.
+
+borderpad : float, default: :rc:`legend.borderpad`
+    The fractional whitespace inside the legend border, in font-size units.
+
+labelspacing : float, default: :rc:`legend.labelspacing`
+    The vertical space between the legend entries, in font-size units.
+
+handlelength : float, default: :rc:`legend.handlelength`
+    The length of the legend handles, in font-size units.
+
+handleheight : float, default: :rc:`legend.handleheight`
+    The height of the legend handles, in font-size units.
+
+handletextpad : float, default: :rc:`legend.handletextpad`
+    The pad between the legend handle and text, in font-size units.
+
+borderaxespad : float, default: :rc:`legend.borderaxespad`
+    The pad between the Axes and legend border, in font-size units.
+
+columnspacing : float, default: :rc:`legend.columnspacing`
+    The spacing between columns, in font-size units.
+
+handler_map : dict or None
+    The custom dictionary mapping instances or types to a legend
+    handler. This *handler_map* updates the default handler map
+    found at `matplotlib.legend.Legend.get_legend_handler_map`.
+
+draggable : bool, default: False
+    Whether the legend can be dragged with the mouse.
+
+
+Attributes
+----------
+legend_handles
+    List of `.Artist` objects added as legend entries.
+
+    .. versionadded:: 3.7"""
         ...
 
     @classmethod
@@ -388,6 +759,64 @@ class Legend(mlegend.Legend):
 
     @override
     def set_loc(self, loc: Incomplete=None) -> Incomplete:
+        """Set the location of the legend.
+
+.. versionadded:: 3.8
+
+Parameters
+----------
+
+loc : str or pair of floats, default: :rc:`legend.loc` for Axes, 'upper right' for Figure
+    The location of the legend.
+
+    The strings ``'upper left'``, ``'upper right'``, ``'lower left'``,
+    ``'lower right'`` place the legend at the corresponding corner of the
+    axes/figure.
+
+    The strings ``'upper center'``, ``'lower center'``, ``'center left'``,
+    ``'center right'`` place the legend at the center of the corresponding edge
+    of the axes/figure.
+
+    The string ``'center'`` places the legend at the center of the axes/figure.
+
+    The string ``'best'`` places the legend at the location, among the nine
+    locations defined so far, with the minimum overlap with other drawn
+    artists.  This option can be quite slow for plots with large amounts of
+    data; your plotting speed may benefit from providing a specific location.
+
+    The location can also be a 2-tuple giving the coordinates of the lower-left
+    corner of the legend in axes/figure coordinates (in which case *bbox_to_anchor*
+    will be ignored).
+
+    For back-compatibility, ``'center right'`` (but no other location) can also
+    be spelled ``'right'``, and each "string" location can also be given as a
+    numeric value:
+
+    ==================   =============
+    Location String      Location Code
+    ==================   =============
+    'best' (Axes only)   0
+    'upper right'        1
+    'upper left'         2
+    'lower left'         3
+    'lower right'        4
+    'right'              5
+    'center left'        6
+    'center right'       7
+    'lower center'       8
+    'upper center'       9
+    'center'             10
+    ==================   =============
+
+    If a figure is using the constrained layout manager, the string codes
+    of the *loc* keyword argument can get better layout behaviour using the
+    prefix 'outside'. There is ambiguity at the corners, so 'outside
+    upper right' will make space for the legend above the rest of the
+    axes in the layout, and 'outside right upper' will make space on the
+    right side of the layout.  In addition to the values of *loc*
+    listed above, we have 'outside right upper', 'outside right lower',
+    'outside left upper', and 'outside left lower'.  See
+    :ref:`legend_guide` for more details."""
         ...
 
     def remove(self) -> None:
@@ -409,11 +838,10 @@ _semantic_num_style_kwargs_docstring = ...
 _semantic_handle_kw_docstring = ...
 
 class UltraLegend:
-    """
-    Centralized legend builder for axes.
-    """
+    """Centralized legend builder for axes."""
 
     def __init__(self, axes: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @staticmethod

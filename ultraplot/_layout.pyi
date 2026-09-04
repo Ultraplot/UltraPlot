@@ -51,21 +51,20 @@ class _AxisTickResult:
     minor_locs: np.ndarray | tuple
 
 class _AxisTickCache:
-    """
-    Cache repeated tick updates during one layout-and-render transaction.
+    """Cache repeated tick updates during one layout-and-render transaction.
 
-    Tight bounding-box calculation and the final axes draw repeatedly call
-    ``Axis._update_ticks`` with identical state. The method runs locators,
-    formatters, tick positioning, and visibility filtering each time. This
-    manager replaces the method on individual axes for the duration of a
-    canvas draw and restores the original instance state afterwards.
+Tight bounding-box calculation and the final axes draw repeatedly call
+``Axis._update_ticks`` with identical state. The method runs locators,
+formatters, tick positioning, and visibility filtering each time. This
+manager replaces the method on individual axes for the duration of a
+canvas draw and restores the original instance state afterwards.
 
-    Custom third-party locators and formatters conservatively bypass the
-    cache because they may rely on repeated side effects.
-    """
+Custom third-party locators and formatters conservatively bypass the
+cache because they may rely on repeated side effects."""
     _MAX_STATES_PER_AXIS = 4
 
     def __init__(self, figure: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> Incomplete:
@@ -114,17 +113,16 @@ class _AxesExtentRecord:
     outsets: tuple
 
 class _LayoutExtentStore:
-    """
-    Persist relative axes outsets and dependency versions between layouts.
+    """Persist relative axes outsets and dependency versions between layouts.
 
-    Absolute axes positions are solver outputs. Tick labels, axis labels, and
-    titles are better represented as four overhangs around those positions.
-    Standard Cartesian axes can therefore move without repeating renderer text
-    measurements. Position-sensitive axes and extra artists automatically add
-    the absolute origin to their state key.
-    """
+Absolute axes positions are solver outputs. Tick labels, axis labels, and
+titles are better represented as four overhangs around those positions.
+Standard Cartesian axes can therefore move without repeating renderer text
+measurements. Position-sensitive axes and extra artists automatically add
+the absolute origin to their state key."""
 
     def __init__(self, figure: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> Incomplete:
@@ -185,14 +183,13 @@ relative outsets remain valid for the next layout transaction."""
         ...
 
 class _LayoutTransaction:
-    """
-    Own temporary and persistent caches for one dirty canvas draw.
+    """Own temporary and persistent caches for one dirty canvas draw.
 
-    Figure code only needs to know whether a transaction is active. Cache setup,
-    dynamic-axes refresh, and exception-safe cleanup stay private to this object.
-    """
+Figure code only needs to know whether a transaction is active. Cache setup,
+dynamic-axes refresh, and exception-safe cleanup stay private to this object."""
 
     def __init__(self, figure: Incomplete, *, cache_ticks: Incomplete=True, cache_extents: Incomplete=True) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> Incomplete:

@@ -263,30 +263,34 @@ ultraplot.demos.show_fonts"""
     ...
 
 class Configurator(MutableMapping, dict):
-    """
-    A dictionary-like class for managing `matplotlib settings
-    <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__
-    stored in `rc_matplotlib` and :ref:`ultraplot settings <ug_rcultraplot>`
-    stored in `rc_ultraplot`. This class is instantiated as the `rc` object
-    on import. See the :ref:`user guide <ug_config>` for details.
-    """
+    """A dictionary-like class for managing `matplotlib settings
+<https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__
+stored in `rc_matplotlib` and :ref:`ultraplot settings <ug_rcultraplot>`
+stored in `rc_ultraplot`. This class is instantiated as the `rc` object
+on import. See the :ref:`user guide <ug_config>` for details."""
 
     def __repr__(self) -> str:
+        """Return repr(self)."""
         ...
 
     def __str__(self) -> str:
+        """Return str(self)."""
         ...
 
     def __iter__(self) -> Incomplete:
+        """Implement iter(self)."""
         ...
 
     def __len__(self) -> int:
+        """Return len(self)."""
         ...
 
     def __delitem__(self, key: Incomplete) -> Incomplete:
+        """Delete self[key]."""
         ...
 
     def __delattr__(self, attr: Incomplete) -> Incomplete:
+        """Implement delattr(self, name)."""
         ...
 
     def __init__(self, local: Incomplete=True, user: Incomplete=True, default: Incomplete=True, **kwargs: Incomplete) -> None:
@@ -301,31 +305,30 @@ default : bool, default: True
         ...
 
     def register_handler(self, name: str, func: Callable[[Any], Dict[str, Any]]) -> None:
-        """        Register a callback function to be executed when a setting is modified.
+        """Register a callback function to be executed when a setting is modified.
 
-        This is an extension point for "special" settings that require complex
-        logic or have side-effects, such as updating other matplotlib settings.
-        It is used internally to decouple the configuration system from other
-        subsystems and avoid circular imports.
+This is an extension point for "special" settings that require complex
+logic or have side-effects, such as updating other matplotlib settings.
+It is used internally to decouple the configuration system from other
+subsystems and avoid circular imports.
 
-        Parameters
-        ----------
-        name : str
-            The name of the setting (e.g., ``'cycle'``).
-        func : callable
-            The handler function to be executed. The function must accept a
-            single positional argument, which is the new `value` of the
-            setting, and must return a dictionary. The keys of the dictionary
-            should be valid ``matplotlib`` rc setting names, and the values
-            will be applied to the ``rc_matplotlib`` object.
+Parameters
+----------
+name : str
+    The name of the setting (e.g., ``'cycle'``).
+func : callable
+    The handler function to be executed. The function must accept a
+    single positional argument, which is the new `value` of the
+    setting, and must return a dictionary. The keys of the dictionary
+    should be valid ``matplotlib`` rc setting names, and the values
+    will be applied to the ``rc_matplotlib`` object.
 
-        Example
-        -------
-        >>> def _cycle_handler(value):
-        ...     # ... logic to create a cycler object from the value ...
-        ...     return {'axes.prop_cycle': new_cycler}
-        >>> rc.register_handler('cycle', _cycle_handler)
-        """
+Example
+-------
+>>> def _cycle_handler(value):
+...     # ... logic to create a cycler object from the value ...
+...     return {'axes.prop_cycle': new_cycler}
+>>> rc.register_handler('cycle', _cycle_handler)"""
         ...
 
     def __getitem__(self, key: Incomplete) -> Incomplete:

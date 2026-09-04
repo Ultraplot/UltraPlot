@@ -45,11 +45,7 @@ def _update_ticks(self, manual_only: Incomplete=False) -> None:
     ...
 
 class _InsetColorbar(martist.Artist):
-    """
-    Legend-like class for managing inset colorbars.
-    """
+    """Legend-like class for managing inset colorbars."""
 
 class _CenteredLegend(martist.Artist):
-    """
-    Legend-like class for managing centered-row legends.
-    """
+    """Legend-like class for managing centered-row legends."""

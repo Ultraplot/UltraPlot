@@ -11,20 +11,19 @@ except ImportError:
     Axes3D = object
 
 class ThreeAxes(shared._SharedAxes, base.Axes, Axes3D):
-    """
-    Simple mix-in of `ultraplot.axes.Axes` with `~mpl_toolkits.mplot3d.axes3d.Axes3D`.
+    """Simple mix-in of `ultraplot.axes.Axes` with `~mpl_toolkits.mplot3d.axes3d.Axes3D`.
 
-    Important
-    ---------
-    Note that this subclass does *not* implement the :class:`~ultraplot.axes.PlotAxes`
-    plotting overrides. This axes subclass can be used by passing ``proj='3d'`` or
-    ``proj='three'`` to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
-    `~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`.
-    """
+Important
+---------
+Note that this subclass does *not* implement the :class:`~ultraplot.axes.PlotAxes`
+plotting overrides. This axes subclass can be used by passing ``proj='3d'`` or
+``proj='three'`` to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
+`~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`."""
     _name = 'three'
     _name_aliases = ('3d',)
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def graph(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:

@@ -11,34 +11,91 @@ from .internals import labels
 __all__ = ['CurvedText']
 
 class CurvedText(mtext.Text):
-    """
-    A text object that follows an arbitrary curve.
+    """A text object that follows an arbitrary curve.
 
-    Parameters
-    ----------
-    x, y : array-like
-        Curve coordinates.
-    text : str
-        Text to render along the curve.
-    axes : matplotlib.axes.Axes
-        Target axes.
-    upright : bool, default: True
-        Whether to flip the curve direction to keep text upright.
-    ellipsis : bool, default: False
-        Whether to show an ellipsis when the text exceeds curve length.
-        avoid_overlap : bool, default: True
-        Whether to hide glyphs that overlap after rotation.
-    overlap_tol : float, default: 0.1
-        Fractional overlap area (0–1) required before hiding a glyph.
-    curvature_pad : float, default: 2.0
-        Extra spacing in pixels per radian of local curvature.
-    min_advance : float, default: 1.0
-        Minimum additional spacing (pixels) enforced between glyph centers.
-    **kwargs
-        Passed to `matplotlib.text.Text` for character styling.
-    """
+Parameters
+----------
+x, y : array-like
+    Curve coordinates.
+text : str
+    Text to render along the curve.
+axes : matplotlib.axes.Axes
+    Target axes.
+upright : bool, default: True
+    Whether to flip the curve direction to keep text upright.
+ellipsis : bool, default: False
+    Whether to show an ellipsis when the text exceeds curve length.
+    avoid_overlap : bool, default: True
+    Whether to hide glyphs that overlap after rotation.
+overlap_tol : float, default: 0.1
+    Fractional overlap area (0–1) required before hiding a glyph.
+curvature_pad : float, default: 2.0
+    Extra spacing in pixels per radian of local curvature.
+min_advance : float, default: 1.0
+    Minimum additional spacing (pixels) enforced between glyph centers.
+**kwargs
+    Passed to `matplotlib.text.Text` for character styling."""
 
     def __init__(self, x: Incomplete, y: Incomplete, text: Incomplete, axes: Incomplete, *, upright: Incomplete=True, ellipsis: Incomplete=False, avoid_overlap: Incomplete=True, overlap_tol: Incomplete=0.1, curvature_pad: Incomplete=2.0, min_advance: Incomplete=1.0, **kwargs: Incomplete) -> None:
+        """Create a `.Text` instance at *x*, *y* with string *text*.
+
+The text is aligned relative to the anchor point (*x*, *y*) according
+to ``horizontalalignment`` (default: 'left') and ``verticalalignment``
+(default: 'baseline'). See also
+:doc:`/gallery/text_labels_and_annotations/text_alignment`.
+
+While Text accepts the 'label' keyword argument, by default it is not
+added to the handles of a legend.
+
+Valid keyword arguments are:
+
+Properties:
+    agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
+    alpha: float or None
+    animated: bool
+    antialiased: bool
+    backgroundcolor: :mpltype:`color`
+    bbox: dict with properties for `.patches.FancyBboxPatch`
+    clip_box: unknown
+    clip_on: unknown
+    clip_path: unknown
+    color or c: :mpltype:`color`
+    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    fontfamily or family or fontname: {FONTNAME, 'serif', 'sans-serif', 'cursive', 'fantasy', 'monospace'}
+    fontproperties or font or font_properties: `.font_manager.FontProperties` or `str` or `pathlib.Path`
+    fontsize or size: float or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
+    fontstretch or stretch: {a numeric value in range 0-1000, 'ultra-condensed', 'extra-condensed', 'condensed', 'semi-condensed', 'normal', 'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'}
+    fontstyle or style: {'normal', 'italic', 'oblique'}
+    fontvariant or variant: {'normal', 'small-caps'}
+    fontweight or weight: {a numeric value in range 0-1000, 'ultralight', 'light', 'normal', 'regular', 'book', 'medium', 'roman', 'semibold', 'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'}
+    gid: str
+    horizontalalignment or ha: {'left', 'center', 'right'}
+    in_layout: bool
+    label: object
+    linespacing: float (multiple of font size)
+    math_fontfamily: str
+    mouseover: bool
+    multialignment or ma: {'left', 'right', 'center'}
+    parse_math: bool
+    path_effects: list of `.AbstractPathEffect`
+    picker: None or bool or float or callable
+    position: (float, float)
+    rasterized: bool
+    rotation: float or {'vertical', 'horizontal'}
+    rotation_mode: {None, 'default', 'anchor'}
+    sketch_params: (scale: float, length: float, randomness: float)
+    snap: bool or None
+    text: object
+    transform: `~matplotlib.transforms.Transform`
+    transform_rotates_text: bool
+    url: str
+    usetex: bool, default: :rc:`text.usetex`
+    verticalalignment or va: {'baseline', 'bottom', 'center', 'center_baseline', 'top'}
+    visible: bool
+    wrap: bool
+    x: float
+    y: float
+    zorder: float"""
         ...
 
     def _restore_clip_on(self, t: Incomplete) -> None:
@@ -49,9 +106,19 @@ class CurvedText(mtext.Text):
         ...
 
     def set_text(self, s: Incomplete) -> None:
+        """Set the text string *s*.
+
+It may contain newlines (``\\n``) or math in LaTeX syntax.
+
+Parameters
+----------
+s : object
+    Any object gets converted to its `str` representation, except for
+    ``None`` which is converted to an empty string."""
         ...
 
     def get_text(self) -> str:
+        """Return the text string."""
         ...
 
     def set_curve(self, x: Iterable[float], y: Iterable[float]) -> None:
@@ -64,9 +131,20 @@ class CurvedText(mtext.Text):
         ...
 
     def set_zorder(self, zorder: Incomplete) -> None:
+        """Set the zorder for the artist.  Artists with lower zorder
+values are drawn first.
+
+Parameters
+----------
+level : float"""
         ...
 
     def set_transform(self, transform: Incomplete) -> None:
+        """Set the artist transform.
+
+Parameters
+----------
+t : `~matplotlib.transforms.Transform`"""
         ...
 
     def draw(self, renderer: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> None:

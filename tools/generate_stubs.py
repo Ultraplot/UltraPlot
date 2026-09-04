@@ -47,6 +47,9 @@ STATIC_DECORATORS = {
 SNIPPET_PATTERN = re.compile(r"%\(([^)]+)\)s")
 BUILTIN_NAMES = set(dir(builtins)) | {"None"}
 TRY_NODES = (ast.Try,) + ((ast.TryStar,) if hasattr(ast, "TryStar") else ())
+RUNTIME_DOC_BANNERS = re.compile(
+    r"(?m)^=+\n(ultraplot documentation|Matplotlib documentation)\n=+\n?"
+)
 
 
 def _dotted_name(node: ast.expr) -> str | None:
@@ -430,15 +433,18 @@ def _module_name(source_path: Path) -> str:
     return ".".join(parts)
 
 
-def _load_module(name: str):
-    """Safely import a module from the package for runtime inspection."""
+def _load_runtime_modules(source_files: Iterable[Path]) -> dict[Path, Any]:
+    """Evaluate package modules once and retain the resulting runtime API."""
     os.environ.setdefault("MPLCONFIGDIR", "/tmp/ultraplot-matplotlib")
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
-    try:
-        return importlib.import_module(name)
-    except Exception:
-        return None
+    modules = {}
+    for source_path in source_files:
+        try:
+            modules[source_path] = importlib.import_module(_module_name(source_path))
+        except Exception:
+            modules[source_path] = None
+    return modules
 
 
 def _resolve_runtime_doc(module: Any, qualname: str) -> str | None:
@@ -453,14 +459,25 @@ def _resolve_runtime_doc(module: Any, qualname: str) -> str | None:
                 if isinstance(candidate, property):
                     doc = inspect.getdoc(candidate) or inspect.getdoc(candidate.fget)
                     if doc:
-                        return doc
+                        return _clean_runtime_doc(doc)
             obj = getattr(obj, part)
         doc = inspect.getdoc(obj)
         if doc:
-            return doc
+            return _clean_runtime_doc(doc)
     except Exception:
         pass
     return None
+
+
+def _clean_runtime_doc(doc: str) -> str:
+    """Remove website-oriented reStructuredText banners from editor hovers."""
+    def replace(match: re.Match) -> str:
+        if match.group(1).startswith("ultraplot"):
+            return ""
+        return "Matplotlib documentation\n\n"
+
+    doc = RUNTIME_DOC_BANNERS.sub(replace, doc)
+    return doc.strip()
 
 
 class _StubTransformer(ast.NodeTransformer):
@@ -672,8 +689,33 @@ def _snippet_expander():
     return expand
 
 
+def _add_static_forwarding_bases(source_path: Path, tree: ast.Module) -> None:
+    """Expose runtime ``__getattr__`` proxies to static analyzers.
+
+    ``SubplotGrid`` forwards missing attributes to its axes, but language servers
+    cannot enumerate attributes implemented by ``__getattr__``. Its stub can
+    advertise the shared two-dimensional plotting API as a base, while the
+    runtime proxy continues to handle calls for each compatible axes.
+    """
+    if source_path != PACKAGE / "gridspec.py":
+        return
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef) and node.name == "SubplotGrid":
+            node.bases.append(
+                ast.Attribute(
+                    value=ast.Name(id="paxes", ctx=ast.Load()),
+                    attr="PlotAxes",
+                    ctx=ast.Load(),
+                )
+            )
+            return
+
+
 def _render(
-    source_path: Path, expand_docstring, inferred: ast.Module | None
+    source_path: Path,
+    expand_docstring,
+    inferred: ast.Module | None,
+    runtime_module: Any,
 ) -> tuple[str, tuple[int, int, int, int]]:
     """Render one implementation module as a deterministic type stub."""
     if source_path == PACKAGE / "_version.py":
@@ -683,11 +725,14 @@ def _render(
     source = source_path.read_text()
     tree = ast.parse(source, filename=str(source_path))
     annotation_counts = _merge_annotations(tree, inferred)
-    module_name = _module_name(source_path)
-    module = _load_module(module_name)
-    tree = _StubTransformer(expand_docstring, module=module).visit(copy.deepcopy(tree))
+    _add_static_forwarding_bases(source_path, tree)
+    tree = _StubTransformer(expand_docstring, module=runtime_module).visit(
+        copy.deepcopy(tree)
+    )
     ast.fix_missing_locations(tree)
-    rendered = ast.unparse(tree).rstrip() + "\n"
+    rendered = ast.unparse(tree)
+    rendered = "\n".join(line.rstrip() for line in rendered.splitlines())
+    rendered = rendered.rstrip() + "\n"
     return HEADER + rendered, annotation_counts
 
 
@@ -725,6 +770,7 @@ def main(argv: list[str] | None = None) -> int:
 
     expand_docstring = _snippet_expander()
     source_files = list(_source_files())
+    runtime_modules = _load_runtime_modules(source_files)
     expected = set()
     changed = []
     inferred_count = fallback_count = unmatched_count = discarded_count = 0
@@ -734,7 +780,10 @@ def main(argv: list[str] | None = None) -> int:
         stub_path = _stub_path(source_path)
         expected.add(stub_path)
         rendered, counts = _render(
-            source_path, expand_docstring, inferred_trees.get(source_path)
+            source_path,
+            expand_docstring,
+            inferred_trees.get(source_path),
+            runtime_modules.get(source_path),
         )
         inferred_count += counts[0]
         fallback_count += counts[1]

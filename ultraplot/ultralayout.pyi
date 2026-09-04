@@ -37,13 +37,11 @@ bool
     ...
 
 class UltraLayoutSolver:
-    """
-    UltraLayout: Constraint-based layout solver using kiwisolver for subplot positioning.
+    """UltraLayout: Constraint-based layout solver using kiwisolver for subplot positioning.
 
-    This solver computes aesthetically pleasing positions for subplots in
-    non-orthogonal arrangements by using constraint satisfaction, providing
-    a superior layout experience for complex subplot arrangements.
-    """
+This solver computes aesthetically pleasing positions for subplots in
+non-orthogonal arrangements by using constraint satisfaction, providing
+a superior layout experience for complex subplot arrangements."""
 
     def __init__(self, array: np.ndarray, figwidth: float=10.0, figheight: float=8.0, wspace: Optional[List[float]]=None, hspace: Optional[List[float]]=None, left: float=0.125, right: float=0.125, top: float=0.125, bottom: float=0.125, wratios: Optional[List[float]]=None, hratios: Optional[List[float]]=None, wpanels: Optional[List[bool]]=None, hpanels: Optional[List[bool]]=None) -> None:
         """Initialize the UltraLayout solver.
@@ -83,11 +81,10 @@ dict
         ...
 
 class ColorbarLayoutSolver:
-    """
-    Constraint-based solver for inset colorbar frame alignment.
-    """
+    """Constraint-based solver for inset colorbar frame alignment."""
 
     def __init__(self, loc: str, cb_width: float, cb_height: float, pad_left: float, pad_right: float, pad_bottom: float, pad_top: float) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _setup_constraints(self) -> None:

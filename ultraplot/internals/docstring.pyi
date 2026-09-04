@@ -32,9 +32,7 @@ axes method and mark its generated-documentation signature as compact."""
     ...
 
 class _SnippetManager(dict):
-    """
-    A simple database for handling documentation snippets.
-    """
+    """A simple database for handling documentation snippets."""
     _lazy_modules = {'axes': 'ultraplot.axes.base', 'cartesian': 'ultraplot.axes.cartesian', 'polar': 'ultraplot.axes.polar', 'geo': 'ultraplot.axes.geo', 'plot': 'ultraplot.axes.plot', 'figure': 'ultraplot.figure', 'gridspec': 'ultraplot.gridspec', 'legend': 'ultraplot.legend', 'ticker': 'ultraplot.ticker', 'proj': 'ultraplot.proj', 'colors': 'ultraplot.colors', 'utils': 'ultraplot.utils', 'config': 'ultraplot.config', 'demos': 'ultraplot.demos', 'rc': 'ultraplot.axes.base'}
 
     def __missing__(self, key: Incomplete) -> Incomplete:
@@ -43,10 +41,14 @@ class _SnippetManager(dict):
 
     @overload
     def __call__(self, obj: str) -> str:
+        """Add snippets to the string or object using ``%(name)s`` substitution. Here
+``%(name)s`` is used rather than ``.format`` to support invalid identifiers."""
         ...
 
     @overload
     def __call__(self, obj: _T) -> _T:
+        """Add snippets to the string or object using ``%(name)s`` substitution. Here
+``%(name)s`` is used rather than ``.format`` to support invalid identifiers."""
         ...
 
     def __setitem__(self, key: Incomplete, value: Incomplete) -> None:

@@ -25,16 +25,14 @@ _POLAR_LABEL_SECTOR_FRAC = 0.8
 _format_docstring = ...
 
 class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
-    """
-    Axes subclass for plotting in polar coordinates. Adds the `~PolarAxes.format`
-    method and overrides several existing methods.
+    """Axes subclass for plotting in polar coordinates. Adds the `~PolarAxes.format`
+method and overrides several existing methods.
 
-    Important
-    ---------
-    This axes subclass can be used by passing ``proj='polar'``
-    to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
-    `~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`.
-    """
+Important
+---------
+This axes subclass can be used by passing ``proj='polar'``
+to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
+`~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`."""
     _name = 'polar'
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
@@ -305,10 +303,60 @@ along the radial spoke (`rlabel`), both via CurvedText."""
 
     @override
     def draw(self, renderer: Incomplete=None, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+        """Draw the Artist (and its children) using the given renderer.
+
+This has no effect if the artist is not visible (`.Artist.get_visible`
+returns False).
+
+Parameters
+----------
+renderer : `~matplotlib.backend_bases.RendererBase` subclass.
+
+Notes
+-----
+This method is overridden in the Artist subclasses."""
         ...
 
     @override
     def get_tightbbox(self, renderer: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+        """Return the tight bounding box of the Axes, including axis and their
+decorators (xlabel, title, etc).
+
+Artists that have ``artist.set_in_layout(False)`` are not included
+in the bbox.
+
+Parameters
+----------
+renderer : `.RendererBase` subclass
+    renderer that will be used to draw the figures (i.e.
+    ``fig.canvas.get_renderer()``)
+
+bbox_extra_artists : list of `.Artist` or ``None``
+    List of artists to include in the tight bounding box.  If
+    ``None`` (default), then all artist children of the Axes are
+    included in the tight bounding box.
+
+call_axes_locator : bool, default: True
+    If *call_axes_locator* is ``False``, it does not call the
+    ``_axes_locator`` attribute, which is necessary to get the correct
+    bounding box. ``call_axes_locator=False`` can be used if the
+    caller is only interested in the relative size of the tightbbox
+    compared to the Axes bbox.
+
+for_layout_only : default: False
+    The bounding box will *not* include the x-extent of the title and
+    the xlabel, or the y-extent of the ylabel.
+
+Returns
+-------
+`.BboxBase`
+    Bounding box in figure pixel coordinates.
+
+See Also
+--------
+matplotlib.axes.Axes.get_window_extent
+matplotlib.axis.Axis.get_tightbbox
+matplotlib.spines.Spine.get_window_extent"""
         ...
 
     def format(self, *, r0: Incomplete=None, theta0: Incomplete=None, thetadir: Incomplete=None, thetamin: Incomplete=None, thetamax: Incomplete=None, thetalim: Incomplete=None, rmin: Incomplete=None, rmax: Incomplete=None, rlim: Incomplete=None, thetagrid: Incomplete=None, rgrid: Incomplete=None, thetagridminor: Incomplete=None, rgridminor: Incomplete=None, thetagridcolor: Incomplete=None, rgridcolor: Incomplete=None, rlabelpos: Incomplete=None, rscale: Incomplete=None, rborder: Incomplete=None, thetalocator: Incomplete=None, rlocator: Incomplete=None, thetalines: Incomplete=None, rlines: Incomplete=None, thetalocator_kw: Incomplete=None, rlocator_kw: Incomplete=None, thetaminorlocator: Incomplete=None, rminorlocator: Incomplete=None, thetaminorlines: Incomplete=None, rminorlines: Incomplete=None, thetaminorlocator_kw: Incomplete=None, rminorlocator_kw: Incomplete=None, thetaformatter: Incomplete=None, rformatter: Incomplete=None, thetalabels: Incomplete=None, rlabels: Incomplete=None, thetaformatter_kw: Incomplete=None, rformatter_kw: Incomplete=None, labelpad: Incomplete=None, labelsize: Incomplete=None, labelcolor: Incomplete=None, labelweight: Incomplete=None, thetalabel: Incomplete=None, rlabel: Incomplete=None, thetalabelloc: Incomplete=None, rlabelloc: Incomplete=None, thetalabel_kw: Incomplete=None, rlabel_kw: Incomplete=None, **kwargs: Incomplete) -> None:

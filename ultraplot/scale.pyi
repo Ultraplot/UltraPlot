@@ -21,15 +21,14 @@ change the default `linthresh` to ``1``."""
     ...
 
 class _Scale(object):
-    """
-    Mix-in class that standardizes the behavior of
-    `~matplotlib.scale.ScaleBase.set_default_locators_and_formatters`
-    and `~matplotlib.scale.ScaleBase.get_transform`. Also overrides
-    `__init__` so you no longer have to instantiate scales with an
-    `~matplotlib.axis.Axis` instance.
-    """
+    """Mix-in class that standardizes the behavior of
+`~matplotlib.scale.ScaleBase.set_default_locators_and_formatters`
+and `~matplotlib.scale.ScaleBase.get_transform`. Also overrides
+`__init__` so you no longer have to instantiate scales with an
+`~matplotlib.axis.Axis` instance."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def set_default_locators_and_formatters(self, axis: Incomplete, only_if_default: Incomplete=False) -> Incomplete:
@@ -51,10 +50,8 @@ only_if_default : bool, optional
         ...
 
 class LinearScale(_Scale, mscale.LinearScale):
-    """
-    As with `~matplotlib.scale.LinearScale` but with
-    `~ultraplot.ticker.AutoFormatter` as the default major formatter.
-    """
+    """As with `~matplotlib.scale.LinearScale` but with
+`~ultraplot.ticker.AutoFormatter` as the default major formatter."""
     name = 'linear'
 
     def __init__(self, **kwargs: Incomplete) -> None:
@@ -64,10 +61,8 @@ ultraplot.constructor.Scale"""
         ...
 
 class LogitScale(_Scale, mscale.LogitScale):
-    """
-    As with `~matplotlib.scale.LogitScale` but with `~ultraplot.ticker.AutoFormatter`
-    as the default major formatter.
-    """
+    """As with `~matplotlib.scale.LogitScale` but with `~ultraplot.ticker.AutoFormatter`
+as the default major formatter."""
     name = 'logit'
 
     def __init__(self, **kwargs: Incomplete) -> None:
@@ -83,11 +78,9 @@ ultraplot.constructor.Scale"""
         ...
 
 class LogScale(_Scale, mscale.LogScale):
-    """
-    As with `~matplotlib.scale.LogScale` but with `~ultraplot.ticker.AutoFormatter`
-    as the default major formatter. `x` and `y` versions of each keyword
-    argument are no longer required.
-    """
+    """As with `~matplotlib.scale.LogScale` but with `~ultraplot.ticker.AutoFormatter`
+as the default major formatter. `x` and `y` versions of each keyword
+argument are no longer required."""
     name = 'log'
 
     def __init__(self, **kwargs: Incomplete) -> None:
@@ -112,12 +105,10 @@ ultraplot.constructor.Scale"""
         ...
 
 class SymmetricalLogScale(_Scale, mscale.SymmetricalLogScale):
-    """
-    As with `~matplotlib.scale.SymmetricalLogScale` but with
-    `~ultraplot.ticker.AutoFormatter` as the default major formatter.
-    `x` and `y` versions of each keyword argument are no longer
-    required.
-    """
+    """As with `~matplotlib.scale.SymmetricalLogScale` but with
+`~ultraplot.ticker.AutoFormatter` as the default major formatter.
+`x` and `y` versions of each keyword argument are no longer
+required."""
     name = 'symlog'
 
     def __init__(self, **kwargs: Incomplete) -> None:
@@ -149,9 +140,7 @@ ultraplot.constructor.Scale"""
         ...
 
 class FuncScale(_Scale, mscale.ScaleBase):
-    """
-    Axis scale composed of arbitrary forward and inverse transformations.
-    """
+    """Axis scale composed of arbitrary forward and inverse transformations."""
     name = 'function'
 
     def __init__(self, transform: Incomplete=None, invert: Incomplete=False, parent_scale: Incomplete=None, **kwargs: Incomplete) -> None:
@@ -208,23 +197,53 @@ class FuncTransform(mtransforms.Transform):
     has_inverse = True
 
     def __init__(self, forward: Incomplete, inverse: Incomplete) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, values: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class PowerScale(_Scale, mscale.ScaleBase):
-    """
-    "Power scale" that performs the transformation
+    """"Power scale" that performs the transformation
 
-    .. math::
+.. math::
 
-        x^{c}
-
-    """
+    x^{c}"""
     name = 'power'
 
     def __init__(self, power: Incomplete=1, inverse: Incomplete=False) -> None:
@@ -247,12 +266,45 @@ class PowerTransform(mtransforms.Transform):
     is_separable = True
 
     def __init__(self, power: Incomplete) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class InvertedPowerTransform(mtransforms.Transform):
@@ -262,34 +314,65 @@ class InvertedPowerTransform(mtransforms.Transform):
     is_separable = True
 
     def __init__(self, power: Incomplete) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class ExpScale(_Scale, mscale.ScaleBase):
-    """
-    "Exponential scale" that performs either of two transformations. When
-    `inverse` is ``False`` (the default), performs the transformation
+    """"Exponential scale" that performs either of two transformations. When
+`inverse` is ``False`` (the default), performs the transformation
 
-    .. math::
+.. math::
 
-        Ca^{bx}
+    Ca^{bx}
 
-    where the constants :math:`a`, :math:`b`, and :math:`C` are set by the
-    input (see below). When `inverse` is ``True``, this performs the inverse
-    transformation
+where the constants :math:`a`, :math:`b`, and :math:`C` are set by the
+input (see below). When `inverse` is ``True``, this performs the inverse
+transformation
 
-    .. math::
+.. math::
 
-        (\\log_a(x) - \\log_a(C))/b
+    (\\log_a(x) - \\log_a(C))/b
 
-    which in appearance is equivalent to `LogScale` since it is just a linear
-    transformation of the logarithm.
-    """
+which in appearance is equivalent to `LogScale` since it is just a linear
+transformation of the logarithm."""
     name = 'exp'
 
     def __init__(self, a: Incomplete=np.e, b: Incomplete=1, c: Incomplete=1, inverse: Incomplete=False) -> None:
@@ -320,12 +403,45 @@ class ExpTransform(mtransforms.Transform):
     is_separable = True
 
     def __init__(self, a: Incomplete, b: Incomplete, c: Incomplete) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class InvertedExpTransform(mtransforms.Transform):
@@ -335,30 +451,60 @@ class InvertedExpTransform(mtransforms.Transform):
     is_separable = True
 
     def __init__(self, a: Incomplete, b: Incomplete, c: Incomplete) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class MercatorLatitudeScale(_Scale, mscale.ScaleBase):
-    """
-    Axis scale that is linear in the `Mercator projection latitude <http://en.wikipedia.org/wiki/Mercator_projection>`__. Adapted from `this example <https://matplotlib.org/2.0.2/examples/api/custom_scale_example.html>`__.
-    The scale function is as follows:
+    """Axis scale that is linear in the `Mercator projection latitude <http://en.wikipedia.org/wiki/Mercator_projection>`__. Adapted from `this example <https://matplotlib.org/2.0.2/examples/api/custom_scale_example.html>`__.
+The scale function is as follows:
 
-    .. math::
+.. math::
 
-        y = \\ln(\\tan(\\pi x \\,/\\, 180) + \\sec(\\pi x \\,/\\, 180))
+    y = \\ln(\\tan(\\pi x \\,/\\, 180) + \\sec(\\pi x \\,/\\, 180))
 
-    The inverse scale function is as follows:
+The inverse scale function is as follows:
 
-    .. math::
+.. math::
 
-        x = 180\\,\\arctan(\\sinh(y)) \\,/\\, \\pi
-
-    """
+    x = 180\\,\\arctan(\\sinh(y)) \\,/\\, \\pi"""
     name = 'mercator'
 
     def __init__(self, thresh: Incomplete=85.0) -> None:
@@ -385,12 +531,45 @@ class MercatorLatitudeTransform(mtransforms.Transform):
     has_inverse = True
 
     def __init__(self, thresh: Incomplete) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class InvertedMercatorLatitudeTransform(mtransforms.Transform):
@@ -400,30 +579,61 @@ class InvertedMercatorLatitudeTransform(mtransforms.Transform):
     has_inverse = True
 
     def __init__(self, thresh: Incomplete) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class SineLatitudeScale(_Scale, mscale.ScaleBase):
-    """
-    Axis scale that is linear in the sine transformation of *x*. The axis
-    limits are constrained to fall between ``-90`` and ``+90`` degrees.
-    The scale function is as follows:
+    """Axis scale that is linear in the sine transformation of *x*. The axis
+limits are constrained to fall between ``-90`` and ``+90`` degrees.
+The scale function is as follows:
 
-    .. math::
+.. math::
 
-        y = \\sin(\\pi x/180)
+    y = \\sin(\\pi x/180)
 
-    The inverse scale function is as follows:
+The inverse scale function is as follows:
 
-    .. math::
+.. math::
 
-        x = 180\\arcsin(y)/\\pi
-    """
+    x = 180\\arcsin(y)/\\pi"""
     name = 'sine'
 
     def __init__(self) -> None:
@@ -444,12 +654,45 @@ class SineLatitudeTransform(mtransforms.Transform):
     has_inverse = True
 
     def __init__(self) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class InvertedSineLatitudeTransform(mtransforms.Transform):
@@ -459,20 +702,51 @@ class InvertedSineLatitudeTransform(mtransforms.Transform):
     has_inverse = True
 
     def __init__(self) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class CutoffScale(_Scale, mscale.ScaleBase):
-    """
-    Axis scale composed of arbitrary piecewise linear transformations.
-    The axis can undergo discrete jumps, "accelerations", or "decelerations"
-    between successive thresholds.
-    """
+    """Axis scale composed of arbitrary piecewise linear transformations.
+The axis can undergo discrete jumps, "accelerations", or "decelerations"
+between successive thresholds."""
     name = 'cutoff'
 
     def __init__(self, *args: Incomplete) -> None:
@@ -514,24 +788,54 @@ class CutoffTransform(mtransforms.Transform):
     is_separable = True
 
     def __init__(self, threshs: Incomplete, scales: Incomplete, zero_dists: Incomplete=None) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 class InverseScale(_Scale, mscale.ScaleBase):
-    """
-    Axis scale that is linear in the *inverse* of *x*. The forward and inverse
-    scale functions are as follows:
+    """Axis scale that is linear in the *inverse* of *x*. The forward and inverse
+scale functions are as follows:
 
-    .. math::
+.. math::
 
-        y = x^{-1}
-
-    """
+    y = x^{-1}"""
     name = 'inverse'
 
     def __init__(self) -> None:
@@ -551,12 +855,45 @@ class InverseTransform(mtransforms.Transform):
     has_inverse = True
 
     def __init__(self) -> None:
+        """Parameters
+----------
+shorthand_name : str
+    A string representing the "name" of the transform. The name carries
+    no significance other than to improve the readability of
+    ``str(transform)`` when DEBUG=True."""
         ...
 
     def inverted(self) -> Incomplete:
+        """Return the corresponding inverse transformation.
+
+It holds ``x == self.inverted().transform(self.transform(x))``.
+
+The return value of this method should be treated as
+temporary.  An update to *self* does not cause a corresponding
+update to its inverted copy."""
         ...
 
     def transform_non_affine(self, a: Incomplete) -> Incomplete:
+        """Apply only the non-affine part of this transformation.
+
+``transform(values)`` is always equivalent to
+``transform_affine(transform_non_affine(values))``.
+
+In non-affine transformations, this is generally equivalent to
+``transform(values)``.  In affine transformations, this is
+always a no-op.
+
+Parameters
+----------
+values : array
+    The input values as an array of length :attr:`input_dims` or
+    shape (N, :attr:`input_dims`).
+
+Returns
+-------
+array
+    The output values as an array of length :attr:`output_dims` or
+    shape (N, :attr:`output_dims`), depending on the input."""
         ...
 
 def _scale_factory(scale: Incomplete, axis: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:

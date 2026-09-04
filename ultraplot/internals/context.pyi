@@ -7,11 +7,10 @@ from _typeshed import Incomplete
 from . import ic
 
 class _empty_context(object):
-    """
-    A dummy context manager.
-    """
+    """A dummy context manager."""
 
     def __init__(self) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> None:
@@ -21,11 +20,10 @@ class _empty_context(object):
         ...
 
 class _state_context(object):
-    """
-    Temporarily modify attribute(s) for an arbitrary object.
-    """
+    """Temporarily modify attribute(s) for an arbitrary object."""
 
     def __init__(self, obj: Incomplete, **kwargs: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> None:

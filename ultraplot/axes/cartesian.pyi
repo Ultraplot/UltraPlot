@@ -88,17 +88,15 @@ class _AxisFormatConfig:
     ticklabelweight: Optional[str] = None
 
 class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
-    """
-    Axes subclass for plotting in ordinary Cartesian coordinates. Adds the
-    `~CartesianAxes.format` method and overrides several existing methods.
+    """Axes subclass for plotting in ordinary Cartesian coordinates. Adds the
+`~CartesianAxes.format` method and overrides several existing methods.
 
-    Important
-    ---------
-    This is the default axes subclass. It can be specified explicitly by passing
-    ``proj='cart'``, ``proj='cartesian'``, ``proj='rect'``, or ``proj='rectilinear'``
-    to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
-    `~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`.
-    """
+Important
+---------
+This is the default axes subclass. It can be specified explicitly by passing
+``proj='cart'``, ``proj='cartesian'``, ``proj='rect'``, or ``proj='rectilinear'``
+to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
+`~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`."""
     _name = 'cartesian'
     _name_aliases = ('cart', 'rect', 'rectilinar')
 
@@ -457,9 +455,35 @@ one will draw its properties. Use keyword args to override settings."""
         ...
 
     def set_xscale(self, value: Incomplete, **kwargs: Incomplete) -> None:
+        """Set the xaxis' scale.
+
+Parameters
+----------
+value : str or `.ScaleBase`
+    The axis scale type to apply.  Valid string values are the names of scale
+    classes ("linear", "log", "function",...).  These may be the names of any
+    of the :ref:`built-in scales<builtin_scales>` or of any custom scales
+    registered using `matplotlib.scale.register_scale`.
+
+**kwargs
+    If *value* is a string, keywords are passed to the instantiation method of
+    the respective class."""
         ...
 
     def set_yscale(self, value: Incomplete, **kwargs: Incomplete) -> None:
+        """Set the yaxis' scale.
+
+Parameters
+----------
+value : str or `.ScaleBase`
+    The axis scale type to apply.  Valid string values are the names of scale
+    classes ("linear", "log", "function",...).  These may be the names of any
+    of the :ref:`built-in scales<builtin_scales>` or of any custom scales
+    registered using `matplotlib.scale.register_scale`.
+
+**kwargs
+    If *value* is a string, keywords are passed to the instantiation method of
+    the respective class."""
         ...
 
     def _update_formatter(self, s: Incomplete, formatter: Incomplete=None, *, formatter_kw: Incomplete=None, tickrange: Incomplete=None, wraprange: Incomplete=None) -> None:
@@ -1031,9 +1055,59 @@ This enforces the following default settings:
         ...
 
     def draw(self, renderer: Incomplete=None, *args: Incomplete, **kwargs: Incomplete) -> None:
+        """Draw the Artist (and its children) using the given renderer.
+
+This has no effect if the artist is not visible (`.Artist.get_visible`
+returns False).
+
+Parameters
+----------
+renderer : `~matplotlib.backend_bases.RendererBase` subclass.
+
+Notes
+-----
+This method is overridden in the Artist subclasses."""
         ...
 
     def get_tightbbox(self, renderer: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+        """Return the tight bounding box of the Axes, including axis and their
+decorators (xlabel, title, etc).
+
+Artists that have ``artist.set_in_layout(False)`` are not included
+in the bbox.
+
+Parameters
+----------
+renderer : `.RendererBase` subclass
+    renderer that will be used to draw the figures (i.e.
+    ``fig.canvas.get_renderer()``)
+
+bbox_extra_artists : list of `.Artist` or ``None``
+    List of artists to include in the tight bounding box.  If
+    ``None`` (default), then all artist children of the Axes are
+    included in the tight bounding box.
+
+call_axes_locator : bool, default: True
+    If *call_axes_locator* is ``False``, it does not call the
+    ``_axes_locator`` attribute, which is necessary to get the correct
+    bounding box. ``call_axes_locator=False`` can be used if the
+    caller is only interested in the relative size of the tightbbox
+    compared to the Axes bbox.
+
+for_layout_only : default: False
+    The bounding box will *not* include the x-extent of the title and
+    the xlabel, or the y-extent of the ylabel.
+
+Returns
+-------
+`.BboxBase`
+    Bounding box in figure pixel coordinates.
+
+See Also
+--------
+matplotlib.axes.Axes.get_window_extent
+matplotlib.axis.Axis.get_tightbbox
+matplotlib.spines.Spine.get_window_extent"""
         ...
 
 def _capture_explicit_format_keys(func: _F) -> _F:

@@ -10,7 +10,7 @@ import re
 from collections.abc import MutableSequence
 from functools import wraps
 from numbers import Integral
-from typing import Callable, List, Optional, Tuple, TypeVar, Union, cast, overload
+from typing import Any, Callable, List, Optional, Tuple, TypeVar, Union, cast, overload
 import matplotlib.axes as maxes
 import matplotlib.gridspec as mgridspec
 import matplotlib.transforms as mtransforms
@@ -46,12 +46,11 @@ def _apply_to_all(func: None=None, *, doc_key: Optional[str]=None) -> Callable[[
     ...
 
 class _SubplotSpec(mgridspec.SubplotSpec):
-    """
-    A thin `~matplotlib.gridspec.SubplotSpec` subclass with a nice string
-    representation and a few helper methods.
-    """
+    """A thin `~matplotlib.gridspec.SubplotSpec` subclass with a nice string
+representation and a few helper methods."""
 
     def __repr__(self) -> Incomplete:
+        """Return repr(self)."""
         ...
 
     def _get_geometry(self) -> Incomplete:
@@ -71,15 +70,15 @@ the main plots, not the panels or colorbars."""
         ...
 
     def get_position(self, figure: Incomplete, return_all: Incomplete=False) -> Incomplete:
+        """Update the subplot position from ``figure.subplotpars``."""
         ...
 
 class GridSpec(mgridspec.GridSpec):
-    """
-    A `~matplotlib.gridspec.GridSpec` subclass that permits variable spacing
-    between successive rows and columns and hides "panel slots" from indexing.
-    """
+    """A `~matplotlib.gridspec.GridSpec` subclass that permits variable spacing
+between successive rows and columns and hides "panel slots" from indexing."""
 
     def __repr__(self) -> str:
+        """Return repr(self)."""
         ...
 
     def __getattr__(self, attr: Incomplete) -> None:
@@ -488,6 +487,13 @@ ultraplot.figure.Figure.gridspec"""
 
     @figure.setter
     def figure(self, fig: Incomplete) -> None:
+        """The `ultraplot.figure.Figure` uniquely associated with this `GridSpec`.
+On assignment the gridspec parameters and figure size are updated.
+
+See also
+--------
+ultraplot.gridspec.SubplotGrid.figure
+ultraplot.figure.Figure.gridspec"""
         ...
     tight_layout = _disable_method('tight_layout')
     subgridspec = _disable_method('subgridspec')
@@ -497,9 +503,22 @@ ultraplot.figure.Figure.gridspec"""
     set_height_ratios = _disable_method('set_height_ratios')
 
     def get_subplot_params(self, figure: Incomplete=None) -> Incomplete:
+        """Return the `.SubplotParams` for the GridSpec.
+
+In order of precedence the values are taken from
+
+- non-*None* attributes of the GridSpec
+- the provided *figure*
+- :rc:`figure.subplot.*`
+
+Note that the ``figure`` attribute of the GridSpec is always ignored."""
         ...
 
     def locally_modified_subplot_params(self) -> Incomplete:
+        """Return a list of the names of the subplot parameters explicitly set
+in the GridSpec.
+
+This is a subset of the attributes of `.SubplotParams`."""
         ...
     gridheight = ...
     gridwidth = ...
@@ -536,24 +555,26 @@ ultraplot.figure.Figure.gridspec"""
     hpad_total = ...
     wpad_total = ...
 
-class SubplotGrid(MutableSequence, list):
-    """
-    List-like, array-like object used to store subplots returned by
-    `~ultraplot.figure.Figure.subplots`. 1D indexing uses the underlying list of
-    `~ultraplot.axes.Axes` while 2D indexing uses the `~SubplotGrid.gridspec`.
-    See `~SubplotGrid.__getitem__` for details.
-    """
+class SubplotGrid(MutableSequence[paxes.Axes], list[paxes.Axes], paxes.PlotAxes):
+    """List-like, array-like object used to store subplots returned by
+`~ultraplot.figure.Figure.subplots`. 1D indexing uses the underlying list of
+`~ultraplot.axes.Axes` while 2D indexing uses the `~SubplotGrid.gridspec`.
+See `~SubplotGrid.__getitem__` for details."""
 
     def __repr__(self) -> str:
+        """Return repr(self)."""
         ...
 
     def __str__(self) -> str:
+        """Return str(self)."""
         ...
 
     def __len__(self) -> int:
+        """Return len(self)."""
         ...
 
     def insert(self, key: Incomplete, value: Incomplete) -> None:
+        """S.insert(index, value) -- insert value before index"""
         ...
 
     def __init__(self, sequence: Incomplete=None, **kwargs: Incomplete) -> None:
@@ -569,13 +590,40 @@ ultraplot.figure.Figure.subplots
 ultraplot.figure.Figure.add_subplots"""
         ...
 
-    def __getattr__(self, attr: Incomplete) -> Incomplete:
+    def __getattr__(self, attr: str) -> Any:
         """Get a missing attribute. Simply redirects to the axes if the `SubplotGrid`
 is singleton and raises an error otherwise. This can be convenient for
 single-axes figures generated with `~ultraplot.figure.Figure.subplots`."""
         ...
 
-    def __getitem__(self, key: Incomplete) -> Incomplete:
+    @overload
+    def __getitem__(self, key: int) -> paxes.Axes:
+        """Get an axes.
+
+Parameters
+----------
+key : int, slice, or 2-tuple
+    The index. If 1D then the axes in the corresponding
+    sublist are returned. If 2D then the axes that intersect
+    the corresponding `~SubplotGrid.gridspec` slots are returned.
+
+Returns
+-------
+axs : ultraplot.axes.Axes or SubplotGrid
+    The axes. If the index included slices then
+    another `SubplotGrid` is returned.
+
+Example
+-------
+>>> import ultraplot as uplt
+>>> fig, axs = uplt.subplots(nrows=3, ncols=3)
+>>> axs[5]  # the subplot in the second row, third column
+>>> axs[1, 2]  # the subplot in the second row, third column
+>>> axs[:, 0]  # a SubplotGrid containing the subplots in the first column"""
+        ...
+
+    @overload
+    def __getitem__(self, key: Union[slice, List[int], np.ndarray, Tuple[Union[int, slice], ...]]) -> 'SubplotGrid':
         """Get an axes.
 
 Parameters
@@ -1227,60 +1275,353 @@ list
         ...
 
     def altx(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
-        """Call `altx()` for every axes in the grid.
+        """Add an axis locked to the same location with a
+distinct x axis for every axes in the grid.
+This is an alias and arguably more intuitive name for
+`~ultraplot.axes.CartesianAxes.twiny`, which generates
+two x axes with a shared ("twin") y axes.
+
+Parameters
+----------
+**kwargs
+    Passed to `~ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords. You can optionally
+    omit the x from keywords beginning with ``x`` -- for example
+    ``ax.altx(lim=(0, 10))`` is equivalent to ``ax.altx(xlim=(0, 10))``.
+    You can also change the default side for the axis spine, axis tick marks,
+    axis tick labels, and/or axis labels by passing ``loc`` keywords. For example,
+    ``ax.altx(loc='bottom')`` changes the default side from top to bottom.
 
 Returns
 -------
-SubplotGrid
-    A grid of the resulting axes."""
+SubplotGridultraplot.axes.CartesianAxesA grid of the resulting axes.
+
+Note
+----
+This enforces the following default settings:
+
+* Places the old x axis on the bottom and the new x
+  axis on the top.
+* Makes the old top spine invisible and the new bottom, left,
+  and right spines invisible.
+* Adjusts the x axis tick, tick label, and axis label positions
+  according to the visible spine positions.
+* Syncs the old and new y axis limits and scales, and makes the
+  new y axis labels invisible."""
         ...
 
     def dualx(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
-        """Call `dualx()` for every axes in the grid.
+        """Add an axes locked to the same location whose x axis denotes
+equivalent coordinates in alternate units for every axes in the grid.
+This is an alternative to `matplotlib.axes.Axes.secondary_xaxis` with
+additional convenience features.
+
+Parameters
+----------
+funcscale : callable, 2-tuple of callables, or scale-spec
+    The scale used to transform units from the parent axis to the secondary
+    axis. This can be a `~ultraplot.scale.FuncScale` itself or a function,
+    (function, function) tuple, or an axis scale specification interpreted
+    by the `~ultraplot.constructor.Scale` constructor function, any of which
+    will be used to build a `~ultraplot.scale.FuncScale` and applied
+    to the dual axis (see `~ultraplot.scale.FuncScale` for details).
+**kwargs
+    Passed to `~ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords. You can optionally
+    omit the x from keywords beginning with ``x`` -- for example
+    ``ax.altx(lim=(0, 10))`` is equivalent to ``ax.altx(xlim=(0, 10))``.
+    You can also change the default side for the axis spine, axis tick marks,
+    axis tick labels, and/or axis labels by passing ``loc`` keywords. For example,
+    ``ax.altx(loc='bottom')`` changes the default side from top to bottom.
 
 Returns
 -------
-SubplotGrid
-    A grid of the resulting axes."""
+SubplotGridultraplot.axes.CartesianAxesA grid of the resulting axes.
+
+Note
+----
+This enforces the following default settings:
+
+* Places the old x axis on the bottom and the new x
+  axis on the top.
+* Makes the old top spine invisible and the new bottom, left,
+  and right spines invisible.
+* Adjusts the x axis tick, tick label, and axis label positions
+  according to the visible spine positions.
+* Syncs the old and new y axis limits and scales, and makes the
+  new y axis labels invisible."""
         ...
 
     def twinx(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
-        """Call `twinx()` for every axes in the grid.
+        """Add an axis locked to the same location with a
+distinct y axis for every axes in the grid.
+This builds upon `matplotlib.axes.Axes.twinx`.
+
+Parameters
+----------
+**kwargs
+    Passed to `~ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords. You can optionally
+    omit the y from keywords beginning with ``y`` -- for example
+    ``ax.alty(lim=(0, 10))`` is equivalent to ``ax.alty(ylim=(0, 10))``.
+    You can also change the default side for the axis spine, axis tick marks,
+    axis tick labels, and/or axis labels by passing ``loc`` keywords. For example,
+    ``ax.alty(loc='left')`` changes the default side from right to left.
 
 Returns
 -------
-SubplotGrid
-    A grid of the resulting axes."""
+SubplotGridultraplot.axes.CartesianAxesA grid of the resulting axes.
+
+Note
+----
+This enforces the following default settings:
+
+* Places the old y axis on the left and the new y
+  axis on the right.
+* Makes the old right spine invisible and the new left, bottom,
+  and top spines invisible.
+* Adjusts the y axis tick, tick label, and axis label positions
+  according to the visible spine positions.
+* Syncs the old and new x axis limits and scales, and makes the
+  new x axis labels invisible."""
         ...
 
     def alty(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
-        """Call `alty()` for every axes in the grid.
+        """Add an axis locked to the same location with a
+distinct y axis for every axes in the grid.
+This is an alias and arguably more intuitive name for
+`~ultraplot.axes.CartesianAxes.twinx`, which generates
+two y axes with a shared ("twin") x axes.
+
+Parameters
+----------
+**kwargs
+    Passed to `~ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords. You can optionally
+    omit the y from keywords beginning with ``y`` -- for example
+    ``ax.alty(lim=(0, 10))`` is equivalent to ``ax.alty(ylim=(0, 10))``.
+    You can also change the default side for the axis spine, axis tick marks,
+    axis tick labels, and/or axis labels by passing ``loc`` keywords. For example,
+    ``ax.alty(loc='left')`` changes the default side from right to left.
 
 Returns
 -------
-SubplotGrid
-    A grid of the resulting axes."""
+SubplotGridultraplot.axes.CartesianAxesA grid of the resulting axes.
+
+Note
+----
+This enforces the following default settings:
+
+* Places the old y axis on the left and the new y
+  axis on the right.
+* Makes the old right spine invisible and the new left, bottom,
+  and top spines invisible.
+* Adjusts the y axis tick, tick label, and axis label positions
+  according to the visible spine positions.
+* Syncs the old and new x axis limits and scales, and makes the
+  new x axis labels invisible."""
         ...
 
     def dualy(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
-        """Call `dualy()` for every axes in the grid.
+        """Add an axes locked to the same location whose y axis denotes
+equivalent coordinates in alternate units for every axes in the grid.
+This is an alternative to `matplotlib.axes.Axes.secondary_yaxis` with
+additional convenience features.
+
+Parameters
+----------
+funcscale : callable, 2-tuple of callables, or scale-spec
+    The scale used to transform units from the parent axis to the secondary
+    axis. This can be a `~ultraplot.scale.FuncScale` itself or a function,
+    (function, function) tuple, or an axis scale specification interpreted
+    by the `~ultraplot.constructor.Scale` constructor function, any of which
+    will be used to build a `~ultraplot.scale.FuncScale` and applied
+    to the dual axis (see `~ultraplot.scale.FuncScale` for details).
+**kwargs
+    Passed to `~ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords. You can optionally
+    omit the y from keywords beginning with ``y`` -- for example
+    ``ax.alty(lim=(0, 10))`` is equivalent to ``ax.alty(ylim=(0, 10))``.
+    You can also change the default side for the axis spine, axis tick marks,
+    axis tick labels, and/or axis labels by passing ``loc`` keywords. For example,
+    ``ax.alty(loc='left')`` changes the default side from right to left.
 
 Returns
 -------
-SubplotGrid
-    A grid of the resulting axes."""
+SubplotGridultraplot.axes.CartesianAxesA grid of the resulting axes.
+
+Note
+----
+This enforces the following default settings:
+
+* Places the old y axis on the left and the new y
+  axis on the right.
+* Makes the old right spine invisible and the new left, bottom,
+  and top spines invisible.
+* Adjusts the y axis tick, tick label, and axis label positions
+  according to the visible spine positions.
+* Syncs the old and new x axis limits and scales, and makes the
+  new x axis labels invisible."""
         ...
 
     def twiny(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
+        """Add an axis locked to the same location with a
+distinct x axis for every axes in the grid.
+This builds upon `matplotlib.axes.Axes.twiny`.
+
+Parameters
+----------
+**kwargs
+    Passed to `~ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords. You can optionally
+    omit the x from keywords beginning with ``x`` -- for example
+    ``ax.altx(lim=(0, 10))`` is equivalent to ``ax.altx(xlim=(0, 10))``.
+    You can also change the default side for the axis spine, axis tick marks,
+    axis tick labels, and/or axis labels by passing ``loc`` keywords. For example,
+    ``ax.altx(loc='bottom')`` changes the default side from top to bottom.
+
+Returns
+-------
+SubplotGridultraplot.axes.CartesianAxesA grid of the resulting axes.
+
+Note
+----
+This enforces the following default settings:
+
+* Places the old x axis on the bottom and the new x
+  axis on the top.
+* Makes the old top spine invisible and the new bottom, left,
+  and right spines invisible.
+* Adjusts the x axis tick, tick label, and axis label positions
+  according to the visible spine positions.
+* Syncs the old and new y axis limits and scales, and makes the
+  new y axis labels invisible."""
         ...
 
     def panel(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
+        """Add a panel axes for every axes in the grid.
+
+Parameters
+-----------
+side : str, optional
+    The panel location. Valid location keys are as follows.
+
+    ==========  =====================
+    Location    Valid keys
+    ==========  =====================
+    left        ``'left'``, ``'l'``
+    right       ``'right'``, ``'r'``
+    bottom      ``'bottom'``, ``'b'``
+    top         ``'top'``, ``'t'``
+    ==========  =====================
+
+width : unit-spec, default: :rc:`subplots.panelwidth`
+    The panel width.
+    If float, units are inches. If string, interpreted by `~ultraplot.utils.units`.
+space : unit-spec, default: None
+    The fixed space between the panel and the subplot edge.
+    If float, units are em-widths. If string, interpreted by `~ultraplot.utils.units`.
+    When the :ref:`tight layout algorithm <ug_tight>` is active for the figure,
+    `space` is computed automatically (see `pad`). Otherwise, `space` is set to
+    a suitable default.
+pad : unit-spec, default: :rc:`subplots.panelpad`
+    The :ref:`tight layout padding <ug_tight>` between the panel and the subplot.
+    If float, units are em-widths. If string, interpreted by `~ultraplot.utils.units`.
+row, rows
+    Aliases for `span` for panels on the left or right side (vertical panels).
+col, cols
+    Aliases for `span` for panels on the top or bottom side (horizontal panels).
+span : int or 2-tuple of int, default: None
+    Integer(s) indicating the span of the panel across rows and columns of
+    subplots. For panels on the left or right side, use `rows` or `row` to
+    specify which rows the panel should span. For panels on the top or bottom
+    side, use `cols` or `col` to specify which columns the panel should span.
+    For example, ``ax.panel('b', col=1)`` draws a panel beneath only the
+    leftmost column, and ``ax.panel('b', cols=(1, 2))`` draws a panel beneath
+    the left two columns. By default the panel will span all rows or columns
+    aligned with the parent axes.
+share : bool, default: True
+    Whether to enable axis sharing between the *x* and *y* axes of the
+    main subplot and the panel long axes for each panel in the "stack".
+    Sharing between the panel short axis and other panel short axes
+    is determined by figure-wide `sharex` and `sharey` settings.
+
+Other parameters
+-----------------
+**kwargs
+    Passed to `ultraplot.axes.CartesianAxes`. Supports all valid
+    `~ultraplot.axes.CartesianAxes.format` keywords.
+
+Returns
+--------
+ultraplot.axes.CartesianAxes
+    The panel axes."""
         ...
 
     def panel_axes(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
         ...
 
     def inset(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':
+        """Add an inset axes for every axes in the grid.
+This is similar to `matplotlib.axes.Axes.inset_axes`.
+
+Parameters
+-----------
+bounds : 4-tuple of float or (4-tuple, transform)
+    The (left, bottom, width, height) coordinates for the axes. To specify the
+    coordinate system alongside the coordinates, pass ``(bounds, transform)``.
+transform : {'data', 'axes', 'figure', 'subfigure'} or `~matplotlib.transforms.Transform`, optional
+    The transform used to interpret the bounds. Can be a
+    :class:`~matplotlib.transforms.Transform` instance or a string representing
+    the :class:`~matplotlib.axes.Axes.transData`, :class:`~matplotlib.axes.Axes.transAxes`,
+    :class:`~matplotlib.figure.Figure.transFigure`, or
+    :class:`~matplotlib.figure.Figure.transSubfigure`, transforms.
+    Default is to use the same projection as the current axes.
+proj, projection :
+str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
+    The map projection specification(s). If ``'cart'`` or ``'cartesian'``
+    (the default), a `~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
+    a :class:`~ultraplot.axes.PolarAxes` is created. Otherwise, the argument is
+    interpreted by `~ultraplot.constructor.Proj`, and the result is used
+    to make a `~ultraplot.axes.GeoAxes` (in this case the argument can be
+    a `cartopy.crs.Projection` instance, a `~mpl_toolkits.basemap.Basemap`
+    instance, or a projection name listed in :ref:`this table <proj_table>`).
+proj_kw, projection_kw : dict-like, optional
+    Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or
+    cartopy `~cartopy.crs.Projection` classes on instantiation.
+backend : {'cartopy', 'basemap'}, default: :rc:`geo.backend`
+    Whether to use `~mpl_toolkits.basemap.Basemap` or
+    `~cartopy.crs.Projection` for map projections.
+
+    .. deprecated:: 3.0.0
+        The ``'basemap'`` backend is deprecated and may be removed in a
+        future release. Please use the ``'cartopy'`` backend instead.
+zorder : float, default: 4
+    The `zorder <https://matplotlib.org/stable/gallery/misc/zorder_demo.html>`__
+    of the axes. Should be greater than the zorder of elements in the parent axes.
+zoom : bool, default: True or False
+    Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.
+    The line positions will automatically adjust when the parent or inset axes limits
+    change. Default is ``True`` only if both axes are `~ultraplot.axes.CartesianAxes`.
+zoom_kw : dict, optional
+    Passed to `~Axes.indicate_inset_zoom`.
+
+Other parameters
+-----------------
+**kwargs
+    Passed to `ultraplot.axes.Axes`.
+
+Returns
+--------
+ultraplot.axes.Axes
+    The inset axes.
+
+See also
+---------
+Axes.indicate_inset_zoom
+matplotlib.axes.Axes.inset_axes
+matplotlib.axes.Axes.indicate_inset
+matplotlib.axes.Axes.indicate_inset_zoom"""
         ...
 
     def inset_axes(self, *args: Incomplete, **kwargs: Incomplete) -> 'SubplotGrid':

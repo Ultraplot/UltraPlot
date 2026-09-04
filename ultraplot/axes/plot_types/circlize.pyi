@@ -11,8 +11,19 @@ from typing import Any, Callable, Mapping, Optional, Sequence, Union
 from matplotlib.projections.polar import PolarAxes as MplPolarAxes
 from ... import constructor
 from ...config import rc
+_PYCIRCLIZE_RC_LEAKS = ('savefig.bbox', 'savefig.pad_inches', 'svg.fonttype')
 
 def _import_pycirclize() -> Incomplete:
+    """Import pycirclize without letting it restyle the session.
+
+``pycirclize.config`` runs ``mpl.rcParams.update(...)`` at import time,
+setting ``savefig.bbox='tight'`` and ``savefig.pad_inches=0.5``. Since the
+import is lazy, the first chord, radar, phylogeny or circos plot in a
+session would otherwise silently change the size and padding of every
+figure saved afterwards."""
+    ...
+
+def _import_pycirclize_unguarded() -> Incomplete:
     ...
 
 def _unwrap_axes(ax: Incomplete, label: str) -> Incomplete:

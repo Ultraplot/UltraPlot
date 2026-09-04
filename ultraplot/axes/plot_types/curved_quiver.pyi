@@ -22,23 +22,23 @@ class _CurvedQuiverTrajectory:
 class _DomainMap(object):
     """Map representing different coordinate systems.
 
-    Coordinate definitions:
-    * axes-coordinates goes from 0 to 1 in the domain.
-    * data-coordinates are specified by the input x-y coordinates.
-    * grid-coordinates goes from 0 to N and 0 to M for an N x M grid,
-        where N and M match the shape of the input data.
-    * mask-coordinates goes from 0 to N and 0 to M for an N x M mask,
-        where N and M are user-specified to control the density of
-        streamlines.
+Coordinate definitions:
+* axes-coordinates goes from 0 to 1 in the domain.
+* data-coordinates are specified by the input x-y coordinates.
+* grid-coordinates goes from 0 to N and 0 to M for an N x M grid,
+    where N and M match the shape of the input data.
+* mask-coordinates goes from 0 to N and 0 to M for an N x M mask,
+    where N and M are user-specified to control the density of
+    streamlines.
 
-    This class also has methods for adding trajectories to the
-    StreamMask. Before adding a trajectory, run `start_trajectory` to
-    keep track of regions crossed by a given trajectory. Later, if you
-    decide the trajectory is bad (e.g., if the trajectory is very
-    short) just call `undo_trajectory`.
-    """
+This class also has methods for adding trajectories to the
+StreamMask. Before adding a trajectory, run `start_trajectory` to
+keep track of regions crossed by a given trajectory. Later, if you
+decide the trajectory is bad (e.g., if the trajectory is very
+short) just call `undo_trajectory`."""
 
     def __init__(self, grid: Incomplete, mask: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def grid2mask(self, xi: float, yi: float) -> tuple[int, int]:
@@ -70,6 +70,7 @@ class _CurvedQuiverGrid(object):
     """Grid of data."""
 
     def __init__(self, x: np.ndarray, y: np.ndarray) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @property
@@ -83,13 +84,13 @@ class _CurvedQuiverGrid(object):
 class _StreamMask(object):
     """Mask to keep track of discrete regions crossed by streamlines.
 
-    The resolution of this grid determines the approximate spacing
-    between trajectories. Streamlines are only allowed to pass through
-    zeroed cells: When a streamline enters a cell, that cell is set to
-    1, and no new streamlines are allowed to enter.
-    """
+The resolution of this grid determines the approximate spacing
+between trajectories. Streamlines are only allowed to pass through
+zeroed cells: When a streamline enters a cell, that cell is set to
+1, and no new streamlines are allowed to enter."""
 
     def __init__(self, density: float | int) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __getitem__(self, *args: Incomplete) -> Incomplete:
@@ -116,6 +117,7 @@ class _CurvedQuiverTerminateTrajectory(Exception):
 class CurvedQuiverSolver:
 
     def __init__(self, x: np.ndarray, y: np.ndarray, density: float | tuple[float, float]) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def get_integrator(self, u: np.ndarray, v: np.ndarray, minlength: float, resolution: float, magnitude: np.ndarray) -> Callable[[float, float], _CurvedQuiverTrajectory | None]:

@@ -170,9 +170,7 @@ margin : optional
     ...
 
 class _Colormap(object):
-    """
-    Mixin class used to add some helper methods.
-    """
+    """Mixin class used to add some helper methods."""
 
     def _get_data(self, ext: Incomplete, alpha: Incomplete=True) -> Incomplete:
         """Return a string containing the colormap colors for saving.
@@ -216,14 +214,14 @@ algongside more intuitive ``Colormap(data, name, N)`` input."""
         ...
 
 class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
-    """
-    Replacement for `~matplotlib.colors.LinearSegmentedColormap`.
-    """
+    """Replacement for `~matplotlib.colors.LinearSegmentedColormap`."""
 
     def __str__(self) -> str:
+        """Return str(self)."""
         ...
 
     def __repr__(self) -> str:
+        """Return repr(self)."""
         ...
 
     def __init__(self, *args: Incomplete, gamma: Incomplete=1, alpha: Incomplete=None, cyclic: Incomplete=False, **kwargs: Incomplete) -> None:
@@ -564,14 +562,14 @@ PerceptualColormap.from_list"""
         ...
 
 class DiscreteColormap(mcolors.ListedColormap, _Colormap):
-    """
-    Replacement for `~matplotlib.colors.ListedColormap`.
-    """
+    """Replacement for `~matplotlib.colors.ListedColormap`."""
 
     def __str__(self) -> str:
+        """Return str(self)."""
         ...
 
     def __repr__(self) -> str:
+        """Return repr(self)."""
         ...
 
     @property
@@ -581,6 +579,7 @@ class DiscreteColormap(mcolors.ListedColormap, _Colormap):
 
     @monochrome.setter
     def monochrome(self, value: Incomplete) -> None:
+        """Whether every color is identical, normalized to a Python boolean."""
         ...
 
     def __init__(self, colors: Incomplete, name: Incomplete=None, N: Incomplete=None, alpha: Incomplete=None, **kwargs: Incomplete) -> None:
@@ -769,10 +768,8 @@ ContinuousColormap.from_file"""
         ...
 
 class PerceptualColormap(ContinuousColormap):
-    """
-    A `ContinuousColormap` with linear transitions across hue, saturation,
-    and luminance rather than red, blue, and green.
-    """
+    """A `ContinuousColormap` with linear transitions across hue, saturation,
+and luminance rather than red, blue, and green."""
 
     def __init__(self, *args: Incomplete, space: Incomplete=None, clip: Incomplete=True, gamma: Incomplete=None, gamma1: Incomplete=None, gamma2: Incomplete=None, **kwargs: Incomplete) -> None:
         """Parameters
@@ -1063,10 +1060,8 @@ def _sanitize_levels(levels: Incomplete, minsize: Incomplete=2) -> Incomplete:
     ...
 
 class DiscreteNorm(mcolors.BoundaryNorm):
-    """
-    Meta-normalizer that discretizes the possible color values returned by
-    arbitrary continuous normalizers given a sequence of level boundaries.
-    """
+    """Meta-normalizer that discretizes the possible color values returned by
+arbitrary continuous normalizers given a sequence of level boundaries."""
 
     def __init__(self, levels: Incomplete, norm: Incomplete=None, unique: Incomplete=None, step: Incomplete=None, clip: Incomplete=False, ticks: Incomplete=None, labels: Incomplete=None) -> None:
         """Parameters
@@ -1146,10 +1141,8 @@ ValueError
         ...
 
 class SegmentedNorm(mcolors.Normalize):
-    """
-    Normalizer that scales data linearly with respect to the
-    interpolated index in an arbitrary monotonic level sequence.
-    """
+    """Normalizer that scales data linearly with respect to the
+interpolated index in an arbitrary monotonic level sequence."""
 
     def __init__(self, levels: Incomplete, vmin: Incomplete=None, vmax: Incomplete=None, clip: Incomplete=False) -> None:
         """Parameters
@@ -1214,12 +1207,11 @@ value : numeric
         ...
 
 class DivergingNorm(mcolors.Normalize):
-    """
-    Normalizer that ensures some central data value lies at the central
-    colormap color. The default central value is ``0``.
-    """
+    """Normalizer that ensures some central data value lies at the central
+colormap color. The default central value is ``0``."""
 
     def __str__(self) -> str:
+        """Return str(self)."""
         ...
 
     def __init__(self, vcenter: Incomplete=0, vmin: Incomplete=None, vmax: Incomplete=None, fair: Incomplete=True, clip: Incomplete=None) -> None:
@@ -1279,9 +1271,7 @@ cyclic colormaps based on names and re-apply default lookup table size."""
     ...
 
 class _ColorCache(dict):
-    """
-    Replacement for the native color cache.
-    """
+    """Replacement for the native color cache."""
 
     def __getitem__(self, key: Incomplete) -> Incomplete:
         """Get the standard color, colormap color, or color cycle color."""
@@ -1292,13 +1282,12 @@ class _ColorCache(dict):
         ...
 
 class ColorDatabase(MutableMapping, dict):
-    """
-    Dictionary subclass used to replace the builtin matplotlib color database.
-    See `~ColorDatabase.__getitem__` for details.
-    """
+    """Dictionary subclass used to replace the builtin matplotlib color database.
+See `~ColorDatabase.__getitem__` for details."""
     _colors_replace = (('grey', 'gray'), ('ochre', 'ocher'), ('kelley', 'kelly'))
 
     def __delitem__(self, key: Incomplete) -> None:
+        """Delete self[key]."""
         ...
 
     def __init__(self, mapping: Incomplete=None) -> None:
@@ -1336,11 +1325,9 @@ cache. The color must be a string."""
         ...
 
 class ColormapDatabase(mcm.ColormapRegistry):
-    """
-    Dictionary subclass used to replace the matplotlib
-    colormap registry. See `~ColormapDatabase.__getitem__` and
-    `~ColormapDatabase.__setitem__` for details.
-    """
+    """Dictionary subclass used to replace the matplotlib
+colormap registry. See `~ColormapDatabase.__getitem__` and
+`~ColormapDatabase.__setitem__` for details."""
     _regex_grays = re.compile('\\A(grays)(_r|_s)*\\Z', flags=re.IGNORECASE)
     _regex_suffix = re.compile('(_r|_s)*\\Z', flags=re.IGNORECASE)
 
@@ -1367,6 +1354,19 @@ kwargs : dict-like
         ...
 
     def get_cmap(self, cmap: Incomplete) -> Incomplete:
+        """Return a color map specified through *cmap*.
+
+Parameters
+----------
+cmap : str or `~matplotlib.colors.Colormap` or None
+
+    - if a `.Colormap`, return it
+    - if a string, look it up in ``mpl.colormaps``
+    - if None, return the Colormap defined in :rc:`image.cmap`
+
+Returns
+-------
+Colormap"""
         ...
 
     def __getitem__(self, key: Incomplete) -> Incomplete:

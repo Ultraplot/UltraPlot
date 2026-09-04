@@ -42,15 +42,14 @@ def _suffix(filename: Incomplete) -> Incomplete:
     ...
 
 class _RawWriter:
-    """
-    Base class for writers that consume raw ``RGBA`` frames.
+    """Base class for writers that consume raw ``RGBA`` frames.
 
-    Subclasses implement `write`, `_close`, and `_discard`. The output file is
-    deleted unless `finish` completed, so an animation that fails halfway
-    through never leaves a truncated movie that looks like a whole one.
-    """
+Subclasses implement `write`, `_close`, and `_discard`. The output file is
+deleted unless `finish` completed, so an animation that fails halfway
+through never leaves a truncated movie that looks like a whole one."""
 
     def __init__(self, filename: Incomplete, fps: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def setup(self, width: Incomplete, height: Incomplete) -> Incomplete:
@@ -74,11 +73,10 @@ class _RawWriter:
         ...
 
 class _RawFFMpegWriter(_RawWriter):
-    """
-    Pipe raw ``RGBA`` frames into ``ffmpeg`` with no intermediate encoding.
-    """
+    """Pipe raw ``RGBA`` frames into ``ffmpeg`` with no intermediate encoding."""
 
     def __init__(self, filename: Incomplete, fps: Incomplete, *, codec: Incomplete=None, bitrate: Incomplete=None, extra_args: Incomplete=None, metadata: Incomplete=None) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @staticmethod
@@ -105,11 +103,10 @@ class _RawFFMpegWriter(_RawWriter):
         ...
 
 class _RawPillowWriter(_RawWriter):
-    """
-    Collect raw ``RGBA`` frames and write an animated image with Pillow.
-    """
+    """Collect raw ``RGBA`` frames and write an animated image with Pillow."""
 
     def __init__(self, filename: Incomplete, fps: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def write(self, buffer: Incomplete) -> Incomplete:
@@ -122,12 +119,10 @@ class _RawPillowWriter(_RawWriter):
         ...
 
 class _FastSaveMixin:
-    """
-    The fast `save` path, shared by the animation classes.
+    """The fast `save` path, shared by the animation classes.
 
-    Subclasses supply the three frame hooks below; everything else here is the
-    machinery that renders those frames into a movie file.
-    """
+Subclasses supply the three frame hooks below; everything else here is the
+machinery that renders those frames into a movie file."""
 
     def _fast_frame_seq(self) -> Incomplete:
         ...
@@ -242,64 +237,63 @@ matplotlib.animation.Animation.save"""
         ...
 
 class FuncAnimation(_FastSaveMixin, manimation.FuncAnimation):
-    """
-    A faster drop-in replacement for `matplotlib.animation.FuncAnimation`.
+    """A faster drop-in replacement for `matplotlib.animation.FuncAnimation`.
 
-    The signature matches Matplotlib's, with two differences: `blit` defaults
-    to ``True`` instead of ``False``, and `freeze_layout` is added. Saving
-    renders frames directly into the Agg buffer instead of calling
-    `~matplotlib.figure.Figure.savefig` once per frame, which removes the
-    per-frame PNG round-trip and the repeated UltraPlot tight-layout pass.
+The signature matches Matplotlib's, with two differences: `blit` defaults
+to ``True`` instead of ``False``, and `freeze_layout` is added. Saving
+renders frames directly into the Agg buffer instead of calling
+`~matplotlib.figure.Figure.savefig` once per frame, which removes the
+per-frame PNG round-trip and the repeated UltraPlot tight-layout pass.
 
-    Parameters
-    ----------
-    fig : `~ultraplot.figure.Figure`
-        The figure to animate.
-    func : callable
-        The update function, called as ``func(frame, *fargs)``. It should
-        return an iterable of the artists it modified. This is required when
-        `blit` is ``True``, and lets the fast path skip untouched artists.
-    frames : int, iterable, generator, or None, optional
-        Source of frame data, as in Matplotlib.
-    init_func : callable, optional
-        Function drawing the clear frame. Should return the animated artists.
-    fargs : tuple, optional
-        Extra positional arguments for `func` and `init_func`.
-    save_count : int, optional
-        Number of frames to cache from a generator.
-    blit : bool, default: True
-        Whether to redraw only the artists returned by `func`. This is the main
-        source of the speedup, but it means changes to artists that are *not*
-        returned, such as titles or tick labels, will not show up. Pass
-        ``False`` to redraw the whole figure each frame, which is still faster
-        than Matplotlib because the layout solver is frozen.
-    cache_frame_data : bool, default: True
-        Whether to cache frame data, as in Matplotlib.
-    **kwargs
-        Passed to `matplotlib.animation.TimedAnimation`, e.g. `interval`,
-        `repeat`, and `repeat_delay`.
+Parameters
+----------
+fig : `~ultraplot.figure.Figure`
+    The figure to animate.
+func : callable
+    The update function, called as ``func(frame, *fargs)``. It should
+    return an iterable of the artists it modified. This is required when
+    `blit` is ``True``, and lets the fast path skip untouched artists.
+frames : int, iterable, generator, or None, optional
+    Source of frame data, as in Matplotlib.
+init_func : callable, optional
+    Function drawing the clear frame. Should return the animated artists.
+fargs : tuple, optional
+    Extra positional arguments for `func` and `init_func`.
+save_count : int, optional
+    Number of frames to cache from a generator.
+blit : bool, default: True
+    Whether to redraw only the artists returned by `func`. This is the main
+    source of the speedup, but it means changes to artists that are *not*
+    returned, such as titles or tick labels, will not show up. Pass
+    ``False`` to redraw the whole figure each frame, which is still faster
+    than Matplotlib because the layout solver is frozen.
+cache_frame_data : bool, default: True
+    Whether to cache frame data, as in Matplotlib.
+**kwargs
+    Passed to `matplotlib.animation.TimedAnimation`, e.g. `interval`,
+    `repeat`, and `repeat_delay`.
 
-    Examples
-    --------
-    >>> import ultraplot as uplt
-    >>> import numpy as np
-    >>> fig, ax = uplt.subplots()
-    >>> x = np.linspace(0, 2 * np.pi, 200)
-    >>> (line,) = ax.plot(x, np.sin(x))
-    >>> def update(frame):
-    ...     line.set_ydata(np.sin(x + frame / 10))
-    ...     return (line,)
-    ...
-    >>> ani = uplt.FuncAnimation(fig, update, frames=100)
-    >>> ani.save('waves.mp4')
+Examples
+--------
+>>> import ultraplot as uplt
+>>> import numpy as np
+>>> fig, ax = uplt.subplots()
+>>> x = np.linspace(0, 2 * np.pi, 200)
+>>> (line,) = ax.plot(x, np.sin(x))
+>>> def update(frame):
+...     line.set_ydata(np.sin(x + frame / 10))
+...     return (line,)
+...
+>>> ani = uplt.FuncAnimation(fig, update, frames=100)
+>>> ani.save('waves.mp4')
 
-    See also
-    --------
-    matplotlib.animation.FuncAnimation
-    ultraplot.animation.ArtistAnimation
-    """
+See also
+--------
+matplotlib.animation.FuncAnimation
+ultraplot.animation.ArtistAnimation"""
 
     def __init__(self, fig: Incomplete, func: Incomplete, frames: Incomplete=None, init_func: Incomplete=None, fargs: Incomplete=None, save_count: Incomplete=None, *, blit: Incomplete=True, **kwargs: Incomplete) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _fast_frame_seq(self) -> Incomplete:
@@ -312,26 +306,24 @@ class FuncAnimation(_FastSaveMixin, manimation.FuncAnimation):
         ...
 
 class ArtistAnimation(_FastSaveMixin, manimation.ArtistAnimation):
-    """
-    A faster drop-in replacement for `matplotlib.animation.ArtistAnimation`.
+    """A faster drop-in replacement for `matplotlib.animation.ArtistAnimation`.
 
-    Frames are lists of artists that are made visible in turn. Saving uses the
-    same direct-to-buffer renderer as `FuncAnimation`.
+Frames are lists of artists that are made visible in turn. Saving uses the
+same direct-to-buffer renderer as `FuncAnimation`.
 
-    Parameters
-    ----------
-    fig : `~ultraplot.figure.Figure`
-        The figure to animate.
-    artists : list of list of `~matplotlib.artist.Artist`
-        Each entry is the collection of artists making up one frame.
-    **kwargs
-        Passed to `matplotlib.animation.TimedAnimation`.
+Parameters
+----------
+fig : `~ultraplot.figure.Figure`
+    The figure to animate.
+artists : list of list of `~matplotlib.artist.Artist`
+    Each entry is the collection of artists making up one frame.
+**kwargs
+    Passed to `matplotlib.animation.TimedAnimation`.
 
-    See also
-    --------
-    matplotlib.animation.ArtistAnimation
-    ultraplot.animation.FuncAnimation
-    """
+See also
+--------
+matplotlib.animation.ArtistAnimation
+ultraplot.animation.FuncAnimation"""
 
     def _fast_frame_seq(self) -> Incomplete:
         ...

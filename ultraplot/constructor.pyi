@@ -42,44 +42,52 @@ DEFAULT_CYCLE_LUMINANCE = 90
 _RegistryValue = TypeVar('_RegistryValue')
 
 class _RefreshingRegistry(dict[str, _RegistryValue]):
-    """
-    Dictionary-like registry that rebuilds itself before reads.
+    """Dictionary-like registry that rebuilds itself before reads.
 
-    This keeps constructor registries aligned with modules that may be reloaded
-    in-place during tests or interactive use.
-    """
+This keeps constructor registries aligned with modules that may be reloaded
+in-place during tests or interactive use."""
 
     def __init__(self, factory: Callable[[], dict[str, _RegistryValue]]) -> None:
+        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _refresh(self) -> None:
         ...
 
     def __contains__(self, key: object) -> bool:
+        """True if the dictionary has the specified key, else False."""
         ...
 
     def __getitem__(self, key: str) -> _RegistryValue:
+        """Return self[key]."""
         ...
 
     def __iter__(self) -> Iterator[str]:
+        """Implement iter(self)."""
         ...
 
     def __len__(self) -> int:
+        """Return len(self)."""
         ...
 
     def get(self, key: str, default: _RegistryValue | None=None) -> _RegistryValue | None:
+        """Return the value for key if key is in the dictionary, else default."""
         ...
 
     def items(self) -> Incomplete:
+        """Return a set-like object providing a view on the dict's items."""
         ...
 
     def keys(self) -> Incomplete:
+        """Return a set-like object providing a view on the dict's keys."""
         ...
 
     def values(self) -> Incomplete:
+        """Return an object providing a view on the dict's values."""
         ...
 
     def copy(self) -> dict[str, _RegistryValue]:
+        """Return a shallow copy of the dict."""
         ...
 
 def _build_norm_registry() -> dict[str, type[mcolors.Normalize]]:
@@ -283,79 +291,80 @@ ultraplot.utils.get_colors"""
     ...
 
 class Cycle(cycler.Cycler):
-    """
-    Generate and merge `~cycler.Cycler` instances in a variety of ways. The new generated class can be used to internally map keywords to the properties of the `~cycler.Cycler` instance. It is used by various plot functions to cycle through colors, linestyles, markers, etc.
+    """Generate and merge `~cycler.Cycler` instances in a variety of ways. The new generated class can be used to internally map keywords to the properties of the `~cycler.Cycler` instance. It is used by various plot functions to cycle through colors, linestyles, markers, etc.
 
-    Parameters
-    ----------
-    *args : colormap-spec or cycle-spec, optional
-        Positional arguments control the *colors* in the `~cycler.Cycler`
-        object. If zero arguments are passed, the single color ``'black'``
-        is used. If more than one argument is passed, the resulting cycles
-        are merged. Arguments are interpreted as follows:
+Parameters
+----------
+*args : colormap-spec or cycle-spec, optional
+    Positional arguments control the *colors* in the `~cycler.Cycler`
+    object. If zero arguments are passed, the single color ``'black'``
+    is used. If more than one argument is passed, the resulting cycles
+    are merged. Arguments are interpreted as follows:
 
-        * If a `~cycler.Cycler`, nothing more is done.
-        * If a sequence of RGB tuples or color strings, these colors are used.
-        * If a :class:`~ultraplot.colors.DiscreteColormap`, colors from the ``colors``
-        attribute are used.
-        * If a string cycle name, that :class:`~ultraplot.colors.DiscreteColormap`
-        is looked up and its ``colors`` are used.
-        * In all other cases, the argument is passed to `Colormap`, and
-        colors from the resulting :class:`~ultraplot.colors.ContinuousColormap`
-        are used. See the `samples` argument.
+    * If a `~cycler.Cycler`, nothing more is done.
+    * If a sequence of RGB tuples or color strings, these colors are used.
+    * If a :class:`~ultraplot.colors.DiscreteColormap`, colors from the ``colors``
+    attribute are used.
+    * If a string cycle name, that :class:`~ultraplot.colors.DiscreteColormap`
+    is looked up and its ``colors`` are used.
+    * In all other cases, the argument is passed to `Colormap`, and
+    colors from the resulting :class:`~ultraplot.colors.ContinuousColormap`
+    are used. See the `samples` argument.
 
-        If the last positional argument is numeric, it is used for the
-        `samples` keyword argument.
-    N
-        Shorthand for `samples`.
-    samples : float or sequence of float, optional
-        For :class:`~ultraplot.colors.DiscreteColormap`\\ s, this is the number of
-        colors to select. For example, ``Cycle('538', 4)`` returns the first 4
-        colors of the ``'538'`` color cycle.
-        For :class:`~ultraplot.colors.ContinuousColormap`\\ s, this is either a
-        sequence of sample coordinates used to draw colors from the colormap, or
-        an integer number of colors to draw. If the latter, the sample coordinates
-        are ``np.linspace(0, 1, samples)``. For example, ``Cycle('Reds', 5)``
-        divides the ``'Reds'`` colormap into five evenly spaced colors.
+    If the last positional argument is numeric, it is used for the
+    `samples` keyword argument.
+N
+    Shorthand for `samples`.
+samples : float or sequence of float, optional
+    For :class:`~ultraplot.colors.DiscreteColormap`\\ s, this is the number of
+    colors to select. For example, ``Cycle('538', 4)`` returns the first 4
+    colors of the ``'538'`` color cycle.
+    For :class:`~ultraplot.colors.ContinuousColormap`\\ s, this is either a
+    sequence of sample coordinates used to draw colors from the colormap, or
+    an integer number of colors to draw. If the latter, the sample coordinates
+    are ``np.linspace(0, 1, samples)``. For example, ``Cycle('Reds', 5)``
+    divides the ``'Reds'`` colormap into five evenly spaced colors.
 
-    Other parameters
-    ----------------
-    c, color, colors : sequence of color-spec, optional
-        A sequence of colors passed as keyword arguments. This is equivalent
-        to passing a sequence of colors as the first positional argument and is
-        included for consistency with `~matplotlib.axes.Axes.set_prop_cycle`.
-        If positional arguments were passed, the colors in this list are
-        appended to the colors resulting from the positional arguments.
-    lw, ls, d, a, m, ms, mew, mec, mfc
-        Shorthands for the below keywords.
-    linewidth, linestyle, dashes, alpha, marker, markersize, markeredgewidth, markeredgecolor, markerfacecolor : object or sequence of object, optional
-        Lists of `~matplotlib.lines.Line2D` properties that can be added to the
-        `~cycler.Cycler` instance. If the input was already a `~cycler.Cycler`,
-        these are added or appended to the existing cycle keys. If the lists have
-        unequal length, they are repeated to their least common multiple (unlike
-        `~cycler.cycler`, which throws an error in this case). For more info
-        on cyclers see `~matplotlib.axes.Axes.set_prop_cycle`. Also see
-        the `line style reference <https://matplotlib.org/2.2.5/gallery/lines_bars_and_markers/line_styles_reference.html>`__,
-        the `marker reference <https://matplotlib.org/stable/gallery/lines_bars_and_markers/marker_reference.html>`__,
-        and the `custom dashes reference <https://matplotlib.org/stable/gallery/lines_bars_and_markers/line_demo_dash_control.html>`__.
-    linewidths, linestyles, dashes, alphas, markers, markersizes, markeredgewidths, markeredgecolors, markerfacecolors
-        Aliases for the above keywords.
-    **kwargs
-        If the input is not already a `~cycler.Cycler` instance, these are passed
-        to `Colormap` and used to build the :class:`~ultraplot.colors.DiscreteColormap`
-        from which the cycler will draw its colors.
+Other parameters
+----------------
+c, color, colors : sequence of color-spec, optional
+    A sequence of colors passed as keyword arguments. This is equivalent
+    to passing a sequence of colors as the first positional argument and is
+    included for consistency with `~matplotlib.axes.Axes.set_prop_cycle`.
+    If positional arguments were passed, the colors in this list are
+    appended to the colors resulting from the positional arguments.
+lw, ls, d, a, m, ms, mew, mec, mfc
+    Shorthands for the below keywords.
+linewidth, linestyle, dashes, alpha, marker, markersize, markeredgewidth, markeredgecolor, markerfacecolor : object or sequence of object, optional
+    Lists of `~matplotlib.lines.Line2D` properties that can be added to the
+    `~cycler.Cycler` instance. If the input was already a `~cycler.Cycler`,
+    these are added or appended to the existing cycle keys. If the lists have
+    unequal length, they are repeated to their least common multiple (unlike
+    `~cycler.cycler`, which throws an error in this case). For more info
+    on cyclers see `~matplotlib.axes.Axes.set_prop_cycle`. Also see
+    the `line style reference <https://matplotlib.org/2.2.5/gallery/lines_bars_and_markers/line_styles_reference.html>`__,
+    the `marker reference <https://matplotlib.org/stable/gallery/lines_bars_and_markers/marker_reference.html>`__,
+    and the `custom dashes reference <https://matplotlib.org/stable/gallery/lines_bars_and_markers/line_demo_dash_control.html>`__.
+linewidths, linestyles, dashes, alphas, markers, markersizes, markeredgewidths, markeredgecolors, markerfacecolors
+    Aliases for the above keywords.
+**kwargs
+    If the input is not already a `~cycler.Cycler` instance, these are passed
+    to `Colormap` and used to build the :class:`~ultraplot.colors.DiscreteColormap`
+    from which the cycler will draw its colors.
 
-    See also
-    --------
-    cycler.cycler
-    cycler.Cycler
-    matplotlib.axes.Axes.set_prop_cycle
-    ultraplot.constructor.Colormap
-    ultraplot.constructor.Norm
-    ultraplot.utils.get_colors
-    """
+See also
+--------
+cycler.cycler
+cycler.Cycler
+matplotlib.axes.Axes.set_prop_cycle
+ultraplot.constructor.Colormap
+ultraplot.constructor.Norm
+ultraplot.utils.get_colors"""
 
     def __init__(self, *args: Incomplete, N: Incomplete=None, samples: Incomplete=None, name: Incomplete=None, **kwargs: Incomplete) -> None:
+        """Semi-private init.
+
+Do not use this directly, use `cycler` function instead."""
         ...
 
     def _parse_basic_properties(self, kwargs: Incomplete) -> Incomplete:
@@ -387,6 +396,7 @@ class Cycle(cycler.Cycler):
         ...
 
     def __eq__(self, other: Incomplete) -> bool:
+        """Return self==value."""
         ...
 
     def get_next(self) -> Incomplete:

@@ -16,16 +16,14 @@ __all__ = ['TaylorAxes']
 _format_docstring = ...
 
 class TaylorAxes(PolarAxes):
-    """
-    Axes subclass for Taylor diagrams.
+    """Axes subclass for Taylor diagrams.
 
-    Important
-    ---------
-    This axes subclass can be used by passing ``proj='taylor'`` to
-    axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
-    `~ultraplot.figure.Figure.add_subplot`, and
-    `~ultraplot.figure.Figure.subplots`.
-    """
+Important
+---------
+This axes subclass can be used by passing ``proj='taylor'`` to
+axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
+`~ultraplot.figure.Figure.add_subplot`, and
+`~ultraplot.figure.Figure.subplots`."""
     _name = 'taylor'
     _name_aliases = ()
     _default_corrs = np.array((1.0, 0.95, 0.9, 0.8, 0.6, 0.4, 0.2, 0.0))
