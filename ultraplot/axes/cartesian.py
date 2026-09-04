@@ -21,6 +21,8 @@ from .. import ticker as pticker
 from ..config import rc
 from ..internals import (
     _alias_kwargs,
+    _canonicalize_kwargs,
+    _format_alias_scopes,
     _not_none,
     _pop_params,
     _pop_rc,
@@ -676,13 +678,25 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # To restore matplotlib behavior, which draws "child" artists on top simply
         # because the axes was created after the "parent" one, use the inset_axes
         # zorder of 4 and make the background transparent.
+        kwargs = _canonicalize_kwargs(_format_alias_scopes, kwargs)
         sy = "y" if sx == "x" else "x"
         sig = self._format_signatures[CartesianAxes]
         keys = tuple(key[1:] for key in sig.parameters if key[0] == sx)
-        kwargs = {
-            (f"{sx}spineloc" if key == "loc" else sx + key if key in keys else key): val
-            for key, val in kwargs.items()
-        }  # noqa: E501
+        normalized = {}
+        for key, value in kwargs.items():
+            if key == "loc":
+                key = f"{sx}spineloc"
+            elif key in keys:
+                key = sx + key
+            else:
+                candidate = _canonicalize_kwargs(
+                    _format_alias_scopes, {sx + key: value}
+                )
+                candidate_key = next(iter(candidate))
+                if candidate_key in sig.parameters:
+                    key = candidate_key
+            normalized[key] = value
+        kwargs = normalized
         kwargs.setdefault(f"{sy}spineloc", "neither")
         kwargs.setdefault(f"{sx}spineloc", "top" if sx == "x" else "right")
         kwargs.setdefault(f"autoscale{sy}_on", getattr(self, f"get_autoscale{sy}_on")())

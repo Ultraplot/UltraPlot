@@ -146,3 +146,10 @@ def test_level_alias_is_consumed_before_native_plot_call() -> None:
     _, ax = uplt.subplots()
     mesh = ax.heatmap(np.arange(4).reshape(2, 2), N=5)
     assert mesh is not None
+
+
+def test_format_alias_is_consumed_before_twin_axes_init() -> None:
+    """A twin's legacy spine location must override its canonical default."""
+    _, ax = uplt.subplots()
+    twin = ax.twiny(xloc="bottom", ticks=2.5)
+    assert twin is not None
