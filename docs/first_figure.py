@@ -178,9 +178,10 @@ time = np.linspace(0, 10, 200)
 series1 = np.sin(time) * np.exp(-time / 5)
 series2 = np.cos(time) * np.exp(-time / 5)
 
-# Use a Cartesian panel as the square reference. The map keeps its native
-# Robinson aspect while the right-hand plots remain readable in a tall figure.
-layout = [[1, 2], [1, 2], [1, 3], [1, 3]]
+# The map spans two rows while the right-hand panels stack beside it. With the
+# 4:1 column ratio below, the Robinson map keeps its native 2:1 aspect and the
+# right-hand panels receive approximately square plotting areas.
+layout = [[1, 2], [1, 3]]
 
 # 3. Create the figure
 # Apply a Robinson projection only to the first panel.
@@ -190,10 +191,8 @@ fig, axs = uplt.subplots(
     share=0,
     refnum=2,
     refwidth=1.5,
-    wratios=(3.25, 1),
-    # The two right-hand axes span rows (0, 1) and (2, 3), respectively.
-    # Only the middle boundary separates them.
-    hspace=('0pt', '13em', '0pt'),
+    wratios=(4, 1),
+    hspace='13em',
 )
 
 # 4. Geographic data

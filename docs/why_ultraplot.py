@@ -114,9 +114,14 @@ uplt_fig.show()
 # UltraPlot does not reinvent the wheel—it just makes it easier to steer. A good
 # mental model for your workflow looks like this:
 #
-# * Use standard Matplotlib axes methods (``plot``, ``imshow``, ``scatter``) to draw the data.
-# * Use ``axs.format()`` to apply consistent labels, ticks, and styling at the panel level.
-# * Use ``fig.format()`` for global aesthetics and unified figure guides (like shared colorbars).
+# * Use standard axes methods such as :meth:`~ultraplot.axes.PlotAxes.plot`,
+#   :meth:`~ultraplot.axes.PlotAxes.imshow`, and
+#   :meth:`~ultraplot.axes.PlotAxes.scatter` to draw data.
+# * Use :meth:`~ultraplot.axes.Axes.format` through ``axs.format()`` to apply
+#   consistent labels, ticks, and styling at the panel level.
+# * Use :meth:`~ultraplot.figure.Figure.format` through ``fig.format()`` for
+#   global aesthetics, and :meth:`~ultraplot.figure.Figure.colorbar` for a
+#   shared colorbar.
 #
 # For a single, fast plot, stick with Matplotlib. When layout scaling and repetitive
 # formatting become a chore, let UltraPlot handle the heavy lifting.
