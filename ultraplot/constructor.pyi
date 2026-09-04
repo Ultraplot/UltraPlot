@@ -115,38 +115,38 @@ def _modify_colormap(cmap: Incomplete, *, cut: Incomplete, left: Incomplete, rig
 
 def Colormap(*args: Incomplete, name: Incomplete=None, listmode: Incomplete='perceptual', filemode: Incomplete='continuous', discrete: Incomplete=False, cycle: Incomplete=None, save: Incomplete=False, save_kw: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
     """Generate, retrieve, modify, and/or merge instances of
-:class:`~ultraplot.colors.PerceptualColormap`,
-:class:`~ultraplot.colors.ContinuousColormap`, and
-:class:`~ultraplot.colors.DiscreteColormap`.
+[PerceptualColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html),
+[ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html), and
+[DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 
 Parameters
 ----------
 *args : colormap-spec
     Positional arguments that individually generate colormaps. If more
     than one argument is passed, the resulting colormaps are *merged* with
-    `~ultraplot.colors.ContinuousColormap.append`
-    or `~ultraplot.colors.DiscreteColormap.append`.
+    [append](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.append)
+    or [append](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html#ultraplot.colors.DiscreteColormap.append).
     The arguments are interpreted as follows:
 
     * If a registered colormap name, that colormap instance is looked up.
       If colormap instance is a native matplotlib colormap class, it is
       converted to a ultraplot colormap class.
     * If a filename string with valid extension, the colormap data
-      is loaded with `ultraplot.colors.ContinuousColormap.from_file` or
-      `ultraplot.colors.DiscreteColormap.from_file` depending on the value of
+      is loaded with [ultraplot.colors.ContinuousColormap.from_file](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.from_file) or
+      [ultraplot.colors.DiscreteColormap.from_file](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html#ultraplot.colors.DiscreteColormap.from_file) depending on the value of
       `filemode` (see below). Default behavior is to load a
-      :class:`~ultraplot.colors.ContinuousColormap`.
-    * If RGB tuple or color string, a :class:`~ultraplot.colors.PerceptualColormap`
-      is generated with `~ultraplot.colors.PerceptualColormap.from_color`.
+      [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html).
+    * If RGB tuple or color string, a [PerceptualColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html)
+      is generated with [from_color](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_color).
       If the string ends in ``'_r'``, the monochromatic map will be
       *reversed*, i.e. will go from dark to light instead of light to dark.
     * If sequence of RGB tuples or color strings, a
-      :class:`~ultraplot.colors.DiscreteColormap`, :class:`~ultraplot.colors.PerceptualColormap`,
-      or :class:`~ultraplot.colors.ContinuousColormap` is generated depending on
+      [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html), [PerceptualColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html),
+      or [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html) is generated depending on
       the value of `listmode` (see below). Default behavior is to generate a
-      :class:`~ultraplot.colors.PerceptualColormap`.
-    * If dictionary, a :class:`~ultraplot.colors.PerceptualColormap` is
-      generated with `~ultraplot.colors.PerceptualColormap.from_hsl`.
+      [PerceptualColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html).
+    * If dictionary, a [PerceptualColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html) is
+      generated with [from_hsl](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_hsl).
       The dictionary should contain the keys ``'hue'``, ``'saturation'``,
       ``'luminance'``, and optionally ``'alpha'``, or their aliases (see below).
 
@@ -159,11 +159,11 @@ filemode : {'perceptual', 'continuous', 'discrete'}, optional
     The options are as follows:
 
     * If ``'perceptual'`` or ``'continuous'``, a colormap is generated using
-      `~ultraplot.colors.ContinuousColormap.from_file`. The resulting
-      colormap may be a :class:`~ultraplot.colors.ContinuousColormap` or
-      :class:`~ultraplot.colors.PerceptualColormap` depending on the data file.
-    * If ``'discrete'``, a :class:`~ultraplot.colors.DiscreteColormap` is generated
-      using `~ultraplot.colors.ContinuousColormap.from_file`.
+      [from_file](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.from_file). The resulting
+      colormap may be a [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html) or
+      [PerceptualColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html) depending on the data file.
+    * If ``'discrete'``, a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html) is generated
+      using [from_file](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.from_file).
 
     Default is ``'continuous'`` when calling `Colormap` directly and
     ``'discrete'`` when `Colormap` is called by `Cycle`.
@@ -171,28 +171,28 @@ listmode : {'perceptual', 'continuous', 'discrete'}, optional
     Controls how colormaps are generated when you input sequence(s)
     of colors. The options are as follows:
 
-    * If ``'perceptual'``, a :class:`~ultraplot.colors.PerceptualColormap`
-      is generated with `~ultraplot.colors.PerceptualColormap.from_list`.
-    * If ``'continuous'``, a :class:`~ultraplot.colors.ContinuousColormap` is
-      generated with `~ultraplot.colors.ContinuousColormap.from_list`.
-    * If ``'discrete'``, a :class:`~ultraplot.colors.DiscreteColormap` is generated
+    * If ``'perceptual'``, a [PerceptualColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html)
+      is generated with [from_list](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_list).
+    * If ``'continuous'``, a [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html) is
+      generated with [from_list](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.from_list).
+    * If ``'discrete'``, a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html) is generated
       by simply passing the colors to the class.
 
     Default is ``'perceptual'`` when calling `Colormap` directly and
     ``'discrete'`` when `Colormap` is called by `Cycle`.
 samples : int or sequence of int, optional
-    For :class:`~ultraplot.colors.ContinuousColormap`\\ s, this is used to
-    generate :class:`~ultraplot.colors.DiscreteColormap`\\ s with
-    `~ultraplot.colors.ContinuousColormap.to_discrete`. For
-    :class:`~ultraplot.colors.DiscreteColormap`\\ s, this is used to updates the
+    For [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html)\\ s, this is used to
+    generate [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html)\\ s with
+    [to_discrete](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.to_discrete). For
+    [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html)\\ s, this is used to updates the
     number of colors in the cycle. If `samples` is integer, it applies
     to the final *merged* colormap. If it is a sequence of integers,
     it applies to each input colormap individually.
 discrete : bool, optional
     If ``True``, when the final colormap is a
-    :class:`~ultraplot.colors.DiscreteColormap`, we leave it alone, but when it is a
-    :class:`~ultraplot.colors.ContinuousColormap`, we always call
-    `~ultraplot.colors.ContinuousColormap.to_discrete` with a
+    [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html), we leave it alone, but when it is a
+    [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html), we always call
+    [to_discrete](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.to_discrete) with a
     default `samples` value of ``10``. This argument is not
     necessary if you provide the `samples` argument.
 left, right : float or sequence of float, optional
@@ -202,12 +202,12 @@ left, right : float or sequence of float, optional
     of float, these apply to each input colormap individually.
 cut : float or sequence of float, optional
     Cut out the center of the colormap. Passed to
-    `~ultraplot.colors.ContinuousColormap.cut`. If float,
+    [cut](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.cut). If float,
     this applies to the final *merged* colormap. If sequence of
     float, these apply to each input colormap individually.
 reverse : bool or sequence of bool, optional
     Reverse the colormap. Passed to
-    `~ultraplot.colors.ContinuousColormap.reversed`. If
+    [reversed](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.reversed). If
     float, this applies to the final *merged* colormap. If
     sequence of float, these apply to each input colormap individually.
 shift : float or sequence of float, optional
@@ -219,25 +219,25 @@ a
     Shorthand for `alpha`.
 alpha : float or color-spec or sequence, optional
     The opacity of the colormap or the opacity gradation. Passed to
-    `ultraplot.colors.ContinuousColormap.set_alpha`
-    or `ultraplot.colors.DiscreteColormap.set_alpha`. If float, this applies
+    [ultraplot.colors.ContinuousColormap.set_alpha](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.set_alpha)
+    or [ultraplot.colors.DiscreteColormap.set_alpha](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html#ultraplot.colors.DiscreteColormap.set_alpha). If float, this applies
     to the final *merged* colormap. If sequence of float, these apply to
     each colormap individually.
 h, s, l, c
     Shorthands for `hue`, `luminance`, `saturation`, and `chroma`.
 hue, saturation, luminance : float or color-spec or sequence, optional
     The channel value(s) used to generate colormaps with
-    `~ultraplot.colors.PerceptualColormap.from_hsl` and
-    `~ultraplot.colors.PerceptualColormap.from_color`.
+    [from_hsl](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_hsl) and
+    [from_color](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_color).
 
     * If you provided no positional arguments, these are used to create
       an arbitrary perceptually uniform colormap with
-      `~ultraplot.colors.PerceptualColormap.from_hsl`. This
+      [from_hsl](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_hsl). This
       is an alternative to passing a dictionary as a positional argument
       with `hue`, `saturation`, and `luminance` as dictionary keys (see `args`).
     * If you did provide positional arguments, and any of them are
       color specifications, these control the look of monochromatic colormaps
-      generated with `~ultraplot.colors.PerceptualColormap.from_color`.
+      generated with [from_color](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_color).
       To use different values for each colormap, pass a sequence of floats
       instead of a single float. Note the default `luminance` is ``90`` if
       `discrete` is ``True`` and ``100`` otherwise.
@@ -246,29 +246,29 @@ chroma
     Alias for `saturation`.
 cycle : str, optional
     The registered cycle name used to interpret color strings like ``'C0'``
-    and ``'C2'``. Default is from the active property :rcraw:`cycle`. This lets
+    and ``'C2'``. Default is from the active property [cycle](https://ultraplot.readthedocs.io/en/stable/search.html?q=cycle). This lets
     you make monochromatic colormaps using colors selected from arbitrary cycles.
 save : bool, optional
     Whether to call the colormap/color cycle save method, i.e.
-    `ultraplot.colors.ContinuousColormap.save` or
-    `ultraplot.colors.DiscreteColormap.save`.
+    [ultraplot.colors.ContinuousColormap.save](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.save) or
+    [ultraplot.colors.DiscreteColormap.save](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html#ultraplot.colors.DiscreteColormap.save).
 save_kw : dict-like, optional
     Ignored if `save` is ``False``. Passed to the colormap/color cycle
-    save method, i.e. `ultraplot.colors.ContinuousColormap.save` or
-    `ultraplot.colors.DiscreteColormap.save`.
+    save method, i.e. [ultraplot.colors.ContinuousColormap.save](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.save) or
+    [ultraplot.colors.DiscreteColormap.save](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html#ultraplot.colors.DiscreteColormap.save).
 
 Other parameters
 ----------------
 **kwargs
-    Passed to `ultraplot.colors.ContinuousColormap.copy`,
-    `ultraplot.colors.PerceptualColormap.copy`, or
-    `ultraplot.colors.DiscreteColormap.copy`.
+    Passed to [ultraplot.colors.ContinuousColormap.copy](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html#ultraplot.colors.ContinuousColormap.copy),
+    [ultraplot.colors.PerceptualColormap.copy](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.copy), or
+    [ultraplot.colors.DiscreteColormap.copy](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html#ultraplot.colors.DiscreteColormap.copy).
 
 Returns
 -------
 matplotlib.colors.Colormap
-    A :class:`~ultraplot.colors.ContinuousColormap` or
-    :class:`~ultraplot.colors.DiscreteColormap` instance.
+    A [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html) or
+    [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html) instance.
 
 See also
 --------
@@ -293,12 +293,12 @@ Parameters
 
     * If a `~cycler.Cycler`, nothing more is done.
     * If a sequence of RGB tuples or color strings, these colors are used.
-    * If a :class:`~ultraplot.colors.DiscreteColormap`, colors from the ``colors``
+    * If a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html), colors from the ``colors``
     attribute are used.
-    * If a string cycle name, that :class:`~ultraplot.colors.DiscreteColormap`
+    * If a string cycle name, that [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html)
     is looked up and its ``colors`` are used.
     * In all other cases, the argument is passed to `Colormap`, and
-    colors from the resulting :class:`~ultraplot.colors.ContinuousColormap`
+    colors from the resulting [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html)
     are used. See the `samples` argument.
 
     If the last positional argument is numeric, it is used for the
@@ -306,10 +306,10 @@ Parameters
 N
     Shorthand for `samples`.
 samples : float or sequence of float, optional
-    For :class:`~ultraplot.colors.DiscreteColormap`\\ s, this is the number of
+    For [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html)\\ s, this is the number of
     colors to select. For example, ``Cycle('538', 4)`` returns the first 4
     colors of the ``'538'`` color cycle.
-    For :class:`~ultraplot.colors.ContinuousColormap`\\ s, this is either a
+    For [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html)\\ s, this is either a
     sequence of sample coordinates used to draw colors from the colormap, or
     an integer number of colors to draw. If the latter, the sample coordinates
     are ``np.linspace(0, 1, samples)``. For example, ``Cycle('Reds', 5)``
@@ -320,26 +320,26 @@ Other parameters
 c, color, colors : sequence of color-spec, optional
     A sequence of colors passed as keyword arguments. This is equivalent
     to passing a sequence of colors as the first positional argument and is
-    included for consistency with `~matplotlib.axes.Axes.set_prop_cycle`.
+    included for consistency with [set_prop_cycle](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_prop_cycle.html).
     If positional arguments were passed, the colors in this list are
     appended to the colors resulting from the positional arguments.
 lw, ls, d, a, m, ms, mew, mec, mfc
     Shorthands for the below keywords.
 linewidth, linestyle, dashes, alpha, marker, markersize, markeredgewidth, markeredgecolor, markerfacecolor : object or sequence of object, optional
-    Lists of `~matplotlib.lines.Line2D` properties that can be added to the
+    Lists of [Line2D](https://matplotlib.org/stable/api/_as_gen/matplotlib.lines.Line2D.html) properties that can be added to the
     `~cycler.Cycler` instance. If the input was already a `~cycler.Cycler`,
     these are added or appended to the existing cycle keys. If the lists have
     unequal length, they are repeated to their least common multiple (unlike
     `~cycler.cycler`, which throws an error in this case). For more info
-    on cyclers see `~matplotlib.axes.Axes.set_prop_cycle`. Also see
-    the `line style reference <https://matplotlib.org/2.2.5/gallery/lines_bars_and_markers/line_styles_reference.html>`__,
-    the `marker reference <https://matplotlib.org/stable/gallery/lines_bars_and_markers/marker_reference.html>`__,
-    and the `custom dashes reference <https://matplotlib.org/stable/gallery/lines_bars_and_markers/line_demo_dash_control.html>`__.
+    on cyclers see [set_prop_cycle](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_prop_cycle.html). Also see
+    the [line style reference](https://matplotlib.org/2.2.5/gallery/lines_bars_and_markers/line_styles_reference.html),
+    the [marker reference](https://matplotlib.org/stable/gallery/lines_bars_and_markers/marker_reference.html),
+    and the [custom dashes reference](https://matplotlib.org/stable/gallery/lines_bars_and_markers/line_demo_dash_control.html).
 linewidths, linestyles, dashes, alphas, markers, markersizes, markeredgewidths, markeredgecolors, markerfacecolors
     Aliases for the above keywords.
 **kwargs
     If the input is not already a `~cycler.Cycler` instance, these are passed
-    to `Colormap` and used to build the :class:`~ultraplot.colors.DiscreteColormap`
+    to `Colormap` and used to build the [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html)
     from which the cycler will draw its colors.
 
 See also
@@ -389,14 +389,14 @@ ultraplot.utils.get_colors"""
         ...
 
 def Norm(norm: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
-    """Return an arbitrary `~matplotlib.colors.Normalize` instance. See this
-`tutorial <https://matplotlib.org/stable/tutorials/colors/colormapnorms.html>`__
+    """Return an arbitrary [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) instance. See this
+[tutorial](https://matplotlib.org/stable/tutorials/colors/colormapnorms.html)
 for an introduction to matplotlib normalizers.
 
 Parameters
 ----------
-norm : str or `~matplotlib.colors.Normalize`
-    The normalizer specification. If a `~matplotlib.colors.Normalize`
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html)
+    The normalizer specification. If a [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html)
     instance already, a `copy.copy` of the instance is returned.
     Otherwise, `norm` should be a string corresponding to one of
     the "registered" colormap normalizers (see below table).
@@ -410,24 +410,24 @@ norm : str or `~matplotlib.colors.Normalize`
     ===============================  =====================================
     Key(s)                           Class
     ===============================  =====================================
-    ``'null'``, ``'none'``           `~matplotlib.colors.NoNorm`
-    ``'diverging'``, ``'div'``       `~ultraplot.colors.DivergingNorm`
-    ``'segmented'``, ``'segments'``  `~ultraplot.colors.SegmentedNorm`
-    ``'linear'``                     `~matplotlib.colors.Normalize`
-    ``'log'``                        `~matplotlib.colors.LogNorm`
-    ``'power'``                      `~matplotlib.colors.PowerNorm`
-    ``'symlog'``                     `~matplotlib.colors.SymLogNorm`
+    ``'null'``, ``'none'``           [NoNorm](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.NoNorm.html)
+    ``'diverging'``, ``'div'``       [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    ``'segmented'``, ``'segments'``  [SegmentedNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.SegmentedNorm.html)
+    ``'linear'``                     [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html)
+    ``'log'``                        [LogNorm](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LogNorm.html)
+    ``'power'``                      [PowerNorm](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.PowerNorm.html)
+    ``'symlog'``                     [SymLogNorm](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.SymLogNorm.html)
     ===============================  =====================================
 
 Other parameters
 ----------------
 *args, **kwargs
-    Passed to the `~matplotlib.colors.Normalize` initializer.
+    Passed to the [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) initializer.
 
 Returns
 -------
 matplotlib.colors.Normalize
-    A `~matplotlib.colors.Normalize` instance.
+    A [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) instance.
 
 See also
 --------
@@ -437,22 +437,22 @@ ultraplot.constructor.Colormap"""
     ...
 
 def Locator(locator: Incomplete, *args: Incomplete, discrete: Incomplete=False, **kwargs: Incomplete) -> Incomplete:
-    """Return a `~matplotlib.ticker.Locator` instance.
+    """Return a [Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance.
 
 Parameters
 ----------
-locator : `~matplotlib.ticker.Locator`, str, bool, float, or sequence
+locator : [Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html), str, bool, float, or sequence
     The locator specification, interpreted as follows:
 
-    * If a `~matplotlib.ticker.Locator` instance already,
+    * If a [Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance already,
       a `copy.copy` of the instance is returned.
-    * If ``False``, a `~matplotlib.ticker.NullLocator` is used, and if
-      ``True``, the default `~matplotlib.ticker.AutoLocator` is used.
+    * If ``False``, a [NullLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.NullLocator.html) is used, and if
+      ``True``, the default [AutoLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.AutoLocator.html) is used.
     * If a number, this specifies the *step size* between tick locations.
-      Returns a `~matplotlib.ticker.MultipleLocator`.
+      Returns a [MultipleLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MultipleLocator.html).
     * If a sequence of numbers, these points are ticked. Returns
-      a `~matplotlib.ticker.FixedLocator` by default or a
-      `~ultraplot.ticker.DiscreteLocator` if `discrete` is ``True``.
+      a [FixedLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FixedLocator.html) by default or a
+      [DiscreteLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.DiscreteLocator.html) if `discrete` is ``True``.
 
     Otherwise, `locator` should be a string corresponding to one
     of the "registered" locators (see below table). If `locator` is a
@@ -466,48 +466,48 @@ locator : `~matplotlib.ticker.Locator`, str, bool, float, or sequence
     =======================  ============================================  =====================================================================================
     Key                      Class                                         Description
     =======================  ============================================  =====================================================================================
-    ``'null'``, ``'none'``   `~matplotlib.ticker.NullLocator`              No ticks
-    ``'auto'``               `~matplotlib.ticker.AutoLocator`              Major ticks at sensible locations
-    ``'minor'``              `~matplotlib.ticker.AutoMinorLocator`         Minor ticks at sensible locations
-    ``'date'``               `~matplotlib.dates.AutoDateLocator`           Default tick locations for datetime axes
-    ``'fixed'``              `~matplotlib.ticker.FixedLocator`             Ticks at these exact locations
-    ``'discrete'``           `~ultraplot.ticker.DiscreteLocator`             Major ticks restricted to these locations but subsampled depending on the axis length
-    ``'discreteminor'``      `~ultraplot.ticker.DiscreteLocator`             Minor ticks restricted to these locations but subsampled depending on the axis length
-    ``'index'``              :class:`~ultraplot.ticker.IndexLocator`                Ticks on the non-negative integers
-    ``'linear'``             `~matplotlib.ticker.LinearLocator`            Exactly ``N`` ticks encompassing axis limits, spaced as ``numpy.linspace(lo, hi, N)``
-    ``'log'``                `~matplotlib.ticker.LogLocator`               For log-scale axes
-    ``'logminor'``           `~matplotlib.ticker.LogLocator`               For log-scale axes on the 1st through 9th multiples of each power of the base
-    ``'logit'``              `~matplotlib.ticker.LogitLocator`             For logit-scale axes
-    ``'logitminor'``         `~matplotlib.ticker.LogitLocator`             For logit-scale axes with ``minor=True`` passed to `~matplotlib.ticker.LogitLocator`
-    ``'maxn'``               `~matplotlib.ticker.MaxNLocator`              No more than ``N`` ticks at sensible locations
-    ``'multiple'``           `~matplotlib.ticker.MultipleLocator`          Ticks every ``N`` step away from zero
-    ``'symlog'``             `~matplotlib.ticker.SymmetricalLogLocator`    For symlog-scale axes
-    ``'symlogminor'``        `~matplotlib.ticker.SymmetricalLogLocator`    For symlog-scale axes on the 1st through 9th multiples of each power of the base
-    ``'theta'``              `~matplotlib.projections.polar.ThetaLocator`  Like the base locator but default locations are every `numpy.pi` / 8 radians
-    ``'year'``               `~matplotlib.dates.YearLocator`               Ticks every ``N`` years
-    ``'month'``              `~matplotlib.dates.MonthLocator`              Ticks every ``N`` months
-    ``'weekday'``            `~matplotlib.dates.WeekdayLocator`            Ticks every ``N`` weekdays
-    ``'day'``                `~matplotlib.dates.DayLocator`                Ticks every ``N`` days
-    ``'hour'``               `~matplotlib.dates.HourLocator`               Ticks every ``N`` hours
-    ``'minute'``             `~matplotlib.dates.MinuteLocator`             Ticks every ``N`` minutes
-    ``'second'``             `~matplotlib.dates.SecondLocator`             Ticks every ``N`` seconds
-    ``'microsecond'``        `~matplotlib.dates.MicrosecondLocator`        Ticks every ``N`` microseconds
-    ``'lon'``, ``'deglon'``  `~ultraplot.ticker.LongitudeLocator`            Longitude gridlines at sensible decimal locations
-    ``'lat'``, ``'deglat'``  `~ultraplot.ticker.LatitudeLocator`             Latitude gridlines at sensible decimal locations
-    ``'dms'``                `~ultraplot.ticker.DegreeLocator`               Gridlines on nice minute and second intervals
-    ``'dmslon'``             `~ultraplot.ticker.LongitudeLocator`            Longitude gridlines on nice minute and second intervals
-    ``'dmslat'``             `~ultraplot.ticker.LatitudeLocator`             Latitude gridlines on nice minute and second intervals
+    ``'null'``, ``'none'``   [NullLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.NullLocator.html)              No ticks
+    ``'auto'``               [AutoLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.AutoLocator.html)              Major ticks at sensible locations
+    ``'minor'``              [AutoMinorLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.AutoMinorLocator.html)         Minor ticks at sensible locations
+    ``'date'``               [AutoDateLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.AutoDateLocator.html)           Default tick locations for datetime axes
+    ``'fixed'``              [FixedLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FixedLocator.html)             Ticks at these exact locations
+    ``'discrete'``           [DiscreteLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.DiscreteLocator.html)             Major ticks restricted to these locations but subsampled depending on the axis length
+    ``'discreteminor'``      [DiscreteLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.DiscreteLocator.html)             Minor ticks restricted to these locations but subsampled depending on the axis length
+    ``'index'``              [IndexLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.IndexLocator.html)                Ticks on the non-negative integers
+    ``'linear'``             [LinearLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.LinearLocator.html)            Exactly ``N`` ticks encompassing axis limits, spaced as ``numpy.linspace(lo, hi, N)``
+    ``'log'``                [LogLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.LogLocator.html)               For log-scale axes
+    ``'logminor'``           [LogLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.LogLocator.html)               For log-scale axes on the 1st through 9th multiples of each power of the base
+    ``'logit'``              [LogitLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.LogitLocator.html)             For logit-scale axes
+    ``'logitminor'``         [LogitLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.LogitLocator.html)             For logit-scale axes with ``minor=True`` passed to [LogitLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.LogitLocator.html)
+    ``'maxn'``               [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)              No more than ``N`` ticks at sensible locations
+    ``'multiple'``           [MultipleLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MultipleLocator.html)          Ticks every ``N`` step away from zero
+    ``'symlog'``             [SymmetricalLogLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.SymmetricalLogLocator.html)    For symlog-scale axes
+    ``'symlogminor'``        [SymmetricalLogLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.SymmetricalLogLocator.html)    For symlog-scale axes on the 1st through 9th multiples of each power of the base
+    ``'theta'``              [ThetaLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.projections.polar.ThetaLocator.html)  Like the base locator but default locations are every [numpy.pi](https://numpy.org/doc/stable/reference/generated/numpy.pi.html) / 8 radians
+    ``'year'``               [YearLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.YearLocator.html)               Ticks every ``N`` years
+    ``'month'``              [MonthLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.MonthLocator.html)              Ticks every ``N`` months
+    ``'weekday'``            [WeekdayLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.WeekdayLocator.html)            Ticks every ``N`` weekdays
+    ``'day'``                [DayLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.DayLocator.html)                Ticks every ``N`` days
+    ``'hour'``               [HourLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.HourLocator.html)               Ticks every ``N`` hours
+    ``'minute'``             [MinuteLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.MinuteLocator.html)             Ticks every ``N`` minutes
+    ``'second'``             [SecondLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.SecondLocator.html)             Ticks every ``N`` seconds
+    ``'microsecond'``        [MicrosecondLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.MicrosecondLocator.html)        Ticks every ``N`` microseconds
+    ``'lon'``, ``'deglon'``  [LongitudeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LongitudeLocator.html)            Longitude gridlines at sensible decimal locations
+    ``'lat'``, ``'deglat'``  [LatitudeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LatitudeLocator.html)             Latitude gridlines at sensible decimal locations
+    ``'dms'``                [DegreeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.DegreeLocator.html)               Gridlines on nice minute and second intervals
+    ``'dmslon'``             [LongitudeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LongitudeLocator.html)            Longitude gridlines on nice minute and second intervals
+    ``'dmslat'``             [LatitudeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LatitudeLocator.html)             Latitude gridlines on nice minute and second intervals
     =======================  ============================================  =====================================================================================
 
 Other parameters
 ----------------
 *args, **kwargs
-    Passed to the `~matplotlib.ticker.Locator` class.
+    Passed to the [Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 
 Returns
 -------
 matplotlib.ticker.Locator
-    A `~matplotlib.ticker.Locator` instance.
+    A [Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance.
 
 See also
 --------
@@ -520,33 +520,33 @@ ultraplot.constructor.Formatter"""
     ...
 
 def Formatter(formatter: Incomplete, *args: Incomplete, date: Incomplete=False, index: Incomplete=False, **kwargs: Incomplete) -> Incomplete:
-    """Return a `~matplotlib.ticker.Formatter` instance.
+    """Return a [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) instance.
 
 Parameters
 ----------
-formatter : `~matplotlib.ticker.Formatter`, str, bool, callable, or sequence
+formatter : [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html), str, bool, callable, or sequence
     The formatter specification, interpreted as follows:
 
-    * If a `~matplotlib.ticker.Formatter` instance already,
+    * If a [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) instance already,
       a `copy.copy` of the instance is returned.
-    * If ``False``, a `~matplotlib.ticker.NullFormatter` is used, and if
-      ``True``, the default `~ultraplot.ticker.AutoFormatter` is used.
+    * If ``False``, a [NullFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.NullFormatter.html) is used, and if
+      ``True``, the default [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) is used.
     * If a function, the labels will be generated using this function.
-      Returns a `~matplotlib.ticker.FuncFormatter`.
+      Returns a [FuncFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FuncFormatter.html).
     * If sequence of strings, the ticks are labeled with these strings.
-      Returns a `~matplotlib.ticker.FixedFormatter` by default or
-      an :class:`~ultraplot.ticker.IndexFormatter` if `index` is ``True``.
+      Returns a [FixedFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FixedFormatter.html) by default or
+      an [IndexFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.IndexFormatter.html) if `index` is ``True``.
     * If a string containing ``{x}`` or ``{x:...}``, ticks will be
       formatted by calling ``string.format(x=number)``. Returns
-      a `~matplotlib.ticker.StrMethodFormatter`.
+      a [StrMethodFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.StrMethodFormatter.html).
     * If a string containing ``'%%'`` and `date` is ``False``, ticks
       will be formatted using the C-style ``string %% number`` method. See
-      `this page <https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting>`__
-      for a review. Returns a `~matplotlib.ticker.FormatStrFormatter`.
+      [this page](https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting)
+      for a review. Returns a [FormatStrFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FormatStrFormatter.html).
     * If a string containing ``'%%'`` and `date` is ``True``, ticks
       will be formatted using `~datetime.datetime.strfrtime`. See
-      `this page <https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes>`__
-      for a review. Returns a `~matplotlib.dates.DateFormatter`.
+      [this page](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes)
+      for a review. Returns a [DateFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.DateFormatter.html).
 
     Otherwise, `formatter` should be a string corresponding to one of the
     "registered" formatters or formatter presets (see below table). If
@@ -563,37 +563,37 @@ formatter : `~matplotlib.ticker.Formatter`, str, bool, callable, or sequence
     ======================  ==============================================  =================================================================
     Key                     Class                                           Description
     ======================  ==============================================  =================================================================
-    ``'null'``, ``'none'``  `~matplotlib.ticker.NullFormatter`              No tick labels
-    ``'auto'``              `~ultraplot.ticker.AutoFormatter`                 New default tick labels for axes
-    ``'sci'``               `~ultraplot.ticker.SciFormatter`                  Format ticks with scientific notation
-    ``'simple'``            `~ultraplot.ticker.SimpleFormatter`               New default tick labels for e.g. contour labels
-    ``'sigfig'``            `~ultraplot.ticker.SigFigFormatter`               Format labels using the first ``N`` significant digits
-    ``'frac'``              `~ultraplot.ticker.FracFormatter`                 Rational fractions
-    ``'date'``              `~matplotlib.dates.AutoDateFormatter`           Default tick labels for datetime axes
-    ``'concise'``           `~matplotlib.dates.ConciseDateFormatter`        More concise date labels introduced in matplotlib 3.1
-    ``'datestr'``           `~matplotlib.dates.DateFormatter`               Date formatting with C-style ``string %% format`` notation
-    ``'eng'``               `~matplotlib.ticker.EngFormatter`               Engineering notation
-    ``'fixed'``             `~matplotlib.ticker.FixedFormatter`             List of strings
-    ``'formatstr'``         `~matplotlib.ticker.FormatStrFormatter`         From C-style ``string %% format`` notation
-    ``'func'``              `~matplotlib.ticker.FuncFormatter`              Use an arbitrary function
-    ``'index'``             :class:`~ultraplot.ticker.IndexFormatter`                List of strings corresponding to non-negative integer positions
-    ``'log'``               `~matplotlib.ticker.LogFormatterSciNotation`    For log-scale axes with scientific notation
-    ``'logit'``             `~matplotlib.ticker.LogitFormatter`             For logistic-scale axes
-    ``'percent'``           `~matplotlib.ticker.PercentFormatter`           Trailing percent sign
-    ``'scalar'``            `~matplotlib.ticker.ScalarFormatter`            The default matplotlib formatter
-    ``'strmethod'``         `~matplotlib.ticker.StrMethodFormatter`         From the ``string.format`` method
-    ``'theta'``             `~matplotlib.projections.polar.ThetaFormatter`  Formats radians as degrees, with a degree symbol
-    ``'e'``                 `~ultraplot.ticker.FracFormatter` preset          Fractions of *e*
-    ``'pi'``                `~ultraplot.ticker.FracFormatter` preset          Fractions of :math:`\\pi`
-    ``'tau'``               `~ultraplot.ticker.FracFormatter` preset          Fractions of the `one true circle constant <tau_>`_ :math:`\\tau`
-    ``'lat'``               `~ultraplot.ticker.AutoFormatter` preset          Cardinal "SN" indicator
-    ``'lon'``               `~ultraplot.ticker.AutoFormatter` preset          Cardinal "WE" indicator
-    ``'deg'``               `~ultraplot.ticker.AutoFormatter` preset          Trailing degree symbol
-    ``'deglat'``            `~ultraplot.ticker.AutoFormatter` preset          Trailing degree symbol and cardinal "SN" indicator
-    ``'deglon'``            `~ultraplot.ticker.AutoFormatter` preset          Trailing degree symbol and cardinal "WE" indicator
-    ``'dms'``               `~ultraplot.ticker.DegreeFormatter`               Labels with degree/minute/second support
-    ``'dmslon'``            `~ultraplot.ticker.LongitudeFormatter`            Longitude labels with degree/minute/second support
-    ``'dmslat'``            `~ultraplot.ticker.LatitudeFormatter`             Latitude labels with degree/minute/second support
+    ``'null'``, ``'none'``  [NullFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.NullFormatter.html)              No tick labels
+    ``'auto'``              [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html)                 New default tick labels for axes
+    ``'sci'``               [SciFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.SciFormatter.html)                  Format ticks with scientific notation
+    ``'simple'``            [SimpleFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.SimpleFormatter.html)               New default tick labels for e.g. contour labels
+    ``'sigfig'``            [SigFigFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.SigFigFormatter.html)               Format labels using the first ``N`` significant digits
+    ``'frac'``              [FracFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.FracFormatter.html)                 Rational fractions
+    ``'date'``              [AutoDateFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.AutoDateFormatter.html)           Default tick labels for datetime axes
+    ``'concise'``           [ConciseDateFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.ConciseDateFormatter.html)        More concise date labels introduced in matplotlib 3.1
+    ``'datestr'``           [DateFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.dates.DateFormatter.html)               Date formatting with C-style ``string %% format`` notation
+    ``'eng'``               [EngFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.EngFormatter.html)               Engineering notation
+    ``'fixed'``             [FixedFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FixedFormatter.html)             List of strings
+    ``'formatstr'``         [FormatStrFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FormatStrFormatter.html)         From C-style ``string %% format`` notation
+    ``'func'``              [FuncFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FuncFormatter.html)              Use an arbitrary function
+    ``'index'``             [IndexFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.IndexFormatter.html)                List of strings corresponding to non-negative integer positions
+    ``'log'``               [LogFormatterSciNotation](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.LogFormatterSciNotation.html)    For log-scale axes with scientific notation
+    ``'logit'``             [LogitFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.LogitFormatter.html)             For logistic-scale axes
+    ``'percent'``           [PercentFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.PercentFormatter.html)           Trailing percent sign
+    ``'scalar'``            [ScalarFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.ScalarFormatter.html)            The default matplotlib formatter
+    ``'strmethod'``         [StrMethodFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.StrMethodFormatter.html)         From the ``string.format`` method
+    ``'theta'``             [ThetaFormatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.projections.polar.ThetaFormatter.html)  Formats radians as degrees, with a degree symbol
+    ``'e'``                 [FracFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.FracFormatter.html) preset          Fractions of *e*
+    ``'pi'``                [FracFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.FracFormatter.html) preset          Fractions of :math:`\\pi`
+    ``'tau'``               [FracFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.FracFormatter.html) preset          Fractions of the `one true circle constant <tau_>`_ :math:`\\tau`
+    ``'lat'``               [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) preset          Cardinal "SN" indicator
+    ``'lon'``               [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) preset          Cardinal "WE" indicator
+    ``'deg'``               [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) preset          Trailing degree symbol
+    ``'deglat'``            [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) preset          Trailing degree symbol and cardinal "SN" indicator
+    ``'deglon'``            [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) preset          Trailing degree symbol and cardinal "WE" indicator
+    ``'dms'``               [DegreeFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.DegreeFormatter.html)               Labels with degree/minute/second support
+    ``'dmslon'``            [LongitudeFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LongitudeFormatter.html)            Longitude labels with degree/minute/second support
+    ``'dmslat'``            [LatitudeFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LatitudeFormatter.html)             Latitude labels with degree/minute/second support
     ======================  ==============================================  =================================================================
 
 date : bool, optional
@@ -606,12 +606,12 @@ index : bool, optional
 Other parameters
 ----------------
 *args, **kwargs
-    Passed to the `~matplotlib.ticker.Formatter` class.
+    Passed to the [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 
 Returns
 -------
 matplotlib.ticker.Formatter
-    A `~matplotlib.ticker.Formatter` instance.
+    A [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) instance.
 
 See also
 --------
@@ -624,12 +624,12 @@ ultraplot.constructor.Locator"""
     ...
 
 def Scale(scale: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
-    """Return a `~matplotlib.scale.ScaleBase` instance.
+    """Return a [ScaleBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.ScaleBase.html) instance.
 
 Parameters
 ----------
-scale : `~matplotlib.scale.ScaleBase`, str, or tuple
-    The axis scale specification. If a `~matplotlib.scale.ScaleBase` instance
+scale : [ScaleBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.ScaleBase.html), str, or tuple
+    The axis scale specification. If a [ScaleBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.ScaleBase.html) instance
     already, a `copy.copy` of the instance is returned. Otherwise, `scale`
     should be a string corresponding to one of the "registered" axis scales
     or axis scale presets (see below table).
@@ -643,26 +643,26 @@ scale : `~matplotlib.scale.ScaleBase`, str, or tuple
     =================  ======================================  ===============================================
     Key                Class                                   Description
     =================  ======================================  ===============================================
-    ``'linear'``       `~ultraplot.scale.LinearScale`            Linear
-    ``'log'``          `~ultraplot.scale.LogScale`               Logarithmic
-    ``'symlog'``       `~ultraplot.scale.SymmetricalLogScale`    Logarithmic beyond finite space around zero
-    ``'logit'``        `~ultraplot.scale.LogitScale`             Logistic
-    ``'inverse'``      `~ultraplot.scale.InverseScale`           Inverse
-    ``'function'``     `~ultraplot.scale.FuncScale`              Arbitrary forward and backwards transformations
-    ``'sine'``         `~ultraplot.scale.SineLatitudeScale`      Sine function (in degrees)
-    ``'mercator'``     `~ultraplot.scale.MercatorLatitudeScale`  Mercator latitude function (in degrees)
-    ``'exp'``          `~ultraplot.scale.ExpScale`               Arbitrary exponential function
-    ``'power'``        `~ultraplot.scale.PowerScale`             Arbitrary power function
-    ``'cutoff'``       `~ultraplot.scale.CutoffScale`            Arbitrary piecewise linear transformations
-    ``'quadratic'``    `~ultraplot.scale.PowerScale` (preset)    Quadratic function
-    ``'cubic'``        `~ultraplot.scale.PowerScale` (preset)    Cubic function
-    ``'quartic'``      `~ultraplot.scale.PowerScale` (preset)    Quartic function
-    ``'db'``           `~ultraplot.scale.ExpScale` (preset)      Ratio expressed as `decibels <db_>`_
-    ``'np'``           `~ultraplot.scale.ExpScale` (preset)      Ratio expressed as `nepers <np_>`_
-    ``'idb'``          `~ultraplot.scale.ExpScale` (preset)      `Decibels <db_>`_ expressed as ratio
-    ``'inp'``          `~ultraplot.scale.ExpScale` (preset)      `Nepers <np_>`_ expressed as ratio
-    ``'pressure'``     `~ultraplot.scale.ExpScale` (preset)      Height (in km) expressed linear in pressure
-    ``'height'``       `~ultraplot.scale.ExpScale` (preset)      Pressure (in hPa) expressed linear in height
+    ``'linear'``       [LinearScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.LinearScale.html)            Linear
+    ``'log'``          [LogScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.LogScale.html)               Logarithmic
+    ``'symlog'``       [SymmetricalLogScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.SymmetricalLogScale.html)    Logarithmic beyond finite space around zero
+    ``'logit'``        [LogitScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.LogitScale.html)             Logistic
+    ``'inverse'``      [InverseScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.InverseScale.html)           Inverse
+    ``'function'``     [FuncScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.FuncScale.html)              Arbitrary forward and backwards transformations
+    ``'sine'``         [SineLatitudeScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.SineLatitudeScale.html)      Sine function (in degrees)
+    ``'mercator'``     [MercatorLatitudeScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.MercatorLatitudeScale.html)  Mercator latitude function (in degrees)
+    ``'exp'``          [ExpScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.ExpScale.html)               Arbitrary exponential function
+    ``'power'``        [PowerScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.PowerScale.html)             Arbitrary power function
+    ``'cutoff'``       [CutoffScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.CutoffScale.html)            Arbitrary piecewise linear transformations
+    ``'quadratic'``    [PowerScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.PowerScale.html) (preset)    Quadratic function
+    ``'cubic'``        [PowerScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.PowerScale.html) (preset)    Cubic function
+    ``'quartic'``      [PowerScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.PowerScale.html) (preset)    Quartic function
+    ``'db'``           [ExpScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.ExpScale.html) (preset)      Ratio expressed as `decibels <db_>`_
+    ``'np'``           [ExpScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.ExpScale.html) (preset)      Ratio expressed as `nepers <np_>`_
+    ``'idb'``          [ExpScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.ExpScale.html) (preset)      `Decibels <db_>`_ expressed as ratio
+    ``'inp'``          [ExpScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.ExpScale.html) (preset)      `Nepers <np_>`_ expressed as ratio
+    ``'pressure'``     [ExpScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.ExpScale.html) (preset)      Height (in km) expressed linear in pressure
+    ``'height'``       [ExpScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.ExpScale.html) (preset)      Pressure (in hPa) expressed linear in height
     =================  ======================================  ===============================================
 
     .. _db: https://en.wikipedia.org/wiki/Decibel
@@ -671,12 +671,12 @@ scale : `~matplotlib.scale.ScaleBase`, str, or tuple
 Other parameters
 ----------------
 *args, **kwargs
-    Passed to the `~matplotlib.scale.ScaleBase` class.
+    Passed to the [ScaleBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.ScaleBase.html) class.
 
 Returns
 -------
 matplotlib.scale.ScaleBase
-    A `~matplotlib.scale.ScaleBase` instance.
+    A [ScaleBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.ScaleBase.html) instance.
 
 See also
 --------
@@ -699,12 +699,11 @@ Parameters
 name : str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`
     The projection name or projection class instance. If the latter, it
     is simply returned. If the former, it must correspond to one of the
-    `PROJ <https://proj.org>`__ projection name shorthands, like in
+    [PROJ](https://proj.org) projection name shorthands, like in
     basemap.
 
     The following table lists the valid projection name shorthands,
-    their full names (with links to the relevant `PROJ documentation
-    <https://proj.org/operations/projections>`__),
+    their full names (with links to the relevant [PROJ documentation](https://proj.org/operations/projections)),
     and whether they are available in the cartopy and basemap packages.
     (added) indicates a projection class that ultraplot has "added" to
     cartopy using the cartopy API.
@@ -767,7 +766,7 @@ name : str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`
     ``'wintri'``   `Winkel tripel <wintri_>`_                       ✓ (added)  ✗
     =============  ===============================================  =========  =======
 
-backend : {'cartopy', 'basemap'}, default: :rc:`geo.backend`
+backend : {'cartopy', 'basemap'}, default: [geo.backend](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.backend)
     Whether to return a cartopy `~cartopy.crs.Projection` instance
     or a basemap `~mpl_toolkits.basemap.Basemap` instance.
 
@@ -807,8 +806,8 @@ ultraplot.axes.GeoAxes
 References
 ----------
 For more information on map projections, see the
-`wikipedia page <https://en.wikipedia.org/wiki/Map_projection>`__ and the
-`PROJ <https://proj.org>`__ documentation.
+[wikipedia page](https://en.wikipedia.org/wiki/Map_projection) and the
+[PROJ](https://proj.org) documentation.
 
 .. _aea: https://proj.org/operations/projections/aea.html
 .. _aeqd: https://proj.org/operations/projections/aeqd.html

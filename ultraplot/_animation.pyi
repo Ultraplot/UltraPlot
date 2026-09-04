@@ -215,11 +215,11 @@ Backends without blitting support safely fall back to ``draw_idle()``.
 
 Parameters
 ----------
-canvas : `~matplotlib.backend_bases.FigureCanvasBase`
+canvas : [FigureCanvasBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.backend_bases.FigureCanvasBase.html)
     Canvas containing the artists.
-artists : iterable of `~matplotlib.artist.Artist`, optional
+artists : iterable of [Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html), optional
     Artists that will change between updates.
-bbox : `~matplotlib.transforms.Bbox` or object with a ``bbox`` attribute, optional
+bbox : [Bbox](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Bbox.html) or object with a ``bbox`` attribute, optional
     Region to cache and blit. By default, the union of the managed artists'
     axes bounding boxes is used. Figure-level artists fall back to the full
     figure bounding box.

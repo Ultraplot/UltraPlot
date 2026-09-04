@@ -2,7 +2,7 @@
 # fmt: off
 """
 Tools for setting up ultraplot and configuring global settings.
-See the :ref:`configuration guide <ug_config>` for details.
+See the [configuration guide](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_config) for details.
 """
 from _typeshed import Incomplete
 import logging
@@ -69,7 +69,7 @@ def _infer_ultraplot_dict(kw_params: Incomplete) -> Incomplete:
     ...
 
 def config_inline_backend(fmt: Incomplete=None) -> None:
-    """Set up the ipython `inline backend display format <https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-matplotlib>`__
+    """Set up the ipython [inline backend display format](https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-matplotlib)
 and ensure that inline figures always look the same as saved figures.
 This runs the following ipython magic commands:
 
@@ -81,11 +81,11 @@ This runs the following ipython magic commands:
     %%config InlineBackend.print_figure_kwargs = {'bbox_inches': None}
 
 When the inline backend is inactive or unavailable, this has no effect.
-This function is called when you modify the :rcraw:`inlineformat` property.
+This function is called when you modify the [inlineformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=inlineformat) property.
 
 Parameters
 ----------
-fmt : str or sequence, default: :rc:`inlineformat`
+fmt : str or sequence, default: [inlineformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=inlineformat)
     The inline backend file format or a list thereof. Valid formats
     include ``'jpg'``, ``'png'``, ``'svg'``, ``'pdf'``, and ``'retina'``.
 
@@ -95,9 +95,9 @@ Configurator"""
     ...
 
 def use_style(style: Incomplete) -> None:
-    """Apply the `matplotlib style(s) <https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__
-with `matplotlib.style.use`. This function is
-called when you modify the :rcraw:`style` property.
+    """Apply the [matplotlib style(s)](https://matplotlib.org/stable/tutorials/introductory/customizing.html)
+with [matplotlib.style.use](https://matplotlib.org/stable/api/_as_gen/matplotlib.style.use.html). This function is
+called when you modify the [style](https://ultraplot.readthedocs.io/en/stable/search.html?q=style) property.
 
 Parameters
 ----------
@@ -117,9 +117,9 @@ def register_cmaps(*args: Incomplete, user: Incomplete=None, local: Incomplete=N
 
 Parameters
 ----------
-*args : path-spec or `~ultraplot.colors.ContinuousColormap`, optional
+*args : path-spec or [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html), optional
     The colormaps to register. These can be file paths containing
-    RGB data or `~ultraplot.colors.ContinuousColormap` instances. By default,
+    RGB data or [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html) instances. By default,
     if positional arguments are passed, then `user` is set to ``False``.
 
     Valid file extensions are listed in the below table. Note that colormaps
@@ -157,9 +157,9 @@ def register_cycles(*args: Incomplete, user: Incomplete=None, local: Incomplete=
 
 Parameters
 ----------
-*args : path-spec or `~ultraplot.colors.DiscreteColormap`, optional
+*args : path-spec or [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html), optional
     The color cycles to register. These can be file paths containing
-    RGB data or `~ultraplot.colors.DiscreteColormap` instances. By default,
+    RGB data or [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html) instances. By default,
     if positional arguments are passed, then `user` is set to ``False``.
 
     Valid file extensions are listed in the below table. Note that color cycles
@@ -213,11 +213,11 @@ default : bool, default: False
     Default is always ``False``.
 space : {'hcl', 'hsl', 'hpl'}, optional
     The colorspace used to pick "perceptually distinct" colors from
-    the `XKCD color survey <https://xkcd.com/color/rgb/>`__.
+    the [XKCD color survey](https://xkcd.com/color/rgb/).
     If passed then `default` is set to ``True``.
 margin : float, default: 0.1
     The margin used to pick "perceptually distinct" colors from the
-    `XKCD color survey <https://xkcd.com/color/rgb/>`__. The normalized hue,
+    [XKCD color survey](https://xkcd.com/color/rgb/). The normalized hue,
     saturation, and luminance of each color must differ from the channel
     values of the prededing colors by `margin` in order to be registered.
     Must fall between ``0`` and ``1`` (``0`` will register all colors).
@@ -242,7 +242,7 @@ Parameters
 *args : path-like, optional
     The font files to add. By default, if positional arguments are passed, then
     `user` is set to ``False``. Files must have the extensions ``.ttf`` or ``.otf``.
-    See `this link <https://gree2.github.io/python/2015/04/27/python-change-matplotlib-font-on-mac>`__
+    See [this link](https://gree2.github.io/python/2015/04/27/python-change-matplotlib-font-on-mac)
     for a guide on converting other font files to ``.ttf`` and ``.otf``.
 user : bool, optional
     Whether to reload fonts from `~Configurator.user_folder`. Default is
@@ -263,11 +263,10 @@ ultraplot.demos.show_fonts"""
     ...
 
 class Configurator(MutableMapping, dict):
-    """A dictionary-like class for managing `matplotlib settings
-<https://matplotlib.org/stable/tutorials/introductory/customizing.html>`__
-stored in `rc_matplotlib` and :ref:`ultraplot settings <ug_rcultraplot>`
+    """A dictionary-like class for managing [matplotlib settings](https://matplotlib.org/stable/tutorials/introductory/customizing.html)
+stored in `rc_matplotlib` and [ultraplot settings](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_rcultraplot)
 stored in `rc_ultraplot`. This class is instantiated as the `rc` object
-on import. See the :ref:`user guide <ug_config>` for details."""
+on import. See the [user guide](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_config) for details."""
 
     def __repr__(self) -> str:
         ...
@@ -452,7 +451,7 @@ Configurator.local_files"""
     def user_file() -> str:
         """Return location of the default ultraplotrc file. On Linux, this is either
 ``$XDG_CONFIG_HOME/ultraplot/ultraplotrc`` or ``~/.config/ultraplot/ultraplotrc``
-if the `XDG directory <https://wiki.archlinux.org/title/XDG_Base_Directory>`__
+if the [XDG directory](https://wiki.archlinux.org/title/XDG_Base_Directory)
 is unset. On other operating systems, this is ``~/.ultraplot/ultraplotrc``. The
 location ``~/.ultraplotrc`` or ``~/.ultraplot/ultraplotrc`` is always returned if the
 file exists, regardless of the operating system. If multiple valid locations
@@ -468,7 +467,7 @@ Configurator.local_files"""
     def user_folder(subfolder: Incomplete=None) -> str:
         """Return location of the default ultraplot folder. On Linux, this
 is either ``$XDG_CONFIG_HOME/ultraplot`` or ``~/.config/ultraplot``
-if the `XDG directory <https://wiki.archlinux.org/title/XDG_Base_Directory>`__
+if the [XDG directory](https://wiki.archlinux.org/title/XDG_Base_Directory)
 is unset. On other operating systems, this is ``~/.ultraplot``. The location
 ``~/.ultraplot`` is always returned if the folder exists, regardless of the
 operating system. If multiple valid locations are found, a warning is raised.
@@ -506,7 +505,7 @@ mode : {0, 1, 2}, optional
       whether or not they are local to the "with as" block.
     * ``mode=1``: Matplotlib's `rc_matplotlib` settings are only
       returned if they are local to the "with as" block. For example,
-      if :rcraw:`axes.titlesize` was passed to `~Configurator.context`,
+      if [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize) was passed to `~Configurator.context`,
       then ``uplt.rc.find('axes.titlesize', context=True)`` will return
       this value, but ``uplt.rc.find('axes.titleweight', context=True)`` will
       return ``None``. This is used internally when instantiating axes.
@@ -517,10 +516,10 @@ mode : {0, 1, 2}, optional
 Note
 ----
 Context "modes" are primarily used internally but may also be useful for power
-users. Mode ``1`` is used when `~ultraplot.axes.Axes.format` is called during
-axes instantiation, and mode ``2`` is used when `~ultraplot.axes.Axes.format`
+users. Mode ``1`` is used when [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format) is called during
+axes instantiation, and mode ``2`` is used when [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format)
 is manually called by users. The latter prevents successive calls to
-`~ultraplot.axes.Axes.format` from constantly looking up and re-applying
+[format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format) from constantly looking up and re-applying
 unchanged settings and significantly increasing the runtime.
 
 Example
@@ -534,7 +533,7 @@ The below applies settings to axes in a specific figure using
 >>>     ax.plot(data)
 
 The below applies settings to a specific axes using
-`~ultraplot.axes.Axes.format`, which uses `~Configurator.context`
+[format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format), which uses `~Configurator.context`
 internally.
 
 >>> import ultraplot as uplt
@@ -608,7 +607,7 @@ Parameters
     a "category" name as the first argument, in which case all
     settings are prepended with ``'category.'``. For example,
     ``rc.update('axes', labelsize=20, titlesize=20)`` changes the
-    :rcraw:`axes.labelsize` and :rcraw:`axes.titlesize` settings.
+    [axes.labelsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.labelsize) and [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize) settings.
 **kwargs
     `rc` keys and values passed as keyword arguments.
     If the name has dots, simply omit them.
@@ -681,7 +680,7 @@ comment : bool, optional
     this takes the same value as `user`.
 description : bool, default: False
     Whether to include descriptions of each setting (as seen in the
-    :ref:`user guide table <ug_rctable>`) as comments.
+    [user guide table](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_rctable)) as comments.
 
 See also
 --------

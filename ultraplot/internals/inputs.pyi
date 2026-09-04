@@ -86,8 +86,8 @@ subset of the weights. Used to sanitize input for `_dist_kde`."""
 def _dist_kde(distribution: Incomplete, *, coords: Incomplete=None, points: Incomplete=None, margin: Incomplete=0.0, bw_method: Incomplete=None, weights: Incomplete=None) -> Incomplete:
     """Return the coordinates and gaussian kernel density estimate of the input
 distribution. This is the single entry point for the kernel density
-estimates drawn by `~ultraplot.axes.PlotAxes.hist` and
-`~ultraplot.axes.PlotAxes.ridgeline`.
+estimates drawn by [hist](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.hist) and
+[ridgeline](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.ridgeline).
 
 Parameters
 ----------
@@ -96,17 +96,17 @@ distribution : array-like
 coords : array-like, optional
     The coordinates to evaluate the estimate on. If ``None`` an evenly
     spaced grid is built from the data range (see `points` and `margin`).
-points : int, default: :rc:`kde.points`
+points : int, default: [kde.points](https://ultraplot.readthedocs.io/en/stable/search.html?q=kde.points)
     The number of evenly spaced evaluation coordinates. Larger values give
     smoother curves at the cost of speed. Ignored if `coords` was passed.
 margin : float, default: 0
     The fraction of the data range used to pad either side of the
     evaluation grid. Ignored if `coords` was passed.
 bw_method : str, float, or callable, optional
-    The bandwidth selector passed to `scipy.stats.gaussian_kde`. Can be
+    The bandwidth selector passed to [scipy.stats.gaussian_kde](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html). Can be
     ``'scott'``, ``'silverman'``, a scalar, or a callable.
 weights : array-like, optional
-    The per-sample weights passed to `scipy.stats.gaussian_kde`.
+    The per-sample weights passed to [scipy.stats.gaussian_kde](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html).
 
 Returns
 -------
@@ -158,8 +158,8 @@ Include units in the title if `include_units` is ``True``."""
     ...
 
 def _meta_units(data: Incomplete) -> Incomplete:
-    """Get the unit string from the `xarray.DataArray` attributes or the
-`pint.Quantity`. Format the latter with :rcraw:`unitformat`."""
+    """Get the unit string from the [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) attributes or the
+[pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity). Format the latter with [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat)."""
     ...
 
 def _geo_basemap_1d(x: Incomplete, *ys: Incomplete, xmin: Incomplete=-180, xmax: Incomplete=180) -> Incomplete:

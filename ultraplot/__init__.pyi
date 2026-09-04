@@ -169,7 +169,7 @@ def __dir__() -> list[str]:
     ...
 
 def _patch_seaborn_move_legend() -> None:
-    """Let ``sns.move_legend(ax, ...)`` accept singleton :class:`SubplotGrid` objects.
+    """Let ``sns.move_legend(ax, ...)`` accept singleton `SubplotGrid` objects.
 
 Seaborn only accepts native Matplotlib axes, figures, and its own grids. The
 wrapper unwraps a singleton grid to its underlying axes; callers can avoid

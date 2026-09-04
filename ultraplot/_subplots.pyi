@@ -22,7 +22,7 @@ for a Figure instance.
 
 Parameters
 ----------
-figure : `~ultraplot.figure.Figure`
+figure : [Figure](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html)
     The parent figure."""
 
     def __init__(self, figure: 'Figure') -> None:
@@ -31,7 +31,7 @@ figure : `~ultraplot.figure.Figure`
     def reset(self) -> None:
         """Forget every subplot and release the gridspec.
 
-Called by `~ultraplot.figure.Figure.clear`, which destroys the axes this
+Called by [clear](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.clear), which destroys the axes this
 manager tracks. Without this the figure keeps handing out axes that are no
 longer attached to it."""
         ...

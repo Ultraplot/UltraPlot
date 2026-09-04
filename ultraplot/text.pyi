@@ -34,7 +34,7 @@ curvature_pad : float, default: 2.0
 min_advance : float, default: 1.0
     Minimum additional spacing (pixels) enforced between glyph centers.
 **kwargs
-    Passed to `matplotlib.text.Text` for character styling."""
+    Passed to [matplotlib.text.Text](https://matplotlib.org/stable/api/_as_gen/matplotlib.text.Text.html) for character styling."""
 
     def __init__(self, x: Incomplete, y: Incomplete, text: Incomplete, axes: Incomplete, *, upright: Incomplete=True, ellipsis: Incomplete=False, avoid_overlap: Incomplete=True, overlap_tol: Incomplete=0.1, curvature_pad: Incomplete=2.0, min_advance: Incomplete=1.0, **kwargs: Incomplete) -> None:
         """Create a `.Text` instance at *x*, *y* with string *text*.
@@ -42,7 +42,7 @@ min_advance : float, default: 1.0
 The text is aligned relative to the anchor point (*x*, *y*) according
 to ``horizontalalignment`` (default: 'left') and ``verticalalignment``
 (default: 'baseline'). See also
-:doc:`/gallery/text_labels_and_annotations/text_alignment`.
+[/gallery/text_labels_and_annotations/text_alignment](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Ftext_labels_and_annotations%2Ftext_alignment).
 
 While Text accepts the 'label' keyword argument, by default it is not
 added to the handles of a legend.
@@ -54,13 +54,13 @@ Properties:
     alpha: float or None
     animated: bool
     antialiased: bool
-    backgroundcolor: :mpltype:`color`
+    backgroundcolor: [color](https://matplotlib.org/stable/search.html?q=color)
     bbox: dict with properties for `.patches.FancyBboxPatch`
     clip_box: unknown
     clip_on: unknown
     clip_path: unknown
-    color or c: :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color or c: [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     fontfamily or family or fontname: {FONTNAME, 'serif', 'sans-serif', 'cursive', 'fantasy', 'monospace'}
     fontproperties or font or font_properties: `.font_manager.FontProperties` or `str` or `pathlib.Path`
     fontsize or size: float or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
@@ -86,10 +86,10 @@ Properties:
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
     text: object
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     transform_rotates_text: bool
     url: str
-    usetex: bool, default: :rc:`text.usetex`
+    usetex: bool, default: [text.usetex](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.usetex)
     verticalalignment or va: {'baseline', 'bottom', 'center', 'center_baseline', 'top'}
     visible: bool
     wrap: bool
@@ -144,7 +144,7 @@ level : float"""
 
 Parameters
 ----------
-t : `~matplotlib.transforms.Transform`"""
+t : [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)"""
         ...
 
     def draw(self, renderer: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> None:

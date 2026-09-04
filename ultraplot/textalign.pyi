@@ -124,14 +124,14 @@ Parameters
 ----------
 ax : ultraplot.axes.Axes
     The axes whose labels are aligned.
-labels : sequence of `~matplotlib.text.Text`, optional
+labels : sequence of [Text](https://matplotlib.org/stable/api/_as_gen/matplotlib.text.Text.html), optional
     The labels to move. Default is every text registered for alignment on
-    the axes (see `~ultraplot.axes.Axes.text` with ``avoid_overlap=True``).
+    the axes (see [text](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.text) with ``avoid_overlap=True``).
 pad : float, default: 2.0
     Padding in points added around every label bounding box.
 avoid_points : bool, default: True
     Whether labels also repel the data points of lines and scatter plots.
-avoid : sequence of `~matplotlib.artist.Artist`, optional
+avoid : sequence of [Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html), optional
     Additional artists (a legend, an inset, ...) whose bounding boxes the
     labels must stay clear of.
 only_move : {'xy', 'x', 'y'}, default: 'xy'
@@ -148,7 +148,7 @@ clip : bool, default: True
     Whether to keep labels inside the axes.
 arrows : bool or dict, default: False
     Whether to draw a connector from displaced labels back to their anchor.
-    A dict is passed to `~matplotlib.patches.FancyArrowPatch`.
+    A dict is passed to [FancyArrowPatch](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.FancyArrowPatch.html).
 min_arrow_dist : float, default: 8.0
     Only draw connectors for labels displaced further than this (in points).
 

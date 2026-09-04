@@ -149,6 +149,15 @@ def test_generated_stubs_include_runtime_docstrings():
     assert "Matplotlib documentation" in plot_doc
     assert "Plot standard lines" in plot_doc
     assert "=====================\nultraplot documentation" not in plot_doc
+    assert (
+        "[DataFrame](https://pandas.pydata.org/pandas-docs/stable/"
+        "reference/api/pandas.DataFrame.html)" in plot_doc
+    )
+    assert (
+        "[Cycle](https://ultraplot.readthedocs.io/en/stable/api/"
+        "ultraplot.constructor.Cycle.html)" in plot_doc
+    )
+    assert ":class:`~pandas.DataFrame`" not in plot_doc
 
     grid_stub = PACKAGE / "gridspec.pyi"
     grid_tree = ast.parse(grid_stub.read_text(encoding="utf-8"))

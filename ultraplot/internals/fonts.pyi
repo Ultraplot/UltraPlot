@@ -24,16 +24,16 @@ def _clear_math_parse_cache() -> None:
     ...
 
 class _UnicodeFonts(UnicodeFonts):
-    """A simple `~matplotlib._mathtext.UnicodeFonts` subclass that
+    """A simple [UnicodeFonts](https://matplotlib.org/stable/api/_as_gen/matplotlib._mathtext.UnicodeFonts.html) subclass that
 interprets ``rc['mathtext.default'] != 'regular'`` in the presence of
 ``rc['mathtext.fontset'] == 'custom'`` as possibly modifying the active font.
 
 Works by permitting the ``rc['mathtext.rm']``, ``rc['mathtext.it']``,
 etc. settings to have the dummy value ``'regular'`` instead of a valid family
 name, e.g. ``rc['mathtext.it'] == 'regular:italic'`` (permitted through an
-override of the `~matplotlib.rcsetup.validate_font_properties` validator).
+override of the [validate_font_properties](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcsetup.validate_font_properties.html) validator).
 When this dummy value is detected then the font properties passed to
-`~matplotlib._mathtext.TrueTypeFont` are taken by replacing ``'regular'``
+[TrueTypeFont](https://matplotlib.org/stable/api/_as_gen/matplotlib._mathtext.TrueTypeFont.html) are taken by replacing ``'regular'``
 in the "math" fontset with the active font name."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:

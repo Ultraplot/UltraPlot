@@ -18,6 +18,7 @@ import warnings
 from collections import defaultdict, deque
 from collections.abc import Iterable
 from pathlib import Path
+from urllib.parse import quote_plus
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "ultraplot"
@@ -50,6 +51,25 @@ TRY_NODES = (ast.Try,) + ((ast.TryStar,) if hasattr(ast, "TryStar") else ())
 RUNTIME_DOC_BANNERS = re.compile(
     r"(?m)^=+\n(ultraplot documentation|Matplotlib documentation)\n=+\n?"
 )
+RST_LINK_PATTERN = re.compile(r"`([^`<>]+?)\s*<(https?://[^>]+)>`__?")
+SPHINX_ROLE_PATTERN = re.compile(
+    r":(?:(?:py):)?(class|func|meth|attr|obj|mod|data|ref|doc|rc|rcraw|mpltype):"
+    r"`([^`]+)`"
+)
+SPHINX_TARGET_PATTERN = re.compile(
+    r"(?<![:`\w\[])`(~?(?:ultraplot|matplotlib|numpy|scipy|pandas|xarray|pint|networkx)"
+    r"\.[^`\s]+)`"
+)
+DOC_SEARCH_URLS = {
+    "ultraplot": "https://ultraplot.readthedocs.io/en/stable/search.html?q={query}",
+    "matplotlib": "https://matplotlib.org/stable/search.html?q={query}",
+    "numpy": "https://numpy.org/doc/stable/search.html?q={query}",
+    "scipy": "https://docs.scipy.org/doc/scipy/search.html?q={query}",
+    "pandas": "https://pandas.pydata.org/pandas-docs/stable/search.html?q={query}",
+    "xarray": "https://docs.xarray.dev/en/stable/search.html?q={query}",
+    "pint": "https://pint.readthedocs.io/en/stable/search.html?q={query}",
+    "networkx": "https://networkx.org/documentation/stable/search.html?q={query}",
+}
 
 
 def _dotted_name(node: ast.expr) -> str | None:
@@ -506,6 +526,78 @@ def _clean_runtime_doc(doc: str) -> str:
     return doc.strip()
 
 
+def _split_sphinx_target(value: str) -> tuple[str, str]:
+    """Return the display label and canonical target from a Sphinx role body."""
+    match = re.fullmatch(r"(.+?)\s*<([^>]+)>", value.strip())
+    if match:
+        return match.group(1).strip(), match.group(2).strip().lstrip("~")
+    target = value.strip()
+    shortened = target.startswith("~")
+    target = target.lstrip("~")
+    return (target.rsplit(".", 1)[-1] if shortened else target), target
+
+
+def _ultraplot_doc_url(target: str) -> str:
+    """Return the autosummary URL generated for an UltraPlot API target."""
+    parts = target.split(".")
+    class_index = next(
+        (index for index, part in enumerate(parts) if part[:1].isupper()), None
+    )
+    if class_index is not None and class_index < len(parts) - 1:
+        page = ".".join(parts[: class_index + 1])
+        return f"https://ultraplot.readthedocs.io/en/stable/api/{page}.html#{target}"
+    return f"https://ultraplot.readthedocs.io/en/stable/api/{target}.html"
+
+
+def _api_doc_url(target: str, role: str = "obj") -> str | None:
+    """Resolve common Sphinx API targets without loading remote inventories."""
+    if target.startswith("ultraplot."):
+        return _ultraplot_doc_url(target)
+    templates = {
+        "matplotlib.": "https://matplotlib.org/stable/api/_as_gen/{target}.html",
+        "numpy.": "https://numpy.org/doc/stable/reference/generated/{target}.html",
+        "scipy.": "https://docs.scipy.org/doc/scipy/reference/generated/{target}.html",
+        "pandas.": "https://pandas.pydata.org/pandas-docs/stable/reference/api/{target}.html",
+        "xarray.": "https://docs.xarray.dev/en/stable/generated/{target}.html",
+    }
+    for prefix, template in templates.items():
+        if target.startswith(prefix):
+            return template.format(target=target)
+    if role in {"rc", "rcraw"}:
+        return DOC_SEARCH_URLS["ultraplot"].format(query=quote_plus(target))
+    if role in {"ref", "doc"}:
+        return DOC_SEARCH_URLS["ultraplot"].format(query=quote_plus(target))
+    if role == "mpltype":
+        return DOC_SEARCH_URLS["matplotlib"].format(query=quote_plus(target))
+    project = target.split(".", 1)[0]
+    if project in DOC_SEARCH_URLS:
+        return DOC_SEARCH_URLS[project].format(query=quote_plus(target))
+    return None
+
+
+def _markdown_api_link(label: str, target: str, role: str = "obj") -> str:
+    """Render a resolved target as a Markdown link or readable inline code."""
+    url = _api_doc_url(target, role)
+    return f"[{label}]({url})" if url else f"`{label}`"
+
+
+def _linkify_docstring(doc: str) -> str:
+    """Convert Sphinx links and API roles into LSP-friendly Markdown links."""
+    doc = RST_LINK_PATTERN.sub(lambda match: f"[{match.group(1)}]({match.group(2)})", doc)
+
+    def replace_role(match: re.Match) -> str:
+        role = match.group(1)
+        label, target = _split_sphinx_target(match.group(2))
+        return _markdown_api_link(label, target, role)
+
+    def replace_target(match: re.Match) -> str:
+        label, target = _split_sphinx_target(match.group(1))
+        return _markdown_api_link(label, target)
+
+    doc = SPHINX_ROLE_PATTERN.sub(replace_role, doc)
+    return SPHINX_TARGET_PATTERN.sub(replace_target, doc)
+
+
 class _StubTransformer(ast.NodeTransformer):
     """Reduce implementation syntax to declarations suitable for ``.pyi`` files."""
 
@@ -534,6 +626,8 @@ class _StubTransformer(ast.NodeTransformer):
                 doc = self._expand_docstring(ast_doc)
         elif "%(" in doc:
             doc = self._expand_docstring(doc)
+        if doc:
+            doc = _linkify_docstring(doc)
 
         body = []
         if doc:
@@ -592,6 +686,7 @@ class _StubTransformer(ast.NodeTransformer):
                 doc = ast.get_docstring(node, clean=True)
             if doc:
                 doc = self._expand_docstring(doc)
+                doc = _linkify_docstring(doc)
                 node.body[0] = ast.Expr(value=ast.Constant(doc))
         if not node.body:
             node.body = [ast.Expr(value=ast.Constant(Ellipsis))]
@@ -614,6 +709,7 @@ class _StubTransformer(ast.NodeTransformer):
     def visit_Expr(self, node: ast.Expr) -> ast.Expr | None:
         if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
             value = self._expand_docstring(node.value.value)
+            value = _linkify_docstring(value)
             return ast.Expr(value=ast.Constant(value))
         return None
 

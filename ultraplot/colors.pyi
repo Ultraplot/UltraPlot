@@ -107,7 +107,7 @@ ratios : sequence of float, optional
 
 def _make_lookup_table(N: Incomplete, data: Incomplete, gamma: Incomplete=1.0, inverse: Incomplete=False) -> Incomplete:
     """Generate lookup tables of HSL values given specified gradations. Similar to
-`~matplotlib.colors.makeMappingArray` but permits *circular* hue gradations,
+[makeMappingArray](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.makeMappingArray.html) but permits *circular* hue gradations,
 disables clipping of out-of-bounds values, and uses fancier "gamma" scaling.
 
 Parameters
@@ -117,7 +117,7 @@ N : int
 data : array-like
     Sequence of `(x, y_0, y_1)` tuples specifying channel jumps
     (from `y_0` to `y_1`) and `x` coordinate of those jumps
-    (ranges between 0 and 1). See `~matplotlib.colors.LinearSegmentedColormap`.
+    (ranges between 0 and 1). See [LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html).
 gamma : float or sequence of float, optional
     To obtain channel values between coordinates `x_i` and `x_{i+1}`
     in rows `i` and `i+1` of `data` we use the formula:
@@ -130,7 +130,7 @@ gamma : float or sequence of float, optional
     0 to 1 between rows `i` and ``i+1``. If `gamma` is float, it applies
     to every transition. Otherwise, its length must equal ``data.shape[0]-1``.
 
-    This is similar to the `matplotlib.colors.makeMappingArray` `gamma` except
+    This is similar to the [matplotlib.colors.makeMappingArray](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.makeMappingArray.html) `gamma` except
     it controls the weighting for transitions *between* each segment data
     coordinate rather than the coordinates themselves. This makes more sense
     for `PerceptualColormap`\\ s because they usually contain just a
@@ -214,7 +214,7 @@ algongside more intuitive ``Colormap(data, name, N)`` input."""
         ...
 
 class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
-    """Replacement for `~matplotlib.colors.LinearSegmentedColormap`."""
+    """Replacement for [LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html)."""
 
     def __str__(self) -> str:
         ...
@@ -231,11 +231,11 @@ segmentdata : dict-like
     and ``'a'`` are also acceptable. The key values can be callable
     functions that return channel values given a colormap index, or
     3-column arrays indicating the coordinates and channel transitions. See
-    `matplotlib.colors.LinearSegmentedColormap` for a detailed explanation.
+    [matplotlib.colors.LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html) for a detailed explanation.
 name : str, default: '_no_name'
     The colormap name. This can also be passed as the first
     positional string argument.
-N : int, default: :rc:`image.lut`
+N : int, default: [image.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.lut)
     Number of points in the colormap lookup table.
 gamma : float, optional
     Gamma scaling used for the *x* coordinates.
@@ -250,7 +250,7 @@ cyclic : bool, optional
 Other parameters
 ----------------
 **kwargs
-    Passed to `matplotlib.colors.LinearSegmentedColormap`.
+    Passed to [matplotlib.colors.LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html).
 
 See also
 --------
@@ -357,7 +357,7 @@ Parameters
 ----------
 path : path-like, optional
     The output filename. If not provided, the colormap is saved in the
-    ``cmaps`` subfolder in :func:`~ultraplot.config.Configurator.user_folder`
+    ``cmaps`` subfolder in [user_folder](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.user_folder)
     under the filename ``name.json`` (where ``name`` is the colormap
     name). Valid extensions are shown in the below table.
 
@@ -560,7 +560,7 @@ PerceptualColormap.from_list"""
         ...
 
 class DiscreteColormap(mcolors.ListedColormap, _Colormap):
-    """Replacement for `~matplotlib.colors.ListedColormap`."""
+    """Replacement for [ListedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.ListedColormap.html)."""
 
     def __str__(self) -> str:
         ...
@@ -595,7 +595,7 @@ alpha : float, optional
 Other parameters
 ----------------
 **kwargs
-    Passed to `~matplotlib.colors.ListedColormap`.
+    Passed to [ListedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.ListedColormap.html).
 
 See also
 --------
@@ -635,7 +635,7 @@ Parameters
 ----------
 path : path-like, optional
     The output filename. If not provided, the colormap is saved in the
-    ``cycles`` subfolder in :func:`~ultraplot.config.Configurator.user_folder`
+    ``cycles`` subfolder in [user_folder](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.user_folder)
     under the filename ``name.hex`` (where ``name`` is the color cycle
     name). Valid extensions are described in the below table.
 
@@ -777,16 +777,16 @@ segmentdata : dict-like
     ``'s'``, ``'l'``, ``'a'``, and ``'c'`` are also acceptable. The key
     values can be callable functions that return channel values given a
     colormap index, or 3-column arrays indicating the coordinates and
-    channel transitions. See `~matplotlib.colors.LinearSegmentedColormap`
+    channel transitions. See [LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html)
     for a more detailed explanation.
 name : str, default: '_no_name'
     The colormap name. This can also be passed as the first
     positional string argument.
-N : int, default: :rc:`image.lut`
+N : int, default: [image.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.lut)
     Number of points in the colormap lookup table.
 space : {'hsl', 'hpl', 'hcl', 'hsv'}, optional
     The hue, saturation, luminance-style colorspace to use for interpreting
-    the channels. See `this page <http://www.hsluv.org/comparison/>`__ for
+    the channels. See [this page](http://www.hsluv.org/comparison/) for
     a full description.
 clip : bool, optional
     Whether to "clip" impossible colors (i.e. truncate HCL colors with
@@ -796,11 +796,11 @@ gamma : float, optional
 gamma1 : float, optional
     If greater than 1, make low saturation colors more prominent. If
     less than 1, make high saturation colors more prominent. Similar to
-    the `HCLWizard <http://hclwizard.org:64230/hclwizard/>`_ option.
+    the [HCLWizard](http://hclwizard.org:64230/hclwizard/) option.
 gamma2 : float, optional
     If greater than 1, make high luminance colors more prominent. If
     less than 1, make low luminance colors more prominent. Similar to
-    the `HCLWizard <http://hclwizard.org:64230/hclwizard/>`_ option.
+    the [HCLWizard](http://hclwizard.org:64230/hclwizard/) option.
 alpha : float, optional
     The opacity for the entire colormap. This overrides
     the input opacities.
@@ -835,7 +835,7 @@ ultraplot.constructor.Colormap"""
         ...
 
     def _init(self) -> None:
-        """As with `~matplotlib.colors.LinearSegmentedColormap`, but convert
+        """As with [LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html), but convert
 each value in the lookup table from ``self._space`` to RGB."""
         ...
 
@@ -849,11 +849,11 @@ gamma : float, optional
 gamma1 : float, optional
     If greater than 1, make low saturation colors more prominent. If
     less than 1, make high saturation colors more prominent. Similar to
-    the `HCLWizard <http://hclwizard.org:64230/hclwizard/>`_ option.
+    the [HCLWizard](http://hclwizard.org:64230/hclwizard/) option.
 gamma2 : float, optional
     If greater than 1, make high luminance colors more prominent. If
     less than 1, make low luminance colors more prominent. Similar to
-    the `HCLWizard <http://hclwizard.org:64230/hclwizard/>`_ option."""
+    the [HCLWizard](http://hclwizard.org:64230/hclwizard/) option."""
         ...
 
     def copy(self, name: Incomplete=None, segmentdata: Incomplete=None, N: Incomplete=None, *, alpha: Incomplete=None, gamma: Incomplete=None, cyclic: Incomplete=None, clip: Incomplete=None, gamma1: Incomplete=None, gamma2: Incomplete=None, space: Incomplete=None) -> PerceptualColormap:
@@ -907,7 +907,7 @@ name : str, default: '_no_name'
     positional string argument.
 space : {'hsl', 'hpl', 'hcl', 'hsv'}, optional
     The hue, saturation, luminance-style colorspace to use for interpreting
-    the channels. See `this page <http://www.hsluv.org/comparison/>`__ for
+    the channels. See [this page](http://www.hsluv.org/comparison/) for
     a full description.
 l, s, a, c
     Shorthands for `luminance`, `saturation`, `alpha`, and `chroma`.
@@ -946,7 +946,7 @@ Parameters
 ----------
 space : {'hsl', 'hpl', 'hcl', 'hsv'}, optional
     The hue, saturation, luminance-style colorspace to use for interpreting
-    the channels. See `this page <http://www.hsluv.org/comparison/>`__ for
+    the channels. See [this page](http://www.hsluv.org/comparison/) for
     a full description.
 name : str, default: '_no_name'
     The colormap name. This can also be passed as the first
@@ -1047,7 +1047,7 @@ def _interpolate_scalar(x: Incomplete, x0: Incomplete, x1: Incomplete, y0: Incom
     ...
 
 def _interpolate_extrapolate_vector(xq: Incomplete, x: Incomplete, y: Incomplete) -> Incomplete:
-    """Interpolate between two vectors. Similar to `numpy.interp` except this
+    """Interpolate between two vectors. Similar to [numpy.interp](https://numpy.org/doc/stable/reference/generated/numpy.interp.html) except this
 does not truncate out-of-bounds values (i.e. this is reversible)."""
     ...
 
@@ -1066,7 +1066,7 @@ levels : sequence of float
     The level boundaries. Must be monotonically increasing or decreasing.
     If the latter then `~DiscreteNorm.descending` is set to ``True`` and the
     colorbar axis drawn with this normalizer will be reversed.
-norm : `~matplotlib.colors.Normalize`, optional
+norm : [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalizer used to transform `levels` and data values passed to
     `~DiscreteNorm.__call__` before discretization. The ``vmin`` and ``vmax``
     of the normalizer are set to the minimum and maximum values in `levels`.
@@ -1074,8 +1074,8 @@ unique : {'neither', 'both', 'min', 'max'}, optional
     Which out-of-bounds regions should be assigned unique colormap colors.
     Possible values are equivalent to the `extend` values. Internally, ultraplot
     sets this depending on the user-input `extend`, whether the colormap is
-    cyclic, and whether `~matplotlib.colors.Colormap.set_under`
-    or `~matplotlib.colors.Colormap.set_over` were called for the colormap.
+    cyclic, and whether [set_under](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.set_under.html)
+    or [set_over](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.set_over.html) were called for the colormap.
 step : float, optional
     The intensity of the transition to out-of-bounds colors as a fraction
     of the adjacent step between in-bounds colors. Internally, ultraplot sets
@@ -1165,13 +1165,13 @@ Note
 ----
 The algorithm this normalizer uses to select normalized values
 in-between level list indices is adapted from the algorithm
-`~matplotlib.colors.LinearSegmentedColormap` uses to select channel
+[LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html) uses to select channel
 values in-between segment data points (hence the name `SegmentedNorm`).
 
 Example
 -------
 In the below example, unevenly spaced levels are passed to
-`~matplotlib.axes.Axes.contourf`, resulting in the automatic
+[contourf](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contourf.html), resulting in the automatic
 application of `SegmentedNorm`.
 
 >>> import ultraplot as uplt
@@ -1302,7 +1302,7 @@ colors "on-the-fly" from registered colormaps and color cycles.
 
 This works everywhere that colors are used in matplotlib, for
 example as `color`, `edgecolor`, or `facecolor` keyword arguments
-passed to :class:`~ultraplot.axes.PlotAxes` commands."""
+passed to [PlotAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html) commands."""
         ...
 
     def __setitem__(self, key: Incomplete, value: Incomplete) -> None:
@@ -1352,11 +1352,11 @@ kwargs : dict-like
 
 Parameters
 ----------
-cmap : str or `~matplotlib.colors.Colormap` or None
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html) or None
 
     - if a `.Colormap`, return it
     - if a string, look it up in ``mpl.colormaps``
-    - if None, return the Colormap defined in :rc:`image.cmap`
+    - if None, return the Colormap defined in [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
 
 Returns
 -------

@@ -24,13 +24,13 @@ def _pop_rc(src: Incomplete, *, ignore_conflicts: Incomplete=True) -> Incomplete
 
 def _translate_loc(loc: Incomplete, mode: Incomplete, *, default: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
     """Translate the location string `loc` into a standardized form. The `mode`
-must be a string for which there is a :rcraw:`mode.loc` setting. Additional
+must be a string for which there is a [mode.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=mode.loc) setting. Additional
 options can be added with keyword arguments."""
     ...
 
 def _translate_grid(b: Incomplete, key: Incomplete) -> Incomplete:
     """Translate an instruction to turn either major or minor gridlines on or off into a
-boolean and string applied to :rcraw:`axes.grid` and :rcraw:`axes.grid.which`."""
+boolean and string applied to [axes.grid](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.grid) and [axes.grid.which](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.grid.which)."""
     ...
 
 def _resolve_lazy(name: Incomplete) -> Incomplete:

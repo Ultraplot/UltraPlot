@@ -170,16 +170,16 @@ matplotlib >= 3.10 the ``InsetIndicator`` resolves its connectors in its own
 
 @dataclass
 class _HawkeyeSpec:
-    """Validated inputs for :meth:`GeoAxes.hawkeye`.
+    """Validated inputs for `GeoAxes.hawkeye`.
 
 ``extent_transform`` and ``relation`` are only fully resolved when ``extent``
 is not ``None`` (they require a geographic extent to normalize and infer);
 otherwise they retain their raw defaults and are never consumed. ``aspect`` is
 intentionally not stored here because ``'projection'`` can only be resolved
-from the live inset axes (see :meth:`GeoAxes._build_hawkeye_inset`). When
+from the live inset axes (see `GeoAxes._build_hawkeye_inset`). When
 ``anchor_transform`` is not ``None`` the ``anchor`` is a geographic/projected
 point rather than an axes fraction; it is converted to a fraction against the
-live inset view limits in :meth:`GeoAxes._build_hawkeye_inset`."""
+live inset view limits in `GeoAxes._build_hawkeye_inset`."""
     xy: tuple[float, float]
     size: tuple[float, float]
     anchor: tuple[float, float]
@@ -231,8 +231,8 @@ else:
 
 class _GeoAxis(object):
     """Dummy axis used by longitude and latitude locators and for storing view limits on
-longitude and latitude coordinates. Modeled after how `matplotlib.ticker._DummyAxis`
-and `matplotlib.ticker.TickHelper` are used to control tick locations and labels."""
+longitude and latitude coordinates. Modeled after how [matplotlib.ticker._DummyAxis](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker._DummyAxis.html)
+and [matplotlib.ticker.TickHelper](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.TickHelper.html) are used to control tick locations and labels."""
 
     def __init__(self, axes: 'GeoAxes') -> None:
         ...
@@ -439,9 +439,9 @@ the axes instance rather than the `~mpl_toolkits.basemap.Basemap` instance.
 Important
 ---------
 This axes subclass can be used by passing ``proj='proj_name'``
-to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
-`~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`,
-where ``proj_name`` is a registered :ref:`PROJ projection name <proj_table>`.
+to axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.add_axes),
+[add_subplot](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.add_subplot), and [subplots](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.subplots),
+where ``proj_name`` is a registered [PROJ projection name](https://ultraplot.readthedocs.io/en/stable/search.html?q=proj_table).
 You can also pass a `~cartopy.crs.Projection` or `~mpl_toolkits.basemap.Basemap`
 instance instead of a projection name. Alternatively, you can pass any of the
 matplotlib-recognized axes subclass names ``proj='cartopy'``, ``proj='geo'``, or
@@ -453,26 +453,26 @@ argument, or pass ``proj='basemap'`` with a `~mpl_toolkits.basemap.Basemap`
         """Parameters
 ----------
 *args
-    Passed to `matplotlib.axes.Axes`.
+    Passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).
 map_projection : `~cartopy.crs.Projection` or `~mpl_toolkits.basemap.Basemap`
     The cartopy or basemap projection instance. This is
     passed automatically when calling axes-creation
-    commands like `~ultraplot.figure.Figure.add_subplot`.
+    commands like [add_subplot](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.add_subplot).
 aspect : {'auto', 'equal'} or float, optional
     The map aspect ratio. ``'auto'`` makes the map fill its subplot slot, which
     can be useful for aligning it with neighboring Cartesian axes but distorts
-    the projection. See :func:`~matplotlib.axes.Axes.set_aspect` for details.
+    the projection. See [set_aspect](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_aspect.html) for details.
 abcanchor : {'axes', 'slot'}, default: 'axes'
     The coordinate box used for the a-b-c label. ``'axes'`` attaches it to the
     visible map boundary. ``'slot'`` attaches it to the unadjusted GridSpec
     slot, keeping labels aligned with neighboring subplots when fixed map
     aspect leaves empty space inside a slot.
-round : bool, default: :rc:`geo.round`
+round : bool, default: [geo.round](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.round)
     *For polar cartopy axes only*.
     Whether to bound polar projections with circles rather than squares. Note that outer
     gridline labels cannot be added to circle-bounded polar projections. When basemap
-    is the backend this argument must be passed to `~ultraplot.constructor.Proj` instead.
-extent : {'globe', 'auto'}, default: :rc:`geo.extent`
+    is the backend this argument must be passed to [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html) instead.
+extent : {'globe', 'auto'}, default: [geo.extent](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.extent)
     *For cartopy axes only*.
     Whether to auto adjust the map bounds based on plotted content. If ``'globe'`` then
     non-polar projections are fixed with `~cartopy.mpl.geoaxes.GeoAxes.set_global`,
@@ -482,42 +482,42 @@ lonlim, latlim : 2-tuple of float, optional
     *For cartopy axes only.*
     The approximate longitude and latitude boundaries of the map, applied
     with `~cartopy.mpl.geoaxes.GeoAxes.set_extent`. When basemap is the backend
-    this argument must be passed to `~ultraplot.constructor.Proj` instead.
+    this argument must be passed to [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html) instead.
 boundinglat : float, optional
     *For cartopy axes only.*
     The edge latitude for the circle bounding North Pole and South Pole-centered
     projections. When basemap is the backend this argument must be passed to
-    `~ultraplot.constructor.Proj` instead.
-longrid, latgrid, grid : bool, default: :rc:`grid`
+    [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html) instead.
+longrid, latgrid, grid : bool, default: [grid](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid)
     Whether to draw longitude and latitude gridlines.
     Use the keyword `grid` to toggle both at once.
-longridminor, latgridminor, gridminor : bool, default: :rc:`gridminor`
+longridminor, latgridminor, gridminor : bool, default: [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
     Whether to draw "minor" longitude and latitude lines.
     Use the keyword `gridminor` to toggle both at once.
-lonticklen, latticklen, ticklen : unit-spec, default: :rc:`tick.len`
+lonticklen, latticklen, ticklen : unit-spec, default: [tick.len](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.len)
     Major tick lengths for the longitudinal (x) and latitude (y) axis.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
     Use the keyword `ticklen` to set both at once.
 latmax : float, default: 80
     The maximum absolute latitude for gridlines. Longitude gridlines are cut off
     poleward of this value (note this feature does not work in cartopy 0.18).
-nsteps : int, default: :rc:`grid.nsteps`
+nsteps : int, default: [grid.nsteps](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.nsteps)
     *For cartopy axes only.*
     The number of interpolation steps used to draw gridlines.
 lonlocator, latlocator : locator-spec, optional
     Used to determine the longitude and latitude gridline locations.
     Aliases: ``lonlines`` and ``latlines``, respectively.
-    Passed to the `~ultraplot.constructor.Locator` constructor. Can be
-    string, float, list of float, or `matplotlib.ticker.Locator` instance.
+    Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor. Can be
+    string, float, list of float, or [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance.
 
     For basemap or cartopy < 0.18, the defaults are ``'deglon'`` and
-    ``'deglat'``, which correspond to the `~ultraplot.ticker.LongitudeLocator`
-    and `~ultraplot.ticker.LatitudeLocator` locators (adapted from cartopy).
+    ``'deglat'``, which correspond to the [LongitudeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LongitudeLocator.html)
+    and [LatitudeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LatitudeLocator.html) locators (adapted from cartopy).
     For cartopy >= 0.18, the defaults are ``'dmslon'`` and ``'dmslat'``,
     which uses the same locators with ``dms=True``. This selects gridlines
     at nice degree-minute-second intervals when the map extent is very small.
 lonlocator_kw, latlocator_kw : dict-like, optional
-    Keyword arguments passed to the `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to the [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
     Aliases: ``lonlines_kw`` and ``latlines_kw``, respectively.
 lonminorlocator, latminorlocator : optional
     As with `lonlocator` and `latlocator` but for the "minor" gridlines.
@@ -525,7 +525,7 @@ lonminorlocator, latminorlocator : optional
 lonminorlocator_kw, latminorlocator_kw : optional
     As with `lonlocator_kw`, and `latlocator_kw` but for the "minor" gridlines.
     Aliases: ``lonminorlines_kw`` and ``latminorlines_kw``, respectively.
-lonlabels, latlabels, labels : str, bool, or sequence, :rc:`grid.labels`
+lonlabels, latlabels, labels : str, bool, or sequence, [grid.labels](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labels)
     Whether to add non-inline longitude and latitude gridline labels, and on
     which sides of the map. Use the keyword `labels` to set both at once. The
     argument must conform to one of the following options:
@@ -544,14 +544,14 @@ lonlabels, latlabels, labels : str, bool, or sequence, :rc:`grid.labels`
       and the ``(left, right)`` sides for latitudes.
     * A boolean 4-tuple indicating whether to draw labels on the
       ``(left, right, bottom, top)`` sides, as with the basemap
-      :func:`~mpl_toolkits.basemap.Basemap.drawmeridians` and
-      :func:`~mpl_toolkits.basemap.Basemap.drawparallels` `labels` keyword.
+      `drawmeridians` and
+      `drawparallels` `labels` keyword.
 
-loninline, latinline, inlinelabels : bool, default: :rc:`grid.inlinelabels`
+loninline, latinline, inlinelabels : bool, default: [grid.inlinelabels](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.inlinelabels)
     *For cartopy axes only.*
     Whether to add inline longitude and latitude gridline labels. Use
     the keyword `inlinelabels` to set both at once.
-rotatelabels : bool, default: :rc:`grid.rotatelabels`
+rotatelabels : bool, default: [grid.rotatelabels](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.rotatelabels)
     *For cartopy axes only.*
     Whether to rotate non-inline gridline labels so that they automatically
     follow the map boundary curvature.
@@ -564,11 +564,11 @@ lonlabelrotation : float, optional
 latlabelrotation : float, optional
     The rotation angle in degrees for latitude tick labels.
     Works for both cartopy and basemap backends.
-labelpad : unit-spec, default: :rc:`grid.labelpad`
+labelpad : unit-spec, default: [grid.labelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelpad)
     *For cartopy axes only.*
     The padding between non-inline gridline labels and the map boundary.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-dms : bool, default: :rc:`grid.dmslabels`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+dms : bool, default: [grid.dmslabels](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.dmslabels)
     *For cartopy axes only.*
     Whether the default locators and formatters should use "minutes" and "seconds"
     for gridline labels on small scales rather than decimal degrees. Setting this to
@@ -576,11 +576,11 @@ dms : bool, default: :rc:`grid.dmslabels`
     and ``ax.format(lonformatter='deglon', latformatter='deglat')``.
 lonformatter, latformatter : formatter-spec, optional
     Formatter used to style longitude and latitude gridline labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor. Can be
-    string, list of string, or `matplotlib.ticker.Formatter` instance.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor. Can be
+    string, list of string, or [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) instance.
 
     For basemap or cartopy < 0.18, the defaults are ``'deglon'`` and
-    ``'deglat'``, which correspond to `~ultraplot.ticker.SimpleFormatter`
+    ``'deglat'``, which correspond to [SimpleFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.SimpleFormatter.html)
     presets with degree symbols and cardinal direction suffixes.
     For cartopy >= 0.18, the defaults are ``'dmslon'`` and ``'dmslat'``,
     which uses cartopy's `~cartopy.mpl.ticker.LongitudeFormatter` and
@@ -588,32 +588,32 @@ lonformatter, latformatter : formatter-spec, optional
     This formats gridlines that do not fall on whole degrees as "minutes" and
     "seconds" rather than decimal degrees. Use ``dms=False`` to disable this.
 lonformatter_kw, latformatter_kw : dict-like, optional
-    Keyword arguments passed to the `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to the [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 land, ocean, coast, rivers, lakes, borders, innerborders : bool, optional
     Toggles various geographic features. These are actually the
-    :rcraw:`land`, :rcraw:`ocean`, :rcraw:`coast`, :rcraw:`rivers`,
-    :rcraw:`lakes`, :rcraw:`borders`, and :rcraw:`innerborders`
-    settings passed to `~ultraplot.config.Configurator.context`.
+    [land](https://ultraplot.readthedocs.io/en/stable/search.html?q=land), [ocean](https://ultraplot.readthedocs.io/en/stable/search.html?q=ocean), [coast](https://ultraplot.readthedocs.io/en/stable/search.html?q=coast), [rivers](https://ultraplot.readthedocs.io/en/stable/search.html?q=rivers),
+    [lakes](https://ultraplot.readthedocs.io/en/stable/search.html?q=lakes), [borders](https://ultraplot.readthedocs.io/en/stable/search.html?q=borders), and [innerborders](https://ultraplot.readthedocs.io/en/stable/search.html?q=innerborders)
+    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
     The style can be modified using additional `rc` settings.
 
-    For example, to change :rcraw:`land.color`, use
+    For example, to change [land.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=land.color), use
     ``ax.format(landcolor='green')``, and to change
-    :rcraw:`land.zorder`, use ``ax.format(landzorder=4)``.
+    [land.zorder](https://ultraplot.readthedocs.io/en/stable/search.html?q=land.zorder), use ``ax.format(landzorder=4)``.
 reso : {'lo', 'med', 'hi', 'x-hi', 'xx-hi'}, optional
     *For cartopy axes only.*
     The resolution of geographic features. When basemap is the backend this
-    must be passed to `~ultraplot.constructor.Proj` instead.
-color : color-spec, default: :rc:`meta.color`
+    must be passed to [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html) instead.
+color : color-spec, default: [meta.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=meta.color)
     The color for the axes edge. Propagates to `labelcolor` unless specified
-    otherwise (similar to :func:`~ultraplot.axes.CartesianAxes.format`).
-gridcolor : color-spec, default: :rc:`grid.color`
+    otherwise (similar to [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format)).
+gridcolor : color-spec, default: [grid.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.color)
     The color for the gridline labels.
-labelcolor : color-spec, default: `color` or :rc:`grid.labelcolor`
+labelcolor : color-spec, default: `color` or [grid.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelcolor)
     The color for the gridline labels (`gridlabelcolor` is also allowed).
-labelsize : unit-spec or str, default: :rc:`grid.labelsize`
+labelsize : unit-spec or str, default: [grid.labelsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelsize)
     The font size for the gridline labels (`gridlabelsize` is also allowed).
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-labelweight : str, default: :rc:`grid.labelweight`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+labelweight : str, default: [grid.labelweight](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelweight)
     The font weight for the gridline labels (`gridlabelweight` is also allowed).
 
 Other parameters
@@ -621,14 +621,14 @@ Other parameters
 title : str or sequence, optional
     The axes title. Can optionally be a sequence strings, in which case
     the title will be selected from the sequence according to `~Axes.number`.
-abc : bool or str or sequence, default: :rc:`abc`
+abc : bool or str or sequence, default: [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc)
     The "a-b-c" subplot label style. Must contain the character `a` or `A`,
     for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
     ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
     matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
     characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
     Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
-abcloc, titleloc : str, default: :rc:`abc.loc`, :rc:`title.loc`
+abcloc, titleloc : str, default: [abc.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.loc), [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc)
     Strings indicating the location for the a-b-c label and main title.
     The following locations are valid:
 
@@ -650,31 +650,31 @@ abcloc, titleloc : str, default: :rc:`abc.loc`, :rc:`title.loc`
     right of y axis           ``'outer right'``, ``'or'``
     ========================  ============================
 
-abcborder, titleborder : bool, default: :rc:`abc.border` and :rc:`title.border`
+abcborder, titleborder : bool, default: [abc.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.border) and [title.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.border)
     Whether to draw a white border around titles and a-b-c labels positioned
     inside the axes. This can help them stand out on top of artists
     plotted inside the axes.
-abcbbox, titlebbox : bool, default: :rc:`abc.bbox` and :rc:`title.bbox`
+abcbbox, titlebbox : bool, default: [abc.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.bbox) and [title.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bbox)
     Whether to draw a white bbox around titles and a-b-c labels positioned
     inside the axes. This can help them stand out on top of artists plotted
     inside the axes.
-abcpad : float or unit-spec, default: :rc:`abc.pad`
+abcpad : float or unit-spec, default: [abc.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.pad)
     Horizontal offset to shift the a-b-c label position. Positive values move
     the label right, negative values move it left. This is separate from
     `abctitlepad`, which controls spacing between abc and title when co-located.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 abc_kw, title_kw : dict-like, optional
     Additional settings used to update the a-b-c label and title
     with ``text.update()``.
-titlepad : float, default: :rc:`title.pad`
+titlepad : float, default: [title.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.pad)
     The padding for the inner and outer titles and a-b-c labels.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-titleabove : bool, default: :rc:`title.above`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+titleabove : bool, default: [title.above](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.above)
     Whether to try to put outer titles and a-b-c labels above panels,
     colorbars, or legends that are above the axes.
-abctitlepad : float, default: :rc:`abc.titlepad`
+abctitlepad : float, default: [abc.titlepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.titlepad)
     The horizontal padding between a-b-c labels and titles in the same location.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
     Shorthands for the below keywords.
     lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
@@ -683,22 +683,22 @@ lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
     an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
     permits adding more than one title-like label for a single axes.
 a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    :rc:`axes.alpha` (default: 1.0), :rc:`axes.facecolor` (default: white), :rc:`axes.edgecolor` (default: black), :rc:`axes.linewidth` (default: 0.6), -
+    [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), -
     Additional settings applied to the background patch, and their
     shorthands. Their defaults values are the ``'axes'`` properties.
 rc_mode : int, optional
-    The context mode passed to `~ultraplot.config.Configurator.context`.
+    The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
 rc_kw : dict-like, optional
     An alternative to passing extra keyword arguments. See below.
 **kwargs
-    Remaining keyword arguments are passed to `matplotlib.axes.Axes`.\\n    Keyword arguments that match the name of an `~ultraplot.config.rc` setting are
-    passed to `ultraplot.config.Configurator.context` and used to update the axes.
+    Remaining keyword arguments are passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).\\n    Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are
+    passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
     If the setting name has "dots" you can simply omit the dots. For example,
-    ``abc='A.'`` modifies the :rcraw:`abc` setting, ``titleloc='left'`` modifies the
-    :rcraw:`title.loc` setting, ``gridminor=True`` modifies the :rcraw:`gridminor`
-    setting, and ``gridbelow=True`` modifies the :rcraw:`grid.below` setting. Many
+    ``abc='A.'`` modifies the [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc) setting, ``titleloc='left'`` modifies the
+    [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc) setting, ``gridminor=True`` modifies the [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
+    setting, and ``gridbelow=True`` modifies the [grid.below](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.below) setting. Many
     of the keyword arguments documented above are internally applied by retrieving
-    settings passed to `~ultraplot.config.Configurator.context`.
+    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
 
 See also
 --------
@@ -727,16 +727,16 @@ size : float or 2-tuple of float
 transform : coordinate system, default: 'axes'
     Coordinate system for *xy*. One of:
 
-    * ``'axes'`` -- parent axes fractions (`~matplotlib.axes.Axes.transAxes`).
+    * ``'axes'`` -- parent axes fractions ([transAxes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transAxes.html)).
     * ``'data'`` -- parent *projected* coordinates
-      (`~matplotlib.axes.Axes.transData`), i.e. the parent projection's native
+      ([transData](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transData.html)), i.e. the parent projection's native
       units (metres for most projections). This coincides with longitude-latitude
       only for a default `~cartopy.crs.PlateCarree` parent, so it is rarely what
       you want on a map; use ``'map'`` for longitude-latitude.
     * ``'figure'`` / ``'subfigure'`` -- figure or subfigure fractions.
     * ``'map'`` -- longitude-latitude degrees (`~cartopy.crs.PlateCarree`).
     * a projection name (e.g. ``'cyl'``, ``'moll'``), a `~cartopy.crs.Projection`,
-      or a `~matplotlib.transforms.Transform` -- *xy* in arbitrary projected
+      or a [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html) -- *xy* in arbitrary projected
       coordinates.
 anchor : str or 2-tuple of float, default: 'upper right'
     The inset point placed at *xy*. String aliases include ``'ul'``, ``'ur'``,
@@ -790,7 +790,7 @@ GeoAxes
         ...
 
     def _resolve_hawkeye_spec(self, xy: Sequence[float], size: float | Sequence[float], transform: Any, anchor: str | Sequence[float], anchor_transform: Any, extent: Optional[Sequence[float]], extent_transform: Any, relation: str, connector: bool | str, shape: str, target: str) -> '_HawkeyeSpec':
-        """Validate and normalize raw hawkeye arguments into a :class:`_HawkeyeSpec`."""
+        """Validate and normalize raw hawkeye arguments into a `_HawkeyeSpec`."""
         ...
 
     def _resolve_hawkeye_xy_transform(self, transform: Any) -> Any:
@@ -798,7 +798,7 @@ GeoAxes
 
 Reserved names (``'axes'``, ``'data'``, ``'figure'``, ``'subfigure'``,
 ``'map'``), matplotlib transforms, and cartopy CRS instances are handled
-by :meth:`_get_transform`. Any other string is treated as a projection
+by `_get_transform`. Any other string is treated as a projection
 name and resolved to a cartopy CRS so *xy* can be given in arbitrary
 projected coordinates."""
         ...
@@ -966,7 +966,7 @@ returns False).
 
 Parameters
 ----------
-renderer : `~matplotlib.backend_bases.RendererBase` subclass.
+renderer : [RendererBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.backend_bases.RendererBase.html) subclass.
 
 Notes
 -----
@@ -1046,18 +1046,18 @@ Parameters
 aspect : {'auto', 'equal'} or float, optional
     The map aspect ratio. ``'auto'`` makes the map fill its subplot slot, which
     can be useful for aligning it with neighboring Cartesian axes but distorts
-    the projection. See :func:`~matplotlib.axes.Axes.set_aspect` for details.
+    the projection. See [set_aspect](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_aspect.html) for details.
 abcanchor : {'axes', 'slot'}, default: 'axes'
     The coordinate box used for the a-b-c label. ``'axes'`` attaches it to the
     visible map boundary. ``'slot'`` attaches it to the unadjusted GridSpec
     slot, keeping labels aligned with neighboring subplots when fixed map
     aspect leaves empty space inside a slot.
-round : bool, default: :rc:`geo.round`
+round : bool, default: [geo.round](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.round)
     *For polar cartopy axes only*.
     Whether to bound polar projections with circles rather than squares. Note that outer
     gridline labels cannot be added to circle-bounded polar projections. When basemap
-    is the backend this argument must be passed to `~ultraplot.constructor.Proj` instead.
-extent : {'globe', 'auto'}, default: :rc:`geo.extent`
+    is the backend this argument must be passed to [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html) instead.
+extent : {'globe', 'auto'}, default: [geo.extent](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.extent)
     *For cartopy axes only*.
     Whether to auto adjust the map bounds based on plotted content. If ``'globe'`` then
     non-polar projections are fixed with `~cartopy.mpl.geoaxes.GeoAxes.set_global`,
@@ -1067,42 +1067,42 @@ lonlim, latlim : 2-tuple of float, optional
     *For cartopy axes only.*
     The approximate longitude and latitude boundaries of the map, applied
     with `~cartopy.mpl.geoaxes.GeoAxes.set_extent`. When basemap is the backend
-    this argument must be passed to `~ultraplot.constructor.Proj` instead.
+    this argument must be passed to [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html) instead.
 boundinglat : float, optional
     *For cartopy axes only.*
     The edge latitude for the circle bounding North Pole and South Pole-centered
     projections. When basemap is the backend this argument must be passed to
-    `~ultraplot.constructor.Proj` instead.
-longrid, latgrid, grid : bool, default: :rc:`grid`
+    [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html) instead.
+longrid, latgrid, grid : bool, default: [grid](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid)
     Whether to draw longitude and latitude gridlines.
     Use the keyword `grid` to toggle both at once.
-longridminor, latgridminor, gridminor : bool, default: :rc:`gridminor`
+longridminor, latgridminor, gridminor : bool, default: [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
     Whether to draw "minor" longitude and latitude lines.
     Use the keyword `gridminor` to toggle both at once.
-lonticklen, latticklen, ticklen : unit-spec, default: :rc:`tick.len`
+lonticklen, latticklen, ticklen : unit-spec, default: [tick.len](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.len)
     Major tick lengths for the longitudinal (x) and latitude (y) axis.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
     Use the keyword `ticklen` to set both at once.
 latmax : float, default: 80
     The maximum absolute latitude for gridlines. Longitude gridlines are cut off
     poleward of this value (note this feature does not work in cartopy 0.18).
-nsteps : int, default: :rc:`grid.nsteps`
+nsteps : int, default: [grid.nsteps](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.nsteps)
     *For cartopy axes only.*
     The number of interpolation steps used to draw gridlines.
 lonlocator, latlocator : locator-spec, optional
     Used to determine the longitude and latitude gridline locations.
     Aliases: ``lonlines`` and ``latlines``, respectively.
-    Passed to the `~ultraplot.constructor.Locator` constructor. Can be
-    string, float, list of float, or `matplotlib.ticker.Locator` instance.
+    Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor. Can be
+    string, float, list of float, or [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance.
 
     For basemap or cartopy < 0.18, the defaults are ``'deglon'`` and
-    ``'deglat'``, which correspond to the `~ultraplot.ticker.LongitudeLocator`
-    and `~ultraplot.ticker.LatitudeLocator` locators (adapted from cartopy).
+    ``'deglat'``, which correspond to the [LongitudeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LongitudeLocator.html)
+    and [LatitudeLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.LatitudeLocator.html) locators (adapted from cartopy).
     For cartopy >= 0.18, the defaults are ``'dmslon'`` and ``'dmslat'``,
     which uses the same locators with ``dms=True``. This selects gridlines
     at nice degree-minute-second intervals when the map extent is very small.
 lonlocator_kw, latlocator_kw : dict-like, optional
-    Keyword arguments passed to the `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to the [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
     Aliases: ``lonlines_kw`` and ``latlines_kw``, respectively.
 lonminorlocator, latminorlocator : optional
     As with `lonlocator` and `latlocator` but for the "minor" gridlines.
@@ -1110,7 +1110,7 @@ lonminorlocator, latminorlocator : optional
 lonminorlocator_kw, latminorlocator_kw : optional
     As with `lonlocator_kw`, and `latlocator_kw` but for the "minor" gridlines.
     Aliases: ``lonminorlines_kw`` and ``latminorlines_kw``, respectively.
-lonlabels, latlabels, labels : str, bool, or sequence, :rc:`grid.labels`
+lonlabels, latlabels, labels : str, bool, or sequence, [grid.labels](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labels)
     Whether to add non-inline longitude and latitude gridline labels, and on
     which sides of the map. Use the keyword `labels` to set both at once. The
     argument must conform to one of the following options:
@@ -1129,14 +1129,14 @@ lonlabels, latlabels, labels : str, bool, or sequence, :rc:`grid.labels`
       and the ``(left, right)`` sides for latitudes.
     * A boolean 4-tuple indicating whether to draw labels on the
       ``(left, right, bottom, top)`` sides, as with the basemap
-      :func:`~mpl_toolkits.basemap.Basemap.drawmeridians` and
-      :func:`~mpl_toolkits.basemap.Basemap.drawparallels` `labels` keyword.
+      `drawmeridians` and
+      `drawparallels` `labels` keyword.
 
-loninline, latinline, inlinelabels : bool, default: :rc:`grid.inlinelabels`
+loninline, latinline, inlinelabels : bool, default: [grid.inlinelabels](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.inlinelabels)
     *For cartopy axes only.*
     Whether to add inline longitude and latitude gridline labels. Use
     the keyword `inlinelabels` to set both at once.
-rotatelabels : bool, default: :rc:`grid.rotatelabels`
+rotatelabels : bool, default: [grid.rotatelabels](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.rotatelabels)
     *For cartopy axes only.*
     Whether to rotate non-inline gridline labels so that they automatically
     follow the map boundary curvature.
@@ -1149,11 +1149,11 @@ lonlabelrotation : float, optional
 latlabelrotation : float, optional
     The rotation angle in degrees for latitude tick labels.
     Works for both cartopy and basemap backends.
-labelpad : unit-spec, default: :rc:`grid.labelpad`
+labelpad : unit-spec, default: [grid.labelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelpad)
     *For cartopy axes only.*
     The padding between non-inline gridline labels and the map boundary.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-dms : bool, default: :rc:`grid.dmslabels`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+dms : bool, default: [grid.dmslabels](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.dmslabels)
     *For cartopy axes only.*
     Whether the default locators and formatters should use "minutes" and "seconds"
     for gridline labels on small scales rather than decimal degrees. Setting this to
@@ -1161,11 +1161,11 @@ dms : bool, default: :rc:`grid.dmslabels`
     and ``ax.format(lonformatter='deglon', latformatter='deglat')``.
 lonformatter, latformatter : formatter-spec, optional
     Formatter used to style longitude and latitude gridline labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor. Can be
-    string, list of string, or `matplotlib.ticker.Formatter` instance.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor. Can be
+    string, list of string, or [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) instance.
 
     For basemap or cartopy < 0.18, the defaults are ``'deglon'`` and
-    ``'deglat'``, which correspond to `~ultraplot.ticker.SimpleFormatter`
+    ``'deglat'``, which correspond to [SimpleFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.SimpleFormatter.html)
     presets with degree symbols and cardinal direction suffixes.
     For cartopy >= 0.18, the defaults are ``'dmslon'`` and ``'dmslat'``,
     which uses cartopy's `~cartopy.mpl.ticker.LongitudeFormatter` and
@@ -1173,32 +1173,32 @@ lonformatter, latformatter : formatter-spec, optional
     This formats gridlines that do not fall on whole degrees as "minutes" and
     "seconds" rather than decimal degrees. Use ``dms=False`` to disable this.
 lonformatter_kw, latformatter_kw : dict-like, optional
-    Keyword arguments passed to the `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to the [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 land, ocean, coast, rivers, lakes, borders, innerborders : bool, optional
     Toggles various geographic features. These are actually the
-    :rcraw:`land`, :rcraw:`ocean`, :rcraw:`coast`, :rcraw:`rivers`,
-    :rcraw:`lakes`, :rcraw:`borders`, and :rcraw:`innerborders`
-    settings passed to `~ultraplot.config.Configurator.context`.
+    [land](https://ultraplot.readthedocs.io/en/stable/search.html?q=land), [ocean](https://ultraplot.readthedocs.io/en/stable/search.html?q=ocean), [coast](https://ultraplot.readthedocs.io/en/stable/search.html?q=coast), [rivers](https://ultraplot.readthedocs.io/en/stable/search.html?q=rivers),
+    [lakes](https://ultraplot.readthedocs.io/en/stable/search.html?q=lakes), [borders](https://ultraplot.readthedocs.io/en/stable/search.html?q=borders), and [innerborders](https://ultraplot.readthedocs.io/en/stable/search.html?q=innerborders)
+    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
     The style can be modified using additional `rc` settings.
 
-    For example, to change :rcraw:`land.color`, use
+    For example, to change [land.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=land.color), use
     ``ax.format(landcolor='green')``, and to change
-    :rcraw:`land.zorder`, use ``ax.format(landzorder=4)``.
+    [land.zorder](https://ultraplot.readthedocs.io/en/stable/search.html?q=land.zorder), use ``ax.format(landzorder=4)``.
 reso : {'lo', 'med', 'hi', 'x-hi', 'xx-hi'}, optional
     *For cartopy axes only.*
     The resolution of geographic features. When basemap is the backend this
-    must be passed to `~ultraplot.constructor.Proj` instead.
-color : color-spec, default: :rc:`meta.color`
+    must be passed to [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html) instead.
+color : color-spec, default: [meta.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=meta.color)
     The color for the axes edge. Propagates to `labelcolor` unless specified
-    otherwise (similar to :func:`~ultraplot.axes.CartesianAxes.format`).
-gridcolor : color-spec, default: :rc:`grid.color`
+    otherwise (similar to [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format)).
+gridcolor : color-spec, default: [grid.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.color)
     The color for the gridline labels.
-labelcolor : color-spec, default: `color` or :rc:`grid.labelcolor`
+labelcolor : color-spec, default: `color` or [grid.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelcolor)
     The color for the gridline labels (`gridlabelcolor` is also allowed).
-labelsize : unit-spec or str, default: :rc:`grid.labelsize`
+labelsize : unit-spec or str, default: [grid.labelsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelsize)
     The font size for the gridline labels (`gridlabelsize` is also allowed).
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-labelweight : str, default: :rc:`grid.labelweight`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+labelweight : str, default: [grid.labelweight](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelweight)
     The font weight for the gridline labels (`gridlabelweight` is also allowed).
 
 Other parameters
@@ -1206,14 +1206,14 @@ Other parameters
 title : str or sequence, optional
     The axes title. Can optionally be a sequence strings, in which case
     the title will be selected from the sequence according to `~Axes.number`.
-abc : bool or str or sequence, default: :rc:`abc`
+abc : bool or str or sequence, default: [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc)
     The "a-b-c" subplot label style. Must contain the character `a` or `A`,
     for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
     ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
     matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
     characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
     Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
-abcloc, titleloc : str, default: :rc:`abc.loc`, :rc:`title.loc`
+abcloc, titleloc : str, default: [abc.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.loc), [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc)
     Strings indicating the location for the a-b-c label and main title.
     The following locations are valid:
 
@@ -1235,31 +1235,31 @@ abcloc, titleloc : str, default: :rc:`abc.loc`, :rc:`title.loc`
     right of y axis           ``'outer right'``, ``'or'``
     ========================  ============================
 
-abcborder, titleborder : bool, default: :rc:`abc.border` and :rc:`title.border`
+abcborder, titleborder : bool, default: [abc.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.border) and [title.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.border)
     Whether to draw a white border around titles and a-b-c labels positioned
     inside the axes. This can help them stand out on top of artists
     plotted inside the axes.
-abcbbox, titlebbox : bool, default: :rc:`abc.bbox` and :rc:`title.bbox`
+abcbbox, titlebbox : bool, default: [abc.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.bbox) and [title.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bbox)
     Whether to draw a white bbox around titles and a-b-c labels positioned
     inside the axes. This can help them stand out on top of artists plotted
     inside the axes.
-abcpad : float or unit-spec, default: :rc:`abc.pad`
+abcpad : float or unit-spec, default: [abc.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.pad)
     Horizontal offset to shift the a-b-c label position. Positive values move
     the label right, negative values move it left. This is separate from
     `abctitlepad`, which controls spacing between abc and title when co-located.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 abc_kw, title_kw : dict-like, optional
     Additional settings used to update the a-b-c label and title
     with ``text.update()``.
-titlepad : float, default: :rc:`title.pad`
+titlepad : float, default: [title.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.pad)
     The padding for the inner and outer titles and a-b-c labels.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-titleabove : bool, default: :rc:`title.above`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+titleabove : bool, default: [title.above](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.above)
     Whether to try to put outer titles and a-b-c labels above panels,
     colorbars, or legends that are above the axes.
-abctitlepad : float, default: :rc:`abc.titlepad`
+abctitlepad : float, default: [abc.titlepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.titlepad)
     The horizontal padding between a-b-c labels and titles in the same location.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
     Shorthands for the below keywords.
     lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
@@ -1268,7 +1268,7 @@ lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
     an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
     permits adding more than one title-like label for a single axes.
 a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    :rc:`axes.alpha` (default: 1.0), :rc:`axes.facecolor` (default: white), :rc:`axes.edgecolor` (default: black), :rc:`axes.linewidth` (default: 0.6), -
+    [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), -
     Additional settings applied to the background patch, and their
     shorthands. Their defaults values are the ``'axes'`` properties.
 rowlabels, collabels, llabels, tlabels, rlabels, blabels
@@ -1279,14 +1279,14 @@ leftlabels, toplabels, rightlabels, bottomlabels : sequence of str, optional
     bottom edges of the figure. The length of each list must match
     the number of subplots along the corresponding edge.
 leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, default
-: :rc:`leftlabel.pad`, :rc:`toplabel.pad`, :rc:`rightlabel.pad`, :rc:`bottomlabel.pad`
+: [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad)
     The padding between the labels and the axes content.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad : float or unit-spec, default
-: :rc:`leftlabel.sharedpad`, :rc:`toplabel.sharedpad`, :rc:`rightlabel.sharedpad`, :rc:`bottomlabel.sharedpad`
+: [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad)
     The padding between side labels and a shared spanning axis label on the
     same side. The spanning label is placed outside the side labels.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw : dict-like, optional
     Additional settings used to update the labels with ``text.update()``.
 figtitle
@@ -1294,9 +1294,9 @@ figtitle
 suptitle : str, optional
     The figure "super" title, centered between the left edge of the leftmost
     subplot and the right edge of the rightmost subplot.
-suptitlepad : float, default: :rc:`suptitle.pad`
+suptitlepad : float, default: [suptitle.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=suptitle.pad)
     The padding between the super title and the axes content.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 suptitle_kw : optional
     Additional settings used to update the super title with ``text.update()``.
 includepanels : bool, default: False
@@ -1304,18 +1304,18 @@ includepanels : bool, default: False
     of the subplot grid and when aligning the `spanx` *x* axis labels and
     `spany` *y* axis labels along the sides of the subplot grid.
 rc_mode : int, optional
-    The context mode passed to `~ultraplot.config.Configurator.context`.
+    The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
 rc_kw : dict-like, optional
     An alternative to passing extra keyword arguments. See below.
 **kwargs
-    Keyword arguments that match the name of an `~ultraplot.config.rc` setting are
-    passed to `ultraplot.config.Configurator.context` and used to update the axes.
+    Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are
+    passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
     If the setting name has "dots" you can simply omit the dots. For example,
-    ``abc='A.'`` modifies the :rcraw:`abc` setting, ``titleloc='left'`` modifies the
-    :rcraw:`title.loc` setting, ``gridminor=True`` modifies the :rcraw:`gridminor`
-    setting, and ``gridbelow=True`` modifies the :rcraw:`grid.below` setting. Many
+    ``abc='A.'`` modifies the [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc) setting, ``titleloc='left'`` modifies the
+    [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc) setting, ``gridminor=True`` modifies the [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
+    setting, and ``gridbelow=True`` modifies the [grid.below](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.below) setting. Many
     of the keyword arguments documented above are internally applied by retrieving
-    settings passed to `~ultraplot.config.Configurator.context`.
+    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
 
 See also
 --------
@@ -1347,13 +1347,13 @@ country : bool, optional
     Natural Earth polygons before plotting.
 country_reso : {'110m', '50m', '10m'}, optional
     The Natural Earth country resolution used when `country=True`.
-    Defaults to :rc:`geo.choropleth.country_reso`.
+    Defaults to [geo.choropleth.country_reso](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.choropleth.country_reso).
 country_territories : bool, optional
     Whether to keep distant territories for multi-part country
     geometries when `country=True`. Defaults to
-    :rc:`geo.choropleth.country_territories`.
+    [geo.choropleth.country_territories](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.choropleth.country_territories).
 colorbar, colorbar_kw
-    Passed to `~ultraplot.axes.Axes.colorbar`.
+    Passed to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 missing_kw : dict-like, optional
     Style applied to geometries whose values are missing or non-finite.
     If omitted, missing geometries are skipped.
@@ -1378,9 +1378,9 @@ Parameters
 ----------
 x_or_y : {'x', 'y'}
     The axis to add ticks to ('x' for longitude, 'y' for latitude).
-itick, ticklen : unit-spec, default: :rc:`tick.len`
+itick, ticklen : unit-spec, default: [tick.len](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.len)
     Major tick lengths for the x and y axis.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
     Use the argument `ticklen` to set both at once.
 
 Notes
@@ -1400,8 +1400,8 @@ See: https://cartopy.readthedocs.io/stable/reference/generated/cartopy.mpl.gridl
         """The cartopy `~cartopy.mpl.gridliner.Gridliner`
 used for major gridlines or a 2-tuple containing the
 (longitude, latitude) major gridlines returned by
-basemap's :func:`~mpl_toolkits.basemap.Basemap.drawmeridians`
-and :func:`~mpl_toolkits.basemap.Basemap.drawparallels`.
+basemap's `drawmeridians`
+and `drawparallels`.
 This can be used for customization and debugging."""
         ...
 
@@ -1410,8 +1410,8 @@ This can be used for customization and debugging."""
         """The cartopy `~cartopy.mpl.gridliner.Gridliner`
 used for minor gridlines or a 2-tuple containing the
 (longitude, latitude) minor gridlines returned by
-basemap's :func:`~mpl_toolkits.basemap.Basemap.drawmeridians`
-and :func:`~mpl_toolkits.basemap.Basemap.drawparallels`.
+basemap's `drawmeridians`
+and `drawparallels`.
 This can be used for customization and debugging."""
         ...
 
@@ -1448,9 +1448,9 @@ map_projection : ~cartopy.crs.Projection
 
     @staticmethod
     def _get_circle_path(N: int=100) -> mpath.Path:
-        """Return a circle `~matplotlib.path.Path` used as the outline for polar
+        """Return a circle [Path](https://matplotlib.org/stable/api/_as_gen/matplotlib.path.Path.html) used as the outline for polar
 stereographic, azimuthal equidistant, Lambert conformal, and gnomonic
-projections. This was developed from `this cartopy example     <https://cartopy.readthedocs.io/v0.25.0.post2/gallery/lines_and_polygons/always_circular_stereo.html>`__."""
+projections. This was developed from [this cartopy example](https://cartopy.readthedocs.io/v0.25.0.post2/gallery/lines_and_polygons/always_circular_stereo.html)."""
         ...
 
     def _get_global_extent(self) -> list[float]:

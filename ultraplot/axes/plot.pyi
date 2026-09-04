@@ -113,18 +113,18 @@ if a default is provided."""
 
 def _parse_kde_kw(kde_kw: Incomplete=None, *, points: Incomplete=None, weights: Incomplete=None) -> Incomplete:
     """Split `kde_kw` into the keyword arguments that control the kernel density
-estimate, i.e. those accepted by `~ultraplot.internals.inputs._dist_kde`, and
-the remaining line properties meant for `~matplotlib.axes.Axes.plot`. The
+estimate, i.e. those accepted by [_dist_kde](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.internals.inputs._dist_kde.html), and
+the remaining line properties meant for [plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html). The
 `points` and `weights` arguments supply defaults from the parent command."""
     ...
 
 def _get_hist_colors(res: Incomplete, n: Incomplete) -> Incomplete:
     """Return one color per column of a histogram drawn by
-`~matplotlib.axes.Axes.hist`, so that overlays can be colored to match."""
+[hist](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hist.html), so that overlays can be colored to match."""
     ...
 
 class PlotAxes(base.Axes):
-    """The second lowest-level `~matplotlib.axes.Axes` subclass used by ultraplot.
+    """The second lowest-level [Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html) subclass used by ultraplot.
 Implements all plotting overrides."""
 
     def curved_quiver(self, x: np.ndarray, y: np.ndarray, u: np.ndarray, v: np.ndarray, linewidth: Optional[float]=None, color: Optional[Union[str, Any]]=None, cmap: Optional[Any]=None, norm: Optional[Any]=None, arrowsize: Optional[float]=None, arrowstyle: Optional[str]=None, transform: Optional[Any]=None, zorder: Optional[int]=None, start_points: Optional[np.ndarray]=None, scale: Optional[float]=None, grains: Optional[int]=None, density: Optional[int]=None, arrow_at_end: Optional[bool]=None, colorbar: Optional[str]=None, colorbar_kw: Optional[dict[str, Any]]=None) -> Incomplete:
@@ -189,22 +189,22 @@ orientations : sequence of int, optional
     Flow orientations (-1: down, 0: right, 1: up) for Matplotlib's Sankey.
 pathlengths : float or sequence of float, optional
     Path lengths for each flow in Matplotlib's Sankey. Defaults to
-    :rc:`sankey.pathlengths` when omitted.
+    [sankey.pathlengths](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.pathlengths) when omitted.
 trunklength : float, optional
     Length of the trunk between the input and output flows. Defaults to
-    :rc:`sankey.trunklength` when omitted.
+    [sankey.trunklength](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.trunklength) when omitted.
 patchlabel : str, optional
     Label for the main patch in Matplotlib's Sankey mode. Defaults to
-    :rc:`sankey.pathlabel` when omitted.
+    [sankey.pathlabel](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.pathlabel) when omitted.
 scale, unit, format, gap, radius, shoulder, offset, head_angle, margin, tolerance : optional
-    Passed to `matplotlib.sankey.Sankey`.
+    Passed to [matplotlib.sankey.Sankey](https://matplotlib.org/stable/api/_as_gen/matplotlib.sankey.Sankey.html).
 prior : int, optional
     Index of a prior diagram to connect to.
 connect : (int, int), optional
     Flow indices for the prior and current diagram connection. Defaults to
-    :rc:`sankey.connect` when omitted.
+    [sankey.connect](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.connect) when omitted.
 rotation : float, optional
-    Rotation angle in degrees. Defaults to :rc:`sankey.rotation` when omitted.
+    Rotation angle in degrees. Defaults to [sankey.rotation](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.rotation) when omitted.
 node_kw, flow_kw, label_kw : dict-like, optional
     Style dictionaries for the layered Sankey renderer.
 node_label_kw, flow_label_kw : dict-like, optional
@@ -223,45 +223,45 @@ group_cycle : sequence, optional
 flow_other : float, optional
     Aggregate flows below this threshold into a single ``other_label``.
 other_label : str, optional
-    Label for the aggregated flow target. Defaults to :rc:`sankey.other_label`
+    Label for the aggregated flow target. Defaults to [sankey.other_label](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.other_label)
     when omitted.
 value_format : str or callable, optional
     Formatter for flow labels when not explicitly provided.
 node_label_outside : {'auto', True, False}, optional
     Place node labels outside narrow nodes. Defaults to
-    :rc:`sankey.node_label_outside` when omitted.
+    [sankey.node_label_outside](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.node_label_outside) when omitted.
 node_label_offset : float, optional
     Offset for outside node labels (axes-relative units). Defaults to
-    :rc:`sankey.node_label_offset` when omitted.
+    [sankey.node_label_offset](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.node_label_offset) when omitted.
 flow_sort : bool, optional
     Whether to sort flows by target position to reduce crossings. Defaults to
-    :rc:`sankey.flow_sort` when omitted.
+    [sankey.flow_sort](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.flow_sort) when omitted.
 flow_label_pos : float, optional
     Horizontal placement for single flow labels (0 to 1 along the ribbon).
-    Defaults to :rc:`sankey.flow_label_pos` when omitted.
+    Defaults to [sankey.flow_label_pos](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.flow_label_pos) when omitted.
     When flow labels overlap, positions are redistributed between 0.25 and 0.75.
 node_labels, flow_labels : bool, optional
     Whether to draw node or flow labels in layered mode. Defaults to
-    :rc:`sankey.node_labels` and :rc:`sankey.flow_labels` when omitted.
+    [sankey.node_labels](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.node_labels) and [sankey.flow_labels](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.flow_labels) when omitted.
 align : {'center', 'top', 'bottom'}, optional
     Vertical alignment for nodes within each layer in layered mode. Defaults to
-    :rc:`sankey.align` when omitted.
+    [sankey.align](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.align) when omitted.
 layers : dict-like, optional
     Manual layer assignments for nodes in layered mode.
 **kwargs
-    Patch properties passed to `matplotlib.sankey.Sankey.add` in Matplotlib mode.
+    Patch properties passed to [matplotlib.sankey.Sankey.add](https://matplotlib.org/stable/api/_as_gen/matplotlib.sankey.Sankey.add.html) in Matplotlib mode.
 
 Layered defaults
 ----------------
-Layered mode uses :rc:`sankey.nodepad`, :rc:`sankey.nodewidth`,
-:rc:`sankey.margin`, :rc:`sankey.flow.alpha`, :rc:`sankey.flow.curvature`,
-and :rc:`sankey.node.facecolor` when not set explicitly.
+Layered mode uses [sankey.nodepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.nodepad), [sankey.nodewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.nodewidth),
+[sankey.margin](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.margin), [sankey.flow.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.flow.alpha), [sankey.flow.curvature](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.flow.curvature),
+and [sankey.node.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=sankey.node.facecolor) when not set explicitly.
 
 Returns
 -------
 matplotlib.sankey.Sankey or list or SankeyDiagram
     The Sankey diagram instance, or a list for multi-diagram usage. For layered
-    mode, returns a `~ultraplot.axes.plot_types.sankey.SankeyDiagram`."""
+    mode, returns a [SankeyDiagram](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.plot_types.sankey.SankeyDiagram.html)."""
         ...
 
     def ribbon(self, data: Any, *, id_col: str='id', period_col: str='period', topic_col: str='topic', value_col: str | None=None, period_order: Sequence[Any] | None=None, topic_order: Sequence[Any] | None=None, group_map: Mapping[Any, Any] | None=None, group_order: Sequence[Any] | None=None, group_colors: Mapping[Any, Any] | None=None, xmargin: Optional[float]=None, ymargin: Optional[float]=None, row_height_ratio: Optional[float]=None, node_width: Optional[float]=None, flow_curvature: Optional[float]=None, flow_alpha: Optional[float]=None, show_topic_labels: Optional[bool]=None, topic_label_offset: Optional[float]=None, topic_label_size: Optional[float]=None, topic_label_box: Optional[bool]=None) -> dict[str, Any]:
@@ -681,7 +681,7 @@ pycirclize.Circos
         ...
 
     def _add_auto_labels(self, obj: Incomplete, cobj: Incomplete=None, labels: Incomplete=False, labels_kw: Incomplete=None, fmt: Incomplete=None, formatter: Incomplete=None, formatter_kw: Incomplete=None, precision: Incomplete=None) -> None:
-        """Add number labels. Default formatter is `~ultraplot.ticker.SimpleFormatter`
+        """Add number labels. Default formatter is [SimpleFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.SimpleFormatter.html)
 with a default maximum precision of ``3`` decimal places."""
         ...
 
@@ -752,13 +752,13 @@ the mutable input `extents` to support iteration over columns."""
 
     def _add_kde_lines(self, xs: Incomplete, *, edges: Incomplete, colors: Incomplete, density: Incomplete=None, stack: Incomplete=False, orientation: Incomplete='vertical', points: Incomplete=None, bw_method: Incomplete=None, weights: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Add a gaussian kernel density estimate line for each column of `xs`, drawn
-in `colors` and passing `**kwargs` to `~matplotlib.axes.Axes.plot`.
+in `colors` and passing `**kwargs` to [plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html).
 
 Unless `density` is ``True`` each estimate is rescaled from a probability
 density to the bin counts implied by the histogram bin `edges`. Stacked
 histograms share a single evaluation grid so that the estimates accumulate
 the way the bin counts do. Remaining arguments go to
-`~ultraplot.internals.inputs._dist_kde`."""
+[_dist_kde](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.internals.inputs._dist_kde.html)."""
         ...
 
     def _parse_1d_args(self, x: Incomplete, *ys: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -937,16 +937,16 @@ explicit_limits : bool
 
     @staticmethod
     def _parse_level_norm(levels: Incomplete, norm: Incomplete, cmap: Incomplete, *, extend: Incomplete=None, min_levels: Incomplete=None, discrete_ticks: Incomplete=None, discrete_labels: Incomplete=None, center_levels: Incomplete=None, explicit_limits: Incomplete=False, **kwargs: Incomplete) -> Incomplete:
-        """Create a `~ultraplot.colors.DiscreteNorm` or `~ultraplot.colors.BoundaryNorm`
+        """Create a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) or [BoundaryNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.BoundaryNorm.html)
 from the input colormap and normalizer.
 
 Parameters
 ----------
 levels : sequence of float
     The level boundaries.
-norm : `~matplotlib.colors.Normalize`
+norm : [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html)
     The continuous normalizer.
-cmap : `~matplotlib.colors.Colormap`
+cmap : [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html)
     The colormap.
 extend : str, optional
     The extend setting.
@@ -961,10 +961,10 @@ explicit_limits : bool, optional
 
 Returns
 -------
-norm : `~ultraplot.colors.DiscreteNorm` or `~matplotlib.colors.Normalize`
+norm : [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html)
     The discrete normalizer, or the original continuous normalizer when
     line contours have explicit limits or use qualitative color lists.
-cmap : `~matplotlib.colors.Colormap`
+cmap : [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html)
     The possibly-modified colormap.
 kwargs
     Unused arguments."""
@@ -983,43 +983,42 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`lines.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line(s). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyle : str, default: :rc:`lines.linestyle`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyle : str, default: [lines.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linestyle)
     The style of the line(s). Aliases: ``ls``, ``linestyles``.
 color : color-spec, optional
     The color of the line(s). The property `cycle` is used by default. Aliases: ``c``, ``colors``.
@@ -1027,11 +1026,11 @@ alpha : float, optional
     The opacity of the line(s). Inferred from `color` by default. Aliases: ``a``, ``alphas``.
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `y` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `y` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -1057,15 +1056,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -1093,7 +1092,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -1102,10 +1101,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -1117,22 +1116,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to :func:`~matplotlib.axes.Axes.plot`.
+    Passed to [plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html).
 
 See also
 --------
@@ -1150,43 +1149,42 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`lines.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line(s). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyle : str, default: :rc:`lines.linestyle`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyle : str, default: [lines.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linestyle)
     The style of the line(s). Aliases: ``ls``, ``linestyles``.
 color : color-spec, optional
     The color of the line(s). The property `cycle` is used by default. Aliases: ``c``, ``colors``.
@@ -1194,11 +1192,11 @@ alpha : float, optional
     The opacity of the line(s). Inferred from `color` by default. Aliases: ``a``, ``alphas``.
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `x` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `x` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -1224,15 +1222,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -1260,7 +1258,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -1269,10 +1267,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -1284,22 +1282,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to :func:`~matplotlib.axes.Axes.plot`.
+    Passed to [plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html).
 
 See also
 --------
@@ -1313,7 +1311,7 @@ matplotlib.axes.Axes.plot"""
         ...
 
     def beeswarm(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
-        """Beeswarm plot with `SHAP-style <https://shap.readthedocs.io/en/latest/generated/shap.plots.beeswarm.html#shap.plots.beeswarm>`_ feature value coloring.
+        """Beeswarm plot with [SHAP-style](https://shap.readthedocs.io/en/latest/generated/shap.plots.beeswarm.html#shap.plots.beeswarm) feature value coloring.
 
 Parameters
 ----------
@@ -1327,7 +1325,7 @@ n_bins: int or array-like, default: 50
  s, size, ms, markersize : float or array-like or unit-spec, optional
      The marker size area(s). If this is an array matching the shape of `x` and `y`,
      the units are scaled by `smin` and `smax`. If this contains unit string(s), it
-     is processed by `~ultraplot.utils.units` and represents the width rather than area.
+     is processed by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html) and represents the width rather than area.
  c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors  : array-like or color-spec, optional
      The marker color(s). If this is an array matching the shape of `x` and `y`,
      the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
@@ -1335,7 +1333,7 @@ n_bins: int or array-like, default: 50
  smin, smax : float, optional
      The minimum and maximum marker size area in units ``points ** 2``. Ignored
      if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
-     `smax` is the square of :rc:`lines.markersize`.
+     `smax` is the square of [lines.markersize](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.markersize).
  area_size : bool, default: True
      Whether the marker sizes `s` are scaled by area or by radius. The default
      ``True`` is consistent with matplotlib. When `absolute_size` is ``True``,
@@ -1356,60 +1354,59 @@ n_bins: int or array-like, default: 50
     and `vmax` are some percentile range of the data values. Otherwise, the default
     `vmin` and `vmax` are the minimum and maximum of the data values.
  data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
  Other parameters
  ----------------
- cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+ cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
  N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -1417,31 +1414,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
- robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+ robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -1453,27 +1450,27 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
  cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
  lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths  : float or sequence, optional
      The marker edge width(s).
  edgecolors, markeredgecolor, markeredgecolors  : color-spec or sequence, optional
      The marker edge color(s).
  mean, means : bool, default: False
     Whether to plot the means of each column for 2D `y` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `y` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
  bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -1499,15 +1496,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -1535,7 +1532,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -1544,10 +1541,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
- inbounds : bool, default: :rc:`axes.inbounds`
+ inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
  label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -1559,22 +1556,22 @@ labels, values : sequence of float or sequence of str, optional
  colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
  **kwargs
-     Passed to `~matplotlib.axes.Axes.scatter`.
+     Passed to [scatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.scatter.html).
 
  See also
  --------
@@ -1591,7 +1588,7 @@ legend_kw : dict-like, optional
 
 A lollipop graph is a bar graph with the bars replaced by dots connected to the x-axis by lines.
 
-Inputs such as arrays (`x` or `y`) or dataframes (`pandas` or `xarray`) are passed through :func:`~ultraplot.PlotAxes.bar`. Colors are inferred from the bar objects and parsed automatically. Formatting of the lollipop consists of controlling the `stem` and the `marker`. The stem properties can be set for the width, size, or color. Marker formatting follows the same inputs to :func:`~ultraplot.PlotAxes.scatter`.
+Inputs such as arrays (`x` or `y`) or dataframes (`pandas` or `xarray`) are passed through [bar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.PlotAxes.html#ultraplot.PlotAxes.bar). Colors are inferred from the bar objects and parsed automatically. Formatting of the lollipop consists of controlling the `stem` and the `marker`. The stem properties can be set for the width, size, or color. Marker formatting follows the same inputs to [scatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.PlotAxes.html#ultraplot.PlotAxes.scatter).
 
 Parameters
 ----------
@@ -1599,25 +1596,25 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
-stemlinewidth : str, default: :rc:`lollipop.stemlinewidth`
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
+stemlinewidth : str, default: [lollipop.stemlinewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.stemlinewidth)
     The width of the lines connecting the dots to the x-axis.
-stemcolor : str, default: :rc:`lollipop.stemcolor`
-    Line color of the lines connecting the dots to the x-axis. Defaults to :rc:`lollipop.linecolor`.
-stemlinestyle : str, default: :rc:`lollipop.stemlinestyle`
-    The style of the lines connecting the dots to the x-axis. Defaults to :rc:`lollipop.linestyle`.
+stemcolor : str, default: [lollipop.stemcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.stemcolor)
+    Line color of the lines connecting the dots to the x-axis. Defaults to [lollipop.linecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.linecolor).
+stemlinestyle : str, default: [lollipop.stemlinestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.stemlinestyle)
+    The style of the lines connecting the dots to the x-axis. Defaults to [lollipop.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.linestyle).
 s, size, ms, markersize : float or array-like or unit-spec, optional
     The marker size area(s). If this is an array matching the shape of `x` and `y`,
     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
-    is processed by `~ultraplot.utils.units` and represents the width rather than area.
+    is processed by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html) and represents the width rather than area.
 c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
     the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
@@ -1625,7 +1622,7 @@ c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : arr
 smin, smax : float, optional
     The minimum and maximum marker size area in units ``points ** 2``. Ignored
     if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
-    `smax` is the square of :rc:`lines.markersize`.
+    `smax` is the square of [lines.markersize](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.markersize).
 area_size : bool, default: True
     Whether the marker sizes `s` are scaled by area or by radius. The default
     ``True`` is consistent with matplotlib. When `absolute_size` is ``True``,
@@ -1646,60 +1643,59 @@ vmin, vmax : float, optional
     and `vmax` are some percentile range of the data values. Otherwise, the default
     `vmin` and `vmax` are the minimum and maximum of the data values.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -1707,31 +1703,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -1743,27 +1739,27 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths : float or sequence, optional
     The marker edge width(s).
 edgecolors, markeredgecolor, markeredgecolors : color-spec or sequence, optional
     The marker edge color(s).
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `x` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `x` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -1789,15 +1785,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -1825,7 +1821,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -1834,10 +1830,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -1849,24 +1845,24 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.scatter`.
+    Passed to [scatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.scatter.html).
 
-See for more info on the grouping behavior :func:`~ultraplot.PlotAxes.bar`, and for formatting :func:`~ultraplot.PlotAxes.scatter`.
+See for more info on the grouping behavior [bar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.PlotAxes.html#ultraplot.PlotAxes.bar), and for formatting [scatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.PlotAxes.html#ultraplot.PlotAxes.scatter).
 Returns
 -------
 List of ~matplotlib.collections.PatchCollection, and a ~matplotlib.collections.LineCollection"""
@@ -1877,7 +1873,7 @@ List of ~matplotlib.collections.PatchCollection, and a ~matplotlib.collections.L
 
 A lollipop graph is a bar graph with the bars replaced by dots connected to the x-axis by lines.
 
-Inputs such as arrays (`x` or `y`) or dataframes (`pandas` or `xarray`) are passed through :func:`~ultraplot.PlotAxes.bar`. Colors are inferred from the bar objects and parsed automatically. Formatting of the lollipop consists of controlling the `stem` and the `marker`. The stem properties can be set for the width, size, or color. Marker formatting follows the same inputs to :func:`~ultraplot.PlotAxes.scatter`.
+Inputs such as arrays (`x` or `y`) or dataframes (`pandas` or `xarray`) are passed through [bar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.PlotAxes.html#ultraplot.PlotAxes.bar). Colors are inferred from the bar objects and parsed automatically. Formatting of the lollipop consists of controlling the `stem` and the `marker`. The stem properties can be set for the width, size, or color. Marker formatting follows the same inputs to [scatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.PlotAxes.html#ultraplot.PlotAxes.scatter).
 
 Parameters
 ----------
@@ -1885,25 +1881,25 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
-stemlinewidth : str, default: :rc:`lollipop.stemlinewidth`
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
+stemlinewidth : str, default: [lollipop.stemlinewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.stemlinewidth)
     The width of the lines connecting the dots to the x-axis.
-stemcolor : str, default: :rc:`lollipop.stemcolor`
-    Line color of the lines connecting the dots to the x-axis. Defaults to :rc:`lollipop.linecolor`.
-stemlinestyle : str, default: :rc:`lollipop.stemlinestyle`
-    The style of the lines connecting the dots to the x-axis. Defaults to :rc:`lollipop.linestyle`.
+stemcolor : str, default: [lollipop.stemcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.stemcolor)
+    Line color of the lines connecting the dots to the x-axis. Defaults to [lollipop.linecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.linecolor).
+stemlinestyle : str, default: [lollipop.stemlinestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.stemlinestyle)
+    The style of the lines connecting the dots to the x-axis. Defaults to [lollipop.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lollipop.linestyle).
 s, size, ms, markersize : float or array-like or unit-spec, optional
     The marker size area(s). If this is an array matching the shape of `x` and `y`,
     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
-    is processed by `~ultraplot.utils.units` and represents the width rather than area.
+    is processed by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html) and represents the width rather than area.
 c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
     the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
@@ -1911,7 +1907,7 @@ c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : arr
 smin, smax : float, optional
     The minimum and maximum marker size area in units ``points ** 2``. Ignored
     if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
-    `smax` is the square of :rc:`lines.markersize`.
+    `smax` is the square of [lines.markersize](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.markersize).
 area_size : bool, default: True
     Whether the marker sizes `s` are scaled by area or by radius. The default
     ``True`` is consistent with matplotlib. When `absolute_size` is ``True``,
@@ -1932,60 +1928,59 @@ vmin, vmax : float, optional
     and `vmax` are some percentile range of the data values. Otherwise, the default
     `vmin` and `vmax` are the minimum and maximum of the data values.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -1993,31 +1988,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -2029,27 +2024,27 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths : float or sequence, optional
     The marker edge width(s).
 edgecolors, markeredgecolor, markeredgecolors : color-spec or sequence, optional
     The marker edge color(s).
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `x` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `x` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -2075,15 +2070,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -2111,7 +2106,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -2120,10 +2115,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -2135,24 +2130,24 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.scatter`.
+    Passed to [scatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.scatter.html).
 
-See for more info on the grouping behavior :func:`~ultraplot.PlotAxes.bar`, and for formatting :func:`~ultraplot.PlotAxes.scatter`.
+See for more info on the grouping behavior [bar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.PlotAxes.html#ultraplot.PlotAxes.bar), and for formatting [scatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.PlotAxes.html#ultraplot.PlotAxes.scatter).
 Returns
 -------
 List of ~matplotlib.collections.PatchCollection, and a ~matplotlib.collections.LineCollection (horizontal lollipop)"""
@@ -2207,7 +2202,7 @@ Notes
 
 .. note::
 
-    This is the :ref:`pyplot wrapper <pyplot_interface>` for `.axes.Axes.loglog`."""
+    This is the [pyplot wrapper](https://ultraplot.readthedocs.io/en/stable/search.html?q=pyplot_interface) for `.axes.Axes.loglog`."""
         ...
 
     def semilogy(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -2256,7 +2251,7 @@ Notes
 
 .. note::
 
-    This is the :ref:`pyplot wrapper <pyplot_interface>` for `.axes.Axes.semilogy`."""
+    This is the [pyplot wrapper](https://ultraplot.readthedocs.io/en/stable/search.html?q=pyplot_interface) for `.axes.Axes.semilogy`."""
         ...
 
     def semilogx(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -2305,7 +2300,7 @@ Notes
 
 .. note::
 
-    This is the :ref:`pyplot wrapper <pyplot_interface>` for `.axes.Axes.semilogx`."""
+    This is the [pyplot wrapper](https://ultraplot.readthedocs.io/en/stable/search.html?q=pyplot_interface) for `.axes.Axes.semilogx`."""
         ...
 
     def plot(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -2317,43 +2312,42 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`lines.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line(s). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyle : str, default: :rc:`lines.linestyle`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyle : str, default: [lines.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linestyle)
     The style of the line(s). Aliases: ``ls``, ``linestyles``.
 color : color-spec, optional
     The color of the line(s). The property `cycle` is used by default. Aliases: ``c``, ``colors``.
@@ -2361,11 +2355,11 @@ alpha : float, optional
     The opacity of the line(s). Inferred from `color` by default. Aliases: ``a``, ``alphas``.
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `y` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `y` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -2391,15 +2385,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -2427,7 +2421,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -2436,10 +2430,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -2451,22 +2445,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to :func:`~matplotlib.axes.Axes.plot`.
+    Passed to [plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html).
 
 See also
 --------
@@ -2516,7 +2510,7 @@ parameter and just give the labels for *x* and *y*::
 >>> plot('xlabel', 'ylabel', data=obj)
 
 All indexable objects are supported. This could e.g. be a `dict`, a
-`pandas.DataFrame` or a structured numpy array.
+[pandas.DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or a structured numpy array.
 
 
 **Plotting multiple sets of data**
@@ -2558,7 +2552,7 @@ By default, each line is assigned a different style specified by a
 'style cycle'. The *fmt* and line property parameters are only
 necessary if you want explicit deviations from these defaults.
 Alternatively, you can also change the style cycle using
-:rc:`axes.prop_cycle`.
+[axes.prop_cycle](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.prop_cycle).
 
 
 Parameters
@@ -2608,7 +2602,7 @@ scalex, scaley : bool, default: True
     data limits. The values are passed on to
     `~.axes.Axes.autoscale_view`.
 
-**kwargs : `~matplotlib.lines.Line2D` properties, optional
+**kwargs : [Line2D](https://matplotlib.org/stable/api/_as_gen/matplotlib.lines.Line2D.html) properties, optional
     *kwargs* are used to specify properties like a line label (for
     auto legends), linewidth, antialiasing, marker face color.
     Example::
@@ -2627,28 +2621,28 @@ scalex, scaley : bool, default: True
     alpha: float or None
     animated: bool
     antialiased or aa: bool
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
-    color or c: :mpltype:`color`
+    color or c: [color](https://matplotlib.org/stable/search.html?q=color)
     dash_capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     dash_joinstyle: `.JoinStyle` or {'miter', 'round', 'bevel'}
     dashes: sequence of floats (on/off ink in points) or (None, None)
     data: (2, N) array or two 1D arrays
     drawstyle or ds: {'default', 'steps', 'steps-pre', 'steps-mid', 'steps-post'}, default: 'default'
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     fillstyle: {'full', 'left', 'right', 'bottom', 'top', 'none'}
-    gapcolor: :mpltype:`color` or None
+    gapcolor: [color](https://matplotlib.org/stable/search.html?q=color) or None
     gid: str
     in_layout: bool
     label: object
     linestyle or ls: {'-', '--', '-.', ':', '', (offset, on-off-seq), ...}
     linewidth or lw: float
     marker: marker style string, `~.path.Path` or `~.markers.MarkerStyle`
-    markeredgecolor or mec: :mpltype:`color`
+    markeredgecolor or mec: [color](https://matplotlib.org/stable/search.html?q=color)
     markeredgewidth or mew: float
-    markerfacecolor or mfc: :mpltype:`color`
-    markerfacecoloralt or mfcalt: :mpltype:`color`
+    markerfacecolor or mfc: [color](https://matplotlib.org/stable/search.html?q=color)
+    markerfacecoloralt or mfcalt: [color](https://matplotlib.org/stable/search.html?q=color)
     markersize or ms: float
     markevery: None or int or (int, int) or slice or list[int] or float or (float, float) or list[bool]
     mouseover: bool
@@ -2758,7 +2752,7 @@ character        color
 and the ``'CN'`` colors that index into the default property cycle.
 
 If the color is the only part of the format string, you can
-additionally use any  `matplotlib.colors` spec, e.g. full names
+additionally use any  [matplotlib.colors](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.html) spec, e.g. full names
 (``'green'``) or hex strings (``'#008000'``)."""
         ...
 
@@ -2771,43 +2765,42 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`lines.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line(s). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyle : str, default: :rc:`lines.linestyle`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyle : str, default: [lines.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linestyle)
     The style of the line(s). Aliases: ``ls``, ``linestyles``.
 color : color-spec, optional
     The color of the line(s). The property `cycle` is used by default. Aliases: ``c``, ``colors``.
@@ -2815,11 +2808,11 @@ alpha : float, optional
     The opacity of the line(s). Inferred from `color` by default. Aliases: ``a``, ``alphas``.
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `x` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `x` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -2845,15 +2838,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -2881,7 +2874,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -2890,10 +2883,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -2905,22 +2898,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to :func:`~matplotlib.axes.Axes.plot`.
+    Passed to [plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html).
 
 See also
 --------
@@ -2942,52 +2935,51 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`lines.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line(s). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyle : str, default: :rc:`lines.linestyle`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyle : str, default: [lines.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linestyle)
     The style of the line(s). Aliases: ``ls``, ``linestyles``.
 color : color-spec, optional
     The color of the line(s). The property `cycle` is used by default. Aliases: ``c``, ``colors``.
 alpha : float, optional
     The opacity of the line(s). Inferred from `color` by default. Aliases: ``a``, ``alphas``.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -2999,22 +2991,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.step`.
+    Passed to [step](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.step.html).
 
 See also
 --------
@@ -3097,52 +3089,51 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`lines.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line(s). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyle : str, default: :rc:`lines.linestyle`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyle : str, default: [lines.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linestyle)
     The style of the line(s). Aliases: ``ls``, ``linestyles``.
 color : color-spec, optional
     The color of the line(s). The property `cycle` is used by default. Aliases: ``c``, ``colors``.
 alpha : float, optional
     The opacity of the line(s). Inferred from `color` by default. Aliases: ``a``, ``alphas``.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -3154,22 +3145,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.step`.
+    Passed to [step](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.step.html).
 
 See also
 --------
@@ -3191,62 +3182,61 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-inbounds : bool, default: :rc:`axes.inbounds`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.stem`.
+    Passed to [stem](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.stem.html).
 
 Matplotlib documentation
 
@@ -3327,7 +3317,7 @@ Notes
 -----
 .. seealso::
     The MATLAB function
-    `stem <https://www.mathworks.com/help/matlab/ref/stem.html>`_
+    [stem](https://www.mathworks.com/help/matlab/ref/stem.html)
     which inspired this method."""
         ...
 
@@ -3340,62 +3330,61 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-inbounds : bool, default: :rc:`axes.inbounds`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.stem`."""
+    Passed to [stem](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.stem.html)."""
         ...
 
     def parametric(self, x: Incomplete, y: Incomplete, c: Incomplete, *, interp: Incomplete=0, scalex: Incomplete=True, scaley: Incomplete=True, **kwargs: Incomplete) -> Incomplete:
@@ -3407,15 +3396,15 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 c, color, colors, values, labels : sequence of float, str, or color-spec, optional
     The parametric coordinate(s). These can be passed as a third positional
     argument or as a keyword argument. If they are float, the colors will be
@@ -3429,56 +3418,55 @@ interp : int, default: 0
     coordinates. This can be increased to make the color gradations
     between a small number of coordinates appear "smooth".
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -3489,13 +3477,13 @@ vmin, vmax : float, optional
     the minimum and maximum of the lists. If `robust` was passed, the default `vmin`
     and `vmax` are some percentile range of the data values. Otherwise, the default
     `vmin` and `vmax` are the minimum and maximum of the data values.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 scalex, scaley : bool, optional
     Whether the view limits are adapted to the data limits. The values are
-    passed on to `~matplotlib.axes.Axes.autoscale_view`.
+    passed on to [autoscale_view](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.autoscale_view.html).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -3503,27 +3491,27 @@ label, value : float or str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Valid :class:`~matplotlib.collections.LineCollection` properties.
+    Valid [LineCollection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.LineCollection.html) properties.
 
 Returns
 -------
-:class:`~matplotlib.collections.LineCollection`
-    The parametric line. See `this matplotlib example <https://matplotlib.org/stable/gallery/lines_bars_and_markers/multicolored_line>`__.
+[LineCollection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.LineCollection.html)
+    The parametric line. See [this matplotlib example](https://matplotlib.org/stable/gallery/lines_bars_and_markers/multicolored_line).
 
 See also
 --------
@@ -3545,27 +3533,26 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates from
-      the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the :class:`~xarray.DataArray`
+      the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `x` coordinates are ``np.arange(0, y2.shape[0])``.
     * If only `x` and `y2` coordinates are passed, set the `y1` coordinates
       to zero. This draws elements originating from the zero line.
     * If both `y1` and `y2` are provided, draw elements between these points. If
       either are 2D, draw elements by iterating over each column.
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
@@ -3573,18 +3560,18 @@ stack, stacked : bool, default: False
     Whether to "stack" lines from successive columns of y data
     or plot lines on top of each other.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`lines.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line(s). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyle : str, default: :rc:`lines.linestyle`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyle : str, default: [lines.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linestyle)
     The style of the line(s). Aliases: ``ls``, ``linestyles``.
 color : color-spec, optional
     The color of the line(s). The property `cycle` is used by default. Aliases: ``c``, ``colors``.
@@ -3594,13 +3581,13 @@ negpos : bool, default: False
     Whether to shade lines where ``ymax >= ymin`` with `poscolor`
     and where ``ymax < ymin`` with `negcolor`. If ``True`` this
     function will return a length-2 silent list of handles.
-negcolor, poscolor : color-spec, default: :rc:`negcolor`, :rc:`poscolor`
+negcolor, poscolor : color-spec, default: [negcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=negcolor), [poscolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=poscolor)
     Colors to use for the negative and positive lines. Ignored if
     `negpos` is ``False``.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -3612,22 +3599,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.vlines`.
+    Passed to [vlines](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.vlines.html).
 
 See also
 --------
@@ -3646,27 +3633,26 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates from
-      the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the :class:`~xarray.DataArray`
+      the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, x2.shape[0])``.
     * If only `y` and `x2` coordinates are passed, set the `x1` coordinates
       to zero. This draws elements originating from the zero line.
     * If both `x1` and `x2` are provided, draw elements between these points. If
       either are 2D, draw elements by iterating over each column.
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
@@ -3674,18 +3660,18 @@ stack, stacked : bool, default: False
     Whether to "stack" lines from successive columns of x data
     or plot lines on top of each other.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`lines.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line(s). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyle : str, default: :rc:`lines.linestyle`
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyle : str, default: [lines.linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linestyle)
     The style of the line(s). Aliases: ``ls``, ``linestyles``.
 color : color-spec, optional
     The color of the line(s). The property `cycle` is used by default. Aliases: ``c``, ``colors``.
@@ -3695,13 +3681,13 @@ negpos : bool, default: False
     Whether to shade lines where ``ymax >= ymin`` with `poscolor`
     and where ``ymax < ymin`` with `negcolor`. If ``True`` this
     function will return a length-2 silent list of handles.
-negcolor, poscolor : color-spec, default: :rc:`negcolor`, :rc:`poscolor`
+negcolor, poscolor : color-spec, default: [negcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=negcolor), [poscolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=poscolor)
     Colors to use for the negative and positive lines. Ignored if
     `negpos` is ``False``.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -3713,22 +3699,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.hlines`.
+    Passed to [hlines](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hlines.html).
 
 See also
 --------
@@ -3755,19 +3741,19 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 s, size, ms, markersize : float or array-like or unit-spec, optional
     The marker size area(s). If this is an array matching the shape of `x` and `y`,
     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
-    is processed by `~ultraplot.utils.units` and represents the width rather than area.
+    is processed by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html) and represents the width rather than area.
 c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
     the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
@@ -3778,7 +3764,7 @@ c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : arr
 smin, smax : float, optional
     The minimum and maximum marker size area in units ``points ** 2``. Ignored
     if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
-    `smax` is the square of :rc:`lines.markersize`.
+    `smax` is the square of [lines.markersize](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.markersize).
 area_size : bool, default: True
     Whether the marker sizes `s` are scaled by area or by radius. The default
     ``True`` is consistent with matplotlib. When `absolute_size` is ``True``,
@@ -3799,60 +3785,59 @@ vmin, vmax : float, optional
     and `vmax` are some percentile range of the data values. Otherwise, the default
     `vmin` and `vmax` are the minimum and maximum of the data values.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -3860,31 +3845,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -3896,27 +3881,27 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths : float or sequence, optional
     The marker edge width(s).
 edgecolors, markeredgecolor, markeredgecolors : color-spec or sequence, optional
     The marker edge color(s).
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `y` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `y` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -3942,15 +3927,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -3978,7 +3963,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -3987,10 +3972,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -4002,22 +3987,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.scatter`.
+    Passed to [scatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.scatter.html).
 
 See also
 --------
@@ -4051,7 +4036,7 @@ s : float or array-like, shape (n, ), optional
     To eliminate the marker edge either set *linewidth=0* or
     *edgecolor='none'*.
 
-c : array-like or list of :mpltype:`color` or :mpltype:`color`, optional
+c : array-like or list of [color](https://matplotlib.org/stable/search.html?q=color) or [color](https://matplotlib.org/stable/search.html?q=color), optional
     The marker colors. Possible values:
 
     - A scalar or sequence of n numbers to be mapped to colors using
@@ -4074,21 +4059,21 @@ c : array-like or list of :mpltype:`color` or :mpltype:`color`, optional
     by the value of *color*, *facecolor* or *facecolors*. In case
     those are not specified or `None`, the marker color is determined
     by the next color of the ``Axes``' current "shape and fill" color
-    cycle. This cycle defaults to :rc:`axes.prop_cycle`.
+    cycle. This cycle defaults to [axes.prop_cycle](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.prop_cycle).
 
-marker : `~.markers.MarkerStyle`, default: :rc:`scatter.marker`
+marker : `~.markers.MarkerStyle`, default: [scatter.marker](https://ultraplot.readthedocs.io/en/stable/search.html?q=scatter.marker)
     The marker style. *marker* can be either an instance of the class
     or the text shorthand for a particular marker.
-    See :mod:`matplotlib.markers` for more information about marker
+    See [matplotlib.markers](https://matplotlib.org/stable/api/_as_gen/matplotlib.markers.html) for more information about marker
     styles.
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
     This parameter is ignored if *c* is RGB(A).
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -4096,9 +4081,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -4116,11 +4101,11 @@ vmin, vmax : float, optional
 alpha : float, default: None
     The alpha blending value, between 0 (transparent) and 1 (opaque).
 
-linewidths : float or array-like, default: :rc:`lines.linewidth`
+linewidths : float or array-like, default: [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The linewidth of the marker edges. Note: The default *edgecolors*
     is 'face'. You may want to change this as well.
 
-edgecolors : {'face', 'none', *None*} or :mpltype:`color` or list of :mpltype:`color`, default: :rc:`scatter.edgecolors`
+edgecolors : {'face', 'none', *None*} or [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), default: [scatter.edgecolors](https://ultraplot.readthedocs.io/en/stable/search.html?q=scatter.edgecolors)
     The edge color of the marker. Possible values:
 
     - 'face': The edge color will always be the same as the face color.
@@ -4131,7 +4116,7 @@ edgecolors : {'face', 'none', *None*} or :mpltype:`color` or list of :mpltype:`c
     is determined like with 'face', i.e. from *c*, *colors*, or
     *facecolors*.
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -4144,7 +4129,7 @@ plotnonfinite : bool, default: False
 
 Returns
 -------
-`~matplotlib.collections.PathCollection`
+[PathCollection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.PathCollection.html)
 
 Other Parameters
 ----------------
@@ -4153,7 +4138,7 @@ data : indexable object, optional
     interpreted as ``data[s]`` if ``s`` is a key in ``data``:
 
     *x*, *y*, *s*, *linewidths*, *edgecolors*, *c*, *facecolor*, *facecolors*, *color*
-**kwargs : `~matplotlib.collections.PathCollection` properties
+**kwargs : [PathCollection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.PathCollection.html) properties
     Properties:
     agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
     alpha: array-like or float or None
@@ -4162,14 +4147,14 @@ data : indexable object, optional
     array: array-like or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -4187,10 +4172,10 @@ data : indexable object, optional
     picker: None or bool or float or callable
     pickradius: float
     rasterized: bool
-    sizes: `numpy.ndarray` or None
+    sizes: [numpy.ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) or None
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     visible: bool
@@ -4225,19 +4210,19 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 s, size, ms, markersize : float or array-like or unit-spec, optional
     The marker size area(s). If this is an array matching the shape of `x` and `y`,
     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
-    is processed by `~ultraplot.utils.units` and represents the width rather than area.
+    is processed by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html) and represents the width rather than area.
 c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
     the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
@@ -4248,7 +4233,7 @@ c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : arr
 smin, smax : float, optional
     The minimum and maximum marker size area in units ``points ** 2``. Ignored
     if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
-    `smax` is the square of :rc:`lines.markersize`.
+    `smax` is the square of [lines.markersize](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.markersize).
 area_size : bool, default: True
     Whether the marker sizes `s` are scaled by area or by radius. The default
     ``True`` is consistent with matplotlib. When `absolute_size` is ``True``,
@@ -4269,60 +4254,59 @@ vmin, vmax : float, optional
     and `vmax` are some percentile range of the data values. Otherwise, the default
     `vmin` and `vmax` are the minimum and maximum of the data values.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -4330,31 +4314,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -4366,27 +4350,27 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths : float or sequence, optional
     The marker edge width(s).
 edgecolors, markeredgecolor, markeredgecolors : color-spec or sequence, optional
     The marker edge color(s).
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `x` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `x` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -4412,15 +4396,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -4448,7 +4432,7 @@ shadez, shadezorder, fadez, fadezorder : float, default: 1.5
     The "zorder" for the different shaded regions.
 shadea, shadealpha, fadea, fadealpha : float, default: 0.4, 0.2
     The opacity for the different shaded regions.
-shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: :rc:`patch.linewidth`.
+shadelw, shadelinewidth, fadelw, fadelinewidth : float, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
     The edge line width for the shading patches.
 shdeec, shadeedgecolor, fadeec, fadeedgecolor : float, default: 'none'
     The edge color for the shading patches.
@@ -4457,10 +4441,10 @@ shadelabel, fadelabel : bool or str, optional
     labels "on" and apply a *default* label, use e.g. ``shadelabel=True``. To apply
     a *custom* label, use e.g. ``shadelabel='label'``. Otherwise, the shading is
     drawn underneath the line and/or marker in the legend entry.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -4472,22 +4456,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.scatter`.
+    Passed to [scatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.scatter.html).
 
 See also
 --------
@@ -4547,48 +4531,47 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates from
-      the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the :class:`~xarray.DataArray`
+      the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `x` coordinates are ``np.arange(0, y2.shape[0])``.
     * If only `x` and `y2` coordinates are passed, set the `y1` coordinates
       to zero. This draws elements originating from the zero line.
     * If both `y1` and `y2` are provided, draw elements between these points. If
       either are 2D, draw elements by iterating over each column.
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 stack, stacked : bool, default: False
     Whether to "stack" area patches from successive columns of y
     data or plot area patches on top of each other.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 where : ndarray, optional
     A boolean mask for the points that should be shaded.
-    See `this matplotlib example <https://matplotlib.org/stable/gallery/pyplots/whats_new_98_4_fill_between.html>`__.
+    See [this matplotlib example](https://matplotlib.org/stable/gallery/pyplots/whats_new_98_4_fill_between.html).
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -4601,21 +4584,21 @@ negpos : bool, default: False
     Whether to shade patches where ``y2 >= y1`` with `poscolor`
     and where ``y2 < y1`` with `negcolor`. If ``True`` this
     function will return a length-2 silent list of handles.
-negcolor, poscolor : color-spec, default: :rc:`negcolor`, :rc:`poscolor`
+negcolor, poscolor : color-spec, default: [negcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=negcolor), [poscolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=poscolor)
     Colors to use for the negative and positive patches. Ignored if
     `negpos` is ``False``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
     automatically disabled when the patches have transparency.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -4627,22 +4610,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.fill_between`.
+    Passed to [fill_between](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_between.html).
 
 See also
 --------
@@ -4663,48 +4646,47 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates from
-      the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the :class:`~xarray.DataArray`
+      the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, x2.shape[0])``.
     * If only `y` and `x2` coordinates are passed, set the `x1` coordinates
       to zero. This draws elements originating from the zero line.
     * If both `x1` and `x2` are provided, draw elements between these points. If
       either are 2D, draw elements by iterating over each column.
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 stack, stacked : bool, default: False
     Whether to "stack" area patches from successive columns of x
     data or plot area patches on top of each other.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 where : ndarray, optional
     A boolean mask for the points that should be shaded.
-    See `this matplotlib example <https://matplotlib.org/stable/gallery/pyplots/whats_new_98_4_fill_between.html>`__.
+    See [this matplotlib example](https://matplotlib.org/stable/gallery/pyplots/whats_new_98_4_fill_between.html).
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -4717,21 +4699,21 @@ negpos : bool, default: False
     Whether to shade patches where ``y2 >= y1`` with `poscolor`
     and where ``y2 < y1`` with `negcolor`. If ``True`` this
     function will return a length-2 silent list of handles.
-negcolor, poscolor : color-spec, default: :rc:`negcolor`, :rc:`poscolor`
+negcolor, poscolor : color-spec, default: [negcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=negcolor), [poscolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=poscolor)
     Colors to use for the negative and positive patches. Ignored if
     `negpos` is ``False``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
     automatically disabled when the patches have transparency.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -4743,22 +4725,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.fill_betweenx`.
+    Passed to [fill_betweenx](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_betweenx.html).
 
 See also
 --------
@@ -4779,48 +4761,47 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates from
-      the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the :class:`~xarray.DataArray`
+      the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `x` coordinates are ``np.arange(0, y2.shape[0])``.
     * If only `x` and `y2` coordinates are passed, set the `y1` coordinates
       to zero. This draws elements originating from the zero line.
     * If both `y1` and `y2` are provided, draw elements between these points. If
       either are 2D, draw elements by iterating over each column.
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 stack, stacked : bool, default: False
     Whether to "stack" area patches from successive columns of y
     data or plot area patches on top of each other.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 where : ndarray, optional
     A boolean mask for the points that should be shaded.
-    See `this matplotlib example <https://matplotlib.org/stable/gallery/pyplots/whats_new_98_4_fill_between.html>`__.
+    See [this matplotlib example](https://matplotlib.org/stable/gallery/pyplots/whats_new_98_4_fill_between.html).
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -4833,21 +4814,21 @@ negpos : bool, default: False
     Whether to shade patches where ``y2 >= y1`` with `poscolor`
     and where ``y2 < y1`` with `negcolor`. If ``True`` this
     function will return a length-2 silent list of handles.
-negcolor, poscolor : color-spec, default: :rc:`negcolor`, :rc:`poscolor`
+negcolor, poscolor : color-spec, default: [negcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=negcolor), [poscolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=poscolor)
     Colors to use for the negative and positive patches. Ignored if
     `negpos` is ``False``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
     automatically disabled when the patches have transparency.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -4859,22 +4840,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.fill_between`.
+    Passed to [fill_between](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_between.html).
 
 See also
 --------
@@ -4972,15 +4953,15 @@ data : indexable object, optional
     array: array-like or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
     data: array-like
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -4998,10 +4979,10 @@ data : indexable object, optional
     picker: None or bool or float or callable
     pickradius: float
     rasterized: bool
-    sizes: `numpy.ndarray` or None
+    sizes: [numpy.ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) or None
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     verts: list of array-like
@@ -5024,48 +5005,47 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates from
-      the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the :class:`~xarray.DataArray`
+      the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, x2.shape[0])``.
     * If only `y` and `x2` coordinates are passed, set the `x1` coordinates
       to zero. This draws elements originating from the zero line.
     * If both `x1` and `x2` are provided, draw elements between these points. If
       either are 2D, draw elements by iterating over each column.
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 stack, stacked : bool, default: False
     Whether to "stack" area patches from successive columns of x
     data or plot area patches on top of each other.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 where : ndarray, optional
     A boolean mask for the points that should be shaded.
-    See `this matplotlib example <https://matplotlib.org/stable/gallery/pyplots/whats_new_98_4_fill_between.html>`__.
+    See [this matplotlib example](https://matplotlib.org/stable/gallery/pyplots/whats_new_98_4_fill_between.html).
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -5078,21 +5058,21 @@ negpos : bool, default: False
     Whether to shade patches where ``y2 >= y1`` with `poscolor`
     and where ``y2 < y1`` with `negcolor`. If ``True`` this
     function will return a length-2 silent list of handles.
-negcolor, poscolor : color-spec, default: :rc:`negcolor`, :rc:`poscolor`
+negcolor, poscolor : color-spec, default: [negcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=negcolor), [poscolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=poscolor)
     Colors to use for the negative and positive patches. Ignored if
     `negpos` is ``False``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
     automatically disabled when the patches have transparency.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -5104,22 +5084,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.fill_betweenx`.
+    Passed to [fill_betweenx](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_betweenx.html).
 
 See also
 --------
@@ -5217,15 +5197,15 @@ data : indexable object, optional
     array: array-like or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
     data: array-like
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -5243,10 +5223,10 @@ data : indexable object, optional
     picker: None or bool or float or callable
     pickradius: float
     rasterized: bool
-    sizes: `numpy.ndarray` or None
+    sizes: [numpy.ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) or None
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     verts: list of array-like
@@ -5266,31 +5246,31 @@ fill_betweenx : Fill between two sets of x-values."""
 Parameters
 ----------
 g : networkx.Graph
-    The graph object to be plotted. Can be any subclass of :class:`~networkx.Graph`, such as
-    :class:`~networkx.DiGraph` or :class:`~networkx.MultiGraph`.
+    The graph object to be plotted. Can be any subclass of [Graph](https://networkx.org/documentation/stable/search.html?q=networkx.Graph), such as
+    [DiGraph](https://networkx.org/documentation/stable/search.html?q=networkx.DiGraph) or [MultiGraph](https://networkx.org/documentation/stable/search.html?q=networkx.MultiGraph).
 layout : callable or dict, optional
     A layout function or a precomputed dict mapping nodes to 2D positions. If a function
-    is given, it is called as ``layout(g, **layout_kw)`` to compute positions. See :func:`networkx.drawing.nx_pylab.draw` for more information.
-nodes : bool or iterable, default: :rc:`graph.draw_nodes`
+    is given, it is called as ``layout(g, **layout_kw)`` to compute positions. See [networkx.drawing.nx_pylab.draw](https://networkx.org/documentation/stable/search.html?q=networkx.drawing.nx_pylab.draw) for more information.
+nodes : bool or iterable, default: [graph.draw_nodes](https://ultraplot.readthedocs.io/en/stable/search.html?q=graph.draw_nodes)
     Which nodes to draw. If `True`, all nodes are drawn. If an iterable is provided, only
-    the specified nodes are included. This effectively acts as `nodelist` in :func:`networkx.drawing.nx_pylab.draw_networkx_nodes`.
-edges : bool or iterable, default: :rc:`graph.draw_edges`
+    the specified nodes are included. This effectively acts as `nodelist` in [networkx.drawing.nx_pylab.draw_networkx_nodes](https://networkx.org/documentation/stable/search.html?q=networkx.drawing.nx_pylab.draw_networkx_nodes).
+edges : bool or iterable, default: [graph.draw_edges](https://ultraplot.readthedocs.io/en/stable/search.html?q=graph.draw_edges)
     Which edges to draw. If `True`, all edges are drawn. If an iterable of edge tuples is
-    provided, only those edges are included. This effectively acts as `edgelist` in :func:`networkx.drawing.nx_pylab.draw_networkx_edges`.
-labels : bool or iterable, default: :rc:`graph.draw_labels`
+    provided, only those edges are included. This effectively acts as `edgelist` in [networkx.drawing.nx_pylab.draw_networkx_edges](https://networkx.org/documentation/stable/search.html?q=networkx.drawing.nx_pylab.draw_networkx_edges).
+labels : bool or iterable, default: [graph.draw_labels](https://ultraplot.readthedocs.io/en/stable/search.html?q=graph.draw_labels)
     Whether to show node labels. If `True`, labels are drawn using node names. If an
     iterable is given, only those nodes are labeled.
 layout_kw : dict, default: {}
-    Keyword arguments passed to the layout function, if `layout` is callable, see `networkx's drawing functions <https://networkx.org/documentation/stable/reference/drawing.html>`_ for more information.
+    Keyword arguments passed to the layout function, if `layout` is callable, see [networkx's drawing functions](https://networkx.org/documentation/stable/reference/drawing.html) for more information.
 node_kw : dict, default: {}
-    Additional keyword arguments passed to the node drawing function (see :func:`networkx.drawing.nx_pylab.draw_networkx_nodes`). These can include
-    size, color, edgecolor, cmap, alpha, etc., depending on the backend used, see :func:`networkx.drawing.nx_pylab.draw_networkx_nodes`.
+    Additional keyword arguments passed to the node drawing function (see [networkx.drawing.nx_pylab.draw_networkx_nodes](https://networkx.org/documentation/stable/search.html?q=networkx.drawing.nx_pylab.draw_networkx_nodes)). These can include
+    size, color, edgecolor, cmap, alpha, etc., depending on the backend used, see [networkx.drawing.nx_pylab.draw_networkx_nodes](https://networkx.org/documentation/stable/search.html?q=networkx.drawing.nx_pylab.draw_networkx_nodes).
 edge_kw : dict, default: {}
     Additional keyword arguments passed to the edge drawing function. These can include
-    width, color, style, alpha, arrows, etc (see :func:`networkx.drawing.nx_pylab.draw_networkx_edges`).
+    width, color, style, alpha, arrows, etc (see [networkx.drawing.nx_pylab.draw_networkx_edges](https://networkx.org/documentation/stable/search.html?q=networkx.drawing.nx_pylab.draw_networkx_edges)).
 label_kw : dict, default: {}
     Additional keyword arguments passed to the label drawing function, such as font size,
-    font color, background color, alignment, etc (see :func:`networkx.drawing.nx_pylab.draw_networkx_labels`).
+    font color, background color, alignment, etc (see [networkx.drawing.nx_pylab.draw_networkx_labels](https://networkx.org/documentation/stable/search.html?q=networkx.drawing.nx_pylab.draw_networkx_labels)).
 rescale : bool,  None, default: None.
     When set to none it checks for `rc["graph.rescale"]` which defaults to `True`. This performs a rescale such that the node position is within a [0, 1] x [0, 1] box.
 Returns
@@ -5330,15 +5310,15 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 width : float or array-like, default: 0.8
     The width(s) of the bars. Can be passed as a third positional argument. If
     `absolute_width` is ``True`` (the default) these are in units relative to the
@@ -5355,34 +5335,33 @@ stack, stacked : bool, default: False
 bar_labels : bool, default rc["bar.bar_labels"]
     Whether to show the height values for vertical bars or width values for horizontal bars.
 bar_labels_kw : dict, default None
-    Keywords to format the bar_labels, see :func:`~matplotlib.pyplot.bar_label`.
+    Keywords to format the bar_labels, see [bar_label](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar_label.html).
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -5395,24 +5374,24 @@ negpos : bool, default: False
     Whether to shade bars where ``height >= 0`` with `poscolor`
     and where ``height < 0`` with `negcolor`. If ``True`` this
     function will return a length-2 silent list of handles.
-negcolor, poscolor : color-spec, default: :rc:`negcolor`, :rc:`poscolor`
+negcolor, poscolor : color-spec, default: [negcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=negcolor), [poscolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=poscolor)
     Colors to use for the negative and positive bars. Ignored if
     `negpos` is ``False``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
     automatically disabled when the patches have transparency.
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `y` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `y` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -5438,15 +5417,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -5454,10 +5433,10 @@ boxms, boxmarkersize : size-spec, default: ``(2 * boxlinewidth) ** 2``
     The marker size for the `boxmarker` marker in points ** 2.
 boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor : color-spec, default: 'w'
     Color, face color, and edge color for the `boxmarker` marker.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -5469,22 +5448,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.bar`.
+    Passed to [bar](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.bar.html).
 
 See also
 --------
@@ -5556,15 +5535,15 @@ Returns
 
 Other Parameters
 ----------------
-color : :mpltype:`color` or list of :mpltype:`color`, optional
+color : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the bar faces. This is an alias for *facecolor*.
     If both are given, *facecolor* takes precedence.
 
-facecolor : :mpltype:`color` or list of :mpltype:`color`, optional
+facecolor : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the bar faces.
     If both *color* and *facecolor are given, *facecolor* takes precedence.
 
-edgecolor : :mpltype:`color` or list of :mpltype:`color`, optional
+edgecolor : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the bar edges.
 
 linewidth : float or array-like, optional
@@ -5593,13 +5572,13 @@ xerr, yerr : float or array-like of shape(N,) or shape(2, N), optional
       errors.
     - *None*: No errorbar. (Default)
 
-    See :doc:`/gallery/statistics/errorbar_features` for an example on
+    See [/gallery/statistics/errorbar_features](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fstatistics%2Ferrorbar_features) for an example on
     the usage of *xerr* and *yerr*.
 
-ecolor : :mpltype:`color` or list of :mpltype:`color`, default: 'black'
+ecolor : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), default: 'black'
     The line color of the errorbars.
 
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
    The length of the error bar caps in points.
 
 error_kw : dict, optional
@@ -5624,13 +5603,13 @@ Properties:
     antialiased or aa: bool or None
     bounds: (left, bottom, width, height)
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
-    color: :mpltype:`color`
-    edgecolor or ec: :mpltype:`color` or None
-    facecolor or fc: :mpltype:`color` or None
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color)
+    edgecolor or ec: [color](https://matplotlib.org/stable/search.html?q=color) or None
+    facecolor or fc: [color](https://matplotlib.org/stable/search.html?q=color) or None
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     fill: bool
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
@@ -5647,7 +5626,7 @@ Properties:
     rasterized: bool
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     visible: bool
     width: unknown
@@ -5663,7 +5642,7 @@ barh : Plot a horizontal bar plot.
 Notes
 -----
 Stacked bars can be achieved by passing individual *bottom* values per
-bar. See :doc:`/gallery/lines_bars_and_markers/bar_stacked`."""
+bar. See [/gallery/lines_bars_and_markers/bar_stacked](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Flines_bars_and_markers%2Fbar_stacked)."""
         ...
 
     def barh(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -5675,15 +5654,15 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 width : float or array-like, default: 0.8
     The width(s) of the bars. Can be passed as a third positional argument. If
     `absolute_width` is ``True`` (the default) these are in units relative to the
@@ -5700,34 +5679,33 @@ stack, stacked : bool, default: False
 bar_labels : bool, default rc["bar.bar_labels"]
     Whether to show the height values for vertical bars or width values for horizontal bars.
 bar_labels_kw : dict, default None
-    Keywords to format the bar_labels, see :func:`~matplotlib.pyplot.bar_label`.
+    Keywords to format the bar_labels, see [bar_label](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar_label.html).
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -5740,24 +5718,24 @@ negpos : bool, default: False
     Whether to shade bars where ``height >= 0`` with `poscolor`
     and where ``height < 0`` with `negcolor`. If ``True`` this
     function will return a length-2 silent list of handles.
-negcolor, poscolor : color-spec, default: :rc:`negcolor`, :rc:`poscolor`
+negcolor, poscolor : color-spec, default: [negcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=negcolor), [poscolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=poscolor)
     Colors to use for the negative and positive bars. Ignored if
     `negpos` is ``False``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
     automatically disabled when the patches have transparency.
 mean, means : bool, default: False
     Whether to plot the means of each column for 2D `x` coordinates. Means
-    are calculated with `numpy.nanmean`. If no other arguments are specified,
+    are calculated with [numpy.nanmean](https://numpy.org/doc/stable/reference/generated/numpy.nanmean.html). If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 median, medians : bool, default: False
     Whether to plot the medians of each column for 2D `x` coordinates. Medians
-    are calculated with `numpy.nanmedian`. If no other arguments arguments are
+    are calculated with [numpy.nanmedian](https://numpy.org/doc/stable/reference/generated/numpy.nanmedian.html). If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 bars : bool, default: None
     Shorthand for `barstd`, `barstds`.
@@ -5783,15 +5761,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -5799,10 +5777,10 @@ boxms, boxmarkersize : size-spec, default: ``(2 * boxlinewidth) ** 2``
     The marker size for the `boxmarker` marker in points ** 2.
 boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor : color-spec, default: 'w'
     Color, face color, and edge color for the `boxmarker` marker.
-inbounds : bool, default: :rc:`axes.inbounds`
+inbounds : bool, default: [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds)
     Whether to restrict the default `y` (`x`) axis limits to account for only
     in-bounds data when the `x` (`y`) axis limits have been locked.
-    See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
+    See also [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds) and [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds).
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -5814,22 +5792,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.barh`.
+    Passed to [barh](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.barh.html).
 
 See also
 --------
@@ -5902,10 +5880,10 @@ Returns
 
 Other Parameters
 ----------------
-color : :mpltype:`color` or list of :mpltype:`color`, optional
+color : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the bar faces.
 
-edgecolor : :mpltype:`color` or list of :mpltype:`color`, optional
+edgecolor : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the bar edges.
 
 linewidth : float or array-like, optional
@@ -5934,13 +5912,13 @@ xerr, yerr : float or array-like of shape(N,) or shape(2, N), optional
       errors.
     - *None*: No errorbar. (default)
 
-    See :doc:`/gallery/statistics/errorbar_features` for an example on
+    See [/gallery/statistics/errorbar_features](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fstatistics%2Ferrorbar_features) for an example on
     the usage of *xerr* and *yerr*.
 
-ecolor : :mpltype:`color` or list of :mpltype:`color`, default: 'black'
+ecolor : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), default: 'black'
     The line color of the errorbars.
 
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
    The length of the error bar caps in points.
 
 error_kw : dict, optional
@@ -5965,13 +5943,13 @@ Properties:
     antialiased or aa: bool or None
     bounds: (left, bottom, width, height)
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
-    color: :mpltype:`color`
-    edgecolor or ec: :mpltype:`color` or None
-    facecolor or fc: :mpltype:`color` or None
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color)
+    edgecolor or ec: [color](https://matplotlib.org/stable/search.html?q=color) or None
+    facecolor or fc: [color](https://matplotlib.org/stable/search.html?q=color) or None
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     fill: bool
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
@@ -5988,7 +5966,7 @@ Properties:
     rasterized: bool
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     visible: bool
     width: unknown
@@ -6005,7 +5983,7 @@ Notes
 -----
 Stacked bars can be achieved by passing individual *left* values per
 bar. See
-:doc:`/gallery/lines_bars_and_markers/horizontal_barchart_distribution`."""
+[/gallery/lines_bars_and_markers/horizontal_barchart_distribution](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Flines_bars_and_markers%2Fhorizontal_barchart_distribution)."""
         ...
 
     def pie(self, x: Incomplete, explode: Incomplete, *, labelpad: Incomplete=None, labeldistance: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
@@ -6017,42 +5995,41 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -6061,10 +6038,10 @@ facecolor : color-spec, optional
     The face color of the patch(es). The property `cycle` is used by default. Aliases: ``fc``, ``facecolors``, ``fillcolor``, ``fillcolors``.
 alpha : float, optional
     The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -6107,14 +6084,14 @@ explode : array-like, default: None
 labels : list, default: None
     A sequence of strings providing the labels for each wedge
 
-colors : :mpltype:`color` or list of :mpltype:`color`, default: None
+colors : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), default: None
     A sequence of colors through which the pie chart will cycle.  If
     *None*, will use the colors in the currently active cycle.
 
 hatch : str or list, default: None
     Hatching pattern applied to all pie wedges or sequence of patterns
     through which the chart will cycle. For a list of valid patterns,
-    see :doc:`/gallery/shapes_and_collections/hatch_style_reference`.
+    see [/gallery/shapes_and_collections/hatch_style_reference](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fshapes_and_collections%2Fhatch_style_reference).
 
     .. versionadded:: 3.7
 
@@ -6186,7 +6163,7 @@ data : indexable object, optional
 Returns
 -------
 patches : list
-    A sequence of `matplotlib.patches.Wedge` instances
+    A sequence of [matplotlib.patches.Wedge](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Wedge.html) instances
 
 texts : list
     A list of the label `.Text` instances.
@@ -6229,27 +6206,26 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
@@ -6257,19 +6233,19 @@ fill : bool, default: True
     Whether to fill the box with a color.
 mean, means : bool, default: False
     If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to
-    `matplotlib.axes.Axes.boxplot`. Adds mean lines alongside the median.
+    [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html). Adds mean lines alongside the median.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'black'
@@ -6280,23 +6256,23 @@ alpha : float, optional
     The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. Aliases: ``a``, ``alphas``.
 m, marker, ms, markersize : float or str, optional
     Marker style and size for the 'fliers', i.e. outliers. See the
-    ``boxplot.flierprops`` `~matplotlib.rcParams` settings.
+    ``boxplot.flierprops`` [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 meanls, medianls, meanlinestyle, medianlinestyle, meanlinestyles, medianlinestyles : str, optional
     Line style for the mean and median lines drawn across the box.
     See the ``boxplot.meanprops`` and ``boxplot.medianprops``
-    `~matplotlib.rcParams` settings.
+    [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 boxc, capc, whiskerc, flierc, meanc, medianc, boxcolor, capcolor, whiskercolor, fliercolor, meancolor, mediancolor boxcolors, capcolors, whiskercolors, fliercolors, meancolors, mediancolors : color-spec or sequence, optional
     Color of various boxplot components. If a sequence, should be the same length as
     the number of boxes. These are shorthands so you don't have to pass e.g. a
     `boxprops` dictionary keyword. See the ``boxplot.boxprops``, ``boxplot.capprops``,
     ``boxplot.whiskerprops``, ``boxplot.flierprops``, ``boxplot.meanprops``, and
-    ``boxplot.medianprops`` `~matplotlib.rcParams` settings.
+    ``boxplot.medianprops`` [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 boxlw, caplw, whiskerlw, flierlw, meanlw, medianlw, boxlinewidth, caplinewidth, meanlinewidth, medianlinewidth, whiskerlinewidth, flierlinewidth, boxlinewidths, caplinewidths, meanlinewidths, medianlinewidths, whiskerlinewidths, flierlinewidths : float, optional
     Line width of various boxplot components. These are shorthands so
     you don't have to pass e.g. a `boxprops` dictionary keyword.
     See the ``boxplot.boxprops``, ``boxplot.capprops``, ``boxplot.whiskerprops``,
     ``boxplot.flierprops``, ``boxplot.meanprops``, and ``boxplot.medianprops``
-    `~matplotlib.rcParams` settings.
+    [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -6306,7 +6282,7 @@ labels, values : sequence of float or sequence of str, optional
     Can be numeric or string, and must match the number of plotted elements.
     This is generally used with 2D positional arguments.
 **kwargs
-    Passed to `matplotlib.axes.Axes.boxplot`.
+    Passed to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
 
 See also
 --------
@@ -6326,27 +6302,26 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
@@ -6354,19 +6329,19 @@ fill : bool, default: True
     Whether to fill the box with a color.
 mean, means : bool, default: False
     If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to
-    `matplotlib.axes.Axes.boxplot`. Adds mean lines alongside the median.
+    [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html). Adds mean lines alongside the median.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'black'
@@ -6377,23 +6352,23 @@ alpha : float, optional
     The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. Aliases: ``a``, ``alphas``.
 m, marker, ms, markersize : float or str, optional
     Marker style and size for the 'fliers', i.e. outliers. See the
-    ``boxplot.flierprops`` `~matplotlib.rcParams` settings.
+    ``boxplot.flierprops`` [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 meanls, medianls, meanlinestyle, medianlinestyle, meanlinestyles, medianlinestyles : str, optional
     Line style for the mean and median lines drawn across the box.
     See the ``boxplot.meanprops`` and ``boxplot.medianprops``
-    `~matplotlib.rcParams` settings.
+    [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 boxc, capc, whiskerc, flierc, meanc, medianc, boxcolor, capcolor, whiskercolor, fliercolor, meancolor, mediancolor boxcolors, capcolors, whiskercolors, fliercolors, meancolors, mediancolors : color-spec or sequence, optional
     Color of various boxplot components. If a sequence, should be the same length as
     the number of boxes. These are shorthands so you don't have to pass e.g. a
     `boxprops` dictionary keyword. See the ``boxplot.boxprops``, ``boxplot.capprops``,
     ``boxplot.whiskerprops``, ``boxplot.flierprops``, ``boxplot.meanprops``, and
-    ``boxplot.medianprops`` `~matplotlib.rcParams` settings.
+    ``boxplot.medianprops`` [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 boxlw, caplw, whiskerlw, flierlw, meanlw, medianlw, boxlinewidth, caplinewidth, meanlinewidth, medianlinewidth, whiskerlinewidth, flierlinewidth, boxlinewidths, caplinewidths, meanlinewidths, medianlinewidths, whiskerlinewidths, flierlinewidths : float, optional
     Line width of various boxplot components. These are shorthands so
     you don't have to pass e.g. a `boxprops` dictionary keyword.
     See the ``boxplot.boxprops``, ``boxplot.capprops``, ``boxplot.whiskerprops``,
     ``boxplot.flierprops``, ``boxplot.meanprops``, and ``boxplot.medianprops``
-    `~matplotlib.rcParams` settings.
+    [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -6403,7 +6378,7 @@ labels, values : sequence of float or sequence of str, optional
     Can be numeric or string, and must match the number of plotted elements.
     This is generally used with 2D positional arguments.
 **kwargs
-    Passed to `matplotlib.axes.Axes.boxplot`.
+    Passed to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
 
 See also
 --------
@@ -6423,27 +6398,26 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
@@ -6451,19 +6425,19 @@ fill : bool, default: True
     Whether to fill the box with a color.
 mean, means : bool, default: False
     If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to
-    `matplotlib.axes.Axes.boxplot`. Adds mean lines alongside the median.
+    [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html). Adds mean lines alongside the median.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'black'
@@ -6474,23 +6448,23 @@ alpha : float, optional
     The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. Aliases: ``a``, ``alphas``.
 m, marker, ms, markersize : float or str, optional
     Marker style and size for the 'fliers', i.e. outliers. See the
-    ``boxplot.flierprops`` `~matplotlib.rcParams` settings.
+    ``boxplot.flierprops`` [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 meanls, medianls, meanlinestyle, medianlinestyle, meanlinestyles, medianlinestyles : str, optional
     Line style for the mean and median lines drawn across the box.
     See the ``boxplot.meanprops`` and ``boxplot.medianprops``
-    `~matplotlib.rcParams` settings.
+    [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 boxc, capc, whiskerc, flierc, meanc, medianc, boxcolor, capcolor, whiskercolor, fliercolor, meancolor, mediancolor boxcolors, capcolors, whiskercolors, fliercolors, meancolors, mediancolors : color-spec or sequence, optional
     Color of various boxplot components. If a sequence, should be the same length as
     the number of boxes. These are shorthands so you don't have to pass e.g. a
     `boxprops` dictionary keyword. See the ``boxplot.boxprops``, ``boxplot.capprops``,
     ``boxplot.whiskerprops``, ``boxplot.flierprops``, ``boxplot.meanprops``, and
-    ``boxplot.medianprops`` `~matplotlib.rcParams` settings.
+    ``boxplot.medianprops`` [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 boxlw, caplw, whiskerlw, flierlw, meanlw, medianlw, boxlinewidth, caplinewidth, meanlinewidth, medianlinewidth, whiskerlinewidth, flierlinewidth, boxlinewidths, caplinewidths, meanlinewidths, medianlinewidths, whiskerlinewidths, flierlinewidths : float, optional
     Line width of various boxplot components. These are shorthands so
     you don't have to pass e.g. a `boxprops` dictionary keyword.
     See the ``boxplot.boxprops``, ``boxplot.capprops``, ``boxplot.whiskerprops``,
     ``boxplot.flierprops``, ``boxplot.meanprops``, and ``boxplot.medianprops``
-    `~matplotlib.rcParams` settings.
+    [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -6500,7 +6474,7 @@ labels, values : sequence of float or sequence of str, optional
     Can be numeric or string, and must match the number of plotted elements.
     This is generally used with 2D positional arguments.
 **kwargs
-    Passed to `matplotlib.axes.Axes.boxplot`.
+    Passed to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
 
 See also
 --------
@@ -6539,7 +6513,7 @@ x : Array or a sequence of vectors.
     in *x*.  If a sequence of 1D arrays, a boxplot is drawn for each
     array in *x*.
 
-notch : bool, default: :rc:`boxplot.notch`
+notch : bool, default: [boxplot.notch](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.notch)
     Whether to draw a notched boxplot (`True`), or a rectangular
     boxplot (`False`).  The notches represent the confidence interval
     (CI) around the median.  The documentation for *bootstrap*
@@ -6632,7 +6606,7 @@ widths : float or array-like
     The widths of the boxes.  The default is 0.5, or ``0.15*(distance
     between extreme positions)``, if that is smaller.
 
-patch_artist : bool, default: :rc:`boxplot.patchartist`
+patch_artist : bool, default: [boxplot.patchartist](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.patchartist)
     If `False` produces boxes with the Line2D artist. Otherwise,
     boxes are drawn with Patch artists.
 
@@ -6655,7 +6629,7 @@ autorange : bool, default: False
     75th percentiles are equal, *whis* is set to (0, 100) such
     that the whisker ends are at the minimum and maximum of the data.
 
-meanline : bool, default: :rc:`boxplot.meanline`
+meanline : bool, default: [boxplot.meanline](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.meanline)
     If `True` (and *showmeans* is `True`), will try to render the
     mean as a line spanning the full width of the box according to
     *meanprops* (see below).  Not recommended if *shownotches* is also
@@ -6690,13 +6664,13 @@ dict
 
 Other Parameters
 ----------------
-showcaps : bool, default: :rc:`boxplot.showcaps`
+showcaps : bool, default: [boxplot.showcaps](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.showcaps)
     Show the caps on the ends of whiskers.
-showbox : bool, default: :rc:`boxplot.showbox`
+showbox : bool, default: [boxplot.showbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.showbox)
     Show the central box.
-showfliers : bool, default: :rc:`boxplot.showfliers`
+showfliers : bool, default: [boxplot.showfliers](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.showfliers)
     Show the outliers beyond the caps.
-showmeans : bool, default: :rc:`boxplot.showmeans`
+showmeans : bool, default: [boxplot.showmeans](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.showmeans)
     Show the arithmetic means.
 capprops : dict, default: None
     The style of the caps.
@@ -6717,7 +6691,7 @@ label : str or list of str, optional
     you only want a single legend entry for them. Use a list of strings to
     label all boxes individually. To be distinguishable, the boxes should be
     styled individually, which is currently only possible by modifying the
-    returned artists, see e.g. :doc:`/gallery/statistics/boxplot_demo`.
+    returned artists, see e.g. [/gallery/statistics/boxplot_demo](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fstatistics%2Fboxplot_demo).
 
     In the case of a single string, the legend entry will technically be
     associated with the first box only. By default, the legend will show the
@@ -6745,27 +6719,26 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
@@ -6773,19 +6746,19 @@ fill : bool, default: True
     Whether to fill the box with a color.
 mean, means : bool, default: False
     If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to
-    `matplotlib.axes.Axes.boxplot`. Adds mean lines alongside the median.
+    [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html). Adds mean lines alongside the median.
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'black'
@@ -6796,23 +6769,23 @@ alpha : float, optional
     The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. Aliases: ``a``, ``alphas``.
 m, marker, ms, markersize : float or str, optional
     Marker style and size for the 'fliers', i.e. outliers. See the
-    ``boxplot.flierprops`` `~matplotlib.rcParams` settings.
+    ``boxplot.flierprops`` [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 meanls, medianls, meanlinestyle, medianlinestyle, meanlinestyles, medianlinestyles : str, optional
     Line style for the mean and median lines drawn across the box.
     See the ``boxplot.meanprops`` and ``boxplot.medianprops``
-    `~matplotlib.rcParams` settings.
+    [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 boxc, capc, whiskerc, flierc, meanc, medianc, boxcolor, capcolor, whiskercolor, fliercolor, meancolor, mediancolor boxcolors, capcolors, whiskercolors, fliercolors, meancolors, mediancolors : color-spec or sequence, optional
     Color of various boxplot components. If a sequence, should be the same length as
     the number of boxes. These are shorthands so you don't have to pass e.g. a
     `boxprops` dictionary keyword. See the ``boxplot.boxprops``, ``boxplot.capprops``,
     ``boxplot.whiskerprops``, ``boxplot.flierprops``, ``boxplot.meanprops``, and
-    ``boxplot.medianprops`` `~matplotlib.rcParams` settings.
+    ``boxplot.medianprops`` [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 boxlw, caplw, whiskerlw, flierlw, meanlw, medianlw, boxlinewidth, caplinewidth, meanlinewidth, medianlinewidth, whiskerlinewidth, flierlinewidth, boxlinewidths, caplinewidths, meanlinewidths, medianlinewidths, whiskerlinewidths, flierlinewidths : float, optional
     Line width of various boxplot components. These are shorthands so
     you don't have to pass e.g. a `boxprops` dictionary keyword.
     See the ``boxplot.boxprops``, ``boxplot.capprops``, ``boxplot.whiskerprops``,
     ``boxplot.flierprops``, ``boxplot.meanprops``, and ``boxplot.medianprops``
-    `~matplotlib.rcParams` settings.
+    [rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) settings.
 label, value : float or str, optional
     The single legend label or colorbar coordinate to be used for
     this plotted element. Can be numeric or string. This is generally
@@ -6822,7 +6795,7 @@ labels, values : sequence of float or sequence of str, optional
     Can be numeric or string, and must match the number of plotted elements.
     This is generally used with 2D positional arguments.
 **kwargs
-    Passed to `matplotlib.axes.Axes.boxplot`.
+    Passed to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
 
 See also
 --------
@@ -6839,7 +6812,7 @@ matplotlib.axes.Axes.boxplot"""
 
     def violin(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
         """Plot vertical violins with a nice default style matching
-`this matplotlib example <https://matplotlib.org/stable/gallery/statistics/customized_violin.html>`__.
+[this matplotlib example](https://matplotlib.org/stable/gallery/statistics/customized_violin.html).
 
 Parameters
 ----------
@@ -6847,42 +6820,41 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'black'
@@ -6927,15 +6899,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -6944,7 +6916,7 @@ boxms, boxmarkersize : size-spec, default: ``(2 * boxlinewidth) ** 2``
 boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor : color-spec, default: 'w'
     Color, face color, and edge color for the `boxmarker` marker.
 **kwargs
-    Passed to `matplotlib.axes.Axes.violinplot`.
+    Passed to [matplotlib.axes.Axes.violinplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.violinplot.html).
 
 See also
 --------
@@ -6957,7 +6929,7 @@ matplotlib.axes.Axes.violinplot"""
 
     def violinh(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
         """Plot horizontal violins with a nice default style matching
-`this matplotlib example <https://matplotlib.org/stable/gallery/statistics/customized_violin.html>`__.
+[this matplotlib example](https://matplotlib.org/stable/gallery/statistics/customized_violin.html).
 
 Parameters
 ----------
@@ -6965,42 +6937,41 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'black'
@@ -7045,15 +7016,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -7062,7 +7033,7 @@ boxms, boxmarkersize : size-spec, default: ``(2 * boxlinewidth) ** 2``
 boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor : color-spec, default: 'w'
     Color, face color, and edge color for the `boxmarker` marker.
 **kwargs
-    Passed to `matplotlib.axes.Axes.violinplot`.
+    Passed to [matplotlib.axes.Axes.violinplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.violinplot.html).
 
 See also
 --------
@@ -7075,7 +7046,7 @@ matplotlib.axes.Axes.violinplot"""
 
     def violinplot(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
         """Plot vertical violins with a nice default style matching
-`this matplotlib example <https://matplotlib.org/stable/gallery/statistics/customized_violin.html>`__.
+[this matplotlib example](https://matplotlib.org/stable/gallery/statistics/customized_violin.html).
 
 Parameters
 ----------
@@ -7083,42 +7054,41 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'black'
@@ -7163,15 +7133,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -7180,7 +7150,7 @@ boxms, boxmarkersize : size-spec, default: ``(2 * boxlinewidth) ** 2``
 boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor : color-spec, default: 'w'
     Color, face color, and edge color for the `boxmarker` marker.
 **kwargs
-    Passed to `matplotlib.axes.Axes.violinplot`.
+    Passed to [matplotlib.axes.Axes.violinplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.violinplot.html).
 
 See also
 --------
@@ -7251,7 +7221,7 @@ points : int, default: 100
 bw_method : {'scott', 'silverman'} or float or callable, default: 'scott'
     The method used to calculate the estimator bandwidth.  If a
     float, this will be used directly as `kde.factor`.  If a
-    callable, it should take a `matplotlib.mlab.GaussianKDE` instance as
+    callable, it should take a [matplotlib.mlab.GaussianKDE](https://matplotlib.org/stable/api/_as_gen/matplotlib.mlab.GaussianKDE.html) instance as
     its only parameter and return a float.
 
 side : {'both', 'low', 'high'}, default: 'both'
@@ -7301,7 +7271,7 @@ boxplot : Draw a box and whisker plot."""
 
     def violinploth(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
         """Plot horizontal violins with a nice default style matching
-`this matplotlib example <https://matplotlib.org/stable/gallery/statistics/customized_violin.html>`__.
+[this matplotlib example](https://matplotlib.org/stable/gallery/statistics/customized_violin.html).
 
 Parameters
 ----------
@@ -7309,42 +7279,41 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'black'
@@ -7389,15 +7358,15 @@ boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
     is ``True``, the default percentile range of 25 to 75 is used (i.e., the
     interquartile range). When "boxes" and "bars" are combined, this has the
     effect of drawing miniature box-and-whisker plots.
-capsize : float, default: :rc:`errorbar.capsize`
+capsize : float, default: [errorbar.capsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=errorbar.capsize)
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: [boxplot.whiskerprops.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.color)
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth)
     Line widths for the thin and thick error bars, in points. The default for boxes
-    is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
+    is 4 times [boxplot.whiskerprops.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=boxplot.whiskerprops.linewidth).
 boxm, boxmarker : bool or marker-spec, default: 'o'
     Whether to draw a small marker in the middle of the box denoting
     the mean or median position. Ignored if `boxes` is ``False``.
@@ -7406,7 +7375,7 @@ boxms, boxmarkersize : size-spec, default: ``(2 * boxlinewidth) ** 2``
 boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor : color-spec, default: 'w'
     Color, face color, and edge color for the `boxmarker` marker.
 **kwargs
-    Passed to `matplotlib.axes.Axes.violinplot`.
+    Passed to [matplotlib.axes.Axes.violinplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.violinplot.html).
 
 See also
 --------
@@ -7440,7 +7409,7 @@ kde_kw : dict, optional
     for the latter) control the estimate and the remaining keys style
     the resulting curve, e.g. ``color``, ``linestyle``, ``linewidth``.
     Only used when hist=False.
-points : int, default: :rc:`kde.points`
+points : int, default: [kde.points](https://ultraplot.readthedocs.io/en/stable/search.html?q=kde.points)
     Number of points to evaluate the KDE at. Higher values create smoother curves
     but take longer to compute. Only used when hist=False.
 hist : bool, default: False
@@ -7506,7 +7475,7 @@ overlap : float, default: 0.5
     positioning mode (when positions is None).
 kde_kw : dict, optional
     Settings for the kernel density estimate. The following keys control the
-    estimate itself and are passed to `scipy.stats.gaussian_kde`:
+    estimate itself and are passed to [scipy.stats.gaussian_kde](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html):
 
     * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
     * ``weights`` : Array of weights for each data point
@@ -7514,9 +7483,9 @@ kde_kw : dict, optional
       (``stepsize`` is accepted as an alias)
 
     The remaining keys style the resulting curve and are passed to
-    `matplotlib.axes.Axes.plot`, e.g. ``color``, ``linestyle``, ``linewidth``.
+    [matplotlib.axes.Axes.plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html), e.g. ``color``, ``linestyle``, ``linewidth``.
     Only used when hist=False.
-points : int, default: :rc:`kde.points`
+points : int, default: [kde.points](https://ultraplot.readthedocs.io/en/stable/search.html?q=kde.points)
     Number of evaluation points for KDE curves. Higher values create smoother
     curves but take longer to compute. Only used when hist=False.
 hist : bool, default: False
@@ -7603,7 +7572,7 @@ overlap : float, default: 0.5
     positioning mode (when positions is None).
 kde_kw : dict, optional
     Settings for the kernel density estimate. The following keys control the
-    estimate itself and are passed to `scipy.stats.gaussian_kde`:
+    estimate itself and are passed to [scipy.stats.gaussian_kde](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html):
 
     * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
     * ``weights`` : Array of weights for each data point
@@ -7611,9 +7580,9 @@ kde_kw : dict, optional
       (``stepsize`` is accepted as an alias)
 
     The remaining keys style the resulting curve and are passed to
-    `matplotlib.axes.Axes.plot`, e.g. ``color``, ``linestyle``, ``linewidth``.
+    [matplotlib.axes.Axes.plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html), e.g. ``color``, ``linestyle``, ``linewidth``.
     Only used when hist=False.
-points : int, default: :rc:`kde.points`
+points : int, default: [kde.points](https://ultraplot.readthedocs.io/en/stable/search.html?q=kde.points)
     Number of evaluation points for KDE curves. Higher values create smoother
     curves but take longer to compute. Only used when hist=False.
 hist : bool, default: False
@@ -7683,22 +7652,22 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 bins : int or sequence of float, optional
     The bin count or exact bin edges.
 weights : array-like, optional
     The weights associated with each point. If string this
     can be retrieved from `data` (see below).
 histtype : {'bar', 'barstacked', 'step', 'stepfilled'}, optional
-    The histogram type. See `matplotlib.axes.Axes.hist` for details.
+    The histogram type. See [matplotlib.axes.Axes.hist](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hist.html) for details.
 width, rwidth : float, default: 0.8 or 1
     The bar width(s) for bar-type histograms relative to the bin size. Default
     is ``0.8`` for multiple columns of unstacked data and ``1`` otherwise.
@@ -7710,50 +7679,49 @@ kde : bool, default: False
     Whether to overlay a gaussian kernel density estimate of each column of
     data. The curve tracks the histogram, i.e. it is scaled to the bin counts
     unless ``density=True`` and accumulated when the histogram is stacked.
-    Requires `scipy <https://scipy.org>`__.
+    Requires [scipy](https://scipy.org).
 kde_kw : dict, optional
     Settings for the kernel density estimate. The following keys control the
-    estimate itself and are passed to `scipy.stats.gaussian_kde`:
+    estimate itself and are passed to [scipy.stats.gaussian_kde](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html):
 
     * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
     * ``weights`` : Array of weights for each data point, defaults to `weights`
-    * ``points`` : Number of evaluation points, default :rc:`kde.points`
+    * ``points`` : Number of evaluation points, default [kde.points](https://ultraplot.readthedocs.io/en/stable/search.html?q=kde.points)
       (``stepsize`` is accepted as an alias)
 
     The remaining keys style the resulting curve and are passed to
-    `matplotlib.axes.Axes.plot`, e.g. ``color``, ``linestyle``, ``linewidth``.
+    [matplotlib.axes.Axes.plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html), e.g. ``color``, ``linestyle``, ``linewidth``.
     By default each curve takes the color of its histogram.
 fill, filled : bool, optional
     Whether to "fill" step-type histograms or just plot the edges. Setting
     this to ``False`` is equivalent to ``histtype='step'`` and to ``True``
     is equivalent to ``histtype='stepfilled'``.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -7762,10 +7730,10 @@ facecolor : color-spec, optional
     The face color of the patch(es). The property `cycle` is used by default. Aliases: ``fc``, ``facecolors``, ``fillcolor``, ``fillcolors``.
 alpha : float, optional
     The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -7781,22 +7749,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.hist`.
+    Passed to [hist](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hist.html).
 
 See also
 --------
@@ -7809,10 +7777,10 @@ Matplotlib documentation
 
 Compute and plot a histogram.
 
-This method uses `numpy.histogram` to bin the data in *x* and count the
+This method uses [numpy.histogram](https://numpy.org/doc/stable/reference/generated/numpy.histogram.html) to bin the data in *x* and count the
 number of values in each bin, then draws the distribution either as a
 `.BarContainer` or `.Polygon`. The *bins*, *range*, *density*, and
-*weights* parameters are forwarded to `numpy.histogram`.
+*weights* parameters are forwarded to [numpy.histogram](https://numpy.org/doc/stable/reference/generated/numpy.histogram.html).
 
 If the data has already been binned and counted, use `~.bar` or
 `~.stairs` to plot the distribution::
@@ -7841,7 +7809,7 @@ x : (n,) array or sequence of (n,) arrays
     Input values, this takes either a single array or a sequence of
     arrays which are not required to be of the same length.
 
-bins : int or sequence or str, default: :rc:`hist.bins`
+bins : int or sequence or str, default: [hist.bins](https://ultraplot.readthedocs.io/en/stable/search.html?q=hist.bins)
     If *bins* is an integer, it defines the number of equal-width bins
     in the range.
 
@@ -7857,7 +7825,7 @@ bins : int or sequence or str, default: :rc:`hist.bins`
     *includes* 4.
 
     If *bins* is a string, it is one of the binning strategies
-    supported by `numpy.histogram_bin_edges`: 'auto', 'fd', 'doane',
+    supported by [numpy.histogram_bin_edges](https://numpy.org/doc/stable/reference/generated/numpy.histogram_bin_edges.html): 'auto', 'fd', 'doane',
     'scott', 'stone', 'rice', 'sturges', or 'sqrt'.
 
 range : tuple or None, default: None
@@ -7937,7 +7905,7 @@ rwidth : float or None, default: None
 log : bool, default: False
     If ``True``, the histogram axis will be set to a log scale.
 
-color : :mpltype:`color` or list of :mpltype:`color` or None, default: None
+color : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or None, default: None
     Color or sequence of colors, one per dataset.  Default (``None``)
     uses the standard line color sequence.
 
@@ -7980,7 +7948,7 @@ data : indexable object, optional
     *x*, *weights*
 
 **kwargs
-    `~matplotlib.patches.Patch` properties. The following properties
+    [Patch](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Patch.html) properties. The following properties
     additionally accept a sequence of values corresponding to the
     datasets in *x*:
     *edgecolor*, *facecolor*, *linewidth*, *linestyle*, *hatch*.
@@ -8012,22 +7980,22 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `x` coordinates are passed, try to infer the `y` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `y` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `y` coordinates
       are ``np.arange(0, x.shape[0])``.
     * If the `x` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 bins : int or sequence of float, optional
     The bin count or exact bin edges.
 weights : array-like, optional
     The weights associated with each point. If string this
     can be retrieved from `data` (see below).
 histtype : {'bar', 'barstacked', 'step', 'stepfilled'}, optional
-    The histogram type. See `matplotlib.axes.Axes.hist` for details.
+    The histogram type. See [matplotlib.axes.Axes.hist](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hist.html) for details.
 width, rwidth : float, default: 0.8 or 1
     The bar width(s) for bar-type histograms relative to the bin size. Default
     is ``0.8`` for multiple columns of unstacked data and ``1`` otherwise.
@@ -8039,50 +8007,49 @@ kde : bool, default: False
     Whether to overlay a gaussian kernel density estimate of each column of
     data. The curve tracks the histogram, i.e. it is scaled to the bin counts
     unless ``density=True`` and accumulated when the histogram is stacked.
-    Requires `scipy <https://scipy.org>`__.
+    Requires [scipy](https://scipy.org).
 kde_kw : dict, optional
     Settings for the kernel density estimate. The following keys control the
-    estimate itself and are passed to `scipy.stats.gaussian_kde`:
+    estimate itself and are passed to [scipy.stats.gaussian_kde](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.gaussian_kde.html):
 
     * ``bw_method`` : Bandwidth selection method (scalar, 'scott', 'silverman', or callable)
     * ``weights`` : Array of weights for each data point, defaults to `weights`
-    * ``points`` : Number of evaluation points, default :rc:`kde.points`
+    * ``points`` : Number of evaluation points, default [kde.points](https://ultraplot.readthedocs.io/en/stable/search.html?q=kde.points)
       (``stepsize`` is accepted as an alias)
 
     The remaining keys style the resulting curve and are passed to
-    `matplotlib.axes.Axes.plot`, e.g. ``color``, ``linestyle``, ``linewidth``.
+    [matplotlib.axes.Axes.plot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.plot.html), e.g. ``color``, ``linestyle``, ``linewidth``.
     By default each curve takes the color of its histogram.
 fill, filled : bool, optional
     Whether to "fill" step-type histograms or just plot the edges. Setting
     this to ``False`` is equivalent to ``histtype='step'`` and to ``True``
     is equivalent to ``histtype='stepfilled'``.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
 cycle : cycle-spec, optional
-    The cycle specifer, passed to the `~ultraplot.constructor.Cycle` constructor.
+    The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
     If the returned cycler is unchanged from the current cycler, the axes
     cycler will not be reset to its first position. To disable property cycling
     and just use black for the default color, use ``cycle=False``, ``cycle='none'``,
     or ``cycle=()`` (analogous to disabling ticks with e.g. ``xformatter='none'``).
     To restore the default property cycler, use ``cycle=True``.
 cycle_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Cycle`.
-linewidth : unit-spec, default: :rc:`patch.linewidth`
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
+linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
     The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
     The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
 edgecolor : color-spec, default: 'none'
@@ -8091,10 +8058,10 @@ facecolor : color-spec, optional
     The face color of the patch(es). The property `cycle` is used by default. Aliases: ``fc``, ``facecolors``, ``fillcolor``, ``fillcolors``.
 alpha : float, optional
     The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -8110,22 +8077,22 @@ labels, values : sequence of float or sequence of str, optional
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.hist`.
+    Passed to [hist](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hist.html).
 
 See also
 --------
@@ -8144,71 +8111,70 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 bins : int or 2-tuple of int, or array-like or 2-tuple of array-like, optional
     The bin count or exact bin edges for each dimension or both dimensions.
 weights : array-like, optional
     The weights associated with each point. If string this
     can be retrieved from `data` (see below).
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -8221,7 +8187,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -8229,31 +8195,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -8265,46 +8231,46 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.hist2d`.
+    Passed to [hist2d](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hist2d.html).
 
 See also
 --------
@@ -8370,11 +8336,11 @@ image : `~.matplotlib.collections.QuadMesh`
 
 Other Parameters
 ----------------
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -8382,9 +8348,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -8395,7 +8361,7 @@ vmin, vmax : float, optional
     *vmin*/*vmax* when a *norm* instance is given (but using a `str` *norm*
     name together with *vmin*/*vmax* is acceptable).
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -8410,7 +8376,7 @@ data : indexable object, optional
 
 **kwargs
     Additional parameters are passed along to the
-    `~.Axes.pcolormesh` method and `~matplotlib.collections.QuadMesh`
+    `~.Axes.pcolormesh` method and [QuadMesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.QuadMesh.html)
     constructor.
 
 See Also
@@ -8439,69 +8405,68 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `y` coordinates are passed, try to infer the `x` coordinates
-      from the `~pandas.Series` or :class:`~pandas.DataFrame` indices or the
-      :class:`~xarray.DataArray` coordinates. Otherwise, the `x` coordinates
+      from the [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) or [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices or the
+      [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) coordinates. Otherwise, the `x` coordinates
       are ``np.arange(0, y.shape[0])``.
     * If the `y` coordinates are a 2D array, plot each column of data in succession
       (except where each column of data represents a statistical distribution, as with
       ``boxplot``, ``violinplot``, or when using ``means=True`` or ``medians=True``).
-    * If any arguments are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`.
-      A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If any arguments are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib).
+      A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 weights : array-like, optional
     The weights associated with each point. If string this
     can be retrieved from `data` (see below).
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -8514,7 +8479,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -8522,31 +8487,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -8558,46 +8523,46 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `~matplotlib.axes.Axes.hexbin`.
+    Passed to [hexbin](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hexbin.html).
 
 See also
 --------
@@ -8697,7 +8662,7 @@ extent : 4-tuple of float, default: *None*
 
 Returns
 -------
-`~matplotlib.collections.PolyCollection`
+[PolyCollection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.PolyCollection.html)
     A `.PolyCollection` defining the hexagonal bins.
 
     - `.PolyCollection.get_offsets` contains a Mx2 array containing
@@ -8711,11 +8676,11 @@ Returns
 
 Other Parameters
 ----------------
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -8723,9 +8688,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -8740,7 +8705,7 @@ alpha : float between 0 and 1, optional
     The alpha blending value, between 0 (transparent) and 1 (opaque).
 
 linewidths : float, default: *None*
-    If *None*, defaults to :rc:`patch.linewidth`.
+    If *None*, defaults to [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth).
 
 edgecolors : {'face', 'none', *None*} or color, default: 'face'
     The color of the hexagon edges. Possible values are:
@@ -8751,7 +8716,7 @@ edgecolors : {'face', 'none', *None*} or color, default: 'face'
     - *None*: Draw outlines in the default color.
     - An explicit color.
 
-reduce_C_function : callable, default: `numpy.mean`
+reduce_C_function : callable, default: [numpy.mean](https://numpy.org/doc/stable/reference/generated/numpy.mean.html)
     The function to aggregate *C* within the bins. It is ignored if
     *C* is not given. This must have the signature::
 
@@ -8759,16 +8724,16 @@ reduce_C_function : callable, default: `numpy.mean`
 
     Commonly used functions are:
 
-    - `numpy.mean`: average of the points
-    - `numpy.sum`: integral of the point values
-    - `numpy.amax`: value taken from the largest point
+    - [numpy.mean](https://numpy.org/doc/stable/reference/generated/numpy.mean.html): average of the points
+    - [numpy.sum](https://numpy.org/doc/stable/reference/generated/numpy.sum.html): integral of the point values
+    - [numpy.amax](https://numpy.org/doc/stable/reference/generated/numpy.amax.html): value taken from the largest point
 
     By default will only reduce cells with at least 1 point because some
-    reduction functions (such as `numpy.amax`) will error/warn with empty
+    reduction functions (such as [numpy.amax](https://numpy.org/doc/stable/reference/generated/numpy.amax.html)) will error/warn with empty
     input. Changing *mincnt* will adjust the cutoff, and if set to 0 will
     pass empty input to the reduction function.
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -8778,7 +8743,7 @@ data : indexable object, optional
 
     *x*, *y*, *C*
 
-**kwargs : `~matplotlib.collections.PolyCollection` properties
+**kwargs : [PolyCollection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.PolyCollection.html) properties
     All other keyword arguments are passed on to `.PolyCollection`:
 
     Properties:
@@ -8789,14 +8754,14 @@ data : indexable object, optional
     array: array-like or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -8814,10 +8779,10 @@ data : indexable object, optional
     picker: None or bool or float or callable
     pickradius: float
     rasterized: bool
-    sizes: `numpy.ndarray` or None
+    sizes: [numpy.ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) or None
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     verts: list of array-like
@@ -8839,29 +8804,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -8871,7 +8835,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -8884,42 +8848,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -8932,7 +8896,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -8940,31 +8904,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -8976,13 +8940,13 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
-linewidths : unit-spec, default: 0.3 or :rc:`lines.linewidth`
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
+linewidths : unit-spec, default: 0.3 or [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line contours. Default is ``0.3`` when adding to filled contours
-    or :rc:`lines.linewidth` otherwise. Aliases: ``lw``, ``linewidth``. If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyles : str, default: '-' or :rc:`contour.negative_linestyle`
+    or [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth) otherwise. Aliases: ``lw``, ``linewidth``. If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyles : str, default: '-' or [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle)
     The style of the line contours. Default is ``'-'`` for positive contours and
-    :rcraw:`contour.negative_linestyle` for negative contours. Aliases: ``ls``, ``linestyle``.
+    [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle) for negative contours. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k' or inferred
     The color of the line contours. Default is ``'k'`` when adding to filled contours
     or inferred from `color` or `cmap` otherwise. Aliases: ``ec``, ``edgecolor``.
@@ -8991,42 +8955,42 @@ alpha : float, optional
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.contour`.
+    Passed to [matplotlib.axes.Axes.contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html).
 
 See also
 --------
@@ -9057,7 +9021,7 @@ X, Y : array-like, optional
     The coordinates of the values in *Z*.
 
     *X* and *Y* must both be 2D with the same shape as *Z* (e.g.
-    created via `numpy.meshgrid`), or they must both be 1-D such
+    created via [numpy.meshgrid](https://numpy.org/doc/stable/reference/generated/numpy.meshgrid.html)), or they must both be 1-D such
     that ``len(X) == N`` is the number of columns in *Z* and
     ``len(Y) == M`` is the number of rows in *Z*.
 
@@ -9073,7 +9037,7 @@ Z : (M, N) array-like
 levels : int or array-like, optional
     Determines the number and positions of the contour lines / regions.
 
-    If an int *n*, use `~matplotlib.ticker.MaxNLocator`, which tries
+    If an int *n*, use [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html), which tries
     to automatically choose no more than *n+1* "nice" contour levels
     between minimum and maximum numeric values of *Z*.
 
@@ -9086,14 +9050,14 @@ Returns
 
 Other Parameters
 ----------------
-corner_mask : bool, default: :rc:`contour.corner_mask`
+corner_mask : bool, default: [contour.corner_mask](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.corner_mask)
     Enable/disable corner masking, which only has an effect if *Z* is
     a masked array.  If ``False``, any quad touching a masked point is
     masked out.  If ``True``, only the triangular corners of quads
     nearest those points are always masked out, other triangular
     corners comprising three unmasked points are contoured as usual.
 
-colors : :mpltype:`color` or list of :mpltype:`color`, optional
+colors : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the levels, i.e. the lines for `.contour` and the
     areas for `.contourf`.
 
@@ -9113,13 +9077,13 @@ colors : :mpltype:`color` or list of :mpltype:`color`, optional
 alpha : float, default: 1
     The alpha blending value, between 0 (transparent) and 1 (opaque).
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
     This parameter is ignored if *colors* is set.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -9127,9 +9091,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -9147,7 +9111,7 @@ vmin, vmax : float, optional
 
     This parameter is ignored if *colors* is set.
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -9162,7 +9126,7 @@ origin : {*None*, 'upper', 'lower', 'image'}, default: None
     - 'lower': ``Z[0, 0]`` is at X=0.5, Y=0.5 in the lower left corner.
     - 'upper': ``Z[0, 0]`` is at X=N+0.5, Y=0.5 in the upper left
       corner.
-    - 'image': Use the value from :rc:`image.origin`.
+    - 'image': Use the value from [image.origin](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.origin).
 
 extent : (x0, x1, y0, y1), optional
     If *origin* is not *None*, then *extent* is interpreted as in
@@ -9217,12 +9181,12 @@ extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
 
 xunits, yunits : registered units, optional
     Override axis units by specifying an instance of a
-    :class:`matplotlib.units.ConversionInterface`.
+    [matplotlib.units.ConversionInterface](https://matplotlib.org/stable/api/_as_gen/matplotlib.units.ConversionInterface.html).
 
 antialiased : bool, optional
     Enable antialiasing, overriding the defaults.  For
     filled contours, the default is *False*.  For line contours,
-    it is taken from :rc:`lines.antialiased`.
+    it is taken from [lines.antialiased](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.antialiased).
 
 nchunk : int >= 0, optional
     If 0, no subdivision of the domain.  Specify a positive integer to
@@ -9233,7 +9197,7 @@ nchunk : int >= 0, optional
     however introduce rendering artifacts at chunk boundaries depending
     on the backend, the *antialiased* flag and value of *alpha*.
 
-linewidths : float or array-like, default: :rc:`contour.linewidth`
+linewidths : float or array-like, default: [contour.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.linewidth)
     *Only applies to* `.contour`.
 
     The line width of the contour lines.
@@ -9243,7 +9207,7 @@ linewidths : float or array-like, default: :rc:`contour.linewidth`
     If a sequence, the levels in ascending order will be plotted with
     the linewidths in the order specified.
 
-    If None, this falls back to :rc:`lines.linewidth`.
+    If None, this falls back to [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth).
 
 linestyles : {*None*, 'solid', 'dashed', 'dashdot', 'dotted'}, optional
     *Only applies to* `.contour`.
@@ -9263,7 +9227,7 @@ negative_linestyles : {*None*, 'solid', 'dashed', 'dashdot', 'dotted'},         
     specifies the line style for negative contours.
 
     If *negative_linestyles* is *None*, the default is taken from
-    :rc:`contour.negative_linestyle`.
+    [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle).
 
     *negative_linestyles* can also be an iterable of the above strings
     specifying a set of linestyles to be used. If this iterable is shorter than
@@ -9278,14 +9242,14 @@ hatches : list[str], optional
 algorithm : {'mpl2005', 'mpl2014', 'serial', 'threaded'}, optional
     Which contouring algorithm to use to calculate the contour lines and
     polygons. The algorithms are implemented in
-    `ContourPy <https://github.com/contourpy/contourpy>`_, consult the
-    `ContourPy documentation <https://contourpy.readthedocs.io>`_ for
+    [ContourPy](https://github.com/contourpy/contourpy), consult the
+    [ContourPy documentation](https://contourpy.readthedocs.io) for
     further information.
 
-    The default is taken from :rc:`contour.algorithm`.
+    The default is taken from [contour.algorithm](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.algorithm).
 
-clip_path : `~matplotlib.patches.Patch` or `.Path` or `.TransformedPath`
-    Set the clip path.  See `~matplotlib.artist.Artist.set_clip_path`.
+clip_path : [Patch](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Patch.html) or `.Path` or `.TransformedPath`
+    Set the clip path.  See [set_clip_path](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.set_clip_path.html).
 
     .. versionadded:: 3.8
 
@@ -9307,10 +9271,9 @@ Notes
    except for the lowest interval, which is closed on both sides (i.e.
    it includes the lowest value).
 
-3. `.contour` and `.contourf` use a `marching squares
-   <https://en.wikipedia.org/wiki/Marching_squares>`_ algorithm to
+3. `.contour` and `.contourf` use a [marching squares](https://en.wikipedia.org/wiki/Marching_squares) algorithm to
    compute contour locations.  More information can be found in
-   `ContourPy documentation <https://contourpy.readthedocs.io>`_."""
+   [ContourPy documentation](https://contourpy.readthedocs.io)."""
         ...
 
     def contourf(self, x: Incomplete, y: Incomplete, z: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -9322,29 +9285,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -9354,7 +9316,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -9367,42 +9329,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -9415,7 +9377,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -9423,31 +9385,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -9459,21 +9421,21 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
-linewidths : unit-spec, default: 0.3 or :rc:`lines.linewidth`
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
+linewidths : unit-spec, default: 0.3 or [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line contours. Default is ``0.3`` when adding to filled contours
-    or :rc:`lines.linewidth` otherwise. Aliases: ``lw``, ``linewidth``. If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyles : str, default: '-' or :rc:`contour.negative_linestyle`
+    or [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth) otherwise. Aliases: ``lw``, ``linewidth``. If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyles : str, default: '-' or [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle)
     The style of the line contours. Default is ``'-'`` for positive contours and
-    :rcraw:`contour.negative_linestyle` for negative contours. Aliases: ``ls``, ``linestyle``.
+    [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle) for negative contours. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k' or inferred
     The color of the line contours. Default is ``'k'`` when adding to filled contours
     or inferred from `color` or `cmap` otherwise. Aliases: ``ec``, ``edgecolor``.
 alpha : float, optional
-    The opacity of the contours. Inferred from `edgecolors` by default. Aliases: ``a``, ``alphas``.edgefix : bool or float, default: :rc:`edgefix`
+    The opacity of the contours. Inferred from `edgecolors` by default. Aliases: ``a``, ``alphas``.edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -9482,42 +9444,42 @@ alpha : float, optional
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.contourf`.
+    Passed to [matplotlib.axes.Axes.contourf](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contourf.html).
 
 See also
 --------
@@ -9548,7 +9510,7 @@ X, Y : array-like, optional
     The coordinates of the values in *Z*.
 
     *X* and *Y* must both be 2D with the same shape as *Z* (e.g.
-    created via `numpy.meshgrid`), or they must both be 1-D such
+    created via [numpy.meshgrid](https://numpy.org/doc/stable/reference/generated/numpy.meshgrid.html)), or they must both be 1-D such
     that ``len(X) == N`` is the number of columns in *Z* and
     ``len(Y) == M`` is the number of rows in *Z*.
 
@@ -9564,7 +9526,7 @@ Z : (M, N) array-like
 levels : int or array-like, optional
     Determines the number and positions of the contour lines / regions.
 
-    If an int *n*, use `~matplotlib.ticker.MaxNLocator`, which tries
+    If an int *n*, use [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html), which tries
     to automatically choose no more than *n+1* "nice" contour levels
     between minimum and maximum numeric values of *Z*.
 
@@ -9577,14 +9539,14 @@ Returns
 
 Other Parameters
 ----------------
-corner_mask : bool, default: :rc:`contour.corner_mask`
+corner_mask : bool, default: [contour.corner_mask](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.corner_mask)
     Enable/disable corner masking, which only has an effect if *Z* is
     a masked array.  If ``False``, any quad touching a masked point is
     masked out.  If ``True``, only the triangular corners of quads
     nearest those points are always masked out, other triangular
     corners comprising three unmasked points are contoured as usual.
 
-colors : :mpltype:`color` or list of :mpltype:`color`, optional
+colors : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the levels, i.e. the lines for `.contour` and the
     areas for `.contourf`.
 
@@ -9604,13 +9566,13 @@ colors : :mpltype:`color` or list of :mpltype:`color`, optional
 alpha : float, default: 1
     The alpha blending value, between 0 (transparent) and 1 (opaque).
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
     This parameter is ignored if *colors* is set.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -9618,9 +9580,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -9638,7 +9600,7 @@ vmin, vmax : float, optional
 
     This parameter is ignored if *colors* is set.
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -9653,7 +9615,7 @@ origin : {*None*, 'upper', 'lower', 'image'}, default: None
     - 'lower': ``Z[0, 0]`` is at X=0.5, Y=0.5 in the lower left corner.
     - 'upper': ``Z[0, 0]`` is at X=N+0.5, Y=0.5 in the upper left
       corner.
-    - 'image': Use the value from :rc:`image.origin`.
+    - 'image': Use the value from [image.origin](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.origin).
 
 extent : (x0, x1, y0, y1), optional
     If *origin* is not *None*, then *extent* is interpreted as in
@@ -9708,12 +9670,12 @@ extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
 
 xunits, yunits : registered units, optional
     Override axis units by specifying an instance of a
-    :class:`matplotlib.units.ConversionInterface`.
+    [matplotlib.units.ConversionInterface](https://matplotlib.org/stable/api/_as_gen/matplotlib.units.ConversionInterface.html).
 
 antialiased : bool, optional
     Enable antialiasing, overriding the defaults.  For
     filled contours, the default is *False*.  For line contours,
-    it is taken from :rc:`lines.antialiased`.
+    it is taken from [lines.antialiased](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.antialiased).
 
 nchunk : int >= 0, optional
     If 0, no subdivision of the domain.  Specify a positive integer to
@@ -9724,7 +9686,7 @@ nchunk : int >= 0, optional
     however introduce rendering artifacts at chunk boundaries depending
     on the backend, the *antialiased* flag and value of *alpha*.
 
-linewidths : float or array-like, default: :rc:`contour.linewidth`
+linewidths : float or array-like, default: [contour.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.linewidth)
     *Only applies to* `.contour`.
 
     The line width of the contour lines.
@@ -9734,7 +9696,7 @@ linewidths : float or array-like, default: :rc:`contour.linewidth`
     If a sequence, the levels in ascending order will be plotted with
     the linewidths in the order specified.
 
-    If None, this falls back to :rc:`lines.linewidth`.
+    If None, this falls back to [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth).
 
 linestyles : {*None*, 'solid', 'dashed', 'dashdot', 'dotted'}, optional
     *Only applies to* `.contour`.
@@ -9754,7 +9716,7 @@ negative_linestyles : {*None*, 'solid', 'dashed', 'dashdot', 'dotted'},         
     specifies the line style for negative contours.
 
     If *negative_linestyles* is *None*, the default is taken from
-    :rc:`contour.negative_linestyle`.
+    [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle).
 
     *negative_linestyles* can also be an iterable of the above strings
     specifying a set of linestyles to be used. If this iterable is shorter than
@@ -9769,14 +9731,14 @@ hatches : list[str], optional
 algorithm : {'mpl2005', 'mpl2014', 'serial', 'threaded'}, optional
     Which contouring algorithm to use to calculate the contour lines and
     polygons. The algorithms are implemented in
-    `ContourPy <https://github.com/contourpy/contourpy>`_, consult the
-    `ContourPy documentation <https://contourpy.readthedocs.io>`_ for
+    [ContourPy](https://github.com/contourpy/contourpy), consult the
+    [ContourPy documentation](https://contourpy.readthedocs.io) for
     further information.
 
-    The default is taken from :rc:`contour.algorithm`.
+    The default is taken from [contour.algorithm](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.algorithm).
 
-clip_path : `~matplotlib.patches.Patch` or `.Path` or `.TransformedPath`
-    Set the clip path.  See `~matplotlib.artist.Artist.set_clip_path`.
+clip_path : [Patch](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Patch.html) or `.Path` or `.TransformedPath`
+    Set the clip path.  See [set_clip_path](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.set_clip_path.html).
 
     .. versionadded:: 3.8
 
@@ -9798,10 +9760,9 @@ Notes
    except for the lowest interval, which is closed on both sides (i.e.
    it includes the lowest value).
 
-3. `.contour` and `.contourf` use a `marching squares
-   <https://en.wikipedia.org/wiki/Marching_squares>`_ algorithm to
+3. `.contour` and `.contourf` use a [marching squares](https://en.wikipedia.org/wiki/Marching_squares) algorithm to
    compute contour locations.  More information can be found in
-   `ContourPy documentation <https://contourpy.readthedocs.io>`_."""
+   [ContourPy documentation](https://contourpy.readthedocs.io)."""
         ...
 
     def pcolor(self, x: Incomplete, y: Incomplete, z: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -9813,29 +9774,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -9845,7 +9805,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -9858,42 +9818,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -9906,7 +9866,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -9914,31 +9874,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -9950,20 +9910,20 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 linewidths : unit-spec, default: 0.3
     The width of lines between grid boxes. Aliases: ``lw``, ``linewidth``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyles : str, default: '-'
     The style of lines between grid boxes. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k'
     The color of lines between grid boxes. Aliases: ``ec``, ``edgecolor``.
 alpha : float, optional
     The opacity of the grid boxes. Inferred from `cmap` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -9971,42 +9931,42 @@ edgefix : bool or float, default: :rc:`edgefix`
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.pcolor`.
+    Passed to [matplotlib.axes.Axes.pcolor](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.pcolor.html).
 
 See also
 --------
@@ -10035,8 +9995,7 @@ The arguments *X*, *Y*, *C* are positional-only.
     ``pcolor()`` can be very slow for large arrays. In most
     cases you should use the similar but much faster
     `~.Axes.pcolormesh` instead. See
-    :ref:`Differences between pcolor() and pcolormesh()
-    <differences-pcolor-pcolormesh>` for a discussion of the
+    [Differences between pcolor() and pcolormesh()](https://ultraplot.readthedocs.io/en/stable/search.html?q=differences-pcolor-pcolormesh) for a discussion of the
     differences.
 
 Parameters
@@ -10056,7 +10015,7 @@ X, Y : array-like, optional
 
     Note that the column index corresponds to the x-coordinate, and
     the row index corresponds to y. For details, see the
-    :ref:`Notes <axes-pcolormesh-grid-orientation>` section below.
+    [Notes](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes-pcolormesh-grid-orientation) section below.
 
     If ``shading='flat'`` the dimensions of *X* and *Y* should be one
     greater than those of *C*, and the quadrilateral is colored due
@@ -10072,7 +10031,7 @@ X, Y : array-like, optional
     expanded as needed into the appropriate 2D arrays, making a
     rectangular grid.
 
-shading : {'flat', 'nearest', 'auto'}, default: :rc:`pcolor.shading`
+shading : {'flat', 'nearest', 'auto'}, default: [pcolor.shading](https://ultraplot.readthedocs.io/en/stable/search.html?q=pcolor.shading)
     The fill style for the quadrilateral. Possible values:
 
     - 'flat': A solid color is used for each quad. The color of the
@@ -10087,14 +10046,14 @@ shading : {'flat', 'nearest', 'auto'}, default: :rc:`pcolor.shading`
     - 'auto': Choose 'flat' if dimensions of *X* and *Y* are one
       larger than *C*.  Choose 'nearest' if dimensions are the same.
 
-    See :doc:`/gallery/images_contours_and_fields/pcolormesh_grids`
+    See [/gallery/images_contours_and_fields/pcolormesh_grids](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fimages_contours_and_fields%2Fpcolormesh_grids)
     for more description.
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -10102,9 +10061,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -10115,7 +10074,7 @@ vmin, vmax : float, optional
     *vmin*/*vmax* when a *norm* instance is given (but using a `str` *norm*
     name together with *vmin*/*vmax* is acceptable).
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -10123,8 +10082,8 @@ edgecolors : {'none', None, 'face', color, color sequence}, optional
     The color of the edges. Defaults to 'none'. Possible values:
 
     - 'none' or '': No edge.
-    - *None*: :rc:`patch.edgecolor` will be used. Note that currently
-      :rc:`patch.force_edgecolor` has to be True for this to work.
+    - *None*: [patch.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.edgecolor) will be used. Note that currently
+      [patch.force_edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.force_edgecolor) has to be True for this to work.
     - 'face': Use the adjacent face color.
     - A color or sequence of colors will set the edge color.
 
@@ -10140,7 +10099,7 @@ snap : bool, default: False
 
 Returns
 -------
-`matplotlib.collections.PolyQuadMesh`
+[matplotlib.collections.PolyQuadMesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.PolyQuadMesh.html)
 
 Other Parameters
 ----------------
@@ -10149,7 +10108,7 @@ antialiaseds : bool, default: False
     *edgecolors*\\ ="none" is used.  This eliminates artificial lines
     at patch boundaries, and works regardless of the value of alpha.
     If *edgecolors* is not "none", then the default *antialiaseds*
-    is taken from :rc:`patch.antialiased`.
+    is taken from [patch.antialiased](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.antialiased).
     Stroking the edges may be preferred if *alpha* is 1, but will
     cause artifacts otherwise.
 
@@ -10159,7 +10118,7 @@ data : indexable object, optional
 
 **kwargs
     Additionally, the following arguments are allowed. They are passed
-    along to the `~matplotlib.collections.PolyQuadMesh` constructor:
+    along to the [PolyQuadMesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.PolyQuadMesh.html) constructor:
 
 Properties:
     agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
@@ -10169,14 +10128,14 @@ Properties:
     array: array-like or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -10194,10 +10153,10 @@ Properties:
     picker: None or bool or float or callable
     pickradius: float
     rasterized: bool
-    sizes: `numpy.ndarray` or None
+    sizes: [numpy.ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) or None
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     verts: list of array-like
@@ -10239,29 +10198,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -10271,7 +10229,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -10284,42 +10242,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -10332,7 +10290,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -10340,31 +10298,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -10376,20 +10334,20 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 linewidths : unit-spec, default: 0.3
     The width of lines between grid boxes. Aliases: ``lw``, ``linewidth``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyles : str, default: '-'
     The style of lines between grid boxes. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k'
     The color of lines between grid boxes. Aliases: ``ec``, ``edgecolor``.
 alpha : float, optional
     The opacity of the grid boxes. Inferred from `cmap` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -10397,42 +10355,42 @@ edgefix : bool or float, default: :rc:`edgefix`
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.pcolormesh`.
+    Passed to [matplotlib.axes.Axes.pcolormesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html).
 
 See also
 --------
@@ -10460,8 +10418,7 @@ The arguments *X*, *Y*, *C* are positional-only.
 
    `~.Axes.pcolormesh` is similar to `~.Axes.pcolor`. It is much faster
    and preferred in most cases. For a detailed discussion on the
-   differences see :ref:`Differences between pcolor() and pcolormesh()
-   <differences-pcolor-pcolormesh>`.
+   differences see [Differences between pcolor() and pcolormesh()](https://ultraplot.readthedocs.io/en/stable/search.html?q=differences-pcolor-pcolormesh).
 
 Parameters
 ----------
@@ -10489,7 +10446,7 @@ X, Y : array-like, optional
 
     Note that the column index corresponds to the x-coordinate, and
     the row index corresponds to y. For details, see the
-    :ref:`Notes <axes-pcolormesh-grid-orientation>` section below.
+    [Notes](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes-pcolormesh-grid-orientation) section below.
 
     If ``shading='flat'`` the dimensions of *X* and *Y* should be one
     greater than those of *C*, and the quadrilateral is colored due
@@ -10507,11 +10464,11 @@ X, Y : array-like, optional
     expanded as needed into the appropriate 2D arrays, making a
     rectangular grid.
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -10519,9 +10476,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -10532,7 +10489,7 @@ vmin, vmax : float, optional
     *vmin*/*vmax* when a *norm* instance is given (but using a `str` *norm*
     name together with *vmin*/*vmax* is acceptable).
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -10540,8 +10497,8 @@ edgecolors : {'none', None, 'face', color, color sequence}, optional
     The color of the edges. Defaults to 'none'. Possible values:
 
     - 'none' or '': No edge.
-    - *None*: :rc:`patch.edgecolor` will be used. Note that currently
-      :rc:`patch.force_edgecolor` has to be True for this to work.
+    - *None*: [patch.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.edgecolor) will be used. Note that currently
+      [patch.force_edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.force_edgecolor) has to be True for this to work.
     - 'face': Use the adjacent face color.
     - A color or sequence of colors will set the edge color.
 
@@ -10552,7 +10509,7 @@ alpha : float, default: None
 
 shading : {'flat', 'nearest', 'gouraud', 'auto'}, optional
     The fill style for the quadrilateral; defaults to
-    :rc:`pcolor.shading`. Possible values:
+    [pcolor.shading](https://ultraplot.readthedocs.io/en/stable/search.html?q=pcolor.shading). Possible values:
 
     - 'flat': A solid color is used for each quad. The color of the
       quad (i, j), (i+1, j), (i, j+1), (i+1, j+1) is given by
@@ -10571,7 +10528,7 @@ shading : {'flat', 'nearest', 'gouraud', 'auto'}, optional
     - 'auto': Choose 'flat' if dimensions of *X* and *Y* are one
       larger than *C*.  Choose 'nearest' if dimensions are the same.
 
-    See :doc:`/gallery/images_contours_and_fields/pcolormesh_grids`
+    See [/gallery/images_contours_and_fields/pcolormesh_grids](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fimages_contours_and_fields%2Fpcolormesh_grids)
     for more description.
 
 snap : bool, default: False
@@ -10580,11 +10537,11 @@ snap : bool, default: False
 rasterized : bool, optional
     Rasterize the pcolormesh when drawing vector graphics.  This can
     speed up rendering and produce smaller files for large data sets.
-    See also :doc:`/gallery/misc/rasterization_demo`.
+    See also [/gallery/misc/rasterization_demo](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fmisc%2Frasterization_demo).
 
 Returns
 -------
-`matplotlib.collections.QuadMesh`
+[matplotlib.collections.QuadMesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.QuadMesh.html)
 
 Other Parameters
 ----------------
@@ -10594,7 +10551,7 @@ data : indexable object, optional
 
 **kwargs
     Additionally, the following arguments are allowed. They are passed
-    along to the `~matplotlib.collections.QuadMesh` constructor:
+    along to the [QuadMesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.QuadMesh.html) constructor:
 
 Properties:
     agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
@@ -10604,14 +10561,14 @@ Properties:
     array: array-like
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -10630,7 +10587,7 @@ Properties:
     rasterized: bool
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     visible: bool
@@ -10640,8 +10597,7 @@ See Also
 --------
 pcolor : An alternative implementation with slightly different
     features. For a detailed discussion on the differences see
-    :ref:`Differences between pcolor() and pcolormesh()
-    <differences-pcolor-pcolormesh>`.
+    [Differences between pcolor() and pcolormesh()](https://ultraplot.readthedocs.io/en/stable/search.html?q=differences-pcolor-pcolormesh).
 imshow : If *X* and *Y* are each equidistant, `~.Axes.imshow` can be a
     faster alternative.
 
@@ -10700,29 +10656,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -10732,7 +10687,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -10745,42 +10700,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -10793,7 +10748,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -10801,31 +10756,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -10837,20 +10792,20 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 linewidths : unit-spec, default: 0.3
     The width of lines between grid boxes. Aliases: ``lw``, ``linewidth``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyles : str, default: '-'
     The style of lines between grid boxes. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k'
     The color of lines between grid boxes. Aliases: ``ec``, ``edgecolor``.
 alpha : float, optional
     The opacity of the grid boxes. Inferred from `cmap` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -10858,42 +10813,42 @@ edgefix : bool or float, default: :rc:`edgefix`
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.pcolorfast`.
+    Passed to [matplotlib.axes.Axes.pcolorfast](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.pcolorfast.html).
 
 See also
 --------
@@ -10979,13 +10934,13 @@ X, Y : tuple or array-like, default: ``(0, N)``, ``(0, M)``
 
     These arguments can only be passed positionally.
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
     This parameter is ignored if *C* is RGB(A).
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -10993,9 +10948,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -11010,7 +10965,7 @@ vmin, vmax : float, optional
 
     This parameter is ignored if *C* is RGB(A).
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -11045,7 +11000,7 @@ data : indexable object, optional
     def heatmap(self, *args: Incomplete, aspect: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Plot grid boxes with formatting suitable for heatmaps. Ensures square grid
 boxes, adds major ticks to the center of each grid box, disables minor
-ticks and gridlines, and sets :rcraw:`cmap.discrete` to ``False`` by default.
+ticks and gridlines, and sets [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete) to ``False`` by default.
 
 Parameters
 ----------
@@ -11053,29 +11008,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -11085,7 +11039,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -11095,10 +11049,10 @@ globe : bool, default: False
     #. When basemap is the backend, cycles 1D longitude vectors to fit within
        the map edges. For example, if the central longitude is 90°,
        the data is shifted so that it spans -90° to 270°.
-aspect : {'equal', 'auto'} or float, default: :rc:`image.aspet`
+aspect : {'equal', 'auto'} or float, default: [image.aspet](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.aspet)
     Modify the axes aspect ratio. The aspect ratio is of particular relevance for
     heatmaps since it may lead to non-square grid boxes. This parameter is a shortcut
-    for calling `~matplotlib.axes.set_aspect`. The options are as follows:
+    for calling [set_aspect](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.set_aspect.html). The options are as follows:
 
     * Number: The data aspect ratio.
     * ``'equal'``: A data aspect ratio of 1.
@@ -11107,42 +11061,42 @@ aspect : {'equal', 'auto'} or float, default: :rc:`image.aspet`
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -11155,7 +11109,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -11163,31 +11117,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -11199,20 +11153,20 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 linewidths : unit-spec, default: 0.3
     The width of lines between grid boxes. Aliases: ``lw``, ``linewidth``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyles : str, default: '-'
     The style of lines between grid boxes. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k'
     The color of lines between grid boxes. Aliases: ``ec``, ``edgecolor``.
 alpha : float, optional
     The opacity of the grid boxes. Inferred from `cmap` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -11220,42 +11174,42 @@ edgefix : bool or float, default: :rc:`edgefix`
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.pcolormesh`.
+    Passed to [matplotlib.axes.Axes.pcolormesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.pcolormesh.html).
 
 See also
 --------
@@ -11276,33 +11230,32 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `u` and `v` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `u` and `v` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `u` and `v` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 c, color, colors : array-like or color-spec, optional
     The colors of the wind barbs passed as either a keyword argument
     or a fifth positional argument. This can be a single color or
     a color array to be scaled by `cmap` and `norm`.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -11312,7 +11265,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -11325,42 +11278,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -11373,7 +11326,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -11381,31 +11334,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -11417,9 +11370,9 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 **kwargs
-    Passed to `matplotlib.axes.Axes.barbs`
+    Passed to [matplotlib.axes.Axes.barbs](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.barbs.html)
 
 See also
 --------
@@ -11502,12 +11455,12 @@ pivot : {'tip', 'middle'} or float, default: 'tip'
     rotates about this point. This can also be a number, which shifts the
     start of the barb that many points away from grid point.
 
-barbcolor : :mpltype:`color` or color sequence
+barbcolor : [color](https://matplotlib.org/stable/search.html?q=color) or color sequence
     The color of all parts of the barb except for the flags.  This parameter
     is analogous to the *edgecolor* parameter for polygons, which can be used
     instead. However this parameter will override facecolor.
 
-flagcolor : :mpltype:`color` or color sequence
+flagcolor : [color](https://matplotlib.org/stable/search.html?q=color) or color sequence
     The color of any flags on the barb.  This parameter is analogous to the
     *facecolor* parameter for polygons, which can be used instead. However,
     this parameter will override facecolor.  If this is not set (and *C* has
@@ -11554,7 +11507,7 @@ flip_barb : bool or array-like of bool, default: False
 
 Returns
 -------
-barbs : `~matplotlib.quiver.Barbs`
+barbs : [Barbs](https://matplotlib.org/stable/api/_as_gen/matplotlib.quiver.Barbs.html)
 
 Other Parameters
 ----------------
@@ -11574,14 +11527,14 @@ data : indexable object, optional
     array: array-like or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -11599,10 +11552,10 @@ data : indexable object, optional
     picker: None or bool or float or callable
     pickradius: float
     rasterized: bool
-    sizes: `numpy.ndarray` or None
+    sizes: [numpy.ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) or None
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     verts: list of array-like
@@ -11620,33 +11573,32 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `u` and `v` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `u` and `v` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `u` and `v` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 c, color, colors : array-like or color-spec, optional
     The colors of the quiver arrows passed as either a keyword argument
     or a fifth positional argument. This can be a single color or
     a color array to be scaled by `cmap` and `norm`.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -11656,7 +11608,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -11669,42 +11621,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -11717,7 +11669,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -11725,31 +11677,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -11761,9 +11713,9 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 **kwargs
-    Passed to `matplotlib.axes.Axes.quiver`
+    Passed to [matplotlib.axes.Axes.quiver](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.quiver.html)
 
 See also
 --------
@@ -11836,7 +11788,7 @@ angles : {'uv', 'xy'} or array-like, default: 'uv'
     Method for determining the angle of the arrows.
 
     - 'uv':  Arrow directions are based on
-      :ref:`display coordinates <coordinate-systems>`; i.e. a 45° angle will
+      [display coordinates](https://ultraplot.readthedocs.io/en/stable/search.html?q=coordinate-systems); i.e. a 45° angle will
       always show up as diagonal on the screen, irrespective of figure or Axes
       aspect ratio or Axes data ranges. This is useful when the arrows represent
       a quantity whose direction is not tied to the x and y data coordinates.
@@ -11969,7 +11921,7 @@ minlength : float, default: 1
     Minimum length as a multiple of shaft width; if an arrow length
     is less than this, plot a dot (hexagon) of this diameter instead.
 
-color : :mpltype:`color` or list :mpltype:`color`, optional
+color : [color](https://matplotlib.org/stable/search.html?q=color) or list [color](https://matplotlib.org/stable/search.html?q=color), optional
     Explicit color(s) for the arrows. If *C* has been set, *color* has no
     effect.
 
@@ -11981,7 +11933,7 @@ data : indexable object, optional
     If given, all parameters also accept a string ``s``, which is
     interpreted as ``data[s]`` if ``s`` is a key in ``data``.
 
-**kwargs : `~matplotlib.collections.PolyCollection` properties, optional
+**kwargs : [PolyCollection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.PolyCollection.html) properties, optional
     All other keyword arguments are passed on to `.PolyCollection`:
 
     Properties:
@@ -11992,14 +11944,14 @@ data : indexable object, optional
     array: array-like or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -12017,10 +11969,10 @@ data : indexable object, optional
     picker: None or bool or float or callable
     pickradius: float
     rasterized: bool
-    sizes: `numpy.ndarray` or None
+    sizes: [numpy.ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html) or None
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     verts: list of array-like
@@ -12030,7 +11982,7 @@ data : indexable object, optional
 
 Returns
 -------
-`~matplotlib.quiver.Quiver`
+[Quiver](https://matplotlib.org/stable/api/_as_gen/matplotlib.quiver.Quiver.html)
 
 See Also
 --------
@@ -12071,33 +12023,32 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `u` and `v` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `u` and `v` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `u` and `v` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 c, color, colors : array-like or color-spec, optional
     The colors of the streamlines passed as either a keyword argument
     or a fifth positional argument. This can be a single color or
     a color array to be scaled by `cmap` and `norm`.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -12107,7 +12058,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -12120,42 +12071,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -12168,7 +12119,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -12176,31 +12127,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -12212,9 +12163,9 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 **kwargs
-    Passed to `matplotlib.axes.Axes.streamplot`
+    Passed to [matplotlib.axes.Axes.streamplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.streamplot.html)
 
 See also
 --------
@@ -12234,33 +12185,32 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `u` and `v` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `u` and `v` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `u` and `v` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 c, color, colors : array-like or color-spec, optional
     The colors of the streamlines passed as either a keyword argument
     or a fifth positional argument. This can be a single color or
     a color array to be scaled by `cmap` and `norm`.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -12270,7 +12220,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -12283,42 +12233,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -12331,7 +12281,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -12339,31 +12289,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -12375,9 +12325,9 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 **kwargs
-    Passed to `matplotlib.axes.Axes.streamplot`
+    Passed to [matplotlib.axes.Axes.streamplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.streamplot.html)
 
 See also
 --------
@@ -12411,7 +12361,7 @@ linewidth : float or 2D array
     The width of the streamlines. With a 2D array the line width can be
     varied across the grid. The array must have the same shape as *u*
     and *v*.
-color : :mpltype:`color` or 2D array
+color : [color](https://matplotlib.org/stable/search.html?q=color) or 2D array
     The streamline color. If given an array, its values are converted to
     colors using *cmap* and *norm*.  The array must have the same shape
     as *u* and *v*.
@@ -12423,7 +12373,7 @@ arrowsize : float
     Scaling factor for the arrow size.
 arrowstyle : str
     Arrow style specification.
-    See `~matplotlib.patches.FancyArrowPatch`.
+    See [FancyArrowPatch](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.FancyArrowPatch.html).
 minlength : float
     Minimum length of streamline in axes coordinates.
 start_points : (N, 2) array
@@ -12470,29 +12420,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -12502,7 +12451,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -12515,42 +12464,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -12563,7 +12512,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -12571,31 +12520,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -12607,13 +12556,13 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
-linewidths : unit-spec, default: 0.3 or :rc:`lines.linewidth`
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
+linewidths : unit-spec, default: 0.3 or [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line contours. Default is ``0.3`` when adding to filled contours
-    or :rc:`lines.linewidth` otherwise. Aliases: ``lw``, ``linewidth``. If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyles : str, default: '-' or :rc:`contour.negative_linestyle`
+    or [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth) otherwise. Aliases: ``lw``, ``linewidth``. If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyles : str, default: '-' or [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle)
     The style of the line contours. Default is ``'-'`` for positive contours and
-    :rcraw:`contour.negative_linestyle` for negative contours. Aliases: ``ls``, ``linestyle``.
+    [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle) for negative contours. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k' or inferred
     The color of the line contours. Default is ``'k'`` when adding to filled contours
     or inferred from `color` or `cmap` otherwise. Aliases: ``ec``, ``edgecolor``.
@@ -12622,42 +12571,42 @@ alpha : float, optional
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.tricontour`.
+    Passed to [matplotlib.axes.Axes.tricontour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.tricontour.html).
 
 See also
 --------
@@ -12707,7 +12656,7 @@ z : array-like
 levels : int or array-like, optional
     Determines the number and positions of the contour lines / regions.
 
-    If an int *n*, use `~matplotlib.ticker.MaxNLocator`, which tries to
+    If an int *n*, use [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html), which tries to
     automatically choose no more than *n+1* "nice" contour levels between
     between minimum and maximum numeric values of *Z*.
 
@@ -12716,11 +12665,11 @@ levels : int or array-like, optional
 
 Returns
 -------
-`~matplotlib.tri.TriContourSet`
+[TriContourSet](https://matplotlib.org/stable/api/_as_gen/matplotlib.tri.TriContourSet.html)
 
 Other Parameters
 ----------------
-colors : :mpltype:`color` or list of :mpltype:`color`, optional
+colors : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the levels, i.e., the contour lines.
 
     The sequence is cycled for the levels in ascending order. If the sequence
@@ -12736,13 +12685,13 @@ colors : :mpltype:`color` or list of :mpltype:`color`, optional
 alpha : float, default: 1
     The alpha blending value, between 0 (transparent) and 1 (opaque).
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
     This parameter is ignored if *colors* is set.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -12750,9 +12699,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -12777,7 +12726,7 @@ origin : {*None*, 'upper', 'lower', 'image'}, default: None
     - *None*: ``z[0, 0]`` is at X=0, Y=0 in the lower left corner.
     - 'lower': ``z[0, 0]`` is at X=0.5, Y=0.5 in the lower left corner.
     - 'upper': ``z[0, 0]`` is at X=N+0.5, Y=0.5 in the upper left corner.
-    - 'image': Use the value from :rc:`image.origin`.
+    - 'image': Use the value from [image.origin](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.origin).
 
 extent : (x0, x1, y0, y1), optional
     If *origin* is not *None*, then *extent* is interpreted as in `.imshow`: it
@@ -12818,14 +12767,14 @@ extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
 
 xunits, yunits : registered units, optional
     Override axis units by specifying an instance of a
-    :class:`matplotlib.units.ConversionInterface`.
+    [matplotlib.units.ConversionInterface](https://matplotlib.org/stable/api/_as_gen/matplotlib.units.ConversionInterface.html).
 
 antialiased : bool, optional
     Enable antialiasing, overriding the defaults.  For
     filled contours, the default is *True*.  For line contours,
-    it is taken from :rc:`lines.antialiased`.
+    it is taken from [lines.antialiased](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.antialiased).
 
-linewidths : float or array-like, default: :rc:`contour.linewidth`
+linewidths : float or array-like, default: [contour.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.linewidth)
     The line width of the contour lines.
 
     If a number, all levels will be plotted with this linewidth.
@@ -12833,12 +12782,12 @@ linewidths : float or array-like, default: :rc:`contour.linewidth`
     If a sequence, the levels in ascending order will be plotted with
     the linewidths in the order specified.
 
-    If None, this falls back to :rc:`lines.linewidth`.
+    If None, this falls back to [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth).
 
 linestyles : {*None*, 'solid', 'dashed', 'dashdot', 'dotted'}, optional
     If *linestyles* is *None*, the default is 'solid' unless the lines are
     monochrome.  In that case, negative contours will take their linestyle
-    from :rc:`contour.negative_linestyle` setting.
+    from [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle) setting.
 
     *linestyles* can also be an iterable of the above strings specifying a
     set of linestyles to be used. If this iterable is shorter than the
@@ -12854,29 +12803,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -12886,7 +12834,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -12899,42 +12847,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -12947,7 +12895,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -12955,31 +12903,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -12991,22 +12939,22 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
-linewidths : unit-spec, default: 0.3 or :rc:`lines.linewidth`
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
+linewidths : unit-spec, default: 0.3 or [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth)
     The width of the line contours. Default is ``0.3`` when adding to filled contours
-    or :rc:`lines.linewidth` otherwise. Aliases: ``lw``, ``linewidth``. If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
-linestyles : str, default: '-' or :rc:`contour.negative_linestyle`
+    or [lines.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.linewidth) otherwise. Aliases: ``lw``, ``linewidth``. If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+linestyles : str, default: '-' or [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle)
     The style of the line contours. Default is ``'-'`` for positive contours and
-    :rcraw:`contour.negative_linestyle` for negative contours. Aliases: ``ls``, ``linestyle``.
+    [contour.negative_linestyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=contour.negative_linestyle) for negative contours. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k' or inferred
     The color of the line contours. Default is ``'k'`` when adding to filled contours
     or inferred from `color` or `cmap` otherwise. Aliases: ``ec``, ``edgecolor``.
 alpha : float, optional
     The opacity of the contours. Inferred from `edgecolors` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -13014,42 +12962,42 @@ edgefix : bool or float, default: :rc:`edgefix`
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.tricontourf`.
+    Passed to [matplotlib.axes.Axes.tricontourf](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.tricontourf.html).
 
 See also
 --------
@@ -13099,7 +13047,7 @@ z : array-like
 levels : int or array-like, optional
     Determines the number and positions of the contour lines / regions.
 
-    If an int *n*, use `~matplotlib.ticker.MaxNLocator`, which tries to
+    If an int *n*, use [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html), which tries to
     automatically choose no more than *n+1* "nice" contour levels between
     between minimum and maximum numeric values of *Z*.
 
@@ -13108,11 +13056,11 @@ levels : int or array-like, optional
 
 Returns
 -------
-`~matplotlib.tri.TriContourSet`
+[TriContourSet](https://matplotlib.org/stable/api/_as_gen/matplotlib.tri.TriContourSet.html)
 
 Other Parameters
 ----------------
-colors : :mpltype:`color` or list of :mpltype:`color`, optional
+colors : [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color), optional
     The colors of the levels, i.e., the contour regions.
 
     The sequence is cycled for the levels in ascending order. If the sequence
@@ -13128,13 +13076,13 @@ colors : :mpltype:`color` or list of :mpltype:`color`, optional
 alpha : float, default: 1
     The alpha blending value, between 0 (transparent) and 1 (opaque).
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
     This parameter is ignored if *colors* is set.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -13142,9 +13090,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -13169,7 +13117,7 @@ origin : {*None*, 'upper', 'lower', 'image'}, default: None
     - *None*: ``z[0, 0]`` is at X=0, Y=0 in the lower left corner.
     - 'lower': ``z[0, 0]`` is at X=0.5, Y=0.5 in the lower left corner.
     - 'upper': ``z[0, 0]`` is at X=N+0.5, Y=0.5 in the upper left corner.
-    - 'image': Use the value from :rc:`image.origin`.
+    - 'image': Use the value from [image.origin](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.origin).
 
 extent : (x0, x1, y0, y1), optional
     If *origin* is not *None*, then *extent* is interpreted as in `.imshow`: it
@@ -13210,12 +13158,12 @@ extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
 
 xunits, yunits : registered units, optional
     Override axis units by specifying an instance of a
-    :class:`matplotlib.units.ConversionInterface`.
+    [matplotlib.units.ConversionInterface](https://matplotlib.org/stable/api/_as_gen/matplotlib.units.ConversionInterface.html).
 
 antialiased : bool, optional
     Enable antialiasing, overriding the defaults.  For
     filled contours, the default is *True*.  For line contours,
-    it is taken from :rc:`lines.antialiased`.
+    it is taken from [lines.antialiased](https://ultraplot.readthedocs.io/en/stable/search.html?q=lines.antialiased).
 
 hatches : list[str], optional
     A list of crosshatch patterns to use on the filled areas.
@@ -13241,29 +13189,28 @@ Parameters
     The data passed as positional or keyword arguments. Interpreted as follows:
 
     * If only `z` coordinates are passed, try to infer the `x` and `y` coordinates
-      from the :class:`~pandas.DataFrame` indices and columns or the :class:`~xarray.DataArray`
+      from the [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) indices and columns or the [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html)
       coordinates. Otherwise, the `y` coordinates are ``np.arange(0, y.shape[0])``
       and the `x` coordinates are ``np.arange(0, y.shape[1])``.
     * For ``pcolor`` and ``pcolormesh``, calculate coordinate *edges* using
-      `~ultraplot.utils.edges` or :func:`~ultraplot.utils.edges2d` if *centers* were provided.
+      [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html) or [edges2d](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges2d.html) if *centers* were provided.
       For all other methods, calculate coordinate *centers* if *edges* were provided.
-    * If the `x` or `y` coordinates are `pint.Quantity`, auto-add the pint unit registry
-      to matplotlib's unit registry using `~pint.UnitRegistry.setup_matplotlib`. If the
-      `z` coordinates are `pint.Quantity`, pass the magnitude to the plotting
-      command. A `pint.Quantity` embedded in an `xarray.DataArray` is also supported.
+    * If the `x` or `y` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), auto-add the pint unit registry
+      to matplotlib's unit registry using [setup_matplotlib](https://pint.readthedocs.io/en/stable/search.html?q=pint.UnitRegistry.setup_matplotlib). If the
+      `z` coordinates are [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity), pass the magnitude to the plotting
+      command. A [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity) embedded in an [xarray.DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html) is also supported.
 
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 transpose : bool, default: False
     Whether to transpose the input data. This should be used when
     passing datasets with column-major dimension order ``(x, y)``.
@@ -13273,7 +13220,7 @@ order : {'C', 'F'}, default: 'C'
     row-major ordering (equivalent to ``transpose=False``). ``'F'`` corresponds
     to Fortran-style column-major ordering (equivalent to ``transpose=True``).
 globe : bool, default: False
-    For `ultraplot.axes.GeoAxes` only. Whether to enforce global
+    For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only. Whether to enforce global
     coverage. When set to ``True`` this does the following:
 
     #. Interpolates input data to the North and South poles by setting the data
@@ -13286,42 +13233,42 @@ globe : bool, default: False
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -13334,7 +13281,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -13342,31 +13289,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -13378,20 +13325,20 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 linewidths : unit-spec, default: 0.3
     The width of lines between grid boxes. Aliases: ``lw``, ``linewidth``.
-    If float, units are points. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyles : str, default: '-'
     The style of lines between grid boxes. Aliases: ``ls``, ``linestyle``.
 edgecolors : color-spec, default: 'k'
     The color of lines between grid boxes. Aliases: ``ec``, ``edgecolor``.
 alpha : float, optional
     The opacity of the grid boxes. Inferred from `cmap` by default. Aliases: ``a``, ``alphas``.
-edgefix : bool or float, default: :rc:`edgefix`
+edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
     Whether to fix the common issue where white lines appear between adjacent
     patches in saved vector graphics (this can slow down figure rendering).
-    See this `github repo <https://github.com/jklymak/contourfIssues>`__ for a
+    See this [github repo](https://github.com/jklymak/contourfIssues) for a
     demonstration of the problem. If ``True``, a small default linewidth of
     ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
     this specific linewidth is used to cover up the white lines. This feature is
@@ -13399,42 +13346,42 @@ edgefix : bool or float, default: :rc:`edgefix`
 label : str, optional
     The legend label to be used for this object. In the case of
     contours, this is paired with the the central artist in the artist
-    list returned by `matplotlib.contour.ContourSet.legend_elements`.
+    list returned by [matplotlib.contour.ContourSet.legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html).
 labels : bool, optional
     Whether to apply labels to contours and grid boxes. The text will be
     white when the luminance of the underlying filled contour or grid box
     is less than 50 and black otherwise.
 labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
-    For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
-    Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
+    For contour plots, this is passed to [clabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.clabel.html).
+    Otherwise, this is passed to [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
 formatter, fmt : formatter-spec, optional
-    The `~matplotlib.ticker.Formatter` used to format number labels.
-    Passed to the `~ultraplot.constructor.Formatter` constructor.
+    The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
 formatter_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Formatter` class.
+    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 precision : int, optional
     The maximum number of decimal places for number labels generated
-    with the default formatter `~ultraplot.ticker.Simpleformatter`.
+    with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.tripcolor`.
+    Passed to [matplotlib.axes.Axes.tripcolor](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.tripcolor.html).
 
 See also
 --------
@@ -13494,11 +13441,11 @@ shading : {'flat', 'gouraud'}, default: 'flat'
     values used for each triangle are from the mean c of the triangle's
     three points. If *shading* is 'gouraud' then color values must be
     defined at points.
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -13506,9 +13453,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -13519,19 +13466,19 @@ vmin, vmax : float, optional
     *vmin*/*vmax* when a *norm* instance is given (but using a `str` *norm*
     name together with *vmin*/*vmax* is acceptable).
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
 Returns
 -------
-`~matplotlib.collections.PolyCollection` or `~matplotlib.collections.TriMesh`
+[PolyCollection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.PolyCollection.html) or [TriMesh](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.TriMesh.html)
     The result depends on *shading*: For ``shading='flat'`` the result is a
     `.PolyCollection`, for ``shading='gouraud'`` the result is a `.TriMesh`.
 
 Other Parameters
 ----------------
-**kwargs : `~matplotlib.collections.Collection` properties
+**kwargs : [Collection](https://matplotlib.org/stable/api/_as_gen/matplotlib.collections.Collection.html) properties
 
     Properties:
     agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
@@ -13541,14 +13488,14 @@ Other Parameters
     array: array-like or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     clim: (vmin: float, vmax: float)
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
     cmap: `.Colormap` or str or None
-    color: :mpltype:`color` or list of RGBA tuples
-    edgecolor or ec or edgecolors: :mpltype:`color` or list of :mpltype:`color` or 'face'
-    facecolor or facecolors or fc: :mpltype:`color` or list of :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color) or list of RGBA tuples
+    edgecolor or ec or edgecolors: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color) or 'face'
+    facecolor or facecolors or fc: [color](https://matplotlib.org/stable/search.html?q=color) or list of [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
@@ -13568,7 +13515,7 @@ Other Parameters
     rasterized: bool
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     urls: list of str or None
     visible: bool
@@ -13583,56 +13530,55 @@ Parameters
 z : array-like
     The data passed as a positional argument or keyword argument.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -13645,7 +13591,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -13653,31 +13599,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -13689,26 +13635,26 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.imshow`.
+    Passed to [matplotlib.axes.Axes.imshow](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.imshow.html).
 
 See also
 --------
@@ -13729,9 +13675,9 @@ The number of pixels used to render an image is set by the Axes size
 and the figure *dpi*. This can lead to aliasing artifacts when
 the image is resampled, because the displayed image size will usually
 not match the size of *X* (see
-:doc:`/gallery/images_contours_and_fields/image_antialiasing`).
+[/gallery/images_contours_and_fields/image_antialiasing](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fimages_contours_and_fields%2Fimage_antialiasing)).
 The resampling can be controlled via the *interpolation* parameter
-and/or :rc:`image.interpolation`.
+and/or [image.interpolation](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.interpolation).
 
 Parameters
 ----------
@@ -13750,13 +13696,13 @@ X : array-like or PIL image
 
     Out-of-range RGB(A) values are clipped.
 
-cmap : str or `~matplotlib.colors.Colormap`, default: :rc:`image.cmap`
+cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     The Colormap instance or registered colormap name used to map scalar data
     to colors.
 
     This parameter is ignored if *X* is RGB(A).
 
-norm : str or `~matplotlib.colors.Normalize`, optional
+norm : str or [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
     The normalization method used to scale scalar data to the [0, 1] range
     before mapping to colors using *cmap*. By default, a linear scaling is
     used, mapping the lowest value to 0 and the highest to 1.
@@ -13764,9 +13710,9 @@ norm : str or `~matplotlib.colors.Normalize`, optional
     If given, this can be one of the following:
 
     - An instance of `.Normalize` or one of its subclasses
-      (see :ref:`colormapnorms`).
+      (see [colormapnorms](https://ultraplot.readthedocs.io/en/stable/search.html?q=colormapnorms)).
     - A scale name, i.e. one of "linear", "log", "symlog", "logit", etc.  For a
-      list of available scales, call `matplotlib.scale.get_scale_names()`.
+      list of available scales, call [matplotlib.scale.get_scale_names()](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.get_scale_names().html).
       In that case, a suitable `.Normalize` subclass is dynamically generated
       and instantiated.
 
@@ -13781,7 +13727,7 @@ vmin, vmax : float, optional
 
     This parameter is ignored if *X* is RGB(A).
 
-colorizer : `~matplotlib.colorizer.Colorizer` or None, default: None
+colorizer : [Colorizer](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorizer.Colorizer.html) or None, default: None
     The Colorizer object used to map color to data. If None, a Colorizer
     object is created from a *norm* and *cmap*.
 
@@ -13802,12 +13748,12 @@ aspect : {'equal', 'auto'} or float or None, default: None
       that the data fit in the Axes. In general, this will result in
       non-square pixels.
 
-    Normally, None (the default) means to use :rc:`image.aspect`.  However, if
+    Normally, None (the default) means to use [image.aspect](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.aspect).  However, if
     the image uses a transform that does not contain the axes data transform,
     then None means to not modify the axes aspect at all (in that case, directly
     call `.Axes.set_aspect` if desired).
 
-interpolation : str, default: :rc:`image.interpolation`
+interpolation : str, default: [image.interpolation](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.interpolation)
     The interpolation method used.
 
     Supported values are 'none', 'auto', 'nearest', 'bilinear',
@@ -13834,9 +13780,9 @@ interpolation : str, default: :rc:`image.interpolation`
     image happens to be upsampled by exactly a factor of two or one.
 
     See
-    :doc:`/gallery/images_contours_and_fields/interpolation_methods`
+    [/gallery/images_contours_and_fields/interpolation_methods](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fimages_contours_and_fields%2Finterpolation_methods)
     for an overview of the supported interpolation methods, and
-    :doc:`/gallery/images_contours_and_fields/image_antialiasing` for
+    [/gallery/images_contours_and_fields/image_antialiasing](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fimages_contours_and_fields%2Fimage_antialiasing) for
     a discussion of image antialiasing.
 
     Some interpolation methods require an additional radius parameter,
@@ -13855,7 +13801,7 @@ interpolation_stage : {'auto', 'data', 'rgba'}, default: 'auto'
       'rgba' when downsampling, or upsampling at a rate less than 3, and
       'data' when upsampling at a higher rate.
 
-    See :doc:`/gallery/images_contours_and_fields/image_antialiasing` for
+    See [/gallery/images_contours_and_fields/image_antialiasing](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Fimages_contours_and_fields%2Fimage_antialiasing) for
     a discussion of image antialiasing.
 
 alpha : float or array-like, optional
@@ -13863,7 +13809,7 @@ alpha : float or array-like, optional
     If *alpha* is an array, the alpha blending values are applied pixel
     by pixel, and *alpha* must have the same shape as *X*.
 
-origin : {'upper', 'lower'}, default: :rc:`image.origin`
+origin : {'upper', 'lower'}, default: [image.origin](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.origin)
     Place the [0, 0] index of the array in the upper left or lower
     left corner of the Axes. The convention (the default) 'upper' is
     typically used for matrices and images.
@@ -13871,7 +13817,7 @@ origin : {'upper', 'lower'}, default: :rc:`image.origin`
     Note that the vertical axis points upward for 'lower'
     but downward for 'upper'.
 
-    See the :ref:`imshow_extent` tutorial for
+    See the [imshow_extent](https://ultraplot.readthedocs.io/en/stable/search.html?q=imshow_extent) tutorial for
     examples and a more detailed description.
 
 extent : floats (left, right, bottom, top), optional
@@ -13892,7 +13838,7 @@ extent : floats (left, right, bottom, top), optional
     - For ``origin == 'lower'`` the default is
       ``(-0.5, numcols-0.5, -0.5, numrows-0.5)``.
 
-    See the :ref:`imshow_extent` tutorial for
+    See the [imshow_extent](https://ultraplot.readthedocs.io/en/stable/search.html?q=imshow_extent) tutorial for
     examples and a more detailed description.
 
 filternorm : bool, default: True
@@ -13908,7 +13854,7 @@ filterrad : float > 0, default: 4.0
     The filter radius for filters that have a radius parameter, i.e.
     when interpolation is one of: 'sinc', 'lanczos' or 'blackman'.
 
-resample : bool, default: :rc:`image.resample`
+resample : bool, default: [image.resample](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.resample)
     When *True*, use a full resampling method.  When *False*, only
     resample when the output image is larger than the input image.
 
@@ -13917,7 +13863,7 @@ url : str, optional
 
 Returns
 -------
-`~matplotlib.image.AxesImage`
+[AxesImage](https://matplotlib.org/stable/api/_as_gen/matplotlib.image.AxesImage.html)
 
 Other Parameters
 ----------------
@@ -13925,7 +13871,7 @@ data : indexable object, optional
     If given, all parameters also accept a string ``s``, which is
     interpreted as ``data[s]`` if ``s`` is a key in ``data``.
 
-**kwargs : `~matplotlib.artist.Artist` properties
+**kwargs : [Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html) properties
     These parameters are passed on to the constructor of the
     `.AxesImage` artist.
 
@@ -13947,7 +13893,7 @@ channel:
 -   Premultiplied (associated) alpha: R, G, and B channels represent
     the color of the pixel, adjusted for its opacity by multiplication.
 
-`~matplotlib.pyplot.imshow` expects RGB images adopting the straight
+[imshow](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html) expects RGB images adopting the straight
 (unassociated) alpha representation."""
         ...
 
@@ -13959,56 +13905,55 @@ Parameters
 z : array-like
     The data passed as a positional argument or keyword argument.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -14021,7 +13966,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -14029,31 +13974,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -14065,26 +14010,26 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.matshow`.
+    Passed to [matplotlib.axes.Axes.matshow](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.matshow.html).
 
 See also
 --------
@@ -14106,11 +14051,11 @@ Z : (M, N) array-like
 
 Returns
 -------
-`~matplotlib.image.AxesImage`
+[AxesImage](https://matplotlib.org/stable/api/_as_gen/matplotlib.image.AxesImage.html)
 
 Other Parameters
 ----------------
-**kwargs : `~matplotlib.axes.Axes.imshow` arguments
+**kwargs : [imshow](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.imshow.html) arguments
 
 See Also
 --------
@@ -14136,56 +14081,55 @@ Parameters
 z : array-like
     The data passed as a positional argument or keyword argument.
 data : dict-like, optional
-    A dict-like dataset container (e.g., :class:`~pandas.DataFrame` or
-    `~xarray.Dataset`). If passed, each data argument can optionally
+    A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or
+    [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)). If passed, each data argument can optionally
     be a string `key` and the arrays used for plotting are retrieved
-    with ``data[key]``. This is a `native matplotlib feature
-    <https://matplotlib.org/stable/gallery/misc/keyword_plotting.html>`__.
-autoformat : bool, default: :rc:`autoformat`
+    with ``data[key]``. This is a [native matplotlib feature](https://matplotlib.org/stable/gallery/misc/keyword_plotting.html).
+autoformat : bool, default: [autoformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=autoformat)
     Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles,
     legend titles, and colorbar labels are automatically configured when a
-    `~pandas.Series`, :class:`~pandas.DataFrame`, :class:`~xarray.DataArray`, or `~pint.Quantity`
-    is passed to the plotting command. Formatting of `pint.Quantity`
-    unit strings is controlled by :rc:`unitformat`.
+    [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html), [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html), [DataArray](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html), or [Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    is passed to the plotting command. Formatting of [pint.Quantity](https://pint.readthedocs.io/en/stable/search.html?q=pint.Quantity)
+    unit strings is controlled by [unitformat](https://ultraplot.readthedocs.io/en/stable/search.html?q=unitformat).
 
 Other parameters
 ----------------
-cmap : colormap-spec, default: :rc:`cmap.sequential` or :rc:`cmap.diverging`
-    The colormap specifer, passed to the :class:`~ultraplot.constructor.Colormap` constructor
-    function. If :rcraw:`cmap.autodiverging` is ``True`` and the normalization
-    range contains negative and positive values then :rcraw:`cmap.diverging` is used.
-    Otherwise :rcraw:`cmap.sequential` is used.
+cmap : colormap-spec, default: [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) or [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging)
+    The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor
+    function. If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization
+    range contains negative and positive values then [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging) is used.
+    Otherwise [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential) is used.
 cmap_kw : dict-like, optional
-    Passed to :class:`~ultraplot.constructor.Colormap`.
+    Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
 c, color, colors : color-spec or sequence of color-spec, optional
-    The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
+    The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
     If not passed, `cmap` is used.
-norm : norm-spec, default: `~matplotlib.colors.Normalize` or `~ultraplot.colors.DivergingNorm`
-    The data value normalizer, passed to the `~ultraplot.constructor.Norm`
+norm : norm-spec, default: [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) or [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
+    The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html)
     constructor function. If `discrete` is ``True`` then 1) this affects the default
     level-generation algorithm (e.g. ``norm='log'`` builds levels in log-space) and
-    2) this is passed to `~ultraplot.colors.DiscreteNorm` to scale the colors before they
-    are discretized (if `norm` is not already a `~ultraplot.colors.DiscreteNorm`).
-    If :rcraw:`cmap.autodiverging` is ``True`` and the normalization range contains
-    negative and positive values then `~ultraplot.colors.DivergingNorm` is used.
-    Otherwise `~matplotlib.colors.Normalize` is used.
+    2) this is passed to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) to scale the colors before they
+    are discretized (if `norm` is not already a [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)).
+    If [cmap.autodiverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.autodiverging) is ``True`` and the normalization range contains
+    negative and positive values then [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html) is used.
+    Otherwise [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html) is used.
 norm_kw : dict-like, optional
-    Passed to `~ultraplot.constructor.Norm`.
+    Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
-discrete : bool, default: :rc:`cmap.discrete`
-    If ``False``, then `~ultraplot.colors.DiscreteNorm` is not applied to the
+discrete : bool, default: [cmap.discrete](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.discrete)
+    If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the
     colormap. Instead, for non-contour plots, the number of levels will be
-    roughly controlled by :rcraw:`cmap.lut`. This has a similar effect to
+    roughly controlled by [cmap.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.lut). This has a similar effect to
     using `levels=large_number` but it may improve rendering speed. Default is
-    ``True`` only for contouring commands like `~ultraplot.axes.Axes.contourf`
-    and pseudocolor commands like `~ultraplot.axes.Axes.pcolor`.
+    ``True`` only for contouring commands like [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.contourf)
+    and pseudocolor commands like [pcolor](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.pcolor).
 sequential, diverging, cyclic, qualitative : bool, default: None
     Boolean arguments used if `cmap` is not passed. Set these to ``True``
-    to use the default :rcraw:`cmap.sequential`, :rcraw:`cmap.diverging`,
-    :rcraw:`cmap.cyclic`, and :rcraw:`cmap.qualitative` colormaps.
-    The `diverging` option also applies `~ultraplot.colors.DivergingNorm`
+    to use the default [cmap.sequential](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.sequential), [cmap.diverging](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.diverging),
+    [cmap.cyclic](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.cyclic), and [cmap.qualitative](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.qualitative) colormaps.
+    The `diverging` option also applies [DivergingNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DivergingNorm.html)
     as the default continuous normalizer.
 vmin, vmax : float, optional
     The minimum and maximum color scale values used with the `norm` normalizer.
@@ -14198,7 +14142,7 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 N
     Shorthand for `levels`.
-levels : int or sequence of float, default: :rc:`cmap.levels`
+levels : int or sequence of float, default: [cmap.levels](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.levels)
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
     the levels should be monotonically increasing or decreasing (note decreasing
@@ -14206,31 +14150,31 @@ levels : int or sequence of float, default: :rc:`cmap.levels`
 values : int or sequence of float, default: None
     The number of level centers or a sequence of level centers. If the former,
     `locator` is used to generate this many level centers at "nice" intervals.
-    If the latter, levels are inferred using `~ultraplot.utils.edges`.
+    If the latter, levels are inferred using [edges](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.edges.html).
     This will override any `levels` input.
 center_levels : bool, default False
     If set to true, the discrete color bar bins will be centered on the level values
     instead of using the level values as the edges of the discrete bins. This option
     can be used for diverging, discrete color bars with both positive and negative
     data to ensure data near zero is properly represented.
-robust : bool, float, or 2-tuple, default: :rc:`cmap.robust`
+robust : bool, float, or 2-tuple, default: [cmap.robust](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.robust)
     If ``True`` and `vmin` or `vmax` were not provided, they are
     determined from the 2nd and 98th data percentiles rather than the
     minimum and maximum. If float, this percentile range is used (for example,
     ``90`` corresponds to the 5th to 95th percentiles). If 2-tuple of float,
     these specific percentiles should be used. This feature is useful
     when your data has large outliers.
-inbounds : bool, default: :rc:`cmap.inbounds`
+inbounds : bool, default: [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds)
     If ``True`` and `vmin` or `vmax` were not provided, when axis limits
-    have been explicitly restricted with :func:`~matplotlib.axes.Axes.set_xlim`
-    or :func:`~matplotlib.axes.Axes.set_ylim`, out-of-bounds data is ignored.
-    See also :rcraw:`cmap.inbounds` and :rcraw:`axes.inbounds`.
-locator : locator-spec, default: `matplotlib.ticker.MaxNLocator`
+    have been explicitly restricted with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
+    or [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html), out-of-bounds data is ignored.
+    See also [cmap.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=cmap.inbounds) and [axes.inbounds](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.inbounds).
+locator : locator-spec, default: [matplotlib.ticker.MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html)
     The locator used to determine level locations if `levels` or `values` were not
-    already passed as lists. Passed to the `~ultraplot.constructor.Locator` constructor.
-    Default is `~matplotlib.ticker.MaxNLocator` with `levels` integer levels.
+    already passed as lists. Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.
+    Default is [MaxNLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.MaxNLocator.html) with `levels` integer levels.
 locator_kw : dict-like, optional
-    Keyword arguments passed to `matplotlib.ticker.Locator` class.
+    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
 symmetric : bool, default: False
     If ``True``, the normalization range or discrete colormap levels are
     symmetric about zero.
@@ -14242,26 +14186,26 @@ negative : bool, default: False
     negative with a minimum at zero.
 nozero : bool, default: False
     If ``True``, ``0`` is removed from the level list. This is mainly useful for
-    single-color `~matplotlib.axes.Axes.contour` plots.
+    single-color [contour](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.contour.html) plots.
 colorbar : bool, int, or str, optional
     If not ``None``, this is a location specifying where to draw an
     *inset* or *outer* colorbar from the resulting object(s). If ``True``,
-    the default :rc:`colorbar.loc` is used. If the same location is
+    the default [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc) is used. If the same location is
     used in successive plotting calls, object(s) will be added to the
     existing colorbar in that location (valid for colorbars built from lists
-    of artists). Valid locations are shown in in `~ultraplot.axes.Axes.colorbar`.
+    of artists). Valid locations are shown in in [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 colorbar_kw : dict-like, optional
-    Extra keyword args for the call to `~ultraplot.axes.Axes.colorbar`.
+    Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 legend : bool, int, or str, optional
     Location specifying where to draw an *inset* or *outer* legend from the
-    resulting object(s). If ``True``, the default :rc:`legend.loc` is used.
+    resulting object(s). If ``True``, the default [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) is used.
     If the same location is used in successive plotting calls, object(s)
     will be added to existing legend in that location. Valid locations
-    are shown in :meth:`~ultraplot.axes.Axes.legend`.
+    are shown in [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 legend_kw : dict-like, optional
-    Extra keyword args for the call to :class:`~ultraplot.axes.Axes.legend`.
+    Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 **kwargs
-    Passed to `matplotlib.axes.Axes.spy`.
+    Passed to [matplotlib.axes.Axes.spy](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.spy.html).
 
 See also
 --------
@@ -14277,7 +14221,7 @@ This visualizes the non-zero values of the array.
 
 Two plotting styles are available: image and marker. Both
 are available for full arrays, but only the marker style
-works for `scipy.sparse.spmatrix` instances.
+works for [scipy.sparse.spmatrix](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html) instances.
 
 **Image style**
 
@@ -14286,7 +14230,7 @@ extra remaining keyword arguments are passed to this method.
 
 **Marker style**
 
-If *Z* is a `scipy.sparse.spmatrix` or *marker* or *markersize* are
+If *Z* is a [scipy.sparse.spmatrix](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html) or *marker* or *markersize* are
 *None*, a `.Line2D` object will be returned with the value of marker
 determining the marker type, and any remaining keyword arguments
 passed to `~.Axes.plot`.
@@ -14300,7 +14244,7 @@ precision : float or 'present', default: 0
     If *precision* is 0, any non-zero value will be plotted. Otherwise,
     values of :math:`|Z| > precision` will be plotted.
 
-    For `scipy.sparse.spmatrix` instances, you can also
+    For [scipy.sparse.spmatrix](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.spmatrix.html) instances, you can also
     pass 'present'. In this case any value present in the array
     will be plotted, even if it is identically zero.
 
@@ -14316,16 +14260,16 @@ aspect : {'equal', 'auto', None} or float, default: 'equal'
     - 'auto': The Axes is kept fixed and the aspect is adjusted so
       that the data fit in the Axes. In general, this will result in
       non-square pixels.
-    - *None*: Use :rc:`image.aspect`.
+    - *None*: Use [image.aspect](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.aspect).
 
-origin : {'upper', 'lower'}, default: :rc:`image.origin`
+origin : {'upper', 'lower'}, default: [image.origin](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.origin)
     Place the [0, 0] index of the array in the upper left or lower left
     corner of the Axes. The convention 'upper' is typically used for
     matrices and images.
 
 Returns
 -------
-`~matplotlib.image.AxesImage` or `.Line2D`
+[AxesImage](https://matplotlib.org/stable/api/_as_gen/matplotlib.image.AxesImage.html) or `.Line2D`
     The return type depends on the plotting style (see above).
 
 Other Parameters
@@ -14349,28 +14293,28 @@ Other Parameters
     alpha: float or None
     animated: bool
     antialiased or aa: bool
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
-    color or c: :mpltype:`color`
+    color or c: [color](https://matplotlib.org/stable/search.html?q=color)
     dash_capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     dash_joinstyle: `.JoinStyle` or {'miter', 'round', 'bevel'}
     dashes: sequence of floats (on/off ink in points) or (None, None)
     data: (2, N) array or two 1D arrays
     drawstyle or ds: {'default', 'steps', 'steps-pre', 'steps-mid', 'steps-post'}, default: 'default'
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     fillstyle: {'full', 'left', 'right', 'bottom', 'top', 'none'}
-    gapcolor: :mpltype:`color` or None
+    gapcolor: [color](https://matplotlib.org/stable/search.html?q=color) or None
     gid: str
     in_layout: bool
     label: object
     linestyle or ls: {'-', '--', '-.', ':', '', (offset, on-off-seq), ...}
     linewidth or lw: float
     marker: marker style string, `~.path.Path` or `~.markers.MarkerStyle`
-    markeredgecolor or mec: :mpltype:`color`
+    markeredgecolor or mec: [color](https://matplotlib.org/stable/search.html?q=color)
     markeredgewidth or mew: float
-    markerfacecolor or mfc: :mpltype:`color`
-    markerfacecoloralt or mfcalt: :mpltype:`color`
+    markerfacecolor or mfc: [color](https://matplotlib.org/stable/search.html?q=color)
+    markerfacecoloralt or mfcalt: [color](https://matplotlib.org/stable/search.html?q=color)
     markersize or ms: float
     markevery: None or int or (int, int) or slice or list[int] or float or (float, float) or list[bool]
     mouseover: bool

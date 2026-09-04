@@ -11,14 +11,14 @@ except ImportError:
     Axes3D = object
 
 class ThreeAxes(shared._SharedAxes, base.Axes, Axes3D):
-    """Simple mix-in of `ultraplot.axes.Axes` with `~mpl_toolkits.mplot3d.axes3d.Axes3D`.
+    """Simple mix-in of [ultraplot.axes.Axes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html) with `~mpl_toolkits.mplot3d.axes3d.Axes3D`.
 
 Important
 ---------
-Note that this subclass does *not* implement the :class:`~ultraplot.axes.PlotAxes`
+Note that this subclass does *not* implement the [PlotAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html)
 plotting overrides. This axes subclass can be used by passing ``proj='3d'`` or
-``proj='three'`` to axes-creation commands like `~ultraplot.figure.Figure.add_axes`,
-`~ultraplot.figure.Figure.add_subplot`, and `~ultraplot.figure.Figure.subplots`."""
+``proj='three'`` to axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.add_axes),
+[add_subplot](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.add_subplot), and [subplots](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.subplots)."""
     _name = 'three'
     _name_aliases = ('3d',)
 
@@ -27,7 +27,7 @@ plotting overrides. This axes subclass can be used by passing ``proj='3d'`` or
 
 Parameters
 ----------
-fig : `~matplotlib.figure.Figure`
+fig : [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html)
     The Axes is built in the `.Figure` *fig*.
 
 *args
@@ -43,7 +43,7 @@ fig : `~matplotlib.figure.Figure`
     being created.  Finally, ``*args`` can also directly be a
     `.SubplotSpec` instance.
 
-sharex, sharey : `~matplotlib.axes.Axes`, optional
+sharex, sharey : [Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html), optional
     The x- or y-`~.matplotlib.axis` is shared with the x- or y-axis in
     the input `~.axes.Axes`.  Note that it is not possible to unshare
     axes.
@@ -76,11 +76,11 @@ forward_navigation_events : bool or "auto", default: "auto"
     axes_locator: Callable[[Axes, Renderer], Bbox]
     axisbelow: bool or 'line'
     box_aspect: float or None
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
-    facecolor or fc: :mpltype:`color`
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    facecolor or fc: [color](https://matplotlib.org/stable/search.html?q=color)
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     forward_navigation_events: bool or "auto"
     frame_on: bool
     gid: str
@@ -91,7 +91,7 @@ forward_navigation_events : bool or "auto", default: "auto"
     navigate_mode: unknown
     path_effects: list of `.AbstractPathEffect`
     picker: None or bool or float or callable
-    position: [left, bottom, width, height] or `~matplotlib.transforms.Bbox`
+    position: [left, bottom, width, height] or [Bbox](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Bbox.html)
     prop_cycle: `~cycler.Cycler`
     rasterization_zorder: float or None
     rasterized: bool
@@ -99,7 +99,7 @@ forward_navigation_events : bool or "auto", default: "auto"
     snap: bool or None
     subplotspec: unknown
     title: str
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     visible: bool
     xbound: (lower: float, upper: float)

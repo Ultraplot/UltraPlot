@@ -48,7 +48,7 @@ def _wedge_legend_patch(legend: Incomplete, orig_handle: Incomplete, xdescent: I
 class LegendEntry(mlines.Line2D):
     """Convenience artist for custom legend entries.
 
-This is a lightweight wrapper around `matplotlib.lines.Line2D` that
+This is a lightweight wrapper around [matplotlib.lines.Line2D](https://matplotlib.org/stable/api/_as_gen/matplotlib.lines.Line2D.html) that
 initializes with empty data so it can be passed directly to
 `Axes.legend()` or `Figure.legend()` handles."""
 
@@ -63,28 +63,28 @@ Properties:
     alpha: float or None
     animated: bool
     antialiased or aa: bool
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
-    color or c: :mpltype:`color`
+    color or c: [color](https://matplotlib.org/stable/search.html?q=color)
     dash_capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
     dash_joinstyle: `.JoinStyle` or {'miter', 'round', 'bevel'}
     dashes: sequence of floats (on/off ink in points) or (None, None)
     data: (2, N) array or two 1D arrays
     drawstyle or ds: {'default', 'steps', 'steps-pre', 'steps-mid', 'steps-post'}, default: 'default'
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     fillstyle: {'full', 'left', 'right', 'bottom', 'top', 'none'}
-    gapcolor: :mpltype:`color` or None
+    gapcolor: [color](https://matplotlib.org/stable/search.html?q=color) or None
     gid: str
     in_layout: bool
     label: object
     linestyle or ls: {'-', '--', '-.', ':', '', (offset, on-off-seq), ...}
     linewidth or lw: float
     marker: marker style string, `~.path.Path` or `~.markers.MarkerStyle`
-    markeredgecolor or mec: :mpltype:`color`
+    markeredgecolor or mec: [color](https://matplotlib.org/stable/search.html?q=color)
     markeredgewidth or mew: float
-    markerfacecolor or mfc: :mpltype:`color`
-    markerfacecoloralt or mfcalt: :mpltype:`color`
+    markerfacecolor or mfc: [color](https://matplotlib.org/stable/search.html?q=color)
+    markerfacecoloralt or mfcalt: [color](https://matplotlib.org/stable/search.html?q=color)
     markersize or ms: float
     markevery: None or int or (int, int) or slice or list[int] or float or (float, float) or list[bool]
     mouseover: bool
@@ -103,9 +103,9 @@ Properties:
     ydata: 1D array
     zorder: float
 
-See :meth:`set_linestyle` for a description of the line styles,
-:meth:`set_marker` for a description of the markers, and
-:meth:`set_drawstyle` for a description of the draw styles."""
+See `set_linestyle` for a description of the line styles,
+`set_marker` for a description of the markers, and
+`set_drawstyle` for a description of the draw styles."""
         ...
 
     @classmethod
@@ -126,9 +126,9 @@ class _Line2DLegendHandler(mhandler.HandlerLine2D):
 
 Parameters
 ----------
-legend : `~matplotlib.legend.Legend`
+legend : [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html)
     The legend for which these legend artists are being created.
-orig_handle : `~matplotlib.artist.Artist` or similar
+orig_handle : [Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html) or similar
     The object for which these legend artists are being created.
 xdescent, ydescent, width, height : int
     The rectangle (*xdescent*, *ydescent*, *width*, *height*) that the
@@ -136,7 +136,7 @@ xdescent, ydescent, width, height : int
 fontsize : int
     The fontsize in pixels. The legend artists being created should
     be scaled according to the given fontsize.
-trans : `~matplotlib.transforms.Transform`
+trans : [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     The transform that is applied to the legend artists being created.
     Typically from unit coordinates in the handler box to screen
     coordinates."""
@@ -303,7 +303,7 @@ Parameters
 ----------
 geometry
     Geometry shorthand (e.g. ``'triangle'`` or ``'country:AU'``),
-    shapely geometry, or `matplotlib.path.Path`."""
+    shapely geometry, or [matplotlib.path.Path](https://matplotlib.org/stable/api/_as_gen/matplotlib.path.Path.html)."""
 
     def __init__(self, geometry: Any='square', *, country_reso: str='110m', country_territories: bool=False, country_proj: Any=None, label: Optional[str]=None, facecolor: Any='none', edgecolor: Any='0.25', linewidth: float=1.0, joinstyle: str=_DEFAULT_GEO_JOINSTYLE, alpha: Optional[float]=None, fill: Optional[bool]=None, **kwargs: Any) -> None:
         """*path* is a `.Path` object.
@@ -316,13 +316,13 @@ Properties:
     animated: bool
     antialiased or aa: bool or None
     capstyle: `.CapStyle` or {'butt', 'projecting', 'round'}
-    clip_box: `~matplotlib.transforms.BboxBase` or None
+    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
     clip_on: bool
     clip_path: Patch or (Path, Transform) or None
-    color: :mpltype:`color`
-    edgecolor or ec: :mpltype:`color` or None
-    facecolor or fc: :mpltype:`color` or None
-    figure: `~matplotlib.figure.Figure` or `~matplotlib.figure.SubFigure`
+    color: [color](https://matplotlib.org/stable/search.html?q=color)
+    edgecolor or ec: [color](https://matplotlib.org/stable/search.html?q=color) or None
+    facecolor or fc: [color](https://matplotlib.org/stable/search.html?q=color) or None
+    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     fill: bool
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
@@ -338,7 +338,7 @@ Properties:
     rasterized: bool
     sketch_params: (scale: float, length: float, randomness: float)
     snap: bool or None
-    transform: `~matplotlib.transforms.Transform`
+    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     url: str
     visible: bool
     zorder: float"""
@@ -521,7 +521,7 @@ class Legend(mlegend.Legend):
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
 ----------
-parent : `~matplotlib.axes.Axes` or `.Figure`
+parent : [Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html) or `.Figure`
     The artist that contains the legend.
 
 handles : list of (`.Artist` or tuple of `.Artist`)
@@ -535,7 +535,7 @@ labels : list of str
 Other Parameters
 ----------------
 
-loc : str or pair of floats, default: :rc:`legend.loc` for Axes, 'upper right' for Figure
+loc : str or pair of floats, default: [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) for Axes, 'upper right' for Figure
     The location of the legend.
 
     The strings ``'upper left'``, ``'upper right'``, ``'lower left'``,
@@ -585,7 +585,7 @@ loc : str or pair of floats, default: :rc:`legend.loc` for Axes, 'upper right' f
     right side of the layout.  In addition to the values of *loc*
     listed above, we have 'outside right upper', 'outside right lower',
     'outside left upper', and 'outside left lower'.  See
-    :ref:`legend_guide` for more details.
+    [legend_guide](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend_guide) for more details.
 
 bbox_to_anchor : `.BboxBase`, 2-tuple, or 4-tuple of floats
     Box that is used to position the legend in conjunction with *loc*.
@@ -616,29 +616,29 @@ ncols : int, default: 1
     For backward compatibility, the spelling *ncol* is also supported
     but it is discouraged. If both are given, *ncols* takes precedence.
 
-prop : None or `~matplotlib.font_manager.FontProperties` or dict
+prop : None or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html) or dict
     The font properties of the legend. If None (default), the current
-    :data:`matplotlib.rcParams` will be used.
+    [matplotlib.rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) will be used.
 
 fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
     The font size of the legend. If the value is numeric the size will be the
     absolute font size in points. String values are relative to the current
     default font size. This argument is only used if *prop* is not specified.
 
-labelcolor : str or list, default: :rc:`legend.labelcolor`
+labelcolor : str or list, default: [legend.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.labelcolor)
     The color of the text in the legend. Either a valid color string
     (for example, 'red'), or a list of color strings. The labelcolor can
     also be made to match the color of the line or marker using 'linecolor',
     'markerfacecolor' (or 'mfc'), or 'markeredgecolor' (or 'mec').
 
-    Labelcolor can be set globally using :rc:`legend.labelcolor`. If None,
-    use :rc:`text.color`.
+    Labelcolor can be set globally using [legend.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.labelcolor). If None,
+    use [text.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.color).
 
-numpoints : int, default: :rc:`legend.numpoints`
+numpoints : int, default: [legend.numpoints](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.numpoints)
     The number of marker points in the legend when creating a legend
     entry for a `.Line2D` (line).
 
-scatterpoints : int, default: :rc:`legend.scatterpoints`
+scatterpoints : int, default: [legend.scatterpoints](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.scatterpoints)
     The number of marker points in the legend when creating
     a legend entry for a `.PathCollection` (scatter plot).
 
@@ -648,7 +648,7 @@ scatteryoffsets : iterable of floats, default: ``[0.375, 0.5, 0.3125]``
     legend text, and 1.0 is at the top. To draw all markers at the
     same height, set to ``[0.5]``.
 
-markerscale : float, default: :rc:`legend.markerscale`
+markerscale : float, default: [legend.markerscale](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.markerscale)
     The relative size of legend markers compared to the originally drawn ones.
 
 markerfirst : bool, default: True
@@ -661,50 +661,50 @@ reverse : bool, default: False
 
     .. versionadded:: 3.7
 
-frameon : bool, default: :rc:`legend.frameon`
+frameon : bool, default: [legend.frameon](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.frameon)
     Whether the legend should be drawn on a patch (frame).
 
-fancybox : bool, default: :rc:`legend.fancybox`
+fancybox : bool, default: [legend.fancybox](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.fancybox)
     Whether round edges should be enabled around the `.FancyBboxPatch` which
     makes up the legend's background.
 
-shadow : None, bool or dict, default: :rc:`legend.shadow`
+shadow : None, bool or dict, default: [legend.shadow](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.shadow)
     Whether to draw a shadow behind the legend.
     The shadow can be configured using `.Patch` keywords.
-    Customization via :rc:`legend.shadow` is currently not supported.
+    Customization via [legend.shadow](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.shadow) is currently not supported.
 
-framealpha : float, default: :rc:`legend.framealpha`
+framealpha : float, default: [legend.framealpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.framealpha)
     The alpha transparency of the legend's background.
     If *shadow* is activated and *framealpha* is ``None``, the default value is
     ignored.
 
-facecolor : "inherit" or color, default: :rc:`legend.facecolor`
+facecolor : "inherit" or color, default: [legend.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.facecolor)
     The legend's background color.
-    If ``"inherit"``, use :rc:`axes.facecolor`.
+    If ``"inherit"``, use [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor).
 
-edgecolor : "inherit" or color, default: :rc:`legend.edgecolor`
+edgecolor : "inherit" or color, default: [legend.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.edgecolor)
     The legend's background patch edge color.
-    If ``"inherit"``, use :rc:`axes.edgecolor`.
+    If ``"inherit"``, use [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor).
 
 mode : {"expand", None}
     If *mode* is set to ``"expand"`` the legend will be horizontally
     expanded to fill the Axes area (or *bbox_to_anchor* if defines
     the legend's size).
 
-bbox_transform : None or `~matplotlib.transforms.Transform`
+bbox_transform : None or [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
     The transform for the bounding box (*bbox_to_anchor*). For a value
     of ``None`` (default) the Axes'
-    :data:`~matplotlib.axes.Axes.transAxes` transform will be used.
+    [transAxes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transAxes.html) transform will be used.
 
 title : str or None
     The legend's title. Default is no title (``None``).
 
-title_fontproperties : None or `~matplotlib.font_manager.FontProperties` or dict
+title_fontproperties : None or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html) or dict
     The font properties of the legend's title. If None (default), the
     *title_fontsize* argument will be used if present; if *title_fontsize* is
-    also None, the current :rc:`legend.title_fontsize` will be used.
+    also None, the current [legend.title_fontsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.title_fontsize) will be used.
 
-title_fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}, default: :rc:`legend.title_fontsize`
+title_fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}, default: [legend.title_fontsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.title_fontsize)
     The font size of the legend's title.
     Note: This cannot be combined with *title_fontproperties*. If you want
     to set the fontsize alongside other font properties, use the *size*
@@ -714,31 +714,31 @@ alignment : {'center', 'left', 'right'}, default: 'center'
     The alignment of the legend title and the box of entries. The entries
     are aligned as a single block, so that markers always lined up.
 
-borderpad : float, default: :rc:`legend.borderpad`
+borderpad : float, default: [legend.borderpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.borderpad)
     The fractional whitespace inside the legend border, in font-size units.
 
-labelspacing : float, default: :rc:`legend.labelspacing`
+labelspacing : float, default: [legend.labelspacing](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.labelspacing)
     The vertical space between the legend entries, in font-size units.
 
-handlelength : float, default: :rc:`legend.handlelength`
+handlelength : float, default: [legend.handlelength](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.handlelength)
     The length of the legend handles, in font-size units.
 
-handleheight : float, default: :rc:`legend.handleheight`
+handleheight : float, default: [legend.handleheight](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.handleheight)
     The height of the legend handles, in font-size units.
 
-handletextpad : float, default: :rc:`legend.handletextpad`
+handletextpad : float, default: [legend.handletextpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.handletextpad)
     The pad between the legend handle and text, in font-size units.
 
-borderaxespad : float, default: :rc:`legend.borderaxespad`
+borderaxespad : float, default: [legend.borderaxespad](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.borderaxespad)
     The pad between the Axes and legend border, in font-size units.
 
-columnspacing : float, default: :rc:`legend.columnspacing`
+columnspacing : float, default: [legend.columnspacing](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.columnspacing)
     The spacing between columns, in font-size units.
 
 handler_map : dict or None
     The custom dictionary mapping instances or types to a legend
     handler. This *handler_map* updates the default handler map
-    found at `matplotlib.legend.Legend.get_legend_handler_map`.
+    found at [matplotlib.legend.Legend.get_legend_handler_map](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.get_legend_handler_map.html).
 
 draggable : bool, default: False
     Whether the legend can be dragged with the mouse.
@@ -766,7 +766,7 @@ legend_handles
 Parameters
 ----------
 
-loc : str or pair of floats, default: :rc:`legend.loc` for Axes, 'upper right' for Figure
+loc : str or pair of floats, default: [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc) for Axes, 'upper right' for Figure
     The location of the legend.
 
     The strings ``'upper left'``, ``'upper right'``, ``'lower left'``,
@@ -816,7 +816,7 @@ loc : str or pair of floats, default: :rc:`legend.loc` for Axes, 'upper right' f
     right side of the layout.  In addition to the values of *loc*
     listed above, we have 'outside right upper', 'outside right lower',
     'outside left upper', and 'outside left lower'.  See
-    :ref:`legend_guide` for more details."""
+    [legend_guide](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend_guide) for more details."""
         ...
 
     def remove(self) -> None:
@@ -850,27 +850,27 @@ class UltraLegend:
 
     def entrylegend(self, entries: Iterable[Any] | Mapping[Any, Any], *, line: Optional[bool]=None, marker: Incomplete=None, color: Incomplete=None, handle_kw: Optional[dict[str, Any]]=None, add: bool=True, **kwargs: Any) -> Incomplete:
         """Build generic semantic legend entries and optionally draw a legend.
-Public docs live on :meth:`Axes.entrylegend`."""
+Public docs live on `Axes.entrylegend`."""
         ...
 
     def catlegend(self, categories: Iterable[Any], *, color: Incomplete=None, marker: Incomplete=None, line: Optional[bool]=None, handle_kw: Optional[dict[str, Any]]=None, add: bool=True, **kwargs: Any) -> Incomplete:
         """Build categorical legend entries and optionally draw a legend.
-Public docs live on :meth:`Axes.catlegend`."""
+Public docs live on `Axes.catlegend`."""
         ...
 
     def sizelegend(self, levels: Iterable[float], *, labels: Incomplete=None, color: Incomplete=None, marker: Incomplete=None, area: Optional[bool]=None, values: Incomplete=None, vmin: Optional[float]=None, vmax: Optional[float]=None, smin: Optional[float]=None, smax: Optional[float]=None, area_size: Optional[bool]=None, absolute_size: Optional[bool]=None, scale: Optional[float]=None, minsize: Optional[float]=None, fmt: Incomplete=None, handle_kw: Optional[dict[str, Any]]=None, add: bool=True, **kwargs: Any) -> Incomplete:
         """Build size legend entries and optionally draw a legend.
-Public docs live on :meth:`Axes.sizelegend`."""
+Public docs live on `Axes.sizelegend`."""
         ...
 
     def numlegend(self, levels: Incomplete=None, *, vmin: Incomplete=None, vmax: Incomplete=None, n: Optional[int]=None, cmap: Incomplete=None, norm: Incomplete=None, fmt: Incomplete=None, facecolor: Incomplete=None, edgecolor: Incomplete=None, linewidth: Optional[float]=None, linestyle: Incomplete=None, alpha: Incomplete=None, handle_kw: Optional[dict[str, Any]]=None, add: bool=True, **kwargs: Any) -> Incomplete:
         """Build numeric-color legend entries and optionally draw a legend.
-Public docs live on :meth:`Axes.numlegend`."""
+Public docs live on `Axes.numlegend`."""
         ...
 
     def geolegend(self, entries: Iterable[Any] | dict[Any, Any], labels: Optional[Iterable[Any]]=None, *, country_reso: Optional[str]=None, country_territories: Optional[bool]=None, country_proj: Any=None, handlesize: Optional[float]=None, facecolor: Any=None, edgecolor: Any=None, linewidth: Optional[float]=None, alpha: Optional[float]=None, fill: Optional[bool]=None, handle_kw: Optional[dict[str, Any]]=None, add: bool=True, **kwargs: Any) -> Incomplete:
         """Build geometry legend entries and optionally draw a legend.
-Public docs live on :meth:`Axes.geolegend`."""
+Public docs live on `Axes.geolegend`."""
         ...
 
     @staticmethod

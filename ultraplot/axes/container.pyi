@@ -32,7 +32,7 @@ external_axes_class : type
     The external axes class to instantiate (e.g., mpltern.TernaryAxes)
 external_axes_kwargs : dict, optional
     Keyword arguments to pass to the external axes constructor
-external_shrink_factor : float, optional, default: :rc:`external.shrink`
+external_shrink_factor : float, optional, default: [external.shrink](https://ultraplot.readthedocs.io/en/stable/search.html?q=external.shrink)
     The factor by which to shrink the external axes within the container
     to leave room for labels. For ternary plots, labels extend significantly
     beyond the plot area, so a value of 0.90 (10% padding) helps prevent

@@ -30,7 +30,7 @@ def _keep_units(func: Incomplete) -> Incomplete:
     ...
 
 def arange(min_: Incomplete, *args: Incomplete) -> Incomplete:
-    """Identical to `numpy.arange` but with inclusive endpoints. For example,
+    """Identical to [numpy.arange](https://numpy.org/doc/stable/reference/generated/numpy.arange.html) but with inclusive endpoints. For example,
 ``uplt.arange(2, 4)`` returns the numpy array ``[2, 3, 4]`` instead of
 ``[2, 3]``. This is useful for generating lists of tick locations or
 colormap levels, e.g. ``ax.format(xlocator=uplt.arange(0, 10))``
@@ -115,7 +115,7 @@ on-the-fly color cycle or colormap.
 Parameters
 ----------
 *args, **kwargs
-    Passed to `~ultraplot.constructor.Cycle`.
+    Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 
 Returns
 -------
@@ -341,7 +341,7 @@ def _translate_cycle_color(color: Incomplete, cycle: Incomplete=None) -> Incompl
 
 def to_hex(color: Incomplete, space: Incomplete='rgb', cycle: Incomplete=None, keep_alpha: Incomplete=True) -> str:
     """Translate the color from an arbitrary colorspace to a HEX string.
-This is a generalization of `matplotlib.colors.to_hex`.
+This is a generalization of [matplotlib.colors.to_hex](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.to_hex.html).
 
 Parameters
 ----------
@@ -349,7 +349,7 @@ color : color-spec
     The color. Can be a 3-tuple or 4-tuple of channel values, a hex
     string, a registered color name, a cycle color like ``'C0'``, or
     a 2-tuple colormap coordinate specification like ``('magma', 0.5)``
-    (see `~ultraplot.colors.ColorDatabase` for details).
+    (see [ColorDatabase](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ColorDatabase.html) for details).
 
     If `space` is ``'rgb'``, this is a tuple of RGB values, and any
     channels are larger than ``2``, the channels are assumed to be
@@ -357,7 +357,7 @@ color : color-spec
 space : {'rgb', 'hsv', 'hcl', 'hpl', 'hsl'}, optional
     The colorspace for the input channel values. Ignored unless `color`
     is a tuple of numbers.
-cycle : str, default: :rcraw:`cycle`
+cycle : str, default: [cycle](https://ultraplot.readthedocs.io/en/stable/search.html?q=cycle)
     The registered color cycle name used to interpret colors that
     look like ``'C0'``, ``'C1'``, etc.
 clip : bool, default: True
@@ -383,7 +383,7 @@ to_xyza"""
 
 def to_rgb(color: Incomplete, space: Incomplete='rgb', cycle: Incomplete=None) -> Incomplete:
     """Translate the color from an arbitrary colorspace to an RGB tuple. This is
-a generalization of `matplotlib.colors.to_rgb` and the inverse of `to_xyz`.
+a generalization of [matplotlib.colors.to_rgb](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.to_rgb.html) and the inverse of `to_xyz`.
 
 Parameters
 ----------
@@ -391,7 +391,7 @@ color : color-spec
     The color. Can be a 3-tuple or 4-tuple of channel values, a hex
     string, a registered color name, a cycle color like ``'C0'``, or
     a 2-tuple colormap coordinate specification like ``('magma', 0.5)``
-    (see `~ultraplot.colors.ColorDatabase` for details).
+    (see [ColorDatabase](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ColorDatabase.html) for details).
 
     If `space` is ``'rgb'``, this is a tuple of RGB values, and any
     channels are larger than ``2``, the channels are assumed to be
@@ -399,7 +399,7 @@ color : color-spec
 space : {'rgb', 'hsv', 'hcl', 'hpl', 'hsl'}, optional
     The colorspace for the input channel values. Ignored unless `color`
     is a tuple of numbers.
-cycle : str, default: :rcraw:`cycle`
+cycle : str, default: [cycle](https://ultraplot.readthedocs.io/en/stable/search.html?q=cycle)
     The registered color cycle name used to interpret colors that
     look like ``'C0'``, ``'C1'``, etc.
 clip : bool, default: True
@@ -421,7 +421,7 @@ to_xyza"""
 
 def to_rgba(color: Incomplete, space: Incomplete='rgb', cycle: Incomplete=None, clip: Incomplete=True) -> Incomplete:
     """Translate the color from an arbitrary colorspace to an RGBA tuple. This is
-a generalization of `matplotlib.colors.to_rgba` and the inverse of `to_xyz`.
+a generalization of [matplotlib.colors.to_rgba](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.to_rgba.html) and the inverse of `to_xyz`.
 
 Parameters
 ----------
@@ -429,7 +429,7 @@ color : color-spec
     The color. Can be a 3-tuple or 4-tuple of channel values, a hex
     string, a registered color name, a cycle color like ``'C0'``, or
     a 2-tuple colormap coordinate specification like ``('magma', 0.5)``
-    (see `~ultraplot.colors.ColorDatabase` for details).
+    (see [ColorDatabase](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ColorDatabase.html) for details).
 
     If `space` is ``'rgb'``, this is a tuple of RGB values, and any
     channels are larger than ``2``, the channels are assumed to be
@@ -437,7 +437,7 @@ color : color-spec
 space : {'rgb', 'hsv', 'hcl', 'hpl', 'hsl'}, optional
     The colorspace for the input channel values. Ignored unless `color`
     is a tuple of numbers.
-cycle : str, default: :rcraw:`cycle`
+cycle : str, default: [cycle](https://ultraplot.readthedocs.io/en/stable/search.html?q=cycle)
     The registered color cycle name used to interpret colors that
     look like ``'C0'``, ``'C1'``, etc.
 clip : bool, default: True
@@ -536,12 +536,12 @@ value : float or str or sequence
     ``'in'``   Inches
     ``'pc'``   `Pica <pc_>`_ (1/6 inches)
     ``'pt'``   `Points <pt_>`_ (1/72 inches)
-    ``'px'``   Pixels on screen, using dpi of :rcraw:`figure.dpi`
-    ``'pp'``   Pixels once printed, using dpi of :rcraw:`savefig.dpi`
-    ``'em'``   `Em square <em_>`_ for :rcraw:`font.size`
-    ``'en'``   `En square <en_>`_ for :rcraw:`font.size`
-    ``'Em'``   `Em square <em_>`_ for :rcraw:`axes.titlesize`
-    ``'En'``   `En square <en_>`_ for :rcraw:`axes.titlesize`
+    ``'px'``   Pixels on screen, using dpi of [figure.dpi](https://ultraplot.readthedocs.io/en/stable/search.html?q=figure.dpi)
+    ``'pp'``   Pixels once printed, using dpi of [savefig.dpi](https://ultraplot.readthedocs.io/en/stable/search.html?q=savefig.dpi)
+    ``'em'``   `Em square <em_>`_ for [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size)
+    ``'en'``   `En square <en_>`_ for [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size)
+    ``'Em'``   `Em square <em_>`_ for [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize)
+    ``'En'``   `En square <en_>`_ for [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize)
     ``'ax'``   Axes-relative units (not always available)
     ``'fig'``  Figure-relative units (not always available)
     ``'ly'``   Light years ;)
@@ -556,13 +556,13 @@ numeric : str, default: 'in'
     The units associated with numeric input.
 dest : str, default: `numeric`
     The destination units.
-fontsize : str or float, default: :rc:`font.size` or :rc:`axes.titlesize`
+fontsize : str or float, default: [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size) or [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize)
     The font size in points used for scaling. Default is
-    :rcraw:`font.size` for ``em`` and ``en`` units and
-    :rcraw:`axes.titlesize` for ``Em`` and ``En`` units.
-axes : `~matplotlib.axes.Axes`, optional
+    [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size) for ``em`` and ``en`` units and
+    [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize) for ``Em`` and ``En`` units.
+axes : [Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html), optional
     The axes to use for scaling units that look like ``'0.1ax'``.
-figure : `~matplotlib.figure.Figure`, optional
+figure : [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html), optional
     The figure to use for scaling units that look like ``'0.1fig'``.
     If not provided we try to get the figure from ``axes.figure``.
 width : bool, optional

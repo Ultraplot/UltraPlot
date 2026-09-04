@@ -26,11 +26,11 @@ _colorbar_docstring = ...
 def show_channels(*args: Incomplete, N: Incomplete=100, rgb: Incomplete=False, saturation: Incomplete=True, minhue: Incomplete=0, maxsat: Incomplete=500, width: Incomplete=100, refwidth: Incomplete=1.7) -> Incomplete:
     """Show how arbitrary colormap(s) vary with respect to the hue, chroma,
 luminance, HSL saturation, and HPL saturation channels, and optionally
-the red, blue and green channels. Adapted from `this example <https://matplotlib.org/stable/tutorials/colors/colormaps.html#lightness-of-matplotlib-colormaps>`__.
+the red, blue and green channels. Adapted from [this example](https://matplotlib.org/stable/tutorials/colors/colormaps.html#lightness-of-matplotlib-colormaps).
 
 Parameters
 ----------
-*args : colormap-spec, default: :rc:`image.cmap`
+*args : colormap-spec, default: [image.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.cmap)
     Positional arguments are colormap names or objects.
 N : int, optional
     The number of markers to draw for each colormap.
@@ -45,7 +45,7 @@ maxsat : float, optional
 width : int, optional
     The width of each colormap line in points.
 refwidth : int or str, optional
-    The width of each subplot. Passed to `~ultraplot.ui.subplots`.
+    The width of each subplot. Passed to [subplots](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ui.subplots.html).
 
 Returns
 -------
@@ -77,7 +77,7 @@ hue : float, optional
     are drawn for this hue. Must be between ``0`` and ``360``.
 refwidth : str or float, optional
     Average width of each subplot. Units are interpreted by
-    `~ultraplot.utils.units`.
+    [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 
 Returns
 -------
@@ -99,13 +99,13 @@ def _draw_bars(cmaps: Incomplete, *, source: Incomplete, unknown: Incomplete='Us
 
 def show_cmaps(*args: Incomplete, **kwargs: Incomplete) -> Incomplete:
     """Generate a table of the registered colormaps or the input colormaps
-categorized by source. Adapted from `this example <http://matplotlib.org/stable/gallery/color/colormap_reference.html>`__.
+categorized by source. Adapted from [this example](http://matplotlib.org/stable/gallery/color/colormap_reference.html).
 
 Parameters
 ----------
 *args : colormap-spec, optional
     Colormap names or objects.
-N : int, default: :rc:`image.lut`
+N : int, default: [image.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.lut)
     The number of levels in each colorbar.
 unknown : str, default: 'User'
     Category name for colormaps that are unknown to ultraplot.
@@ -117,14 +117,14 @@ include : str or sequence of str, default: None
 ignore : str or sequence of str, default: 'MATLAB', 'GNUplot', 'GIST', 'Other'
     Used only if `include` was not passed. Category names to be removed from the
     table. Use of the default ignored colormaps is discouraged because they contain
-    non-uniform color transitions (see the :ref:`user guide <ug_perceptual>`).
+    non-uniform color transitions (see the [user guide](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_perceptual)).
 length : unit-spec, optional
     The length of each colorbar.
-    If float, units are inches. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 width : float or str, optional
     The width of each colorbar.
-    If float, units are inches. If string, interpreted by `~ultraplot.utils.units`.
-rasterized : bool, default: :rc:`colorbar.rasterized`
+    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+rasterized : bool, default: [colorbar.rasterized](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.rasterized)
     Whether to rasterize the colorbar solids. This increases rendering
     time and decreases file sizes for vector graphics.
 
@@ -146,7 +146,7 @@ show_fonts"""
 
 def show_cycles(*args: Incomplete, **kwargs: Incomplete) -> Incomplete:
     """Generate a table of registered color cycles or the input color cycles
-categorized by source. Adapted from `this example <http://matplotlib.org/stable/gallery/color/colormap_reference.html>`__.
+categorized by source. Adapted from [this example](http://matplotlib.org/stable/gallery/color/colormap_reference.html).
 
 Parameters
 ----------
@@ -164,11 +164,11 @@ ignore : str or sequence of str, default: None
     from the table.
 length : unit-spec, optional
     The length of each colorbar.
-    If float, units are inches. If string, interpreted by `~ultraplot.utils.units`.
+    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 width : float or str, optional
     The width of each colorbar.
-    If float, units are inches. If string, interpreted by `~ultraplot.utils.units`.
-rasterized : bool, default: :rc:`colorbar.rasterized`
+    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
+rasterized : bool, default: [colorbar.rasterized](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.rasterized)
     Whether to rasterize the colorbar solids. This increases rendering
     time and decreases file sizes for vector graphics.
 
@@ -203,7 +203,7 @@ minsat : float
 
 def show_colors(*, nhues: Incomplete=17, minsat: Incomplete=10, unknown: Incomplete='User', include: Incomplete=None, ignore: Incomplete=None) -> Incomplete:
     """Generate tables of the registered color names. Adapted from
-`this example <https://matplotlib.org/examples/color/named_colors.html>`__.
+[this example](https://matplotlib.org/examples/color/named_colors.html).
 
 Parameters
 ----------
@@ -238,22 +238,22 @@ it is replaced with the "¤" dummy character.
 
 Parameters
 ----------
-*args : str or `~matplotlib.font_manager.FontProperties`
-    The font specs, font names, or `~matplotlib.font_manager.FontProperties`\\ s
+*args : str or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html)
+    The font specs, font names, or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html)\\ s
     to show. If no positional arguments are passed and the `family` argument is
-    not passed, then the fonts found in :func:`~ultraplot.config.Configurator.user_folder`
-    and `~ultraplot.config.Configurator.local_folders` and the *available*
-    :rcraw:`font.sans-serif` fonts are shown.
+    not passed, then the fonts found in [user_folder](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.user_folder)
+    and [local_folders](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.local_folders) and the *available*
+    [font.sans-serif](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.sans-serif) fonts are shown.
 family : {'tex-gyre', 'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy'}, optional
     The family from which *available* fonts are shown. Default is ``'sans-serif'``
     if no arguments were provided. Otherwise the default is to not show family
-    fonts. The fonts belonging to each family are listed under :rcraw:`font.serif`,
-    :rcraw:`font.sans-serif`, :rcraw:`font.monospace`, :rcraw:`font.cursive`, and
-    :rcraw:`font.fantasy`. The special family ``'tex-gyre'`` includes the
-    `TeX Gyre <http://www.gust.org.pl/projects/e-foundry/tex-gyre>`__ fonts.
+    fonts. The fonts belonging to each family are listed under [font.serif](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.serif),
+    [font.sans-serif](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.sans-serif), [font.monospace](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.monospace), [font.cursive](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.cursive), and
+    [font.fantasy](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.fantasy). The special family ``'tex-gyre'`` includes the
+    [TeX Gyre](http://www.gust.org.pl/projects/e-foundry/tex-gyre) fonts.
 user : bool, optional
-    Whether to include fonts in :func:`~ultraplot.config.Configurator.user_folder` and
-    `~ultraplot.config.Configurator.local_folders` at the top of the table. Default
+    Whether to include fonts in [user_folder](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.user_folder) and
+    [local_folders](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.local_folders) at the top of the table. Default
     is ``True`` if called without any arguments and ``False`` otherwise.
 text : str, optional
     The sample text shown for each font. If not passed then default math or
@@ -262,10 +262,10 @@ math : bool, default: False
     Whether the default sample text should show non-math Latin characters or
     or math equations and Greek letters.
 fallback : bool, default: False
-    Whether to use the fallback font :rcraw:`mathtext.fallback` for unavailable
+    Whether to use the fallback font [mathtext.fallback](https://ultraplot.readthedocs.io/en/stable/search.html?q=mathtext.fallback) for unavailable
     characters. If ``False`` the dummy glyph "¤" is shown for missing characters.
 **kwargs
-    Additional font properties passed to `~matplotlib.font_manager.FontProperties`.
+    Additional font properties passed to [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html).
     Default size is ``12`` and default weight, style, and strength are ``'normal'``.
 
 Other parameters
