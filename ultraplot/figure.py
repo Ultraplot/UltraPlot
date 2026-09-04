@@ -3901,10 +3901,12 @@ class Figure(mfigure.Figure):
                 (item for item in mapping.values() if item is not None), None
             )
         all_axes = set(self._iter_subplots())
-        if axis_mappings and len(all_axes) > 1:
+        formatted_main_axes = set(axs) & all_axes
+        can_reduce_sharing = len(all_axes) > 1 and bool(formatted_main_axes)
+        if axis_mappings and can_reduce_sharing:
             self._update_sharing_for_format_keys(axis_mappings)
         is_subset = bool(axs) and all_axes and set(axs) != all_axes
-        if is_subset:
+        if is_subset and can_reduce_sharing:
             local_keys = {
                 key
                 for keys in (

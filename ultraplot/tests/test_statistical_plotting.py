@@ -310,7 +310,7 @@ def test_ridgeline_comparison_kde_vs_hist(rng):
         cmap="viridis",
         alpha=0.7,
     )
-    axs[0].format(title="KDE Ridgeline", xlabel="Value", grid=False)
+    axs[0].format(title="KDE Ridgeline", grid=False)
 
     # Histogram version
     axs[1].ridgeline(
@@ -322,9 +322,9 @@ def test_ridgeline_comparison_kde_vs_hist(rng):
         hist=True,
         bins=15,
     )
-    axs[1].format(title="Histogram Ridgeline", xlabel="Value", grid=False)
+    axs[1].format(title="Histogram Ridgeline", grid=False)
 
-    fig.format(suptitle="KDE vs Histogram Ridgeline Comparison")
+    fig.format(xlabel="Value", suptitle="KDE vs Histogram Ridgeline Comparison")
     return fig
 
 
@@ -466,16 +466,15 @@ def test_ridgeline_continuous_vs_categorical(rng):
 
     # Categorical mode
     axs[0].ridgeline(data, labels=labels, overlap=0.6, cmap="viridis", alpha=0.7)
-    axs[0].format(title="Categorical Positioning", xlabel="Value", grid=False)
+    axs[0].format(title="Categorical Positioning", grid=False)
 
     # Continuous mode
     positions = [0, 5, 15, 30]
     axs[1].ridgeline(
         data, labels=labels, positions=positions, height=4, cmap="viridis", alpha=0.7
     )
-    axs[1].format(
-        title="Continuous Positioning", xlabel="Value", ylabel="Coordinate", grid=True
-    )
+    axs[1].format(title="Continuous Positioning", ylabel="Coordinate", grid=True)
+    axs.format(xlabel="Value")
 
     return fig
 

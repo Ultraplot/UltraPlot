@@ -60,10 +60,11 @@ def test_unsharing_on_creation():
 
 
 @pytest.mark.parametrize("kind", ("inset", "panel", "alternate"))
-def test_auxiliary_axes_format_does_not_change_figure_sharing(kind):
+@pytest.mark.parametrize("wrapped", (False, True))
+def test_auxiliary_axes_format_does_not_change_figure_sharing(kind, wrapped):
     """Only numbered main subplots may reduce figure-wide sharing."""
     fig, axs = uplt.subplots(nrows=2, share=True)
-    ax = axs[0]
+    ax = axs[:1] if wrapped else axs[0]
     if kind == "inset":
         other = ax.inset_axes((0.2, 0.2, 0.4, 0.4))
     elif kind == "panel":
