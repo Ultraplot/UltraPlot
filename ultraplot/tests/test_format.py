@@ -366,6 +366,26 @@ def test_label_settings():
     return fig
 
 
+def test_format_distributes_axis_label_sequences_and_reduces_sharing():
+    """Per-axes labels retain shared limits but override label sharing."""
+    fig, axs = uplt.subplots(ncols=2, share=True)
+    axs.format(
+        title=["First", "Second"],
+        xlabel=["First x", "Second x"],
+        ylabel=["First y", "Second y"],
+    )
+    fig.canvas.draw()
+
+    assert [ax.get_title() for ax in axs] == ["First", "Second"]
+    assert [ax.get_xlabel() for ax in axs] == ["First x", "Second x"]
+    assert [ax.get_ylabel() for ax in axs] == ["First y", "Second y"]
+    assert fig._sharex == fig._sharey == 2
+    assert all(ax.xaxis.label.get_visible() for ax in axs)
+    assert all(ax.yaxis.label.get_visible() for ax in axs)
+    axs[0].set_xlim(1, 2)
+    assert axs[1].get_xlim() == (1, 2)
+
+
 def test_colormap_parsing():
     """Test colormaps merging"""
     reds = uplt.colormaps.get_cmap("reds")

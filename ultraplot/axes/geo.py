@@ -2078,7 +2078,11 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         """
 
         # Share axis labels
-        if self._sharex and self.figure._sharex >= 1:
+        if (
+            self._sharex
+            and self.figure._sharex >= 1
+            and getattr(self.figure, "_sharex_labels", True)
+        ):
             if self.figure._is_share_label_group_member(self, "x"):
                 pass
             elif self.figure._is_share_label_group_member(self._sharex, "x"):
@@ -2086,7 +2090,11 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             else:
                 labels._transfer_label(self.xaxis.label, self._sharex.xaxis.label)
                 self.xaxis.label.set_visible(False)
-        if self._sharey and self.figure._sharey >= 1:
+        if (
+            self._sharey
+            and self.figure._sharey >= 1
+            and getattr(self.figure, "_sharey_labels", True)
+        ):
             if self.figure._is_share_label_group_member(self, "y"):
                 pass
             elif self.figure._is_share_label_group_member(self._sharey, "y"):

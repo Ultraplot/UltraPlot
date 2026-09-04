@@ -546,7 +546,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         level = 3 if panel_group else sharing_level
 
         # Handle axis label sharing (level > 0)
-        if level > 0:
+        if level > 0 and getattr(self.figure, f"_share{axis_name}_labels", True):
             if self.figure._is_share_label_group_member(self, axis_name):
                 pass
             elif self.figure._is_share_label_group_member(shared_axis, axis_name):

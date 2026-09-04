@@ -3558,7 +3558,37 @@ class Figure(mfigure.Figure):
         pending_layout = kwargs.pop("_pending_layout", None)
         if pending_layout is None:
             pending_layout = bool(self.stale)
-        axs = axs or self._iter_subplots()
+        axs = list(axs or self._iter_subplots())
+        # Unlike titles, axis labels are normally forwarded verbatim to every
+        # axes. Accept a sequence of strings here as a request for one label per
+        # formatted axes. Distinct labels are incompatible with label sharing, so
+        # disable sharing in that direction and trust the explicit request.
+        label_sequences = {}
+        for key, axis in (("xlabel", "x"), ("ylabel", "y")):
+            value = kwargs.get(key)
+            if isinstance(value, str) or not np.iterable(value):
+                continue
+            value = tuple(value)
+            if not all(isinstance(item, str) for item in value):
+                continue
+            if len(value) != len(axs):
+                raise ValueError(
+                    f"Invalid {key} list length {len(value)} "
+                    f"for {len(axs)} formatted axes."
+                )
+            label_sequences[key] = value
+            kwargs[key] = value
+            if len(value) > 1:
+                if getattr(self, f"_share{axis}", 0):
+                    # Rebuild at level 2: preserve the shared limits, scales,
+                    # and tickers but remove label sharing (level 1).
+                    self._toggle_axis_sharing(which=axis, share=0)
+                    self._toggle_axis_sharing(which=axis, share=2)
+                setattr(self, f"_share{axis}_labels", False)
+                # Spanning labels are enabled by default with shared axes, but
+                # would replace the per-axes labels with a single figure artist.
+                setattr(self, f"_span{axis}", False)
+                self._clear_share_label_groups(target=axis)
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         explicit_format_keys = set(kwargs)
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
@@ -3682,6 +3712,17 @@ class Figure(mfigure.Figure):
                 for key, value in kw.items()
                 if isinstance(ax, cls) and not classes.add(cls)
             }
+            # Titles already support this convention in Axes._update_title().
+            # Labels need dispatch here because Matplotlib otherwise treats a
+            # sequence as one label object and converts it to its repr.
+            for key, values in label_sequences.items():
+                supports_label = any(
+                    key in cls_kw
+                    for cls, cls_kw in kws.items()
+                    if isinstance(ax, cls)
+                )
+                if supports_label:
+                    kw[key] = values[number - 1]
             if kw.get("xlabel") is not None and self._has_share_label_groups("x"):
                 if _axis_has_share_label_text(ax, "x") or _axis_has_label_text(ax, "x"):
                     kw.pop("xlabel", None)
