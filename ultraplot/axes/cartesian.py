@@ -31,6 +31,9 @@ from ..internals import (
 )
 from ..utils import units
 from ._formatting import (
+    AXIS_LABEL_FORMAT_KEYS,
+    AXIS_SHARED_STATE_FORMAT_KEYS,
+    AXIS_TICKLABEL_SHARING_FORMAT_KEYS,
     CARTESIAN_PARENT_FILTER_KEYS,
     axis_format_requires_layout,
     get_axis_style_fields,
@@ -1221,7 +1224,6 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             labelloc = _validate_loc(labelloc, label_opts, "axis label")
             axis.set_label_position(labelloc)
         if offsetloc is not None:
-            offsetloc = _not_none(offsetloc, options[0])
             if hasattr(axis, "set_offset_position"):  # y axis (and future x axis?)
                 axis.set_offset_position(offsetloc)
             elif s == "x" and _version_mpl >= "3.3":  # ugly x axis kludge
@@ -1718,6 +1720,28 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # such as a set_ylabel() call since the last draw. format() has always
         # flushed those into the layout, so keep doing that.
         pending_layout = bool(self.stale)
+        if self.figure is not None and not kwargs.get("skip_figure", False):
+            format_values = locals().copy()
+            format_values.update(kwargs)
+            format_keys = {
+                key
+                for key, value in format_values.items()
+                if value is not None
+                and key
+                in (
+                    AXIS_LABEL_FORMAT_KEYS["x"]
+                    | AXIS_LABEL_FORMAT_KEYS["y"]
+                    | AXIS_SHARED_STATE_FORMAT_KEYS["x"]
+                    | AXIS_SHARED_STATE_FORMAT_KEYS["y"]
+                    | AXIS_TICKLABEL_SHARING_FORMAT_KEYS["x"]
+                    | AXIS_TICKLABEL_SHARING_FORMAT_KEYS["y"]
+                )
+            }
+            self.figure._update_sharing_for_format_keys(format_keys)
+            if format_keys & AXIS_LABEL_FORMAT_KEYS["x"]:
+                self.xaxis.label.set_visible(True)
+            if format_keys & AXIS_LABEL_FORMAT_KEYS["y"]:
+                self.yaxis.label.set_visible(True)
         explicit_format_keys = set(kwargs.pop("_explicit_format_keys", ()))
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
             kwargs, self._format_signatures[CartesianAxes]

@@ -275,8 +275,10 @@ def test_subset_share_xlabels_override():
 
     fig.canvas.draw()
 
-    assert not ax[0, 0].xaxis.get_label().get_visible()
-    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert ax[0, 0].xaxis.get_label().get_visible()
+    assert ax[0, 0].get_xlabel() == "Top-left X"
+    assert ax[0, 1].xaxis.get_label().get_visible()
+    assert ax[0, 1].get_xlabel() == "Top-right X"
     assert bottom[0].get_xlabel().strip() == ""
     assert bottom[1].get_xlabel().strip() == ""
     assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())
@@ -340,8 +342,10 @@ def test_subset_share_xlabels_implicit():
 
     fig.canvas.draw()
 
-    assert not ax[0, 0].xaxis.get_label().get_visible()
-    assert not ax[0, 1].xaxis.get_label().get_visible()
+    assert ax[0, 0].xaxis.get_label().get_visible()
+    assert ax[0, 0].get_xlabel() == "Top-left X"
+    assert ax[0, 1].xaxis.get_label().get_visible()
+    assert ax[0, 1].get_xlabel() == "Top-right X"
     assert bottom[0].get_xlabel().strip() == ""
     assert bottom[1].get_xlabel().strip() == ""
     assert any(lab.get_text() == "Bottom-row X" for lab in fig._supxlabel_dict.values())

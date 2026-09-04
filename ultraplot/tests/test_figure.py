@@ -461,13 +461,15 @@ def test_auto_share_splits_mixed_x_unit_domains_after_refresh():
     assert _share_sibling_count(axs[1], "x") == 1
 
 
-def test_explicit_sharey_propagates_scale_changes():
+def test_explicit_sharey_local_scale_change_unshares():
     fig, axs = uplt.subplots(ncols=2, sharey=True)
     axs[0].format(yscale="log")
     fig.canvas.draw()
 
     assert axs[0].get_yscale() == "log"
-    assert axs[1].get_yscale() == "log"
+    assert axs[1].get_yscale() == "linear"
+    assert not fig._sharey_limits
+    assert not fig._sharey_ticklabels
 
 
 @pytest.mark.parametrize("va", ["bottom", "center", "top"])

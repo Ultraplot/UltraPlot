@@ -5,6 +5,59 @@ Shared metadata for axis formatting keyword routing and persistence.
 
 import inspect
 
+_GENERIC_AXIS_LABEL_FORMAT_KEYS = {
+    "labelpad",
+    "labelcolor",
+    "labelsize",
+    "labelweight",
+}
+
+AXIS_LABEL_FORMAT_KEYS = {
+    axis: {
+        f"{axis}label",
+        f"{axis}labelloc",
+        f"{axis}labelpad",
+        f"{axis}labelcolor",
+        f"{axis}labelsize",
+        f"{axis}labelweight",
+        f"{axis}label_kw",
+    }
+    | _GENERIC_AXIS_LABEL_FORMAT_KEYS
+    for axis in "xy"
+}
+AXIS_SHARED_STATE_FORMAT_KEYS = {
+    axis: {
+        f"{axis}lim",
+        f"{axis}min",
+        f"{axis}max",
+        f"{axis}scale",
+        f"{axis}reverse",
+        f"{axis}margin",
+        f"{axis}formatter",
+        f"{axis}ticklabels",
+        f"{axis}ticks",
+        f"{axis}locator",
+        f"{axis}minorticks",
+        f"{axis}minorlocator",
+        f"{axis}tickrange",
+        f"{axis}wraprange",
+        f"{axis}scale_kw",
+        f"{axis}locator_kw",
+        f"{axis}formatter_kw",
+        f"{axis}minorlocator_kw",
+    }
+    for axis in "xy"
+}
+AXIS_TICKLABEL_SHARING_FORMAT_KEYS = {
+    axis: {
+        f"{axis}loc",
+        f"{axis}spineloc",
+        f"{axis}tickloc",
+        f"{axis}ticklabelloc",
+    }
+    for axis in "xy"
+}
+
 _AXIS_STYLE_FIELD_TEMPLATES = {
     "color": (
         "{axis}color",

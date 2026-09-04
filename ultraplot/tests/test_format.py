@@ -435,6 +435,86 @@ def test_orthogonal_axis_sharing_controls():
     assert axs[1].get_xlim() == (1, 2)
 
 
+def test_format_axes_mapping_uses_one_based_selectors():
+    """Axes mappings format selected axes and preserve native style dictionaries."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    axs.format(
+        title={1: "First", (3, 4): "Last"},
+        xlabel={2: "Second x"},
+        ylim={1: (0, 2), 4: (0, 4)},
+        title_kw={"color": "red"},
+        labelcolor={1: "blue"},
+    )
+
+    assert [ax.get_title() for ax in axs] == ["First", "", "Last", "Last"]
+    assert [ax.get_xlabel() for ax in axs] == ["", "Second x", "", ""]
+    assert axs[0].get_ylim() == (0, 2)
+    assert axs[3].get_ylim() == (0, 4)
+    assert axs[0]._title_dict[axs[0]._title_loc].get_color() == "red"
+    assert axs[0].xaxis.label.get_color() == "blue"
+    assert axs[0].yaxis.label.get_color() == "blue"
+    assert axs[1].xaxis.label.get_color() != "blue"
+    assert not fig._sharex_labels
+    assert not fig._sharey_labels
+    assert not fig._sharey_limits
+
+
+def test_indexed_format_updates_axis_sharing():
+    """Formatting one axes updates sharing like a sparse figure-level mapping."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    axs[0].format(ylabel="Local y")
+
+    assert not fig._sharey_labels
+    assert fig._sharey_limits
+    axs[0].set_ylim(1, 2)
+    assert axs[1].get_ylim() == (1, 2)
+    axs[0].format(ylim=(3, 4))
+    assert not fig._sharey_limits
+    assert not fig._sharey_ticklabels
+    assert axs[0].get_ylim() == (3, 4)
+    assert axs[1].get_ylim() == (1, 2)
+
+
+def test_indexed_limit_format_restores_interior_ticklabels():
+    """Local limits restore tick labels previously hidden by global sharing."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    fig.canvas.draw()
+    assert not axs[0].xaxis.get_tick_params()["labelbottom"]
+
+    axs[2].format(xlim=(-1, 0))
+    fig.canvas.draw()
+
+    assert axs[0].xaxis.get_tick_params()["labelbottom"]
+    assert axs[0].get_xlim() == (0, 1)
+    assert axs[2].get_xlim() == (-1, 0)
+
+
+def test_indexed_tick_location_only_disables_ticklabel_sharing():
+    """Local tick-label placement retains shared numeric limits."""
+    fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
+    fig.canvas.draw()
+
+    axs[0].format(xticklabelloc="bottom")
+    fig.canvas.draw()
+
+    assert fig._sharex_limits
+    assert not fig._sharex_ticklabels
+    assert axs[0].xaxis.get_tick_params()["labelbottom"]
+    axs[0].set_xlim(2, 3)
+    assert axs[2].get_xlim() == (2, 3)
+
+
+def test_singleton_grid_format_updates_axis_sharing():
+    """A one-item grid slice has the same sharing semantics as direct indexing."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    axs[:1].format(xlim=(2, 3), ylabel="Local y")
+
+    assert not fig._sharex_limits
+    assert not fig._sharey_labels
+    assert axs[0].get_xlim() == (2, 3)
+    assert axs[1].get_xlim() != (2, 3)
+
+
 @pytest.mark.parametrize(
     ("key", "limits", "shared_attr", "unaffected_attr", "getter", "sibling"),
     (

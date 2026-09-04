@@ -7,6 +7,7 @@ import functools
 import inspect
 import os
 from contextlib import ExitStack
+from numbers import Integral
 
 try:
     from typing import Any, Iterable, List, Optional, Tuple, Union
@@ -25,7 +26,14 @@ except:
     from typing_extensions import override
 
 from . import axes as paxes
-from .axes._formatting import axis_format_requires_layout, pop_axis_format_kwargs
+from .axes._formatting import (
+    AXIS_LABEL_FORMAT_KEYS,
+    AXIS_SHARED_STATE_FORMAT_KEYS,
+    AXIS_TICKLABEL_SHARING_FORMAT_KEYS,
+    GENERIC_AXIS_FORMAT_KEYS,
+    axis_format_requires_layout,
+    pop_axis_format_kwargs,
+)
 from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
@@ -2383,6 +2391,68 @@ class Figure(mfigure.Figure):
             for component in ("labels", "limits", "ticklabels")
         )
 
+    def _update_axis_sharing_for_format(
+        self, which, *, labels=False, limits=False, ticklabels=False
+    ):
+        """Disable sharing components contradicted by local format values."""
+        if labels:
+            setattr(self, f"_share{which}_labels", False)
+            setattr(self, f"_span{which}", False)
+            self._clear_share_label_groups(target=which)
+        if limits or ticklabels:
+            restore_ticklabels = getattr(self, f"_share{which}_ticklabels")
+            setattr(self, f"_share{which}_ticklabels", False)
+        if limits:
+            setattr(self, f"_share{which}_limits", False)
+            self._rebuild_axis_sharing(which)
+        if (limits or ticklabels) and restore_ticklabels:
+            self._restore_axis_ticklabels(which)
+
+    def _update_sharing_for_format_keys(self, keys):
+        """Update sharing for axes-specific format keyword names."""
+        keys = set(keys)
+        for which in "xy":
+            self._update_axis_sharing_for_format(
+                which,
+                labels=bool(keys & AXIS_LABEL_FORMAT_KEYS[which]),
+                limits=bool(keys & AXIS_SHARED_STATE_FORMAT_KEYS[which]),
+                ticklabels=bool(keys & AXIS_TICKLABEL_SHARING_FORMAT_KEYS[which]),
+            )
+
+    def _restore_axis_ticklabels(self, which):
+        """Restore labels hidden only by subplot tick-label sharing."""
+        sides = ("bottom", "top") if which == "x" else ("left", "right")
+        labels = tuple(f"label{side}" for side in sides)
+        for ax in self._iter_axes(hidden=False, children=False, panels=False):
+            axis = getattr(ax, f"{which}axis", None)
+            if axis is None or not hasattr(axis, "get_tick_params"):
+                continue
+            params = axis.get_tick_params()
+            state_getter = getattr(ax, "_get_axis_style_state", None)
+            state = state_getter(which) if state_getter is not None else {}
+            loc = state.get("ticklabelloc")
+            if loc is None:
+                visibility = {
+                    label: bool(params.get(label, False) or params.get(side, False))
+                    for side, label in zip(sides, labels)
+                }
+            else:
+                aliases = {side[0]: side for side in sides}
+                if isinstance(loc, str):
+                    loc = loc.lower()
+                    if loc in ("none", "neither"):
+                        active = ()
+                    elif loc == "both":
+                        active = sides
+                    else:
+                        active = (aliases.get(loc, loc),)
+                else:
+                    active = tuple(loc)
+                visibility = {
+                    label: side in active for side, label in zip(sides, labels)
+                }
+            axis.set_tick_params(which="both", **visibility)
+
     def _rebuild_axis_sharing(self, which):
         """Rebuild axis relationships from the orthogonal sharing flags."""
         axes = list(self._iter_axes(hidden=False, children=False, panels=False))
@@ -3596,6 +3666,10 @@ class Figure(mfigure.Figure):
         ----------
         axs : sequence of `~ultraplot.axes.Axes`, optional
             The axes to format. Default is the numbered subplots.
+            Axes-format arguments may be dictionaries mapping one-based positions
+            in this sequence to values, for example ``xlabel={1: 'First',
+            (2, 3): 'Others'}``. Dictionaries with string keys remain ordinary
+            style dictionaries.
         %(figure.format)s
 
         Important
@@ -3635,6 +3709,75 @@ class Figure(mfigure.Figure):
         if pending_layout is None:
             pending_layout = bool(self.stale)
         axs = list(axs or self._iter_subplots())
+
+        # Parse per-axes dictionaries using the same one-based selector syntax as
+        # subplot projection dictionaries: {1: value, (2, 3): value}. Dictionaries
+        # with ordinary string keys remain native format/style dictionaries.
+        axis_format_keys = {
+            key
+            for signature in paxes.Axes._format_signatures.values()
+            for key in signature.parameters
+        }
+        axis_format_keys.update(GENERIC_AXIS_FORMAT_KEYS)
+
+        def _selector_numbers(selector):
+            if isinstance(selector, Integral) and not isinstance(selector, bool):
+                return (int(selector),)
+            if isinstance(selector, (tuple, list, range)) and all(
+                isinstance(item, Integral) and not isinstance(item, bool)
+                for item in selector
+            ):
+                return tuple(int(item) for item in selector)
+            return None
+
+        axis_mappings = {}
+        for key, value in tuple(kwargs.items()):
+            if key not in axis_format_keys or not isinstance(value, dict) or not value:
+                continue
+            parsed = [
+                (_selector_numbers(selector), item) for selector, item in value.items()
+            ]
+            if not any(numbers is not None for numbers, _ in parsed):
+                continue
+            if any(numbers is None for numbers, _ in parsed):
+                raise ValueError(f"Invalid mixed axes mapping for {key!r}: {value!r}.")
+            mapping = {}
+            for numbers, item in parsed:
+                for number in numbers:
+                    if number not in range(1, len(axs) + 1):
+                        raise ValueError(
+                            f"Invalid axes number {number} for {key!r}; "
+                            f"expected 1 through {len(axs)}."
+                        )
+                    mapping[number] = item
+            axis_mappings[key] = mapping
+            kwargs[key] = next(
+                (item for item in mapping.values() if item is not None), None
+            )
+        if axis_mappings:
+            self._update_sharing_for_format_keys(axis_mappings)
+        all_axes = set(self._iter_subplots())
+        is_subset = bool(axs) and all_axes and set(axs) != all_axes
+        if is_subset:
+            local_keys = {
+                key
+                for keys in (
+                    *AXIS_SHARED_STATE_FORMAT_KEYS.values(),
+                    *AXIS_TICKLABEL_SHARING_FORMAT_KEYS.values(),
+                )
+                for key in keys
+            }
+            if len(axs) == 1:
+                local_keys.update(
+                    key for keys in AXIS_LABEL_FORMAT_KEYS.values() for key in keys
+                )
+            local_state_keys = {
+                key
+                for key, value in kwargs.items()
+                if value is not None and key in local_keys
+            }
+            self._update_sharing_for_format_keys(local_state_keys)
+
         # Unlike titles, axis labels are normally forwarded verbatim to every
         # axes. Accept a sequence of strings here as a request for one label per
         # formatted axes. Distinct labels are incompatible with label sharing, so
@@ -3655,11 +3798,7 @@ class Figure(mfigure.Figure):
             label_sequences[key] = value
             kwargs[key] = value
             if len(value) > 1:
-                setattr(self, f"_share{axis}_labels", False)
-                # Spanning labels are enabled by default with shared axes, but
-                # would replace the per-axes labels with a single figure artist.
-                setattr(self, f"_span{axis}", False)
-                self._clear_share_label_groups(target=axis)
+                self._update_axis_sharing_for_format(axis, labels=True)
 
         # A sequence of limit pairs requests independent numeric axes in that
         # direction. Preserve axis-title sharing, but detach limits/tickers and
@@ -3682,9 +3821,7 @@ class Figure(mfigure.Figure):
             limit_sequences[key] = value
             kwargs[key] = value
             if len(value) > 1:
-                setattr(self, f"_share{axis}_limits", False)
-                setattr(self, f"_share{axis}_ticklabels", False)
-                self._rebuild_axis_sharing(axis)
+                self._update_axis_sharing_for_format(axis, limits=True)
         skip_axes = kwargs.pop("skip_axes", False)  # internal keyword arg
         explicit_format_keys = set(kwargs)
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
@@ -3808,6 +3945,18 @@ class Figure(mfigure.Figure):
                 for key, value in kw.items()
                 if isinstance(ax, cls) and not classes.add(cls)
             }
+            generic_kw = generic_axis_kwargs.copy()
+            for key, mapping in axis_mappings.items():
+                is_generic = key in generic_axis_kwargs
+                supports_value = is_generic or any(
+                    key in cls_kw for cls, cls_kw in kws.items() if isinstance(ax, cls)
+                )
+                if number in mapping and supports_value:
+                    (generic_kw if is_generic else kw)[key] = mapping[number]
+                    if key in ("xlabel", "ylabel"):
+                        getattr(ax, f"{key[0]}axis").label.set_visible(True)
+                else:
+                    (generic_kw if is_generic else kw).pop(key, None)
             # Titles already support this convention in Axes._update_title().
             # Labels need dispatch here because Matplotlib otherwise treats a
             # sequence as one label object and converts it to its repr.
@@ -3840,7 +3989,7 @@ class Figure(mfigure.Figure):
                 **explicit_kw,
                 **kw,
                 **kwargs,
-                **generic_axis_kwargs,
+                **generic_kw,
             )
             ax.number = store_old_number
         # Warn unused keyword argument(s). Shared params (those in multiple
