@@ -13,6 +13,7 @@ from matplotlib import cbook, container
 
 from ..config import rc
 from ..internals import _pop_rc, warnings
+from . import shared
 from .cartesian import CartesianAxes
 
 __all__ = ["ExternalAxesContainer"]
@@ -710,7 +711,7 @@ class ExternalAxesContainer(CartesianAxes):
         if self._external_axes is not None:
             self._external_axes.clear()
 
-    def format(self, **kwargs):
+    def _format_impl(self, **kwargs):
         """
         Format the container and delegate to external axes where appropriate.
 
@@ -754,11 +755,13 @@ class ExternalAxesContainer(CartesianAxes):
 
         # Apply container formatting (for ultraplot-specific features)
         if container_kwargs:
-            super().format(**container_kwargs)
+            super()._format_impl(**container_kwargs)
 
         # Apply external axes formatting
         if external_kwargs and self._external_axes is not None:
             self._external_axes.set(**external_kwargs)
+
+    format = shared._format_wrapper(_format_impl)
 
     def draw(self, renderer):
         """Override draw to render container (with abc/titles) and external axes."""

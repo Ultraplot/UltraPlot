@@ -500,7 +500,7 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         return super().get_tightbbox(renderer, *args, **kwargs)
 
     @docstring._snippet_manager
-    def format(
+    def _format_impl(
         self,
         *,
         r0=None,
@@ -738,10 +738,11 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
                 self._update_polar_label(kind, text, **kw)
 
         # Parent format method
-        super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
+        super()._format_impl(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
 
 
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__
-PolarAxes._format_signatures[PolarAxes] = inspect.signature(PolarAxes.format)
+PolarAxes._format_signatures[PolarAxes] = inspect.signature(PolarAxes._format_impl)
+PolarAxes.format = shared._format_wrapper(PolarAxes._format_impl)
 PolarAxes.format = docstring._obfuscate_kwargs(PolarAxes.format)

@@ -167,6 +167,42 @@ def test_internal_plot_formatting_does_not_reduce_sharing():
     assert fig.get_axis_sharing() == before
 
 
+@pytest.mark.parametrize(
+    ("alternate", "which", "limits"),
+    (("altx", "y", (-2, -1)), ("alty", "x", (2, 3))),
+)
+def test_rebuilding_sharing_preserves_alternate_axis_link(alternate, which, limits):
+    """Figure sharing changes must not detach a twin from its parent."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    child = getattr(axs[0], alternate)()
+    shared = getattr(axs[0], f"get_shared_{which}_axes")()
+
+    axs[0].format(**{f"{which}lim": limits})
+
+    assert shared.joined(axs[0], child)
+    assert getattr(child, f"get_{which}lim")() == limits
+    shifted = tuple(value + 2 for value in limits)
+    getattr(axs[0], f"set_{which}lim")(*shifted)
+    assert getattr(child, f"get_{which}lim")() == shifted
+
+    fig.set_axis_sharing(which, level=3)
+    assert shared.joined(axs[0], child)
+
+
+def test_rebuilding_sharing_preserves_panel_alternate_axis_link():
+    """Rebuilding a main group must preserve twins owned by its panels."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    panel = axs[0].panel_axes("bottom")
+    child = panel.alty()
+    shared = panel.get_shared_x_axes()
+
+    axs[0].format(xlim=(-1, 0))
+
+    assert shared.joined(panel, child)
+    panel.set_xlim(2, 3)
+    assert child.get_xlim() == (2, 3)
+
+
 def test_unsharing_different_rectilinear():
     """
     Even if the projections are rectilinear, the coordinates systems may be different, as such we only allow sharing for the same kind of projections.

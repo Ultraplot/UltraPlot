@@ -31,9 +31,6 @@ from ..internals import (
 )
 from ..utils import units
 from ._formatting import (
-    AXIS_LABEL_FORMAT_KEYS,
-    AXIS_SHARED_STATE_FORMAT_KEYS,
-    AXIS_TICKLABEL_SHARING_FORMAT_KEYS,
     CARTESIAN_PARENT_FILTER_KEYS,
     axis_format_requires_layout,
     get_axis_style_fields,
@@ -721,8 +718,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._twinned_axes.join(self, ax)
 
         # Format parent and child axes
-        self.format(
-            _skip_share_update=True,
+        self._format_impl(
             **{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)},
         )
         setattr(ax, f"_alt{sx}_parent", self)
@@ -1586,7 +1582,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         return _AxisFormatConfig(**config_kwargs)
 
     @docstring._snippet_manager
-    def format(
+    def _format_impl(
         self,
         *,
         aspect=None,
@@ -1723,41 +1719,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # such as a set_ylabel() call since the last draw. format() has always
         # flushed those into the layout, so keep doing that.
         pending_layout = bool(self.stale)
-        skip_share_update = kwargs.pop("_skip_share_update", False)
-        main_subplots = (
-            tuple(self.figure._iter_subplots()) if self.figure is not None else ()
-        )
-        can_reduce_sharing = len(main_subplots) > 1 and any(
-            self is ax for ax in main_subplots
-        )
-        if (
-            can_reduce_sharing
-            and not skip_share_update
-            and not kwargs.get("skip_figure", False)
-        ):
-            format_values = locals().copy()
-            format_values.update(kwargs)
-            format_keys = {
-                key
-                for key, value in format_values.items()
-                if value is not None
-                and key
-                in (
-                    AXIS_LABEL_FORMAT_KEYS["x"]
-                    | AXIS_LABEL_FORMAT_KEYS["y"]
-                    | AXIS_SHARED_STATE_FORMAT_KEYS["x"]
-                    | AXIS_SHARED_STATE_FORMAT_KEYS["y"]
-                    | AXIS_TICKLABEL_SHARING_FORMAT_KEYS["x"]
-                    | AXIS_TICKLABEL_SHARING_FORMAT_KEYS["y"]
-                )
-            }
-            self.figure._update_sharing_for_format_keys(format_keys, axes=(self,))
-            if format_keys & AXIS_LABEL_FORMAT_KEYS["x"]:
-                self.xaxis.label.set_visible(True)
-            if format_keys & AXIS_LABEL_FORMAT_KEYS["y"]:
-                self.yaxis.label.set_visible(True)
         explicit_format_keys = set(kwargs.pop("_explicit_format_keys", ()))
-        explicit_format_keys.discard("_skip_share_update")
         signature_axis_kwargs, generic_axis_kwargs = pop_axis_format_kwargs(
             kwargs, self._format_signatures[CartesianAxes]
         )
@@ -1821,7 +1783,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             or axis_format_requires_layout(explicit_format_keys)
         )
         try:
-            super().format(rc_kw=rc_kw, rc_mode=rc_mode, **base_kwargs)
+            super()._format_impl(rc_kw=rc_kw, rc_mode=rc_mode, **base_kwargs)
         finally:
             if previous is sentinel:
                 del self._format_layout_required
@@ -1915,7 +1877,8 @@ def _capture_explicit_format_keys(func):
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__, altx, and alty
 CartesianAxes._format_signatures[CartesianAxes] = inspect.signature(
-    CartesianAxes.format
+    CartesianAxes._format_impl
 )  # noqa: E501
+CartesianAxes.format = shared._format_wrapper(CartesianAxes._format_impl)
 CartesianAxes.format = _capture_explicit_format_keys(CartesianAxes.format)
 CartesianAxes.format = docstring._obfuscate_kwargs(CartesianAxes.format)

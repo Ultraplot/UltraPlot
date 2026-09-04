@@ -329,11 +329,10 @@ def ribbon_diagram(
         )
         period_text.append(text)
 
-    ax.format(
+    ax._format_impl(
         xlim=(0, 1),
         ylim=(0, 1),
         grid=False,
-        _skip_share_update=True,
     )
     ax.axis("off")
     return {

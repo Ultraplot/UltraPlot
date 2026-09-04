@@ -460,6 +460,106 @@ def test_format_axes_mapping_uses_one_based_selectors():
     assert fig._sharey == 0
 
 
+def test_figure_format_subset_scalar_label_creates_shared_group():
+    """Direct figure subset formatting shares one label across the subset."""
+    fig, axs = uplt.subplots(nrows=3, share=True, span=False)
+
+    fig.format(axs=axs[:2], xlabel="Subset x")
+    fig.canvas.draw()
+
+    assert all(ax.get_xlabel().strip() == "" for ax in axs[:2])
+    assert any(label.get_text() == "Subset x" for label in fig._supxlabel_dict.values())
+    assert fig._sharex_labels
+
+
+@pytest.mark.parametrize(
+    ("projection", "key"),
+    ((None, "lonlim"), ("cyl", "xlim")),
+)
+def test_unsupported_sparse_mapping_preserves_sharing(projection, key):
+    """Ignored projection-specific mappings cannot change sharing state."""
+    kwargs = {} if projection is None else {"proj": projection}
+    fig, axs = uplt.subplots(nrows=2, share=True, **kwargs)
+    before = fig.get_axis_sharing()
+
+    with pytest.warns(uplt.warnings.UltraPlotWarning, match="Ignoring unused"):
+        fig.format(**{key: {1: (0, 1)}})
+
+    assert fig.get_axis_sharing() == before
+
+
+@pytest.mark.parametrize(
+    ("projection", "key"),
+    ((None, "lonlim"), ("cyl", "xlim")),
+)
+def test_unsupported_direct_format_preserves_sharing(projection, key):
+    """Projection-specific filtering also applies to direct axes calls."""
+    kwargs = {} if projection is None else {"proj": projection}
+    fig, axs = uplt.subplots(nrows=2, share=True, **kwargs)
+    before = fig.get_axis_sharing()
+
+    with pytest.raises(TypeError):
+        axs[0].format(**{key: (0, 1)})
+
+    assert fig.get_axis_sharing() == before
+
+
+def test_mixed_projection_subset_only_considers_supported_targets():
+    """An unsupported selected axis cannot detach another projection's group."""
+    fig, axs = uplt.subplots(nrows=3, proj=(None, "cyl", "cyl"), share=True)
+    before = fig.get_axis_sharing("x")
+
+    fig.format(axs=axs[:2], xlim=(2, 3))
+
+    assert axs[0].get_xlim() == (2, 3)
+    assert fig.get_axis_sharing("x") == before
+    assert axs[1].get_shared_x_axes().joined(axs[1], axs[2])
+
+
+@pytest.mark.parametrize("syntax", ("direct", "mapping", "sequence"))
+def test_invalid_limit_preserves_sharing(syntax):
+    """Validation precedes every sharing state transition."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    before = fig.get_axis_sharing()
+
+    with pytest.raises(ValueError, match="Must be 2-tuple"):
+        if syntax == "direct":
+            axs[0].format(xlim=(0, 1, 2))
+        elif syntax == "mapping":
+            fig.format(xlim={1: (0, 1, 2)})
+        else:
+            fig.format(xlim=((0, 1), (0, 1, 2)))
+
+    assert fig.get_axis_sharing() == before
+
+
+@pytest.mark.parametrize("syntax", ("direct", "figure"))
+def test_failed_scale_format_restores_sharing(syntax):
+    """Projection errors roll back sharing policy and topology."""
+    fig, axs = uplt.subplots(nrows=2, share=True)
+    before = fig.get_axis_sharing()
+
+    with pytest.raises(ValueError):
+        if syntax == "direct":
+            axs[0].format(xscale="definitely-not-a-scale")
+        else:
+            fig.format(axs=axs[:1], xscale="definitely-not-a-scale")
+
+    assert fig.get_axis_sharing() == before
+    assert axs[0].get_shared_x_axes().joined(axs[0], axs[1])
+
+
+def test_local_label_in_singleton_direction_preserves_sharing_state():
+    """A local label only reduces a direction with actual shared siblings."""
+    fig, axs = uplt.subplots(ncols=2, share=True)
+    before = fig.get_axis_sharing("x")
+
+    axs[0].format(xlabel="Local x")
+
+    assert fig.get_axis_sharing("x") == before
+    assert axs[0].get_xlabel() == "Local x"
+
+
 def test_indexed_format_updates_axis_sharing():
     """Formatting one axes updates sharing like a sparse figure-level mapping."""
     fig, axs = uplt.subplots(nrows=2, ncols=2, share=True)
@@ -641,7 +741,10 @@ def test_singleton_grid_format_updates_axis_sharing():
     axs[:1].format(xlim=(2, 3), ylabel="Local y")
 
     assert not fig._sharex_limits
-    assert not fig._sharey_labels
+    # These vertically stacked axes do not participate in a y-sharing group,
+    # so a local ylabel does not contradict the nominal y-sharing setting.
+    assert fig._sharey_labels
+    assert axs[0].get_ylabel() == "Local y"
     assert axs[0].get_xlim() == (2, 3)
     assert axs[1].get_xlim() != (2, 3)
 

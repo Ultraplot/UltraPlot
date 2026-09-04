@@ -3289,7 +3289,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     ax.yaxis.label = label
 
     @docstring._snippet_manager
-    def format(
+    def _format_impl(
         self,
         *,
         title=None,
@@ -4753,8 +4753,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__
-Axes._format_signatures = {Axes: inspect.signature(Axes.format)}
-Axes.format = docstring._obfuscate_kwargs(Axes.format)
+Axes._format_signatures = {Axes: inspect.signature(Axes._format_impl)}
+Axes.format = docstring._obfuscate_kwargs(Axes._format_impl)
+Axes.format.__name__ = "format"
+Axes.format.__qualname__ = f"{Axes.__qualname__}.format"
 
 
 def _get_pos_from_locator(

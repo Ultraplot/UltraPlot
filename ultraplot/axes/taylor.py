@@ -12,6 +12,7 @@ import numpy as np
 
 from ..config import rc
 from ..internals import _not_none, _pop_rc, docstring
+from . import shared
 from .polar import PolarAxes
 
 __all__ = ["TaylorAxes"]
@@ -492,7 +493,7 @@ class TaylorAxes(PolarAxes):
         super().draw(renderer, *args, **kwargs)
 
     @docstring._snippet_manager
-    def format(
+    def _format_impl(
         self,
         *,
         xlabel=None,
@@ -564,7 +565,7 @@ class TaylorAxes(PolarAxes):
                 corrlabel_kw=corrlabel_kw,
             )
 
-        super().format(
+        super()._format_impl(
             rc_kw=rc_kw,
             rc_mode=rc_mode,
             labelpad=labelpad,
@@ -579,5 +580,6 @@ class TaylorAxes(PolarAxes):
         self._update_taylor_std_ticklabels()
 
 
-TaylorAxes._format_signatures[TaylorAxes] = inspect.signature(TaylorAxes.format)
+TaylorAxes._format_signatures[TaylorAxes] = inspect.signature(TaylorAxes._format_impl)
+TaylorAxes.format = shared._format_wrapper(TaylorAxes._format_impl)
 TaylorAxes.format = docstring._obfuscate_kwargs(TaylorAxes.format)

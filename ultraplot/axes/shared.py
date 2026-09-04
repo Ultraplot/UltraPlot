@@ -5,9 +5,20 @@ An axes used to jointly format Cartesian and polar axes.
 
 # NOTE: We could define these in base.py but idea is projection-specific formatters
 # should never be defined on the base class. Might add to this class later anyway.
+import functools
+
 import numpy as np
 
 from ..config import rc
+from .._sharing import (
+    AXIS_LABEL_FORMAT_KEYS,
+    axis_supports_format_key,
+    get_axis_sharing_format_keys,
+    restore_axis_sharing,
+    snapshot_axis_sharing,
+    update_sharing_for_format_keys,
+    validate_axis_format_values,
+)
 from ..internals import ic  # noqa: F401
 from ..internals import _pop_kwargs
 from ..utils import _fontsize_to_pt, _not_none, units
@@ -21,11 +32,51 @@ except ImportError:
     from typing_extensions import override
 
 
+def _format_wrapper(method, *, exclude=()):
+    """Wrap a format implementation with explicit-user sharing updates."""
+
+    @functools.wraps(method)
+    def format(self, *args, **kwargs):
+        validate_axis_format_values(kwargs)
+        keys = {
+            key
+            for key in get_axis_sharing_format_keys(kwargs, exclude=exclude)
+            if axis_supports_format_key(self, key)
+        }
+        if kwargs.get("skip_figure", False):
+            keys.clear()
+        figure = self.figure
+        state = snapshot_axis_sharing(figure) if figure is not None and keys else None
+        try:
+            self._update_format_sharing(keys)
+            return method(self, *args, **kwargs)
+        except Exception:
+            if state is not None:
+                restore_axis_sharing(figure, state)
+            raise
+
+    format.__name__ = "format"
+    format.__qualname__ = f"{method.__qualname__.rsplit('.', 1)[0]}.format"
+    return format
+
+
 class _SharedAxes(object):
     """
     Mix-in class with methods shared between `~ultraplot.axes.CartesianAxes`
     and :class:`~ultraplot.axes.PolarAxes`.
     """
+
+    def _update_format_sharing(self, format_keys):
+        """Apply sharing effects for one explicit axes-level format call."""
+        if self.figure is None or not format_keys:
+            return
+        main_subplots = tuple(self.figure._iter_subplots())
+        if len(main_subplots) < 2 or not any(self is ax for ax in main_subplots):
+            return
+        update_sharing_for_format_keys(self.figure, format_keys, axes=(self,))
+        for which in "xy":
+            if format_keys & AXIS_LABEL_FORMAT_KEYS[which]:
+                getattr(self, f"{which}axis").label.set_visible(True)
 
     @staticmethod
     def _min_max_lim(key, min_=None, max_=None, lim=None):

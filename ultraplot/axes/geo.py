@@ -48,11 +48,6 @@ from ..internals import (
 )
 from ..utils import units
 from . import plot, shared
-from ._formatting import (
-    AXIS_LABEL_FORMAT_KEYS,
-    AXIS_SHARED_STATE_FORMAT_KEYS,
-    AXIS_TICKLABEL_SHARING_FORMAT_KEYS,
-)
 
 try:
     import cartopy.crs as ccrs
@@ -1568,6 +1563,10 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     `map_projection` keyword argument.
     """
 
+    _format_sharing_exclude = frozenset(
+        {"labelpad", "labelcolor", "labelsize", "labelweight"}
+    )
+
     @docstring._snippet_manager
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -2957,7 +2956,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     # 3) apply extent, features, and gridlines
     # 4) apply tick lengths and defer to parent format
     @docstring._snippet_manager
-    def format(
+    def _format_impl(
         self,
         *,
         aspect: str | float | None = None,
@@ -3032,45 +3031,6 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         ultraplot.axes.Axes.format
         ultraplot.config.Configurator.context
         """
-        skip_share_update = kwargs.pop("_skip_share_update", False)
-        main_subplots = (
-            tuple(self.figure._iter_subplots()) if self.figure is not None else ()
-        )
-        can_reduce_sharing = len(main_subplots) > 1 and any(
-            self is ax for ax in main_subplots
-        )
-        if (
-            can_reduce_sharing
-            and not skip_share_update
-            and not kwargs.get("skip_figure", False)
-        ):
-            format_values = locals().copy()
-            format_values.update(kwargs)
-            format_keys = {
-                key
-                for key, value in format_values.items()
-                if value is not None
-                and key
-                in (
-                    AXIS_LABEL_FORMAT_KEYS["x"]
-                    | AXIS_LABEL_FORMAT_KEYS["y"]
-                    | AXIS_SHARED_STATE_FORMAT_KEYS["x"]
-                    | AXIS_SHARED_STATE_FORMAT_KEYS["y"]
-                    | AXIS_TICKLABEL_SHARING_FORMAT_KEYS["x"]
-                    | AXIS_TICKLABEL_SHARING_FORMAT_KEYS["y"]
-                )
-            }
-            # These generic names style geographic gridline labels rather than
-            # Cartesian x/y axis-title text, so they do not contradict shared
-            # xlabel or ylabel state.
-            format_keys.difference_update(
-                {"labelpad", "labelcolor", "labelsize", "labelweight"}
-            )
-            self.figure._update_sharing_for_format_keys(format_keys, axes=(self,))
-            if format_keys & AXIS_LABEL_FORMAT_KEYS["x"]:
-                self.xaxis.label.set_visible(True)
-            if format_keys & AXIS_LABEL_FORMAT_KEYS["y"]:
-                self.yaxis.label.set_visible(True)
         self._format_init_basemap_boundary()
         lonlabels, latlabels = self._format_normalize_label_inputs(
             labels=labels,
@@ -3212,7 +3172,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._abc_anchor = abcanchor
 
         # Parent format method
-        super().format(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
+        super()._format_impl(rc_kw=rc_kw, rc_mode=rc_mode, **kwargs)
 
     @docstring._snippet_manager
     def choropleth(
@@ -4792,7 +4752,13 @@ def _choropleth_edge_collection_kw(
 
 
 # Apply signature obfuscation after storing previous signature
-GeoAxes._format_signatures[GeoAxes] = inspect.signature(GeoAxes.format)
+GeoAxes._format_signatures[GeoAxes] = inspect.signature(GeoAxes._format_impl)
+# Generic label style names affect geographic gridline labels, not Cartesian
+# axis-title text, and therefore do not contradict xlabel/ylabel sharing.
+GeoAxes.format = shared._format_wrapper(
+    GeoAxes._format_impl,
+    exclude=GeoAxes._format_sharing_exclude,
+)
 GeoAxes.format = docstring._obfuscate_kwargs(GeoAxes.format)
 
 
