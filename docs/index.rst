@@ -79,14 +79,14 @@ Topics
       Place and align guides across individual subplots or a whole figure.
 
    .. grid-item-card::
-      :link: 1dplots.html
+      :link: data_aware.html
       :shadow: md
       :class-card: card-with-bottom-text
 
       **Data-aware plotting**
       ^^^
 
-      .. image:: _static/example_plots/cartesian_example.svg
+      .. image:: _static/example_plots/data_aware_example.svg
          :align: center
 
       Plot labelled pandas and xarray data with metadata-aware labels and
@@ -148,6 +148,7 @@ For details, see the full :doc:`User guide <usage>` and
    basics
    subplots
    cartesian
+   data_aware
    networks
    colorbars_legends
    colormaps
