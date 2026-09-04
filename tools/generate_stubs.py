@@ -834,6 +834,28 @@ def _add_static_forwarding_bases(source_path: Path, tree: ast.Module) -> None:
             return
 
 
+def _add_static_signatures(source_path: Path, tree: ast.Module) -> None:
+    """Add useful signatures for public wrappers that are dynamic at runtime."""
+    if source_path != PACKAGE / "axes" / "plot.py":
+        return
+
+    signature = ast.parse(
+        "def plot("
+        "self, *args: Any, "
+        "scalex: bool = ..., scaley: bool = ..., data: Any = ..., "
+        "**kwargs: Any"
+        ") -> list[Any]: ..."
+    ).body[0]
+    for node in tree.body:
+        if not isinstance(node, ast.ClassDef) or node.name != "PlotAxes":
+            continue
+        for member in node.body:
+            if isinstance(member, ast.FunctionDef) and member.name == "plot":
+                member.args = signature.args
+                member.returns = signature.returns
+                return
+
+
 def _render(
     source_path: Path,
     expand_docstring,
@@ -849,6 +871,7 @@ def _render(
     tree = ast.parse(source, filename=str(source_path))
     annotation_counts = _merge_annotations(tree, inferred)
     _add_static_forwarding_bases(source_path, tree)
+    _add_static_signatures(source_path, tree)
     tree = _StubTransformer(expand_docstring, module=runtime_module).visit(
         copy.deepcopy(tree)
     )

@@ -2303,7 +2303,7 @@ Notes
     This is the [pyplot wrapper](https://ultraplot.readthedocs.io/en/stable/search.html?q=pyplot_interface) for `.axes.Axes.semilogx`."""
         ...
 
-    def plot(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
+    def plot(self, *args: Any, scalex: bool=..., scaley: bool=..., data: Any=..., **kwargs: Any) -> list[Any]:
         """Plot standard lines.
 
 Parameters

@@ -169,6 +169,30 @@ def test_generated_stubs_include_runtime_docstrings():
     assert "for every axes in the grid" in twiny_doc
 
 
+def test_plot_stub_exposes_static_signature():
+    """The dynamic plot wrapper should retain its useful public call shape."""
+    tree = ast.parse((PACKAGE / "axes" / "plot.pyi").read_text(encoding="utf-8"))
+    plot_axes = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "PlotAxes"
+    )
+    plot = next(
+        node
+        for node in plot_axes.body
+        if isinstance(node, ast.FunctionDef) and node.name == "plot"
+    )
+
+    assert ast.unparse(plot.args.vararg.annotation) == "Any"
+    assert [argument.arg for argument in plot.args.kwonlyargs] == [
+        "scalex",
+        "scaley",
+        "data",
+    ]
+    assert ast.unparse(plot.args.kwarg.annotation) == "Any"
+    assert ast.unparse(plot.returns) == "list[Any]"
+
+
 def test_subplot_grid_stub_preserves_axes_indexing_chain():
     """Integer indexing must lead static analyzers from a grid to an axes."""
     grid_stub = PACKAGE / "gridspec.pyi"
