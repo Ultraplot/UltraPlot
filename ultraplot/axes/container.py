@@ -711,7 +711,8 @@ class ExternalAxesContainer(CartesianAxes):
         if self._external_axes is not None:
             self._external_axes.clear()
 
-    def _format_impl(self, **kwargs):
+    @shared._format_wrapper
+    def format(self, **kwargs):
         """
         Format the container and delegate to external axes where appropriate.
 
@@ -760,8 +761,6 @@ class ExternalAxesContainer(CartesianAxes):
         # Apply external axes formatting
         if external_kwargs and self._external_axes is not None:
             self._external_axes.set(**external_kwargs)
-
-    format = shared._format_wrapper(_format_impl)
 
     def draw(self, renderer):
         """Override draw to render container (with abc/titles) and external axes."""
@@ -871,6 +870,9 @@ class ExternalAxesContainer(CartesianAxes):
         if self._external_axes is not None:
             attrs.update(dir(self._external_axes))
         return sorted(attrs)
+
+
+ExternalAxesContainer._format_impl = ExternalAxesContainer.format.__wrapped__
 
 
 def create_external_axes_container(external_axes_class, projection_name=None):

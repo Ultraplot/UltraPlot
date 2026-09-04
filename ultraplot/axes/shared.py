@@ -32,11 +32,19 @@ except ImportError:
     from typing_extensions import override
 
 
-def _format_wrapper(method, *, exclude=()):
-    """Wrap a format implementation with explicit-user sharing updates."""
+def _format_wrapper(method=None, *, exclude=(), capture_explicit=False):
+    """Decorate a public format method with transactional sharing updates."""
+    if method is None:
+        return lambda method: _format_wrapper(
+            method,
+            exclude=exclude,
+            capture_explicit=capture_explicit,
+        )
 
     @functools.wraps(method)
-    def format(self, *args, **kwargs):
+    def wrapper(self, *args, **kwargs):
+        if capture_explicit:
+            kwargs.setdefault("_explicit_format_keys", set(kwargs))
         validate_axis_format_values(kwargs)
         keys = {
             key
@@ -55,9 +63,7 @@ def _format_wrapper(method, *, exclude=()):
                 restore_axis_sharing(figure, state)
             raise
 
-    format.__name__ = "format"
-    format.__qualname__ = f"{method.__qualname__.rsplit('.', 1)[0]}.format"
-    return format
+    return wrapper
 
 
 class _SharedAxes(object):

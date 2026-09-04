@@ -492,8 +492,9 @@ class TaylorAxes(PolarAxes):
         self._update_taylor_std_ticklabels()
         super().draw(renderer, *args, **kwargs)
 
+    @shared._format_wrapper
     @docstring._snippet_manager
-    def _format_impl(
+    def format(
         self,
         *,
         xlabel=None,
@@ -580,6 +581,6 @@ class TaylorAxes(PolarAxes):
         self._update_taylor_std_ticklabels()
 
 
+TaylorAxes._format_impl = TaylorAxes.format.__wrapped__
 TaylorAxes._format_signatures[TaylorAxes] = inspect.signature(TaylorAxes._format_impl)
-TaylorAxes.format = shared._format_wrapper(TaylorAxes._format_impl)
 TaylorAxes.format = docstring._obfuscate_kwargs(TaylorAxes.format)

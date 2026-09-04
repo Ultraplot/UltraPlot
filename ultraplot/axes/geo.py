@@ -2955,8 +2955,9 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     # 2) enter rc context and resolve label/locator/formatter inputs
     # 3) apply extent, features, and gridlines
     # 4) apply tick lengths and defer to parent format
+    @shared._format_wrapper(exclude=_format_sharing_exclude)
     @docstring._snippet_manager
-    def _format_impl(
+    def format(
         self,
         *,
         aspect: str | float | None = None,
@@ -4752,13 +4753,8 @@ def _choropleth_edge_collection_kw(
 
 
 # Apply signature obfuscation after storing previous signature
+GeoAxes._format_impl = GeoAxes.format.__wrapped__
 GeoAxes._format_signatures[GeoAxes] = inspect.signature(GeoAxes._format_impl)
-# Generic label style names affect geographic gridline labels, not Cartesian
-# axis-title text, and therefore do not contradict xlabel/ylabel sharing.
-GeoAxes.format = shared._format_wrapper(
-    GeoAxes._format_impl,
-    exclude=GeoAxes._format_sharing_exclude,
-)
 GeoAxes.format = docstring._obfuscate_kwargs(GeoAxes.format)
 
 

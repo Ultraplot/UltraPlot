@@ -499,8 +499,9 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         self._refresh_polar_label_geometry("r")
         return super().get_tightbbox(renderer, *args, **kwargs)
 
+    @shared._format_wrapper
     @docstring._snippet_manager
-    def _format_impl(
+    def format(
         self,
         *,
         r0=None,
@@ -743,6 +744,6 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
 
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__
+PolarAxes._format_impl = PolarAxes.format.__wrapped__
 PolarAxes._format_signatures[PolarAxes] = inspect.signature(PolarAxes._format_impl)
-PolarAxes.format = shared._format_wrapper(PolarAxes._format_impl)
 PolarAxes.format = docstring._obfuscate_kwargs(PolarAxes.format)

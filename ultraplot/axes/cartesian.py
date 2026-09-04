@@ -4,7 +4,6 @@ The standard Cartesian axes used for most ultraplot figures.
 """
 
 import copy
-import functools
 import inspect
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple, Union
@@ -1581,8 +1580,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         return _AxisFormatConfig(**config_kwargs)
 
+    @shared._format_wrapper(capture_explicit=True)
     @docstring._snippet_manager
-    def _format_impl(
+    def format(
         self,
         *,
         aspect=None,
@@ -1860,25 +1860,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         return super().get_tightbbox(renderer, *args, **kwargs)
 
 
-def _capture_explicit_format_keys(func):
-    """
-    Preserve raw keyword names before Python binds them to the format signature.
-    """
-
-    @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        kwargs.setdefault("_explicit_format_keys", set(kwargs))
-        return func(self, *args, **kwargs)
-
-    return wrapper
-
-
-# tmp
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__, altx, and alty
+CartesianAxes._format_impl = CartesianAxes.format.__wrapped__
 CartesianAxes._format_signatures[CartesianAxes] = inspect.signature(
     CartesianAxes._format_impl
 )  # noqa: E501
-CartesianAxes.format = shared._format_wrapper(CartesianAxes._format_impl)
-CartesianAxes.format = _capture_explicit_format_keys(CartesianAxes.format)
 CartesianAxes.format = docstring._obfuscate_kwargs(CartesianAxes.format)
