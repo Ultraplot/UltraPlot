@@ -98,50 +98,20 @@ def _draw_bars(cmaps: Incomplete, *, source: Incomplete, unknown: Incomplete='Us
     ...
 
 def show_cmaps(*args: Incomplete, **kwargs: Incomplete) -> Incomplete:
-    """Generate a table of the registered colormaps or the input colormaps
-categorized by source. Adapted from [this example](http://matplotlib.org/stable/gallery/color/colormap_reference.html).
+    """Generate a table of the registered colormaps or the input colormaps categorized by source.
 
 Parameters
 ----------
-*args : colormap-spec, optional
-    Colormap names or objects.
-N : int, default: [image.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.lut)
-    The number of levels in each colorbar.
-unknown : str, default: 'User'
-    Category name for colormaps that are unknown to ultraplot.
-    Set this to ``False`` to hide unknown colormaps.
-include : str or sequence of str, default: None
-    Category names to be shown in the table. Use this to limit
-    the table to a subset of categories. Valid categories are
-    ``'Grayscale'``, ``'Matplotlib sequential'``, ``'Matplotlib cyclic'``, ``'Seaborn sequential'``, ``'Seaborn diverging'``, ``'UltraPlot sequential'``, ``'UltraPlot diverging'``, ``'Other sequential'``, ``'Other diverging'``, ``'cmOcean sequential'``, ``'cmOcean diverging'``, ``'cmOcean cyclic'``, ``'Scientific colour maps sequential'``, ``'Scientific colour maps diverging'``, ``'Scientific colour maps cyclic'``, ``'ColorBrewer2.0 sequential'``, ``'ColorBrewer2.0 diverging'``, ``'SciVisColor blues'``, ``'SciVisColor greens'``, ``'SciVisColor yellows'``, ``'SciVisColor oranges'``, ``'SciVisColor browns'``, ``'SciVisColor reds'``, ``'SciVisColor purples'``, ``'MATLAB'``, ``'GNUplot'``, ``'GIST'``, ``'Other'``.
-ignore : str or sequence of str, default: 'MATLAB', 'GNUplot', 'GIST', 'Other'
-    Used only if `include` was not passed. Category names to be removed from the
-    table. Use of the default ignored colormaps is discouraged because they contain
-    non-uniform color transitions (see the [user guide](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_perceptual)).
-length : unit-spec, optional
-    The length of each colorbar.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-width : float or str, optional
-    The width of each colorbar.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-rasterized : bool, default: [colorbar.rasterized](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.rasterized)
-    Whether to rasterize the colorbar solids. This increases rendering
-    time and decreases file sizes for vector graphics.
+- `*args`: Colormap names or objects.
+- `N`: The number of levels in each colorbar.
+- `unknown`: Category name for colormaps that are unknown to ultraplot.
+- `include`: Category names to be shown in the table.
+- `ignore`: Used only if `include` was not passed.
+- `length`: The length of each colorbar.
+- `width`: The width of each colorbar.
+- `rasterized`: Whether to rasterize the colorbar solids.
 
-Returns
--------
-ultraplot.figure.Figure
-    The figure.
-ultraplot.gridspec.SubplotGrid
-    The subplot grid.
-
-See also
---------
-show_colorspaces
-show_channels
-show_cycles
-show_colors
-show_fonts"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.demos.show_cmaps.html)"""
     ...
 
 def show_cycles(*args: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -233,62 +203,21 @@ ultraplot.gridspec.SubplotGrid
     ...
 
 def show_fonts(*args: Incomplete, family: Incomplete=None, user: Incomplete=None, text: Incomplete=None, math: Incomplete=False, fallback: Incomplete=False, **kwargs: Incomplete) -> Incomplete:
-    """Generate a table of fonts. If a glyph for a particular font is unavailable,
-it is replaced with the "¤" dummy character.
+    """Generate a table of fonts.
 
 Parameters
 ----------
-*args : str or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html)
-    The font specs, font names, or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html)\\ s
-    to show. If no positional arguments are passed and the `family` argument is
-    not passed, then the fonts found in [user_folder](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.user_folder)
-    and [local_folders](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.local_folders) and the *available*
-    [font.sans-serif](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.sans-serif) fonts are shown.
-family : {'tex-gyre', 'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy'}, optional
-    The family from which *available* fonts are shown. Default is ``'sans-serif'``
-    if no arguments were provided. Otherwise the default is to not show family
-    fonts. The fonts belonging to each family are listed under [font.serif](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.serif),
-    [font.sans-serif](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.sans-serif), [font.monospace](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.monospace), [font.cursive](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.cursive), and
-    [font.fantasy](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.fantasy). The special family ``'tex-gyre'`` includes the
-    [TeX Gyre](http://www.gust.org.pl/projects/e-foundry/tex-gyre) fonts.
-user : bool, optional
-    Whether to include fonts in [user_folder](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.user_folder) and
-    [local_folders](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.local_folders) at the top of the table. Default
-    is ``True`` if called without any arguments and ``False`` otherwise.
-text : str, optional
-    The sample text shown for each font. If not passed then default math or
-    non-math sample text is used.
-math : bool, default: False
-    Whether the default sample text should show non-math Latin characters or
-    or math equations and Greek letters.
-fallback : bool, default: False
-    Whether to use the fallback font [mathtext.fallback](https://ultraplot.readthedocs.io/en/stable/search.html?q=mathtext.fallback) for unavailable
-    characters. If ``False`` the dummy glyph "¤" is shown for missing characters.
-**kwargs
-    Additional font properties passed to [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html).
-    Default size is ``12`` and default weight, style, and strength are ``'normal'``.
+- `*args`: The font specs, font names, or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html)\\ s to show.
+- `family`: The family from which *available* fonts are shown.
+- `user`: Whether to include fonts in [user_folder](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.user_folder) and [local_folders](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.local_folders) at the top of the table.
+- `text`: The sample text shown for each font.
+- `math`: Whether the default sample text should show non-math Latin characters or or math equations and Greek letters.
+- `fallback`: Whether to use the fallback font [mathtext.fallback](https://ultraplot.readthedocs.io/en/stable/search.html?q=mathtext.fallback) for unavailable characters.
+- `**kwargs`: Additional font properties passed to [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html).
+- `size`: The font size.
+- `weight`: The font weight.
+- `style`: The font style.
+- `stretch`: The font stretch.
 
-Other parameters
-----------------
-size : float, default: 12
-    The font size.
-weight : str, default: 'normal'
-    The font weight.
-style : str, default: 'normal'
-    The font style.
-stretch : str, default: 'normal'
-    The font stretch.
-
-Returns
--------
-ultraplot.figure.Figure
-    The figure.
-ultraplot.gridspec.SubplotGrid
-    The subplot grid.
-
-See also
---------
-show_cmaps
-show_cycles
-show_colors"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.demos.show_fonts.html)"""
     ...

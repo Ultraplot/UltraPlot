@@ -103,263 +103,45 @@ to axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/st
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
 ----------
-*args
-    Passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).
-aspect : {'auto', 'equal'} or float, optional
-    The data aspect ratio. See [set_aspect](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_aspect.html)
-    for details.
-xlabel, ylabel : str, optional
-    The x and y axis labels. Applied with [set_xlabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlabel.html)
-    and [set_ylabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylabel.html).
-xlabel_kw, ylabel_kw : dict-like, optional
-    Additional axis label settings applied with [set_xlabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlabel.html)
-    and [set_ylabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylabel.html). See also `labelpad`, `labelcolor`,
-    `labelsize`, and `labelweight` below.
-xlim, ylim : 2-tuple of floats or None, optional
-    The x and y axis data limits. Applied with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
-    and [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html).
-xmin, ymin : float, optional
-    The x and y minimum data limits. Useful if you do not want
-    to set the maximum limits.
-xmax, ymax : float, optional
-    The x and y maximum data limits. Useful if you do not want
-    to set the minimum limits.
-xreverse, yreverse : bool, optional
-    Whether to "reverse" the x and y axis direction. Makes the x and
-    y axes ascend left-to-right and top-to-bottom, respectively.
-xscale, yscale : scale-spec, optional
-    The x and y axis scales. Passed to the [Scale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.Scale.html) constructor.
-    For example, ``xscale='log'`` applies logarithmic scaling, and
-    ``xscale=('cutoff', 100, 2)`` applies a [CutoffScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.CutoffScale.html).
-xscale_kw, yscale_kw : dict-like, optional
-    The x and y axis scale settings. Passed to [Scale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.Scale.html).
-xmargin, ymargin, margin : float, default: [margin](https://ultraplot.readthedocs.io/en/stable/search.html?q=margin)
-    The default margin between plotted content and the x and y axis spines in
-    axes-relative coordinates. This is useful if you don't witch to explicitly set
-    axis limits. Use the keyword `margin` to set both at once.
-xbounds, ybounds : 2-tuple of float, optional
-    The x and y axis data bounds within which to draw the spines. For example,
-    ``xlim=(0, 4)`` combined with ``xbounds=(2, 4)`` will prevent the spines
-    from meeting at the origin. This also applies ``xspineloc='bottom'`` and
-    ``yspineloc='left'`` by default if both spines are currently visible.
-xtickrange, ytickrange : 2-tuple of float, optional
-    The x and y axis data ranges within which major tick marks are labelled.
-    For example, ``xlim=(-5, 5)`` combined with ``xtickrange=(-1, 1)`` and a
-    tick interval of 1 will only label the ticks marks at -1, 0, and 1. See
-    [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) for details.
-xwraprange, ywraprange : 2-tuple of float, optional
-    The x and y axis data ranges with which major tick mark values are wrapped. For
-    example, ``xwraprange=(0, 3)`` causes the values 0 through 9 to be formatted as
-    0, 1, 2, 0, 1, 2, 0, 1, 2, 0. See [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) for details. This
-    can be combined with `xtickrange` and `ytickrange` to make "stacked" line plots.
-xloc, yloc : optional
-    Shorthands for `xspineloc`, `yspineloc`.
-xspineloc, yspineloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right', 'both', 'neither', 'none', 'zero', 'center'} or 2-tuple, optional
-    The x and y spine locations. Applied with [set_position](https://matplotlib.org/stable/api/_as_gen/matplotlib.spines.Spine.set_position.html).
-    Propagates to `tickloc` unless specified otherwise.
-xtickloc, ytickloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right', 'both', 'neither', 'none'}, optional
-    Which x and y axis spines should have major and minor tick marks. Inherits from
-    `spineloc` by default and propagates to `ticklabelloc` unless specified otherwise.
-xticklabelloc, yticklabelloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right', 'both', 'neither', 'none'}, optional
-    Which x and y axis spines should have major tick labels. Inherits from `tickloc`
-    by default and propagates to `labelloc` and `offsetloc` unless specified otherwise.
-xlabelloc, ylabelloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right'}, optional
-    Which x and y axis spines should have axis labels. Inherits from
-    `ticklabelloc` by default (if `ticklabelloc` is a single side).
-xoffsetloc, yoffsetloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right'}, optional
-    Which x and y axis spines should have the axis offset indicator. Inherits from
-    `ticklabelloc` by default (if `ticklabelloc` is a single side).
-xtickdir, ytickdir, tickdir : {'out', 'in', 'inout'}, optional
-    Direction that major and minor tick marks point for the x and y axis.
-    Use the keyword `tickdir` to control both.
-xticklabeldir, yticklabeldir : {'in', 'out'}, optional
-    Whether to place x and y axis tick label text inside or outside the axes.
-    Propagates to `xtickdir` and `ytickdir` unless specified otherwise.
-xrotation, yrotation : float, default: 0
-    The rotation for x and y axis tick labels.
-    for normal axes, [formatter.timerotation](https://ultraplot.readthedocs.io/en/stable/search.html?q=formatter.timerotation) for time x axes.
-xgrid, ygrid, grid : bool, default: [grid](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid)
-    Whether to draw major gridlines on the x and y axis.
-    Use the keyword `grid` to toggle both.
-xgridminor, ygridminor, gridminor : bool, default: [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
-    Whether to draw minor gridlines for the x and y axis.
-    Use the keyword `gridminor` to toggle both.
-xtickminor, ytickminor, tickminor : bool, default: [tick.minor](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.minor)
-    Whether to draw minor ticks on the x and y axes.
-    Use the keyword `tickminor` to toggle both.
-xticks, yticks : optional
-    Aliases for `xlocator`, `ylocator`.
-xlocator, ylocator : locator-spec, optional
-    Used to determine the x and y axis tick mark positions. Passed
-    to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.  Can be float,
-    list of float, string, or [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance.
-    Use ``[]``, ``'null'``, or ``'none'`` for no ticks.
-xlocator_kw, ylocator_kw : dict-like, optional
-    Keyword arguments passed to the [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
-xminorticks, yminorticks : optional
-    Aliases for `xminorlocator`, `yminorlocator`.
-xminorlocator, yminorlocator : optional
-    As for `xlocator`, `ylocator`, but for the minor ticks.
-xminorlocator_kw, yminorlocator_kw
-    As for `xlocator_kw`, `ylocator_kw`, but for the minor locator.
-xticklabels, yticklabels : optional
-    Aliases for `xformatter`, `yformatter`.
-xformatter, yformatter : formatter-spec, optional
-    Used to determine the x and y axis tick label string format.
-    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
-    Can be string, list of strings, or [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) instance.
-    Use ``[]``, ``'null'``, or ``'none'`` for no labels.
-xformatter_kw, yformatter_kw : dict-like, optional
-    Keyword arguments passed to the [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
-xcolor, ycolor, color : color-spec, default: [meta.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=meta.color)
-    Color for the x and y axis spines, ticks, tick labels, and axis labels.
-    Use the keyword `color` to set both at once.
-xgridcolor, ygridcolor, gridcolor : color-spec, default: [grid.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.color)
-    Color for the x and y axis major and minor gridlines.
-    Use the keyword `gridcolor` to set both at once.
-xlinewidth, ylinewidth, linewidth : color-spec, default: [meta.width](https://ultraplot.readthedocs.io/en/stable/search.html?q=meta.width)
-    Line width for the x and y axis spines and major ticks. Propagates to `tickwidth`
-    unless specified otherwise. Use the keyword `linewidth` to set both at once.
-xtickcolor, ytickcolor, tickcolor : color-spec, default: [tick.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.color)
-    Color for the x and y axis ticks. Defaults are `xcolor`, `ycolor`, and `color`
-    if they were passed. Use the keyword `tickcolor` to set both at once.
-xticklen, yticklen, ticklen : unit-spec, default: [tick.len](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.len)
-    Major tick lengths for the x and y axis.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Use the keyword `ticklen` to set both at once.
-xticklenratio, yticklenratio, ticklenratio : float, default: [tick.lenratio](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.lenratio)
-    Relative scaling of `xticklen` and `yticklen` used to determine minor
-    tick lengths. Use the keyword `ticklenratio` to set both at once.
-xtickwidth, ytickwidth, tickwidth, : unit-spec, default: [tick.width](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.width)
-    Major tick widths for the x ans y axis. Default is `linewidth` if it was passed.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Use the keyword `tickwidth` to set both at once.
-xtickwidthratio, ytickwidthratio, tickwidthratio : float, default: [tick.widthratio](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.widthratio)
-    Relative scaling of `xtickwidth` and `ytickwidth` used to determine
-    minor tick widths. Use the keyword `tickwidthratio` to set both at once.
-xticklabelpad, yticklabelpad, ticklabelpad : unit-spec, default: [tick.labelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelpad)
-    The padding between the x and y axis ticks and tick labels. Use the
-    keyword `ticklabelpad` to set both at once.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-xticklabelcolor, yticklabelcolor, ticklabelcolor : color-spec, default: [tick.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelcolor)
-    Color for the x and y tick labels. Defaults are `xcolor`, `ycolor`, and `color`
-    if they were passed. Use the keyword `ticklabelcolor` to set both at once.
-xticklabelsize, yticklabelsize, ticklabelsize : unit-spec or str, default: [tick.labelsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelsize)
-    Font size for the x and y tick labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Use the keyword `ticklabelsize` to set both at once.
-xticklabelweight, yticklabelweight, ticklabelweight : str, default: [tick.labelweight](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelweight)
-    Font weight for the x and y tick labels.
-    Use the keyword `ticklabelweight` to set both at once.
-xlabelpad, ylabelpad : unit-spec, default: [label.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.pad)
-    The padding between the x and y axis bounding box and the x and y axis labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-xlabelcolor, ylabelcolor, labelcolor : color-spec, default: [label.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.color)
-    Color for the x and y axis labels. Defaults are `xcolor`, `ycolor`, and `color`
-    if they were passed. Use the keyword `labelcolor` to set both at once.
-xlabelsize, ylabelsize, labelsize : unit-spec or str, default: [label.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.size)
-    Font size for the x and y axis labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Use the keyword `labelsize` to set both at once.
-xlabelweight, ylabelweight, labelweight : str, default: [label.weight](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.weight)
-    Font weight for the x and y axis labels.
-    Use the keyword `labelweight` to set both at once.
-fixticks : bool, default: False
-    Whether to transform the tick locators to a [FixedLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FixedLocator.html).
-    If your axis ticks are doing weird things (for example, ticks are drawn
-    outside of the axis spine) you can try setting this to ``True``.
+- `*args`: Passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).
+- `aspect`: The data aspect ratio.
+- `xlabel, ylabel`: The x and y axis labels.
+- `xlabel_kw, ylabel_kw`: Additional axis label settings applied with [set_xlabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlabel.html) and [set_ylabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylabel.html).
+- `xlim, ylim`: The x and y axis data limits.
+- `xmin, ymin`: The x and y minimum data limits.
+- `xmax, ymax`: The x and y maximum data limits.
+- `xreverse, yreverse`: Whether to "reverse" the x and y axis direction.
+- `xscale, yscale`: The x and y axis scales.
+- `xscale_kw, yscale_kw`: The x and y axis scale settings.
+- `xmargin, ymargin, margin`: The default margin between plotted content and the x and y axis spines in axes-relative coordinates.
+- `xbounds, ybounds`: The x and y axis data bounds within which to draw the spines.
+- `xtickrange, ytickrange`: The x and y axis data ranges within which major tick marks are labelled.
+- `xwraprange, ywraprange`: The x and y axis data ranges with which major tick mark values are wrapped.
+- `xloc, yloc`: Shorthands for `xspineloc`, `yspineloc`.
+- `xspineloc, yspineloc`: The x and y spine locations.
+- `xtickloc, ytickloc`: Which x and y axis spines should have major and minor tick marks.
+- `xticklabelloc, yticklabelloc`: Which x and y axis spines should have major tick labels.
+- `xlabelloc, ylabelloc`: Which x and y axis spines should have axis labels.
+- `xoffsetloc, yoffsetloc`: Which x and y axis spines should have the axis offset indicator.
+- `xtickdir, ytickdir, tickdir`: Direction that major and minor tick marks point for the x and y axis.
+- `xticklabeldir, yticklabeldir`: Whether to place x and y axis tick label text inside or outside the axes.
+- `xrotation, yrotation`: The rotation for x and y axis tick labels.
+- `xgrid, ygrid, grid`: Whether to draw major gridlines on the x and y axis.
+- `xgridminor, ygridminor, gridminor`: Whether to draw minor gridlines for the x and y axis.
+- `xtickminor, ytickminor, tickminor`: Whether to draw minor ticks on the x and y axes.
+- `xticks, yticks`: Aliases for `xlocator`, `ylocator`.
+- `xlocator, ylocator`: Used to determine the x and y axis tick mark positions.
+- `xlocator_kw, ylocator_kw`: Keyword arguments passed to the [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
+- `xminorticks, yminorticks`: Aliases for `xminorlocator`, `yminorlocator`.
+- `xminorlocator, yminorlocator`: As for `xlocator`, `ylocator`, but for the minor ticks.
+- `xticklabels, yticklabels`: Aliases for `xformatter`, `yformatter`.
+- `xformatter, yformatter`: Used to determine the x and y axis tick label string format.
+- `xformatter_kw, yformatter_kw`: Keyword arguments passed to the [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
+- `xcolor, ycolor, color`: Color for the x and y axis spines, ticks, tick labels, and axis labels.
+- `xgridcolor, ygridcolor, gridcolor`: Color for the x and y axis major and minor gridlines.
+- _30 additional parameter groups are documented online._
 
-Other parameters
-----------------
-title : str or sequence, optional
-    The axes title. Can optionally be a sequence strings, in which case
-    the title will be selected from the sequence according to `~Axes.number`.
-abc : bool or str or sequence, default: [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc)
-    The "a-b-c" subplot label style. Must contain the character `a` or `A`,
-    for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
-    ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
-    matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
-    characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
-    Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
-abcloc, titleloc : str, default: [abc.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.loc), [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc)
-    Strings indicating the location for the a-b-c label and main title.
-    The following locations are valid:
-
-    .. _title_table:
-
-    ========================  ============================
-    Location                  Valid keys
-    ========================  ============================
-    center above axes         ``'center'``, ``'c'``
-    left above axes           ``'left'``, ``'l'``
-    right above axes          ``'right'``, ``'r'``
-    lower center inside axes  ``'lower center'``, ``'lc'``
-    upper center inside axes  ``'upper center'``, ``'uc'``
-    upper right inside axes   ``'upper right'``, ``'ur'``
-    upper left inside axes    ``'upper left'``, ``'ul'``
-    lower left inside axes    ``'lower left'``, ``'ll'``
-    lower right inside axes   ``'lower right'``, ``'lr'``
-    left of y axis            ``'outer left'``, ``'ol'``
-    right of y axis           ``'outer right'``, ``'or'``
-    ========================  ============================
-
-abcborder, titleborder : bool, default: [abc.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.border) and [title.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.border)
-    Whether to draw a white border around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists
-    plotted inside the axes.
-abcbbox, titlebbox : bool, default: [abc.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.bbox) and [title.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bbox)
-    Whether to draw a white bbox around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists plotted
-    inside the axes.
-abcpad : float or unit-spec, default: [abc.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.pad)
-    Horizontal offset to shift the a-b-c label position. Positive values move
-    the label right, negative values move it left. This is separate from
-    `abctitlepad`, which controls spacing between abc and title when co-located.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-abc_kw, title_kw : dict-like, optional
-    Additional settings used to update the a-b-c label and title
-    with ``text.update()``.
-titlepad : float, default: [title.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.pad)
-    The padding for the inner and outer titles and a-b-c labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-titleabove : bool, default: [title.above](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.above)
-    Whether to try to put outer titles and a-b-c labels above panels,
-    colorbars, or legends that are above the axes.
-abctitlepad : float, default: [abc.titlepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.titlepad)
-    The horizontal padding between a-b-c labels and titles in the same location.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
-    Shorthands for the below keywords.
-    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
-lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
-    Additional titles in specific positions (see `title` for details). This works as
-    an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
-    permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), -
-    Additional settings applied to the background patch, and their
-    shorthands. Their defaults values are the ``'axes'`` properties.
-rc_mode : int, optional
-    The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-rc_kw : dict-like, optional
-    An alternative to passing extra keyword arguments. See below.
-**kwargs
-    Remaining keyword arguments are passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).\\n    Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are
-    passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
-    If the setting name has "dots" you can simply omit the dots. For example,
-    ``abc='A.'`` modifies the [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc) setting, ``titleloc='left'`` modifies the
-    [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc) setting, ``gridminor=True`` modifies the [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
-    setting, and ``gridbelow=True`` modifies the [grid.below](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.below) setting. Many
-    of the keyword arguments documented above are internally applied by retrieving
-    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-
-See also
---------
-CartesianAxes.format
-ultraplot.axes.Axes
-ultraplot.axes.PlotAxes
-ultraplot.figure.Figure.subplot
-ultraplot.figure.Figure.add_subplot"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html)"""
         ...
 
     def _get_axis_style_state(self, axis: Incomplete) -> Incomplete:
@@ -525,303 +307,49 @@ positions will be adjusted at draw-time with figure._align_axislabels."""
         ...
 
     def format(self, *, aspect: Incomplete=None, xloc: Incomplete=None, yloc: Incomplete=None, xspineloc: Incomplete=None, yspineloc: Incomplete=None, xoffsetloc: Incomplete=None, yoffsetloc: Incomplete=None, xwraprange: Incomplete=None, ywraprange: Incomplete=None, xreverse: Incomplete=None, yreverse: Incomplete=None, xlim: Incomplete=None, ylim: Incomplete=None, xmin: Incomplete=None, ymin: Incomplete=None, xmax: Incomplete=None, ymax: Incomplete=None, xscale: Incomplete=None, yscale: Incomplete=None, xbounds: Incomplete=None, ybounds: Incomplete=None, xmargin: Incomplete=None, ymargin: Incomplete=None, xrotation: Incomplete=None, yrotation: Incomplete=None, xformatter: Incomplete=None, yformatter: Incomplete=None, xticklabels: Incomplete=None, yticklabels: Incomplete=None, xticks: Incomplete=None, yticks: Incomplete=None, xlocator: Incomplete=None, ylocator: Incomplete=None, xminorticks: Incomplete=None, yminorticks: Incomplete=None, xminorlocator: Incomplete=None, yminorlocator: Incomplete=None, xcolor: Incomplete=None, ycolor: Incomplete=None, xlinewidth: Incomplete=None, ylinewidth: Incomplete=None, xtickloc: Incomplete=None, ytickloc: Incomplete=None, fixticks: Incomplete=False, xtickdir: Incomplete=None, ytickdir: Incomplete=None, xtickminor: Incomplete=None, ytickminor: Incomplete=None, xtickrange: Incomplete=None, ytickrange: Incomplete=None, xtickcolor: Incomplete=None, ytickcolor: Incomplete=None, xticklen: Incomplete=None, yticklen: Incomplete=None, xticklenratio: Incomplete=None, yticklenratio: Incomplete=None, xtickwidth: Incomplete=None, ytickwidth: Incomplete=None, xtickwidthratio: Incomplete=None, ytickwidthratio: Incomplete=None, xticklabelloc: Incomplete=None, yticklabelloc: Incomplete=None, xticklabeldir: Incomplete=None, yticklabeldir: Incomplete=None, xticklabelpad: Incomplete=None, yticklabelpad: Incomplete=None, xticklabelcolor: Incomplete=None, yticklabelcolor: Incomplete=None, xticklabelsize: Incomplete=None, yticklabelsize: Incomplete=None, xticklabelweight: Incomplete=None, yticklabelweight: Incomplete=None, xlabel: Incomplete=None, ylabel: Incomplete=None, xlabelloc: Incomplete=None, ylabelloc: Incomplete=None, xlabelpad: Incomplete=None, ylabelpad: Incomplete=None, xlabelcolor: Incomplete=None, ylabelcolor: Incomplete=None, xlabelsize: Incomplete=None, ylabelsize: Incomplete=None, xlabelweight: Incomplete=None, ylabelweight: Incomplete=None, xgrid: Incomplete=None, ygrid: Incomplete=None, xgridminor: Incomplete=None, ygridminor: Incomplete=None, xgridcolor: Incomplete=None, ygridcolor: Incomplete=None, xlabel_kw: Incomplete=None, ylabel_kw: Incomplete=None, xscale_kw: Incomplete=None, yscale_kw: Incomplete=None, xlocator_kw: Incomplete=None, ylocator_kw: Incomplete=None, xformatter_kw: Incomplete=None, yformatter_kw: Incomplete=None, xminorlocator_kw: Incomplete=None, yminorlocator_kw: Incomplete=None, **kwargs: Incomplete) -> None:
-        """Modify axes limits, axis scales, axis labels, spine locations,
-tick locations, tick labels, and more.
+        """Modify axes limits, axis scales, axis labels, spine locations, tick locations, tick labels, and more.
 
 Parameters
 ----------
-aspect : {'auto', 'equal'} or float, optional
-    The data aspect ratio. See [set_aspect](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_aspect.html)
-    for details.
-xlabel, ylabel : str, optional
-    The x and y axis labels. Applied with [set_xlabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlabel.html)
-    and [set_ylabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylabel.html).
-xlabel_kw, ylabel_kw : dict-like, optional
-    Additional axis label settings applied with [set_xlabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlabel.html)
-    and [set_ylabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylabel.html). See also `labelpad`, `labelcolor`,
-    `labelsize`, and `labelweight` below.
-xlim, ylim : 2-tuple of floats or None, optional
-    The x and y axis data limits. Applied with [set_xlim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlim.html)
-    and [set_ylim](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylim.html).
-xmin, ymin : float, optional
-    The x and y minimum data limits. Useful if you do not want
-    to set the maximum limits.
-xmax, ymax : float, optional
-    The x and y maximum data limits. Useful if you do not want
-    to set the minimum limits.
-xreverse, yreverse : bool, optional
-    Whether to "reverse" the x and y axis direction. Makes the x and
-    y axes ascend left-to-right and top-to-bottom, respectively.
-xscale, yscale : scale-spec, optional
-    The x and y axis scales. Passed to the [Scale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.Scale.html) constructor.
-    For example, ``xscale='log'`` applies logarithmic scaling, and
-    ``xscale=('cutoff', 100, 2)`` applies a [CutoffScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.CutoffScale.html).
-xscale_kw, yscale_kw : dict-like, optional
-    The x and y axis scale settings. Passed to [Scale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.Scale.html).
-xmargin, ymargin, margin : float, default: [margin](https://ultraplot.readthedocs.io/en/stable/search.html?q=margin)
-    The default margin between plotted content and the x and y axis spines in
-    axes-relative coordinates. This is useful if you don't witch to explicitly set
-    axis limits. Use the keyword `margin` to set both at once.
-xbounds, ybounds : 2-tuple of float, optional
-    The x and y axis data bounds within which to draw the spines. For example,
-    ``xlim=(0, 4)`` combined with ``xbounds=(2, 4)`` will prevent the spines
-    from meeting at the origin. This also applies ``xspineloc='bottom'`` and
-    ``yspineloc='left'`` by default if both spines are currently visible.
-xtickrange, ytickrange : 2-tuple of float, optional
-    The x and y axis data ranges within which major tick marks are labelled.
-    For example, ``xlim=(-5, 5)`` combined with ``xtickrange=(-1, 1)`` and a
-    tick interval of 1 will only label the ticks marks at -1, 0, and 1. See
-    [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) for details.
-xwraprange, ywraprange : 2-tuple of float, optional
-    The x and y axis data ranges with which major tick mark values are wrapped. For
-    example, ``xwraprange=(0, 3)`` causes the values 0 through 9 to be formatted as
-    0, 1, 2, 0, 1, 2, 0, 1, 2, 0. See [AutoFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.AutoFormatter.html) for details. This
-    can be combined with `xtickrange` and `ytickrange` to make "stacked" line plots.
-xloc, yloc : optional
-    Shorthands for `xspineloc`, `yspineloc`.
-xspineloc, yspineloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right', 'both', 'neither', 'none', 'zero', 'center'} or 2-tuple, optional
-    The x and y spine locations. Applied with [set_position](https://matplotlib.org/stable/api/_as_gen/matplotlib.spines.Spine.set_position.html).
-    Propagates to `tickloc` unless specified otherwise.
-xtickloc, ytickloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right', 'both', 'neither', 'none'}, optional
-    Which x and y axis spines should have major and minor tick marks. Inherits from
-    `spineloc` by default and propagates to `ticklabelloc` unless specified otherwise.
-xticklabelloc, yticklabelloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right', 'both', 'neither', 'none'}, optional
-    Which x and y axis spines should have major tick labels. Inherits from `tickloc`
-    by default and propagates to `labelloc` and `offsetloc` unless specified otherwise.
-xlabelloc, ylabelloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right'}, optional
-    Which x and y axis spines should have axis labels. Inherits from
-    `ticklabelloc` by default (if `ticklabelloc` is a single side).
-xoffsetloc, yoffsetloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right'}, optional
-    Which x and y axis spines should have the axis offset indicator. Inherits from
-    `ticklabelloc` by default (if `ticklabelloc` is a single side).
-xtickdir, ytickdir, tickdir : {'out', 'in', 'inout'}, optional
-    Direction that major and minor tick marks point for the x and y axis.
-    Use the keyword `tickdir` to control both.
-xticklabeldir, yticklabeldir : {'in', 'out'}, optional
-    Whether to place x and y axis tick label text inside or outside the axes.
-    Propagates to `xtickdir` and `ytickdir` unless specified otherwise.
-xrotation, yrotation : float, default: 0
-    The rotation for x and y axis tick labels.
-    for normal axes, [formatter.timerotation](https://ultraplot.readthedocs.io/en/stable/search.html?q=formatter.timerotation) for time x axes.
-xgrid, ygrid, grid : bool, default: [grid](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid)
-    Whether to draw major gridlines on the x and y axis.
-    Use the keyword `grid` to toggle both.
-xgridminor, ygridminor, gridminor : bool, default: [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
-    Whether to draw minor gridlines for the x and y axis.
-    Use the keyword `gridminor` to toggle both.
-xtickminor, ytickminor, tickminor : bool, default: [tick.minor](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.minor)
-    Whether to draw minor ticks on the x and y axes.
-    Use the keyword `tickminor` to toggle both.
-xticks, yticks : optional
-    Aliases for `xlocator`, `ylocator`.
-xlocator, ylocator : locator-spec, optional
-    Used to determine the x and y axis tick mark positions. Passed
-    to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor.  Can be float,
-    list of float, string, or [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance.
-    Use ``[]``, ``'null'``, or ``'none'`` for no ticks.
-xlocator_kw, ylocator_kw : dict-like, optional
-    Keyword arguments passed to the [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
-xminorticks, yminorticks : optional
-    Aliases for `xminorlocator`, `yminorlocator`.
-xminorlocator, yminorlocator : optional
-    As for `xlocator`, `ylocator`, but for the minor ticks.
-xminorlocator_kw, yminorlocator_kw
-    As for `xlocator_kw`, `ylocator_kw`, but for the minor locator.
-xticklabels, yticklabels : optional
-    Aliases for `xformatter`, `yformatter`.
-xformatter, yformatter : formatter-spec, optional
-    Used to determine the x and y axis tick label string format.
-    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
-    Can be string, list of strings, or [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) instance.
-    Use ``[]``, ``'null'``, or ``'none'`` for no labels.
-xformatter_kw, yformatter_kw : dict-like, optional
-    Keyword arguments passed to the [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
-xcolor, ycolor, color : color-spec, default: [meta.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=meta.color)
-    Color for the x and y axis spines, ticks, tick labels, and axis labels.
-    Use the keyword `color` to set both at once.
-xgridcolor, ygridcolor, gridcolor : color-spec, default: [grid.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.color)
-    Color for the x and y axis major and minor gridlines.
-    Use the keyword `gridcolor` to set both at once.
-xlinewidth, ylinewidth, linewidth : color-spec, default: [meta.width](https://ultraplot.readthedocs.io/en/stable/search.html?q=meta.width)
-    Line width for the x and y axis spines and major ticks. Propagates to `tickwidth`
-    unless specified otherwise. Use the keyword `linewidth` to set both at once.
-xtickcolor, ytickcolor, tickcolor : color-spec, default: [tick.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.color)
-    Color for the x and y axis ticks. Defaults are `xcolor`, `ycolor`, and `color`
-    if they were passed. Use the keyword `tickcolor` to set both at once.
-xticklen, yticklen, ticklen : unit-spec, default: [tick.len](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.len)
-    Major tick lengths for the x and y axis.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Use the keyword `ticklen` to set both at once.
-xticklenratio, yticklenratio, ticklenratio : float, default: [tick.lenratio](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.lenratio)
-    Relative scaling of `xticklen` and `yticklen` used to determine minor
-    tick lengths. Use the keyword `ticklenratio` to set both at once.
-xtickwidth, ytickwidth, tickwidth, : unit-spec, default: [tick.width](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.width)
-    Major tick widths for the x ans y axis. Default is `linewidth` if it was passed.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Use the keyword `tickwidth` to set both at once.
-xtickwidthratio, ytickwidthratio, tickwidthratio : float, default: [tick.widthratio](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.widthratio)
-    Relative scaling of `xtickwidth` and `ytickwidth` used to determine
-    minor tick widths. Use the keyword `tickwidthratio` to set both at once.
-xticklabelpad, yticklabelpad, ticklabelpad : unit-spec, default: [tick.labelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelpad)
-    The padding between the x and y axis ticks and tick labels. Use the
-    keyword `ticklabelpad` to set both at once.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-xticklabelcolor, yticklabelcolor, ticklabelcolor : color-spec, default: [tick.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelcolor)
-    Color for the x and y tick labels. Defaults are `xcolor`, `ycolor`, and `color`
-    if they were passed. Use the keyword `ticklabelcolor` to set both at once.
-xticklabelsize, yticklabelsize, ticklabelsize : unit-spec or str, default: [tick.labelsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelsize)
-    Font size for the x and y tick labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Use the keyword `ticklabelsize` to set both at once.
-xticklabelweight, yticklabelweight, ticklabelweight : str, default: [tick.labelweight](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelweight)
-    Font weight for the x and y tick labels.
-    Use the keyword `ticklabelweight` to set both at once.
-xlabelpad, ylabelpad : unit-spec, default: [label.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.pad)
-    The padding between the x and y axis bounding box and the x and y axis labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-xlabelcolor, ylabelcolor, labelcolor : color-spec, default: [label.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.color)
-    Color for the x and y axis labels. Defaults are `xcolor`, `ycolor`, and `color`
-    if they were passed. Use the keyword `labelcolor` to set both at once.
-xlabelsize, ylabelsize, labelsize : unit-spec or str, default: [label.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.size)
-    Font size for the x and y axis labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Use the keyword `labelsize` to set both at once.
-xlabelweight, ylabelweight, labelweight : str, default: [label.weight](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.weight)
-    Font weight for the x and y axis labels.
-    Use the keyword `labelweight` to set both at once.
-fixticks : bool, default: False
-    Whether to transform the tick locators to a [FixedLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.FixedLocator.html).
-    If your axis ticks are doing weird things (for example, ticks are drawn
-    outside of the axis spine) you can try setting this to ``True``.
+- `aspect`: The data aspect ratio.
+- `xlabel, ylabel`: The x and y axis labels.
+- `xlabel_kw, ylabel_kw`: Additional axis label settings applied with [set_xlabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_xlabel.html) and [set_ylabel](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_ylabel.html).
+- `xlim, ylim`: The x and y axis data limits.
+- `xmin, ymin`: The x and y minimum data limits.
+- `xmax, ymax`: The x and y maximum data limits.
+- `xreverse, yreverse`: Whether to "reverse" the x and y axis direction.
+- `xscale, yscale`: The x and y axis scales.
+- `xscale_kw, yscale_kw`: The x and y axis scale settings.
+- `xmargin, ymargin, margin`: The default margin between plotted content and the x and y axis spines in axes-relative coordinates.
+- `xbounds, ybounds`: The x and y axis data bounds within which to draw the spines.
+- `xtickrange, ytickrange`: The x and y axis data ranges within which major tick marks are labelled.
+- `xwraprange, ywraprange`: The x and y axis data ranges with which major tick mark values are wrapped.
+- `xloc, yloc`: Shorthands for `xspineloc`, `yspineloc`.
+- `xspineloc, yspineloc`: The x and y spine locations.
+- `xtickloc, ytickloc`: Which x and y axis spines should have major and minor tick marks.
+- `xticklabelloc, yticklabelloc`: Which x and y axis spines should have major tick labels.
+- `xlabelloc, ylabelloc`: Which x and y axis spines should have axis labels.
+- `xoffsetloc, yoffsetloc`: Which x and y axis spines should have the axis offset indicator.
+- `xtickdir, ytickdir, tickdir`: Direction that major and minor tick marks point for the x and y axis.
+- `xticklabeldir, yticklabeldir`: Whether to place x and y axis tick label text inside or outside the axes.
+- `xrotation, yrotation`: The rotation for x and y axis tick labels.
+- `xgrid, ygrid, grid`: Whether to draw major gridlines on the x and y axis.
+- `xgridminor, ygridminor, gridminor`: Whether to draw minor gridlines for the x and y axis.
+- `xtickminor, ytickminor, tickminor`: Whether to draw minor ticks on the x and y axes.
+- `xticks, yticks`: Aliases for `xlocator`, `ylocator`.
+- `xlocator, ylocator`: Used to determine the x and y axis tick mark positions.
+- `xlocator_kw, ylocator_kw`: Keyword arguments passed to the [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
+- `xminorticks, yminorticks`: Aliases for `xminorlocator`, `yminorlocator`.
+- `xminorlocator, yminorlocator`: As for `xlocator`, `ylocator`, but for the minor ticks.
+- `xticklabels, yticklabels`: Aliases for `xformatter`, `yformatter`.
+- `xformatter, yformatter`: Used to determine the x and y axis tick label string format.
+- `xformatter_kw, yformatter_kw`: Keyword arguments passed to the [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
+- `xcolor, ycolor, color`: Color for the x and y axis spines, ticks, tick labels, and axis labels.
+- `xgridcolor, ygridcolor, gridcolor`: Color for the x and y axis major and minor gridlines.
+- `xlinewidth, ylinewidth, linewidth`: Line width for the x and y axis spines and major ticks.
+- _38 additional parameter groups are documented online._
 
-Other parameters
-----------------
-title : str or sequence, optional
-    The axes title. Can optionally be a sequence strings, in which case
-    the title will be selected from the sequence according to `~Axes.number`.
-abc : bool or str or sequence, default: [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc)
-    The "a-b-c" subplot label style. Must contain the character `a` or `A`,
-    for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
-    ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
-    matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
-    characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
-    Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
-abcloc, titleloc : str, default: [abc.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.loc), [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc)
-    Strings indicating the location for the a-b-c label and main title.
-    The following locations are valid:
-
-    .. _title_table:
-
-    ========================  ============================
-    Location                  Valid keys
-    ========================  ============================
-    center above axes         ``'center'``, ``'c'``
-    left above axes           ``'left'``, ``'l'``
-    right above axes          ``'right'``, ``'r'``
-    lower center inside axes  ``'lower center'``, ``'lc'``
-    upper center inside axes  ``'upper center'``, ``'uc'``
-    upper right inside axes   ``'upper right'``, ``'ur'``
-    upper left inside axes    ``'upper left'``, ``'ul'``
-    lower left inside axes    ``'lower left'``, ``'ll'``
-    lower right inside axes   ``'lower right'``, ``'lr'``
-    left of y axis            ``'outer left'``, ``'ol'``
-    right of y axis           ``'outer right'``, ``'or'``
-    ========================  ============================
-
-abcborder, titleborder : bool, default: [abc.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.border) and [title.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.border)
-    Whether to draw a white border around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists
-    plotted inside the axes.
-abcbbox, titlebbox : bool, default: [abc.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.bbox) and [title.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bbox)
-    Whether to draw a white bbox around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists plotted
-    inside the axes.
-abcpad : float or unit-spec, default: [abc.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.pad)
-    Horizontal offset to shift the a-b-c label position. Positive values move
-    the label right, negative values move it left. This is separate from
-    `abctitlepad`, which controls spacing between abc and title when co-located.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-abc_kw, title_kw : dict-like, optional
-    Additional settings used to update the a-b-c label and title
-    with ``text.update()``.
-titlepad : float, default: [title.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.pad)
-    The padding for the inner and outer titles and a-b-c labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-titleabove : bool, default: [title.above](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.above)
-    Whether to try to put outer titles and a-b-c labels above panels,
-    colorbars, or legends that are above the axes.
-abctitlepad : float, default: [abc.titlepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.titlepad)
-    The horizontal padding between a-b-c labels and titles in the same location.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
-    Shorthands for the below keywords.
-    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
-lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
-    Additional titles in specific positions (see `title` for details). This works as
-    an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
-    permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), -
-    Additional settings applied to the background patch, and their
-    shorthands. Their defaults values are the ``'axes'`` properties.
-rowlabels, collabels, llabels, tlabels, rlabels, blabels
-    Aliases for `leftlabels` and `toplabels`, and for `leftlabels`,
-    `toplabels`, `rightlabels`, and `bottomlabels`, respectively.
-leftlabels, toplabels, rightlabels, bottomlabels : sequence of str, optional
-    Labels for the subplots lying along the left, top, right, and
-    bottom edges of the figure. The length of each list must match
-    the number of subplots along the corresponding edge.
-leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, default
-: [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad)
-    The padding between the labels and the axes content.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad : float or unit-spec, default
-: [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad)
-    The padding between side labels and a shared spanning axis label on the
-    same side. The spanning label is placed outside the side labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw : dict-like, optional
-    Additional settings used to update the labels with ``text.update()``.
-figtitle
-    Alias for `suptitle`.
-suptitle : str, optional
-    The figure "super" title, centered between the left edge of the leftmost
-    subplot and the right edge of the rightmost subplot.
-suptitlepad : float, default: [suptitle.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=suptitle.pad)
-    The padding between the super title and the axes content.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-suptitle_kw : optional
-    Additional settings used to update the super title with ``text.update()``.
-includepanels : bool, default: False
-    Whether to include panels when aligning figure "super titles" along the top
-    of the subplot grid and when aligning the `spanx` *x* axis labels and
-    `spany` *y* axis labels along the sides of the subplot grid.
-rc_mode : int, optional
-    The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-rc_kw : dict-like, optional
-    An alternative to passing extra keyword arguments. See below.
-**kwargs
-    Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are
-    passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
-    If the setting name has "dots" you can simply omit the dots. For example,
-    ``abc='A.'`` modifies the [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc) setting, ``titleloc='left'`` modifies the
-    [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc) setting, ``gridminor=True`` modifies the [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
-    setting, and ``gridbelow=True`` modifies the [grid.below](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.below) setting. Many
-    of the keyword arguments documented above are internally applied by retrieving
-    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-
-See also
---------
-ultraplot.axes.Axes.format
-ultraplot.figure.Figure.format
-ultraplot.config.Configurator.context
-
-Note
-----
-If you plot something with a [datetime64](https://docs.scipy.org/doc/numpy/reference/arrays.datetime.html),
-[pandas.Timestamp](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Timestamp.html), [pandas.DatetimeIndex](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DatetimeIndex.html), `datetime.date`, `datetime.time`,
-or `datetime.datetime` array as the x or y axis coordinate, the axis ticks
-and tick labels will be automatically formatted as dates."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format)"""
         ...
 
     def altx(self, **kwargs: Incomplete) -> CartesianAxes:
@@ -899,89 +427,25 @@ This enforces the following default settings:
         ...
 
     def dualx(self, funcscale: Incomplete, **kwargs: Incomplete) -> CartesianAxes:
-        """Add an axes locked to the same location whose x axis denotes
-equivalent coordinates in alternate units.
-This is an alternative to [matplotlib.axes.Axes.secondary_xaxis](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.secondary_xaxis.html) with
-additional convenience features.
+        """Add an axes locked to the same location whose x axis denotes equivalent coordinates in alternate units.
 
 Parameters
 ----------
-funcscale : callable, 2-tuple of callables, or scale-spec
-    The scale used to transform units from the parent axis to the secondary
-    axis. This can be a [FuncScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.FuncScale.html) itself or a function,
-    (function, function) tuple, or an axis scale specification interpreted
-    by the [Scale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Scale.html) constructor function, any of which
-    will be used to build a [FuncScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.FuncScale.html) and applied
-    to the dual axis (see [FuncScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.FuncScale.html) for details).
-**kwargs
-    Passed to [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html). Supports all valid
-    [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format) keywords. You can optionally
-    omit the x from keywords beginning with ``x`` -- for example
-    ``ax.altx(lim=(0, 10))`` is equivalent to ``ax.altx(xlim=(0, 10))``.
-    You can also change the default side for the axis spine, axis tick marks,
-    axis tick labels, and/or axis labels by passing ``loc`` keywords. For example,
-    ``ax.altx(loc='bottom')`` changes the default side from top to bottom.
+- `funcscale`: The scale used to transform units from the parent axis to the secondary axis.
+- `**kwargs`: Passed to [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html).
 
-Returns
--------
-ultraplot.axes.CartesianAxes
-    The resulting axes.
-
-Note
-----
-This enforces the following default settings:
-
-* Places the old x axis on the bottom and the new x
-  axis on the top.
-* Makes the old top spine invisible and the new bottom, left,
-  and right spines invisible.
-* Adjusts the x axis tick, tick label, and axis label positions
-  according to the visible spine positions.
-* Syncs the old and new y axis limits and scales, and makes the
-  new y axis labels invisible."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.dualx)"""
         ...
 
     def dualy(self, funcscale: Incomplete, **kwargs: Incomplete) -> CartesianAxes:
-        """Add an axes locked to the same location whose y axis denotes
-equivalent coordinates in alternate units.
-This is an alternative to [matplotlib.axes.Axes.secondary_yaxis](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.secondary_yaxis.html) with
-additional convenience features.
+        """Add an axes locked to the same location whose y axis denotes equivalent coordinates in alternate units.
 
 Parameters
 ----------
-funcscale : callable, 2-tuple of callables, or scale-spec
-    The scale used to transform units from the parent axis to the secondary
-    axis. This can be a [FuncScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.FuncScale.html) itself or a function,
-    (function, function) tuple, or an axis scale specification interpreted
-    by the [Scale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Scale.html) constructor function, any of which
-    will be used to build a [FuncScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.FuncScale.html) and applied
-    to the dual axis (see [FuncScale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.FuncScale.html) for details).
-**kwargs
-    Passed to [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html). Supports all valid
-    [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format) keywords. You can optionally
-    omit the y from keywords beginning with ``y`` -- for example
-    ``ax.alty(lim=(0, 10))`` is equivalent to ``ax.alty(ylim=(0, 10))``.
-    You can also change the default side for the axis spine, axis tick marks,
-    axis tick labels, and/or axis labels by passing ``loc`` keywords. For example,
-    ``ax.alty(loc='left')`` changes the default side from right to left.
+- `funcscale`: The scale used to transform units from the parent axis to the secondary axis.
+- `**kwargs`: Passed to [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html).
 
-Returns
--------
-ultraplot.axes.CartesianAxes
-    The resulting axes.
-
-Note
-----
-This enforces the following default settings:
-
-* Places the old y axis on the left and the new y
-  axis on the right.
-* Makes the old right spine invisible and the new left, bottom,
-  and top spines invisible.
-* Adjusts the y axis tick, tick label, and axis label positions
-  according to the visible spine positions.
-* Syncs the old and new x axis limits and scales, and makes the
-  new x axis labels invisible."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.dualy)"""
         ...
 
     def twinx(self, **kwargs: Incomplete) -> CartesianAxes:

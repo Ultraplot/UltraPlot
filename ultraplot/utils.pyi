@@ -510,64 +510,19 @@ def _fontsize_to_pt(size: Incomplete) -> Incomplete:
     ...
 
 def units(value: Incomplete, numeric: Incomplete=None, dest: Incomplete=None, *, fontsize: Incomplete=None, figure: Incomplete=None, axes: Incomplete=None, width: Incomplete=None) -> Incomplete:
-    """Convert values between arbitrary physical units. This is used internally all
-over ultraplot, permitting flexible units for various keyword arguments.
+    """Convert values between arbitrary physical units.
 
 Parameters
 ----------
-value : float or str or sequence
-    A size specifier or sequence of size specifiers. If numeric, units are
-    converted from `numeric` to `dest`. If string, units are converted to
-    `dest` according to the string specifier. The string should look like
-    ``'123.456unit'``, where the number is the magnitude and ``'unit'``
-    matches a key in the below table.
+- `value`: A size specifier or sequence of size specifiers.
+- `numeric`: The units associated with numeric input.
+- `dest`: The destination units.
+- `fontsize`: The font size in points used for scaling.
+- `axes`: The axes to use for scaling units that look like ``'0.1ax'``.
+- `figure`: The figure to use for scaling units that look like ``'0.1fig'``.
+- `width`: Whether to use the width or height for the axes and figure relative coordinates.
 
-    .. _units_table:
-
-    =========  =====================================================
-    Key        Description
-    =========  =====================================================
-    ``'m'``    Meters
-    ``'dm'``   Decimeters
-    ``'cm'``   Centimeters
-    ``'mm'``   Millimeters
-    ``'yd'``   Yards
-    ``'ft'``   Feet
-    ``'in'``   Inches
-    ``'pc'``   `Pica <pc_>`_ (1/6 inches)
-    ``'pt'``   `Points <pt_>`_ (1/72 inches)
-    ``'px'``   Pixels on screen, using dpi of [figure.dpi](https://ultraplot.readthedocs.io/en/stable/search.html?q=figure.dpi)
-    ``'pp'``   Pixels once printed, using dpi of [savefig.dpi](https://ultraplot.readthedocs.io/en/stable/search.html?q=savefig.dpi)
-    ``'em'``   `Em square <em_>`_ for [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size)
-    ``'en'``   `En square <en_>`_ for [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size)
-    ``'Em'``   `Em square <em_>`_ for [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize)
-    ``'En'``   `En square <en_>`_ for [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize)
-    ``'ax'``   Axes-relative units (not always available)
-    ``'fig'``  Figure-relative units (not always available)
-    ``'ly'``   Light years ;)
-    =========  =====================================================
-
-    .. _pt: https://en.wikipedia.org/wiki/Point_(typography)
-    .. _pc: https://en.wikipedia.org/wiki/Pica_(typography)
-    .. _em: https://en.wikipedia.org/wiki/Em_(typography)
-    .. _en: https://en.wikipedia.org/wiki/En_(typography)
-
-numeric : str, default: 'in'
-    The units associated with numeric input.
-dest : str, default: `numeric`
-    The destination units.
-fontsize : str or float, default: [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size) or [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize)
-    The font size in points used for scaling. Default is
-    [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size) for ``em`` and ``en`` units and
-    [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize) for ``Em`` and ``En`` units.
-axes : [Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html), optional
-    The axes to use for scaling units that look like ``'0.1ax'``.
-figure : [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html), optional
-    The figure to use for scaling units that look like ``'0.1fig'``.
-    If not provided we try to get the figure from ``axes.figure``.
-width : bool, optional
-    Whether to use the width or height for the axes and figure
-    relative coordinates."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html)"""
     ...
 
 def _get_subplot_layout(gs: 'GridSpec', all_axes: Incomplete, same_type: Incomplete=True) -> tuple[np.ndarray[int, int], np.ndarray[int, int], dict[type, int]]:

@@ -191,103 +191,34 @@ call would produce a differently encoded file than before."""
 
 Parameters
 ----------
-filename : path-like
-    The output file, e.g. ``'movie.mp4'`` or ``'movie.gif'``.
-writer : str or [AbstractMovieWriter](https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.AbstractMovieWriter.html), optional
-    Same meaning as in [matplotlib.animation.Animation.save](https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.Animation.save.html). Passing a
-    writer *instance*, or a writer the fast path does not implement,
-    transparently falls back to Matplotlib's implementation.
-fps : int, optional
-    Frames per second. Defaults to the animation interval.
-dpi : float, optional
-    Resolution of the saved frames. Unlike Matplotlib, which uses
-    [savefig.dpi](https://ultraplot.readthedocs.io/en/stable/search.html?q=savefig.dpi), this defaults to the figure's own dpi. UltraPlot
-    sets ``savefig.dpi`` to 1000 for publication-quality stills, which
-    for a movie means hundredfold larger frames and a hundredfold
-    slower encode.
-codec, bitrate, extra_args, metadata : optional
-    Passed to the encoder, as in Matplotlib.
-extra_anim : list, optional
-    Additional animations to composite. Forces the Matplotlib path.
-savefig_kwargs : dict, optional
-    Extra [savefig](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.savefig.html) arguments. Any value here
-    forces the Matplotlib path, since the fast path skips ``savefig``.
-progress_callback : callable, optional
-    Called as ``progress_callback(current_frame, total_frames)``.
-fast : bool, optional
-    Whether to use the fast renderer. The default, ``None``, uses it
-    whenever it can reproduce the requested output exactly. Passing
-    ``True`` raises if the fast path is unavailable.
-blit : bool, optional
-    Whether to blit while saving. Defaults to the animation's own
-    ``blit`` setting. Blitting only redraws the artists returned by the
-    update function, so anything else changed per frame (titles, ticks,
-    axes limits) will not appear. Pass ``False`` to redraw everything.
-
-Other Parameters
-----------------
-See [matplotlib.animation.Animation.save](https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.Animation.save.html).
-
-See also
---------
-matplotlib.animation.Animation.save"""
+- `filename`: The output file, e.g.
+- `writer`: Same meaning as in [matplotlib.animation.Animation.save](https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.Animation.save.html).
+- `fps`: Frames per second.
+- `dpi`: Resolution of the saved frames.
+- `codec, bitrate, extra_args, metadata`: Passed to the encoder, as in Matplotlib.
+- `extra_anim`: Additional animations to composite.
+- `savefig_kwargs`: Extra [savefig](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.savefig.html) arguments.
+- `progress_callback`: Called as ``progress_callback(current_frame, total_frames)``.
+- `fast`: Whether to use the fast renderer.
+- `blit`: Whether to blit while saving."""
         ...
 
 class FuncAnimation(_FastSaveMixin, manimation.FuncAnimation):
     """A faster drop-in replacement for [matplotlib.animation.FuncAnimation](https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.FuncAnimation.html).
 
-The signature matches Matplotlib's, with two differences: `blit` defaults
-to ``True`` instead of ``False``, and `freeze_layout` is added. Saving
-renders frames directly into the Agg buffer instead of calling
-[savefig](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.savefig.html) once per frame, which removes the
-per-frame PNG round-trip and the repeated UltraPlot tight-layout pass.
-
 Parameters
 ----------
-fig : [Figure](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html)
-    The figure to animate.
-func : callable
-    The update function, called as ``func(frame, *fargs)``. It should
-    return an iterable of the artists it modified. This is required when
-    `blit` is ``True``, and lets the fast path skip untouched artists.
-frames : int, iterable, generator, or None, optional
-    Source of frame data, as in Matplotlib.
-init_func : callable, optional
-    Function drawing the clear frame. Should return the animated artists.
-fargs : tuple, optional
-    Extra positional arguments for `func` and `init_func`.
-save_count : int, optional
-    Number of frames to cache from a generator.
-blit : bool, default: True
-    Whether to redraw only the artists returned by `func`. This is the main
-    source of the speedup, but it means changes to artists that are *not*
-    returned, such as titles or tick labels, will not show up. Pass
-    ``False`` to redraw the whole figure each frame, which is still faster
-    than Matplotlib because the layout solver is frozen.
-cache_frame_data : bool, default: True
-    Whether to cache frame data, as in Matplotlib.
-**kwargs
-    Passed to [matplotlib.animation.TimedAnimation](https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.TimedAnimation.html), e.g. `interval`,
-    `repeat`, and `repeat_delay`.
+- `fig`: The figure to animate.
+- `func`: The update function, called as ``func(frame, *fargs)``.
+- `frames`: Source of frame data, as in Matplotlib.
+- `init_func`: Function drawing the clear frame.
+- `fargs`: Extra positional arguments for `func` and `init_func`.
+- `save_count`: Number of frames to cache from a generator.
+- `blit`: Whether to redraw only the artists returned by `func`.
+- `cache_frame_data`: Whether to cache frame data, as in Matplotlib.
+- `**kwargs`: Passed to [matplotlib.animation.TimedAnimation](https://matplotlib.org/stable/api/_as_gen/matplotlib.animation.TimedAnimation.html), e.g.
 
-Examples
---------
->>> import ultraplot as uplt
->>> import numpy as np
->>> fig, ax = uplt.subplots()
->>> x = np.linspace(0, 2 * np.pi, 200)
->>> (line,) = ax.plot(x, np.sin(x))
->>> def update(frame):
-...     line.set_ydata(np.sin(x + frame / 10))
-...     return (line,)
-...
->>> ani = uplt.FuncAnimation(fig, update, frames=100)
->>> ani.save('waves.mp4')
-
-See also
---------
-matplotlib.animation.FuncAnimation
-ultraplot.animation.ArtistAnimation"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.animation.FuncAnimation.html)"""
 
     def __init__(self, fig: Incomplete, func: Incomplete, frames: Incomplete=None, init_func: Incomplete=None, fargs: Incomplete=None, save_count: Incomplete=None, *, blit: Incomplete=True, **kwargs: Incomplete) -> None:
         """Initialize self.  See help(type(self)) for accurate signature."""

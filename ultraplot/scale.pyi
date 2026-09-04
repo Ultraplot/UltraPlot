@@ -145,48 +145,13 @@ class FuncScale(_Scale, mscale.ScaleBase):
     def __init__(self, transform: Incomplete=None, invert: Incomplete=False, parent_scale: Incomplete=None, **kwargs: Incomplete) -> None:
         """Parameters
 ----------
-transform : callable, 2-tuple of callable, or scale-spec
-    The transform used to translate units from the parent axis to
-    the secondary axis. Input can be as follows:
+- `transform`: The transform used to translate units from the parent axis to the secondary axis.
+- `invert`: If ``True``, the forward and inverse functions are *swapped*.
+- `parent_scale`: The axis scale of the "parent" axis.
+- `major_locator, minor_locator`: The default major and minor locator.
+- `major_formatter, minor_formatter`: The default major and minor formatter.
 
-    * A single [linear](https://en.wikipedia.org/wiki/Linear_function) or
-      [involutory](https://en.wikipedia.org/wiki/Involution_(mathematics))
-      function that accepts a number and returns some transformation of
-      that number. For example, to convert Kelvin to Celsius, use
-      ``ax.dualx(lambda x: x - 273.15)``. To convert kilometers to
-      meters, use ``ax.dualx(lambda x: x * 1e3)``.
-    * A 2-tuple of arbitrary functions. This should only be used if your
-      functions are non-linear and non-involutory. The second function must
-      be the inverse of the first. For example, to apply the square, use
-      ``ax.dualx((lambda x: x ** 2, lambda x: x ** 0.5))``.
-    * A scale specification passed to the [Scale](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Scale.html)
-      constructor function. The transform and default locators and formatters
-      are borrowed from the resulting [ScaleBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.ScaleBase.html) instance.
-      For example, to apply the inverse, use ``ax.dualx('inverse')``.
-      To apply the base-10 exponential, use ``ax.dualx(('exp', 10))``.
-
-invert : bool, optional
-    If ``True``, the forward and inverse functions are *swapped*.
-    Used when drawing dual axes.
-parent_scale : [ScaleBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.scale.ScaleBase.html), default: `LinearScale`
-    The axis scale of the "parent" axis. Its forward transform
-    is applied to the `FuncTransform`.
-major_locator, minor_locator : locator-spec, optional
-    The default major and minor locator. Passed to the
-    [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor function. By default, these are
-    the same as the default locators on the input transform. If the input
-    transform was not an axis scale, these are borrowed from `parent_scale`.
-major_formatter, minor_formatter : formatter-spec, optional
-    The default major and minor formatter. Passed to the
-    [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor function. By default, these are
-    the same as the default formatters on the input transform. If the input
-    transform was not an axis scale, these are borrowed from `parent_scale`.
-
-See also
---------
-ultraplot.constructor.Scale
-ultraplot.axes.CartesianAxes.dualx
-ultraplot.axes.CartesianAxes.dualy"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.scale.FuncScale.html)"""
         ...
 
 class FuncTransform(mtransforms.Transform):

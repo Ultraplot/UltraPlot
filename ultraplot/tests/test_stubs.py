@@ -138,7 +138,7 @@ def test_root_stub_exposes_lazy_public_imports():
     assert not source_names - stub_names
 
 
-def test_generated_stubs_include_runtime_docstrings():
+def test_generated_stubs_include_compact_runtime_docstrings():
     plot_stub = PACKAGE / "axes" / "plot.pyi"
     plot_tree = ast.parse(plot_stub.read_text(encoding="utf-8"))
     plot_doc = ""
@@ -146,17 +146,12 @@ def test_generated_stubs_include_runtime_docstrings():
         if isinstance(node, ast.FunctionDef) and node.name == "plot":
             plot_doc = ast.get_docstring(node) or ""
             break
-    assert "Matplotlib documentation" in plot_doc
     assert "Plot standard lines" in plot_doc
+    assert "Parameters" in plot_doc
+    assert "Full API documentation" in plot_doc
+    assert "Matplotlib documentation" not in plot_doc
+    assert len(plot_doc) < 8000
     assert "=====================\nultraplot documentation" not in plot_doc
-    assert (
-        "[DataFrame](https://pandas.pydata.org/pandas-docs/stable/"
-        "reference/api/pandas.DataFrame.html)" in plot_doc
-    )
-    assert (
-        "[Cycle](https://ultraplot.readthedocs.io/en/stable/api/"
-        "ultraplot.constructor.Cycle.html)" in plot_doc
-    )
     assert ":class:`~pandas.DataFrame`" not in plot_doc
 
     grid_stub = PACKAGE / "gridspec.pyi"
@@ -167,6 +162,25 @@ def test_generated_stubs_include_runtime_docstrings():
             twiny_doc = ast.get_docstring(node) or ""
             break
     assert "for every axes in the grid" in twiny_doc
+
+
+def test_long_hover_docstrings_are_compact_and_linked():
+    ui_tree = ast.parse((PACKAGE / "ui.pyi").read_text(encoding="utf-8"))
+    subplots = next(
+        node
+        for node in ui_tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "subplots"
+    )
+    doc = ast.get_docstring(subplots) or ""
+    assert len(doc) < 8000
+    assert "%(figure.figure)s" not in doc
+    assert "- `array`" in doc
+    assert "- `nrows, ncols`" in doc
+    assert (
+        "[Full API documentation](https://ultraplot.readthedocs.io/en/stable/"
+        "api/ultraplot.ui.subplots.html)" in doc
+    )
+    assert "Returns\n-------" not in doc
 
 
 def test_plot_stub_exposes_static_signature():

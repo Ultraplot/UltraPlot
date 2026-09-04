@@ -64,573 +64,90 @@ This is included so you don't have to import [pyplot](https://matplotlib.org/sta
     ...
 
 def figure(**kwargs: Incomplete) -> Figure:
-    """Create an empty figure. Subplots can be subsequently added using
-[add_subplot](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.add_subplot) or [subplots](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.subplots).
-This command is analogous to [matplotlib.pyplot.figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.figure.html).
+    """Create an empty figure.
 
 Parameters
 ----------
-refnum : int, optional
-    The reference subplot number. The `refwidth`, `refheight`, and `refaspect`
-    keyword args are applied to this subplot, and the aspect ratio is conserved
-    for this subplot in the `~Figure.auto_layout`. The default is the first
-    subplot created in the figure.
-refaspect : float or 2-tuple of float, optional
-    The reference subplot aspect ratio. If scalar, this indicates the width
-    divided by height. If 2-tuple, this indicates the (width, height). Ignored
-    if both `figwidth` *and* `figheight` or both `refwidth` *and* `refheight` were
-    passed. The default value is ``1`` or the "data aspect ratio" if the latter
-    is explicitly fixed (as with [imshow](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.imshow) plots and
-    [GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.GeoAxes) projections; see [set_aspect](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_aspect.html)).
-refwidth, refheight : unit-spec, default: [subplots.refwidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.refwidth)
-    The width, height of the reference subplot.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Ignored if `figwidth`, `figheight`, or `figsize` was passed. If you
-    specify just one, `refaspect` will be respected.
-ref, aspect, axwidth, axheight
-    Aliases for `refnum`, `refaspect`, `refwidth`, `refheight`.
-    *These may be deprecated in a future release.*
-figwidth, figheight : unit-spec, optional
-    The figure width and height. Default behavior is to use `refwidth`.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If you specify just one, `refaspect` will be respected.
-width, height
-    Aliases for `figwidth`, `figheight`.
-figsize : 2-tuple, optional
-    Tuple specifying the figure ``(width, height)``.
-sharex, sharey, share : {0, False, 1, 'labels', 'labs', 2, 'limits', 'lims', 3, True, 4, 'all', 'auto'}, default: [subplots.share](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.share)
-    The axis sharing "level" for the *x* axis, *y* axis, or both
-    axes. Options are as follows:
+- `refnum`: The reference subplot number.
+- `refaspect`: The reference subplot aspect ratio.
+- `refwidth, refheight`: The width, height of the reference subplot.
+- `figwidth, figheight`: The figure width and height.
+- `figsize`: Tuple specifying the figure ``(width, height)``.
+- `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
+- `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
+- `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
+- `wspace, hspace, space`: The fixed space between grid columns, rows, or both.
+- `tight`: Whether automatic calls to `~Figure.auto_layout` should include [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight).
+- `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
+- `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
+- `outerpad`: The scalar tight layout padding around the left, right, top, bottom figure edges.
+- `innerpad`: The scalar tight layout padding between columns and rows.
+- `panelpad`: The scalar tight layout padding between subplots and their panels, colorbars, and legends and between "stacks" of these objects.
+- `journal`: String corresponding to an academic journal standard used to control the figure width `figwidth` and, if specified, the figure height `figheight`.
+- `**kwargs`: Passed to [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format).
 
-    * ``0`` or ``False``: No axis sharing. This also sets the default `spanx`
-      and `spany` values to ``False``.
-    * ``1`` or ``'labels'`` or ``'labs'``: Only draw axis labels on the bottommost
-      row or leftmost column of subplots. Tick labels still appear on every subplot.
-    * ``2`` or ``'limits'`` or ``'lims'``: As above but force the axis limits, scales,
-      and tick locations to be identical. Tick labels still appear on every subplot.
-    * ``3`` or ``True``: As above but only show the tick labels on the bottommost
-      row and leftmost column of subplots.
-    * ``4`` or ``'all'``: As above but also share the axis limits, scales, and
-      tick locations between subplots not in the same row or column.
-    * ``'auto'``: Start from level ``3`` and only share axes that are compatible
-      (for example, mixed cartesian and polar axes are kept unshared).
-
-    Explicit sharing levels (``0`` to ``4`` and aliases) still force sharing
-    attempts and can emit warnings for incompatible axes.
-
-spanx, spany, span : bool or {0, 1}, default: [subplots.span](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.span)
-    Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both
-    axes. Default is ``False`` if `sharex`, `sharey`, or `share` are ``0`` or
-    ``False``. When ``True``, a single, centered axis label is used for all axes
-    with bottom and left edges in the same row or column. This can considerably
-    redundancy in your figure. "Spanning" labels integrate with "shared" axes. For
-    example, for a 3-row, 3-column figure, with ``sharey > 1`` and ``spany == True``,
-    your figure will have 1 y axis label instead of 9 y axis labels.
-alignx, aligny, align : bool or {0, 1}, default: [subplots.align](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.align)
-    Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html)
-    for the *x* axis, *y* axis, or both axes. Aligned labels always appear in the same
-    row or column. This is ignored if `spanx`, `spany`, or `span` are ``True``.
-left, right, top, bottom : unit-spec, default: None
-    The fixed space between the subplots and the figure edge.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If ``None``, the space is determined automatically based on the tick and
-    label settings. If [subplots.tight](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.tight) is ``True`` or ``tight=True`` was
-    passed to the figure, the space is determined by the tight layout algorithm.
-wspace, hspace, space : unit-spec, default: None
-    The fixed space between grid columns, rows, or both.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If ``None``, the space is determined automatically based on the font size and axis
-    sharing settings. If [subplots.tight](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.tight) is ``True`` or ``tight=True`` was
-    passed to the figure, the space is determined by the tight layout algorithm.
-tight : bool, default: :rc`subplots.tight`
-    Whether automatic calls to `~Figure.auto_layout` should include
-    [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight). If you manually specified a spacing
-    in the call to [subplots](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ui.subplots.html), it will be used to override the tight
-    layout spacing. For example, with ``left=1``, the left margin is set to 1
-    em-width, while the remaining margin widths are calculated automatically.
-wequal, hequal, equal :  bool, default: [subplots.equalspace](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.equalspace)
-    Whether to make the tight layout algorithm apply equal spacing
-    between columns, rows, or both.
-wgroup, hgroup, group :  bool, default: [subplots.groupspace](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.groupspace)
-    Whether to make the tight layout algorithm just consider spaces between
-    adjacent subplots instead of entire columns and rows of subplots.
-outerpad : unit-spec, default: [subplots.outerpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.outerpad)
-    The scalar tight layout padding around the left, right, top, bottom figure edges.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-innerpad : unit-spec, default: [subplots.innerpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.innerpad)
-    The scalar tight layout padding between columns and rows. Synonymous with `pad`.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-panelpad : unit-spec, default: [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)
-    The scalar tight layout padding between subplots and their panels,
-    colorbars, and legends and between "stacks" of these objects.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-journal : str, optional
-    String corresponding to an academic journal standard used to control the figure
-    width `figwidth` and, if specified, the figure height `figheight`. See the below
-    table. Feel free to add to this table by submitting a pull request.
-
-    .. _journal_table:
-
-    ===========  ====================  ===============================================================================
-    Key          Size description      Organization
-    ===========  ====================  ===============================================================================
-    ``'aaas1'``  1-column              `American Association for the Advancement of Science <aaas_>`_ (e.g. *Science*)
-    ``'aaas2'``  2-column              ”
-    ``'agu1'``   1-column              `American Geophysical Union <agu_>`_
-    ``'agu2'``   2-column              ”
-    ``'agu3'``   full height 1-column  ”
-    ``'agu4'``   full height 2-column  ”
-    ``'ams1'``   1-column              `American Meteorological Society <ams_>`_
-    ``'ams2'``   small 2-column        ”
-    ``'ams3'``   medium 2-column       ”
-    ``'ams4'``   full 2-column         ”
-    ``'cop1'``   1-column              `Copernicus Publications <cop_>`_ (e.g. *The Cryosphere*, *Geoscientific Model Development*)
-    ``'cop2'``   2-column              ”
-    ``'nat1'``   1-column              `Nature Research <nat_>`_
-    ``'nat2'``   2-column              ”
-    ``'pnas1'``  1-column              `Proceedings of the National Academy of Sciences <pnas_>`_
-    ``'pnas2'``  2-column              ”
-    ``'pnas3'``  landscape page        ”
-    ===========  ====================  ===============================================================================
-
-    .. _aaas: https://www.sciencemag.org/authors/instructions-preparing-initial-manuscript
-    .. _agu: https://www.agu.org/Publish-with-AGU/Publish/Author-Resources/Graphic-Requirements
-    .. _ams: https://www.ametsoc.org/ams/index.cfm/publications/authors/journal-and-bams-authors/figure-information-for-authors/
-    .. _cop: https://publications.copernicus.org/for_authors/manuscript_preparation.html#figurestables
-    .. _nat: https://www.nature.com/nature/for-authors/formatting-guide
-    .. _pnas: https://www.pnas.org/page/authors/format
-
-Other parameters
-----------------
-**kwargs
-    Passed to [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format).
-
-See also
---------
-ultraplot.ui.subplots
-ultraplot.figure.Figure.add_subplot
-ultraplot.figure.Figure.subplots
-ultraplot.figure.Figure
-matplotlib.figure.Figure"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ui.figure.html)"""
     ...
 
 def subplot(**kwargs: Incomplete) -> tuple[Figure, paxes.Axes]:
     """Return a figure and a single subplot.
-This command is analogous to [matplotlib.pyplot.subplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplot.html),
-except the figure instance is also returned.
 
-Other parameters
-----------------
-refnum : int, optional
-    The reference subplot number. The `refwidth`, `refheight`, and `refaspect`
-    keyword args are applied to this subplot, and the aspect ratio is conserved
-    for this subplot in the `~Figure.auto_layout`. The default is the first
-    subplot created in the figure.
-refaspect : float or 2-tuple of float, optional
-    The reference subplot aspect ratio. If scalar, this indicates the width
-    divided by height. If 2-tuple, this indicates the (width, height). Ignored
-    if both `figwidth` *and* `figheight` or both `refwidth` *and* `refheight` were
-    passed. The default value is ``1`` or the "data aspect ratio" if the latter
-    is explicitly fixed (as with [imshow](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.imshow) plots and
-    [GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.GeoAxes) projections; see [set_aspect](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_aspect.html)).
-refwidth, refheight : unit-spec, default: [subplots.refwidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.refwidth)
-    The width, height of the reference subplot.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Ignored if `figwidth`, `figheight`, or `figsize` was passed. If you
-    specify just one, `refaspect` will be respected.
-ref, aspect, axwidth, axheight
-    Aliases for `refnum`, `refaspect`, `refwidth`, `refheight`.
-    *These may be deprecated in a future release.*
-figwidth, figheight : unit-spec, optional
-    The figure width and height. Default behavior is to use `refwidth`.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If you specify just one, `refaspect` will be respected.
-width, height
-    Aliases for `figwidth`, `figheight`.
-figsize : 2-tuple, optional
-    Tuple specifying the figure ``(width, height)``.
-sharex, sharey, share : {0, False, 1, 'labels', 'labs', 2, 'limits', 'lims', 3, True, 4, 'all', 'auto'}, default: [subplots.share](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.share)
-    The axis sharing "level" for the *x* axis, *y* axis, or both
-    axes. Options are as follows:
+Parameters
+----------
+- `refnum`: The reference subplot number.
+- `refaspect`: The reference subplot aspect ratio.
+- `refwidth, refheight`: The width, height of the reference subplot.
+- `figwidth, figheight`: The figure width and height.
+- `figsize`: Tuple specifying the figure ``(width, height)``.
+- `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
+- `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
+- `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
+- `wspace, hspace, space`: The fixed space between grid columns, rows, or both.
+- `tight`: Whether automatic calls to `~Figure.auto_layout` should include [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight).
+- `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
+- `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
+- `outerpad`: The scalar tight layout padding around the left, right, top, bottom figure edges.
+- `innerpad`: The scalar tight layout padding between columns and rows.
+- `panelpad`: The scalar tight layout padding between subplots and their panels, colorbars, and legends and between "stacks" of these objects.
+- `journal`: String corresponding to an academic journal standard used to control the figure width `figwidth` and, if specified, the figure height `figheight`.
+- `**kwargs`: Passed to [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format) or the projection-specific ``format`` command for the axes.
 
-    * ``0`` or ``False``: No axis sharing. This also sets the default `spanx`
-      and `spany` values to ``False``.
-    * ``1`` or ``'labels'`` or ``'labs'``: Only draw axis labels on the bottommost
-      row or leftmost column of subplots. Tick labels still appear on every subplot.
-    * ``2`` or ``'limits'`` or ``'lims'``: As above but force the axis limits, scales,
-      and tick locations to be identical. Tick labels still appear on every subplot.
-    * ``3`` or ``True``: As above but only show the tick labels on the bottommost
-      row and leftmost column of subplots.
-    * ``4`` or ``'all'``: As above but also share the axis limits, scales, and
-      tick locations between subplots not in the same row or column.
-    * ``'auto'``: Start from level ``3`` and only share axes that are compatible
-      (for example, mixed cartesian and polar axes are kept unshared).
-
-    Explicit sharing levels (``0`` to ``4`` and aliases) still force sharing
-    attempts and can emit warnings for incompatible axes.
-
-spanx, spany, span : bool or {0, 1}, default: [subplots.span](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.span)
-    Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both
-    axes. Default is ``False`` if `sharex`, `sharey`, or `share` are ``0`` or
-    ``False``. When ``True``, a single, centered axis label is used for all axes
-    with bottom and left edges in the same row or column. This can considerably
-    redundancy in your figure. "Spanning" labels integrate with "shared" axes. For
-    example, for a 3-row, 3-column figure, with ``sharey > 1`` and ``spany == True``,
-    your figure will have 1 y axis label instead of 9 y axis labels.
-alignx, aligny, align : bool or {0, 1}, default: [subplots.align](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.align)
-    Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html)
-    for the *x* axis, *y* axis, or both axes. Aligned labels always appear in the same
-    row or column. This is ignored if `spanx`, `spany`, or `span` are ``True``.
-left, right, top, bottom : unit-spec, default: None
-    The fixed space between the subplots and the figure edge.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If ``None``, the space is determined automatically based on the tick and
-    label settings. If [subplots.tight](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.tight) is ``True`` or ``tight=True`` was
-    passed to the figure, the space is determined by the tight layout algorithm.
-wspace, hspace, space : unit-spec, default: None
-    The fixed space between grid columns, rows, or both.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If ``None``, the space is determined automatically based on the font size and axis
-    sharing settings. If [subplots.tight](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.tight) is ``True`` or ``tight=True`` was
-    passed to the figure, the space is determined by the tight layout algorithm.
-tight : bool, default: :rc`subplots.tight`
-    Whether automatic calls to `~Figure.auto_layout` should include
-    [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight). If you manually specified a spacing
-    in the call to [subplots](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ui.subplots.html), it will be used to override the tight
-    layout spacing. For example, with ``left=1``, the left margin is set to 1
-    em-width, while the remaining margin widths are calculated automatically.
-wequal, hequal, equal :  bool, default: [subplots.equalspace](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.equalspace)
-    Whether to make the tight layout algorithm apply equal spacing
-    between columns, rows, or both.
-wgroup, hgroup, group :  bool, default: [subplots.groupspace](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.groupspace)
-    Whether to make the tight layout algorithm just consider spaces between
-    adjacent subplots instead of entire columns and rows of subplots.
-outerpad : unit-spec, default: [subplots.outerpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.outerpad)
-    The scalar tight layout padding around the left, right, top, bottom figure edges.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-innerpad : unit-spec, default: [subplots.innerpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.innerpad)
-    The scalar tight layout padding between columns and rows. Synonymous with `pad`.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-panelpad : unit-spec, default: [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)
-    The scalar tight layout padding between subplots and their panels,
-    colorbars, and legends and between "stacks" of these objects.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-journal : str, optional
-    String corresponding to an academic journal standard used to control the figure
-    width `figwidth` and, if specified, the figure height `figheight`. See the below
-    table. Feel free to add to this table by submitting a pull request.
-
-    .. _journal_table:
-
-    ===========  ====================  ===============================================================================
-    Key          Size description      Organization
-    ===========  ====================  ===============================================================================
-    ``'aaas1'``  1-column              `American Association for the Advancement of Science <aaas_>`_ (e.g. *Science*)
-    ``'aaas2'``  2-column              ”
-    ``'agu1'``   1-column              `American Geophysical Union <agu_>`_
-    ``'agu2'``   2-column              ”
-    ``'agu3'``   full height 1-column  ”
-    ``'agu4'``   full height 2-column  ”
-    ``'ams1'``   1-column              `American Meteorological Society <ams_>`_
-    ``'ams2'``   small 2-column        ”
-    ``'ams3'``   medium 2-column       ”
-    ``'ams4'``   full 2-column         ”
-    ``'cop1'``   1-column              `Copernicus Publications <cop_>`_ (e.g. *The Cryosphere*, *Geoscientific Model Development*)
-    ``'cop2'``   2-column              ”
-    ``'nat1'``   1-column              `Nature Research <nat_>`_
-    ``'nat2'``   2-column              ”
-    ``'pnas1'``  1-column              `Proceedings of the National Academy of Sciences <pnas_>`_
-    ``'pnas2'``  2-column              ”
-    ``'pnas3'``  landscape page        ”
-    ===========  ====================  ===============================================================================
-
-    .. _aaas: https://www.sciencemag.org/authors/instructions-preparing-initial-manuscript
-    .. _agu: https://www.agu.org/Publish-with-AGU/Publish/Author-Resources/Graphic-Requirements
-    .. _ams: https://www.ametsoc.org/ams/index.cfm/publications/authors/journal-and-bams-authors/figure-information-for-authors/
-    .. _cop: https://publications.copernicus.org/for_authors/manuscript_preparation.html#figurestables
-    .. _nat: https://www.nature.com/nature/for-authors/formatting-guide
-    .. _pnas: https://www.pnas.org/page/authors/format
-**kwargs
-    Passed to [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format) or the
-    projection-specific ``format`` command for the axes.
-
-Returns
--------
-fig : [ultraplot.figure.Figure](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html)
-    The figure instance.
-ax : [ultraplot.axes.Axes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html)
-    The axes instance.
-
-See also
---------
-ultraplot.ui.figure
-ultraplot.figure.Figure.subplot
-ultraplot.figure.Figure
-matplotlib.figure.Figure"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ui.subplot.html)"""
     ...
 
 def subplots(*args: Incomplete, **kwargs: Incomplete) -> tuple[Figure, pgridspec.SubplotGrid]:
     """Return a figure and an arbitrary grid of subplots.
-This command is analogous to [matplotlib.pyplot.subplots](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html),
-except the subplots are stored in a [SubplotGrid](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.SubplotGrid.html).
 
 Parameters
 ----------
-array : [ultraplot.gridspec.GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html) or array-like of int, optional
-    The subplot grid specifier. If a [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), one subplot is
-    drawn for each unique [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html) slot. If a 2D array of integers,
-    one subplot is drawn for each unique integer in the array. Think of this array as
-    a "picture" of the subplot grid -- for example, the array ``[[1, 1], [2, 3]]``
-    creates one long subplot in the top row, two smaller subplots in the bottom row.
-    Integers must range from 1 to the number of plots, and ``0`` indicates an
-    empty space -- for example, ``[[1, 1, 1], [2, 0, 3]]`` creates one long subplot
-    in the top row with two subplots in the bottom row separated by a space.
-nrows, ncols : int, default: 1
-    The number of rows and columns in the subplot grid. Ignored
-    if `array` was passed. Use these arguments for simple subplot grids.
-order : {'C', 'F'}, default: 'C'
-    Whether subplots are numbered in column-major (``'C'``) or row-major (``'F'``)
-    order. Analogous to [numpy.array](https://numpy.org/doc/stable/reference/generated/numpy.array.html) ordering. This controls the order that
-    subplots appear in the `SubplotGrid` returned by this function, and the order
-    of subplot a-b-c labels (see [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format)).
-proj, projection :
-str, `cartopy.crs.Projection`, or `Basemap`, optional
-    The map projection specification(s). If ``'cart'`` or ``'cartesian'``
-    (the default), a [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html) is created. If ``'polar'``,
-    a [PolarAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html) is created. Otherwise, the argument is
-    interpreted by [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html), and the result is used
-    to make a [GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) (in this case the argument can be
-    a `cartopy.crs.Projection` instance, a `Basemap`
-    instance, or a projection name listed in [this table](https://ultraplot.readthedocs.io/en/stable/search.html?q=proj_table)).
+- `array`: The subplot grid specifier.
+- `nrows, ncols`: The number of rows and columns in the subplot grid.
+- `order`: Whether subplots are numbered in column-major (``'C'``) or row-major (``'F'``) order.
+- `proj, projection`: The map projection specification(s).
+- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `backend`: Whether to use `Basemap` or `Projection` for map projections.
+- `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
+- `wspace, hspace, space`: The fixed space between grid columns, rows, and both, respectively.
+- `wratios, hratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), denotes the width and height ratios for the subplot grid.
+- `wpad, hpad, pad`: The tight layout padding between columns, rows, and both, respectively.
+- `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
+- `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
+- `outerpad`: The scalar tight layout padding around the left, right, top, bottom figure edges.
+- `innerpad`: The scalar tight layout padding between columns and rows.
+- `panelpad`: The scalar tight layout padding between subplots and their panels, colorbars, and legends and between "stacks" of these objects.
+- `refnum`: The reference subplot number.
+- `refaspect`: The reference subplot aspect ratio.
+- `refwidth, refheight`: The width, height of the reference subplot.
+- `figwidth, figheight`: The figure width and height.
+- `figsize`: Tuple specifying the figure ``(width, height)``.
+- `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
+- `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
+- `tight`: Whether automatic calls to `~Figure.auto_layout` should include [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight).
+- `journal`: String corresponding to an academic journal standard used to control the figure width `figwidth` and, if specified, the figure height `figheight`.
+- `**kwargs`: Passed to [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format) or the projection-specific ``format`` command for each axes.
 
-    To use different projections for different subplots, you have
-    two options:
-
-    * Pass a *list* of projection specifications, one for each subplot.
-      For example, ``uplt.subplots(ncols=2, proj=('cart', 'robin'))``.
-    * Pass a *dictionary* of projection specifications, where the
-      keys are integers or tuples of integers that indicate the projection
-      to use for the corresponding subplot number(s). If a key is not
-      provided, the default projection ``'cartesian'`` is used. For example,
-      ``uplt.subplots(ncols=4, proj={2: 'cyl', (3, 4): 'stere'})`` creates
-      a figure with a default Cartesian axes for the first subplot, a Mercator
-      projection for the second subplot, and a Stereographic projection
-      for the third and fourth subplots.
-
-proj_kw, projection_kw : dict-like, optional
-    Keyword arguments passed to `Basemap` or
-    `Projection` classes on instantiation.
-    If dictionary of properties, applies globally. If list or dictionary of
-    dictionaries, applies to specific subplots, as with `proj`. For example,
-    ``uplt.subplots(ncols=2, proj='cyl', proj_kw=({'lon_0': 0}, {'lon_0': 180})``
-    centers the projection in the left subplot on the prime meridian and in the
-    right subplot on the international dateline.
-backend : {'cartopy', 'basemap'}, default: [geo.backend](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.backend)
-    Whether to use `Basemap` or
-    `Projection` for map projections.
-
-    .. deprecated:: 3.0.0
-        The ``'basemap'`` backend is deprecated and may be removed in a
-        future release. Please use the ``'cartopy'`` backend instead.
-    If string, applies to all subplots. If list or dict, applies to specific
-    subplots, as with `proj`.
-left, right, top, bottom : unit-spec, default: None
-    The fixed space between the subplots and the figure edge.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If ``None``, the space is determined automatically based on the tick and
-    label settings. If [subplots.tight](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.tight) is ``True`` or ``tight=True`` was
-    passed to the figure, the space is determined by the tight layout algorithm.
-wspace, hspace, space : unit-spec or sequence, default: None
-    The fixed space between grid columns, rows, and both, respectively. If
-    float, string, or ``None``, this value is expanded into lists of length
-    ``ncols - 1`` (for `wspace`) or length ``nrows - 1`` (for `hspace`). If
-    a sequence, its length must match these lengths.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-
-    For elements equal to ``None``, the space is determined automatically based
-    on the tick and label settings. If [subplots.tight](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.tight) is ``True`` or
-    ``tight=True`` was passed to the figure, the space is determined by the tight
-    layout algorithm. For example, ``subplots(ncols=3, tight=True, wspace=(2, None))``
-    fixes the space between columns 1 and 2 but lets the tight layout algorithm
-    determine the space between columns 2 and 3.
-wratios, hratios : float or sequence, optional
-    Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), denotes the width and height
-    ratios for the subplot grid. Length of `wratios` must match the number
-    of columns, and length of `hratios` must match the number of rows.
-width_ratios, height_ratios
-    Aliases for `wratios`, `hratios`. Included for
-    consistency with [matplotlib.gridspec.GridSpec](https://matplotlib.org/stable/api/_as_gen/matplotlib.gridspec.GridSpec.html).
-wpad, hpad, pad : unit-spec or sequence, optional
-    The tight layout padding between columns, rows, and both, respectively.
-    Unlike ``space``, these control the padding between subplot content
-    (including text, ticks, etc.) rather than subplot edges. As with
-    ``space``, these can be scalars or arrays optionally containing ``None``.
-    For elements equal to ``None``, the default is `innerpad`.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-wequal, hequal, equal :  bool, default: [subplots.equalspace](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.equalspace)
-    Whether to make the tight layout algorithm apply equal spacing
-    between columns, rows, or both.
-wgroup, hgroup, group :  bool, default: [subplots.groupspace](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.groupspace)
-    Whether to make the tight layout algorithm just consider spaces between
-    adjacent subplots instead of entire columns and rows of subplots.
-outerpad : unit-spec, default: [subplots.outerpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.outerpad)
-    The scalar tight layout padding around the left, right, top, bottom figure edges.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-innerpad : unit-spec, default: [subplots.innerpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.innerpad)
-    The scalar tight layout padding between columns and rows. Synonymous with `pad`.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-panelpad : unit-spec, default: [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)
-    The scalar tight layout padding between subplots and their panels,
-    colorbars, and legends and between "stacks" of these objects.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-
-Other parameters
-----------------
-refnum : int, optional
-    The reference subplot number. The `refwidth`, `refheight`, and `refaspect`
-    keyword args are applied to this subplot, and the aspect ratio is conserved
-    for this subplot in the `~Figure.auto_layout`. The default is the first
-    subplot created in the figure.
-refaspect : float or 2-tuple of float, optional
-    The reference subplot aspect ratio. If scalar, this indicates the width
-    divided by height. If 2-tuple, this indicates the (width, height). Ignored
-    if both `figwidth` *and* `figheight` or both `refwidth` *and* `refheight` were
-    passed. The default value is ``1`` or the "data aspect ratio" if the latter
-    is explicitly fixed (as with [imshow](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.imshow) plots and
-    [GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.GeoAxes) projections; see [set_aspect](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_aspect.html)).
-refwidth, refheight : unit-spec, default: [subplots.refwidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.refwidth)
-    The width, height of the reference subplot.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    Ignored if `figwidth`, `figheight`, or `figsize` was passed. If you
-    specify just one, `refaspect` will be respected.
-ref, aspect, axwidth, axheight
-    Aliases for `refnum`, `refaspect`, `refwidth`, `refheight`.
-    *These may be deprecated in a future release.*
-figwidth, figheight : unit-spec, optional
-    The figure width and height. Default behavior is to use `refwidth`.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If you specify just one, `refaspect` will be respected.
-width, height
-    Aliases for `figwidth`, `figheight`.
-figsize : 2-tuple, optional
-    Tuple specifying the figure ``(width, height)``.
-sharex, sharey, share : {0, False, 1, 'labels', 'labs', 2, 'limits', 'lims', 3, True, 4, 'all', 'auto'}, default: [subplots.share](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.share)
-    The axis sharing "level" for the *x* axis, *y* axis, or both
-    axes. Options are as follows:
-
-    * ``0`` or ``False``: No axis sharing. This also sets the default `spanx`
-      and `spany` values to ``False``.
-    * ``1`` or ``'labels'`` or ``'labs'``: Only draw axis labels on the bottommost
-      row or leftmost column of subplots. Tick labels still appear on every subplot.
-    * ``2`` or ``'limits'`` or ``'lims'``: As above but force the axis limits, scales,
-      and tick locations to be identical. Tick labels still appear on every subplot.
-    * ``3`` or ``True``: As above but only show the tick labels on the bottommost
-      row and leftmost column of subplots.
-    * ``4`` or ``'all'``: As above but also share the axis limits, scales, and
-      tick locations between subplots not in the same row or column.
-    * ``'auto'``: Start from level ``3`` and only share axes that are compatible
-      (for example, mixed cartesian and polar axes are kept unshared).
-
-    Explicit sharing levels (``0`` to ``4`` and aliases) still force sharing
-    attempts and can emit warnings for incompatible axes.
-
-spanx, spany, span : bool or {0, 1}, default: [subplots.span](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.span)
-    Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both
-    axes. Default is ``False`` if `sharex`, `sharey`, or `share` are ``0`` or
-    ``False``. When ``True``, a single, centered axis label is used for all axes
-    with bottom and left edges in the same row or column. This can considerably
-    redundancy in your figure. "Spanning" labels integrate with "shared" axes. For
-    example, for a 3-row, 3-column figure, with ``sharey > 1`` and ``spany == True``,
-    your figure will have 1 y axis label instead of 9 y axis labels.
-alignx, aligny, align : bool or {0, 1}, default: [subplots.align](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.align)
-    Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html)
-    for the *x* axis, *y* axis, or both axes. Aligned labels always appear in the same
-    row or column. This is ignored if `spanx`, `spany`, or `span` are ``True``.
-left, right, top, bottom : unit-spec, default: None
-    The fixed space between the subplots and the figure edge.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If ``None``, the space is determined automatically based on the tick and
-    label settings. If [subplots.tight](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.tight) is ``True`` or ``tight=True`` was
-    passed to the figure, the space is determined by the tight layout algorithm.
-wspace, hspace, space : unit-spec, default: None
-    The fixed space between grid columns, rows, or both.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    If ``None``, the space is determined automatically based on the font size and axis
-    sharing settings. If [subplots.tight](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.tight) is ``True`` or ``tight=True`` was
-    passed to the figure, the space is determined by the tight layout algorithm.
-tight : bool, default: :rc`subplots.tight`
-    Whether automatic calls to `~Figure.auto_layout` should include
-    [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight). If you manually specified a spacing
-    in the call to [subplots](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ui.subplots.html), it will be used to override the tight
-    layout spacing. For example, with ``left=1``, the left margin is set to 1
-    em-width, while the remaining margin widths are calculated automatically.
-wequal, hequal, equal :  bool, default: [subplots.equalspace](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.equalspace)
-    Whether to make the tight layout algorithm apply equal spacing
-    between columns, rows, or both.
-wgroup, hgroup, group :  bool, default: [subplots.groupspace](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.groupspace)
-    Whether to make the tight layout algorithm just consider spaces between
-    adjacent subplots instead of entire columns and rows of subplots.
-outerpad : unit-spec, default: [subplots.outerpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.outerpad)
-    The scalar tight layout padding around the left, right, top, bottom figure edges.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-innerpad : unit-spec, default: [subplots.innerpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.innerpad)
-    The scalar tight layout padding between columns and rows. Synonymous with `pad`.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-panelpad : unit-spec, default: [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)
-    The scalar tight layout padding between subplots and their panels,
-    colorbars, and legends and between "stacks" of these objects.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-journal : str, optional
-    String corresponding to an academic journal standard used to control the figure
-    width `figwidth` and, if specified, the figure height `figheight`. See the below
-    table. Feel free to add to this table by submitting a pull request.
-
-    .. _journal_table:
-
-    ===========  ====================  ===============================================================================
-    Key          Size description      Organization
-    ===========  ====================  ===============================================================================
-    ``'aaas1'``  1-column              `American Association for the Advancement of Science <aaas_>`_ (e.g. *Science*)
-    ``'aaas2'``  2-column              ”
-    ``'agu1'``   1-column              `American Geophysical Union <agu_>`_
-    ``'agu2'``   2-column              ”
-    ``'agu3'``   full height 1-column  ”
-    ``'agu4'``   full height 2-column  ”
-    ``'ams1'``   1-column              `American Meteorological Society <ams_>`_
-    ``'ams2'``   small 2-column        ”
-    ``'ams3'``   medium 2-column       ”
-    ``'ams4'``   full 2-column         ”
-    ``'cop1'``   1-column              `Copernicus Publications <cop_>`_ (e.g. *The Cryosphere*, *Geoscientific Model Development*)
-    ``'cop2'``   2-column              ”
-    ``'nat1'``   1-column              `Nature Research <nat_>`_
-    ``'nat2'``   2-column              ”
-    ``'pnas1'``  1-column              `Proceedings of the National Academy of Sciences <pnas_>`_
-    ``'pnas2'``  2-column              ”
-    ``'pnas3'``  landscape page        ”
-    ===========  ====================  ===============================================================================
-
-    .. _aaas: https://www.sciencemag.org/authors/instructions-preparing-initial-manuscript
-    .. _agu: https://www.agu.org/Publish-with-AGU/Publish/Author-Resources/Graphic-Requirements
-    .. _ams: https://www.ametsoc.org/ams/index.cfm/publications/authors/journal-and-bams-authors/figure-information-for-authors/
-    .. _cop: https://publications.copernicus.org/for_authors/manuscript_preparation.html#figurestables
-    .. _nat: https://www.nature.com/nature/for-authors/formatting-guide
-    .. _pnas: https://www.pnas.org/page/authors/format
-**kwargs
-    Passed to [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format) or the
-    projection-specific ``format`` command for each axes.
-
-Returns
--------
-fig : [ultraplot.figure.Figure](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html)
-    The figure instance.
-axs : [ultraplot.gridspec.SubplotGrid](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.SubplotGrid.html)
-    The axes instances stored in a [SubplotGrid](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.SubplotGrid.html).
-
-See also
---------
-ultraplot.ui.figure
-ultraplot.figure.Figure.subplots
-ultraplot.gridspec.SubplotGrid
-ultraplot.figure.Figure
-matplotlib.figure.Figure"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ui.subplots.html)"""
     ...

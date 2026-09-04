@@ -163,103 +163,25 @@ Implements basic universal features."""
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
 ----------
-*args
-    Passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).
-title : str or sequence, optional
-    The axes title. Can optionally be a sequence strings, in which case
-    the title will be selected from the sequence according to `~Axes.number`.
-abc : bool or str or sequence, default: [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc)
-    The "a-b-c" subplot label style. Must contain the character `a` or `A`,
-    for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
-    ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
-    matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
-    characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
-    Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
-abcloc, titleloc : str, default: [abc.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.loc), [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc)
-    Strings indicating the location for the a-b-c label and main title.
-    The following locations are valid:
+- `*args`: Passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).
+- `title`: The axes title.
+- `abc`: The "a-b-c" subplot label style.
+- `abcloc, titleloc`: Strings indicating the location for the a-b-c label and main title.
+- `abcborder, titleborder`: Whether to draw a white border around titles and a-b-c labels positioned inside the axes.
+- `abcbbox, titlebbox`: Whether to draw a white bbox around titles and a-b-c labels positioned inside the axes.
+- `abcpad`: Horizontal offset to shift the a-b-c label position.
+- `abc_kw, title_kw`: Additional settings used to update the a-b-c label and title with ``text.update()``.
+- `titlepad`: The padding for the inner and outer titles and a-b-c labels.
+- `titleabove`: Whether to try to put outer titles and a-b-c labels above panels, colorbars, or legends that are above the axes.
+- `abctitlepad`: The horizontal padding between a-b-c labels and titles in the same location.
+- `ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle`: Shorthands for the below keywords.
+- `lowerlefttitle, lowercentertitle, lowerrighttitle`: Additional titles in specific positions (see `title` for details).
+- `a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle`: [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), - Additional settings applied to…
+- `rc_mode`: The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
+- `rc_kw`: An alternative to passing extra keyword arguments.
+- `**kwargs`: Remaining keyword arguments are passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).\\n Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are passed to…
 
-    .. _title_table:
-
-    ========================  ============================
-    Location                  Valid keys
-    ========================  ============================
-    center above axes         ``'center'``, ``'c'``
-    left above axes           ``'left'``, ``'l'``
-    right above axes          ``'right'``, ``'r'``
-    lower center inside axes  ``'lower center'``, ``'lc'``
-    upper center inside axes  ``'upper center'``, ``'uc'``
-    upper right inside axes   ``'upper right'``, ``'ur'``
-    upper left inside axes    ``'upper left'``, ``'ul'``
-    lower left inside axes    ``'lower left'``, ``'ll'``
-    lower right inside axes   ``'lower right'``, ``'lr'``
-    left of y axis            ``'outer left'``, ``'ol'``
-    right of y axis           ``'outer right'``, ``'or'``
-    ========================  ============================
-
-abcborder, titleborder : bool, default: [abc.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.border) and [title.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.border)
-    Whether to draw a white border around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists
-    plotted inside the axes.
-abcbbox, titlebbox : bool, default: [abc.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.bbox) and [title.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bbox)
-    Whether to draw a white bbox around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists plotted
-    inside the axes.
-abcpad : float or unit-spec, default: [abc.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.pad)
-    Horizontal offset to shift the a-b-c label position. Positive values move
-    the label right, negative values move it left. This is separate from
-    `abctitlepad`, which controls spacing between abc and title when co-located.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-abc_kw, title_kw : dict-like, optional
-    Additional settings used to update the a-b-c label and title
-    with ``text.update()``.
-titlepad : float, default: [title.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.pad)
-    The padding for the inner and outer titles and a-b-c labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-titleabove : bool, default: [title.above](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.above)
-    Whether to try to put outer titles and a-b-c labels above panels,
-    colorbars, or legends that are above the axes.
-abctitlepad : float, default: [abc.titlepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.titlepad)
-    The horizontal padding between a-b-c labels and titles in the same location.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
-    Shorthands for the below keywords.
-    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
-lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
-    Additional titles in specific positions (see `title` for details). This works as
-    an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
-    permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), -
-    Additional settings applied to the background patch, and their
-    shorthands. Their defaults values are the ``'axes'`` properties.
-
-Other parameters
-----------------
-rc_mode : int, optional
-    The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-rc_kw : dict-like, optional
-    An alternative to passing extra keyword arguments. See below.
-**kwargs
-    Remaining keyword arguments are passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).\\n    Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are
-    passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
-    If the setting name has "dots" you can simply omit the dots. For example,
-    ``abc='A.'`` modifies the [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc) setting, ``titleloc='left'`` modifies the
-    [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc) setting, ``gridminor=True`` modifies the [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
-    setting, and ``gridbelow=True`` modifies the [grid.below](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.below) setting. Many
-    of the keyword arguments documented above are internally applied by retrieving
-    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-
-See also
---------
-Axes.format
-matplotlib.axes.Axes
-ultraplot.axes.PlotAxes
-ultraplot.axes.CartesianAxes
-ultraplot.axes.PolarAxes
-ultraplot.axes.GeoAxes
-ultraplot.figure.Figure.subplot
-ultraplot.figure.Figure.add_subplot"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html)"""
         ...
 
     def _add_inset_axes(self, bounds: Incomplete, transform: Incomplete=None, *, proj: Incomplete=None, projection: Incomplete=None, zoom: Incomplete=None, zoom_kw: Incomplete=None, zorder: Incomplete=None, **kwargs: Incomplete) -> Axes:
@@ -475,144 +397,37 @@ target : {'x', 'y'}, optional
         ...
 
     def format(self, *, title: Incomplete=None, title_kw: Incomplete=None, abc_kw: Incomplete=None, ltitle: Incomplete=None, lefttitle: Incomplete=None, ctitle: Incomplete=None, centertitle: Incomplete=None, rtitle: Incomplete=None, righttitle: Incomplete=None, ultitle: Incomplete=None, upperlefttitle: Incomplete=None, uctitle: Incomplete=None, uppercentertitle: Incomplete=None, urtitle: Incomplete=None, upperrighttitle: Incomplete=None, lltitle: Incomplete=None, lowerlefttitle: Incomplete=None, lctitle: Incomplete=None, lowercentertitle: Incomplete=None, lrtitle: Incomplete=None, lowerrighttitle: Incomplete=None, share_xlabels: Incomplete=None, share_ylabels: Incomplete=None, **kwargs: Incomplete) -> None:
-        """Modify the a-b-c label, axes title(s), and background patch,
-and call [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format) on the axes figure.
+        """Modify the a-b-c label, axes title(s), and background patch, and call [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format) on the axes figure.
 
 Parameters
 ----------
-title : str or sequence, optional
-    The axes title. Can optionally be a sequence strings, in which case
-    the title will be selected from the sequence according to `~Axes.number`.
-abc : bool or str or sequence, default: [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc)
-    The "a-b-c" subplot label style. Must contain the character `a` or `A`,
-    for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
-    ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
-    matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
-    characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
-    Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
-abcloc, titleloc : str, default: [abc.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.loc), [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc)
-    Strings indicating the location for the a-b-c label and main title.
-    The following locations are valid:
+- `title`: The axes title.
+- `abc`: The "a-b-c" subplot label style.
+- `abcloc, titleloc`: Strings indicating the location for the a-b-c label and main title.
+- `abcborder, titleborder`: Whether to draw a white border around titles and a-b-c labels positioned inside the axes.
+- `abcbbox, titlebbox`: Whether to draw a white bbox around titles and a-b-c labels positioned inside the axes.
+- `abcpad`: Horizontal offset to shift the a-b-c label position.
+- `abc_kw, title_kw`: Additional settings used to update the a-b-c label and title with ``text.update()``.
+- `titlepad`: The padding for the inner and outer titles and a-b-c labels.
+- `titleabove`: Whether to try to put outer titles and a-b-c labels above panels, colorbars, or legends that are above the axes.
+- `abctitlepad`: The horizontal padding between a-b-c labels and titles in the same location.
+- `ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle`: Shorthands for the below keywords.
+- `lowerlefttitle, lowercentertitle, lowerrighttitle`: Additional titles in specific positions (see `title` for details).
+- `a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle`: [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), - Additional settings applied to…
+- `leftlabels, toplabels, rightlabels, bottomlabels`: Labels for the subplots lying along the left, top, right, and bottom edges of the figure.
+- `leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad`: : [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad) The padding between the labels and the axes content.
+- `leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad`: : [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad) The padding between side labels and a shared spanning axis label on…
+- `leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw`: Additional settings used to update the labels with ``text.update()``.
+- `figtitle`: Alias for `suptitle`.
+- `suptitle`: The figure "super" title, centered between the left edge of the leftmost subplot and the right edge of the rightmost subplot.
+- `suptitlepad`: The padding between the super title and the axes content.
+- `suptitle_kw`: Additional settings used to update the super title with ``text.update()``.
+- `includepanels`: Whether to include panels when aligning figure "super titles" along the top of the subplot grid and when aligning the `spanx` *x* axis labels and `spany` *y* axis labels along the…
+- `rc_mode`: The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
+- `rc_kw`: An alternative to passing extra keyword arguments.
+- `**kwargs`: Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
 
-    .. _title_table:
-
-    ========================  ============================
-    Location                  Valid keys
-    ========================  ============================
-    center above axes         ``'center'``, ``'c'``
-    left above axes           ``'left'``, ``'l'``
-    right above axes          ``'right'``, ``'r'``
-    lower center inside axes  ``'lower center'``, ``'lc'``
-    upper center inside axes  ``'upper center'``, ``'uc'``
-    upper right inside axes   ``'upper right'``, ``'ur'``
-    upper left inside axes    ``'upper left'``, ``'ul'``
-    lower left inside axes    ``'lower left'``, ``'ll'``
-    lower right inside axes   ``'lower right'``, ``'lr'``
-    left of y axis            ``'outer left'``, ``'ol'``
-    right of y axis           ``'outer right'``, ``'or'``
-    ========================  ============================
-
-abcborder, titleborder : bool, default: [abc.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.border) and [title.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.border)
-    Whether to draw a white border around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists
-    plotted inside the axes.
-abcbbox, titlebbox : bool, default: [abc.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.bbox) and [title.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bbox)
-    Whether to draw a white bbox around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists plotted
-    inside the axes.
-abcpad : float or unit-spec, default: [abc.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.pad)
-    Horizontal offset to shift the a-b-c label position. Positive values move
-    the label right, negative values move it left. This is separate from
-    `abctitlepad`, which controls spacing between abc and title when co-located.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-abc_kw, title_kw : dict-like, optional
-    Additional settings used to update the a-b-c label and title
-    with ``text.update()``.
-titlepad : float, default: [title.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.pad)
-    The padding for the inner and outer titles and a-b-c labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-titleabove : bool, default: [title.above](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.above)
-    Whether to try to put outer titles and a-b-c labels above panels,
-    colorbars, or legends that are above the axes.
-abctitlepad : float, default: [abc.titlepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.titlepad)
-    The horizontal padding between a-b-c labels and titles in the same location.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
-    Shorthands for the below keywords.
-    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
-lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
-    Additional titles in specific positions (see `title` for details). This works as
-    an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
-    permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), -
-    Additional settings applied to the background patch, and their
-    shorthands. Their defaults values are the ``'axes'`` properties.
-
-Important
----------
-`abc`, `abcloc`, `titleloc`, `titleabove`, `titlepad`, and
-`abctitlepad` are actually [configuration settings](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_config).
-We explicitly document these arguments here because it is common to
-change them for specific axes. But many [other configuration
-settings <ug_format>](https://ultraplot.readthedocs.io/en/stable/search.html?q=other+configuration%0Asettings+%3Cug_format%3E) can be passed to ``format`` too.
-
-Other parameters
-----------------
-rowlabels, collabels, llabels, tlabels, rlabels, blabels
-    Aliases for `leftlabels` and `toplabels`, and for `leftlabels`,
-    `toplabels`, `rightlabels`, and `bottomlabels`, respectively.
-leftlabels, toplabels, rightlabels, bottomlabels : sequence of str, optional
-    Labels for the subplots lying along the left, top, right, and
-    bottom edges of the figure. The length of each list must match
-    the number of subplots along the corresponding edge.
-leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, default
-: [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad)
-    The padding between the labels and the axes content.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad : float or unit-spec, default
-: [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad)
-    The padding between side labels and a shared spanning axis label on the
-    same side. The spanning label is placed outside the side labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw : dict-like, optional
-    Additional settings used to update the labels with ``text.update()``.
-figtitle
-    Alias for `suptitle`.
-suptitle : str, optional
-    The figure "super" title, centered between the left edge of the leftmost
-    subplot and the right edge of the rightmost subplot.
-suptitlepad : float, default: [suptitle.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=suptitle.pad)
-    The padding between the super title and the axes content.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-suptitle_kw : optional
-    Additional settings used to update the super title with ``text.update()``.
-includepanels : bool, default: False
-    Whether to include panels when aligning figure "super titles" along the top
-    of the subplot grid and when aligning the `spanx` *x* axis labels and
-    `spany` *y* axis labels along the sides of the subplot grid.
-rc_mode : int, optional
-    The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-rc_kw : dict-like, optional
-    An alternative to passing extra keyword arguments. See below.
-**kwargs
-    Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are
-    passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
-    If the setting name has "dots" you can simply omit the dots. For example,
-    ``abc='A.'`` modifies the [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc) setting, ``titleloc='left'`` modifies the
-    [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc) setting, ``gridminor=True`` modifies the [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
-    setting, and ``gridbelow=True`` modifies the [grid.below](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.below) setting. Many
-    of the keyword arguments documented above are internally applied by retrieving
-    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-
-See also
---------
-ultraplot.axes.CartesianAxes.format
-ultraplot.axes.PolarAxes.format
-ultraplot.axes.GeoAxes.format
-ultraplot.figure.Figure.format
-ultraplot.gridspec.SubplotGrid.format
-ultraplot.config.Configurator.context"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format)"""
         ...
 
     def draw(self, renderer: Incomplete=None, *args: Incomplete, **kwargs: Incomplete) -> None:
@@ -682,65 +497,13 @@ Artists are excluded either by not being visible or
     def set_prop_cycle(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Set the property cycle of the Axes.
 
-The property cycle controls the style properties such as color,
-marker and linestyle of future plot commands. The style properties
-of data already added to the Axes are not modified.
-
-Call signatures::
-
-  set_prop_cycle(cycler)
-  set_prop_cycle(label=values, label2=values2, ...)
-  set_prop_cycle(label, values)
-
-Form 1 sets given `~cycler.Cycler` object.
-
-Form 2 creates a `~cycler.Cycler` which cycles over one or more
-properties simultaneously and set it as the property cycle of the
-Axes. If multiple properties are given, their value lists must have
-the same length. This is just a shortcut for explicitly creating a
-cycler and passing it to the function, i.e. it's short for
-``set_prop_cycle(cycler(label=values, label2=values2, ...))``.
-
-Form 3 creates a `~cycler.Cycler` for a single property and set it
-as the property cycle of the Axes. This form exists for compatibility
-with the original `cycler.cycler` interface. Its use is discouraged
-in favor of the kwarg form, i.e. ``set_prop_cycle(label=values)``.
-
 Parameters
 ----------
-cycler : `~cycler.Cycler` or ``None``
-    Set the given Cycler. *None* resets to the cycle defined by the
-    current style.
+- `cycler`: Set the given Cycler.
+- `label`: The property key.
+- `values`: Finite-length iterable of the property values.
 
-    .. ACCEPTS: `~cycler.Cycler`
-
-label : str
-    The property key. Must be a valid `.Artist` property.
-    For example, 'color' or 'linestyle'. Aliases are allowed,
-    such as 'c' for 'color' and 'lw' for 'linewidth'.
-
-values : iterable
-    Finite-length iterable of the property values. These values
-    are validated and will raise a ValueError if invalid.
-
-See Also
---------
-matplotlib.rcsetup.cycler
-    Convenience function for creating validated cyclers for properties.
-cycler.cycler
-    The original function for creating unvalidated cyclers.
-
-Examples
---------
-Setting the property cycle for a single property:
-
->>> ax.set_prop_cycle(color=['red', 'green', 'blue'])
-
-Setting the property cycle for simultaneously cycling over multiple
-properties (e.g. red circle, green plus, blue cross):
-
->>> ax.set_prop_cycle(color=['red', 'green', 'blue'],
-...                   marker=['o', '+', 'x'])"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.set_prop_cycle)"""
         ...
 
     def _is_panel_group_member(self, other: 'Axes') -> bool:
@@ -775,128 +538,38 @@ labelright/labelleft respectively."""
 
     def inset(self, *args: Incomplete, **kwargs: Incomplete) -> Axes:
         """Add an inset axes.
-This is similar to [matplotlib.axes.Axes.inset_axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.inset_axes.html).
 
 Parameters
------------
-bounds : 4-tuple of float or (4-tuple, transform)
-    The (left, bottom, width, height) coordinates for the axes. To specify the
-    coordinate system alongside the coordinates, pass ``(bounds, transform)``.
-transform : {'data', 'axes', 'figure', 'subfigure'} or [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html), optional
-    The transform used to interpret the bounds. Can be a
-    [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html) instance or a string representing
-    the [transData](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transData.html), [transAxes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transAxes.html),
-    [transFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.transFigure.html), or
-    [transSubfigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.transSubfigure.html), transforms.
-    Default is to use the same projection as the current axes.
-proj, projection :
-str, `cartopy.crs.Projection`, or `Basemap`, optional
-    The map projection specification(s). If ``'cart'`` or ``'cartesian'``
-    (the default), a [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html) is created. If ``'polar'``,
-    a [PolarAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html) is created. Otherwise, the argument is
-    interpreted by [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html), and the result is used
-    to make a [GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) (in this case the argument can be
-    a `cartopy.crs.Projection` instance, a `Basemap`
-    instance, or a projection name listed in [this table](https://ultraplot.readthedocs.io/en/stable/search.html?q=proj_table)).
-proj_kw, projection_kw : dict-like, optional
-    Keyword arguments passed to `Basemap` or
-    `Projection` classes on instantiation.
-backend : {'cartopy', 'basemap'}, default: [geo.backend](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.backend)
-    Whether to use `Basemap` or
-    `Projection` for map projections.
+----------
+- `bounds`: The (left, bottom, width, height) coordinates for the axes.
+- `transform`: The transform used to interpret the bounds.
+- `proj, projection`: The map projection specification(s).
+- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `backend`: Whether to use `Basemap` or `Projection` for map projections.
+- `zorder`: The [zorder](https://matplotlib.org/stable/gallery/misc/zorder_demo.html) of the axes.
+- `zoom`: Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.
+- `zoom_kw`: Passed to `~Axes.indicate_inset_zoom`.
+- `**kwargs`: Passed to [ultraplot.axes.Axes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html).
 
-    .. deprecated:: 3.0.0
-        The ``'basemap'`` backend is deprecated and may be removed in a
-        future release. Please use the ``'cartopy'`` backend instead.
-zorder : float, default: 4
-    The [zorder](https://matplotlib.org/stable/gallery/misc/zorder_demo.html)
-    of the axes. Should be greater than the zorder of elements in the parent axes.
-zoom : bool, default: True or False
-    Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.
-    The line positions will automatically adjust when the parent or inset axes limits
-    change. Default is ``True`` only if both axes are [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html).
-zoom_kw : dict, optional
-    Passed to `~Axes.indicate_inset_zoom`.
-
-Other parameters
------------------
-**kwargs
-    Passed to [ultraplot.axes.Axes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html).
-
-Returns
---------
-ultraplot.axes.Axes
-    The inset axes.
-
-See also
----------
-Axes.indicate_inset_zoom
-matplotlib.axes.Axes.inset_axes
-matplotlib.axes.Axes.indicate_inset
-matplotlib.axes.Axes.indicate_inset_zoom"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.inset)"""
         ...
 
     def inset_axes(self, *args: Incomplete, **kwargs: Incomplete) -> Axes:
         """Add an inset axes.
-This is similar to [matplotlib.axes.Axes.inset_axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.inset_axes.html).
 
 Parameters
------------
-bounds : 4-tuple of float or (4-tuple, transform)
-    The (left, bottom, width, height) coordinates for the axes. To specify the
-    coordinate system alongside the coordinates, pass ``(bounds, transform)``.
-transform : {'data', 'axes', 'figure', 'subfigure'} or [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html), optional
-    The transform used to interpret the bounds. Can be a
-    [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html) instance or a string representing
-    the [transData](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transData.html), [transAxes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transAxes.html),
-    [transFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.transFigure.html), or
-    [transSubfigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.transSubfigure.html), transforms.
-    Default is to use the same projection as the current axes.
-proj, projection :
-str, `cartopy.crs.Projection`, or `Basemap`, optional
-    The map projection specification(s). If ``'cart'`` or ``'cartesian'``
-    (the default), a [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html) is created. If ``'polar'``,
-    a [PolarAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html) is created. Otherwise, the argument is
-    interpreted by [Proj](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Proj.html), and the result is used
-    to make a [GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) (in this case the argument can be
-    a `cartopy.crs.Projection` instance, a `Basemap`
-    instance, or a projection name listed in [this table](https://ultraplot.readthedocs.io/en/stable/search.html?q=proj_table)).
-proj_kw, projection_kw : dict-like, optional
-    Keyword arguments passed to `Basemap` or
-    `Projection` classes on instantiation.
-backend : {'cartopy', 'basemap'}, default: [geo.backend](https://ultraplot.readthedocs.io/en/stable/search.html?q=geo.backend)
-    Whether to use `Basemap` or
-    `Projection` for map projections.
+----------
+- `bounds`: The (left, bottom, width, height) coordinates for the axes.
+- `transform`: The transform used to interpret the bounds.
+- `proj, projection`: The map projection specification(s).
+- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `backend`: Whether to use `Basemap` or `Projection` for map projections.
+- `zorder`: The [zorder](https://matplotlib.org/stable/gallery/misc/zorder_demo.html) of the axes.
+- `zoom`: Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.
+- `zoom_kw`: Passed to `~Axes.indicate_inset_zoom`.
+- `**kwargs`: Passed to [ultraplot.axes.Axes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html).
 
-    .. deprecated:: 3.0.0
-        The ``'basemap'`` backend is deprecated and may be removed in a
-        future release. Please use the ``'cartopy'`` backend instead.
-zorder : float, default: 4
-    The [zorder](https://matplotlib.org/stable/gallery/misc/zorder_demo.html)
-    of the axes. Should be greater than the zorder of elements in the parent axes.
-zoom : bool, default: True or False
-    Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.
-    The line positions will automatically adjust when the parent or inset axes limits
-    change. Default is ``True`` only if both axes are [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html).
-zoom_kw : dict, optional
-    Passed to `~Axes.indicate_inset_zoom`.
-
-Other parameters
------------------
-**kwargs
-    Passed to [ultraplot.axes.Axes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html).
-
-Returns
---------
-ultraplot.axes.Axes
-    The inset axes.
-
-See also
----------
-Axes.indicate_inset_zoom
-matplotlib.axes.Axes.inset_axes
-matplotlib.axes.Axes.indicate_inset
-matplotlib.axes.Axes.indicate_inset_zoom"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.inset_axes)"""
         ...
 
     @override
@@ -943,120 +616,32 @@ matplotlib.axes.Axes.indicate_inset_zoom"""
         """Add a panel axes.
 
 Parameters
------------
-side : str, optional
-    The panel location. Valid location keys are as follows.
+----------
+- `side`: The panel location.
+- `width`: The panel width.
+- `space`: The fixed space between the panel and the subplot edge.
+- `pad`: The [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) between the panel and the subplot.
+- `span`: Integer(s) indicating the span of the panel across rows and columns of subplots.
+- `share`: Whether to enable axis sharing between the *x* and *y* axes of the main subplot and the panel long axes for each panel in the "stack".
+- `**kwargs`: Passed to [ultraplot.axes.CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html).
 
-    ==========  =====================
-    Location    Valid keys
-    ==========  =====================
-    left        ``'left'``, ``'l'``
-    right       ``'right'``, ``'r'``
-    bottom      ``'bottom'``, ``'b'``
-    top         ``'top'``, ``'t'``
-    ==========  =====================
-
-width : unit-spec, default: [subplots.panelwidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelwidth)
-    The panel width.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-space : unit-spec, default: None
-    The fixed space between the panel and the subplot edge.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    When the [tight layout algorithm](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) is active for the figure,
-    `space` is computed automatically (see `pad`). Otherwise, `space` is set to
-    a suitable default.
-pad : unit-spec, default: [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)
-    The [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) between the panel and the subplot.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-row, rows
-    Aliases for `span` for panels on the left or right side (vertical panels).
-col, cols
-    Aliases for `span` for panels on the top or bottom side (horizontal panels).
-span : int or 2-tuple of int, default: None
-    Integer(s) indicating the span of the panel across rows and columns of
-    subplots. For panels on the left or right side, use `rows` or `row` to
-    specify which rows the panel should span. For panels on the top or bottom
-    side, use `cols` or `col` to specify which columns the panel should span.
-    For example, ``ax.panel('b', col=1)`` draws a panel beneath only the
-    leftmost column, and ``ax.panel('b', cols=(1, 2))`` draws a panel beneath
-    the left two columns. By default the panel will span all rows or columns
-    aligned with the parent axes.
-share : bool, default: True
-    Whether to enable axis sharing between the *x* and *y* axes of the
-    main subplot and the panel long axes for each panel in the "stack".
-    Sharing between the panel short axis and other panel short axes
-    is determined by figure-wide `sharex` and `sharey` settings.
-
-Other parameters
------------------
-**kwargs
-    Passed to [ultraplot.axes.CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html). Supports all valid
-    [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format) keywords.
-
-Returns
---------
-ultraplot.axes.CartesianAxes
-    The panel axes."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.panel)"""
         ...
 
     def panel_axes(self, side: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Add a panel axes.
 
 Parameters
------------
-side : str, optional
-    The panel location. Valid location keys are as follows.
+----------
+- `side`: The panel location.
+- `width`: The panel width.
+- `space`: The fixed space between the panel and the subplot edge.
+- `pad`: The [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) between the panel and the subplot.
+- `span`: Integer(s) indicating the span of the panel across rows and columns of subplots.
+- `share`: Whether to enable axis sharing between the *x* and *y* axes of the main subplot and the panel long axes for each panel in the "stack".
+- `**kwargs`: Passed to [ultraplot.axes.CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html).
 
-    ==========  =====================
-    Location    Valid keys
-    ==========  =====================
-    left        ``'left'``, ``'l'``
-    right       ``'right'``, ``'r'``
-    bottom      ``'bottom'``, ``'b'``
-    top         ``'top'``, ``'t'``
-    ==========  =====================
-
-width : unit-spec, default: [subplots.panelwidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelwidth)
-    The panel width.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-space : unit-spec, default: None
-    The fixed space between the panel and the subplot edge.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    When the [tight layout algorithm](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) is active for the figure,
-    `space` is computed automatically (see `pad`). Otherwise, `space` is set to
-    a suitable default.
-pad : unit-spec, default: [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)
-    The [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) between the panel and the subplot.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-row, rows
-    Aliases for `span` for panels on the left or right side (vertical panels).
-col, cols
-    Aliases for `span` for panels on the top or bottom side (horizontal panels).
-span : int or 2-tuple of int, default: None
-    Integer(s) indicating the span of the panel across rows and columns of
-    subplots. For panels on the left or right side, use `rows` or `row` to
-    specify which rows the panel should span. For panels on the top or bottom
-    side, use `cols` or `col` to specify which columns the panel should span.
-    For example, ``ax.panel('b', col=1)`` draws a panel beneath only the
-    leftmost column, and ``ax.panel('b', cols=(1, 2))`` draws a panel beneath
-    the left two columns. By default the panel will span all rows or columns
-    aligned with the parent axes.
-share : bool, default: True
-    Whether to enable axis sharing between the *x* and *y* axes of the
-    main subplot and the panel long axes for each panel in the "stack".
-    Sharing between the panel short axis and other panel short axes
-    is determined by figure-wide `sharex` and `sharey` settings.
-
-Other parameters
------------------
-**kwargs
-    Passed to [ultraplot.axes.CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html). Supports all valid
-    [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format) keywords.
-
-Returns
---------
-ultraplot.axes.CartesianAxes
-    The panel axes."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.panel_axes)"""
         ...
 
     def colorbar(self, mappable: Incomplete, values: Incomplete=None, loc: Incomplete=None, location: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
@@ -1064,221 +649,45 @@ ultraplot.axes.CartesianAxes
 
 Parameters
 ----------
-    mappable : mappable, colormap-spec, sequence of color-spec,
-        or sequence of [Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html)
-        There are four options here:
+- `space`: For outer colorbars only.
+- `pad`: For outer colorbars, this is the [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) between the colorbar and the subplot (default is [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)).
+- `align`: For outer colorbars only.
+- `norm`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
+- `norm_kw`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
+- `vmin, vmax`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
+- `label, title`: The colorbar label.
+- `reverse`: Whether to reverse the direction of the colorbar.
+- `rotation`: The tick label rotation.
+- `grid, edges, drawedges`: Whether to draw "grid" dividers between each distinct color.
+- `extend`: Direction for drawing colorbar "extensions" (i.e.
+- `extendfrac`: The length of the colorbar "extensions" relative to the length of the colorbar.
+- `extendsize`: The length of the colorbar "extensions" in physical units.
+- `extendrect`: Whether to draw colorbar "extensions" as rectangles.
+- `locator, ticks`: Used to determine the colorbar tick positions.
+- `locator_kw`: Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
+- `minorlocator_kw`: As with `locator_kw`, but for the minor ticks.
+- `format, formatter, ticklabels`: The tick label format.
+- `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
+- `frame, frameon`: For inset colorbars, indicates whether to draw a background "frame", just like [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
+- `tickminor`: Whether to add minor ticks using [minorticks_on](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorbar.ColorbarBase.minorticks_on.html).
+- `tickloc, ticklocation`: Where to draw tick marks on the colorbar.
+- `tickdir, tickdirection`: Direction of major and minor colorbar ticks.
+- `ticklen`: Major tick lengths for the colorbar ticks.
+- `ticklenratio`: Relative scaling of `ticklen` used to determine minor tick lengths.
+- `tickwidth`: Major tick widths for the colorbar ticks.
+- `tickwidthratio`: Relative scaling of `tickwidth` used to determine minor tick widths.
+- `ticklabelcolor, ticklabelsize, ticklabelweight`: The font color, size, and weight for colorbar tick labels
+- `labelloc, labellocation`: The colorbar label location.
+- `labelcolor, labelsize, labelweight`: The font color, size, and weight for the colorbar label.
+- `a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth`: For inset colorbars only.
+- `lw, linewidth, c, color`: Controls the line width and edge color for both the colorbar outline and the level dividers.
+- `edgefix`: Whether to fix the common issue where white lines appear between adjacent patches in saved vector graphics (this can slow down figure rendering).
+- `rasterize`: Whether to rasterize the colorbar solids.
+- `outline`: Controls the visibility of the outer colorbar outline.
+- `labelrotation`: Controls the rotation of the colorbar label.
+- _1 additional parameter groups are documented online._
 
-        1. A [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html) (e.g., an object returned by
-        [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.contourf) or [pcolormesh](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.pcolormesh)).
-        2. A [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html) or registered colormap name used to build a
-        [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html) on-the-fly. The colorbar range and ticks depend
-        on the arguments `values`, `vmin`, `vmax`, and `norm`. The default for a
-        [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html) is ``vmin=0`` and ``vmax=1`` (note that
-        passing `values` will "discretize" the colormap). The default for a
-        [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html) is ``values=np.arange(0, cmap.N)``.
-        3. A sequence of hex strings, color names, or RGB[A] tuples. A
-        [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html) will be generated from these colors and
-        used to build a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html) on-the-fly. The colorbar
-        range and ticks depend on the arguments `values`, `norm`, and
-        `norm_kw`. The default is ``values=np.arange(0, len(mappable))``.
-        4. A sequence of [matplotlib.artist.Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html) instances (e.g., a list of
-        [Line2D](https://matplotlib.org/stable/api/_as_gen/matplotlib.lines.Line2D.html) instances returned by [plot](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.plot)).
-        A colormap will be generated from the colors of these objects (where the
-        color is determined by ``get_color``, if available, or ``get_facecolor``).
-        The colorbar range and ticks depend on the arguments `values`, `norm`, and
-        `norm_kw`. The default is to infer colorbar ticks and tick labels
-        by calling [get_label](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.get_label.html) on each artist.
-
-    values : sequence of float or str, optional
-        Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html). This maps the colormap
-        colors to numeric values using [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html). If the colormap is
-        a [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html) then its colors will be "discretized".
-        These These can also be strings, in which case the list indices are used for
-        tick locations and the strings are applied as tick labels.
-    loc, location : int or str, default: [colorbar.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.loc)
-        The colorbar location. Valid location keys are shown in the below table.
-
-        .. _colorbar_table:
-
-        ==================  =======================================
-        Location            Valid keys
-        ==================  =======================================
-        outer left          ``'left'``, ``'l'``
-        outer right         ``'right'``, ``'r'``
-        outer bottom        ``'bottom'``, ``'b'``
-        outer top           ``'top'``, ``'t'``
-        default inset       ``'best'``, ``'inset'``, ``'i'``, ``0``
-        upper right inset   ``'upper right'``, ``'ur'``, ``1``
-        upper left inset    ``'upper left'``, ``'ul'``, ``2``
-        lower left inset    ``'lower left'``, ``'ll'``, ``3``
-        lower right inset   ``'lower right'``, ``'lr'``, ``4``
-        "filled"            ``'fill'``
-        ==================  =======================================
-
-    shrink
-        Alias for `length`. This is included for consistency with
-        [matplotlib.figure.Figure.colorbar](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.colorbar.html).
-    length : float or unit-spec, default: [colorbar.length](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.length) or [colorbar.insetlength](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.insetlength)
-        The colorbar length. For outer colorbars, units are relative to the axes
-        width or height (default is [colorbar.length](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.length)). For inset
-        colorbars, floats interpreted as em-widths and strings interpreted
-        by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html) (default is [colorbar.insetlength](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.insetlength)).
-    width : unit-spec, default: [colorbar.width](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.width) or [colorbar.insetwidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.insetwidth)
-        The colorbar width. For outer colorbars, floats are interpreted as inches
-        (default is [colorbar.width](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.width)). For inset colorbars, floats are
-        interpreted as em-widths (default is [colorbar.insetwidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.insetwidth)).
-        Strings are interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    queue : bool, optional
-    If ``True`` and `loc` is the same as an existing colorbar, the input
-    arguments are added to a queue and this function returns ``None``.
-    This is used to "update" the same colorbar with successive ``ax.colorbar(...)``
-    calls. If ``False`` (the default) and `loc` is the same as an existing
-    *inset* colorbar, the old colorbar is removed. If ``False`` and `loc` is an
-    *outer* colorbar, the colorbars are "stacked".
-space : unit-spec, default: None
-    For outer colorbars only. The fixed space between the colorbar and the subplot
-    edge. If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    When the [tight layout algorithm](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) is active for the figure,
-    `space` is computed automatically (see `pad`). Otherwise, `space` is set to
-    a suitable default.
-pad : unit-spec, default: [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad) or [colorbar.insetpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.insetpad)
-    For outer colorbars, this is the [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight)
-    between the colorbar and the subplot (default is [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)).
-    For inset colorbars, this is the fixed space between the axes
-    edge and the colorbar (default is [colorbar.insetpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.insetpad)).
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-align : {'center', 'top', 'bottom', 'left', 'right', 't', 'b', 'l', 'r'}, optional
-    For outer colorbars only. How to align the colorbar against the subplot edge.
-    The values ``'top'`` and ``'bottom'`` are valid for left and right colorbars
-    and ``'left'`` and ``'right'`` are valid for top and bottom colorbars.
-    The default is always ``'center'``.
-        Has no visible effect if `length` is ``1``.
-    bbox_to_anchor : 2-tuple, 4-tuple, or [matplotlib.transforms.Bbox](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Bbox.html), optional
-        For inset colorbars, anchor the full colorbar footprint using the
-        same semantics as [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html). The colorbar
-        `loc` selects the corresponding anchor corner. Outer colorbar
-        placement is unchanged.
-    Other parameters
-    ----------------
-    orientation : {None, 'horizontal', 'vertical'}, optional
-    The colorbar orientation. By default this depends on the "side" of the subplot
-    or figure where the colorbar is drawn. Inset colorbars are always horizontal.
-norm : norm-spec, optional
-    Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html). This is the continuous
-    normalizer used to scale the [ContinuousColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.ContinuousColormap.html) (or passed
-    to [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) if `values` was passed). Passed to the
-    [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
-norm_kw : dict-like, optional
-    Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html). These are the
-    normalizer keyword arguments. Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
-vmin, vmax : float, optional
-    Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html). These are the minimum
-    and maximum colorbar values. Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
-label, title : str, optional
-    The colorbar label. The `title` keyword is also accepted for
-    consistency with [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
-reverse : bool, optional
-    Whether to reverse the direction of the colorbar. This is done automatically
-    when descending levels are used with [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html).
-rotation : float, default: 0
-    The tick label rotation.
-grid, edges, drawedges : bool, default: [colorbar.grid](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.grid)
-    Whether to draw "grid" dividers between each distinct color.
-extend : {'neither', 'both', 'min', 'max'}, optional
-    Direction for drawing colorbar "extensions" (i.e. color keys for out-of-bounds
-    data on the end of the colorbar). Default behavior is to use the value of `extend`
-    passed to the plotting command or use ``'neither'`` if the value is unknown.
-extendfrac : float, optional
-    The length of the colorbar "extensions" relative to the length of the colorbar.
-    This is a native matplotlib [colorbar](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.colorbar.html) keyword.
-extendsize : unit-spec, default: [colorbar.extend](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.extend) or [colorbar.insetextend](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.insetextend)
-    The length of the colorbar "extensions" in physical units. Default is
-    [colorbar.extend](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.extend) for outer colorbars and [colorbar.insetextend](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.insetextend)
-    for inset colorbars. If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-extendrect : bool, default: False
-    Whether to draw colorbar "extensions" as rectangles. If ``False`` then
-    the extensions are drawn as triangles.
-locator, ticks : locator-spec, optional
-    Used to determine the colorbar tick positions. Passed to the
-    [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor function. By default
-    [AutoLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.AutoLocator.html) is used for continuous color levels
-    and [DiscreteLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.DiscreteLocator.html) is used for discrete color levels.
-locator_kw : dict-like, optional
-    Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
-minorlocator, minorticks
-    As with `locator`, `ticks` but for the minor ticks. By default
-    [AutoMinorLocator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.AutoMinorLocator.html) is used for continuous color levels
-    and [DiscreteLocator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.DiscreteLocator.html) is used for discrete color levels.
-minorlocator_kw
-    As with `locator_kw`, but for the minor ticks.
-format, formatter, ticklabels : formatter-spec, optional
-    The tick label format. Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html)
-    constructor function.
-formatter_kw : dict-like, optional
-    Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
-frame, frameon : bool, optional
-    For inset colorbars, indicates whether to draw a background "frame",
-    just like [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html). Defaults to
-    [colorbar.frameon](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.frameon) for inset colorbars. For outer colorbars, this is a
-    backwards-compatible alias for `outline`; when omitted, outer colorbars
-    still default to [colorbar.outline](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.outline).
-tickminor : bool, optional
-    Whether to add minor ticks using [minorticks_on](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorbar.ColorbarBase.minorticks_on.html).
-tickloc, ticklocation : {'bottom', 'top', 'left', 'right'}, optional
-    Where to draw tick marks on the colorbar. Default is toward the outside
-    of the subplot for outer colorbars and ``'bottom'`` for inset colorbars.
-tickdir, tickdirection : {'out', 'in', 'inout'}, default: [tick.dir](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.dir)
-    Direction of major and minor colorbar ticks.
-ticklen : unit-spec, default: [tick.len](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.len)
-    Major tick lengths for the colorbar ticks.
-ticklenratio : float, default: [tick.lenratio](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.lenratio)
-    Relative scaling of `ticklen` used to determine minor tick lengths.
-tickwidth : unit-spec, default: `linewidth`
-    Major tick widths for the colorbar ticks.
-    or [tick.width](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.width) if `linewidth` was not passed.
-tickwidthratio : float, default: [tick.widthratio](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.widthratio)
-    Relative scaling of `tickwidth` used to determine minor tick widths.
-ticklabelcolor, ticklabelsize, ticklabelweight: default: [tick.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelcolor), [tick.labelsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelsize), [tick.labelweight](https://ultraplot.readthedocs.io/en/stable/search.html?q=tick.labelweight).
-    The font color, size, and weight for colorbar tick labels
-labelloc, labellocation : {'bottom', 'top', 'left', 'right'}
-    The colorbar label location. Inherits from `tickloc` by default. Default is toward
-    the outside of the subplot for outer colorbars and ``'bottom'`` for inset colorbars.
-labelcolor, labelsize, labelweight: default: [label.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.color), [label.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.size), and [label.weight](https://ultraplot.readthedocs.io/en/stable/search.html?q=label.weight).
-    The font color, size, and weight for the colorbar label.
-a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth : default: [colorbar.framealpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.framealpha), [colorbar.framecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.framecolor)
-    For inset colorbars only. Controls the transparency and color of
-    the background frame.
-lw, linewidth, c, color : optional
-    Controls the line width and edge color for both the colorbar
-    outline and the level dividers.
-edgefix : bool or float, default: [edgefix](https://ultraplot.readthedocs.io/en/stable/search.html?q=edgefix)
-    Whether to fix the common issue where white lines appear between adjacent
-    patches in saved vector graphics (this can slow down figure rendering).
-    See this [github repo](https://github.com/jklymak/contourfIssues) for a
-    demonstration of the problem. If ``True``, a small default linewidth of
-    ``0.3`` is used to cover up the white lines. If float (e.g. ``edgefix=0.5``),
-    this specific linewidth is used to cover up the white lines. This feature is
-    automatically disabled when the patches have transparency.
-rasterize : bool, default: [colorbar.rasterized](https://ultraplot.readthedocs.io/en/stable/search.html?q=colorbar.rasterized)
-    Whether to rasterize the colorbar solids. The matplotlib default was ``True``
-    but ultraplot changes this to ``False`` since rasterization can cause misalignment
-    between the color patches and the colorbar outline.
-outline : bool, None default : None
-    Controls the visibility of the outer colorbar outline. When set to False,
-    the spines of the colorbar are hidden. If set to `None` it uses the
-    `rc['colorbar.outline']` value.
-labelrotation : str, float, default: None
-    Controls the rotation of the colorbar label. When set to None it takes on the value of `rc["colorbar.labelrotation"]`. When set to auto it produces a sensible default where the rotation is adjusted to where the colorbar is located. For example, a horizontal colorbar with a label to the left or right will match the horizontal alignment and rotate the label to 0 degrees. Users can provide a float to rotate to any arbitrary angle.
-
-
-
-**kwargs
-    Passed to [colorbar](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.colorbar.html).
-
-See also
---------
-ultraplot.figure.Figure.colorbar
-matplotlib.figure.Figure.colorbar"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar)"""
         ...
 
     def legend(self, handles: Incomplete=None, labels: Incomplete=None, loc: Incomplete=None, location: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Incomplete) -> Incomplete:
@@ -1286,447 +695,45 @@ matplotlib.figure.Figure.colorbar"""
 
 Parameters
 ----------
-handles : list of artist, optional
-    List of matplotlib artists, or a list of lists of artist instances (see the `center`
-    keyword). If not passed, artists with valid labels (applied by passing `label` or
-    `labels` to a plotting command or calling [set_label](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.set_label.html))
-    are retrieved automatically. If the object is a [ContourSet](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.html),
-    [legend_elements](https://matplotlib.org/stable/api/_as_gen/matplotlib.contour.ContourSet.legend_elements.html) is used to select the central
-    artist in the list (generally useful for single-color contour plots). Note that
-    ultraplot's [contour](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.contour) and [contourf](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.contourf)
-    accept a legend `label` keyword argument.
-labels : list of str, optional
-    A matching list of string labels or ``None`` placeholders, or a matching list of
-    lists (see the `center` keyword). Wherever ``None`` appears in the list (or
-    if no labels were passed at all), labels are retrieved by calling
-    [get_label](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.get_label.html) on each [Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html) in the
-    handle list. If a handle consists of a tuple group of artists, labels are inferred
-    from the artists in the tuple (if there are multiple unique labels in the tuple
-    group of artists, the tuple group is expanded into unique legend entries --
-    otherwise, the tuple group elements are drawn on top of eachother). For details
-    on matplotlib legend handlers and tuple groups, see the matplotlib [legend guide](https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html).
-loc, location : int or str, default: [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc)
-    The legend location. Valid location keys are shown in the below table.
-
-    .. _legend_table:
-
-    ==================  =======================================
-    Location            Valid keys
-    ==================  =======================================
-    outer left          ``'left'``, ``'l'``
-    outer right         ``'right'``, ``'r'``
-    outer bottom        ``'bottom'``, ``'b'``
-    outer top           ``'top'``, ``'t'``
-    "best" inset        ``'best'``, ``'inset'``, ``'i'``, ``0``
-    upper right inset   ``'upper right'``, ``'ur'``, ``1``
-    upper left inset    ``'upper left'``, ``'ul'``, ``2``
-    lower left inset    ``'lower left'``, ``'ll'``, ``3``
-    lower right inset   ``'lower right'``, ``'lr'``, ``4``
-    center left inset   ``'center left'``, ``'cl'``, ``5``
-    center right inset  ``'center right'``, ``'cr'``, ``6``
-    lower center inset  ``'lower center'``, ``'lc'``, ``7``
-    upper center inset  ``'upper center'``, ``'uc'``, ``8``
-    center inset        ``'center'``, ``'c'``, ``9``
-    "filled"            ``'fill'``
-    ==================  =======================================
-
-width : unit-spec, optional
-    For outer legends only. The space allocated for the legend
-    box. This does nothing if the [tight layout algorithm](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) is active for the figure.
-    If float, units are inches. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-queue : bool, optional
-    If ``True`` and `loc` is the same as an existing legend, the input
-    arguments are added to a queue and this function returns ``None``.
-    This is used to "update" the same legend with successive ``ax.legend(...)``
-    calls. If ``False`` (the default) and `loc` is the same as an existing
-    *inset* legend, the old legend is removed. If ``False`` and `loc` is an
-    *outer* legend, the legends are "stacked".
-space : unit-spec, default: None
-    For outer legends only. The fixed space between the legend and the subplot
-    edge. If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    When the [tight layout algorithm](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) is active for the figure,
-    `space` is computed automatically (see `pad`). Otherwise, `space` is set to
-    a suitable default.
-pad : unit-spec, default: [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad) or [legend.borderaxespad](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.borderaxespad)
-    For outer legends, this is the [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight)
-    between the legend and the subplot (default is [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)).
-    For inset legends, this is the fixed space between the axes
-    edge and the legend (default is [legend.borderaxespad](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.borderaxespad)).
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-align : {'center', 'top', 'bottom', 'left', 'right', 't', 'b', 'l', 'r'}, optional
-    For outer legends only. How to align the legend against the subplot edge.
-    The values ``'top'`` and ``'bottom'`` are valid for left and right legends
-    and ``'left'`` and ``'right'`` are valid for top and bottom legends.
-    The default is always ``'center'``.
-
-Other parameters
-----------------
-frame, frameon : bool, optional
-    Toggles the legend frame. For centered-row legends, a frame
-    independent from matplotlib's built-in legend frame is created.
-ncol, ncols : int, optional
-    The number of columns. `ncols` is an alias, added
-    for consistency with [subplots](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html).
-order : {'C', 'F'}, optional
-    Whether legend handles are drawn in row-major (``'C'``) or column-major
-    (``'F'``) order. Analagous to [numpy.array](https://numpy.org/doc/stable/reference/generated/numpy.array.html) ordering. The matplotlib
-    default was ``'F'`` but ultraplot changes this to ``'C'``.
-center : bool, optional
-    Whether to center each legend row individually. If ``True``, we draw
-    successive single-row legends "stacked" on top of each other. If ``None``,
-    we infer this setting from `handles`. By default, `center` is set to ``True``
-    if `handles` is a list of lists (each sublist is used as a row in the legend).
-alphabetize : bool, default: False
-    Whether to alphabetize the legend entries according to
-    the legend labels.
-title, label : str, optional
-    The legend title. The `label` keyword is also accepted, for consistency
-    with [colorbar](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.colorbar.html).
-fontsize, fontweight, fontcolor : optional
-    The font size, weight, and color for the legend text. Font size is interpreted
-    by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html). The default font size is [legend.fontsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.fontsize).
-titlefontsize, titlefontweight, titlefontcolor : optional
-    The font size, weight, and color for the legend title. Font size is interpreted
-    by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html). The default size is `fontsize`.
-borderpad, borderaxespad, handlelength, handleheight, handletextpad,  labelspacing, columnspacing : unit-spec, optional
-    Various matplotlib [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html) spacing arguments.
-    If float, units are em-widths. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth: default: [legend.framealpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.framealpha), [legend.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.facecolor), [legend.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.edgecolor), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) The opacity, face color, edge color, and edge width for the legend frame.
-c, color, lw, linewidth, m, marker, ls, linestyle, dashes, ms, markersize : optional
-    Properties used to override the legend handles. For example, for a
-    legend describing variations in line style ignoring variations
-    in color, you might want to use ``color='black'``.
-handle_kw : dict-like, optional
-    Additional properties used to override legend handles, e.g.
-    ``handle_kw={'edgecolor': 'black'}``. Only line properties
-    can be passed as keyword arguments.
-handler_map : dict-like, optional
-    A dictionary mapping instances or types to a legend handler.
-    This `handler_map` updates the default handler map found at
-    [matplotlib.legend.Legend.get_legend_handler_map](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.get_legend_handler_map.html).
-**kwargs
-    Passed to [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
-
-See also
---------
-ultraplot.figure.Figure.legend
-matplotlib.axes.Axes.legend
-
-Matplotlib documentation
-
-
-Place a legend on the Axes.
-
-Call signatures::
-
-    legend()
-    legend(handles, labels)
-    legend(handles=handles)
-    legend(labels)
-
-The call signatures correspond to the following different ways to use
-this method:
-
-**1. Automatic detection of elements to be shown in the legend**
-
-The elements to be added to the legend are automatically determined,
-when you do not pass in any extra arguments.
-
-In this case, the labels are taken from the artist. You can specify
-them either at artist creation or by calling the
-`set_label` method on the artist::
-
-    ax.plot([1, 2, 3], label='Inline label')
-    ax.legend()
-
-or::
-
-    line, = ax.plot([1, 2, 3])
-    line.set_label('Label via method')
-    ax.legend()
-
-.. note::
-    Specific artists can be excluded from the automatic legend element
-    selection by using a label starting with an underscore, "_".
-    A string starting with an underscore is the default label for all
-    artists, so calling `.Axes.legend` without any arguments and
-    without setting the labels manually will result in a ``UserWarning``
-    and an empty legend being drawn.
-
-
-**2. Explicitly listing the artists and labels in the legend**
-
-For full control of which artists have a legend entry, it is possible
-to pass an iterable of legend artists followed by an iterable of
-legend labels respectively::
-
-    ax.legend([line1, line2, line3], ['label1', 'label2', 'label3'])
-
-
-**3. Explicitly listing the artists in the legend**
-
-This is similar to 2, but the labels are taken from the artists'
-label properties. Example::
-
-    line1, = ax.plot([1, 2, 3], label='label1')
-    line2, = ax.plot([1, 2, 3], label='label2')
-    ax.legend(handles=[line1, line2])
-
-
-**4. Labeling existing plot elements**
-
-.. admonition:: Discouraged
-
-    This call signature is discouraged, because the relation between
-    plot elements and labels is only implicit by their order and can
-    easily be mixed up.
-
-To make a legend for all artists on an Axes, call this function with
-an iterable of strings, one for each legend item. For example::
-
-    ax.plot([1, 2, 3])
-    ax.plot([5, 6, 7])
-    ax.legend(['First line', 'Second line'])
-
-
-Parameters
-----------
-handles : list of (`.Artist` or tuple of `.Artist`), optional
-    A list of Artists (lines, patches) to be added to the legend.
-    Use this together with *labels*, if you need full control on what
-    is shown in the legend and the automatic mechanism described above
-    is not sufficient.
-
-    The length of handles and labels should be the same in this
-    case. If they are not, they are truncated to the smaller length.
-
-    If an entry contains a tuple, then the legend handler for all Artists in the
-    tuple will be placed alongside a single label.
-
-labels : list of str, optional
-    A list of labels to show next to the artists.
-    Use this together with *handles*, if you need full control on what
-    is shown in the legend and the automatic mechanism described above
-    is not sufficient.
-
-Returns
--------
-[Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html)
-
-Other Parameters
-----------------
-
-loc : str or pair of floats, default: [legend.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.loc)
-    The location of the legend.
-
-    The strings ``'upper left'``, ``'upper right'``, ``'lower left'``,
-    ``'lower right'`` place the legend at the corresponding corner of the
-    axes.
-
-    The strings ``'upper center'``, ``'lower center'``, ``'center left'``,
-    ``'center right'`` place the legend at the center of the corresponding edge
-    of the axes.
-
-    The string ``'center'`` places the legend at the center of the axes.
-
-    The string ``'best'`` places the legend at the location, among the nine
-    locations defined so far, with the minimum overlap with other drawn
-    artists.  This option can be quite slow for plots with large amounts of
-    data; your plotting speed may benefit from providing a specific location.
-
-    The location can also be a 2-tuple giving the coordinates of the lower-left
-    corner of the legend in axes coordinates (in which case *bbox_to_anchor*
-    will be ignored).
-
-    For back-compatibility, ``'center right'`` (but no other location) can also
-    be spelled ``'right'``, and each "string" location can also be given as a
-    numeric value:
-
-    ==================   =============
-    Location String      Location Code
-    ==================   =============
-    'best' (Axes only)   0
-    'upper right'        1
-    'upper left'         2
-    'lower left'         3
-    'lower right'        4
-    'right'              5
-    'center left'        6
-    'center right'       7
-    'lower center'       8
-    'upper center'       9
-    'center'             10
-    ==================   =============
-
-bbox_to_anchor : `.BboxBase`, 2-tuple, or 4-tuple of floats
-    Box that is used to position the legend in conjunction with *loc*.
-    Defaults to ``axes.bbox`` (if called as a method to `.Axes.legend`) or
-    ``figure.bbox`` (if ``figure.legend``).  This argument allows arbitrary
-    placement of the legend.
-
-    Bbox coordinates are interpreted in the coordinate system given by
-    *bbox_transform*, with the default transform
-    Axes or Figure coordinates, depending on which ``legend`` is called.
-
-    If a 4-tuple or `.BboxBase` is given, then it specifies the bbox
-    ``(x, y, width, height)`` that the legend is placed in.
-    To put the legend in the best location in the bottom right
-    quadrant of the Axes (or figure)::
-
-        loc='best', bbox_to_anchor=(0.5, 0., 0.5, 0.5)
-
-    A 2-tuple ``(x, y)`` places the corner of the legend specified by *loc* at
-    x, y.  For example, to put the legend's upper right-hand corner in the
-    center of the Axes (or figure) the following keywords can be used::
-
-        loc='upper right', bbox_to_anchor=(0.5, 0.5)
-
-ncols : int, default: 1
-    The number of columns that the legend has.
-
-    For backward compatibility, the spelling *ncol* is also supported
-    but it is discouraged. If both are given, *ncols* takes precedence.
-
-prop : None or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html) or dict
-    The font properties of the legend. If None (default), the current
-    [matplotlib.rcParams](https://matplotlib.org/stable/api/_as_gen/matplotlib.rcParams.html) will be used.
-
-fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
-    The font size of the legend. If the value is numeric the size will be the
-    absolute font size in points. String values are relative to the current
-    default font size. This argument is only used if *prop* is not specified.
-
-labelcolor : str or list, default: [legend.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.labelcolor)
-    The color of the text in the legend. Either a valid color string
-    (for example, 'red'), or a list of color strings. The labelcolor can
-    also be made to match the color of the line or marker using 'linecolor',
-    'markerfacecolor' (or 'mfc'), or 'markeredgecolor' (or 'mec').
-
-    Labelcolor can be set globally using [legend.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.labelcolor). If None,
-    use [text.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.color).
-
-numpoints : int, default: [legend.numpoints](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.numpoints)
-    The number of marker points in the legend when creating a legend
-    entry for a `.Line2D` (line).
-
-scatterpoints : int, default: [legend.scatterpoints](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.scatterpoints)
-    The number of marker points in the legend when creating
-    a legend entry for a `.PathCollection` (scatter plot).
-
-scatteryoffsets : iterable of floats, default: ``[0.375, 0.5, 0.3125]``
-    The vertical offset (relative to the font size) for the markers
-    created for a scatter plot legend entry. 0.0 is at the base the
-    legend text, and 1.0 is at the top. To draw all markers at the
-    same height, set to ``[0.5]``.
-
-markerscale : float, default: [legend.markerscale](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.markerscale)
-    The relative size of legend markers compared to the originally drawn ones.
-
-markerfirst : bool, default: True
-    If *True*, legend marker is placed to the left of the legend label.
-    If *False*, legend marker is placed to the right of the legend label.
-
-reverse : bool, default: False
-    If *True*, the legend labels are displayed in reverse order from the input.
-    If *False*, the legend labels are displayed in the same order as the input.
-
-    .. versionadded:: 3.7
-
-frameon : bool, default: [legend.frameon](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.frameon)
-    Whether the legend should be drawn on a patch (frame).
-
-fancybox : bool, default: [legend.fancybox](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.fancybox)
-    Whether round edges should be enabled around the `.FancyBboxPatch` which
-    makes up the legend's background.
-
-shadow : None, bool or dict, default: [legend.shadow](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.shadow)
-    Whether to draw a shadow behind the legend.
-    The shadow can be configured using `.Patch` keywords.
-    Customization via [legend.shadow](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.shadow) is currently not supported.
-
-framealpha : float, default: [legend.framealpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.framealpha)
-    The alpha transparency of the legend's background.
-    If *shadow* is activated and *framealpha* is ``None``, the default value is
-    ignored.
-
-facecolor : "inherit" or color, default: [legend.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.facecolor)
-    The legend's background color.
-    If ``"inherit"``, use [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor).
-
-edgecolor : "inherit" or color, default: [legend.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.edgecolor)
-    The legend's background patch edge color.
-    If ``"inherit"``, use [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor).
-
-mode : {"expand", None}
-    If *mode* is set to ``"expand"`` the legend will be horizontally
-    expanded to fill the Axes area (or *bbox_to_anchor* if defines
-    the legend's size).
-
-bbox_transform : None or [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
-    The transform for the bounding box (*bbox_to_anchor*). For a value
-    of ``None`` (default) the Axes'
-    [transAxes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transAxes.html) transform will be used.
-
-title : str or None
-    The legend's title. Default is no title (``None``).
-
-title_fontproperties : None or [FontProperties](https://matplotlib.org/stable/api/_as_gen/matplotlib.font_manager.FontProperties.html) or dict
-    The font properties of the legend's title. If None (default), the
-    *title_fontsize* argument will be used if present; if *title_fontsize* is
-    also None, the current [legend.title_fontsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.title_fontsize) will be used.
-
-title_fontsize : int or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}, default: [legend.title_fontsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.title_fontsize)
-    The font size of the legend's title.
-    Note: This cannot be combined with *title_fontproperties*. If you want
-    to set the fontsize alongside other font properties, use the *size*
-    parameter in *title_fontproperties*.
-
-alignment : {'center', 'left', 'right'}, default: 'center'
-    The alignment of the legend title and the box of entries. The entries
-    are aligned as a single block, so that markers always lined up.
-
-borderpad : float, default: [legend.borderpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.borderpad)
-    The fractional whitespace inside the legend border, in font-size units.
-
-labelspacing : float, default: [legend.labelspacing](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.labelspacing)
-    The vertical space between the legend entries, in font-size units.
-
-handlelength : float, default: [legend.handlelength](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.handlelength)
-    The length of the legend handles, in font-size units.
-
-handleheight : float, default: [legend.handleheight](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.handleheight)
-    The height of the legend handles, in font-size units.
-
-handletextpad : float, default: [legend.handletextpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.handletextpad)
-    The pad between the legend handle and text, in font-size units.
-
-borderaxespad : float, default: [legend.borderaxespad](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.borderaxespad)
-    The pad between the Axes and legend border, in font-size units.
-
-columnspacing : float, default: [legend.columnspacing](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.columnspacing)
-    The spacing between columns, in font-size units.
-
-handler_map : dict or None
-    The custom dictionary mapping instances or types to a legend
-    handler. This *handler_map* updates the default handler map
-    found at [matplotlib.legend.Legend.get_legend_handler_map](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.get_legend_handler_map.html).
-
-draggable : bool, default: False
-    Whether the legend can be dragged with the mouse.
-
-
-See Also
---------
-.Figure.legend
-
-Notes
------
-Some artists are not supported by this function.  See
-[legend_guide](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend_guide) for details.
-
-Examples
---------
-.. plot:: gallery/text_labels_and_annotations/legend.py"""
+- `handles`: List of matplotlib artists, or a list of lists of artist instances (see the `center` keyword).
+- `labels`: A matching list of string labels or ``None`` placeholders, or a matching list of lists (see the `center` keyword).
+- `loc, location`: The legend location.
+- `width`: For outer legends only.
+- `queue`: If ``True`` and `loc` is the same as an existing legend, the input arguments are added to a queue and this function returns ``None``.
+- `space`: For outer legends only.
+- `pad`: For outer legends, this is the [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) between the legend and the subplot (default is [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)).
+- `align`: For outer legends only.
+- `frame, frameon`: Toggles the legend frame.
+- `ncol, ncols`: The number of columns.
+- `order`: Whether legend handles are drawn in row-major (``'C'``) or column-major (``'F'``) order.
+- `center`: Whether to center each legend row individually.
+- `alphabetize`: Whether to alphabetize the legend entries according to the legend labels.
+- `title, label`: The legend title.
+- `fontsize, fontweight, fontcolor`: The font size, weight, and color for the legend text.
+- `titlefontsize, titlefontweight, titlefontcolor`: The font size, weight, and color for the legend title.
+- `borderpad, borderaxespad, handlelength, handleheight, handletextpad, labelspacing, columnspacing`: Various matplotlib [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html) spacing arguments.
+- `a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth`: See the full API documentation.
+- `c, color, lw, linewidth, m, marker, ls, linestyle, dashes, ms, markersize`: Properties used to override the legend handles.
+- `handle_kw`: Additional properties used to override legend handles, e.g.
+- `handler_map`: A dictionary mapping instances or types to a legend handler.
+- `**kwargs`: Passed to [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
+- `loc`: The location of the legend.
+- `bbox_to_anchor`: Box that is used to position the legend in conjunction with *loc*.
+- `ncols`: The number of columns that the legend has.
+- `prop`: The font properties of the legend.
+- `fontsize`: The font size of the legend.
+- `labelcolor`: The color of the text in the legend.
+- `numpoints`: The number of marker points in the legend when creating a legend entry for a `.Line2D` (line).
+- `scatterpoints`: The number of marker points in the legend when creating a legend entry for a `.PathCollection` (scatter plot).
+- `scatteryoffsets`: The vertical offset (relative to the font size) for the markers created for a scatter plot legend entry.
+- `markerscale`: The relative size of legend markers compared to the originally drawn ones.
+- `markerfirst`: If *True*, legend marker is placed to the left of the legend label.
+- `reverse`: If *True*, the legend labels are displayed in reverse order from the input.
+- `frameon`: Whether the legend should be drawn on a patch (frame).
+- `fancybox`: Whether round edges should be enabled around the `.FancyBboxPatch` which makes up the legend's background.
+- _18 additional parameter groups are documented online._
+
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend)"""
         ...
 
     def add_legend(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -1738,440 +745,89 @@ Matplotlib-internal entry point."""
         ...
 
     def catlegend(self, categories: Incomplete, **kwargs: Incomplete) -> Incomplete:
-        """Build a categorical legend — one handle per unique category — and
-optionally draw it.
+        """Build a categorical legend — one handle per unique category — and optionally draw it.
 
 Parameters
 ----------
-categories : iterable
-    Category labels in display order. Duplicates are collapsed; the
-    first occurrence determines position.
-color, marker
-    A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.
-    Defaults to ultraplot's color cycle for ``color`` and ``"o"`` for
-    ``marker`` (or [legend.cat.marker](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.cat.marker) when set).
-line : bool, optional
-    Whether to render connector lines through the markers. Falls back
-    to [legend.cat.line](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.cat.line). Setting a non-default ``linestyle``
-    implicitly enables this.
-Other parameters
-----------------
-Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
+- `categories`: Category labels in display order.
+- `line`: Whether to render connector lines through the markers.
+- `handle_kw`: Style overrides applied to each generated handle.
+- `add`: When ``True`` (default), draw the legend on the axes and return the legend artist.
+- `**kwargs`: Style keywords applied per entry (see above), plus any [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
 
-``color`` / ``c``
-    Marker (and line, when ``line=True``) color. ``c`` is the short alias.
-``marker`` / ``m``
-    Marker spec. Set to ``None`` or ``""`` to suppress the marker.
-``markersize`` / ``ms``, ``markeredgewidth`` / ``mew``
-    Marker dimensions. ``markersize`` / ``ms`` denote marker diameter in points.
-``s`` / ``size`` / ``sizes``
-    Scatter-style marker areas, converted to marker diameters for the legend
-    handle. Use ``markersize`` / ``ms`` when specifying diameters directly.
-``markerfacecolor`` / ``mfc``, ``markeredgecolor`` / ``mec``, ``markerfacecoloralt`` / ``mfcalt``
-    Marker fills and edges.
-``linestyle`` / ``ls``, ``linewidth`` / ``lw``
-    Connector line styling. Setting a non-default ``linestyle`` implicitly
-    enables ``line=True``.
-``alpha``, ``antialiased`` / ``aa``, ``fillstyle`` / ``fs``
-    Generic appearance.
-``marker_capstyle``, ``marker_joinstyle``, ``marker_transform``
-    Advanced ``MarkerStyle`` properties; wrapped into the rendered marker.
-
-Plural forms (``colors``, ``markers``, ``edgecolors``, ``facecolors``,
-``linestyles``, ``linewidths``) are accepted as synonyms for the singular
-per-entry form for backward compatibility. ``sizes`` is accepted as a
-scatter-style area alias.
-Each value accepts the scalar / sequence / mapping forms described in
-``A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.``.
-handle_kw : dict, optional
-    Style overrides applied to each generated handle. Same vocabulary as
-    ``**kwargs``; useful when style kwargs would otherwise collide with
-    matplotlib's [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keywords (``loc``,
-    ``title``, …).
-add : bool, default: True
-    When ``True`` (default), draw the legend on the axes and return the
-    legend artist. When ``False``, return ``(handles, labels)`` without
-    drawing — useful for composing into a parent legend.
-**kwargs
-    Style keywords applied per entry (see above), plus any
-    [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
-
-See also
---------
-Axes.entrylegend
-Axes.sizelegend"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.catlegend)"""
         ...
 
     def entrylegend(self, entries: Incomplete, **kwargs: Incomplete) -> Incomplete:
-        """Build generic semantic legend entries from explicit ``{label: style}``
-entries and optionally draw the legend.
+        """Build generic semantic legend entries from explicit ``{label: style}`` entries and optionally draw the legend.
 
 Parameters
 ----------
-entries : iterable or mapping
-    Entry specifications. Either a sequence of ``{**style_kwargs}``
-    dicts (each requiring at least ``label``) or a mapping from label
-    to style-kwargs dict.
-line : bool, optional
-    Whether each entry shows a connector line. Falls back to
-    [legend.cat.line](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.cat.line).
-marker, color
-    A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.
-Other parameters
-----------------
-Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
+- `entries`: Entry specifications.
+- `line`: Whether each entry shows a connector line.
+- `handle_kw`: Style overrides applied to each generated handle.
+- `add`: When ``True`` (default), draw the legend on the axes and return the legend artist.
+- `**kwargs`: Style keywords applied per entry (see above), plus any [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
 
-``color`` / ``c``
-    Marker (and line, when ``line=True``) color. ``c`` is the short alias.
-``marker`` / ``m``
-    Marker spec. Set to ``None`` or ``""`` to suppress the marker.
-``markersize`` / ``ms``, ``markeredgewidth`` / ``mew``
-    Marker dimensions. ``markersize`` / ``ms`` denote marker diameter in points.
-``s`` / ``size`` / ``sizes``
-    Scatter-style marker areas, converted to marker diameters for the legend
-    handle. Use ``markersize`` / ``ms`` when specifying diameters directly.
-``markerfacecolor`` / ``mfc``, ``markeredgecolor`` / ``mec``, ``markerfacecoloralt`` / ``mfcalt``
-    Marker fills and edges.
-``linestyle`` / ``ls``, ``linewidth`` / ``lw``
-    Connector line styling. Setting a non-default ``linestyle`` implicitly
-    enables ``line=True``.
-``alpha``, ``antialiased`` / ``aa``, ``fillstyle`` / ``fs``
-    Generic appearance.
-``marker_capstyle``, ``marker_joinstyle``, ``marker_transform``
-    Advanced ``MarkerStyle`` properties; wrapped into the rendered marker.
-
-Plural forms (``colors``, ``markers``, ``edgecolors``, ``facecolors``,
-``linestyles``, ``linewidths``) are accepted as synonyms for the singular
-per-entry form for backward compatibility. ``sizes`` is accepted as a
-scatter-style area alias.
-Each value accepts the scalar / sequence / mapping forms described in
-``A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.``.
-handle_kw : dict, optional
-    Style overrides applied to each generated handle. Same vocabulary as
-    ``**kwargs``; useful when style kwargs would otherwise collide with
-    matplotlib's [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keywords (``loc``,
-    ``title``, …).
-add : bool, default: True
-    When ``True`` (default), draw the legend on the axes and return the
-    legend artist. When ``False``, return ``(handles, labels)`` without
-    drawing — useful for composing into a parent legend.
-**kwargs
-    Style keywords applied per entry (see above), plus any
-    [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
-
-See also
---------
-Axes.catlegend
-Axes.sizelegend"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.entrylegend)"""
         ...
 
     def sizelegend(self, levels: Incomplete, **kwargs: Incomplete) -> Incomplete:
-        """Build a size legend — one handle per level, scaled by marker size —
-and optionally draw it.
+        """Build a size legend — one handle per level, scaled by marker size — and optionally draw it.
 
 Parameters
 ----------
-levels : iterable of float
-    Numeric values to render as size-scaled markers.
-labels : iterable or mapping, optional
-    Custom labels. A mapping ``{level: label}`` overrides individual
-    entries (every level must be a key). When omitted, labels are
-    formatted from ``levels`` via ``fmt``.
-color, marker
-    A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.
-    Defaults to [legend.size.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.size.color) and [legend.size.marker](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.size.marker).
-area : bool, optional
-    Treat ``levels`` as marker areas (``True``, default) or
-    diameters (``False``). Areas are converted with
-    ``ms = sqrt(level) * scale``. Falls back to [legend.size.area](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.size.area).
-values : array-like, optional
-    Full scatter-size data used to infer the scaling range for
-    ``levels``. When provided, or when any of ``vmin``, ``vmax``,
-    ``smin``, ``smax``, ``area_size``, or ``absolute_size`` are
-    provided, ``levels`` are transformed with the same size scaling
-    rules used by [scatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.scatter) while
-    labels remain based on the original ``levels``. When these options
-    are omitted and a compatible UltraPlot scatter artist already exists
-    on the axes, its size scale is inferred automatically.
-vmin, vmax : float, optional
-    Explicit data range for scatter-style size scaling. Defaults to the
-    finite range of ``values`` or ``levels``.
-smin, smax : float, optional
-    Minimum and maximum scaled marker sizes, with the same meaning as
-    in [scatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.scatter).
-area_size, absolute_size : bool, optional
-    Scatter-style size scaling switches. Defaults match
-    [scatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.scatter) when scatter-style scaling
-    is active. When scatter-style scaling is active and ``area_size`` is
-    omitted, an explicit ``area=False`` is treated like
-    ``area_size=False``.
-scale : float, optional
-    Multiplier applied after area/diameter conversion.
-    Falls back to [legend.size.scale](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.size.scale).
-minsize : float, optional
-    Lower bound on rendered marker size.
-    Falls back to [legend.size.minsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.size.minsize).
-fmt : str or callable, optional
-    Format used to label levels. Falls back to [legend.size.format](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.size.format).
+- `levels`: Numeric values to render as size-scaled markers.
+- `labels`: Custom labels.
+- `area`: Treat ``levels`` as marker areas (``True``, default) or diameters (``False``).
+- `values`: Full scatter-size data used to infer the scaling range for ``levels``.
+- `vmin, vmax`: Explicit data range for scatter-style size scaling.
+- `smin, smax`: Minimum and maximum scaled marker sizes, with the same meaning as in [scatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.scatter).
+- `area_size, absolute_size`: Scatter-style size scaling switches.
+- `scale`: Multiplier applied after area/diameter conversion.
+- `minsize`: Lower bound on rendered marker size.
+- `fmt`: Format used to label levels.
+- `handle_kw`: Style overrides applied to each generated handle.
+- `add`: When ``True`` (default), draw the legend on the axes and return the legend artist.
+- `**kwargs`: Style keywords applied per entry (see above), plus any [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
 
-Other parameters
-----------------
-Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
-
-``color`` / ``c``
-    Marker (and line, when ``line=True``) color. ``c`` is the short alias.
-``marker`` / ``m``
-    Marker spec. Set to ``None`` or ``""`` to suppress the marker.
-``markersize`` / ``ms``, ``markeredgewidth`` / ``mew``
-    Marker dimensions. ``markersize`` / ``ms`` denote marker diameter in points.
-``s`` / ``size`` / ``sizes``
-    Scatter-style marker areas, converted to marker diameters for the legend
-    handle. Use ``markersize`` / ``ms`` when specifying diameters directly.
-``markerfacecolor`` / ``mfc``, ``markeredgecolor`` / ``mec``, ``markerfacecoloralt`` / ``mfcalt``
-    Marker fills and edges.
-``linestyle`` / ``ls``, ``linewidth`` / ``lw``
-    Connector line styling. Setting a non-default ``linestyle`` implicitly
-    enables ``line=True``.
-``alpha``, ``antialiased`` / ``aa``, ``fillstyle`` / ``fs``
-    Generic appearance.
-``marker_capstyle``, ``marker_joinstyle``, ``marker_transform``
-    Advanced ``MarkerStyle`` properties; wrapped into the rendered marker.
-
-Plural forms (``colors``, ``markers``, ``edgecolors``, ``facecolors``,
-``linestyles``, ``linewidths``) are accepted as synonyms for the singular
-per-entry form for backward compatibility. ``sizes`` is accepted as a
-scatter-style area alias.
-Each value accepts the scalar / sequence / mapping forms described in
-``A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.``.
-handle_kw : dict, optional
-    Style overrides applied to each generated handle. Same vocabulary as
-    ``**kwargs``; useful when style kwargs would otherwise collide with
-    matplotlib's [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keywords (``loc``,
-    ``title``, …).
-add : bool, default: True
-    When ``True`` (default), draw the legend on the axes and return the
-    legend artist. When ``False``, return ``(handles, labels)`` without
-    drawing — useful for composing into a parent legend.
-**kwargs
-    Style keywords applied per entry (see above), plus any
-    [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
-
-See also
---------
-Axes.catlegend
-Axes.numlegend"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.sizelegend)"""
         ...
 
     def numlegend(self, levels: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
-        """Build a numeric legend — one patch handle per level, colored from a
-colormap — and optionally draw it.
+        """Build a numeric legend — one patch handle per level, colored from a colormap — and optionally draw it.
 
 Parameters
 ----------
-levels : iterable of float, optional
-    Numeric levels to render. When omitted, ``n`` evenly spaced
-    levels are derived from ``vmin`` / ``vmax``.
-vmin, vmax : float, optional
-    Limits for sampling ``cmap`` when ``norm`` is not provided.
-n : int, optional
-    Number of levels to sample when ``levels`` is omitted.
-    Falls back to [legend.num.n](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.num.n).
-cmap : str or [Colormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.html), optional
-    Colormap used to color the patches.
-    Falls back to [legend.num.cmap](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.num.cmap).
-norm : [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
-    Normalization applied to ``levels`` before colormap lookup.
-fmt : str or callable, optional
-    Format used to label levels.
-    Falls back to [legend.num.format](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.num.format).
-facecolor, edgecolor
-    A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.
-    ``facecolor`` defaults to colormap-derived values; ``edgecolor``
-    falls back to [legend.num.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.num.edgecolor).
-linewidth, linestyle, alpha
-    Patch outline width, style, and transparency. ``linewidth`` /
-    ``alpha`` fall back to [legend.num.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.num.linewidth) /
-    [legend.num.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.num.alpha).
+- `levels`: Numeric levels to render.
+- `vmin, vmax`: Limits for sampling ``cmap`` when ``norm`` is not provided.
+- `n`: Number of levels to sample when ``levels`` is omitted.
+- `cmap`: Colormap used to color the patches.
+- `norm`: Normalization applied to ``levels`` before colormap lookup.
+- `fmt`: Format used to label levels.
+- `handle_kw`: Style overrides applied to each generated handle.
+- `add`: When ``True`` (default), draw the legend on the axes and return the legend artist.
+- `**kwargs`: Style keywords applied per entry (see above), plus any [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
 
-Other parameters
-----------------
-Patch-style keywords accepted via ``handle_kw`` or ``**kwargs``:
-
-``facecolor`` / ``fc``, ``edgecolor`` / ``ec``, ``color`` / ``c``
-    Patch fills and edges.
-``linewidth`` / ``lw``, ``linestyle`` / ``ls``
-    Patch outline styling.
-``alpha``, ``antialiased`` / ``aa``, ``hatch``, ``fill``,
-``joinstyle``, ``capstyle``
-    Generic patch appearance.
-
-Plural collection forms (``colors``, ``facecolors``, ``edgecolors``,
-``linestyles``, ``linewidths``) map to the singular per-entry form.
-Each value accepts the scalar / sequence / mapping forms described in
-``A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.``.
-handle_kw : dict, optional
-    Style overrides applied to each generated handle. Same vocabulary as
-    ``**kwargs``; useful when style kwargs would otherwise collide with
-    matplotlib's [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keywords (``loc``,
-    ``title``, …).
-add : bool, default: True
-    When ``True`` (default), draw the legend on the axes and return the
-    legend artist. When ``False``, return ``(handles, labels)`` without
-    drawing — useful for composing into a parent legend.
-**kwargs
-    Style keywords applied per entry (see above), plus any
-    [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
-
-See also
---------
-Axes.sizelegend
-Axes.geolegend"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.numlegend)"""
         ...
 
     def geolegend(self, entries: Incomplete, labels: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
-        """Build a geometry legend — one patch handle per geometry entry — and
-optionally draw it.
+        """Build a geometry legend — one patch handle per geometry entry — and optionally draw it.
 
 Parameters
 ----------
-entries : iterable or mapping
-    Either a sequence of ``(label, geometry)`` pairs or a mapping
-    from label to geometry specification (string keyword, shapely
-    geometry, ``cartopy`` feature, or a country name when
-    ``country_reso`` is set).
-labels : iterable, optional
-    Labels overriding those derived from ``entries``.
-country_reso : str, optional
-    Natural Earth resolution for country geometries (e.g. ``"110m"``).
-    Falls back to [legend.geo.country_reso](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.country_reso).
-country_territories : bool, optional
-    Whether country lookups include overseas territories.
-    Falls back to [legend.geo.country_territories](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.country_territories).
-country_proj : any, optional
-    Projection used to render country geometries; ignored for non-
-    country entries. Falls back to [legend.geo.country_proj](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.country_proj).
-handlesize : float, optional
-    Multiplier applied to legend ``handlelength`` / ``handleheight``
-    to enlarge geometry handles. Falls back to
-    [legend.geo.handlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.handlesize). Must be positive.
-facecolor, edgecolor
-    A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.
-    Default to [legend.geo.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.facecolor) / [legend.geo.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.edgecolor).
-linewidth, alpha, fill
-    Patch outline width, transparency, and fill toggle.
-    Defaults from [legend.geo.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.linewidth) / [legend.geo.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.alpha) /
-    [legend.geo.fill](https://ultraplot.readthedocs.io/en/stable/search.html?q=legend.geo.fill).
+- `entries`: Either a sequence of ``(label, geometry)`` pairs or a mapping from label to geometry specification (string keyword, shapely geometry, ``cartopy`` feature, or a country name when…
+- `labels`: Labels overriding those derived from ``entries``.
+- `country_reso`: Natural Earth resolution for country geometries (e.g.
+- `country_territories`: Whether country lookups include overseas territories.
+- `country_proj`: Projection used to render country geometries; ignored for non- country entries.
+- `handlesize`: Multiplier applied to legend ``handlelength`` / ``handleheight`` to enlarge geometry handles.
+- `handle_kw`: Style overrides applied to each generated handle.
+- `add`: When ``True`` (default), draw the legend on the axes and return the legend artist.
+- `**kwargs`: Style keywords applied per entry (see above), plus any [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
 
-Other parameters
-----------------
-Patch-style keywords accepted via ``handle_kw`` or ``**kwargs``:
-
-``facecolor`` / ``fc``, ``edgecolor`` / ``ec``, ``color`` / ``c``
-    Patch fills and edges.
-``linewidth`` / ``lw``, ``linestyle`` / ``ls``
-    Patch outline styling.
-``alpha``, ``antialiased`` / ``aa``, ``hatch``, ``fill``,
-``joinstyle``, ``capstyle``
-    Generic patch appearance.
-
-Plural collection forms (``colors``, ``facecolors``, ``edgecolors``,
-``linestyles``, ``linewidths``) map to the singular per-entry form.
-Each value accepts the scalar / sequence / mapping forms described in
-``A style value resolved per legend entry. Accepts a **scalar** (applied
-    to every entry), a **list / tuple / ndarray** (one value per entry,
-    cycled to match the number of entries), or a **dict** (mapping from
-    label — or from numeric value for ``sizelegend`` / ``numlegend`` — to
-    style; missing keys fall back to the default). A 3- or 4-element
-    sequence of floats in ``[0, 1]`` is treated as a single RGB(A) color
-    rather than as per-entry values, so ``color=[0.5, 0.5, 0.5]`` and
-    ``color=(0.5, 0.5, 0.5)`` behave the same.``.
-handle_kw : dict, optional
-    Style overrides applied to each generated handle. Same vocabulary as
-    ``**kwargs``; useful when style kwargs would otherwise collide with
-    matplotlib's [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keywords (``loc``,
-    ``title``, …).
-add : bool, default: True
-    When ``True`` (default), draw the legend on the axes and return the
-    legend artist. When ``False``, return ``(handles, labels)`` without
-    drawing — useful for composing into a parent legend.
-**kwargs
-    Style keywords applied per entry (see above), plus any
-    [Legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.legend.Legend.html) keyword.
-
-Notes
------
-Geometry legend entries use normalized patch proxies inside the legend
-handle box rather than reusing the original map artist directly. This
-preserves the general geometry shape and copied patch styling, but very
-small or high-aspect-ratio handles can still make hatches difficult to
-read at legend scale.
-
-See also
---------
-Axes.numlegend"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.geolegend)"""
         ...
 
     @classmethod
@@ -2194,191 +850,27 @@ Axes.numlegend"""
 
 Parameters
 ----------
-x, y, [z] : float
-    The coordinates for the text. [ThreeAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.ThreeAxes.html) accept an
-    optional third coordinate. If only two are provided this automatically
-    redirects to the `~mpl_toolkits.mplot3d.Axes3D.text2D` method.
-s, text : str
-    The string for the text.
-transform : {'data', 'axes', 'figure', 'subfigure'} or [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html), optional
-    The transform used to interpret the bounds. Can be a
-    [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html) instance or a string representing
-    the [transData](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transData.html), [transAxes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transAxes.html),
-    [transFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.transFigure.html), or
-    [transSubfigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.transSubfigure.html), transforms.
+- `s, text`: The string for the text.
+- `transform`: The transform used to interpret the bounds.
+- `avoid_overlap`: Whether to automatically nudge this text at draw time so it does not overlap other auto-aligned text or the plotted data.
+- `border`: Whether to draw border around text.
+- `borderwidth`: The width of the text border.
+- `bordercolor`: The color of the text border.
+- `borderinvert`: If ``True``, the text and border colors are swapped.
+- `borderstyle`: The [line join style](https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html) used for the border.
+- `bbox`: Whether to draw a bounding box around text.
+- `bboxcolor`: The color of the text bounding box.
+- `bboxstyle`: The style of the bounding box.
+- `bboxalpha`: The alpha for the bounding box.
+- `bboxpad`: The padding for the bounding box.
+- `fontfamily`: The font typeface name (e.g., ``'Fira Math'``) or font family name (e.g., ``'serif'``).
+- `fontsize`: The font size.
+- `**kwargs`: Passed to [matplotlib.axes.Axes.text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
+- `x, y`: The position to place the text.
+- `s`: The text.
+- `fontdict`: The use of *fontdict* is discouraged.
 
-Other parameters
-----------------
-avoid_overlap : bool, default: [text.align](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.align)
-    Whether to automatically nudge this text at draw time so it does not
-    overlap other auto-aligned text or the plotted data. See
-    [auto_align_text](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.auto_align_text) for the solver settings.
-border : bool, default: False
-    Whether to draw border around text.
-borderwidth : float, default: 2
-    The width of the text border.
-bordercolor : color-spec, default: 'w'
-    The color of the text border.
-borderinvert : bool, optional
-    If ``True``, the text and border colors are swapped.
-borderstyle : {'miter', 'round', 'bevel'}, default: [text.borderstyle](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.borderstyle)
-    The [line join style](https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html)
-    used for the border.
-bbox : bool, default: False
-    Whether to draw a bounding box around text.
-bboxcolor : color-spec, default: 'w'
-    The color of the text bounding box.
-bboxstyle : boxstyle, default: 'round'
-    The style of the bounding box.
-bboxalpha : float, default: 0.5
-    The alpha for the bounding box.
-bboxpad : float, default: [title.bboxpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bboxpad)
-    The padding for the bounding box.
-fontfamily : str, optional
-    The font typeface name (e.g., ``'Fira Math'``) or font family name (e.g.,
-    ``'serif'``). Matplotlib falls back to the system default if not found. Aliases: ``family``, ``name``, ``fontname``.
-fontsize : unit-spec or str, optional
-    The font size. Aliases: ``size``. If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    This can also be a string indicating some scaling relative to
-    [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size). The sizes and scalings are shown below. The
-    scalings ``'med'``, ``'med-small'``, and ``'med-large'`` are
-    added by ultraplot while the rest are native matplotlib sizes.
-
-    .. _font_table:
-
-    ==========================  =====
-    Size                        Scale
-    ==========================  =====
-    ``'xx-small'``              0.579
-    ``'x-small'``               0.694
-    ``'small'``, ``'smaller'``  0.833
-    ``'med-small'``             0.9
-    ``'med'``, ``'medium'``     1.0
-    ``'med-large'``             1.1
-    ``'large'``, ``'larger'``   1.2
-    ``'x-large'``               1.440
-    ``'xx-large'``              1.728
-    ``'larger'``                1.2
-    ==========================  =====
-
-**kwargs
-    Passed to [matplotlib.axes.Axes.text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html).
-
-See also
---------
-matplotlib.axes.Axes.text
-ultraplot.axes.Axes.auto_align_text
-
-Matplotlib documentation
-
-
-Add text to the Axes.
-
-Add the text *s* to the Axes at location *x*, *y* in data coordinates,
-with a default ``horizontalalignment`` on the ``left`` and
-``verticalalignment`` at the ``baseline``. See
-[/gallery/text_labels_and_annotations/text_alignment](https://ultraplot.readthedocs.io/en/stable/search.html?q=%2Fgallery%2Ftext_labels_and_annotations%2Ftext_alignment).
-
-Parameters
-----------
-x, y : float
-    The position to place the text. By default, this is in data
-    coordinates. The coordinate system can be changed using the
-    *transform* parameter.
-
-s : str
-    The text.
-
-fontdict : dict, default: None
-
-    .. admonition:: Discouraged
-
-       The use of *fontdict* is discouraged. Parameters should be passed as
-       individual keyword arguments or using dictionary-unpacking
-       ``text(..., **fontdict)``.
-
-    A dictionary to override the default text properties. If fontdict
-    is None, the defaults are determined by `.rcParams`.
-
-Returns
--------
-`.Text`
-    The created `.Text` instance.
-
-Other Parameters
-----------------
-**kwargs : [Text](https://matplotlib.org/stable/api/_as_gen/matplotlib.text.Text.html) properties.
-    Other miscellaneous text parameters.
-
-    Properties:
-    agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
-    alpha: float or None
-    animated: bool
-    antialiased: bool
-    backgroundcolor: [color](https://matplotlib.org/stable/search.html?q=color)
-    bbox: dict with properties for `.patches.FancyBboxPatch`
-    clip_box: unknown
-    clip_on: unknown
-    clip_path: unknown
-    color or c: [color](https://matplotlib.org/stable/search.html?q=color)
-    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
-    fontfamily or family or fontname: {FONTNAME, 'serif', 'sans-serif', 'cursive', 'fantasy', 'monospace'}
-    fontproperties or font or font_properties: `.font_manager.FontProperties` or `str` or `pathlib.Path`
-    fontsize or size: float or {'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'}
-    fontstretch or stretch: {a numeric value in range 0-1000, 'ultra-condensed', 'extra-condensed', 'condensed', 'semi-condensed', 'normal', 'semi-expanded', 'expanded', 'extra-expanded', 'ultra-expanded'}
-    fontstyle or style: {'normal', 'italic', 'oblique'}
-    fontvariant or variant: {'normal', 'small-caps'}
-    fontweight or weight: {a numeric value in range 0-1000, 'ultralight', 'light', 'normal', 'regular', 'book', 'medium', 'roman', 'semibold', 'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'}
-    gid: str
-    horizontalalignment or ha: {'left', 'center', 'right'}
-    in_layout: bool
-    label: object
-    linespacing: float (multiple of font size)
-    math_fontfamily: str
-    mouseover: bool
-    multialignment or ma: {'left', 'right', 'center'}
-    parse_math: bool
-    path_effects: list of `.AbstractPathEffect`
-    picker: None or bool or float or callable
-    position: (float, float)
-    rasterized: bool
-    rotation: float or {'vertical', 'horizontal'}
-    rotation_mode: {None, 'default', 'anchor'}
-    sketch_params: (scale: float, length: float, randomness: float)
-    snap: bool or None
-    text: object
-    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
-    transform_rotates_text: bool
-    url: str
-    usetex: bool, default: [text.usetex](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.usetex)
-    verticalalignment or va: {'baseline', 'bottom', 'center', 'center_baseline', 'top'}
-    visible: bool
-    wrap: bool
-    x: float
-    y: float
-    zorder: float
-
-Examples
---------
-Individual keyword arguments can be used to override any given
-parameter::
-
-    >>> text(x, y, s, fontsize=12)
-
-The default transform specifies that text is in data coords,
-alternatively, you can specify text in axis coords ((0, 0) is
-lower-left and (1, 1) is upper-right).  The example below places
-text in the center of the Axes::
-
-    >>> text(0.5, 0.5, 'matplotlib', horizontalalignment='center',
-    ...      verticalalignment='center', transform=ax.transAxes)
-
-You can put a rectangular box around the text instance (e.g., to
-set a background color) by using the keyword *bbox*.  *bbox* is
-a dictionary of [Rectangle](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Rectangle.html)
-properties.  For example::
-
-    >>> text(x, y, s, bbox=dict(facecolor='red', alpha=0.5))"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.text)"""
         ...
 
     def _register_align_text(self, obj: Incomplete, avoid_overlap: Incomplete=None) -> Incomplete:
@@ -2388,54 +880,21 @@ properties.  For example::
     def auto_align_text(self, *objs: Incomplete, **kwargs: Incomplete) -> Incomplete:
         """Automatically reposition text so that it does not overlap.
 
-Labels are relaxed away from each other, from the plotted data and from
-the axes edges at draw time, then pulled back towards where you put them.
-Because the solver runs on every draw, the layout stays valid when the
-figure is resized or the data limits change.
-
 Parameters
 ----------
-*objs : [Text](https://matplotlib.org/stable/api/_as_gen/matplotlib.text.Text.html), optional
-    The text or annotation objects to align. Default is every text
-    created with ``avoid_overlap=True`` plus, if none were, all the text
-    you added to the axes.
-pad : float, default: [text.align.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.align.pad)
-    Padding in points kept around each label.
-avoid_points : bool, default: True
-    Whether labels also repel the data points of lines and scatter plots.
-avoid : sequence of [Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html), optional
-    Extra artists whose bounding boxes the labels must stay clear of.
-only_move : {'xy', 'x', 'y'}, default: 'xy'
-    Restrict movement to one axis. Use ``'y'`` when the horizontal
-    position of a label carries meaning, as on a time series.
-max_iter : int, default: [text.align.maxiter](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.align.maxiter)
-    Maximum number of relaxation iterations.
-spring : float, default: 0.05
-    Strength of the pull back towards the original position. Larger
-    values keep labels closer to their anchors at the cost of overlap.
-step : float, default: 0.6
-    Damping applied to each iteration's displacement.
-clip : bool, default: True
-    Whether to keep labels inside the axes.
-arrows : bool or dict, default: [text.align.arrows](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.align.arrows)
-    Whether to draw a connector from each displaced label back to the
-    point it labels. A dict is passed to [FancyArrowPatch](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.FancyArrowPatch.html).
-min_arrow_dist : float, default: 8.0
-    Only draw connectors for labels displaced further than this, in points.
+- `*objs`: The text or annotation objects to align.
+- `pad`: Padding in points kept around each label.
+- `avoid_points`: Whether labels also repel the data points of lines and scatter plots.
+- `avoid`: Extra artists whose bounding boxes the labels must stay clear of.
+- `only_move`: Restrict movement to one axis.
+- `max_iter`: Maximum number of relaxation iterations.
+- `spring`: Strength of the pull back towards the original position.
+- `step`: Damping applied to each iteration's displacement.
+- `clip`: Whether to keep labels inside the axes.
+- `arrows`: Whether to draw a connector from each displaced label back to the point it labels.
+- `min_arrow_dist`: Only draw connectors for labels displaced further than this, in points.
 
-Examples
---------
->>> import ultraplot as uplt
->>> fig, ax = uplt.subplots()
->>> ax.scatter(x, y)
->>> for xi, yi, name in zip(x, y, names):
-...     ax.text(xi, yi, name)
->>> ax.auto_align_text()
-
-See also
---------
-ultraplot.axes.Axes.text
-ultraplot.axes.Axes.annotate"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.auto_align_text)"""
         ...
 
     def _apply_align_text(self, renderer: Incomplete) -> None:
@@ -2443,180 +902,21 @@ ultraplot.axes.Axes.annotate"""
         ...
 
     def annotate(self, text: str, xy: Union[Tuple[float, float], Tuple[Iterable[float], Iterable[float]], Iterable[float], np.ndarray], xytext: Optional[Union[Tuple[float, float], Iterable[float], np.ndarray]]=None, xycoords: Union[str, mtransforms.Transform]='data', textcoords: Optional[Union[str, mtransforms.Transform]]=None, arrowprops: Optional[dict[str, Any]]=None, annotation_clip: Optional[bool]=None, avoid_overlap: Optional[bool]=None, **kwargs: Any) -> Incomplete:
-        """Add an annotation. If `xy` is a pair of 1D arrays, draw curved text.
-
-For curved input with `arrowprops`, the arrow points to the curve center.
+        """Add an annotation.
 
 Parameters
 ----------
-avoid_overlap : bool, default: [text.align](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.align)
-    Whether to automatically nudge this annotation at draw time so it
-    does not overlap other auto-aligned text or the plotted data. See
-    [auto_align_text](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.auto_align_text).
+- `avoid_overlap`: Whether to automatically nudge this annotation at draw time so it does not overlap other auto-aligned text or the plotted data.
+- `text`: The text of the annotation.
+- `xy`: The point *(x, y)* to annotate.
+- `xytext`: The position *(x, y)* to place the text at.
+- `xycoords`: The coordinate system that *xy* is given in.
+- `textcoords`: The coordinate system that *xytext* is given in.
+- `arrowprops`: The properties used to draw a `.FancyArrowPatch` arrow between the positions *xy* and *xytext*.
+- `annotation_clip`: Whether to clip (i.e.
+- `**kwargs`: Additional kwargs are passed to `.Text`.
 
-Matplotlib documentation
-
-
-Annotate the point *xy* with text *text*.
-
-In the simplest form, the text is placed at *xy*.
-
-Optionally, the text can be displayed in another position *xytext*.
-An arrow pointing from the text to the annotated point *xy* can then
-be added by defining *arrowprops*.
-
-Parameters
-----------
-text : str
-    The text of the annotation.
-
-xy : (float, float)
-    The point *(x, y)* to annotate. The coordinate system is determined
-    by *xycoords*.
-
-xytext : (float, float), default: *xy*
-    The position *(x, y)* to place the text at. The coordinate system
-    is determined by *textcoords*.
-
-xycoords : single or two-tuple of str or `.Artist` or `.Transform` or callable, default: 'data'
-
-    The coordinate system that *xy* is given in. The following types
-    of values are supported:
-
-    - One of the following strings:
-
-      ==================== ============================================
-      Value                Description
-      ==================== ============================================
-      'figure points'      Points from the lower left of the figure
-      'figure pixels'      Pixels from the lower left of the figure
-      'figure fraction'    Fraction of figure from lower left
-      'subfigure points'   Points from the lower left of the subfigure
-      'subfigure pixels'   Pixels from the lower left of the subfigure
-      'subfigure fraction' Fraction of subfigure from lower left
-      'axes points'        Points from lower left corner of the Axes
-      'axes pixels'        Pixels from lower left corner of the Axes
-      'axes fraction'      Fraction of Axes from lower left
-      'data'               Use the coordinate system of the object
-                           being annotated (default)
-      'polar'              *(theta, r)* if not native 'data'
-                           coordinates
-      ==================== ============================================
-
-      Note that 'subfigure pixels' and 'figure pixels' are the same
-      for the parent figure, so users who want code that is usable in
-      a subfigure can use 'subfigure pixels'.
-
-    - An `.Artist`: *xy* is interpreted as a fraction of the artist's
-      [Bbox](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Bbox.html). E.g. *(0, 0)* would be the lower
-      left corner of the bounding box and *(0.5, 1)* would be the
-      center top of the bounding box.
-
-    - A `.Transform` to transform *xy* to screen coordinates.
-
-    - A function with one of the following signatures::
-
-        def transform(renderer) -> Bbox
-        def transform(renderer) -> Transform
-
-      where *renderer* is a `.RendererBase` subclass.
-
-      The result of the function is interpreted like the `.Artist` and
-      `.Transform` cases above.
-
-    - A tuple *(xcoords, ycoords)* specifying separate coordinate
-      systems for *x* and *y*. *xcoords* and *ycoords* must each be
-      of one of the above described types.
-
-    See [plotting-guide-annotation](https://ultraplot.readthedocs.io/en/stable/search.html?q=plotting-guide-annotation) for more details.
-
-textcoords : single or two-tuple of str or `.Artist` or `.Transform` or callable, default: value of *xycoords*
-    The coordinate system that *xytext* is given in.
-
-    All *xycoords* values are valid as well as the following strings:
-
-    =================   =================================================
-    Value               Description
-    =================   =================================================
-    'offset points'     Offset, in points, from the *xy* value
-    'offset pixels'     Offset, in pixels, from the *xy* value
-    'offset fontsize'   Offset, relative to fontsize, from the *xy* value
-    =================   =================================================
-
-arrowprops : dict, optional
-    The properties used to draw a `.FancyArrowPatch` arrow between the
-    positions *xy* and *xytext*.  Defaults to None, i.e. no arrow is
-    drawn.
-
-    For historical reasons there are two different ways to specify
-    arrows, "simple" and "fancy":
-
-    **Simple arrow:**
-
-    If *arrowprops* does not contain the key 'arrowstyle' the
-    allowed keys are:
-
-    ==========  =================================================
-    Key         Description
-    ==========  =================================================
-    width       The width of the arrow in points
-    headwidth   The width of the base of the arrow head in points
-    headlength  The length of the arrow head in points
-    shrink      Fraction of total length to shrink from both ends
-    ?           Any `.FancyArrowPatch` property
-    ==========  =================================================
-
-    The arrow is attached to the edge of the text box, the exact
-    position (corners or centers) depending on where it's pointing to.
-
-    **Fancy arrow:**
-
-    This is used if 'arrowstyle' is provided in the *arrowprops*.
-
-    Valid keys are the following `.FancyArrowPatch` parameters:
-
-    ===============  ===================================
-    Key              Description
-    ===============  ===================================
-    arrowstyle       The arrow style
-    connectionstyle  The connection style
-    relpos           See below; default is (0.5, 0.5)
-    patchA           Default is bounding box of the text
-    patchB           Default is None
-    shrinkA          In points. Default is 2 points
-    shrinkB          In points. Default is 2 points
-    mutation_scale   Default is text size (in points)
-    mutation_aspect  Default is 1
-    ?                Any `.FancyArrowPatch` property
-    ===============  ===================================
-
-    The exact starting point position of the arrow is defined by
-    *relpos*. It's a tuple of relative coordinates of the text box,
-    where (0, 0) is the lower left corner and (1, 1) is the upper
-    right corner. Values <0 and >1 are supported and specify points
-    outside the text box. By default (0.5, 0.5), so the starting point
-    is centered in the text box.
-
-annotation_clip : bool or None, default: None
-    Whether to clip (i.e. not draw) the annotation when the annotation
-    point *xy* is outside the Axes area.
-
-    - If *True*, the annotation will be clipped when *xy* is outside
-      the Axes.
-    - If *False*, the annotation will always be drawn.
-    - If *None*, the annotation will be clipped when *xy* is outside
-      the Axes and *xycoords* is 'data'.
-
-**kwargs
-    Additional kwargs are passed to `.Text`.
-
-Returns
--------
-`.Annotation`
-
-See Also
---------
-[annotations](https://ultraplot.readthedocs.io/en/stable/search.html?q=annotations)"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.annotate)"""
         ...
 
     def curvedtext(self, x: Incomplete, y: Incomplete, text: Incomplete, *, upright: Incomplete=None, ellipsis: Incomplete=None, avoid_overlap: Incomplete=None, overlap_tol: Incomplete=None, curvature_pad: Incomplete=None, min_advance: Incomplete=None, border: Incomplete=False, bbox: Incomplete=False, bordercolor: Incomplete='w', borderwidth: Incomplete=2, borderinvert: Incomplete=False, borderstyle: Incomplete='miter', bboxcolor: Incomplete='w', bboxstyle: Incomplete='round', bboxalpha: Incomplete=0.5, bboxpad: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
@@ -2624,81 +924,30 @@ See Also
 
 Parameters
 ----------
-x, y : array-like
-    Curve coordinates.
-text : str
-    The string for the text.
-transform : {'data', 'axes', 'figure', 'subfigure'} or [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html), optional
-    The transform used to interpret the bounds. Can be a
-    [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html) instance or a string representing
-    the [transData](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transData.html), [transAxes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.transAxes.html),
-    [transFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.transFigure.html), or
-    [transSubfigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.transSubfigure.html), transforms.
+- `x, y`: Curve coordinates.
+- `text`: The string for the text.
+- `transform`: The transform used to interpret the bounds.
+- `border`: Whether to draw border around text.
+- `borderwidth`: The width of the text border.
+- `bordercolor`: The color of the text border.
+- `borderinvert`: If ``True``, the text and border colors are swapped.
+- `upright`: Whether to flip the curve direction to keep text upright.
+- `ellipsis`: Whether to show an ellipsis when the text exceeds curve length.
+- `avoid_overlap`: Whether to hide glyphs that overlap after rotation.
+- `overlap_tol`: Fractional overlap area (0–1) required before hiding a glyph.
+- `curvature_pad`: Extra spacing in pixels per radian of local curvature.
+- `min_advance`: Minimum additional spacing (pixels) enforced between glyph centers.
+- `borderstyle`: The [line join style](https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html) used for the border.
+- `bbox`: Whether to draw a bounding box around text.
+- `bboxcolor`: The color of the text bounding box.
+- `bboxstyle`: The style of the bounding box.
+- `bboxalpha`: The alpha for the bounding box.
+- `bboxpad`: The padding for the bounding box.
+- `fontfamily`: The font typeface name (e.g., ``'Fira Math'``) or font family name (e.g., ``'serif'``).
+- `fontsize`: The font size.
+- `**kwargs`: Passed to [matplotlib.text.Text](https://matplotlib.org/stable/api/_as_gen/matplotlib.text.Text.html).
 
-Other parameters
-----------------
-border : bool, default: False
-    Whether to draw border around text.
-borderwidth : float, default: 2
-    The width of the text border.
-bordercolor : color-spec, default: 'w'
-    The color of the text border.
-borderinvert : bool, optional
-    If ``True``, the text and border colors are swapped.
-upright : bool, default: [text.curved.upright](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.curved.upright)
-    Whether to flip the curve direction to keep text upright.
-ellipsis : bool, default: [text.curved.ellipsis](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.curved.ellipsis)
-    Whether to show an ellipsis when the text exceeds curve length.
-avoid_overlap : bool, default: [text.curved.avoid_overlap](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.curved.avoid_overlap)
-    Whether to hide glyphs that overlap after rotation.
-overlap_tol : float, default: [text.curved.overlap_tol](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.curved.overlap_tol)
-    Fractional overlap area (0–1) required before hiding a glyph.
-curvature_pad : float, default: [text.curved.curvature_pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.curved.curvature_pad)
-    Extra spacing in pixels per radian of local curvature.
-min_advance : float, default: [text.curved.min_advance](https://ultraplot.readthedocs.io/en/stable/search.html?q=text.curved.min_advance)
-    Minimum additional spacing (pixels) enforced between glyph centers.
-borderstyle : {'miter', 'round', 'bevel'}, default: 'miter'
-    The [line join style](https://matplotlib.org/stable/gallery/lines_bars_and_markers/joinstyle.html)
-    used for the border.
-bbox : bool, default: False
-    Whether to draw a bounding box around text.
-bboxcolor : color-spec, default: 'w'
-    The color of the text bounding box.
-bboxstyle : boxstyle, default: 'round'
-    The style of the bounding box.
-bboxalpha : float, default: 0.5
-    The alpha for the bounding box.
-bboxpad : float, default: [title.bboxpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bboxpad)
-    The padding for the bounding box.
-fontfamily : str, optional
-    The font typeface name (e.g., ``'Fira Math'``) or font family name (e.g.,
-    ``'serif'``). Matplotlib falls back to the system default if not found. Aliases: ``family``, ``name``, ``fontname``.
-fontsize : unit-spec or str, optional
-    The font size. Aliases: ``size``. If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-    This can also be a string indicating some scaling relative to
-    [font.size](https://ultraplot.readthedocs.io/en/stable/search.html?q=font.size). The sizes and scalings are shown below. The
-    scalings ``'med'``, ``'med-small'``, and ``'med-large'`` are
-    added by ultraplot while the rest are native matplotlib sizes.
-
-    .. _font_table:
-
-    ==========================  =====
-    Size                        Scale
-    ==========================  =====
-    ``'xx-small'``              0.579
-    ``'x-small'``               0.694
-    ``'small'``, ``'smaller'``  0.833
-    ``'med-small'``             0.9
-    ``'med'``, ``'medium'``     1.0
-    ``'med-large'``             1.1
-    ``'large'``, ``'larger'``   1.2
-    ``'x-large'``               1.440
-    ``'xx-large'``              1.728
-    ``'larger'``                1.2
-    ==========================  =====
-
-**kwargs
-    Passed to [matplotlib.text.Text](https://matplotlib.org/stable/api/_as_gen/matplotlib.text.Text.html)."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.curvedtext)"""
         ...
 
     def _toggle_spines(self, spines: Union[bool, Iterable, str]) -> None:

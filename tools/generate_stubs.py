@@ -70,6 +70,11 @@ DOC_SEARCH_URLS = {
     "pint": "https://pint.readthedocs.io/en/stable/search.html?q={query}",
     "networkx": "https://networkx.org/documentation/stable/search.html?q={query}",
 }
+HOVER_DOC_MAX_CHARS = 1600
+HOVER_DOC_MAX_PARAMETERS = 36
+HOVER_DOC_DESCRIPTION_CHARS = 180
+DOC_SECTION_PATTERN = re.compile(r"^[A-Za-z][A-Za-z ]+$")
+PARAMETER_NAME_PATTERN = re.compile(r"\*{0,2}[A-Za-z_]\w*")
 
 
 def _dotted_name(node: ast.expr) -> str | None:
@@ -598,6 +603,146 @@ def _linkify_docstring(doc: str) -> str:
     return SPHINX_TARGET_PATTERN.sub(replace_target, doc)
 
 
+def _collapse_hover_text(text: str, limit: int) -> str:
+    """Return a single concise line suitable for an editor hover."""
+    text = re.sub(r"\s+", " ", text).strip()
+    if not text:
+        return ""
+    sentence = re.search(r"(?<=[.!?])(?:\s+|$)", text)
+    if sentence and sentence.end() <= limit:
+        text = text[: sentence.start() + 1]
+    if len(text) > limit:
+        text = text[: limit + 1].rsplit(" ", 1)[0].rstrip(".,;:") + "…"
+    return text
+
+
+def _doc_sections(lines: list[str]) -> list[tuple[str, int, int]]:
+    """Return NumPy-style docstring section names and content bounds."""
+    starts = []
+    for index in range(len(lines) - 1):
+        name = lines[index].strip()
+        underline = lines[index + 1].strip()
+        if (
+            DOC_SECTION_PATTERN.fullmatch(name)
+            and len(underline) >= 3
+            and set(underline) == {"-"}
+        ):
+            starts.append((name.lower(), index, index + 2))
+    return [
+        (name, content, starts[index + 1][1] if index + 1 < len(starts) else len(lines))
+        for index, (name, _, content) in enumerate(starts)
+    ]
+
+
+def _parameter_header(line: str) -> tuple[str, str] | None:
+    """Parse a NumPy-style parameter header into names and type text."""
+    if not line or line[:1].isspace():
+        return None
+    if ":" in line:
+        names, type_name = line.split(":", 1)
+    elif PARAMETER_NAME_PATTERN.fullmatch(line.strip()):
+        names, type_name = line, ""
+    else:
+        return None
+    parts = [part.strip() for part in names.split(",")]
+    if not parts or not all(PARAMETER_NAME_PATTERN.fullmatch(part) for part in parts):
+        return None
+    return ", ".join(parts), type_name.strip()
+
+
+def _parameter_summaries(lines: list[str]) -> list[tuple[str, str, str]]:
+    """Extract parameter names, types, and first-sentence descriptions."""
+    entries = []
+    current = None
+    description = []
+
+    def finish():
+        nonlocal current, description
+        if current is not None:
+            names, type_name = current
+            entries.append(
+                (
+                    names,
+                    type_name,
+                    _collapse_hover_text(
+                        " ".join(description), HOVER_DOC_DESCRIPTION_CHARS
+                    ),
+                )
+            )
+        current = None
+        description = []
+
+    for line in lines:
+        header = _parameter_header(line.rstrip())
+        if header:
+            finish()
+            current = header
+        elif current is not None:
+            stripped = line.strip()
+            if stripped and not stripped.startswith(".. "):
+                if not current[1] and not line[:1].isspace():
+                    current = (current[0], stripped)
+                else:
+                    description.append(stripped)
+    finish()
+    return entries
+
+
+def _hover_doc_url(module: Any, qualname: str) -> str | None:
+    """Return the public API URL associated with a generated declaration."""
+    module_name = getattr(module, "__name__", "")
+    if not module_name.startswith("ultraplot"):
+        return None
+    module_parts = module_name.split(".")[1:]
+    if any(part.startswith("_") for part in module_parts):
+        return None
+    if module_name.startswith("ultraplot.axes."):
+        module_name = "ultraplot.axes"
+    parts = [part for part in qualname.split(".") if part != "__init__"]
+    if not parts or any(part.startswith("_") for part in parts):
+        return None
+    return _ultraplot_doc_url(".".join((module_name, *parts)))
+
+
+def _compact_hover_docstring(doc: str, module: Any, qualname: str) -> str:
+    """Reduce long runtime documentation to a scannable LSP hover summary."""
+    if len(doc) <= HOVER_DOC_MAX_CHARS:
+        return doc
+
+    lines = doc.splitlines()
+    sections = _doc_sections(lines)
+    first_section = sections[0][1] - 2 if sections else len(lines)
+    summary = _collapse_hover_text(" ".join(lines[:first_section]), 420)
+    entries = []
+    seen = set()
+    for name, start, end in sections:
+        if name not in {"parameters", "other parameters", "keyword arguments"}:
+            continue
+        for entry in _parameter_summaries(lines[start:end]):
+            if entry[0] not in seen:
+                seen.add(entry[0])
+                entries.append(entry)
+
+    rendered = [summary] if summary else []
+    if entries:
+        rendered.extend(("", "Parameters", "----------"))
+        visible = entries[:HOVER_DOC_MAX_PARAMETERS]
+        for names, _, description in visible:
+            rendered.append(
+                f"- `{names}`: {description or 'See the full API documentation.'}"
+            )
+        hidden = len(entries) - len(visible)
+        if hidden:
+            rendered.append(
+                f"- _{hidden} additional parameter groups are documented online._"
+            )
+
+    url = _hover_doc_url(module, qualname)
+    if url:
+        rendered.extend(("", f"[Full API documentation]({url})"))
+    return "\n".join(rendered).strip()
+
+
 class _StubTransformer(ast.NodeTransformer):
     """Reduce implementation syntax to declarations suitable for ``.pyi`` files."""
 
@@ -627,6 +772,7 @@ class _StubTransformer(ast.NodeTransformer):
         elif "%(" in doc:
             doc = self._expand_docstring(doc)
         if doc:
+            doc = _compact_hover_docstring(doc, self._module, qualname or "")
             doc = _linkify_docstring(doc)
 
         body = []
@@ -686,6 +832,7 @@ class _StubTransformer(ast.NodeTransformer):
                 doc = ast.get_docstring(node, clean=True)
             if doc:
                 doc = self._expand_docstring(doc)
+                doc = _compact_hover_docstring(doc, self._module, qualname)
                 doc = _linkify_docstring(doc)
                 node.body[0] = ast.Expr(value=ast.Constant(doc))
         if not node.body:

@@ -192,46 +192,19 @@ ultraplot.demos.show_cycles"""
     ...
 
 def register_colors(*args: Incomplete, user: Incomplete=None, local: Incomplete=None, default: Incomplete=False, space: Incomplete=None, margin: Incomplete=None, **kwargs: Incomplete) -> None:
-    """Register named colors. This is called on import.
+    """Register named colors.
 
 Parameters
 ----------
-*args : path-like or dict, optional
-    The colors to register. These can be file paths containing RGB data or
-    dictionary mappings of names to RGB values. By default, if positional
-    arguments are passed, then `user` is set to ``False``. Files must have
-    the extension ``.txt`` and should contain one line per color in the
-    format ``name : hex``. Whitespace is ignored.
-user : bool, optional
-    Whether to reload colors from `~Configurator.user_folder`. Default is
-    ``False`` if positional arguments were passed and ``True`` otherwise.
-local : bool, optional
-    Whether to reload colors from `~Configurator.local_folders`. Default is
-    ``False`` if positional arguments were passed and ``True`` otherwise.
-default : bool, default: False
-    Whether to reload the default colors packaged with ultraplot.
-    Default is always ``False``.
-space : {'hcl', 'hsl', 'hpl'}, optional
-    The colorspace used to pick "perceptually distinct" colors from
-    the [XKCD color survey](https://xkcd.com/color/rgb/).
-    If passed then `default` is set to ``True``.
-margin : float, default: 0.1
-    The margin used to pick "perceptually distinct" colors from the
-    [XKCD color survey](https://xkcd.com/color/rgb/). The normalized hue,
-    saturation, and luminance of each color must differ from the channel
-    values of the prededing colors by `margin` in order to be registered.
-    Must fall between ``0`` and ``1`` (``0`` will register all colors).
-    If passed then `default` is set to ``True``.
-**kwargs
-    Additional color name specifications passed as keyword arguments rather
-    than positional argument dictionaries.
+- `*args`: The colors to register.
+- `user`: Whether to reload colors from `~Configurator.user_folder`.
+- `local`: Whether to reload colors from `~Configurator.local_folders`.
+- `default`: Whether to reload the default colors packaged with ultraplot.
+- `space`: The colorspace used to pick "perceptually distinct" colors from the [XKCD color survey](https://xkcd.com/color/rgb/).
+- `margin`: The margin used to pick "perceptually distinct" colors from the [XKCD color survey](https://xkcd.com/color/rgb/).
+- `**kwargs`: Additional color name specifications passed as keyword arguments rather than positional argument dictionaries.
 
-See also
---------
-register_cmaps
-register_cycles
-register_fonts
-ultraplot.demos.show_colors"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.register_colors.html)"""
     ...
 
 def register_fonts(*args: Incomplete, user: Incomplete=True, local: Incomplete=True, default: Incomplete=False) -> None:
@@ -483,62 +456,12 @@ Configurator.local_folders"""
 
 Parameters
 ----------
-*args
-    Dictionaries of `rc` keys and values.
-file : path-like, optional
-    Filename from which settings should be loaded.
-**kwargs
-    `rc` names and values passed as keyword arguments.
-    If the name has dots, simply omit them.
+- `*args`: Dictionaries of `rc` keys and values.
+- `file`: Filename from which settings should be loaded.
+- `**kwargs`: `rc` names and values passed as keyword arguments.
+- `mode`: The context mode.
 
-Other parameters
-----------------
-mode : {0, 1, 2}, optional
-    The context mode. Dictates the behavior of `~Configurator.find`,
-    `~Configurator.fill`, and `~Configurator.category` within a
-    "with as" block when called with ``context=True``.
-
-    The options are as follows:
-
-    * ``mode=0``: Matplotlib's `rc_matplotlib` settings
-      and ultraplot's `rc_ultraplot` settings are all returned,
-      whether or not they are local to the "with as" block.
-    * ``mode=1``: Matplotlib's `rc_matplotlib` settings are only
-      returned if they are local to the "with as" block. For example,
-      if [axes.titlesize](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.titlesize) was passed to `~Configurator.context`,
-      then ``uplt.rc.find('axes.titlesize', context=True)`` will return
-      this value, but ``uplt.rc.find('axes.titleweight', context=True)`` will
-      return ``None``. This is used internally when instantiating axes.
-    * ``mode=2``: Matplotlib's `rc_matplotlib` settings and ultraplot's
-      `rc_ultraplot` settings are only returned if they are local to the
-      "with as" block. This is used internally when formatting axes.
-
-Note
-----
-Context "modes" are primarily used internally but may also be useful for power
-users. Mode ``1`` is used when [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format) is called during
-axes instantiation, and mode ``2`` is used when [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format)
-is manually called by users. The latter prevents successive calls to
-[format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format) from constantly looking up and re-applying
-unchanged settings and significantly increasing the runtime.
-
-Example
--------
-The below applies settings to axes in a specific figure using
-`~Configurator.context`.
-
->>> import ultraplot as uplt
->>> with uplt.rc.context(ticklen=5, metalinewidth=2):
->>>     fig, ax = uplt.subplots()
->>>     ax.plot(data)
-
-The below applies settings to a specific axes using
-[format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format), which uses `~Configurator.context`
-internally.
-
->>> import ultraplot as uplt
->>> fig, ax = uplt.subplots()
->>> ax.format(ticklen=5, metalinewidth=2)"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context)"""
         ...
 
     def category(self, cat: Incomplete, *, trimcat: Incomplete=True, context: Incomplete=False) -> Incomplete:

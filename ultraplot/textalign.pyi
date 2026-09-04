@@ -122,38 +122,18 @@ def align_text(ax: Incomplete, labels: Optional[Sequence[mtext.Text]]=None, *, r
 
 Parameters
 ----------
-ax : ultraplot.axes.Axes
-    The axes whose labels are aligned.
-labels : sequence of [Text](https://matplotlib.org/stable/api/_as_gen/matplotlib.text.Text.html), optional
-    The labels to move. Default is every text registered for alignment on
-    the axes (see [text](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.text) with ``avoid_overlap=True``).
-pad : float, default: 2.0
-    Padding in points added around every label bounding box.
-avoid_points : bool, default: True
-    Whether labels also repel the data points of lines and scatter plots.
-avoid : sequence of [Artist](https://matplotlib.org/stable/api/_as_gen/matplotlib.artist.Artist.html), optional
-    Additional artists (a legend, an inset, ...) whose bounding boxes the
-    labels must stay clear of.
-only_move : {'xy', 'x', 'y'}, default: 'xy'
-    Restrict movement to a single axis. Useful when the horizontal position
-    of a label is meaningful, e.g. labels on a time series.
-max_iter : int, default: 60
-    Maximum number of relaxation iterations.
-spring : float, default: 0.05
-    Strength of the pull back towards the original anchor. Larger values
-    keep labels closer to where they were placed at the cost of overlap.
-step : float, default: 0.6
-    Damping applied to each iteration's displacement.
-clip : bool, default: True
-    Whether to keep labels inside the axes.
-arrows : bool or dict, default: False
-    Whether to draw a connector from displaced labels back to their anchor.
-    A dict is passed to [FancyArrowPatch](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.FancyArrowPatch.html).
-min_arrow_dist : float, default: 8.0
-    Only draw connectors for labels displaced further than this (in points).
+- `ax`: The axes whose labels are aligned.
+- `labels`: The labels to move.
+- `pad`: Padding in points added around every label bounding box.
+- `avoid_points`: Whether labels also repel the data points of lines and scatter plots.
+- `avoid`: Additional artists (a legend, an inset, ...) whose bounding boxes the labels must stay clear of.
+- `only_move`: Restrict movement to a single axis.
+- `max_iter`: Maximum number of relaxation iterations.
+- `spring`: Strength of the pull back towards the original anchor.
+- `step`: Damping applied to each iteration's displacement.
+- `clip`: Whether to keep labels inside the axes.
+- `arrows`: Whether to draw a connector from displaced labels back to their anchor.
+- `min_arrow_dist`: Only draw connectors for labels displaced further than this (in points).
 
-Returns
--------
-list
-    The connector patches that were drawn, if any."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.textalign.align_text.html)"""
     ...

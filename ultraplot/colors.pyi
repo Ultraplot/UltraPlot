@@ -106,44 +106,14 @@ ratios : sequence of float, optional
     ...
 
 def _make_lookup_table(N: Incomplete, data: Incomplete, gamma: Incomplete=1.0, inverse: Incomplete=False) -> Incomplete:
-    """Generate lookup tables of HSL values given specified gradations. Similar to
-[makeMappingArray](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.makeMappingArray.html) but permits *circular* hue gradations,
-disables clipping of out-of-bounds values, and uses fancier "gamma" scaling.
+    """Generate lookup tables of HSL values given specified gradations.
 
 Parameters
 ----------
-N : int
-    Number of points in the colormap lookup table.
-data : array-like
-    Sequence of `(x, y_0, y_1)` tuples specifying channel jumps
-    (from `y_0` to `y_1`) and `x` coordinate of those jumps
-    (ranges between 0 and 1). See [LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html).
-gamma : float or sequence of float, optional
-    To obtain channel values between coordinates `x_i` and `x_{i+1}`
-    in rows `i` and `i+1` of `data` we use the formula:
-
-    .. math::
-
-        y = y_{1,i} + w_i^{\\gamma_i}*(y_{0,i+1} - y_{1,i})
-
-    where `\\gamma_i` corresponds to `gamma` and the weight `w_i` ranges from
-    0 to 1 between rows `i` and ``i+1``. If `gamma` is float, it applies
-    to every transition. Otherwise, its length must equal ``data.shape[0]-1``.
-
-    This is similar to the [matplotlib.colors.makeMappingArray](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.makeMappingArray.html) `gamma` except
-    it controls the weighting for transitions *between* each segment data
-    coordinate rather than the coordinates themselves. This makes more sense
-    for `PerceptualColormap`\\ s because they usually contain just a
-    handful of transitions representing chained segments.
-inverse : bool, optional
-    If ``True``, `w_i^{\\gamma_i}` is replaced with `1 - (1 - w_i)^{\\gamma_i}` --
-    that is, when `gamma` is greater than 1, this weights colors toward *higher*
-    channel values instead of lower channel values.
-
-    This is implemented in case we want to apply *equal* "gamma scaling"
-    to different HSL channels in different directions. Usually, this
-    is done to weight low data values with higher luminance *and* lower
-    saturation, thereby emphasizing "extreme" data values."""
+- `N`: Number of points in the colormap lookup table.
+- `data`: Sequence of `(x, y_0, y_1)` tuples specifying channel jumps (from `y_0` to `y_1`) and `x` coordinate of those jumps (ranges between 0 and 1).
+- `gamma`: To obtain channel values between coordinates `x_i` and `x_{i+1}` in rows `i` and `i+1` of `data` we use the formula: y = y_{1,i} + w_i^{\\gamma_i}*(y_{0,i+1} - y_{1,i}) where…
+- `inverse`: If ``True``, `w_i^{\\gamma_i}` is replaced with `1 - (1 - w_i)^{\\gamma_i}` -- that is, when `gamma` is greater than 1, this weights colors toward *higher* channel values instead of…"""
     ...
 
 def _load_colors(path: Incomplete, warn_on_failure: Incomplete=True) -> Incomplete:
@@ -770,68 +740,19 @@ and luminance rather than red, blue, and green."""
     def __init__(self, *args: Incomplete, space: Incomplete=None, clip: Incomplete=True, gamma: Incomplete=None, gamma1: Incomplete=None, gamma2: Incomplete=None, **kwargs: Incomplete) -> None:
         """Parameters
 ----------
-segmentdata : dict-like
-    Dictionary containing the keys ``'hue'``, ``'saturation'``,
-    ``'luminance'``, and (optionally) ``'alpha'``. The key ``'chroma'`` is
-    treated as a synonym for ``'saturation'``. The shorthands ``'h'``,
-    ``'s'``, ``'l'``, ``'a'``, and ``'c'`` are also acceptable. The key
-    values can be callable functions that return channel values given a
-    colormap index, or 3-column arrays indicating the coordinates and
-    channel transitions. See [LinearSegmentedColormap](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.LinearSegmentedColormap.html)
-    for a more detailed explanation.
-name : str, default: '_no_name'
-    The colormap name. This can also be passed as the first
-    positional string argument.
-N : int, default: [image.lut](https://ultraplot.readthedocs.io/en/stable/search.html?q=image.lut)
-    Number of points in the colormap lookup table.
-space : {'hsl', 'hpl', 'hcl', 'hsv'}, optional
-    The hue, saturation, luminance-style colorspace to use for interpreting
-    the channels. See [this page](http://www.hsluv.org/comparison/) for
-    a full description.
-clip : bool, optional
-    Whether to "clip" impossible colors (i.e. truncate HCL colors with
-    RGB channels with values greater than 1) or mask them out as gray.
-gamma : float, optional
-    Set `gamma1` and `gamma2` to this identical value.
-gamma1 : float, optional
-    If greater than 1, make low saturation colors more prominent. If
-    less than 1, make high saturation colors more prominent. Similar to
-    the [HCLWizard](http://hclwizard.org:64230/hclwizard/) option.
-gamma2 : float, optional
-    If greater than 1, make high luminance colors more prominent. If
-    less than 1, make low luminance colors more prominent. Similar to
-    the [HCLWizard](http://hclwizard.org:64230/hclwizard/) option.
-alpha : float, optional
-    The opacity for the entire colormap. This overrides
-    the input opacities.
-cyclic : bool, optional
-    Whether the colormap is cyclic. If ``True``, this changes how the leftmost
-    and rightmost color levels are selected, and `extend` can only be
-    ``'neither'`` (a warning will be issued otherwise).
+- `segmentdata`: Dictionary containing the keys ``'hue'``, ``'saturation'``, ``'luminance'``, and (optionally) ``'alpha'``.
+- `name`: The colormap name.
+- `N`: Number of points in the colormap lookup table.
+- `space`: The hue, saturation, luminance-style colorspace to use for interpreting the channels.
+- `clip`: Whether to "clip" impossible colors (i.e.
+- `gamma`: Set `gamma1` and `gamma2` to this identical value.
+- `gamma1`: If greater than 1, make low saturation colors more prominent.
+- `gamma2`: If greater than 1, make high luminance colors more prominent.
+- `alpha`: The opacity for the entire colormap.
+- `cyclic`: Whether the colormap is cyclic.
+- `**kwargs`: Passed to `matploitlib.colors.LinearSegmentedColormap`.
 
-Other parameters
-----------------
-**kwargs
-    Passed to `matploitlib.colors.LinearSegmentedColormap`.
-
-Example
--------
-The below example generates a `PerceptualColormap` from a
-`segmentdata` dictionary that uses color names for the hue data,
-instead of channel values between ``0`` and ``360``.
-
->>> import ultraplot as uplt
->>> data = {
->>>     'h': [[0, 'red', 'red'], [1, 'blue', 'blue']],
->>>     's': [[0, 100, 100], [1, 100, 100]],
->>>     'l': [[0, 100, 100], [1, 20, 20]],
->>> }
->>> cmap = uplt.PerceptualColormap(data)
-
-See also
---------
-ContinuousColormap
-ultraplot.constructor.Colormap"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html)"""
         ...
 
     def _init(self) -> None:
@@ -939,58 +860,21 @@ PerceptualColormap.from_list"""
 
     @classmethod
     def from_hsl(cls, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
-        """Make a `~PerceptualColormap` by specifying the hue,
-saturation, and luminance transitions individually.
+        """Make a `~PerceptualColormap` by specifying the hue, saturation, and luminance transitions individually.
 
 Parameters
 ----------
-space : {'hsl', 'hpl', 'hcl', 'hsv'}, optional
-    The hue, saturation, luminance-style colorspace to use for interpreting
-    the channels. See [this page](http://www.hsluv.org/comparison/) for
-    a full description.
-name : str, default: '_no_name'
-    The colormap name. This can also be passed as the first
-    positional string argument.
-ratios : sequence of float, optional
-    Relative extents of each color transition. Must have length
-    ``len(colors) - 1``. Larger numbers indicate a slower
-    transition, smaller numbers indicate a faster transition.
-    For example, ``luminance=(100, 50, 0)`` with ``ratios=(2, 1)`` results
-    in a colormap with the transition from luminance ``100`` to ``50`` taking
-    *twice as long* as the transition from luminance ``50`` to ``0``.
-h, s, l, a, c
-    Shorthands for `hue`, `saturation`, `luminance`, `alpha`, and `chroma`.
-hue : float or color-spec or sequence, default: 0
-    Hue channel value or sequence of values. The shorthand keyword `h` is also
-    acceptable. Values can be any of the following.
+- `space`: The hue, saturation, luminance-style colorspace to use for interpreting the channels.
+- `name`: The colormap name.
+- `ratios`: Relative extents of each color transition.
+- `hue`: Hue channel value or sequence of values.
+- `saturation`: As with `hue`, but for the saturation channel.
+- `luminance`: As with `hue`, but for the luminance channel.
+- `alpha`: As with `hue`, but for the alpha (opacity) channel.
+- `chroma`: Alias for `saturation`.
+- `**kwargs`: Passed to `PerceptualColormap`.
 
-    1. Numbers, within the range 0 to 360 for hue and 0 to 100 for
-       saturation and luminance.
-    2. Color string names or hex strings, in which case the channel
-       value for that color is looked up.
-saturation : float or color-spec or sequence, default: 50
-    As with `hue`, but for the saturation channel.
-luminance : float or color-spec or sequence, default: ``(100, 20)``
-    As with `hue`, but for the luminance channel.
-alpha : float or color-spec or sequence, default: 1
-    As with `hue`, but for the alpha (opacity) channel.
-chroma
-    Alias for `saturation`.
-
-Other parameters
-----------------
-**kwargs
-    Passed to `PerceptualColormap`.
-
-Returns
--------
-PerceptualColormap
-    The colormap.
-
-See also
---------
-PerceptualColormap.from_color
-PerceptualColormap.from_list"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_hsl)"""
         ...
 
     @classmethod
@@ -999,47 +883,13 @@ PerceptualColormap.from_list"""
 
 Parameters
 ----------
-colors : sequence of color-spec or tuple
-    If a sequence of RGB[A] tuples or color strings, the colormap
-    transitions evenly from ``colors[0]`` at the left-hand side
-    to ``colors[-1]`` at the right-hand side.
+- `colors`: If a sequence of RGB[A] tuples or color strings, the colormap transitions evenly from ``colors[0]`` at the left-hand side to ``colors[-1]`` at the right-hand side.
+- `name`: The colormap name.
+- `ratios`: Relative extents of each color transition.
+- `adjust_grays`: Whether to adjust the hues of grayscale colors (including ``'white'``, ``'black'``, and the ``'grayN'`` open-color colors) to the hues of the preceding and subsequent colors in the…
+- `**kwargs`: Passed to `PerceptualColormap`.
 
-    If a sequence of (float, color-spec) tuples, the float values are the
-    coordinate of each transition and must range from 0 to 1. This
-    can be used to divide  the colormap range unevenly.
-name : str, default: '_no_name'
-    The colormap name. This can also be passed as the first
-    positional string argument.
-ratios : sequence of float, optional
-    Relative extents of each color transition. Must have length
-    ``len(colors) - 1``. Larger numbers indicate a slower
-    transition, smaller numbers indicate a faster transition.
-    For example, ``('red', 'blue', 'green')`` with ``ratios=(2, 1)``
-    creates a colormap with the transition from red to blue taking
-    *twice as long* as the transition from blue to green.
-adjust_grays : bool, optional
-    Whether to adjust the hues of grayscale colors (including ``'white'``,
-    ``'black'``, and the ``'grayN'`` open-color colors) to the hues of the
-    preceding and subsequent colors in the sequence. This facilitates the
-    construction of diverging colormaps with monochromatic segments using
-    e.g. ``PerceptualColormap.from_list(['blue', 'white', 'red'])``.
-
-Other parameters
-----------------
-**kwargs
-    Passed to `PerceptualColormap`.
-
-Returns
--------
-PerceptualColormap
-    The colormap.
-
-See also
---------
-matplotlib.colors.LinearSegmentedColormap.from_list
-ContinuousColormap.from_list
-PerceptualColormap.from_color
-PerceptualColormap.from_hsl"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.PerceptualColormap.html#ultraplot.colors.PerceptualColormap.from_list)"""
         ...
 
 def _interpolate_scalar(x: Incomplete, x0: Incomplete, x1: Incomplete, y0: Incomplete, y1: Incomplete) -> Incomplete:
@@ -1062,53 +912,15 @@ arbitrary continuous normalizers given a sequence of level boundaries."""
     def __init__(self, levels: Incomplete, norm: Incomplete=None, unique: Incomplete=None, step: Incomplete=None, clip: Incomplete=False, ticks: Incomplete=None, labels: Incomplete=None) -> None:
         """Parameters
 ----------
-levels : sequence of float
-    The level boundaries. Must be monotonically increasing or decreasing.
-    If the latter then `~DiscreteNorm.descending` is set to ``True`` and the
-    colorbar axis drawn with this normalizer will be reversed.
-norm : [Normalize](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Normalize.html), optional
-    The normalizer used to transform `levels` and data values passed to
-    `~DiscreteNorm.__call__` before discretization. The ``vmin`` and ``vmax``
-    of the normalizer are set to the minimum and maximum values in `levels`.
-unique : {'neither', 'both', 'min', 'max'}, optional
-    Which out-of-bounds regions should be assigned unique colormap colors.
-    Possible values are equivalent to the `extend` values. Internally, ultraplot
-    sets this depending on the user-input `extend`, whether the colormap is
-    cyclic, and whether [set_under](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.set_under.html)
-    or [set_over](https://matplotlib.org/stable/api/_as_gen/matplotlib.colors.Colormap.set_over.html) were called for the colormap.
-step : float, optional
-    The intensity of the transition to out-of-bounds colors as a fraction
-    of the adjacent step between in-bounds colors. Internally, ultraplot sets
-    this to ``0.5`` for cyclic colormaps and ``1`` for all other colormaps.
-    This only has an effect on lower colors when `unique` is ``'min'`` or
-    ``'both'``, and on upper colors when `unique` is ``'max'`` or ``'both'``.
-clip : bool, optional
-    Whether to clip values falling outside of the level bins. This only
-    has an effect on lower colors when `unique` is ``'min'`` or ``'both'``,
-    and on upper colors when `unique` is ``'max'`` or ``'both'``.
+- `levels`: The level boundaries.
+- `norm`: The normalizer used to transform `levels` and data values passed to `~DiscreteNorm.__call__` before discretization.
+- `unique`: Which out-of-bounds regions should be assigned unique colormap colors.
+- `step`: The intensity of the transition to out-of-bounds colors as a fraction of the adjacent step between in-bounds colors.
+- `clip`: Whether to clip values falling outside of the level bins.
+- `ticks`: Default tick values to use for colorbars drawn with this normalizer.
+- `labels`: Default tick labels to use for colorbars drawn with this normalizer.
 
-Other parameters
-----------------
-ticks : array-like, default: `levels`
-    Default tick values to use for colorbars drawn with this normalizer. This
-    is set to the level centers when `values` is passed to a plotting command.
-labels : array-like, optional
-    Default tick labels to use for colorbars drawn with this normalizer. This
-    is set to values when drawing on-the-fly colorbars.
-
-Note
-----
-This normalizer makes sure that levels always span the full range of
-colors in the colormap, whether `extend` is set to ``'min'``, ``'max'``,
-``'neither'``, or ``'both'``. In matplotlib, when `extend` is not ``'both'``,
-the most intense colors are cut off (reserved for "out of bounds" data),
-even though they are not being used.
-
-See also
---------
-ultraplot.constructor.Norm
-ultraplot.colors.SegmentedNorm
-ultraplot.ticker.DiscreteLocator"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html)"""
         ...
 
     def __call__(self, value: Incomplete, clip: Incomplete=None) -> Incomplete:

@@ -38,201 +38,45 @@ to axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/st
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
         """Parameters
 ----------
-*args
-    Passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).
-r0 : float, default: 0
-    The radial origin.
-theta0 : {'N', 'NW', 'W', 'SW', 'S', 'SE', 'E', 'NE'}, optional
-    The zero azimuth location.
-thetadir : {1, -1, 'anticlockwise', 'counterclockwise', 'clockwise'}, optional
-    The positive azimuth direction. Clockwise corresponds to
-    ``-1`` and anticlockwise corresponds to ``1``.
-thetamin, thetamax : float, optional
-    The lower and upper azimuthal bounds in degrees. If
-    ``thetamax != thetamin + 360``, this produces a sector plot.
-thetalim : 2-tuple of float or None, optional
-    Specifies `thetamin` and `thetamax` at once.
-rmin, rmax : float, optional
-    The inner and outer radial limits. If ``r0 != rmin``, this
-    produces an annular plot.
-rlim : 2-tuple of float or None, optional
-    Specifies `rmin` and `rmax` at once.
-rborder : bool, optional
-    Whether to draw the polar axes border. Visibility of the "inner"
-    radial spine and "start" and "end" azimuthal spines is controlled
-    automatically by matplotlib.
-thetagrid, rgrid, grid : bool, optional
-    Whether to draw major gridlines for the azimuthal and radial axis.
-    Use the keyword `grid` to toggle both.
-thetagridminor, rgridminor, gridminor : bool, optional
-    Whether to draw minor gridlines for the azimuthal and radial axis.
-    Use the keyword `gridminor` to toggle both.
-thetagridcolor, rgridcolor, gridcolor : color-spec, optional
-    Color for the major and minor azimuthal and radial gridlines.
-    Use the keyword `gridcolor` to set both at once.
-thetalocator, rlocator : locator-spec, optional
-    Used to determine the azimuthal and radial gridline positions.
-    Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor. Can be
-    float, list of float, string, or [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance.
-thetalines, rlines
-    Aliases for `thetalocator`, `rlocator`.
-thetalocator_kw, rlocator_kw : dict-like, optional
-    The azimuthal and radial locator settings. Passed to
-    [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html).
-thetaminorlocator, rminorlocator : optional
-    As for `thetalocator`, `rlocator`, but for the minor gridlines.
-thetaminorticks, rminorticks : optional
-    Aliases for `thetaminorlocator`, `rminorlocator`.
-thetaminorlocator_kw, rminorlocator_kw
-    As for `thetalocator_kw`, `rlocator_kw`, but for the minor locator.
-rlabelpos : float, optional
-    The azimuth at which radial coordinates are labeled. Also used as the
-    spoke angle for ``rlabel`` when you want an explicit radial-label
-    position.
-thetaformatter, rformatter : formatter-spec, optional
-    Used to determine the azimuthal and radial label format.
-    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
-    Can be string, list of string, or [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html)
-    instance. Use ``[]``, ``'null'``, or ``'none'`` for no labels.
-thetalabels, rlabels : optional
-    Aliases for `thetaformatter`, `rformatter`.
-thetaformatter_kw, rformatter_kw : dict-like, optional
-    The azimuthal and radial label formatter settings. Passed to
-    [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html).
-thetalabel, rlabel : str, optional
-    Polar-aware axis labels rendered via [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html).
-    ``thetalabel`` follows the outer arc just beyond ``r=rmax``.
-    ``rlabel`` follows a radial spoke, centered between ``rmin`` and
-    ``rmax``. On a full circle it uses ``get_rlabel_position()`` unless
-    ``rlabelpos`` is explicit; on a sector it uses the spoke selected by
-    ``rlabelloc`` unless ``rlabelpos`` is explicit. Both labels include a
-    built-in tick-clearance offset, and ``labelpad`` adds extra padding in
-    points on top of that offset. Pass ``""`` to clear a previously set
-    label.
-thetalabelloc : float, optional
-    Center theta angle (in degrees) for ``thetalabel``. Defaults to the
-    midpoint of the directed ``thetalim`` interval (or ``0`` for a full
-    circle).
-rlabelloc : {'right', 'left'}, default: 'right'
-    Where to place ``rlabel``. When the spoke angle is fixed by a full
-    circle or by explicit ``rlabelpos``, ``rlabelloc`` selects the
-    perpendicular side of that spoke and ``'left'`` flips the default
-    side. On a sector with no explicit ``rlabelpos``, ``'right'``
-    (default) anchors to ``thetamin`` and ``'left'`` anchors to
-    ``thetamax``; the label is then offset outward from the sector.
-thetalabel_kw, rlabel_kw : dict-like, optional
-    Additional [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html) settings for the polar-aware
-    labels (e.g. ``border``, ``bbox``, or rendering hints like
-    ``min_advance``). See also `labelpad`, `labelcolor`, `labelsize`,
-    and `labelweight`.
-color : color-spec, default: [meta.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=meta.color)
-    Color for the axes edge. Propagates to `labelcolor` unless specified
-    otherwise (similar to [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format)).
-labelcolor, gridlabelcolor : color-spec, default: `color` or [grid.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelcolor)
-    Color for the gridline labels.
-labelpad, gridlabelpad : unit-spec, default: [grid.labelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelpad)
-    The padding between the axes edge and the radial and azimuthal labels.
-    For ``thetalabel`` and ``rlabel``, this is added on top of the built-in
-    tick-clearance offset.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-labelsize, gridlabelsize : unit-spec or str, default: [grid.labelsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelsize)
-    Font size for the gridline labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-labelweight, gridlabelweight : str, default: [grid.labelweight](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelweight)
-    Font weight for the gridline labels.
+- `*args`: Passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).
+- `r0`: The radial origin.
+- `theta0`: The zero azimuth location.
+- `thetadir`: The positive azimuth direction.
+- `thetamin, thetamax`: The lower and upper azimuthal bounds in degrees.
+- `thetalim`: Specifies `thetamin` and `thetamax` at once.
+- `rmin, rmax`: The inner and outer radial limits.
+- `rlim`: Specifies `rmin` and `rmax` at once.
+- `rborder`: Whether to draw the polar axes border.
+- `thetagrid, rgrid, grid`: Whether to draw major gridlines for the azimuthal and radial axis.
+- `thetagridminor, rgridminor, gridminor`: Whether to draw minor gridlines for the azimuthal and radial axis.
+- `thetagridcolor, rgridcolor, gridcolor`: Color for the major and minor azimuthal and radial gridlines.
+- `thetalocator, rlocator`: Used to determine the azimuthal and radial gridline positions.
+- `thetalocator_kw, rlocator_kw`: The azimuthal and radial locator settings.
+- `thetaminorlocator, rminorlocator`: As for `thetalocator`, `rlocator`, but for the minor gridlines.
+- `thetaminorticks, rminorticks`: Aliases for `thetaminorlocator`, `rminorlocator`.
+- `rlabelpos`: The azimuth at which radial coordinates are labeled.
+- `thetaformatter, rformatter`: Used to determine the azimuthal and radial label format.
+- `thetalabels, rlabels`: Aliases for `thetaformatter`, `rformatter`.
+- `thetaformatter_kw, rformatter_kw`: The azimuthal and radial label formatter settings.
+- `thetalabel, rlabel`: Polar-aware axis labels rendered via [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html).
+- `thetalabelloc`: Center theta angle (in degrees) for ``thetalabel``.
+- `rlabelloc`: Where to place ``rlabel``.
+- `thetalabel_kw, rlabel_kw`: Additional [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html) settings for the polar-aware labels (e.g.
+- `color`: Color for the axes edge.
+- `labelcolor, gridlabelcolor`: Color for the gridline labels.
+- `labelpad, gridlabelpad`: The padding between the axes edge and the radial and azimuthal labels.
+- `labelsize, gridlabelsize`: Font size for the gridline labels.
+- `labelweight, gridlabelweight`: Font weight for the gridline labels.
+- `title`: The axes title.
+- `abc`: The "a-b-c" subplot label style.
+- `abcloc, titleloc`: Strings indicating the location for the a-b-c label and main title.
+- `abcborder, titleborder`: Whether to draw a white border around titles and a-b-c labels positioned inside the axes.
+- `abcbbox, titlebbox`: Whether to draw a white bbox around titles and a-b-c labels positioned inside the axes.
+- `abcpad`: Horizontal offset to shift the a-b-c label position.
+- `abc_kw, title_kw`: Additional settings used to update the a-b-c label and title with ``text.update()``.
+- _9 additional parameter groups are documented online._
 
-Other parameters
-----------------
-title : str or sequence, optional
-    The axes title. Can optionally be a sequence strings, in which case
-    the title will be selected from the sequence according to `~Axes.number`.
-abc : bool or str or sequence, default: [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc)
-    The "a-b-c" subplot label style. Must contain the character `a` or `A`,
-    for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
-    ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
-    matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
-    characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
-    Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
-abcloc, titleloc : str, default: [abc.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.loc), [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc)
-    Strings indicating the location for the a-b-c label and main title.
-    The following locations are valid:
-
-    .. _title_table:
-
-    ========================  ============================
-    Location                  Valid keys
-    ========================  ============================
-    center above axes         ``'center'``, ``'c'``
-    left above axes           ``'left'``, ``'l'``
-    right above axes          ``'right'``, ``'r'``
-    lower center inside axes  ``'lower center'``, ``'lc'``
-    upper center inside axes  ``'upper center'``, ``'uc'``
-    upper right inside axes   ``'upper right'``, ``'ur'``
-    upper left inside axes    ``'upper left'``, ``'ul'``
-    lower left inside axes    ``'lower left'``, ``'ll'``
-    lower right inside axes   ``'lower right'``, ``'lr'``
-    left of y axis            ``'outer left'``, ``'ol'``
-    right of y axis           ``'outer right'``, ``'or'``
-    ========================  ============================
-
-abcborder, titleborder : bool, default: [abc.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.border) and [title.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.border)
-    Whether to draw a white border around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists
-    plotted inside the axes.
-abcbbox, titlebbox : bool, default: [abc.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.bbox) and [title.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bbox)
-    Whether to draw a white bbox around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists plotted
-    inside the axes.
-abcpad : float or unit-spec, default: [abc.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.pad)
-    Horizontal offset to shift the a-b-c label position. Positive values move
-    the label right, negative values move it left. This is separate from
-    `abctitlepad`, which controls spacing between abc and title when co-located.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-abc_kw, title_kw : dict-like, optional
-    Additional settings used to update the a-b-c label and title
-    with ``text.update()``.
-titlepad : float, default: [title.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.pad)
-    The padding for the inner and outer titles and a-b-c labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-titleabove : bool, default: [title.above](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.above)
-    Whether to try to put outer titles and a-b-c labels above panels,
-    colorbars, or legends that are above the axes.
-abctitlepad : float, default: [abc.titlepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.titlepad)
-    The horizontal padding between a-b-c labels and titles in the same location.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
-    Shorthands for the below keywords.
-    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
-lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
-    Additional titles in specific positions (see `title` for details). This works as
-    an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
-    permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), -
-    Additional settings applied to the background patch, and their
-    shorthands. Their defaults values are the ``'axes'`` properties.
-rc_mode : int, optional
-    The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-rc_kw : dict-like, optional
-    An alternative to passing extra keyword arguments. See below.
-**kwargs
-    Remaining keyword arguments are passed to [matplotlib.axes.Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html).\\n    Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are
-    passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
-    If the setting name has "dots" you can simply omit the dots. For example,
-    ``abc='A.'`` modifies the [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc) setting, ``titleloc='left'`` modifies the
-    [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc) setting, ``gridminor=True`` modifies the [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
-    setting, and ``gridbelow=True`` modifies the [grid.below](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.below) setting. Many
-    of the keyword arguments documented above are internally applied by retrieving
-    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-
-See also
---------
-PolarAxes.format
-ultraplot.axes.Axes
-ultraplot.axes.PlotAxes
-matplotlib.projections.PolarAxes
-ultraplot.figure.Figure.subplot
-ultraplot.figure.Figure.add_subplot"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html)"""
         ...
 
     @override
@@ -360,230 +204,47 @@ matplotlib.spines.Spine.get_window_extent"""
         ...
 
     def format(self, *, r0: Incomplete=None, theta0: Incomplete=None, thetadir: Incomplete=None, thetamin: Incomplete=None, thetamax: Incomplete=None, thetalim: Incomplete=None, rmin: Incomplete=None, rmax: Incomplete=None, rlim: Incomplete=None, thetagrid: Incomplete=None, rgrid: Incomplete=None, thetagridminor: Incomplete=None, rgridminor: Incomplete=None, thetagridcolor: Incomplete=None, rgridcolor: Incomplete=None, rlabelpos: Incomplete=None, rscale: Incomplete=None, rborder: Incomplete=None, thetalocator: Incomplete=None, rlocator: Incomplete=None, thetalines: Incomplete=None, rlines: Incomplete=None, thetalocator_kw: Incomplete=None, rlocator_kw: Incomplete=None, thetaminorlocator: Incomplete=None, rminorlocator: Incomplete=None, thetaminorlines: Incomplete=None, rminorlines: Incomplete=None, thetaminorlocator_kw: Incomplete=None, rminorlocator_kw: Incomplete=None, thetaformatter: Incomplete=None, rformatter: Incomplete=None, thetalabels: Incomplete=None, rlabels: Incomplete=None, thetaformatter_kw: Incomplete=None, rformatter_kw: Incomplete=None, labelpad: Incomplete=None, labelsize: Incomplete=None, labelcolor: Incomplete=None, labelweight: Incomplete=None, thetalabel: Incomplete=None, rlabel: Incomplete=None, thetalabelloc: Incomplete=None, rlabelloc: Incomplete=None, thetalabel_kw: Incomplete=None, rlabel_kw: Incomplete=None, **kwargs: Incomplete) -> None:
-        """Modify axes limits, radial and azimuthal gridlines, and more. Note that
-all of the ``theta`` arguments are specified in degrees, not radians.
+        """Modify axes limits, radial and azimuthal gridlines, and more.
 
 Parameters
 ----------
-r0 : float, default: 0
-    The radial origin.
-theta0 : {'N', 'NW', 'W', 'SW', 'S', 'SE', 'E', 'NE'}, optional
-    The zero azimuth location.
-thetadir : {1, -1, 'anticlockwise', 'counterclockwise', 'clockwise'}, optional
-    The positive azimuth direction. Clockwise corresponds to
-    ``-1`` and anticlockwise corresponds to ``1``.
-thetamin, thetamax : float, optional
-    The lower and upper azimuthal bounds in degrees. If
-    ``thetamax != thetamin + 360``, this produces a sector plot.
-thetalim : 2-tuple of float or None, optional
-    Specifies `thetamin` and `thetamax` at once.
-rmin, rmax : float, optional
-    The inner and outer radial limits. If ``r0 != rmin``, this
-    produces an annular plot.
-rlim : 2-tuple of float or None, optional
-    Specifies `rmin` and `rmax` at once.
-rborder : bool, optional
-    Whether to draw the polar axes border. Visibility of the "inner"
-    radial spine and "start" and "end" azimuthal spines is controlled
-    automatically by matplotlib.
-thetagrid, rgrid, grid : bool, optional
-    Whether to draw major gridlines for the azimuthal and radial axis.
-    Use the keyword `grid` to toggle both.
-thetagridminor, rgridminor, gridminor : bool, optional
-    Whether to draw minor gridlines for the azimuthal and radial axis.
-    Use the keyword `gridminor` to toggle both.
-thetagridcolor, rgridcolor, gridcolor : color-spec, optional
-    Color for the major and minor azimuthal and radial gridlines.
-    Use the keyword `gridcolor` to set both at once.
-thetalocator, rlocator : locator-spec, optional
-    Used to determine the azimuthal and radial gridline positions.
-    Passed to the [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html) constructor. Can be
-    float, list of float, string, or [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) instance.
-thetalines, rlines
-    Aliases for `thetalocator`, `rlocator`.
-thetalocator_kw, rlocator_kw : dict-like, optional
-    The azimuthal and radial locator settings. Passed to
-    [Locator](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Locator.html).
-thetaminorlocator, rminorlocator : optional
-    As for `thetalocator`, `rlocator`, but for the minor gridlines.
-thetaminorticks, rminorticks : optional
-    Aliases for `thetaminorlocator`, `rminorlocator`.
-thetaminorlocator_kw, rminorlocator_kw
-    As for `thetalocator_kw`, `rlocator_kw`, but for the minor locator.
-rlabelpos : float, optional
-    The azimuth at which radial coordinates are labeled. Also used as the
-    spoke angle for ``rlabel`` when you want an explicit radial-label
-    position.
-thetaformatter, rformatter : formatter-spec, optional
-    Used to determine the azimuthal and radial label format.
-    Passed to the [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html) constructor.
-    Can be string, list of string, or [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html)
-    instance. Use ``[]``, ``'null'``, or ``'none'`` for no labels.
-thetalabels, rlabels : optional
-    Aliases for `thetaformatter`, `rformatter`.
-thetaformatter_kw, rformatter_kw : dict-like, optional
-    The azimuthal and radial label formatter settings. Passed to
-    [Formatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Formatter.html).
-thetalabel, rlabel : str, optional
-    Polar-aware axis labels rendered via [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html).
-    ``thetalabel`` follows the outer arc just beyond ``r=rmax``.
-    ``rlabel`` follows a radial spoke, centered between ``rmin`` and
-    ``rmax``. On a full circle it uses ``get_rlabel_position()`` unless
-    ``rlabelpos`` is explicit; on a sector it uses the spoke selected by
-    ``rlabelloc`` unless ``rlabelpos`` is explicit. Both labels include a
-    built-in tick-clearance offset, and ``labelpad`` adds extra padding in
-    points on top of that offset. Pass ``""`` to clear a previously set
-    label.
-thetalabelloc : float, optional
-    Center theta angle (in degrees) for ``thetalabel``. Defaults to the
-    midpoint of the directed ``thetalim`` interval (or ``0`` for a full
-    circle).
-rlabelloc : {'right', 'left'}, default: 'right'
-    Where to place ``rlabel``. When the spoke angle is fixed by a full
-    circle or by explicit ``rlabelpos``, ``rlabelloc`` selects the
-    perpendicular side of that spoke and ``'left'`` flips the default
-    side. On a sector with no explicit ``rlabelpos``, ``'right'``
-    (default) anchors to ``thetamin`` and ``'left'`` anchors to
-    ``thetamax``; the label is then offset outward from the sector.
-thetalabel_kw, rlabel_kw : dict-like, optional
-    Additional [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html) settings for the polar-aware
-    labels (e.g. ``border``, ``bbox``, or rendering hints like
-    ``min_advance``). See also `labelpad`, `labelcolor`, `labelsize`,
-    and `labelweight`.
-color : color-spec, default: [meta.color](https://ultraplot.readthedocs.io/en/stable/search.html?q=meta.color)
-    Color for the axes edge. Propagates to `labelcolor` unless specified
-    otherwise (similar to [format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format)).
-labelcolor, gridlabelcolor : color-spec, default: `color` or [grid.labelcolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelcolor)
-    Color for the gridline labels.
-labelpad, gridlabelpad : unit-spec, default: [grid.labelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelpad)
-    The padding between the axes edge and the radial and azimuthal labels.
-    For ``thetalabel`` and ``rlabel``, this is added on top of the built-in
-    tick-clearance offset.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-labelsize, gridlabelsize : unit-spec or str, default: [grid.labelsize](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelsize)
-    Font size for the gridline labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-labelweight, gridlabelweight : str, default: [grid.labelweight](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.labelweight)
-    Font weight for the gridline labels.
+- `r0`: The radial origin.
+- `theta0`: The zero azimuth location.
+- `thetadir`: The positive azimuth direction.
+- `thetamin, thetamax`: The lower and upper azimuthal bounds in degrees.
+- `thetalim`: Specifies `thetamin` and `thetamax` at once.
+- `rmin, rmax`: The inner and outer radial limits.
+- `rlim`: Specifies `rmin` and `rmax` at once.
+- `rborder`: Whether to draw the polar axes border.
+- `thetagrid, rgrid, grid`: Whether to draw major gridlines for the azimuthal and radial axis.
+- `thetagridminor, rgridminor, gridminor`: Whether to draw minor gridlines for the azimuthal and radial axis.
+- `thetagridcolor, rgridcolor, gridcolor`: Color for the major and minor azimuthal and radial gridlines.
+- `thetalocator, rlocator`: Used to determine the azimuthal and radial gridline positions.
+- `thetalocator_kw, rlocator_kw`: The azimuthal and radial locator settings.
+- `thetaminorlocator, rminorlocator`: As for `thetalocator`, `rlocator`, but for the minor gridlines.
+- `thetaminorticks, rminorticks`: Aliases for `thetaminorlocator`, `rminorlocator`.
+- `rlabelpos`: The azimuth at which radial coordinates are labeled.
+- `thetaformatter, rformatter`: Used to determine the azimuthal and radial label format.
+- `thetalabels, rlabels`: Aliases for `thetaformatter`, `rformatter`.
+- `thetaformatter_kw, rformatter_kw`: The azimuthal and radial label formatter settings.
+- `thetalabel, rlabel`: Polar-aware axis labels rendered via [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html).
+- `thetalabelloc`: Center theta angle (in degrees) for ``thetalabel``.
+- `rlabelloc`: Where to place ``rlabel``.
+- `thetalabel_kw, rlabel_kw`: Additional [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html) settings for the polar-aware labels (e.g.
+- `color`: Color for the axes edge.
+- `labelcolor, gridlabelcolor`: Color for the gridline labels.
+- `labelpad, gridlabelpad`: The padding between the axes edge and the radial and azimuthal labels.
+- `labelsize, gridlabelsize`: Font size for the gridline labels.
+- `labelweight, gridlabelweight`: Font weight for the gridline labels.
+- `title`: The axes title.
+- `abc`: The "a-b-c" subplot label style.
+- `abcloc, titleloc`: Strings indicating the location for the a-b-c label and main title.
+- `abcborder, titleborder`: Whether to draw a white border around titles and a-b-c labels positioned inside the axes.
+- `abcbbox, titlebbox`: Whether to draw a white bbox around titles and a-b-c labels positioned inside the axes.
+- `abcpad`: Horizontal offset to shift the a-b-c label position.
+- `abc_kw, title_kw`: Additional settings used to update the a-b-c label and title with ``text.update()``.
+- `titlepad`: The padding for the inner and outer titles and a-b-c labels.
+- _17 additional parameter groups are documented online._
 
-Other parameters
-----------------
-title : str or sequence, optional
-    The axes title. Can optionally be a sequence strings, in which case
-    the title will be selected from the sequence according to `~Axes.number`.
-abc : bool or str or sequence, default: [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc)
-    The "a-b-c" subplot label style. Must contain the character `a` or `A`,
-    for example ``'a.'``, or ``'A'``. If ``True`` then the default style of
-    ``'a'`` is used. The `a` or ``A`` is replaced with the alphabetic character
-    matching the `~Axes.number`. If `~Axes.number` is greater than 26, the
-    characters loop around to a, ..., z, aa, ..., zz, aaa, ..., zzz, etc.
-    Can also be a sequence of strings, in which case the "a-b-c" label will be selected sequentially from the list. For example `axs.format(abc = ["X", "Y"])` for a two-panel figure, and `axes[3:5].format(abc = ["X", "Y"])` for a two-panel subset of a larger figure.
-abcloc, titleloc : str, default: [abc.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.loc), [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc)
-    Strings indicating the location for the a-b-c label and main title.
-    The following locations are valid:
-
-    .. _title_table:
-
-    ========================  ============================
-    Location                  Valid keys
-    ========================  ============================
-    center above axes         ``'center'``, ``'c'``
-    left above axes           ``'left'``, ``'l'``
-    right above axes          ``'right'``, ``'r'``
-    lower center inside axes  ``'lower center'``, ``'lc'``
-    upper center inside axes  ``'upper center'``, ``'uc'``
-    upper right inside axes   ``'upper right'``, ``'ur'``
-    upper left inside axes    ``'upper left'``, ``'ul'``
-    lower left inside axes    ``'lower left'``, ``'ll'``
-    lower right inside axes   ``'lower right'``, ``'lr'``
-    left of y axis            ``'outer left'``, ``'ol'``
-    right of y axis           ``'outer right'``, ``'or'``
-    ========================  ============================
-
-abcborder, titleborder : bool, default: [abc.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.border) and [title.border](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.border)
-    Whether to draw a white border around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists
-    plotted inside the axes.
-abcbbox, titlebbox : bool, default: [abc.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.bbox) and [title.bbox](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.bbox)
-    Whether to draw a white bbox around titles and a-b-c labels positioned
-    inside the axes. This can help them stand out on top of artists plotted
-    inside the axes.
-abcpad : float or unit-spec, default: [abc.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.pad)
-    Horizontal offset to shift the a-b-c label position. Positive values move
-    the label right, negative values move it left. This is separate from
-    `abctitlepad`, which controls spacing between abc and title when co-located.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-abc_kw, title_kw : dict-like, optional
-    Additional settings used to update the a-b-c label and title
-    with ``text.update()``.
-titlepad : float, default: [title.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.pad)
-    The padding for the inner and outer titles and a-b-c labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-titleabove : bool, default: [title.above](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.above)
-    Whether to try to put outer titles and a-b-c labels above panels,
-    colorbars, or legends that are above the axes.
-abctitlepad : float, default: [abc.titlepad](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc.titlepad)
-    The horizontal padding between a-b-c labels and titles in the same location.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
-    Shorthands for the below keywords.
-    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
-lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
-    Additional titles in specific positions (see `title` for details). This works as
-    an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
-    permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), -
-    Additional settings applied to the background patch, and their
-    shorthands. Their defaults values are the ``'axes'`` properties.
-rowlabels, collabels, llabels, tlabels, rlabels, blabels
-    Aliases for `leftlabels` and `toplabels`, and for `leftlabels`,
-    `toplabels`, `rightlabels`, and `bottomlabels`, respectively.
-leftlabels, toplabels, rightlabels, bottomlabels : sequence of str, optional
-    Labels for the subplots lying along the left, top, right, and
-    bottom edges of the figure. The length of each list must match
-    the number of subplots along the corresponding edge.
-leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, default
-: [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad)
-    The padding between the labels and the axes content.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad : float or unit-spec, default
-: [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad)
-    The padding between side labels and a shared spanning axis label on the
-    same side. The spanning label is placed outside the side labels.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw : dict-like, optional
-    Additional settings used to update the labels with ``text.update()``.
-figtitle
-    Alias for `suptitle`.
-suptitle : str, optional
-    The figure "super" title, centered between the left edge of the leftmost
-    subplot and the right edge of the rightmost subplot.
-suptitlepad : float, default: [suptitle.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=suptitle.pad)
-    The padding between the super title and the axes content.
-    If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
-suptitle_kw : optional
-    Additional settings used to update the super title with ``text.update()``.
-includepanels : bool, default: False
-    Whether to include panels when aligning figure "super titles" along the top
-    of the subplot grid and when aligning the `spanx` *x* axis labels and
-    `spany` *y* axis labels along the sides of the subplot grid.
-rc_mode : int, optional
-    The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-rc_kw : dict-like, optional
-    An alternative to passing extra keyword arguments. See below.
-**kwargs
-    Keyword arguments that match the name of an [rc](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.rc.html) setting are
-    passed to [ultraplot.config.Configurator.context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context) and used to update the axes.
-    If the setting name has "dots" you can simply omit the dots. For example,
-    ``abc='A.'`` modifies the [abc](https://ultraplot.readthedocs.io/en/stable/search.html?q=abc) setting, ``titleloc='left'`` modifies the
-    [title.loc](https://ultraplot.readthedocs.io/en/stable/search.html?q=title.loc) setting, ``gridminor=True`` modifies the [gridminor](https://ultraplot.readthedocs.io/en/stable/search.html?q=gridminor)
-    setting, and ``gridbelow=True`` modifies the [grid.below](https://ultraplot.readthedocs.io/en/stable/search.html?q=grid.below) setting. Many
-    of the keyword arguments documented above are internally applied by retrieving
-    settings passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
-
-See also
---------
-ultraplot.axes.Axes.format
-ultraplot.config.Configurator.context"""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html#ultraplot.axes.PolarAxes.format)"""
         ...

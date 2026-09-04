@@ -27,101 +27,15 @@ plotting overrides. This axes subclass can be used by passing ``proj='3d'`` or
 
 Parameters
 ----------
-fig : [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html)
-    The Axes is built in the `.Figure` *fig*.
+- `fig`: The Axes is built in the `.Figure` *fig*.
+- `*args`: ``*args`` can be a single ``(left, bottom, width, height)`` rectangle or a single `.Bbox`.
+- `sharex, sharey`: The x- or y-`~.matplotlib.axis` is shared with the x- or y-axis in the input `~.axes.Axes`.
+- `frameon`: Whether the Axes frame is visible.
+- `box_aspect`: Set a fixed aspect for the Axes box, i.e.
+- `forward_navigation_events`: Control whether pan/zoom events are passed through to Axes below this one.
+- `**kwargs`: Other optional keyword arguments: Properties: adjustable: {'box', 'datalim'} agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m…
 
-*args
-    ``*args`` can be a single ``(left, bottom, width, height)``
-    rectangle or a single `.Bbox`.  This specifies the rectangle (in
-    figure coordinates) where the Axes is positioned.
-
-    ``*args`` can also consist of three numbers or a single three-digit
-    number; in the latter case, the digits are considered as
-    independent numbers.  The numbers are interpreted as ``(nrows,
-    ncols, index)``: ``(nrows, ncols)`` specifies the size of an array
-    of subplots, and ``index`` is the 1-based index of the subplot
-    being created.  Finally, ``*args`` can also directly be a
-    `.SubplotSpec` instance.
-
-sharex, sharey : [Axes](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.html), optional
-    The x- or y-`~.matplotlib.axis` is shared with the x- or y-axis in
-    the input `~.axes.Axes`.  Note that it is not possible to unshare
-    axes.
-
-frameon : bool, default: True
-    Whether the Axes frame is visible.
-
-box_aspect : float, optional
-    Set a fixed aspect for the Axes box, i.e. the ratio of height to
-    width. See `~.axes.Axes.set_box_aspect` for details.
-
-forward_navigation_events : bool or "auto", default: "auto"
-    Control whether pan/zoom events are passed through to Axes below
-    this one. "auto" is *True* for axes with an invisible patch and
-    *False* otherwise.
-
-**kwargs
-    Other optional keyword arguments:
-
-    Properties:
-    adjustable: {'box', 'datalim'}
-    agg_filter: a filter function, which takes a (m, n, 3) float array and a dpi value, and returns a (m, n, 3) array and two offsets from the bottom left corner of the image
-    alpha: float or None
-    anchor: (float, float) or {'C', 'SW', 'S', 'SE', 'E', 'NE', ...}
-    animated: bool
-    aspect: {'auto', 'equal'} or float
-    autoscale_on: bool
-    autoscalex_on: unknown
-    autoscaley_on: unknown
-    axes_locator: Callable[[Axes, Renderer], Bbox]
-    axisbelow: bool or 'line'
-    box_aspect: float or None
-    clip_box: [BboxBase](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.BboxBase.html) or None
-    clip_on: bool
-    clip_path: Patch or (Path, Transform) or None
-    facecolor or fc: [color](https://matplotlib.org/stable/search.html?q=color)
-    figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
-    forward_navigation_events: bool or "auto"
-    frame_on: bool
-    gid: str
-    in_layout: bool
-    label: object
-    mouseover: bool
-    navigate: bool
-    navigate_mode: unknown
-    path_effects: list of `.AbstractPathEffect`
-    picker: None or bool or float or callable
-    position: [left, bottom, width, height] or [Bbox](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Bbox.html)
-    prop_cycle: `~cycler.Cycler`
-    rasterization_zorder: float or None
-    rasterized: bool
-    sketch_params: (scale: float, length: float, randomness: float)
-    snap: bool or None
-    subplotspec: unknown
-    title: str
-    transform: [Transform](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.html)
-    url: str
-    visible: bool
-    xbound: (lower: float, upper: float)
-    xlabel: str
-    xlim: (left: float, right: float)
-    xmargin: float greater than -0.5
-    xscale: unknown
-    xticklabels: unknown
-    xticks: unknown
-    ybound: (lower: float, upper: float)
-    ylabel: str
-    ylim: (bottom: float, top: float)
-    ymargin: float greater than -0.5
-    yscale: unknown
-    yticklabels: unknown
-    yticks: unknown
-    zorder: float
-
-Returns
--------
-`~.axes.Axes`
-    The new `~.axes.Axes` object."""
+[Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.ThreeAxes.html)"""
         ...
 
     def graph(self, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
