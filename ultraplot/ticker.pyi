@@ -46,7 +46,6 @@ class IndexLocator(mticker.Locator):
 are restricted to the extent of plotted content when content is present."""
 
     def __init__(self, base: Incomplete=1, offset: Incomplete=0) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def set_params(self, base: Incomplete=None, offset: Incomplete=None) -> None:
@@ -364,7 +363,6 @@ class IndexFormatter(mticker.Formatter):
 paired with `IndexLocator` or `~matplotlib.ticker.FixedLocator`."""
 
     def __init__(self, labels: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, x: Incomplete, pos: Incomplete=None) -> Incomplete:
@@ -489,7 +487,6 @@ class AutoCFDatetimeFormatter(mticker.Formatter):
     """Automatic formatter for `cftime.datetime` data."""
 
     def __init__(self, locator: Incomplete, calendar: Incomplete, time_units: Incomplete=None) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def pick_format(self, resolution: Incomplete) -> Incomplete:
@@ -508,7 +505,6 @@ class AutoCFDatetimeLocator(mticker.Locator):
         real_world_calendars = ()
 
     def __init__(self, maxticks: Incomplete=None, calendar: Incomplete='standard', date_unit: Incomplete=None, minticks: Incomplete=3) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def set_params(self, maxticks: Incomplete=None, minticks: Incomplete=None, max_display_ticks: Incomplete=None) -> None:
@@ -570,11 +566,9 @@ class _CartopyFormatter(object):
     """Mixin class for cartopy formatters."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, value: Incomplete, pos: Incomplete=None) -> Incomplete:
-        """Call self as a function."""
         ...
 
 class DegreeFormatter(_CartopyFormatter, _PlateCarreeFormatter):
@@ -590,17 +584,9 @@ dms : bool, default: False
         ...
 
     def _apply_transform(self, value: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
-        """Given a single value, a target projection and a source CRS,
-transform the value from the source CRS to the target
-projection, returning a single value."""
         ...
 
     def _hemisphere(self, value: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
-        """Given both a tick value in the Plate Carree projection and the
-same value in the source CRS, return a string indicating the
-hemisphere that the value is in.
-
-Must be over-ridden by the derived class."""
         ...
 
 class LongitudeFormatter(_CartopyFormatter, LongitudeFormatter):

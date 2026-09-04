@@ -12,7 +12,6 @@ class _benchmark(object):
     """Context object for timing arbitrary blocks of code."""
 
     def __init__(self, message: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> None:

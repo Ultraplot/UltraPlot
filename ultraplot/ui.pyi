@@ -394,13 +394,13 @@ order : {'C', 'F'}, default: 'C'
     subplots appear in the `SubplotGrid` returned by this function, and the order
     of subplot a-b-c labels (see `~ultraplot.axes.Axes.format`).
 proj, projection :
-str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
+str, :class:`cartopy.crs.Projection`, or :class:`~mpl_toolkits.basemap.Basemap`, optional
     The map projection specification(s). If ``'cart'`` or ``'cartesian'``
-    (the default), a `~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
+    (the default), a :class:`~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
     a :class:`~ultraplot.axes.PolarAxes` is created. Otherwise, the argument is
-    interpreted by `~ultraplot.constructor.Proj`, and the result is used
-    to make a `~ultraplot.axes.GeoAxes` (in this case the argument can be
-    a `cartopy.crs.Projection` instance, a `~mpl_toolkits.basemap.Basemap`
+    interpreted by :class:`~ultraplot.constructor.Proj`, and the result is used
+    to make a :class:`~ultraplot.axes.GeoAxes` (in this case the argument can be
+    a :class:`cartopy.crs.Projection` instance, a :class:`~mpl_toolkits.basemap.Basemap`
     instance, or a projection name listed in :ref:`this table <proj_table>`).
 
     To use different projections for different subplots, you have
@@ -418,16 +418,16 @@ str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
       for the third and fourth subplots.
 
 proj_kw, projection_kw : dict-like, optional
-    Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or
-    cartopy `~cartopy.crs.Projection` classes on instantiation.
+    Keyword arguments passed to :class:`~mpl_toolkits.basemap.Basemap` or
+    :class:`~cartopy.crs.Projection` classes on instantiation.
     If dictionary of properties, applies globally. If list or dictionary of
     dictionaries, applies to specific subplots, as with `proj`. For example,
     ``uplt.subplots(ncols=2, proj='cyl', proj_kw=({'lon_0': 0}, {'lon_0': 180})``
     centers the projection in the left subplot on the prime meridian and in the
     right subplot on the international dateline.
 backend : {'cartopy', 'basemap'}, default: :rc:`geo.backend`
-    Whether to use `~mpl_toolkits.basemap.Basemap` or
-    `~cartopy.crs.Projection` for map projections.
+    Whether to use :class:`~mpl_toolkits.basemap.Basemap` or
+    :class:`~cartopy.crs.Projection` for map projections.
 
     .. deprecated:: 3.0.0
         The ``'basemap'`` backend is deprecated and may be removed in a

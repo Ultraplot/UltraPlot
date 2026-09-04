@@ -48,46 +48,36 @@ This keeps constructor registries aligned with modules that may be reloaded
 in-place during tests or interactive use."""
 
     def __init__(self, factory: Callable[[], dict[str, _RegistryValue]]) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _refresh(self) -> None:
         ...
 
     def __contains__(self, key: object) -> bool:
-        """True if the dictionary has the specified key, else False."""
         ...
 
     def __getitem__(self, key: str) -> _RegistryValue:
-        """Return self[key]."""
         ...
 
     def __iter__(self) -> Iterator[str]:
-        """Implement iter(self)."""
         ...
 
     def __len__(self) -> int:
-        """Return len(self)."""
         ...
 
     def get(self, key: str, default: _RegistryValue | None=None) -> _RegistryValue | None:
-        """Return the value for key if key is in the dictionary, else default."""
         ...
 
     def items(self) -> Incomplete:
-        """Return a set-like object providing a view on the dict's items."""
         ...
 
     def keys(self) -> Incomplete:
-        """Return a set-like object providing a view on the dict's keys."""
         ...
 
     def values(self) -> Incomplete:
-        """Return an object providing a view on the dict's values."""
         ...
 
     def copy(self) -> dict[str, _RegistryValue]:
-        """Return a shallow copy of the dict."""
         ...
 
 def _build_norm_registry() -> dict[str, type[mcolors.Normalize]]:
@@ -362,9 +352,6 @@ ultraplot.constructor.Norm
 ultraplot.utils.get_colors"""
 
     def __init__(self, *args: Incomplete, N: Incomplete=None, samples: Incomplete=None, name: Incomplete=None, **kwargs: Incomplete) -> None:
-        """Semi-private init.
-
-Do not use this directly, use `cycler` function instead."""
         ...
 
     def _parse_basic_properties(self, kwargs: Incomplete) -> Incomplete:
@@ -396,7 +383,6 @@ Do not use this directly, use `cycler` function instead."""
         ...
 
     def __eq__(self, other: Incomplete) -> bool:
-        """Return self==value."""
         ...
 
     def get_next(self) -> Incomplete:

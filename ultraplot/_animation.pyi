@@ -40,7 +40,6 @@ is always untouched; a later complete draw primes the retained layers."""
     _min_axes_for_view_redraw = 3
 
     def __init__(self, canvas: Incomplete, figure: Incomplete=None) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @staticmethod
@@ -231,7 +230,6 @@ Managed artists are drawn above the cached static background, matching
 Matplotlib's standard blitting behavior."""
 
     def __init__(self, canvas: Incomplete, artists: Iterable[martist.Artist]=(), bbox: Incomplete=None) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @property

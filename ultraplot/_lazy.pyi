@@ -15,7 +15,6 @@ class LazyLoader:
     """Encapsulates lazy-loading mechanics for the ultraplot top-level module."""
 
     def __init__(self, *, package: str, package_path: Path, exceptions: Mapping[str, tuple[str, Optional[str]]], setup_callback: Callable[[], None], registry_attr_callback: Callable[[str], Optional[type]], registry_build_callback: Callable[[], None], registry_names_callback: Callable[[], Optional[Mapping[str, type]]], attr_map_key: str='_ATTR_MAP', eager_key: str='_EAGER_DONE') -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _import_module(self, module_name: str) -> types.ModuleType:
@@ -55,7 +54,6 @@ class LazyLoader:
 class _UltraPlotModule(types.ModuleType):
 
     def __setattr__(self, name: str, value: Any) -> None:
-        """Implement setattr(self, name, value)."""
         ...
 
 def install_module_proxy(module: Optional[types.ModuleType]) -> None:

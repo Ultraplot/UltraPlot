@@ -841,7 +841,6 @@ class UltraLegend:
     """Centralized legend builder for axes."""
 
     def __init__(self, axes: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @staticmethod

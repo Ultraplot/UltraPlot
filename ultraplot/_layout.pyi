@@ -64,7 +64,6 @@ cache because they may rely on repeated side effects."""
     _MAX_STATES_PER_AXIS = 4
 
     def __init__(self, figure: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> Incomplete:
@@ -122,7 +121,6 @@ measurements. Position-sensitive axes and extra artists automatically add
 the absolute origin to their state key."""
 
     def __init__(self, figure: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> Incomplete:
@@ -189,7 +187,6 @@ Figure code only needs to know whether a transaction is active. Cache setup,
 dynamic-axes refresh, and exception-safe cleanup stay private to this object."""
 
     def __init__(self, figure: Incomplete, *, cache_ticks: Incomplete=True, cache_extents: Incomplete=True) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __enter__(self) -> Incomplete:

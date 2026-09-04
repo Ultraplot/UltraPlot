@@ -60,11 +60,9 @@ class _AnchoredInsetLocator:
     """Locate an inset by anchoring one of its points to a parent coordinate."""
 
     def __init__(self, parent: Incomplete, xy: Incomplete, size: Incomplete, transform: Incomplete, anchor: Incomplete, square: Incomplete=False) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, ax: Incomplete, renderer: Incomplete) -> Incomplete:
-        """Call self as a function."""
         ...
 _HAWKEYE_TRANSFORM_NAMES = frozenset({'axes', 'data', 'figure', 'subfigure', 'map'})
 
@@ -224,20 +222,9 @@ if cgridliner is not None and hasattr(cgridliner, 'Label'):
             ...
 
         def _axes_domain(self, *args: Any, **kwargs: Any) -> tuple[Any, Any]:
-            """Return lon_range, lat_range"""
             ...
 
         def _draw_gridliner(self, *args: Any, **kwargs: Any) -> Any:
-            """Create Artists for all visible elements and add to our Axes.
-
-The following rules apply for the visibility of labels:
-
-- X-type labels are plotted along the bottom, top and geo spines.
-- Y-type labels are plotted along the left, right and geo spines.
-- A label must not overlap another label marked as visible.
-- A label must not overlap the map boundary.
-- When a label is about to be hidden, its padding is slightly
-  increase until it can be drawn or until a padding limit is reached."""
             ...
 else:
     _CartopyGridliner = None
@@ -248,7 +235,6 @@ longitude and latitude coordinates. Modeled after how `matplotlib.ticker._DummyA
 and `matplotlib.ticker.TickHelper` are used to control tick locations and labels."""
 
     def __init__(self, axes: 'GeoAxes') -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _get_extent(self) -> tuple[float, float, float, float]:
@@ -350,7 +336,6 @@ class _CartopyGridlinerAdapter(_GridlinerAdapter):
 into the Gridliner API while hiding cartopy version differences."""
 
     def __init__(self, gridliner: Optional[_CartopyGridlinerProtocol]) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @staticmethod
@@ -377,7 +362,6 @@ class _BasemapGridlinerAdapter(_GridlinerAdapter):
 of cartopy Gridliner behavior needed by GeoAxes (labels, toggles, styling)."""
 
     def __init__(self, lonlines: GridlineDict | None, latlines: GridlineDict | None) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def labels_for_sides(self, *, bottom: bool | str | None=None, top: bool | str | None=None, left: bool | str | None=None, right: bool | str | None=None) -> dict[str, list[mtext.Text]]:
@@ -400,7 +384,6 @@ class _LonAxis(_GeoAxis):
     axis_name = 'lon'
 
     def __init__(self, axes: 'GeoAxes') -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _get_ticklocs(self, locator: mticker.Locator) -> np.ndarray:
@@ -414,7 +397,6 @@ class _LatAxis(_GeoAxis):
     axis_name = 'lat'
 
     def __init__(self, axes: 'GeoAxes', latmax: float=90) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _get_ticklocs(self, locator: mticker.Locator) -> np.ndarray:
@@ -855,7 +837,6 @@ projected coordinates."""
 
     @override
     def _sharex_setup(self, sharex: 'GeoAxes', *, labels: bool=True, limits: bool=True) -> None:
-        """Configure x-axis sharing for panels. See also `~CartesianAxes._sharex_setup`."""
         ...
 
     def _toggle_ticks(self, label: Any, which: str) -> None:
@@ -1524,11 +1505,6 @@ projections. This was developed from `this cartopy example     <https://cartopy.
         ...
 
     def get_extent(self, crs: Any=None) -> Sequence[float]:
-        """Get the extent (x0, x1, y0, y1) of the map in the given coordinate
-system.
-
-If no crs is given, the returned extents' coordinate system will be
-the CRS of this Axes."""
         ...
 
     @override
@@ -1541,36 +1517,50 @@ after the main axes has applied its aspect but before the panel axes are drawn."
         ...
 
     def get_tightbbox(self, renderer: Any, *args: Any, **kwargs: Any) -> Any:
-        """Extend the standard behaviour of
-:func:`matplotlib.axes.Axes.get_tightbbox`.
+        """Return the tight bounding box of the Axes, including axis and their
+decorators (xlabel, title, etc).
 
-Adjust the axes aspect ratio and background patch location before
-calculating the tight bounding box."""
-        ...
-
-    def set_extent(self, extent: Sequence[float], crs: Any=None) -> Any:
-        """Set the extent (x0, x1, y0, y1) of the map in the given
-coordinate system.
-
-If no crs is given, the extents' coordinate system will be assumed
-to be the Geodetic version of this axes' projection.
+Artists that have ``artist.set_in_layout(False)`` are not included
+in the bbox.
 
 Parameters
 ----------
-extents
-    Tuple of floats representing the required extent (x0, x1, y0, y1)."""
+renderer : `.RendererBase` subclass
+    renderer that will be used to draw the figures (i.e.
+    ``fig.canvas.get_renderer()``)
+
+bbox_extra_artists : list of `.Artist` or ``None``
+    List of artists to include in the tight bounding box.  If
+    ``None`` (default), then all artist children of the Axes are
+    included in the tight bounding box.
+
+call_axes_locator : bool, default: True
+    If *call_axes_locator* is ``False``, it does not call the
+    ``_axes_locator`` attribute, which is necessary to get the correct
+    bounding box. ``call_axes_locator=False`` can be used if the
+    caller is only interested in the relative size of the tightbbox
+    compared to the Axes bbox.
+
+for_layout_only : default: False
+    The bounding box will *not* include the x-extent of the title and
+    the xlabel, or the y-extent of the ylabel.
+
+Returns
+-------
+`.BboxBase`
+    Bounding box in figure pixel coordinates.
+
+See Also
+--------
+matplotlib.axes.Axes.get_window_extent
+matplotlib.axis.Axis.get_tightbbox
+matplotlib.spines.Spine.get_window_extent"""
+        ...
+
+    def set_extent(self, extent: Sequence[float], crs: Any=None) -> Any:
         ...
 
     def set_global(self) -> Any:
-        """Set the extent of the Axes to the limits of the projection.
-
-Note
-----
-    In some cases where the projection has a limited sensible range
-    the ``set_global`` method does not actually make the whole globe
-    visible. Instead, the most appropriate extents will be used (e.g.
-    Ordnance Survey UK will set the extents to be around the British
-    Isles."""
         ...
 
 class _BasemapAxes(GeoAxes):

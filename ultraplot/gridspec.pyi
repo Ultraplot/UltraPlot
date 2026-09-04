@@ -562,19 +562,15 @@ class SubplotGrid(MutableSequence[paxes.Axes], list[paxes.Axes], paxes.PlotAxes)
 See `~SubplotGrid.__getitem__` for details."""
 
     def __repr__(self) -> str:
-        """Return repr(self)."""
         ...
 
     def __str__(self) -> str:
-        """Return str(self)."""
         ...
 
     def __len__(self) -> int:
-        """Return len(self)."""
         ...
 
     def insert(self, key: Incomplete, value: Incomplete) -> None:
-        """S.insert(index, value) -- insert value before index"""
         ...
 
     def __init__(self, sequence: Incomplete=None, **kwargs: Incomplete) -> None:
@@ -1578,20 +1574,20 @@ transform : {'data', 'axes', 'figure', 'subfigure'} or `~matplotlib.transforms.T
     :class:`~matplotlib.figure.Figure.transSubfigure`, transforms.
     Default is to use the same projection as the current axes.
 proj, projection :
-str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
+str, :class:`cartopy.crs.Projection`, or :class:`~mpl_toolkits.basemap.Basemap`, optional
     The map projection specification(s). If ``'cart'`` or ``'cartesian'``
-    (the default), a `~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
+    (the default), a :class:`~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
     a :class:`~ultraplot.axes.PolarAxes` is created. Otherwise, the argument is
-    interpreted by `~ultraplot.constructor.Proj`, and the result is used
-    to make a `~ultraplot.axes.GeoAxes` (in this case the argument can be
-    a `cartopy.crs.Projection` instance, a `~mpl_toolkits.basemap.Basemap`
+    interpreted by :class:`~ultraplot.constructor.Proj`, and the result is used
+    to make a :class:`~ultraplot.axes.GeoAxes` (in this case the argument can be
+    a :class:`cartopy.crs.Projection` instance, a :class:`~mpl_toolkits.basemap.Basemap`
     instance, or a projection name listed in :ref:`this table <proj_table>`).
 proj_kw, projection_kw : dict-like, optional
-    Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or
-    cartopy `~cartopy.crs.Projection` classes on instantiation.
+    Keyword arguments passed to :class:`~mpl_toolkits.basemap.Basemap` or
+    :class:`~cartopy.crs.Projection` classes on instantiation.
 backend : {'cartopy', 'basemap'}, default: :rc:`geo.backend`
-    Whether to use `~mpl_toolkits.basemap.Basemap` or
-    `~cartopy.crs.Projection` for map projections.
+    Whether to use :class:`~mpl_toolkits.basemap.Basemap` or
+    :class:`~cartopy.crs.Projection` for map projections.
 
     .. deprecated:: 3.0.0
         The ``'basemap'`` backend is deprecated and may be removed in a

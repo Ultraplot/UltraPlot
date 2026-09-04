@@ -38,7 +38,6 @@ decide the trajectory is bad (e.g., if the trajectory is very
 short) just call `undo_trajectory`."""
 
     def __init__(self, grid: Incomplete, mask: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def grid2mask(self, xi: float, yi: float) -> tuple[int, int]:
@@ -70,7 +69,6 @@ class _CurvedQuiverGrid(object):
     """Grid of data."""
 
     def __init__(self, x: np.ndarray, y: np.ndarray) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @property
@@ -90,7 +88,6 @@ zeroed cells: When a streamline enters a cell, that cell is set to
 1, and no new streamlines are allowed to enter."""
 
     def __init__(self, density: float | int) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __getitem__(self, *args: Incomplete) -> Incomplete:
@@ -117,7 +114,6 @@ class _CurvedQuiverTerminateTrajectory(Exception):
 class CurvedQuiverSolver:
 
     def __init__(self, x: np.ndarray, y: np.ndarray, density: float | tuple[float, float]) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def get_integrator(self, u: np.ndarray, v: np.ndarray, minlength: float, resolution: float, magnitude: np.ndarray) -> Callable[[float, float], _CurvedQuiverTrajectory | None]:

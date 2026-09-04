@@ -270,27 +270,21 @@ stored in `rc_ultraplot`. This class is instantiated as the `rc` object
 on import. See the :ref:`user guide <ug_config>` for details."""
 
     def __repr__(self) -> str:
-        """Return repr(self)."""
         ...
 
     def __str__(self) -> str:
-        """Return str(self)."""
         ...
 
     def __iter__(self) -> Incomplete:
-        """Implement iter(self)."""
         ...
 
     def __len__(self) -> int:
-        """Return len(self)."""
         ...
 
     def __delitem__(self, key: Incomplete) -> Incomplete:
-        """Delete self[key]."""
         ...
 
     def __delattr__(self, attr: Incomplete) -> Incomplete:
-        """Implement delattr(self, name)."""
         ...
 
     def __init__(self, local: Incomplete=True, user: Incomplete=True, default: Incomplete=True, **kwargs: Incomplete) -> None:

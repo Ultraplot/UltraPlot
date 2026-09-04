@@ -91,12 +91,11 @@ allocated space and overlap with adjacent subplots."""
         ...
 
     def _reposition_subplot(self) -> None:
-        """Reposition the subplot axes."""
         ...
 
     def _update_title_position(self, renderer: Incomplete) -> None:
-        """Update the position of inset titles and outer titles. This is called
-by matplotlib at drawtime."""
+        """Update the title position based on the bounding box enclosing
+all the ticklabels and x-axis spine and xlabel..."""
         ...
 
     def _title_reserves_external_space(self, loc: Incomplete) -> bool:

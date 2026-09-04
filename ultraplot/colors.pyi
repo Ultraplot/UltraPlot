@@ -217,11 +217,9 @@ class ContinuousColormap(mcolors.LinearSegmentedColormap, _Colormap):
     """Replacement for `~matplotlib.colors.LinearSegmentedColormap`."""
 
     def __str__(self) -> str:
-        """Return str(self)."""
         ...
 
     def __repr__(self) -> str:
-        """Return repr(self)."""
         ...
 
     def __init__(self, *args: Incomplete, gamma: Incomplete=1, alpha: Incomplete=None, cyclic: Incomplete=False, **kwargs: Incomplete) -> None:
@@ -565,11 +563,9 @@ class DiscreteColormap(mcolors.ListedColormap, _Colormap):
     """Replacement for `~matplotlib.colors.ListedColormap`."""
 
     def __str__(self) -> str:
-        """Return str(self)."""
         ...
 
     def __repr__(self) -> str:
-        """Return repr(self)."""
         ...
 
     @property
@@ -1211,7 +1207,6 @@ class DivergingNorm(mcolors.Normalize):
 colormap color. The default central value is ``0``."""
 
     def __str__(self) -> str:
-        """Return str(self)."""
         ...
 
     def __init__(self, vcenter: Incomplete=0, vmin: Incomplete=None, vmax: Incomplete=None, fair: Incomplete=True, clip: Incomplete=None) -> None:
@@ -1287,7 +1282,6 @@ See `~ColorDatabase.__getitem__` for details."""
     _colors_replace = (('grey', 'gray'), ('ochre', 'ocher'), ('kelley', 'kelly'))
 
     def __delitem__(self, key: Incomplete) -> None:
-        """Delete self[key]."""
         ...
 
     def __init__(self, mapping: Incomplete=None) -> None:

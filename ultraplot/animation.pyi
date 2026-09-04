@@ -49,7 +49,6 @@ deleted unless `finish` completed, so an animation that fails halfway
 through never leaves a truncated movie that looks like a whole one."""
 
     def __init__(self, filename: Incomplete, fps: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def setup(self, width: Incomplete, height: Incomplete) -> Incomplete:
@@ -76,7 +75,6 @@ class _RawFFMpegWriter(_RawWriter):
     """Pipe raw ``RGBA`` frames into ``ffmpeg`` with no intermediate encoding."""
 
     def __init__(self, filename: Incomplete, fps: Incomplete, *, codec: Incomplete=None, bitrate: Incomplete=None, extra_args: Incomplete=None, metadata: Incomplete=None) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     @staticmethod
@@ -106,7 +104,6 @@ class _RawPillowWriter(_RawWriter):
     """Collect raw ``RGBA`` frames and write an animated image with Pillow."""
 
     def __init__(self, filename: Incomplete, fps: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def write(self, buffer: Incomplete) -> Incomplete:

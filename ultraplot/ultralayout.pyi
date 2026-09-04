@@ -84,7 +84,6 @@ class ColorbarLayoutSolver:
     """Constraint-based solver for inset colorbar frame alignment."""
 
     def __init__(self, loc: str, cb_width: float, cb_height: float, pad_left: float, pad_right: float, pad_bottom: float, pad_top: float) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _setup_constraints(self) -> None:

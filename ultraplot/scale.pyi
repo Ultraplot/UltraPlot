@@ -28,7 +28,6 @@ and `~matplotlib.scale.ScaleBase.get_transform`. Also overrides
 `~matplotlib.axis.Axis` instance."""
 
     def __init__(self, *args: Incomplete, **kwargs: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def set_default_locators_and_formatters(self, axis: Incomplete, only_if_default: Incomplete=False) -> Incomplete:

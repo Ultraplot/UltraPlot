@@ -156,31 +156,24 @@ class _RcParams(MutableMapping, dict):
     """A simple dictionary with locked inputs and validated assignments."""
 
     def __init__(self, source: Incomplete, validate: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __repr__(self) -> Incomplete:
-        """Return repr(self)."""
         ...
 
     def __str__(self) -> Incomplete:
-        """Return str(self)."""
         ...
 
     def __len__(self) -> Incomplete:
-        """Return len(self)."""
         ...
 
     def __iter__(self) -> Incomplete:
-        """Implement iter(self)."""
         ...
 
     def __getitem__(self, key: Incomplete) -> Incomplete:
-        """Return self[key]."""
         ...
 
     def __setitem__(self, key: Incomplete, value: Incomplete) -> Incomplete:
-        """Set self[key] to value."""
         ...
 
     @staticmethod
@@ -188,7 +181,6 @@ class _RcParams(MutableMapping, dict):
         ...
 
     def copy(self) -> Incomplete:
-        """Return a shallow copy of the dict."""
         ...
 _validate_pt = _validate_units('pt')
 _validate_em = _validate_units('em')

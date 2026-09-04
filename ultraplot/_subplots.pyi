@@ -26,7 +26,6 @@ figure : `~ultraplot.figure.Figure`
     The parent figure."""
 
     def __init__(self, figure: 'Figure') -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def reset(self) -> None:

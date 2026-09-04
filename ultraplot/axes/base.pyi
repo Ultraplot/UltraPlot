@@ -95,29 +95,24 @@ class _TransformedBoundsLocator:
     """Axes locator for `~Axes.inset_axes` and other axes."""
 
     def __init__(self, bounds: Incomplete, transform: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, ax: Incomplete, renderer: Incomplete) -> Incomplete:
-        """Call self as a function."""
         ...
 
 class _AspectAwareTransformedBoundsLocator(_TransformedBoundsLocator):
     """Preserve an inset's lower-left anchor after box-aspect adjustment."""
 
     def __call__(self, ax: Incomplete, renderer: Incomplete) -> Incomplete:
-        """Call self as a function."""
         ...
 
 class _SideColorbarLocator:
     """Position a side colorbar beyond its parent axes decorations."""
 
     def __init__(self, parent: Incomplete, side: Incomplete, bounds: Incomplete, pad: Incomplete, previous: Incomplete=()) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def __call__(self, ax: Incomplete, renderer: Incomplete) -> Incomplete:
-        """Call self as a function."""
         ...
 
 class _ExternalModeMixin:
@@ -134,7 +129,6 @@ value:
     class _ExternalContext:
 
         def __init__(self, ax: Incomplete, value: Incomplete=True) -> None:
-            """Initialize self.  See help(type(self)) for accurate signature."""
             ...
 
         def __enter__(self) -> Incomplete:
@@ -796,20 +790,20 @@ transform : {'data', 'axes', 'figure', 'subfigure'} or `~matplotlib.transforms.T
     :class:`~matplotlib.figure.Figure.transSubfigure`, transforms.
     Default is to use the same projection as the current axes.
 proj, projection :
-str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
+str, :class:`cartopy.crs.Projection`, or :class:`~mpl_toolkits.basemap.Basemap`, optional
     The map projection specification(s). If ``'cart'`` or ``'cartesian'``
-    (the default), a `~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
+    (the default), a :class:`~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
     a :class:`~ultraplot.axes.PolarAxes` is created. Otherwise, the argument is
-    interpreted by `~ultraplot.constructor.Proj`, and the result is used
-    to make a `~ultraplot.axes.GeoAxes` (in this case the argument can be
-    a `cartopy.crs.Projection` instance, a `~mpl_toolkits.basemap.Basemap`
+    interpreted by :class:`~ultraplot.constructor.Proj`, and the result is used
+    to make a :class:`~ultraplot.axes.GeoAxes` (in this case the argument can be
+    a :class:`cartopy.crs.Projection` instance, a :class:`~mpl_toolkits.basemap.Basemap`
     instance, or a projection name listed in :ref:`this table <proj_table>`).
 proj_kw, projection_kw : dict-like, optional
-    Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or
-    cartopy `~cartopy.crs.Projection` classes on instantiation.
+    Keyword arguments passed to :class:`~mpl_toolkits.basemap.Basemap` or
+    :class:`~cartopy.crs.Projection` classes on instantiation.
 backend : {'cartopy', 'basemap'}, default: :rc:`geo.backend`
-    Whether to use `~mpl_toolkits.basemap.Basemap` or
-    `~cartopy.crs.Projection` for map projections.
+    Whether to use :class:`~mpl_toolkits.basemap.Basemap` or
+    :class:`~cartopy.crs.Projection` for map projections.
 
     .. deprecated:: 3.0.0
         The ``'basemap'`` backend is deprecated and may be removed in a
@@ -859,20 +853,20 @@ transform : {'data', 'axes', 'figure', 'subfigure'} or `~matplotlib.transforms.T
     :class:`~matplotlib.figure.Figure.transSubfigure`, transforms.
     Default is to use the same projection as the current axes.
 proj, projection :
-str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
+str, :class:`cartopy.crs.Projection`, or :class:`~mpl_toolkits.basemap.Basemap`, optional
     The map projection specification(s). If ``'cart'`` or ``'cartesian'``
-    (the default), a `~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
+    (the default), a :class:`~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
     a :class:`~ultraplot.axes.PolarAxes` is created. Otherwise, the argument is
-    interpreted by `~ultraplot.constructor.Proj`, and the result is used
-    to make a `~ultraplot.axes.GeoAxes` (in this case the argument can be
-    a `cartopy.crs.Projection` instance, a `~mpl_toolkits.basemap.Basemap`
+    interpreted by :class:`~ultraplot.constructor.Proj`, and the result is used
+    to make a :class:`~ultraplot.axes.GeoAxes` (in this case the argument can be
+    a :class:`cartopy.crs.Projection` instance, a :class:`~mpl_toolkits.basemap.Basemap`
     instance, or a projection name listed in :ref:`this table <proj_table>`).
 proj_kw, projection_kw : dict-like, optional
-    Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or
-    cartopy `~cartopy.crs.Projection` classes on instantiation.
+    Keyword arguments passed to :class:`~mpl_toolkits.basemap.Basemap` or
+    :class:`~cartopy.crs.Projection` classes on instantiation.
 backend : {'cartopy', 'basemap'}, default: :rc:`geo.backend`
-    Whether to use `~mpl_toolkits.basemap.Basemap` or
-    `~cartopy.crs.Projection` for map projections.
+    Whether to use :class:`~mpl_toolkits.basemap.Basemap` or
+    :class:`~cartopy.crs.Projection` for map projections.
 
     .. deprecated:: 3.0.0
         The ``'basemap'`` backend is deprecated and may be removed in a
@@ -1311,7 +1305,7 @@ labels : list of str, optional
     group of artists, the tuple group is expanded into unique legend entries --
     otherwise, the tuple group elements are drawn on top of eachother). For details
     on matplotlib legend handlers and tuple groups, see the matplotlib `legend guide
--<https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html>`__.
+<https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html>`__.
 loc, location : int or str, default: :rc:`legend.loc`
     The legend location. Valid location keys are shown in the below table.
 

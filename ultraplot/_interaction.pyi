@@ -121,7 +121,6 @@ class _FramePacer:
     _interval = 1 / _TARGET_FRAME_RATE
 
     def __init__(self, canvas: Incomplete, is_active: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def cancel(self) -> None:
@@ -145,7 +144,6 @@ class _NavigationInteractionManager:
     _scatter_limit = 2000
 
     def __init__(self, canvas: Incomplete, figure: Incomplete, selective: Incomplete) -> None:
-        """Initialize self.  See help(type(self)) for accurate signature."""
         ...
 
     def _is_active(self) -> Incomplete:

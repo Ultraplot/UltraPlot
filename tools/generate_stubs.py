@@ -453,17 +453,43 @@ def _resolve_runtime_doc(module: Any, qualname: str) -> str | None:
         return None
     try:
         obj = module
+        member_class = None
+        member_name = None
         for part in qualname.split("."):
-            if isinstance(obj, type) and part in obj.__dict__:
+            if isinstance(obj, type):
+                # A source declaration may override an optional dependency's
+                # member only in one environment. Never borrow an inherited
+                # runtime docstring: it makes generated stubs dependency-specific.
+                if part not in obj.__dict__:
+                    return None
+                member_class = obj
+                member_name = part
                 candidate = obj.__dict__[part]
                 if isinstance(candidate, property):
-                    doc = inspect.getdoc(candidate) or inspect.getdoc(candidate.fget)
+                    if getattr(candidate.fget, "__module__", None) != module.__name__:
+                        return None
+                    doc = candidate.__doc__ or getattr(candidate.fget, "__doc__", None)
                     if doc:
-                        return _clean_runtime_doc(doc)
+                        return _clean_runtime_doc(inspect.cleandoc(doc))
             obj = getattr(obj, part)
-        doc = inspect.getdoc(obj)
+        # Conditional placeholders such as ``SomeOptionalClass = None`` and
+        # imported dependency objects are not the source declaration represented
+        # by this AST node. Fall back to its static docstring in those cases.
+        if getattr(obj, "__module__", None) != module.__name__:
+            return None
+        # Use inherited documentation only from required Matplotlib bases.
+        # ``inspect.getdoc`` also searches optional Cartopy bases, which made
+        # local and clean-CI output differ depending on whether Cartopy existed.
+        doc = getattr(obj, "__doc__", None)
+        if not doc and member_class is not None and member_name is not None:
+            for base in member_class.__mro__[1:]:
+                if member_name not in base.__dict__:
+                    continue
+                if base.__module__.startswith("matplotlib."):
+                    doc = inspect.getdoc(base.__dict__[member_name])
+                    break
         if doc:
-            return _clean_runtime_doc(doc)
+            return _clean_runtime_doc(inspect.cleandoc(doc))
     except Exception:
         pass
     return None
@@ -562,9 +588,10 @@ class _StubTransformer(ast.NodeTransformer):
         if node.body and _is_docstring_statement(node.body[0]):
             qualname = ".".join((*self._scope, node.name))
             doc = _resolve_runtime_doc(self._module, qualname)
+            if not doc:
+                doc = ast.get_docstring(node, clean=True)
             if doc:
-                if "%(" in doc:
-                    doc = self._expand_docstring(doc)
+                doc = self._expand_docstring(doc)
                 node.body[0] = ast.Expr(value=ast.Constant(doc))
         if not node.body:
             node.body = [ast.Expr(value=ast.Constant(Ellipsis))]
