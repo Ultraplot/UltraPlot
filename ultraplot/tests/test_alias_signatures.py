@@ -2,6 +2,9 @@
 
 import inspect
 
+import numpy as np
+
+import ultraplot as uplt
 from ultraplot.axes.base import Axes
 from ultraplot.axes.cartesian import CartesianAxes
 from ultraplot.axes.geo import GeoAxes
@@ -136,3 +139,10 @@ def test_plotting_helper_signatures_contain_only_canonical_names() -> None:
     for function, legacy_names in cases:
         names = _parameter_names(inspect.signature(function))
         assert names.isdisjoint(legacy_names)
+
+
+def test_level_alias_is_consumed_before_native_plot_call() -> None:
+    """The legacy ``N`` spelling must not leak into Matplotlib artist kwargs."""
+    _, ax = uplt.subplots()
+    mesh = ax.heatmap(np.arange(4).reshape(2, 2), N=5)
+    assert mesh is not None

@@ -4153,7 +4153,7 @@ class PlotAxes(base.Axes):
             return False
         return values.shape[0] == point_count
 
-    @_alias_kwargs("plot.colormap")
+    @_alias_kwargs(("plot.colormap", "plot.levels"))
     def _parse_cmap(
         self,
         *args,
