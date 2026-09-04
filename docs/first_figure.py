@@ -48,7 +48,8 @@ fig.show()
 # While UltraPlot revolutionizes the figure layout, the actual plotting
 # commands are completely identical to Matplotlib. Because UltraPlot axes
 # are directly built upon Matplotlib axes, you can use standard methods like
-# ``plot()`` and ``imshow()`` with absolutely zero learning curve.
+# :meth:`~ultraplot.axes.PlotAxes.plot` and
+# :meth:`~ultraplot.axes.PlotAxes.imshow` with absolutely zero learning curve.
 
 # %%
 import numpy as np
@@ -71,8 +72,10 @@ fig.show()
 #
 # This is where UltraPlot drastically reduces boilerplate code. In Matplotlib,
 # formatting these two axes would require six separate lines of code (using
-# ``set_title()``, ``set_xlabel()``, and ``set_ylabel()``). UltraPlot introduces
-# a unified ``format()`` method, allowing you to configure titles, labels,
+# :meth:`~matplotlib.axes.Axes.set_title`,
+# :meth:`~matplotlib.axes.Axes.set_xlabel`, and
+# :meth:`~matplotlib.axes.Axes.set_ylabel`). UltraPlot introduces the unified
+# :meth:`~ultraplot.axes.Axes.format` method, allowing you to configure titles, labels,
 # limits, and styling all in a single, readable function call per axis.
 
 # %%
@@ -98,10 +101,12 @@ fig.show()
 # -----------------------------------------
 #
 # Adding colorbars and legends in Matplotlib is notorious for ruining layouts—they
-# often overlap with data or require tedious ``GridSpec`` wrangling. UltraPlot
+# often overlap with data or require tedious :class:`~matplotlib.gridspec.GridSpec`
+# wrangling. UltraPlot
 # solves this natively. By passing simple location strings like ``loc="t"`` (top)
-# or ``loc="r"`` (right) to figure-level guide commands, UltraPlot allocates
-# dedicated space *outside* the subplots without shrinking or distorting your axes.
+# or ``loc="r"`` (right) to :meth:`~ultraplot.figure.Figure.legend` and
+# :meth:`~ultraplot.axes.Axes.colorbar`, UltraPlot allocates dedicated space
+# *outside* the subplots without shrinking or distorting your axes.
 
 # %%
 import numpy as np
@@ -157,7 +162,7 @@ fig.save("first_figure.png")
 # To truly see UltraPlot's power, let's create a complex, publication-ready
 # figure. In standard Matplotlib, combining a custom mosaic layout, a geographic
 # projection, an inset axes, and A-B-C panel labels usually results in hundreds
-# of lines of fragile ``GridSpec`` and ``transform`` code.
+# of lines of fragile :class:`~matplotlib.gridspec.GridSpec` and transform code.
 #
 # UltraPlot condenses all of this into a highly readable, declarative script.
 # Notice how we assign a projection to just one panel using a dictionary,

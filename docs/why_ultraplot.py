@@ -82,9 +82,11 @@ mpl_fig.show()
 # The UltraPlot approach
 # ----------------------
 #
-# Notice that the actual drawing commands (``plot`` and ``imshow``) are identical
-# to the Matplotlib version above. The magic happens with ``uplt.subplots`` and
-# the ``format`` method.
+# Notice that the actual drawing commands,
+# :meth:`~ultraplot.axes.PlotAxes.plot` and
+# :meth:`~ultraplot.axes.PlotAxes.imshow`, are identical to the Matplotlib
+# version above. UltraPlot adds :func:`~ultraplot.ui.subplots` for figure
+# construction and :meth:`~ultraplot.axes.Axes.format` for panel formatting.
 #
 # Instead of scattering setter methods across your script, UltraPlot lets you
 # define figure layouts and shared labels cohesively. As your figures grow in

@@ -21,7 +21,7 @@ import numpy as np
 import ultraplot as uplt
 
 
-# %% [markdown]
+# %% [raw] raw_mimetype="text/restructuredtext"
 # Labelled line
 # -------------
 # Use ``label`` on each artist and format the axes in one place.
@@ -35,7 +35,7 @@ ax.format(xlabel="angle", ylabel="value", title="Two signals")
 ax.legend(loc="ur")
 
 
-# %% [markdown]
+# %% [raw] raw_mimetype="text/restructuredtext"
 # Shared-axis grid
 # ----------------
 # ``share="labels"`` keeps the grid readable while retaining tick labels.
@@ -48,10 +48,11 @@ for number, ax in enumerate(axs, start=1):
 axs.format(xlabel="x", ylabel="y", suptitle="A shared-axis grid")
 
 
-# %% [markdown]
+# %% [raw] raw_mimetype="text/restructuredtext"
 # Image with a colorbar
 # ---------------------
-# Plot the returned mappable and request an outer colorbar with ``colorbar``.
+# Plot the returned mappable and request an outer colorbar with
+# :meth:`~ultraplot.axes.Axes.colorbar`.
 
 # %%
 image = np.outer(np.sin(x[:60]), np.cos(x[:60]))
@@ -60,10 +61,11 @@ ax.imshow(image, cmap="viridis", colorbar="r")
 ax.format(title="Image data", xformatter="none", yformatter="none")
 
 
-# %% [markdown]
+# %% [raw] raw_mimetype="text/restructuredtext"
 # Figure-wide legend
 # ------------------
-# A figure legend collects labelled artists across the selected axes.
+# A :meth:`~ultraplot.figure.Figure.legend` collects labelled artists across
+# the selected axes.
 
 # %%
 fig, axs = uplt.subplots(ncols=2, refwidth=2.2)
@@ -74,10 +76,11 @@ for ax, phase in zip(axs, (0, np.pi / 2)):
 fig.legend(loc="b", ncols=2)
 
 
-# %% [markdown]
+# %% [raw] raw_mimetype="text/restructuredtext"
 # Publication-sized export
 # ------------------------
-# Set a physical figure width and write a vector file for a manuscript.
+# Set a physical figure width and write a vector file for a manuscript with
+# :meth:`~ultraplot.figure.Figure.save`.
 
 # %%
 fig, ax = uplt.subplots(figwidth="89mm", refaspect=1.6)
