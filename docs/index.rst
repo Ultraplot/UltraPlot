@@ -3,146 +3,166 @@
    :align: center
 
 **UltraPlot** is a succinct wrapper around `matplotlib <https://matplotlib.org/>`__
-for creating **beautiful, publication-quality graphics** with ease.
+for creating **publication-quality graphics** with a small, familiar API.
 
-Key Features
+Start with a finished figure
+############################
+
+The quickest way to get oriented is to make one complete figure, then explore
+the concepts behind it. Follow the :doc:`first figure <first_figure>` walkthrough or browse
+the :doc:`recipes` for focused examples.
+
+.. admonition:: Coming from Matplotlib?
+   :class: tip
+
+   Compare the same figure side by side in the
+   :doc:`Matplotlib comparison <why_ultraplot>` to see where UltraPlot adds
+   convenience while keeping Matplotlib objects and conventions in view.
+
+   :doc:`Make your first figure <first_figure>` ·
+   :doc:`Compare with Matplotlib <why_ultraplot>`
+
+Key features
 ############
-Build polished figures quickly with pragmatic defaults.
-**Simplified Subplot Management** – Create multi-panel plots effortlessly.
 
-**Smart Aesthetics** – Optimized colormaps, fonts, and styles out of the box.
+Build polished figures with pragmatic defaults and familiar Matplotlib
+objects. UltraPlot supports multi-panel layouts, Cartesian and geographic
+plots, colorbars and legends, and data-aware plotting workflows.
 
-**Versatile Plot Types** – Cartesian plots, insets, colormaps, and more.
+**Get started** → :doc:`Installation guide <install>` |
+:doc:`Why UltraPlot? <why_ultraplot>` | :doc:`Usage <usage>` |
+:doc:`Gallery <gallery/index>`
 
-**Get Started** → :doc:`Installation guide <install>` | :doc:`Why UltraPlot? <why>` | :doc:`Usage <usage>` | :doc:`Gallery <gallery/index>`
-
---------------------------------------
-
-User Guide
-##########
-A preview of what UltraPlot can do. For more see the sidebar!
+Topics
+######
 
 .. grid:: 1 2 3 3
    :gutter: 2
 
    .. grid-item-card::
-        :link: subplots.html
-        :shadow: md
-        :class-card: card-with-bottom-text
+      :link: subplots.html
+      :shadow: md
+      :class-card: card-with-bottom-text
 
-        **Subplots & Layouts**
-        ^^^
+      **Subplots & Layouts**
+      ^^^
 
-        .. image:: _static/example_plots/subplot_example.svg
-            :align: center
+      .. image:: _static/example_plots/subplot_example.svg
+         :align: center
 
-        Create complex multi-panel layouts effortlessly.
-
-   .. grid-item-card::
-        :link: cartesian.html
-        :shadow: md
-        :class-card: card-with-bottom-text
-
-        **Cartesian Plots**
-        ^^^
-
-        .. image:: _static/example_plots/cartesian_example.svg
-            :align: center
-
-        .. container:: bottom-aligned-text
-
-        Easily generate clean, well-formatted plots.
+      Create multi-panel layouts with shared axes and automatic spacing.
 
    .. grid-item-card::
-        :link: projections.html
-        :shadow: md
-        :class-card: card-with-bottom-text
+      :link: cartesian.html
+      :shadow: md
+      :class-card: card-with-bottom-text
 
-        **Projections & Maps**
-        ^^^
+      **Cartesian Plots**
+      ^^^
 
-        .. image:: _static/example_plots/projection_example.svg
-            :align: center
+      .. image:: _static/example_plots/cartesian_example.svg
+         :align: center
 
-        .. container:: bottom-aligned-text
-        Built-in support for projections and geographic plots.
-
-   .. grid-item-card::
-        :link: colorbars_legends.html
-        :shadow: md
-        :class-card: card-with-bottom-text
-
-        **Colorbars & Legends**
-        ^^^
-
-        .. image:: _static/example_plots/colorbars_legends_example.svg
-            :align: center
-
-        Customize legends and colorbars with ease.
+      Format ordinary plots while retaining Matplotlib's plotting methods.
 
    .. grid-item-card::
-        :link: insets_panels.html
-        :shadow: md
-        :class-card: card-with-bottom-text
+      :link: colorbars_legends.html
+      :shadow: md
+      :class-card: card-with-bottom-text
 
-        **Insets & Panels**
-        ^^^
+      **Colorbars & Legends**
+      ^^^
 
-        .. image:: _static/example_plots/panels_example.svg
-            :align: center
+      .. image:: _static/example_plots/colorbars_legends_example.svg
+         :align: center
 
-        Add inset plots and panel-based layouts.
+      Place and align guides across individual subplots or a whole figure.
+
+   .. grid-item-card::
+      :link: 1dplots.html
+      :shadow: md
+      :class-card: card-with-bottom-text
+
+      **Data-aware plotting**
+      ^^^
+
+      Plot labelled pandas and xarray data with metadata-aware labels and
+      coordinates.
+
+   .. grid-item-card::
+      :link: projections.html
+      :shadow: md
+      :class-card: card-with-bottom-text
+
+      **Projections & Maps**
+      ^^^
+
+      .. image:: _static/example_plots/projection_example.svg
+         :align: center
+
+      Explore geographic plotting when you need projections and map features.
 
    .. grid-item-card::
       :link: colormaps.html
       :shadow: md
       :class-card: card-with-bottom-text
 
-      **Colormaps & Cycles**
+      **Colormaps & Styles**
       ^^^
 
       .. image:: _static/example_plots/colormaps_example.svg
-        :align: center
+         :align: center
 
-      Use prebuilt colormaps and define your own color cycles.
+      Choose and customize colormaps for clear, consistent visual encoding.
 
-Reference & More
+Reference & more
 ################
-For more details, check the full :doc:`User guide <usage>` and :doc:`API Reference <api>`.
+
+For details, see the full :doc:`User guide <usage>` and
+:doc:`API Reference <api>`.
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`glossary`
+
 .. toctree::
    :maxdepth: 1
-   :caption: Getting Started
+   :caption: Getting started
    :hidden:
 
    install
-   why
+   why_ultraplot
+   first_figure
    usage
+   recipes
    gallery/index
 
 .. toctree::
    :maxdepth: 1
-   :caption: User Guide
+   :caption: Guides
    :hidden:
 
    basics
    subplots
    cartesian
    networks
-   projections
    colorbars_legends
-   insets_panels
+   colormaps
    1dplots
    2dplots
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Advanced guides
+   :hidden:
+
+   projections
+   insets_panels
    stats
-   colormaps
+   configuration
+   fonts
    cycles
    colors
-   fonts
-   configuration
 
 .. toctree::
    :maxdepth: 1
@@ -152,13 +172,14 @@ For more details, check the full :doc:`User guide <usage>` and :doc:`API Referen
    api
    lazy_loading
    external-links
+   faq
    whats_new
    contributing
    about
 
 .. toctree::
    :maxdepth: 1
-   :caption: Dev Zone
+   :caption: Development
    :hidden:
 
    plot_comparison_results
