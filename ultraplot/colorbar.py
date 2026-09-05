@@ -17,7 +17,7 @@ import matplotlib.text as mtext
 from packaging import version
 
 from . import constructor, colors as pcolors
-from .internals import _not_none, _pop_params, guides, warnings
+from .internals import _alias_kwargs, _not_none, _pop_params, guides, warnings
 from .config import rc, _version_mpl
 from .ultralayout import KIWI_AVAILABLE, ColorbarLayoutSolver
 from . import ticker as pticker
@@ -41,6 +41,7 @@ class UltraColorbar:
     def __init__(self, axes: maxes.Axes):
         self.axes = axes
 
+    @_alias_kwargs("colorbar")
     def add(
         self,
         mappable: Any,
@@ -51,55 +52,42 @@ class UltraColorbar:
         space: Optional[Union[float, str]] = None,
         pad: Optional[Union[float, str]] = None,
         width: Optional[Union[float, str]] = None,
-        length: Optional[Union[float, str]] = None,
         span: Optional[Union[int, Tuple[int, int]]] = None,
         row: Optional[int] = None,
         col: Optional[int] = None,
         rows: Optional[Union[int, Tuple[int, int]]] = None,
         cols: Optional[Union[int, Tuple[int, int]]] = None,
-        shrink: Optional[Union[float, str]] = None,
+        length: Optional[Union[float, str]] = None,
         label: Optional[str] = None,
-        title: Optional[str] = None,
         reverse: bool = False,
         rotation: Optional[float] = None,
-        grid: Optional[bool] = None,
-        edges: Optional[bool] = None,
         drawedges: Optional[bool] = None,
         extend: Optional[str] = None,
         extendsize: Optional[Union[float, str]] = None,
         extendfrac: Optional[float] = None,
         ticks: Optional[Iterable[float]] = None,
-        locator: Optional[Any] = None,
         locator_kw: Optional[dict[str, Any]] = None,
         format: Optional[str] = None,
-        formatter: Optional[Any] = None,
-        ticklabels: Optional[Iterable[str]] = None,
         formatter_kw: Optional[dict[str, Any]] = None,
         minorticks: Optional[bool] = None,
-        minorlocator: Optional[Any] = None,
         minorlocator_kw: Optional[dict[str, Any]] = None,
         tickminor: Optional[bool] = None,
         ticklen: Optional[Union[float, str]] = None,
         ticklenratio: Optional[float] = None,
-        tickdir: Optional[str] = None,
         tickdirection: Optional[str] = None,
         tickwidth: Optional[Union[float, str]] = None,
         tickwidthratio: Optional[float] = None,
         ticklabelsize: Optional[float] = None,
         ticklabelweight: Optional[str] = None,
         ticklabelcolor: Optional[str] = None,
-        labelloc: Optional[str] = None,
         labellocation: Optional[str] = None,
         labelsize: Optional[float] = None,
         labelweight: Optional[str] = None,
         labelcolor: Optional[str] = None,
-        c: Optional[str] = None,
         color: Optional[str] = None,
-        lw: Optional[Union[float, str]] = None,
         linewidth: Optional[Union[float, str]] = None,
         edgefix: Optional[bool] = None,
         rasterized: Optional[bool] = None,
-        frame: Optional[bool] = None,
         frameon: Optional[bool] = None,
         outline: Union[bool, None] = None,
         labelrotation: Optional[Union[str, float]] = None,
@@ -113,19 +101,14 @@ class UltraColorbar:
         # Parse input arguments and apply defaults
         # TODO: Get the 'best' inset colorbar location using the legend algorithm
         # and implement inset colorbars the same as inset legends.
-        grid = _not_none(
-            grid=grid, edges=edges, drawedges=drawedges, default=rc["colorbar.grid"]
-        )  # noqa: E501
-        length = _not_none(length=length, shrink=shrink)
-        label = _not_none(title=title, label=label)
-        labelloc = _not_none(labelloc=labelloc, labellocation=labellocation)
-        locator = _not_none(ticks=ticks, locator=locator)
-        formatter = _not_none(ticklabels=ticklabels, formatter=formatter, format=format)
-        minorlocator = _not_none(minorticks=minorticks, minorlocator=minorlocator)
-        color = _not_none(c=c, color=color, default=rc["axes.edgecolor"])
-        linewidth = _not_none(lw=lw, linewidth=linewidth)
+        grid = _not_none(drawedges, rc["colorbar.grid"])
+        labelloc = labellocation
+        locator = ticks
+        formatter = format
+        minorlocator = minorticks
+        color = _not_none(color, rc["axes.edgecolor"])
         ticklen = units(_not_none(ticklen, rc["tick.len"]), "pt")
-        tickdir = _not_none(tickdir=tickdir, tickdirection=tickdirection)
+        tickdir = tickdirection
         tickwidth = units(_not_none(tickwidth, linewidth, rc["tick.width"]), "pt")
         linewidth = units(_not_none(linewidth, default=rc["axes.linewidth"]), "pt")
         ticklenratio = _not_none(ticklenratio, rc["tick.lenratio"])
@@ -162,7 +145,7 @@ class UltraColorbar:
         # Generate and prepare the colorbar axes
         # NOTE: The inset axes function needs 'label' to know how to pad the box
         # TODO: Use seperate keywords for frame properties vs. colorbar edge properties?
-        frame = _not_none(frame=frame, frameon=frameon)
+        frame = frameon
         bbox_to_anchor = kwargs.pop("bbox_to_anchor", None)
         inset_side = loc in ("left", "right", "top", "bottom") and getattr(
             ax, "_inset_parent", None
@@ -209,7 +192,7 @@ class UltraColorbar:
                 extendsize = _not_none(extendsize, rc["colorbar.insetextend"])
                 cax, kwargs = ax._parse_colorbar_inset(
                     loc=loc,
-                    frame=frame,
+                    frameon=frame,
                     labelloc=labelloc,
                     labelrotation=labelrotation,
                     labelsize=labelsize,

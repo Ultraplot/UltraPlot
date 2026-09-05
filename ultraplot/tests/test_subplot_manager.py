@@ -397,18 +397,13 @@ def test_ui_introspects_manager_not_figure_delegator():
     silently routes ``proj`` to the figure, which then raises from ``Figure.set()``.
     """
     proj_params = set(inspect.signature(SubplotManager.parse_proj).parameters)
-    assert {
-        "proj",
-        "projection",
-        "proj_kw",
-        "projection_kw",
-        "backend",
-        "basemap",
-    } <= proj_params
+    assert {"projection", "projection_kw", "backend", "basemap"} <= proj_params
+    assert {"proj", "proj_kw"}.isdisjoint(proj_params)
 
     subplots_params = set(inspect.signature(SubplotManager.add_subplots).parameters)
     assert {"array", "nrows", "ncols", "order"} <= subplots_params
-    assert {"proj", "projection", "proj_kw", "projection_kw"} <= subplots_params
+    assert {"projection", "projection_kw"} <= subplots_params
+    assert {"proj", "proj_kw"}.isdisjoint(subplots_params)
 
 
 def test_figure_delegator_signature_is_not_load_bearing():

@@ -180,71 +180,62 @@ _snippet_manager["units.in"] = _units_docstring.format(units="inches")
 _snippet_manager["units.em"] = _units_docstring.format(units="em-widths")
 
 
-# Style docstrings
-# NOTE: These are needed in a few different places
-def _aliases_note(*names):
-    """
-    Render a compact ``Aliases: ...`` note for a style parameter. The canonical
-    name leads the numpydoc field; the common documented synonyms go here so the
-    parameter reads cleanly instead of opening with a pile of alias names.
-    """
-    return "Aliases: " + ", ".join(f"``{name}``" for name in names) + "."
-
-
-_line_docstring = f"""
+# Style docstrings. Compatibility spellings are intentionally kept out of these
+# primary parameter docs; the registry-generated alias reference is authoritative.
+_line_docstring = """
 linewidth : unit-spec, default: :rc:`lines.linewidth`
-    The width of the line(s). {_aliases_note("lw", "linewidths")}
+    The width of the line(s).
     %(units.pt)s
 linestyle : str, default: :rc:`lines.linestyle`
-    The style of the line(s). {_aliases_note("ls", "linestyles")}
+    The style of the line(s).
 color : color-spec, optional
-    The color of the line(s). The property `cycle` is used by default. {_aliases_note("c", "colors")}
+    The color of the line(s). The property `cycle` is used by default.
 alpha : float, optional
-    The opacity of the line(s). Inferred from `color` by default. {_aliases_note("a", "alphas")}
+    The opacity of the line(s). Inferred from `color` by default.
 """
-_patch_docstring = f"""
+_patch_docstring = """
 linewidth : unit-spec, default: :rc:`patch.linewidth`
-    The edge width of the patch(es). {_aliases_note("lw", "linewidths")}
+    The edge width of the patch(es).
     %(units.pt)s
 linestyle : str, default: '-'
-    The edge style of the patch(es). {_aliases_note("ls", "linestyles")}
-edgecolor : color-spec, default: '{{edgecolor}}'
-    The edge color of the patch(es). {_aliases_note("ec", "edgecolors")}
+    The edge style of the patch(es).
+edgecolor : color-spec, default: '{edgecolor}'
+    The edge color of the patch(es).
 facecolor : color-spec, optional
-    The face color of the patch(es). The property `cycle` is used by default. {_aliases_note("fc", "facecolors", "fillcolor", "fillcolors")}
+    The face color of the patch(es). The property `cycle` is used by default.
 alpha : float, optional
-    The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. {_aliases_note("a", "alphas")}
+    The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default.
 """
-_pcolor_collection_docstring = f"""
+_pcolor_collection_docstring = """
 linewidths : unit-spec, default: 0.3
-    The width of lines between grid boxes. {_aliases_note("lw", "linewidth")}
+    The width of lines between grid boxes.
     %(units.pt)s
 linestyles : str, default: '-'
-    The style of lines between grid boxes. {_aliases_note("ls", "linestyle")}
+    The style of lines between grid boxes.
 edgecolors : color-spec, default: 'k'
-    The color of lines between grid boxes. {_aliases_note("ec", "edgecolor")}
+    The color of lines between grid boxes.
 alpha : float, optional
-    The opacity of the grid boxes. Inferred from `cmap` by default. {_aliases_note("a", "alphas")}
+    The opacity of the grid boxes. Inferred from `cmap` by default.
 """
-_contour_collection_docstring = f"""
+_contour_collection_docstring = """
 linewidths : unit-spec, default: 0.3 or :rc:`lines.linewidth`
     The width of the line contours. Default is ``0.3`` when adding to filled contours
-    or :rc:`lines.linewidth` otherwise. {_aliases_note("lw", "linewidth")} %(units.pt)s
+    or :rc:`lines.linewidth` otherwise. %(units.pt)s
 linestyles : str, default: '-' or :rc:`contour.negative_linestyle`
     The style of the line contours. Default is ``'-'`` for positive contours and
-    :rcraw:`contour.negative_linestyle` for negative contours. {_aliases_note("ls", "linestyle")}
+    :rcraw:`contour.negative_linestyle` for negative contours.
 edgecolors : color-spec, default: 'k' or inferred
     The color of the line contours. Default is ``'k'`` when adding to filled contours
-    or inferred from `color` or `cmap` otherwise. {_aliases_note("ec", "edgecolor")}
+    or inferred from `color` or `cmap` otherwise.
 alpha : float, optional
-    The opacity of the contours. Inferred from `edgecolors` by default. {_aliases_note("a", "alphas")}
+    The opacity of the contours. Inferred from `edgecolors` by default.
 """
-_text_docstring = f"""
+_text_docstring = """
 fontfamily : str, optional
     The font typeface name (e.g., ``'Fira Math'``) or font family name (e.g.,
-    ``'serif'``). Matplotlib falls back to the system default if not found. {_aliases_note("family", "name", "fontname")}
+    ``'serif'``). Matplotlib falls back to the system default if not found.
 fontsize : unit-spec or str, optional
-    The font size. {_aliases_note("size")} %(units.pt)s
+    The font size. %(units.pt)s
     This can also be a string indicating some scaling relative to
     :rcraw:`font.size`. The sizes and scalings are shown below. The
     scalings ``'med'``, ``'med-small'``, and ``'med-large'`` are

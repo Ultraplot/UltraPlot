@@ -55,6 +55,9 @@ from ..colorbar import (
 )
 from ..config import rc
 from ..internals import (
+    _alias_kwargs,
+    _canonicalize_kwargs,
+    _format_alias_scopes,
     _kwargs_to_args,
     _not_none,
     _pop_kwargs,
@@ -86,7 +89,7 @@ ABC_STRING = "abcdefghijklmnopqrstuvwxyz"
 
 # Projection docstring
 _proj_docstring = """
-proj, projection :
+projection :
 str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
     The map projection specification(s). If ``'cart'`` or ``'cartesian'``
     (the default), a `~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
@@ -97,7 +100,7 @@ str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
     instance, or a projection name listed in :ref:`this table <proj_table>`).
 """
 _proj_kw_docstring = """
-proj_kw, projection_kw : dict-like, optional
+projection_kw : dict-like, optional
     Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or
     cartopy `~cartopy.crs.Projection` classes on instantiation.
 """
@@ -365,9 +368,7 @@ titleabove : bool, default: :rc:`title.above`
 abctitlepad : float, default: :rc:`abc.titlepad`
     The horizontal padding between a-b-c labels and titles in the same location.
     %(units.pt)s
-ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle : str or sequence, optional
-    Shorthands for the below keywords.
-    lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
+lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
 lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
     Additional titles in specific positions (see `title` for details). This works as
     an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
@@ -378,9 +379,6 @@ a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
     shorthands. Their defaults values are the ``'axes'`` properties.
 """
 _figure_format_docstring = """
-rowlabels, collabels, llabels, tlabels, rlabels, blabels
-    Aliases for `leftlabels` and `toplabels`, and for `leftlabels`,
-    `toplabels`, `rightlabels`, and `bottomlabels`, respectively.
 leftlabels, toplabels, rightlabels, bottomlabels : sequence of str, optional
     Labels for the subplots lying along the left, top, right, and
     bottom edges of the figure. The length of each list must match
@@ -396,8 +394,6 @@ leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad
     %(units.pt)s
 leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw : dict-like, optional
     Additional settings used to update the labels with ``text.update()``.
-figtitle
-    Alias for `suptitle`.
 suptitle : str, optional
     The figure "super" title, centered between the left edge of the leftmost
     subplot and the right edge of the rightmost subplot.
@@ -485,15 +481,14 @@ norm_kw : dict-like, optional
 vmin, vmax : float, optional
     Ignored if `mappable` is a `~matplotlib.cm.ScalarMappable`. These are the minimum
     and maximum colorbar values. Passed to `~ultraplot.constructor.Norm`.
-label, title : str, optional
-    The colorbar label. The `title` keyword is also accepted for
-    consistency with `~matplotlib.axes.Axes.legend`.
+label : str, optional
+    The colorbar label.
 reverse : bool, optional
     Whether to reverse the direction of the colorbar. This is done automatically
     when descending levels are used with `~ultraplot.colors.DiscreteNorm`.
 rotation : float, default: 0
     The tick label rotation.
-grid, edges, drawedges : bool, default: :rc:`colorbar.grid`
+drawedges : bool, default: :rc:`colorbar.grid`
     Whether to draw "grid" dividers between each distinct color.
 extend : {'neither', 'both', 'min', 'max'}, optional
     Direction for drawing colorbar "extensions" (i.e. color keys for out-of-bounds
@@ -509,36 +504,35 @@ extendsize : unit-spec, default: :rc:`colorbar.extend` or :rc:`colorbar.insetext
 extendrect : bool, default: False
     Whether to draw colorbar "extensions" as rectangles. If ``False`` then
     the extensions are drawn as triangles.
-locator, ticks : locator-spec, optional
+ticks : locator-spec, optional
     Used to determine the colorbar tick positions. Passed to the
     `~ultraplot.constructor.Locator` constructor function. By default
     `~matplotlib.ticker.AutoLocator` is used for continuous color levels
     and `~ultraplot.ticker.DiscreteLocator` is used for discrete color levels.
 locator_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Locator` class.
-minorlocator, minorticks
-    As with `locator`, `ticks` but for the minor ticks. By default
+minorticks
+    As with `ticks` but for the minor ticks. By default
     `~matplotlib.ticker.AutoMinorLocator` is used for continuous color levels
     and `~ultraplot.ticker.DiscreteLocator` is used for discrete color levels.
 minorlocator_kw
     As with `locator_kw`, but for the minor ticks.
-format, formatter, ticklabels : formatter-spec, optional
+format : formatter-spec, optional
     The tick label format. Passed to the `~ultraplot.constructor.Formatter`
     constructor function.
 formatter_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Formatter` class.
-frame, frameon : bool, optional
+frameon : bool, optional
     For inset colorbars, indicates whether to draw a background "frame",
     just like `~matplotlib.axes.Axes.legend`. Defaults to
-    :rc:`colorbar.frameon` for inset colorbars. For outer colorbars, this is a
-    backwards-compatible alias for `outline`; when omitted, outer colorbars
-    still default to :rc:`colorbar.outline`.
+    :rc:`colorbar.frameon` for inset colorbars. For outer colorbars it controls
+    the outline when `outline` is omitted.
 tickminor : bool, optional
     Whether to add minor ticks using `~matplotlib.colorbar.ColorbarBase.minorticks_on`.
 tickloc, ticklocation : {'bottom', 'top', 'left', 'right'}, optional
     Where to draw tick marks on the colorbar. Default is toward the outside
     of the subplot for outer colorbars and ``'bottom'`` for inset colorbars.
-tickdir, tickdirection : {'out', 'in', 'inout'}, default: :rc:`tick.dir`
+tickdirection : {'out', 'in', 'inout'}, default: :rc:`tick.dir`
     Direction of major and minor colorbar ticks.
 ticklen : unit-spec, default: :rc:`tick.len`
     Major tick lengths for the colorbar ticks.
@@ -551,7 +545,7 @@ tickwidthratio : float, default: :rc:`tick.widthratio`
     Relative scaling of `tickwidth` used to determine minor tick widths.
 ticklabelcolor, ticklabelsize, ticklabelweight: default: :rc:`tick.labelcolor`, :rc:`tick.labelsize`, :rc:`tick.labelweight`.
     The font color, size, and weight for colorbar tick labels
-labelloc, labellocation : {'bottom', 'top', 'left', 'right'}
+labellocation : {'bottom', 'top', 'left', 'right'}
     The colorbar label location. Inherits from `tickloc` by default. Default is toward
     the outside of the subplot for outer colorbars and ``'bottom'`` for inset colorbars.
 labelcolor, labelsize, labelweight: default: :rc:`label.color`, :rc:`label.size`, and :rc:`label.weight`.
@@ -559,7 +553,7 @@ labelcolor, labelsize, labelweight: default: :rc:`label.color`, :rc:`label.size`
 a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth : default: :rc:`colorbar.framealpha`, :rc:`colorbar.framecolor`
     For inset colorbars only. Controls the transparency and color of
     the background frame.
-lw, linewidth, c, color : optional
+linewidth, color : optional
     Controls the line width and edge color for both the colorbar
     outline and the level dividers.
 %(axes.edgefix)s
@@ -618,12 +612,11 @@ labels : list of str, optional
 -<https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html>`__.
 """
 _legend_kwargs_docstring = """
-frame, frameon : bool, optional
+frameon : bool, optional
     Toggles the legend frame. For centered-row legends, a frame
     independent from matplotlib's built-in legend frame is created.
-ncol, ncols : int, optional
-    The number of columns. `ncols` is an alias, added
-    for consistency with `~matplotlib.pyplot.subplots`.
+ncols : int, optional
+    The number of columns.
 order : {'C', 'F'}, optional
     Whether legend handles are drawn in row-major (``'C'``) or column-major
     (``'F'``) order. Analagous to `numpy.array` ordering. The matplotlib
@@ -973,6 +966,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         autoshare = _not_none(autoshare, True)
 
         # Remove format-related args and initialize
+        kwargs = _canonicalize_kwargs(_format_alias_scopes, kwargs)
         rc_kw, rc_mode = _pop_rc(kwargs)
         kw_format = _pop_props(kwargs, "patch")  # background properties
         if "zorder" in kw_format:  # special case: refers to the entire axes
@@ -1066,12 +1060,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # features which is necessary on first run. Default otherwise is mode '2'
         self.format(rc_kw=rc_kw, rc_mode=1, skip_figure=True, **kw_format)
 
+    @_alias_kwargs("inset")
     def _add_inset_axes(
         self,
         bounds,
         transform=None,
         *,
-        proj=None,
         projection=None,
         zoom=None,
         zoom_kw=None,
@@ -1090,7 +1084,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         zorder = _not_none(zorder, 4)
 
         # Parse projection and inherit from the current axes by default
-        proj = _not_none(proj=proj, projection=projection)
+        proj = projection
         if proj is None:
             if self._name in ("cartopy", "basemap"):
                 proj = copy.copy(self.projection)
@@ -1239,6 +1233,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         return ax
 
     @warnings._rename_kwargs("0.10", rasterize="rasterized")
+    @_alias_kwargs("colorbar")
     def _add_colorbar(
         self,
         mappable,
@@ -1249,55 +1244,42 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         space: Optional[Union[float, str]] = None,
         pad: Optional[Union[float, str]] = None,
         width: Optional[Union[float, str]] = None,
-        length: Optional[Union[float, str]] = None,
         span: Optional[Union[int, Tuple[int, int]]] = None,
         row: Optional[int] = None,
         col: Optional[int] = None,
         rows: Optional[Union[int, Tuple[int, int]]] = None,
         cols: Optional[Union[int, Tuple[int, int]]] = None,
-        shrink: Optional[Union[float, str]] = None,
+        length: Optional[Union[float, str]] = None,
         label=None,
-        title=None,
         reverse=False,
         rotation=None,
-        grid=None,
-        edges=None,
         drawedges=None,
         extend=None,
         extendsize=None,
         extendfrac=None,
         ticks=None,
-        locator=None,
         locator_kw=None,
         format=None,
-        formatter=None,
-        ticklabels=None,
         formatter_kw=None,
         minorticks=None,
-        minorlocator=None,
         minorlocator_kw=None,
         tickminor=None,
         ticklen=None,
         ticklenratio=None,
-        tickdir=None,
         tickdirection=None,
         tickwidth=None,
         tickwidthratio=None,
         ticklabelsize=None,
         ticklabelweight=None,
         ticklabelcolor=None,
-        labelloc=None,
         labellocation=None,
         labelsize=None,
         labelweight=None,
         labelcolor=None,
-        c=None,
         color=None,
-        lw=None,
         linewidth=None,
         edgefix=None,
         rasterized=None,
-        frame: Optional[bool] = None,
         frameon: Optional[bool] = None,
         outline: Union[bool, None] = None,
         labelrotation: Union[str, float] = None,
@@ -1312,55 +1294,42 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             space=space,
             pad=pad,
             width=width,
-            length=length,
             span=span,
             row=row,
             col=col,
             rows=rows,
             cols=cols,
-            shrink=shrink,
+            length=length,
             label=label,
-            title=title,
             reverse=reverse,
             rotation=rotation,
-            grid=grid,
-            edges=edges,
             drawedges=drawedges,
             extend=extend,
             extendsize=extendsize,
             extendfrac=extendfrac,
             ticks=ticks,
-            locator=locator,
             locator_kw=locator_kw,
             format=format,
-            formatter=formatter,
-            ticklabels=ticklabels,
             formatter_kw=formatter_kw,
             minorticks=minorticks,
-            minorlocator=minorlocator,
             minorlocator_kw=minorlocator_kw,
             tickminor=tickminor,
             ticklen=ticklen,
             ticklenratio=ticklenratio,
-            tickdir=tickdir,
             tickdirection=tickdirection,
             tickwidth=tickwidth,
             tickwidthratio=tickwidthratio,
             ticklabelsize=ticklabelsize,
             ticklabelweight=ticklabelweight,
             ticklabelcolor=ticklabelcolor,
-            labelloc=labelloc,
             labellocation=labellocation,
             labelsize=labelsize,
             labelweight=labelweight,
             labelcolor=labelcolor,
-            c=c,
             color=color,
-            lw=lw,
             linewidth=linewidth,
             edgefix=edgefix,
             rasterized=rasterized,
-            frame=frame,
             frameon=frameon,
             outline=outline,
             labelrotation=labelrotation,
@@ -1368,6 +1337,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             **kwargs,
         )
 
+    @_alias_kwargs("legend")
     def _add_legend(
         self,
         handles=None,
@@ -1378,9 +1348,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         width=None,
         pad=None,
         space=None,
-        frame=None,
         frameon=None,
-        ncol=None,
         ncols=None,
         alphabetize=False,
         center=None,
@@ -1410,9 +1378,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             width=width,
             pad=pad,
             space=space,
-            frame=frame,
             frameon=frameon,
-            ncol=ncol,
             ncols=ncols,
             alphabetize=alphabetize,
             center=center,
@@ -2045,8 +2011,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         bbox_to_anchor=None,
         width=None,
         length=None,
-        shrink=None,
-        frame=None,
         frameon=None,
         label=None,
         labelsize=None,
@@ -2062,12 +2026,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Return the axes and adjusted keyword args for an inset colorbar.
         """
         # Basic colorbar properties
-        frame_enabled = _not_none(
-            frame=frame, frameon=frameon, default=rc["colorbar.frameon"]
-        )
-        length = _not_none(
-            length=length, shrink=shrink, default=rc["colorbar.insetlength"]
-        )  # noqa: E501
+        frame_enabled = _not_none(frameon, rc["colorbar.frameon"])
+        length = _not_none(length, rc["colorbar.insetlength"])
         width = _not_none(width, rc["colorbar.insetwidth"])
         pad = _not_none(pad, rc["colorbar.insetpad"])
         length_raw = length
@@ -2167,7 +2127,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         align=None,
         width=None,
         length=None,
-        shrink=None,
         space=None,
         pad=None,
         tickloc=None,
@@ -2178,7 +2137,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         Return the axes and adjusted keyword args for a side colorbar on an inset axes.
         """
-        length = _not_none(length=length, shrink=shrink, default=rc["colorbar.length"])
+        length = _not_none(length, rc["colorbar.length"])
         width = _not_none(width, rc["colorbar.width"])
         pad = _not_none(space, pad, rc["subplots.panelpad"])
         side = _translate_loc(loc, "panel")
@@ -3291,29 +3250,22 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                     ax.yaxis.label = label
 
     @docstring._snippet_manager
+    @_alias_kwargs("axes.format")
+    @_alias_kwargs("figure.format")
     def format(
         self,
         *,
         title=None,
         title_kw=None,
         abc_kw=None,
-        ltitle=None,
         lefttitle=None,
-        ctitle=None,
         centertitle=None,
-        rtitle=None,
         righttitle=None,
-        ultitle=None,
         upperlefttitle=None,
-        uctitle=None,
         uppercentertitle=None,
-        urtitle=None,
         upperrighttitle=None,
-        lltitle=None,
         lowerlefttitle=None,
-        lctitle=None,
         lowercentertitle=None,
-        lrtitle=None,
         lowerrighttitle=None,
         share_xlabels=None,
         share_ylabels=None,
@@ -3375,51 +3327,15 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 self._abc_pad = units(pad)
             self._update_abc(**abc_kw)
             self._update_title(None, title, **title_kw)
-            self._update_title(
-                "left",
-                _not_none(ltitle=ltitle, lefttitle=lefttitle),
-                **title_kw,
-            )
-            self._update_title(
-                "center",
-                _not_none(ctitle=ctitle, centertitle=centertitle),
-                **title_kw,
-            )
-            self._update_title(
-                "right",
-                _not_none(rtitle=rtitle, righttitle=righttitle),
-                **title_kw,
-            )
-            self._update_title(
-                "upper left",
-                _not_none(ultitle=ultitle, upperlefttitle=upperlefttitle),
-                **title_kw,
-            )
-            self._update_title(
-                "upper center",
-                _not_none(uctitle=uctitle, uppercentertitle=uppercentertitle),
-                **title_kw,
-            )
-            self._update_title(
-                "upper right",
-                _not_none(urtitle=urtitle, upperrighttitle=upperrighttitle),
-                **title_kw,
-            )
-            self._update_title(
-                "lower left",
-                _not_none(lltitle=lltitle, lowerlefttitle=lowerlefttitle),
-                **title_kw,
-            )
-            self._update_title(
-                "lower center",
-                _not_none(lctitle=lctitle, lowercentertitle=lowercentertitle),
-                **title_kw,
-            )
-            self._update_title(
-                "lower right",
-                _not_none(lrtitle=lrtitle, lowerrighttitle=lowerrighttitle),
-                **title_kw,
-            )
+            self._update_title("left", lefttitle, **title_kw)
+            self._update_title("center", centertitle, **title_kw)
+            self._update_title("right", righttitle, **title_kw)
+            self._update_title("upper left", upperlefttitle, **title_kw)
+            self._update_title("upper center", uppercentertitle, **title_kw)
+            self._update_title("upper right", upperrighttitle, **title_kw)
+            self._update_title("lower left", lowerlefttitle, **title_kw)
+            self._update_title("lower center", lowercentertitle, **title_kw)
+            self._update_title("lower right", lowerrighttitle, **title_kw)
 
             # Update the axes style
             # NOTE: This will also raise an error if unknown args are encountered
@@ -3674,14 +3590,15 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
     @docstring._obfuscate_params
     @docstring._snippet_manager
-    def colorbar(self, mappable, values=None, loc=None, location=None, **kwargs):
+    @_alias_kwargs("colorbar")
+    def colorbar(self, mappable, values=None, loc=None, **kwargs):
         """
         Add an inset colorbar or an outer colorbar along the edge of the axes.
 
         Parameters
         ----------
         %(axes.colorbar_args)s
-            loc, location : int or str, default: :rc:`colorbar.loc`
+            loc : int or str, default: :rc:`colorbar.loc`
                 The colorbar location. Valid location keys are shown in the below table.
 
                 .. _colorbar_table:
@@ -3701,12 +3618,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 "filled"            ``'fill'``
                 ==================  =======================================
 
-            shrink
-                Alias for `length`. This is included for consistency with
-                `matplotlib.figure.Figure.colorbar`.
             length : float or unit-spec, default: :rc:`colorbar.length` or :rc:`colorbar.insetlength`
-                The colorbar length. For outer colorbars, units are relative to the axes
-                width or height (default is :rcraw:`colorbar.length`). For inset
+                The colorbar length (also accepted as ``shrink``). For outer colorbars,
+                units are relative to the axes width or height (default is
+                :rcraw:`colorbar.length`). For inset
                 colorbars, floats interpreted as em-widths and strings interpreted
                 by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
             width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth`
@@ -3734,7 +3649,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # infer align setting from keywords stored on object.
         orientation = kwargs.get("orientation", None)
         kwargs = guides._flush_guide_kw(mappable, "colorbar", kwargs)
-        loc = _not_none(loc=loc, location=location)
         if orientation is not None:  # possibly infer loc from orientation
             if orientation not in ("vertical", "horizontal"):
                 raise ValueError(
@@ -3756,12 +3670,12 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
     @docstring._concatenate_inherited  # also obfuscates params
     @docstring._snippet_manager
+    @_alias_kwargs("legend")
     def legend(
         self,
         handles=None,
         labels=None,
         loc=None,
-        location=None,
         span: Optional[Union[int, Tuple[int, int]]] = None,
         row: Optional[int] = None,
         col: Optional[int] = None,
@@ -3775,7 +3689,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Parameters
         ----------
         %(axes.legend_args)s
-        loc, location : int or str, default: :rc:`legend.loc`
+        loc : int or str, default: :rc:`legend.loc`
             The legend location. Valid location keys are shown in the below table.
 
             .. _legend_table:
@@ -3819,7 +3733,6 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         # Translate location and possibly infer from orientation. Also optionally
         # infer align setting from keywords stored on object.
         kwargs = guides._flush_guide_kw(handles, "legend", kwargs)
-        loc = _not_none(loc=loc, location=location)
         loc = _translate_loc(loc, "legend", default=rc["legend.loc"])
         align = kwargs.pop("align", None)
         align = _translate_loc(align, "align", default="center")

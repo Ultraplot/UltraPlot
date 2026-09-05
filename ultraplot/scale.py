@@ -13,6 +13,7 @@ import numpy.ma as ma
 
 from . import ticker as pticker
 from .internals import (
+    _canonicalize_kwargs,
     _not_none,
     _version_mpl,
     ic,  # noqa: F401
@@ -43,15 +44,11 @@ def _parse_logscale_args(*keys, **kwargs):
     # NOTE: Scale classes ignore unused arguments with warnings, but matplotlib 3.3
     # version changes the keyword args. Since we can't do a try except clause, only
     # way to avoid warnings with 3.3 upgrade is to test version string.
+    scope = "scale.symlog" if "linthresh" in keys else "scale.log"
+    kwargs = _canonicalize_kwargs(scope, kwargs)
     kwsuffix = "" if _version_mpl >= "3.3" else "x"
     for key in keys:
-        # Remove duplicates
-        opts = {
-            key: kwargs.pop(key, None),
-            key + "x": kwargs.pop(key + "x", None),
-            key + "y": kwargs.pop(key + "y", None),
-        }
-        value = _not_none(**opts)  # issues warning if multiple values passed
+        value = kwargs.pop(key, None)
 
         # Apply defaults and adjust
         # NOTE: If linthresh is *exactly* on a power of the base, can end
@@ -207,10 +204,6 @@ class LogScale(_Scale, mscale.LogScale):
             Default *minor* tick locations are on these multiples of each power
             of the base. For example, ``subs=(1, 2, 5)`` draws ticks on 1, 2,
             5, 10, 20, 50, 100, 200, 500, etc.
-        basex, basey, nonposx, nonposy, subsx, subsy
-            Aliases for the above keywords. These used to be conditional
-            on the *name* of the axis.
-
         See also
         --------
         ultraplot.constructor.Scale
@@ -252,10 +245,6 @@ class SymmetricalLogScale(_Scale, mscale.SymmetricalLogScale):
             Default *minor* tick locations are on these multiples of each power
             of the base. For example, ``subs=(1, 2, 5)`` draws ticks on 1, 2,
             5, 10, 20, 50, 100, 200, 500, etc.
-        basex, basey, linthreshx, linthreshy, linscalex, linscaley, subsx, subsy
-            Aliases for the above keywords. These keywords used to be
-            conditional on the name of the axis.
-
         See also
         --------
         ultraplot.constructor.Scale

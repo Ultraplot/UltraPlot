@@ -555,7 +555,7 @@ with uplt.rc.context(fontsize="12px"):  # depends on rc['figure.dpi']
         label="colorbar",
         width="2em",
         extendsize="3em",
-        shrink=0.8,
+        length=0.8,
     )
     pax = axs[2].panel_axes("r", width="5en")
 axs.format(
