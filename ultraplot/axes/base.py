@@ -1249,7 +1249,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         col: Optional[int] = None,
         rows: Optional[Union[int, Tuple[int, int]]] = None,
         cols: Optional[Union[int, Tuple[int, int]]] = None,
-        shrink: Optional[Union[float, str]] = None,
+        length: Optional[Union[float, str]] = None,
         label=None,
         reverse=False,
         rotation=None,
@@ -1299,7 +1299,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             col=col,
             rows=rows,
             cols=cols,
-            shrink=shrink,
+            length=length,
             label=label,
             reverse=reverse,
             rotation=rotation,
@@ -2010,7 +2010,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         loc=None,
         bbox_to_anchor=None,
         width=None,
-        shrink=None,
+        length=None,
         frameon=None,
         label=None,
         labelsize=None,
@@ -2027,7 +2027,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         # Basic colorbar properties
         frame_enabled = _not_none(frameon, rc["colorbar.frameon"])
-        length = _not_none(shrink, rc["colorbar.insetlength"])
+        length = _not_none(length, rc["colorbar.insetlength"])
         width = _not_none(width, rc["colorbar.insetwidth"])
         pad = _not_none(pad, rc["colorbar.insetpad"])
         length_raw = length
@@ -2126,7 +2126,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         loc=None,
         align=None,
         width=None,
-        shrink=None,
+        length=None,
         space=None,
         pad=None,
         tickloc=None,
@@ -2137,7 +2137,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         """
         Return the axes and adjusted keyword args for a side colorbar on an inset axes.
         """
-        length = _not_none(shrink, rc["colorbar.length"])
+        length = _not_none(length, rc["colorbar.length"])
         width = _not_none(width, rc["colorbar.width"])
         pad = _not_none(space, pad, rc["subplots.panelpad"])
         side = _translate_loc(loc, "panel")
@@ -3618,9 +3618,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 "filled"            ``'fill'``
                 ==================  =======================================
 
-            shrink : float or unit-spec, default: :rc:`colorbar.length` or :rc:`colorbar.insetlength`
-                The colorbar length. For outer colorbars, units are relative to the axes
-                width or height (default is :rcraw:`colorbar.length`). For inset
+            length : float or unit-spec, default: :rc:`colorbar.length` or :rc:`colorbar.insetlength`
+                The colorbar length (also accepted as ``shrink``). For outer colorbars,
+                units are relative to the axes width or height (default is
+                :rcraw:`colorbar.length`). For inset
                 colorbars, floats interpreted as em-widths and strings interpreted
                 by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
             width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth`
@@ -3629,7 +3630,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
                 interpreted as em-widths (default is :rcraw:`colorbar.insetwidth`).
                 Strings are interpreted by `~ultraplot.utils.units`.
             %(axes.colorbar_space)s
-                Has no visible effect if `shrink` is ``1``.
+                Has no visible effect if `length` is ``1``.
             bbox_to_anchor : 2-tuple, 4-tuple, or `matplotlib.transforms.Bbox`, optional
                 For inset colorbars, anchor the full colorbar footprint using the
                 same semantics as `~matplotlib.axes.Axes.legend`. The colorbar

@@ -96,7 +96,7 @@ _alias_registry = {
     "colorbar": {
         "loc": ("location",),
         "drawedges": ("grid", "edges"),
-        "shrink": ("length",),
+        "length": ("shrink",),
         "label": ("title",),
         "labellocation": ("labelloc",),
         "ticks": ("locator",),

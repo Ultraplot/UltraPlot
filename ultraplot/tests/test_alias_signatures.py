@@ -51,10 +51,11 @@ def test_format_signatures_contain_only_canonical_names() -> None:
 
 def test_largest_migrated_signature_has_thirteen_fewer_parameters() -> None:
     names = _parameter_names(inspect.signature(UltraColorbar.add))
+    assert "length" in names
     assert len(names) == 47
     assert names.isdisjoint(
         {
-            "length",
+            "shrink",
             "title",
             "grid",
             "edges",
@@ -96,9 +97,10 @@ def test_layout_and_projection_signatures_contain_only_canonical_names() -> None
 
 def test_guide_signatures_contain_only_canonical_names() -> None:
     cases = (
-        (Axes.colorbar, {"location"}),
+        (Axes.colorbar, {"location", "shrink"}),
+        (Axes._add_colorbar, {"shrink"}),
         (Axes.legend, {"location"}),
-        (Figure.colorbar, {"location"}),
+        (Figure.colorbar, {"location", "shrink"}),
         (Figure.legend, {"location"}),
         (Axes._add_legend, {"ncol", "frame"}),
         (UltraLegend.add, {"location", "ncol", "frame"}),

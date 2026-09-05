@@ -57,7 +57,7 @@ class UltraColorbar:
         col: Optional[int] = None,
         rows: Optional[Union[int, Tuple[int, int]]] = None,
         cols: Optional[Union[int, Tuple[int, int]]] = None,
-        shrink: Optional[Union[float, str]] = None,
+        length: Optional[Union[float, str]] = None,
         label: Optional[str] = None,
         reverse: bool = False,
         rotation: Optional[float] = None,
@@ -102,7 +102,6 @@ class UltraColorbar:
         # TODO: Get the 'best' inset colorbar location using the legend algorithm
         # and implement inset colorbars the same as inset legends.
         grid = _not_none(drawedges, rc["colorbar.grid"])
-        length = shrink
         labelloc = labellocation
         locator = ticks
         formatter = format
@@ -174,7 +173,7 @@ class UltraColorbar:
         else:
             if inset_side:
                 kwargs.update(
-                    {"align": align, "shrink": length, "space": space, "width": width}
+                    {"align": align, "length": length, "space": space, "width": width}
                 )
                 cax, kwargs = ax._parse_colorbar_inset_side(
                     loc=loc,
@@ -186,7 +185,7 @@ class UltraColorbar:
                     {
                         "bbox_to_anchor": bbox_to_anchor,
                         "label": label,
-                        "shrink": length,
+                        "length": length,
                         "width": width,
                     }
                 )

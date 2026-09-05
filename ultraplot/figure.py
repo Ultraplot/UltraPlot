@@ -3702,14 +3702,14 @@ class Figure(mfigure.Figure):
         Parameters
         ----------
         %(axes.colorbar_args)s
-        shrink : float, default: :rc:`colorbar.length`
-            The colorbar length. Units are relative to the span of the rows and
-            columns of subplots.
+        length : float, default: :rc:`colorbar.length`
+            The colorbar length (also accepted as ``shrink``). Units are relative
+            to the span of the rows and columns of subplots.
         width : unit-spec, default: :rc:`colorbar.width`
             The colorbar width.
             %(units.in)s
         %(figure.colorbar_space)s
-            Has no visible effect if `shrink` is ``1``.
+            Has no visible effect if `length` is ``1``.
 
         Other parameters
         ----------------
@@ -3740,6 +3740,9 @@ class Figure(mfigure.Figure):
             )
         # Fill this axes
         if cax is not None:
+            # Matplotlib uses its native spelling when given explicit axes.
+            if "length" in kwargs:
+                kwargs["shrink"] = kwargs.pop("length")
             with context._state_context(cax, _internal_call=True):  # do not wrap pcolor
                 cb = super().colorbar(mappable, cax=cax, **kwargs)
         # Axes panel colorbar

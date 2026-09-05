@@ -177,7 +177,7 @@ figure.format       collabels         toplabels
 colorbar            location          loc
 colorbar            grid              drawedges
 colorbar            edges             drawedges
-colorbar            length            shrink
+colorbar            shrink            length
 colorbar            title             label
 colorbar            labelloc          labellocation
 colorbar            locator           ticks

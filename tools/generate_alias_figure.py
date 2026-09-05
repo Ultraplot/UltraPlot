@@ -57,7 +57,7 @@ def main():
             points,
             location="right",
             label="Progress",
-            shrink=0.78,
+            length=0.78,
             ticks=[0, 5, 10],
         )
         inset = ax.inset([0.07, 0.63, 0.27, 0.25])
