@@ -2,42 +2,21 @@
 Compatibility alias reference
 =============================
 
-UltraPlot's official documentation and function signatures exclusively use
-canonical parameter names. Alternative shorthand spellings (aliases) remain fully
-supported through silent, behind-the-scenes keyword translation.
-
-* **Context-dependent:** A single shorthand alias might map to different underlying
-  Matplotlib properties depending on the artist type.
-* **Silent translation:** Using aliases will not trigger deprecation warnings in
-  the current version, though these may be enabled in a future release.
-* **RC settings:** Entries marked ``rc (dotless)`` are generated from the rc registry.
-  To bypass compatibility aliases entirely, pass the canonical dotted spellings
-  through ``rc_kw``.
+The names shown in UltraPlot's documentation and function signatures are the
+canonical spellings. Shorthand aliases remain supported without warnings.
+Some aliases have different meanings depending on the plotting method or artist.
 
 Visual alias explorer
 ---------------------
 
-Use the interactive diagram below to discover which aliases apply to different
-parts of your plot:
-
-* **Hover or Focus:** Target a labeled part of the figure to preview its aliases.
-* **Click:** Select a label to keep that area highlighted and filter the complete mapping table below.
-* **Learn More:** Click the API link in the detail panel to view the canonical documentation.
-
+Select a label on the figure to see its aliases. Hover to preview; drag to
+reposition a label.
 
 .. raw:: html
 
    <div class="uplt-alias-explorer" aria-label="Interactive UltraPlot alias map">
-     <div class="uplt-alias-summary" aria-live="polite">
-       <span><strong data-alias-total>0</strong> accepted spellings</span>
-       <span><strong data-alias-context-total>0</strong> contexts</span>
-       <span>one canonical API</span>
-     </div>
-
-     <div class="uplt-alias-map-layout">
-       <div class="uplt-alias-visual-column">
         <div class="uplt-alias-map" aria-label="Annotated UltraPlot figure">
-         <svg viewBox="0 0 760 520" role="img" aria-labelledby="uplt-alias-map-title uplt-alias-map-desc">
+         <svg viewBox="-70 -60 850 620" role="img" aria-labelledby="uplt-alias-map-title uplt-alias-map-desc">
            <title id="uplt-alias-map-title">Alias locations on an UltraPlot figure</title>
            <desc id="uplt-alias-map-desc">An annotated chart with interactive labels for figure layout, side titles, axes, plot data, artist style, legend, and colorbar aliases.</desc>
            <image class="uplt-alias-real-figure" href="_static/alias-map.svg" x="20" y="16" width="720" height="427" preserveAspectRatio="xMidYMid meet"/>
@@ -59,64 +38,68 @@ parts of your plot:
 
            <g class="uplt-alias-node" role="button" tabindex="0" transform="translate(436.3 -38)" data-layout-key="layout" data-anchor-x="380" data-anchor-y="64" data-contexts="figure.init,gridspec,subplot,inset" data-targets="layout,inset" data-label="Figure &amp; layout" data-api="api/ultraplot.figure.Figure.html">
              <path class="uplt-alias-wire" d="M29.0 52.5 L-56.3 102.0"/>
-             <rect width="146" height="54" rx="14"/><text x="73" y="22">Figure &amp;</text><text x="73" y="41">layout</text>
+             <rect width="146" height="54" rx="3"/><text x="73" y="22">Figure &amp;</text><text x="73" y="41">layout</text>
            </g>
            <g class="uplt-alias-node" role="button" tabindex="0" transform="translate(-34.9 -34.9)" data-layout-key="titles" data-anchor-x="71" data-anchor-y="64" data-contexts="axes.format,figure.format" data-targets="titles" data-label="Side titles &amp; labels" data-api="api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format">
              <path class="uplt-alias-wire" d="M84.1 51.3 L105.9 98.9"/>
-             <rect width="146" height="54" rx="14"/><text x="73" y="22">Side titles</text><text x="73" y="41">&amp; labels</text>
+             <rect width="146" height="54" rx="3"/><text x="73" y="22">Side titles</text><text x="73" y="41">&amp; labels</text>
            </g>
            <g class="uplt-alias-node" role="button" tabindex="0" transform="translate(106.5 469.8)" data-layout-key="axes" data-anchor-x="235" data-anchor-y="393" data-contexts="cartesian.format,geo.format,polar.format,taylor.format,projection" data-targets="axes" data-label="Axes &amp; projections" data-api="api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format">
              <path class="uplt-alias-wire" d="M102.8 2.9 L128.5 -76.8"/>
-             <rect width="190" height="54" rx="14"/><text x="95" y="22">Axes &amp;</text><text x="95" y="41">projections</text>
+             <rect width="190" height="54" rx="3"/><text x="95" y="22">Axes &amp;</text><text x="95" y="41">projections</text>
            </g>
            <g class="uplt-alias-node" role="button" tabindex="0" transform="translate(450.3 297.1)" data-layout-key="plot" data-anchor-x="326" data-anchor-y="286" data-contexts="plot.*" data-targets="plot" data-label="Plot methods" data-api="api/ultraplot.axes.PlotAxes.html">
              <path class="uplt-alias-wire" d="M2.9 12.6 L-124.3 -11.1"/>
-             <rect width="160" height="54" rx="14"/><text x="80" y="33">Plot methods</text>
+             <rect width="160" height="54" rx="3"/><text x="80" y="33">Plot methods</text>
            </g>
            <g class="uplt-alias-node" role="button" tabindex="0" transform="translate(625.2 -28)" data-layout-key="legend" data-anchor-x="610" data-anchor-y="64" data-contexts="legend" data-targets="legend" data-label="Legend" data-api="api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend">
              <path class="uplt-alias-wire" d="M35.2 52.1 L-15.2 92.0"/>
-             <rect width="134" height="54" rx="14"/><text x="67" y="33">Legend</text>
+             <rect width="134" height="54" rx="3"/><text x="67" y="33">Legend</text>
            </g>
            <g class="uplt-alias-node" role="button" tabindex="0" transform="translate(610.1 425.8)" data-layout-key="colorbar" data-anchor-x="662" data-anchor-y="358" data-contexts="colorbar" data-targets="colorbar" data-label="Colorbar" data-api="api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar">
              <path class="uplt-alias-wire" d="M63.2 3.0 L51.9 -67.8"/>
-             <rect width="134" height="54" rx="14"/><text x="67" y="33">Colorbar</text>
+             <rect width="134" height="54" rx="3"/><text x="67" y="33">Colorbar</text>
            </g>
            <g class="uplt-alias-node" role="button" tabindex="0" transform="translate(-52.2 398.1)" data-layout-key="style" data-anchor-x="121" data-anchor-y="351" data-contexts="style.*" data-targets="style" data-label="Artist styling" data-api="api/ultraplot.axes.PlotAxes.html">
              <path class="uplt-alias-wire" d="M107.1 1.8 L173.2 -47.1"/>
-             <rect width="146" height="54" rx="14"/><text x="73" y="33">Artist styling</text>
+             <rect width="146" height="54" rx="3"/><text x="73" y="33">Artist styling</text>
            </g>
          </svg>
         </div>
 
         <div class="uplt-alias-categories" aria-label="Alias categories">
-         <button type="button" data-contexts="figure.init,figure.format,gridspec,subplot,inset" data-targets="layout,inset,titles" data-label="Figure &amp; layout" data-api="api/ultraplot.figure.Figure.html"><span>▦</span>Figure &amp; layout</button>
-         <button type="button" data-contexts="axes.format,cartesian.format,geo.format,polar.format,taylor.format" data-targets="axes,titles" data-label="Axes formatting" data-api="api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.format"><span>⌗</span>Axes formatting</button>
-         <button type="button" data-contexts="colorbar,legend" data-targets="colorbar,legend" data-label="Guides" data-api="api/ultraplot.axes.Axes.html"><span>◫</span>Guides</button>
-         <button type="button" data-contexts="plot.*" data-targets="plot" data-label="Plot methods" data-api="api/ultraplot.axes.PlotAxes.html"><span>⌁</span>Plot methods</button>
-         <button type="button" data-contexts="style.*" data-targets="style" data-label="Artist properties" data-api="api/ultraplot.axes.PlotAxes.html"><span>✦</span>Artist properties</button>
-         <button type="button" data-contexts="cycle,projection,scale.*" data-targets="axes,style" data-label="Constructors" data-api="api.html#constructor-functions"><span>⚙</span>Constructors</button>
-         <button type="button" data-contexts="rc (dotless)" data-targets="layout,axes,titles,plot,style,legend,colorbar,inset" data-label="Configuration" data-api="api/ultraplot.config.Configurator.html"><span>⋮</span>Configuration</button>
+         <button type="button" data-alias-color="layout" data-contexts="figure.init,gridspec,subplot,inset" data-targets="layout,inset" data-label="Figure &amp; layout" data-api="api/ultraplot.figure.Figure.html">Figure &amp; layout</button>
+         <button type="button" data-alias-color="titles" data-contexts="axes.format,figure.format" data-targets="titles" data-label="Side titles &amp; labels" data-api="api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format">Side titles &amp; labels</button>
+         <button type="button" data-alias-color="axes" data-contexts="cartesian.format,geo.format,polar.format,taylor.format,projection" data-targets="axes" data-label="Axes &amp; projections" data-api="api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format">Axes &amp; projections</button>
+         <button type="button" data-alias-color="plot" data-contexts="plot.*" data-targets="plot" data-label="Plot methods" data-api="api/ultraplot.axes.PlotAxes.html">Plot methods</button>
+         <button type="button" data-alias-color="legend" data-contexts="legend" data-targets="legend" data-label="Legend" data-api="api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend">Legend</button>
+         <button type="button" data-alias-color="colorbar" data-contexts="colorbar" data-targets="colorbar" data-label="Colorbar" data-api="api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar">Colorbar</button>
+         <button type="button" data-alias-color="style" data-contexts="style.*" data-targets="style" data-label="Artist styling" data-api="api/ultraplot.axes.PlotAxes.html">Artist styling</button>
+         <button type="button" data-contexts="cycle,projection,scale.*" data-targets="axes,style" data-label="Constructors" data-api="api.html#constructor-functions">Constructors</button>
+         <button type="button" data-contexts="rc (dotless)" data-targets="layout,axes,titles,plot,style,legend,colorbar,inset" data-label="Configuration" data-api="api/ultraplot.config.Configurator.html">Configuration</button>
         </div>
 
-        <div class="uplt-alias-filter">
-          <label for="uplt-alias-search">Find an accepted or canonical spelling</label>
-          <div>
-            <input id="uplt-alias-search" type="search" placeholder="Try lw, linewidth, proj, or title…" autocomplete="off"/>
-            <button type="button" data-alias-reset>Show all</button>
-          </div>
-          <p data-alias-filter-status aria-live="polite"></p>
-        </div>
-       </div>
-
-       <aside class="uplt-alias-detail" aria-live="polite">
-         <p class="uplt-alias-detail-help">Drag labels to arrange the map. Hover to preview aliases, or click to keep a selection.</p>
+     <section class="uplt-alias-detail" aria-label="Alias details" aria-live="polite">
+       <div class="uplt-alias-detail-heading">
          <h3 data-alias-detail-title>All aliases</h3>
-         <p data-alias-detail-copy>Select a labelled region or a category below.</p>
-         <div class="uplt-alias-preview" data-alias-preview></div>
-         <a class="uplt-alias-api-link" data-alias-api hidden>Open canonical API <span aria-hidden="true">→</span></a>
-       </aside>
+         <p data-alias-detail-copy>Select a label or category to explore its aliases.</p>
+         <a class="uplt-alias-api-link" data-alias-api hidden>View API documentation <span aria-hidden="true">→</span></a>
+       </div>
+       <div class="uplt-alias-preview" data-alias-preview></div>
+     </section>
+
+     <div class="uplt-alias-filter">
+       <label for="uplt-alias-search">Find an alias</label>
+       <div class="uplt-alias-search-row">
+         <input id="uplt-alias-search" type="search" placeholder="Search names, e.g. shrink or length" autocomplete="off"/>
+         <button type="button" data-alias-reset>Show all</button>
+       </div>
+       <p class="uplt-alias-filter-status" data-alias-filter-status aria-live="polite"></p>
      </div>
    </div>
+
+Entries marked ``rc (dotless)`` are configuration aliases. Use canonical dotted
+names through ``rc_kw`` to bypass their translation.
 
 .. alias-table-start
 

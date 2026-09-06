@@ -119,9 +119,6 @@
 
     if (!rows.length) return;
 
-    const contextCount = new Set(rows.map((row) => row.context)).size;
-    const totalNode = root.querySelector("[data-alias-total]");
-    const contextTotalNode = root.querySelector("[data-alias-context-total]");
     const titleNode = root.querySelector("[data-alias-detail-title]");
     const copyNode = root.querySelector("[data-alias-detail-copy]");
     const previewNode = root.querySelector("[data-alias-preview]");
@@ -297,9 +294,6 @@
       cells[2].replaceChildren(makeKeywordLink(row, row.canonical));
     });
 
-    totalNode.textContent = rows.length.toLocaleString();
-    contextTotalNode.textContent = contextCount.toLocaleString();
-
     let selected = {
       patterns: [],
       targets: [],
@@ -317,17 +311,17 @@
       copyNode.textContent = matches.length
         ? `${matches.length.toLocaleString()} accepted ${
             matches.length === 1 ? "spelling" : "spellings"
-          } in this area${temporary ? " — click to keep this view" : ""}.`
+          }${temporary ? ". Select to keep this view." : "."}`
         : "No compatibility aliases are registered for this area.";
       previewNode.replaceChildren();
 
-      matches.slice(0, 8).forEach((row) => {
+      matches.slice(0, 6).forEach((row) => {
         const item = document.createElement("div");
         item.className = "uplt-alias-pair";
         item.appendChild(makeKeywordLink(row, row.accepted));
         const arrow = document.createElement("span");
         arrow.setAttribute("aria-hidden", "true");
-        arrow.textContent = "→";
+        arrow.className = "uplt-alias-arrow";
         item.appendChild(arrow);
         item.appendChild(makeKeywordLink(row, row.canonical));
         const context = document.createElement("small");
@@ -336,10 +330,10 @@
         previewNode.appendChild(item);
       });
 
-      if (matches.length > 8) {
+      if (matches.length > 6) {
         const more = document.createElement("p");
         more.className = "uplt-alias-more";
-        more.textContent = `+ ${(matches.length - 8).toLocaleString()} more below`;
+        more.textContent = `+ ${(matches.length - 6).toLocaleString()} more below`;
         previewNode.appendChild(more);
       }
 
