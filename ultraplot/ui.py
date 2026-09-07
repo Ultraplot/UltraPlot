@@ -11,6 +11,9 @@ from . import gridspec as pgridspec
 from ._subplots import SubplotManager
 from .figure import Figure
 from .internals import (
+    _canonicalize_kwargs,
+    _figure_format_alias_scopes,
+    _format_alias_scopes,
     _not_none,
     _pop_params,
     _pop_props,
@@ -182,6 +185,9 @@ def subplot(**kwargs) -> tuple[Figure, paxes.Axes]:
     matplotlib.figure.Figure
     """
     _parse_figsize(kwargs)
+    kwargs = _canonicalize_kwargs("subplot", kwargs)
+    kwargs = _canonicalize_kwargs("gridspec", kwargs)
+    kwargs = _canonicalize_kwargs(_format_alias_scopes, kwargs)
     rc_kw, rc_mode = _pop_rc(kwargs)
     kwsub = _pop_props(kwargs, "patch")  # e.g. 'color'
     # NOTE: Introspect the manager, which owns these parameters, rather than the
@@ -230,6 +236,9 @@ def subplots(*args, **kwargs) -> tuple[Figure, pgridspec.SubplotGrid]:
     matplotlib.figure.Figure
     """
     _parse_figsize(kwargs)
+    kwargs = _canonicalize_kwargs("subplot", kwargs)
+    kwargs = _canonicalize_kwargs("gridspec", kwargs)
+    kwargs = _canonicalize_kwargs(_figure_format_alias_scopes, kwargs)
     rc_kw, rc_mode = _pop_rc(kwargs)
     kwsubs = _pop_props(kwargs, "patch")  # e.g. 'color'
     kwsubs.update(_pop_params(kwargs, SubplotManager.add_subplots))

@@ -70,11 +70,12 @@ def test_inbounds_data(rng):
         inbounds = i == 1
         title = f"Restricted lims inbounds={inbounds}"
         title += " (default)" if inbounds else ""
-        ax.format(
-            xlim=(None if i == 0 else xlim),
-            ylim=(None if i == 0 else ylim),
-            title=("Default axis limits" if i == 0 else title),
-        )
+        ax.format(title=("Default axis limits" if i == 0 else title))
+        if i != 0:
+            # Preserve the bottom axes' existing sharing group. Indexed
+            # format(xlim=..., ylim=...) now deliberately requests local axes.
+            ax.set_xlim(xlim)
+            ax.set_ylim(ylim)
         ax.pcolor(x, y, data, cmap=cmap, inbounds=inbounds)
     fig.format(
         xlabel="xlabel",
