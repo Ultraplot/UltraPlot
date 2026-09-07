@@ -401,6 +401,8 @@ def _alias_kwargs(scope=None, **aliases) -> Callable[[_F], _F]:
         groups = _get_alias_groups(scope, aliases)
 
     def decorator(func: _F) -> _F:
+        signature = inspect.signature(func)
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             # Bind positional arguments separately so ``func(value, alias=value)``

@@ -72,15 +72,13 @@ def test_public_docstrings_with_snippets_are_fully_substituted() -> None:
 
 
 def test_geo_format_folds_alias_entries() -> None:
-    # The geo format docstring folded its standalone "Aliases for ..." blocks
-    # into trailing notes on the canonical locator entries.
+    # Canonical locator entries stay in the docstring; compatibility spellings
+    # are documented centrally in docs/aliases.rst.
     geo = docstring._snippet_manager["geo.format"]
     assert "Aliases for" not in geo
     assert "lonlocator, latlocator : locator-spec" in geo
-    assert "Aliases: ``lonlines`` and ``latlines``, respectively." in geo
-    assert (
-        "Aliases: ``lonminorlines_kw`` and ``latminorlines_kw``, respectively." in geo
-    )
+    assert "lonminorlocator_kw, latminorlocator_kw : optional" in geo
+    assert "Aliases:" not in geo
 
 
 def test_compact_doc_markers_preserve_runtime_signatures() -> None:
