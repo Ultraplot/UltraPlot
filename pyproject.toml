@@ -1,8 +1,7 @@
 [build-system]
 requires = [
-    "setuptools>=64",
-    "setuptools_scm[toml]>=8",
-    "wheel",
+    "setuptools>=80",
+    "setuptools-scm>=8",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -19,9 +18,8 @@ maintainers = [
 description = "A succinct matplotlib wrapper for making beautiful, publication-quality graphics."
 readme = "README.rst"
 requires-python = ">=3.10,<3.15"
-license = {text = "MIT"}
+license = "MIT"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3 :: Only",
@@ -50,16 +48,18 @@ packages = {find = {exclude=["docs*", "baseline*", "logo*"]}}
 include-package-data = true
 
 [tool.setuptools_scm]
-write_to = "ultraplot/_version.py"
-write_to_template = "__version__ = '{version}'\n"
+version_file = "ultraplot/_version.py"
+version_file_template = "__version__ = '{version}'\n"
 
 [tool.ultraplot.core_versions]
 python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
 matplotlib = ["3.9", "3.10"]
 
 
-[tool.ruff]
-ignore = ["I001", "I002", "I003", "I004"]
+[tool.ruff.lint]
+ignore = [
+    "I",  # isort (import order)
+]
 
 [tool.basedpyright]
 exclude = ["**/*.ipynb"]
