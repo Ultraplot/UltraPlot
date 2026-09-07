@@ -36,6 +36,7 @@ from .. import proj as pproj
 from .. import ticker as pticker
 from ..config import rc
 from ..internals import (
+    _alias_kwargs,
     _not_none,
     _pop_params,
     _pop_props,
@@ -557,7 +558,6 @@ nsteps : int, default: :rc:`grid.nsteps`
     The number of interpolation steps used to draw gridlines.
 lonlocator, latlocator : locator-spec, optional
     Used to determine the longitude and latitude gridline locations.
-    Aliases: ``lonlines`` and ``latlines``, respectively.
     Passed to the `~ultraplot.constructor.Locator` constructor. Can be
     string, float, list of float, or `matplotlib.ticker.Locator` instance.
 
@@ -569,13 +569,10 @@ lonlocator, latlocator : locator-spec, optional
     at nice degree-minute-second intervals when the map extent is very small.
 lonlocator_kw, latlocator_kw : dict-like, optional
     Keyword arguments passed to the `matplotlib.ticker.Locator` class.
-    Aliases: ``lonlines_kw`` and ``latlines_kw``, respectively.
 lonminorlocator, latminorlocator : optional
     As with `lonlocator` and `latlocator` but for the "minor" gridlines.
-    Aliases: ``lonminorlines`` and ``latminorlines``, respectively.
 lonminorlocator_kw, latminorlocator_kw : optional
     As with `lonlocator_kw`, and `latlocator_kw` but for the "minor" gridlines.
-    Aliases: ``lonminorlines_kw`` and ``latminorlines_kw``, respectively.
 lonlabels, latlabels, labels : str, bool, or sequence, :rc:`grid.labels`
     Whether to add non-inline longitude and latitude gridline labels, and on
     which sides of the map. Use the keyword `labels` to set both at once. The
@@ -2716,33 +2713,19 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self,
         *,
         lonlocator: Any,
-        lonlines: Any,
         latlocator: Any,
-        latlines: Any,
         lonlocator_kw: MutableMapping | None,
-        lonlines_kw: MutableMapping | None,
         latlocator_kw: MutableMapping | None,
-        latlines_kw: MutableMapping | None,
     ) -> None:
         """
         Update major longitude/latitude locators.
         """
-        lonlocator = _not_none(lonlocator=lonlocator, lonlines=lonlines)
-        latlocator = _not_none(latlocator=latlocator, latlines=latlines)
         if lonlocator is not None:
-            lonlocator_kw = _not_none(
-                lonlocator_kw=lonlocator_kw,
-                lonlines_kw=lonlines_kw,
-                default={},
-            )
+            lonlocator_kw = lonlocator_kw or {}
             locator = constructor.Locator(lonlocator, **lonlocator_kw)
             self._lonaxis.set_major_locator(locator)
         if latlocator is not None:
-            latlocator_kw = _not_none(
-                latlocator_kw=latlocator_kw,
-                latlines_kw=latlines_kw,
-                default={},
-            )
+            latlocator_kw = latlocator_kw or {}
             locator = constructor.Locator(latlocator, **latlocator_kw)
             self._lataxis.set_major_locator(locator)
 
@@ -2750,37 +2733,19 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         self,
         *,
         lonminorlocator: Any,
-        lonminorlines: Any,
         latminorlocator: Any,
-        latminorlines: Any,
         lonminorlocator_kw: MutableMapping | None,
-        lonminorlines_kw: MutableMapping | None,
         latminorlocator_kw: MutableMapping | None,
-        latminorlines_kw: MutableMapping | None,
     ) -> None:
         """
         Update minor longitude/latitude locators.
         """
-        lonminorlocator = _not_none(
-            lonminorlocator=lonminorlocator, lonminorlines=lonminorlines
-        )
-        latminorlocator = _not_none(
-            latminorlocator=latminorlocator, latminorlines=latminorlines
-        )
         if lonminorlocator is not None:
-            lonminorlocator_kw = _not_none(
-                lonminorlocator_kw=lonminorlocator_kw,
-                lonminorlines_kw=lonminorlines_kw,
-                default={},
-            )
+            lonminorlocator_kw = lonminorlocator_kw or {}
             locator = constructor.Locator(lonminorlocator, **lonminorlocator_kw)
             self._lonaxis.set_minor_locator(locator)
         if latminorlocator is not None:
-            latminorlocator_kw = _not_none(
-                latminorlocator_kw=latminorlocator_kw,
-                latminorlines_kw=latminorlines_kw,
-                default={},
-            )
+            latminorlocator_kw = latminorlocator_kw or {}
             locator = constructor.Locator(latminorlocator, **latminorlocator_kw)
             self._lataxis.set_minor_locator(locator)
 
@@ -2951,6 +2916,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     # 3) apply extent, features, and gridlines
     # 4) apply tick lengths and defer to parent format
     @docstring._snippet_manager
+    @_alias_kwargs("geo.format")
     def format(
         self,
         *,
@@ -2971,21 +2937,13 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         latmax: float | None = None,
         nsteps: int | None = None,
         lonlocator: Any = None,
-        lonlines: Any = None,
         latlocator: Any = None,
-        latlines: Any = None,
         lonminorlocator: Any = None,
-        lonminorlines: Any = None,
         latminorlocator: Any = None,
-        latminorlines: Any = None,
         lonlocator_kw: MutableMapping | None = None,
-        lonlines_kw: MutableMapping | None = None,
         latlocator_kw: MutableMapping | None = None,
-        latlines_kw: MutableMapping | None = None,
         lonminorlocator_kw: MutableMapping | None = None,
-        lonminorlines_kw: MutableMapping | None = None,
         latminorlocator_kw: MutableMapping | None = None,
-        latminorlines_kw: MutableMapping | None = None,
         lonformatter: Any = None,
         latformatter: Any = None,
         lonformatter_kw: MutableMapping | None = None,
@@ -3065,23 +3023,15 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             self._format_update_latmax(latmax)
             self._format_update_major_locators(
                 lonlocator=lonlocator,
-                lonlines=lonlines,
                 latlocator=latlocator,
-                latlines=latlines,
                 lonlocator_kw=lonlocator_kw,
-                lonlines_kw=lonlines_kw,
                 latlocator_kw=latlocator_kw,
-                latlines_kw=latlines_kw,
             )
             self._format_update_minor_locators(
                 lonminorlocator=lonminorlocator,
-                lonminorlines=lonminorlines,
                 latminorlocator=latminorlocator,
-                latminorlines=latminorlines,
                 lonminorlocator_kw=lonminorlocator_kw,
-                lonminorlines_kw=lonminorlines_kw,
                 latminorlocator_kw=latminorlocator_kw,
-                latminorlines_kw=latminorlines_kw,
             )
             (
                 loninline,
@@ -3131,22 +3081,14 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             )
             self._sync_shared_tick_state(
                 "x",
-                copy_major_locator=_not_none(lonlocator=lonlocator, lonlines=lonlines)
-                is not None,
-                copy_minor_locator=_not_none(
-                    lonminorlocator=lonminorlocator, lonminorlines=lonminorlines
-                )
-                is not None,
+                copy_major_locator=lonlocator is not None,
+                copy_minor_locator=lonminorlocator is not None,
                 copy_major_formatter=lonformatter is not None,
             )
             self._sync_shared_tick_state(
                 "y",
-                copy_major_locator=_not_none(latlocator=latlocator, latlines=latlines)
-                is not None,
-                copy_minor_locator=_not_none(
-                    latminorlocator=latminorlocator, latminorlines=latminorlines
-                )
-                is not None,
+                copy_major_locator=latlocator is not None,
+                copy_minor_locator=latminorlocator is not None,
                 copy_major_formatter=latformatter is not None,
             )
         self._format_apply_ticklen(

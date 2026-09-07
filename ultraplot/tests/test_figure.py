@@ -943,13 +943,9 @@ def test_figure_keyword_aliases() -> None:
     uplt.close("all")
 
 
-def test_figure_alias_conflict_warns() -> None:
-    with warnings.catch_warnings(record=True) as record:
-        warnings.simplefilter("always")
-        fig = uplt.figure(refnum=1, ref=5)
-    assert fig._refnum == 1  # canonical wins
-    assert any("conflicting" in str(w.message).lower() for w in record)
-    uplt.close(fig)
+def test_figure_alias_conflict_raises() -> None:
+    with pytest.raises(TypeError, match="aliases"):
+        uplt.figure(refnum=1, ref=5)
 
 
 def test_clear_drops_subplot_state():

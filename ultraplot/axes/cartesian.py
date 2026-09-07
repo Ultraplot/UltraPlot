@@ -20,6 +20,9 @@ from .. import scale as pscale
 from .. import ticker as pticker
 from ..config import rc
 from ..internals import (
+    _alias_kwargs,
+    _canonicalize_kwargs,
+    _format_alias_scopes,
     _not_none,
     _pop_params,
     _pop_rc,
@@ -104,8 +107,6 @@ xwraprange, ywraprange : 2-tuple of float, optional
     example, ``xwraprange=(0, 3)`` causes the values 0 through 9 to be formatted as
     0, 1, 2, 0, 1, 2, 0, 1, 2, 0. See `~ultraplot.ticker.AutoFormatter` for details. This
     can be combined with `xtickrange` and `ytickrange` to make "stacked" line plots.
-xloc, yloc : optional
-    Shorthands for `xspineloc`, `yspineloc`.
 xspineloc, yspineloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right', \
 'both', 'neither', 'none', 'zero', 'center'} or 2-tuple, optional
     The x and y spine locations. Applied with `~matplotlib.spines.Spine.set_position`.
@@ -144,8 +145,6 @@ xgridminor, ygridminor, gridminor : bool, default: :rc:`gridminor`
 xtickminor, ytickminor, tickminor : bool, default: :rc:`tick.minor`
     Whether to draw minor ticks on the x and y axes.
     Use the keyword `tickminor` to toggle both.
-xticks, yticks : optional
-    Aliases for `xlocator`, `ylocator`.
 xlocator, ylocator : locator-spec, optional
     Used to determine the x and y axis tick mark positions. Passed
     to the `~ultraplot.constructor.Locator` constructor.  Can be float,
@@ -153,14 +152,10 @@ xlocator, ylocator : locator-spec, optional
     Use ``[]``, ``'null'``, or ``'none'`` for no ticks.
 xlocator_kw, ylocator_kw : dict-like, optional
     Keyword arguments passed to the `matplotlib.ticker.Locator` class.
-xminorticks, yminorticks : optional
-    Aliases for `xminorlocator`, `yminorlocator`.
 xminorlocator, yminorlocator : optional
     As for `xlocator`, `ylocator`, but for the minor ticks.
 xminorlocator_kw, yminorlocator_kw
     As for `xlocator_kw`, `ylocator_kw`, but for the minor locator.
-xticklabels, yticklabels : optional
-    Aliases for `xformatter`, `yformatter`.
 xformatter, yformatter : formatter-spec, optional
     Used to determine the x and y axis tick label string format.
     Passed to the `~ultraplot.constructor.Formatter` constructor.
@@ -683,16 +678,27 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # To restore matplotlib behavior, which draws "child" artists on top simply
         # because the axes was created after the "parent" one, use the inset_axes
         # zorder of 4 and make the background transparent.
+        kwargs = _canonicalize_kwargs(_format_alias_scopes, kwargs)
         sy = "y" if sx == "x" else "x"
         sig = self._format_signatures[CartesianAxes]
         keys = tuple(key[1:] for key in sig.parameters if key[0] == sx)
-        kwargs = {
-            (sx + key if key in keys else key): val for key, val in kwargs.items()
-        }  # noqa: E501
-        if f"{sy}spineloc" not in kwargs:  # acccount for aliases
-            kwargs.setdefault(f"{sy}loc", "neither")
-        if f"{sx}spineloc" not in kwargs:  # account for aliases
-            kwargs.setdefault(f"{sx}loc", "top" if sx == "x" else "right")
+        normalized = {}
+        for key, value in kwargs.items():
+            if key == "loc":
+                key = f"{sx}spineloc"
+            elif key in keys:
+                key = sx + key
+            else:
+                candidate = _canonicalize_kwargs(
+                    _format_alias_scopes, {sx + key: value}
+                )
+                candidate_key = next(iter(candidate))
+                if candidate_key in sig.parameters:
+                    key = candidate_key
+            normalized[key] = value
+        kwargs = normalized
+        kwargs.setdefault(f"{sy}spineloc", "neither")
+        kwargs.setdefault(f"{sx}spineloc", "top" if sx == "x" else "right")
         kwargs.setdefault(f"autoscale{sy}_on", getattr(self, f"get_autoscale{sy}_on")())
         kwargs.setdefault(f"share{sy}", self)
 
@@ -712,7 +718,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._twinned_axes.join(self, ax)
 
         # Format parent and child axes
-        self.format(**{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)})
+        self.format(
+            **{f"{sx}spineloc": OPPOSITE_SIDE.get(kwargs[f"{sx}spineloc"], None)}
+        )
         setattr(ax, f"_alt{sx}_parent", self)
         getattr(ax, f"{sy}axis").set_visible(False)
         getattr(ax, "patch").set_visible(False)
@@ -1443,10 +1451,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             rc.find(f"{axis}tick.direction", context=True),
         )
 
-        locator = _not_none(get("locator"), p.get(f"{axis}ticks"))
-        minorlocator = _not_none(get("minorlocator"), p.get(f"{axis}minorticks"))
-
-        formatter = _not_none(get("formatter"), p.get(f"{axis}ticklabels"))
+        locator = get("locator")
+        minorlocator = get("minorlocator")
+        formatter = get("formatter")
 
         # Tick minor default logic
         tickminor = get("tickminor")
@@ -1582,12 +1589,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         return _AxisFormatConfig(**config_kwargs)
 
     @docstring._snippet_manager
+    @_alias_kwargs("cartesian.format")
     def format(
         self,
         *,
         aspect=None,
-        xloc=None,
-        yloc=None,
         xspineloc=None,
         yspineloc=None,
         xoffsetloc=None,
@@ -1612,14 +1618,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         yrotation=None,
         xformatter=None,
         yformatter=None,
-        xticklabels=None,
-        yticklabels=None,
-        xticks=None,
-        yticks=None,
         xlocator=None,
         ylocator=None,
-        xminorticks=None,
-        yminorticks=None,
         xminorlocator=None,
         yminorlocator=None,
         xcolor=None,

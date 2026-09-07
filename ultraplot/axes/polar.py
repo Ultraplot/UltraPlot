@@ -19,6 +19,7 @@ from .. import constructor
 from .. import ticker as pticker
 from ..config import rc
 from ..internals import (
+    _alias_kwargs,
     _not_none,
     _pop_rc,
     docstring,
@@ -72,15 +73,11 @@ thetalocator, rlocator : locator-spec, optional
     Used to determine the azimuthal and radial gridline positions.
     Passed to the `~ultraplot.constructor.Locator` constructor. Can be
     float, list of float, string, or `matplotlib.ticker.Locator` instance.
-thetalines, rlines
-    Aliases for `thetalocator`, `rlocator`.
 thetalocator_kw, rlocator_kw : dict-like, optional
     The azimuthal and radial locator settings. Passed to
     `~ultraplot.constructor.Locator`.
 thetaminorlocator, rminorlocator : optional
     As for `thetalocator`, `rlocator`, but for the minor gridlines.
-thetaminorticks, rminorticks : optional
-    Aliases for `thetaminorlocator`, `rminorlocator`.
 thetaminorlocator_kw, rminorlocator_kw
     As for `thetalocator_kw`, `rlocator_kw`, but for the minor locator.
 rlabelpos : float, optional
@@ -92,8 +89,6 @@ thetaformatter, rformatter : formatter-spec, optional
     Passed to the `~ultraplot.constructor.Formatter` constructor.
     Can be string, list of string, or `matplotlib.ticker.Formatter`
     instance. Use ``[]``, ``'null'``, or ``'none'`` for no labels.
-thetalabels, rlabels : optional
-    Aliases for `thetaformatter`, `rformatter`.
 thetaformatter_kw, rformatter_kw : dict-like, optional
     The azimuthal and radial label formatter settings. Passed to
     `~ultraplot.constructor.Formatter`.
@@ -500,6 +495,7 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         return super().get_tightbbox(renderer, *args, **kwargs)
 
     @docstring._snippet_manager
+    @_alias_kwargs("polar.format")
     def format(
         self,
         *,
@@ -523,20 +519,14 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         rborder=None,
         thetalocator=None,
         rlocator=None,
-        thetalines=None,
-        rlines=None,
         thetalocator_kw=None,
         rlocator_kw=None,
         thetaminorlocator=None,
         rminorlocator=None,
-        thetaminorlines=None,
-        rminorlines=None,  # noqa: E501
         thetaminorlocator_kw=None,
         rminorlocator_kw=None,
         thetaformatter=None,
         rformatter=None,
-        thetalabels=None,
-        rlabels=None,
         thetaformatter_kw=None,
         rformatter_kw=None,
         labelpad=None,
@@ -610,20 +600,6 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
             rlocator_kw = rlocator_kw or {}
             rminorlocator_kw = rminorlocator_kw or {}
             rformatter_kw = rformatter_kw or {}
-
-            # Flexible input
-            thetalocator = _not_none(thetalines=thetalines, thetalocator=thetalocator)
-            thetaformatter = _not_none(
-                thetalabels=thetalabels, thetaformatter=thetaformatter
-            )  # noqa: E501
-            thetaminorlocator = _not_none(
-                thetaminorlines=thetaminorlines, thetaminorlocator=thetaminorlocator
-            )  # noqa: E501
-            rlocator = _not_none(rlines=rlines, rlocator=rlocator)
-            rformatter = _not_none(rlabels=rlabels, rformatter=rformatter)
-            rminorlocator = _not_none(
-                rminorlines=rminorlines, rminorlocator=rminorlocator
-            )  # noqa: E501
 
             # Special radius settings
             if r0 is not None:

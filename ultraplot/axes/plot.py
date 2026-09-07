@@ -36,6 +36,8 @@ from .. import colors as pcolors
 from .. import constructor, utils
 from ..config import rc
 from ..internals import (
+    _alias_kwargs,
+    _canonicalize_kwargs,
     _get_aliases,
     _not_none,
     _pop_kwargs,
@@ -519,23 +521,21 @@ inbounds : bool, default: :rc:`axes.inbounds`
     See also :rcraw:`axes.inbounds` and :rcraw:`cmap.inbounds`.
 """
 _error_means_docstring = """
-mean, means : bool, default: False
+means : bool, default: False
     Whether to plot the means of each column for 2D `{y}` coordinates. Means
     are calculated with `numpy.nanmean`. If no other arguments are specified,
     this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
-median, medians : bool, default: False
+medians : bool, default: False
     Whether to plot the medians of each column for 2D `{y}` coordinates. Medians
     are calculated with `numpy.nanmedian`. If no other arguments arguments are
     specified, this also sets ``barstd=True`` (and ``boxstd=True`` for violin plots).
 """
 _error_bars_docstring = """
-bars : bool, default: None
-    Shorthand for `barstd`, `barstds`.
-barstd, barstds : bool, float, or 2-tuple of float, optional
+barstds : bool, float, or 2-tuple of float, optional
     Valid only if `mean` or `median` is ``True``. Standard deviation multiples for
     *thin error bars* with optional whiskers (i.e., caps). If scalar, then +/- that
     multiple is used. If ``True``, the default standard deviation range of +/-3 is used.
-barpctile, barpctiles : bool, float, or 2-tuple of float, optional
+barpctiles : bool, float, or 2-tuple of float, optional
     Valid only if `mean` or `median` is ``True``. As with `barstd`, but instead
     using percentiles for the error bars. If scalar, that percentile range is
     used (e.g., ``90`` shows the 5th to 95th percentiles). If ``True``, the default
@@ -544,9 +544,7 @@ bardata : array-like, optional
     Valid only if `mean` and `median` are ``False``. If shape is 2 x N, these
     are the lower and upper bounds for the thin error bars. If shape is N, these
     are the absolute, symmetric deviations from the central points.
-boxes : bool, default: None
-    Shorthand for `boxstd`, `boxstds`.
-boxstd, boxstds, boxpctile, boxpctiles, boxdata : optional
+boxstds, boxpctiles, boxdata : optional
     As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars*
     representing a smaller interval than the thin error bars. If `boxstds` is
     ``True``, the default standard deviation range of +/-1 is used. If `boxpctiles`
@@ -573,16 +571,12 @@ boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor : color-spec, default: 'w'
     Color, face color, and edge color for the `boxmarker` marker.
 """
 _error_shading_docstring = """
-shade : bool, default: None
-    Shorthand for `shadestd`.
-shadestd, shadestds, shadepctile, shadepctiles, shadedata : optional
+shadestds, shadepctiles, shadedata : optional
     As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate
     the error range. If `shadestds` is ``True``, the default standard deviation
     range of +/-2 is used. If `shadepctiles` is ``True``, the default
     percentile range of 10 to 90 is used.
-fade : bool, default: None
-    Shorthand for `fadestd`.
-fadestd, fadestds, fadepctile, fadepctiles, fadedata : optional
+fadestds, fadepctiles, fadedata : optional
     As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional,
     more faded, *secondary* shaded region. If `fadestds` is ``True``, the default
     standard deviation range of +/-3 is used. If `fadepctiles` is ``True``,
@@ -631,7 +625,7 @@ cmap : colormap-spec, default: \
     Otherwise :rcraw:`cmap.sequential` is used.
 cmap_kw : dict-like, optional
     Passed to :class:`~ultraplot.constructor.Colormap`.
-c, color, colors : color-spec or sequence of color-spec, optional
+colors : color-spec or sequence of color-spec, optional
     The color(s) used to create a :class:`~ultraplot.colors.DiscreteColormap`.
     If not passed, `cmap` is used.
 norm : norm-spec, default: \
@@ -700,8 +694,6 @@ vmin, vmax : float, optional
     `vmin` and `vmax` are the minimum and maximum of the data values.
 """
 _manual_levels_docstring = """
-N
-    Shorthand for `levels`.
 levels : int or sequence of float, default: :rc:`cmap.levels`
     The number of level edges or a sequence of level edges. If the former, `locator`
     is used to generate this many level edges at "nice" intervals. If the latter,
@@ -782,7 +774,7 @@ labels_kw : dict-like, optional
     Ignored if `labels` is ``False``. Extra keyword args for the labels.
     For contour plots, this is passed to `~matplotlib.axes.Axes.clabel`.
     Otherwise, this is passed to `~matplotlib.axes.Axes.text`.
-formatter, fmt : formatter-spec, optional
+formatter : formatter-spec, optional
     The `~matplotlib.ticker.Formatter` used to format number labels.
     Passed to the `~ultraplot.constructor.Formatter` constructor.
 formatter_kw : dict-like, optional
@@ -911,7 +903,7 @@ Parameters
 
 Other parameters
 ----------------
-stack, stacked : bool, default: False
+stacked : bool, default: False
     Whether to "stack" lines from successive columns of {y} data
     or plot lines on top of each other.
 %(plot.cycle)s
@@ -1137,7 +1129,7 @@ width : float or array-like, default: 0.8
 absolute_width : bool, default: False
     Whether to make the `width` units *absolute*. If ``True``,
     this restores the default matplotlib behavior.
-stack, stacked : bool, default: False
+stacked : bool, default: False
     Whether to "stack" bars from successive columns of {y}
     data or plot bars side-by-side in groups.
 bar_labels : bool, default rc["bar.bar_labels"]
@@ -1253,7 +1245,7 @@ Plot individual, grouped, or overlaid shading patches.
 Parameters
 ----------
 %(plot.args_1d_multi{y})s
-stack, stacked : bool, default: False
+stacked : bool, default: False
     Whether to "stack" area patches from successive columns of {y}
     data or plot area patches on top of each other.
 %(plot.args_1d_shared)s
@@ -1304,7 +1296,7 @@ Other parameters
 ----------------
 fill : bool, default: True
     Whether to fill the box with a color.
-mean, means : bool, default: False
+means : bool, default: False
     If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to
     `matplotlib.axes.Axes.boxplot`. Adds mean lines alongside the median.
 %(plot.cycle)s
@@ -1512,10 +1504,10 @@ bins : int or sequence of float, optional
 %(plot.weights)s
 histtype : {{'bar', 'barstacked', 'step', 'stepfilled'}}, optional
     The histogram type. See `matplotlib.axes.Axes.hist` for details.
-width, rwidth : float, default: 0.8 or 1
+rwidth : float, default: 0.8 or 1
     The bar width(s) for bar-type histograms relative to the bin size. Default
     is ``0.8`` for multiple columns of unstacked data and ``1`` otherwise.
-stack, stacked : bool, optional
+stacked : bool, optional
     Whether to "stack" successive columns of {y} data for bar-type histograms
     or show side-by-side in groups. Setting this to ``False`` is equivalent to
     ``histtype='bar'`` and to ``True`` is equivalent to ``histtype='barstacked'``.
@@ -1536,7 +1528,7 @@ kde_kw : dict, optional
     The remaining keys style the resulting curve and are passed to
     `matplotlib.axes.Axes.plot`, e.g. ``color``, ``linestyle``, ``linewidth``.
     By default each curve takes the color of its histogram.
-fill, filled : bool, optional
+fill : bool, optional
     Whether to "fill" step-type histograms or just plot the edges. Setting
     this to ``False`` is equivalent to ``histtype='step'`` and to ``True``
     is equivalent to ``histtype='stepfilled'``.
@@ -1627,7 +1619,7 @@ Other parameters
 %(artist.patch)s
 %(axes.edgefix)s
 %(plot.labels_1d)s
-labelpad, labeldistance : float, optional
+labeldistance : float, optional
     The distance at which labels are drawn in radial coordinates.
 
 See also
@@ -3056,13 +3048,13 @@ class PlotAxes(base.Axes):
         posobj = self._call_native(name, x, *ypos, **kwargs)
         return cbook.silent_list(type(negobj).__name__, (negobj, posobj))
 
+    @_alias_kwargs("plot.labels")
     def _add_auto_labels(
         self,
         obj,
         cobj=None,
         labels=False,
         labels_kw=None,
-        fmt=None,
         formatter=None,
         formatter_kw=None,
         precision=None,
@@ -3074,12 +3066,10 @@ class PlotAxes(base.Axes):
         # TODO: Add quiverkey to this!
         if not labels:
             return
-        labels_kw = labels_kw or {}
+        labels_kw = _canonicalize_kwargs("plot.labels", labels_kw or {})
         formatter_kw = formatter_kw or {}
         formatter = _not_none(
-            fmt_labels_kw=labels_kw.pop("fmt", None),
             formatter_labels_kw=labels_kw.pop("formatter", None),
-            fmt=fmt,
             formatter=formatter,
             default="simple",
         )
@@ -3101,15 +3091,13 @@ class PlotAxes(base.Axes):
             case _:
                 raise RuntimeError(f"Not possible to add labels to object {obj!r}.")
 
+    @_alias_kwargs("plot.text")
     def _add_quadmesh_labels(
         self,
         obj,
         fmt,
         *,
-        c=None,
         color=None,
-        colors=None,
-        size=None,
         fontsize=None,
         **kwargs,
     ):
@@ -3119,8 +3107,7 @@ class PlotAxes(base.Axes):
         """
         # Parse input args
         obj.update_scalarmappable()
-        color = _not_none(c=c, color=color, colors=colors)
-        fontsize = _not_none(size=size, fontsize=fontsize, default=rc["font.smallsize"])
+        fontsize = _not_none(fontsize, rc["font.smallsize"])
         kwargs.setdefault("ha", "center")
         kwargs.setdefault("va", "center")
 
@@ -3157,15 +3144,13 @@ class PlotAxes(base.Axes):
 
         return labs
 
+    @_alias_kwargs("plot.text")
     def _add_collection_labels(
         self,
         obj,
         fmt,
         *,
-        c=None,
         color=None,
-        colors=None,
-        size=None,
         fontsize=None,
         **kwargs,
     ):
@@ -3177,8 +3162,7 @@ class PlotAxes(base.Axes):
         # NOTE: This function also hides grid boxes filled with NaNs to avoid ugly
         # issue where edge colors surround NaNs. Should maybe move this somewhere else.
         obj.update_scalarmappable()  # update 'edgecolors' list
-        color = _not_none(c=c, color=color, colors=colors)
-        fontsize = _not_none(size=size, fontsize=fontsize, default=rc["font.smallsize"])
+        fontsize = _not_none(fontsize, rc["font.smallsize"])
         kwargs.setdefault("ha", "center")
         kwargs.setdefault("va", "center")
 
@@ -3209,16 +3193,14 @@ class PlotAxes(base.Axes):
         obj.set_edgecolors(edgecolors)
         return labs
 
+    @_alias_kwargs("plot.contour_labels")
     def _add_contour_labels(
         self,
         obj,
         cobj,
         fmt,
         *,
-        c=None,
-        color=None,
         colors=None,
-        size=None,
         fontsize=None,
         inline_spacing=None,
         **kwargs,
@@ -3231,8 +3213,7 @@ class PlotAxes(base.Axes):
         # Parse input args
         zorder = max(3, obj.get_zorder() + 1)
         kwargs.setdefault("zorder", zorder)
-        colors = _not_none(c=c, color=color, colors=colors)
-        fontsize = _not_none(size=size, fontsize=fontsize, default=rc["font.smallsize"])
+        fontsize = _not_none(fontsize, rc["font.smallsize"])
         inline_spacing = _not_none(inline_spacing, 2.5)
 
         # Separate clabel args from text Artist args
@@ -3264,6 +3245,7 @@ class PlotAxes(base.Axes):
 
         return labs
 
+    @_alias_kwargs("plot.error_bars")
     def _add_error_bars(
         self,
         x,
@@ -3275,16 +3257,10 @@ class PlotAxes(base.Axes):
         default_barpctiles=False,
         default_boxpctiles=False,
         default_marker=False,
-        bars=None,
-        boxes=None,
-        barstd=None,
         barstds=None,
-        barpctile=None,
         barpctiles=None,
         bardata=None,
-        boxstd=None,
         boxstds=None,
-        boxpctile=None,
         boxpctiles=None,
         boxdata=None,
         capsize=None,
@@ -3299,10 +3275,6 @@ class PlotAxes(base.Axes):
         # But also want default behavior where some default error indicator is shown
         # if user requests means/medians only. Result is the below kludge.
         kwargs, vert = _get_vert(**kwargs)
-        barstds = _not_none(bars=bars, barstd=barstd, barstds=barstds)
-        boxstds = _not_none(boxes=boxes, boxstd=boxstd, boxstds=boxstds)
-        barpctiles = _not_none(barpctile=barpctile, barpctiles=barpctiles)
-        boxpctiles = _not_none(boxpctile=boxpctile, boxpctiles=boxpctiles)
         if distribution is not None and not any(
             typ + mode in key
             for key in kwargs
@@ -3392,6 +3364,7 @@ class PlotAxes(base.Axes):
         kwargs["distribution"] = distribution
         return (*eobjs, kwargs)
 
+    @_alias_kwargs("plot.error_shading")
     def _add_error_shading(
         self,
         x,
@@ -3399,16 +3372,10 @@ class PlotAxes(base.Axes):
         *_,
         distribution=None,
         color_key="color",
-        shade=None,
-        shadestd=None,
         shadestds=None,
-        shadepctile=None,
         shadepctiles=None,
         shadedata=None,
-        fade=None,
-        fadestd=None,
         fadestds=None,
-        fadepctile=None,
         fadepctiles=None,
         fadedata=None,
         shadelabel=False,
@@ -3419,10 +3386,6 @@ class PlotAxes(base.Axes):
         Add up to 2 error indicators: more opaque "shading" and less opaque "fading".
         """
         kwargs, vert = _get_vert(**kwargs)
-        shadestds = _not_none(shade=shade, shadestd=shadestd, shadestds=shadestds)
-        fadestds = _not_none(fade=fade, fadestd=fadestd, fadestds=fadestds)
-        shadepctiles = _not_none(shadepctile=shadepctile, shadepctiles=shadepctiles)
-        fadepctiles = _not_none(fadepctile=fadepctile, fadepctiles=fadepctiles)
         drawshade = any(
             _ is not None and _ is not False
             for _ in (shadestds, shadepctiles, shadedata)
@@ -4190,13 +4153,12 @@ class PlotAxes(base.Axes):
             return False
         return values.shape[0] == point_count
 
+    @_alias_kwargs(("plot.colormap", "plot.levels"))
     def _parse_cmap(
         self,
         *args,
         cmap=None,
         cmap_kw=None,
-        c=None,
-        color=None,
         colors=None,
         norm=None,
         norm_kw=None,
@@ -4276,7 +4238,6 @@ class PlotAxes(base.Axes):
         vmin = _not_none(vmin=vmin, norm_kw_vmin=norm_kw.pop("vmin", None))
         vmax = _not_none(vmax=vmax, norm_kw_vmax=norm_kw.pop("vmax", None))
         extend = _not_none(extend, "neither")
-        colors = _not_none(c=c, color=color, colors=colors)  # in case untranslated
         modes = {
             key: kwargs.pop(key, None)
             for key in ("sequential", "diverging", "cyclic", "qualitative")
@@ -4763,10 +4724,10 @@ class PlotAxes(base.Axes):
             levels = np.append(levels, levels[-1] + width * np.sign(levels[-1]))
         return levels, kwargs
 
+    @_alias_kwargs("plot.levels")
     def _parse_level_vals(
         self,
         *args,
-        N=None,
         levels=None,
         values=None,
         extend=None,
@@ -4789,8 +4750,6 @@ class PlotAxes(base.Axes):
         ----------
         *args
             The sample data. Passed to `_parse_level_lim`.
-        N
-            Shorthand for `levels`.
         levels : int or sequence of float, optional
             The levels list or (approximate) number of levels to create.
         values : int or sequence of float, optional
@@ -4854,7 +4813,7 @@ class PlotAxes(base.Axes):
         explicit_limits = vmin is not None or vmax is not None
         line_contours = min_levels == 1
         keep_explicit_line_limits = line_contours and explicit_limits
-        levels = _not_none(N=N, levels=levels, norm_kw_levs=norm_kw.pop("levels", None))
+        levels = _not_none(levels=levels, norm_kw_levs=norm_kw.pop("levels", None))
         if positive and negative:
             warnings._warn_ultraplot(
                 "Incompatible args positive=True and negative=True. Using former."
@@ -5614,6 +5573,7 @@ class PlotAxes(base.Axes):
         self._update_guide(obj, **guide_kw)
         return obj
 
+    @_alias_kwargs("plot.stacked")
     def _apply_lines(
         self,
         xs,
@@ -5622,7 +5582,6 @@ class PlotAxes(base.Axes):
         colors,
         *,
         vert=True,
-        stack=None,
         stacked=None,
         negpos=False,
         **kwargs,
@@ -5637,7 +5596,6 @@ class PlotAxes(base.Axes):
             kw["colors"] = colors
         kw.update(_pop_props(kw, "collection"))
         kw, extents = self._inbounds_extent(**kw)
-        stack = _not_none(stack=stack, stacked=stacked)
         xs, ys1, ys2, kw = self._parse_1d_args(xs, ys1, ys2, vert=vert, **kw)
         guide_kw = _pop_params(kw, self._update_guide)
 
@@ -5648,7 +5606,7 @@ class PlotAxes(base.Axes):
         objs, sides = [], []
         for _, n, x, y1, y2, kw in self._iter_arg_cols(xs, ys1, ys2, **kw):
             kw = self._parse_cycle(n, **kw)
-            if stack:
+            if stacked:
                 y1 = y1 + y0  # avoid in-place modification
                 y2 = y2 + y0
                 y0 = y0 + y2 - y1  # irrelevant that we added y0 to both
@@ -5833,6 +5791,7 @@ class PlotAxes(base.Axes):
         kwargs = _parse_vert(default_vert=False, **kwargs)
         return self._apply_scatter(*args, **kwargs)
 
+    @_alias_kwargs("plot.stacked")
     def _apply_fill(
         self,
         xs,
@@ -5842,7 +5801,6 @@ class PlotAxes(base.Axes):
         *,
         vert=True,
         negpos=None,
-        stack=None,
         stacked=None,
         **kwargs,
     ):
@@ -5891,7 +5849,6 @@ class PlotAxes(base.Axes):
         kw.update(_pop_props(kw, "patch"))
         kw, extents = self._inbounds_extent(**kw)
         name = "fill_between" if vert else "fill_betweenx"
-        stack = _not_none(stack=stack, stacked=stacked)
         xs, ys1, ys2, kw = self._parse_1d_args(xs, ys1, ys2, vert=vert, **kw)
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         guide_kw = _pop_params(kw, self._update_guide)
@@ -5905,7 +5862,7 @@ class PlotAxes(base.Axes):
             kw = self._parse_cycle(n, **kw)
 
             # If stacking requested, adjust y arrays
-            if stack:
+            if stacked:
                 y1 = y1 + y0
                 y2 = y2 + y0
                 y0 = y0 + y2 - y1
@@ -6156,6 +6113,7 @@ class PlotAxes(base.Axes):
             x_step = x_step.astype("timedelta64[ns]")
         return width * x_step
 
+    @_alias_kwargs("plot.stacked")
     def _apply_bar(
         self,
         xs,
@@ -6164,7 +6122,6 @@ class PlotAxes(base.Axes):
         bs,
         *,
         absolute_width=None,
-        stack=None,
         stacked=None,
         negpos=False,
         orientation="vertical",
@@ -6179,7 +6136,6 @@ class PlotAxes(base.Axes):
         bar_labels = kw.pop("bar_labels", rc["bar.bar_labels"])
         bar_labels_kw = kw.pop("bar_labels_kw", {})
         name = "barh" if orientation == "horizontal" else "bar"
-        stack = _not_none(stack=stack, stacked=stacked)
         xs, hs, kw = self._parse_1d_args(xs, hs, orientation=orientation, **kw)
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
         if absolute_width is None:
@@ -6212,7 +6168,7 @@ class PlotAxes(base.Axes):
             )  # tolerate scalar `bottom`/`left`
             if not absolute_width:
                 w = self._convert_bar_width(x, w)
-            if stack:
+            if stacked:
                 b = b + b0
                 b0 = b0 + h
             else:  # instead "group" the bars (this is no-op if we have 1 column)
@@ -6330,12 +6286,13 @@ class PlotAxes(base.Axes):
     @inputs._preprocess_or_redirect("x", "explode")
     @docstring._concatenate_inherited
     @docstring._snippet_manager
-    def pie(self, x, explode, *, labelpad=None, labeldistance=None, **kwargs):
+    @_alias_kwargs("plot.pie")
+    def pie(self, x, explode, *, labeldistance=None, **kwargs):
         """
         %(plot.pie)s
         """
         kw = kwargs.copy()
-        pad = _not_none(labeldistance=labeldistance, labelpad=labelpad, default=1.15)
+        labeldistance = _not_none(labeldistance, 1.15)
         wedge_kw = kw.pop("wedgeprops", None) or {}
         wedge_kw.update(_pop_props(kw, "patch"))
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)
@@ -6351,7 +6308,7 @@ class PlotAxes(base.Axes):
             "pie",
             x,
             explode=explode,
-            labeldistance=pad,
+            labeldistance=labeldistance,
             wedgeprops=wedge_kw,
             **kw,
         )
@@ -6413,16 +6370,15 @@ class PlotAxes(base.Axes):
             mticker.FixedFormatter([str(label) for label in label_values])
         )
 
+    @_alias_kwargs(("plot.statistics", "plot.boxplot"))
     def _apply_boxplot(
         self,
         x,
         y,
         *,
-        mean=None,
         means=None,
         vert=True,
         fill=None,
-        filled=None,
         marker=None,
         markersize=None,
         **kwargs,
@@ -6433,8 +6389,6 @@ class PlotAxes(base.Axes):
         # Global and fill properties
         kw = kwargs.copy()
         kw.update(_pop_props(kw, "patch"))
-        fill = _not_none(fill=fill, filled=filled)
-        means = _not_none(mean=mean, means=means, showmeans=kw.get("showmeans"))
         linewidth = kw.pop("linewidth", rc["patch.linewidth"])
         edgecolor = kw.pop("edgecolor", "black")
         fillcolor = kw.pop("facecolor", None)
@@ -6609,17 +6563,14 @@ class PlotAxes(base.Axes):
         kwargs = _parse_vert(default_vert=False, **kwargs)
         return self._apply_boxplot(*args, **kwargs)
 
+    @_alias_kwargs(("plot.statistics", "plot.violinplot"))
     def _apply_violinplot(
         self,
         x,
         y,
         vert=True,
-        mean=None,
         means=None,
-        median=None,
         medians=None,
-        showmeans=None,
-        showmedians=None,
         showextrema=None,
         **kwargs,
     ):
@@ -6630,8 +6581,6 @@ class PlotAxes(base.Axes):
         kw = kwargs.copy()
         kw.update(_pop_props(kw, "patch"))
         kw.setdefault("capsize", 0)  # caps are redundant for violin plots
-        means = _not_none(mean=mean, means=means, showmeans=showmeans)
-        medians = _not_none(median=median, medians=medians, showmedians=showmedians)
         if showextrema:
             kw["default_barpctiles"] = True
             if not means and not medians:
@@ -7132,17 +7081,15 @@ class PlotAxes(base.Axes):
         kwargs = _parse_vert(default_vert=False, **kwargs)
         return self._apply_ridgeline(data, **kwargs)
 
+    @_alias_kwargs("plot.hist")
     def _apply_hist(
         self,
         xs,
         bins,
         *,
-        width=None,
         rwidth=None,
-        stack=None,
         stacked=None,
         fill=None,
-        filled=None,
         histtype=None,
         orientation="vertical",
         kde=False,
@@ -7159,15 +7106,13 @@ class PlotAxes(base.Axes):
         _, xs, kw = self._parse_1d_args(
             xs, autoreverse=False, orientation=orientation, **kwargs
         )
-        fill = _not_none(fill=fill, filled=filled)
-        stack = _not_none(stack=stack, stacked=stacked)
         if fill is not None:
             histtype = _not_none(histtype, "stepfilled" if fill else "step")
-        if stack is not None:
-            histtype = _not_none(histtype, "barstacked" if stack else "bar")
+        if stacked is not None:
+            histtype = _not_none(histtype, "barstacked" if stacked else "bar")
         kw["bins"] = bins
         kw["label"] = kw.pop("labels", None)  # multiple labels are natively supported
-        kw["rwidth"] = _not_none(width=width, rwidth=rwidth)  # latter is native
+        kw["rwidth"] = rwidth
         kw["histtype"] = histtype = _not_none(histtype, "bar")
         kw.update(_pop_props(kw, "patch"))
         edgefix_kw = _pop_params(kw, self._fix_patch_edges)

@@ -22,6 +22,9 @@ docs/_build
 docs/_static/ultraplotrc
 docs/_static/rctable.rst
 docs/_static/*
+!docs/_static/alias-explorer-v3.css
+!docs/_static/alias-explorer-v3.js
+!docs/_static/alias-map.svg
 !docs/_static/why_plots/
 *.html
 docs/gallery/

@@ -20,6 +20,7 @@ from . import axes as paxes
 from .axes._formatting import pop_axis_format_kwargs
 from .config import rc
 from .internals import (
+    _alias_kwargs,
     _not_none,
     _pop_rc,
     docstring,
@@ -71,13 +72,10 @@ wspace, hspace, space : unit-spec or sequence, default: None
     layout algorithm. For example, ``subplots(ncols=3, tight=True, wspace=(2, None))``
     fixes the space between columns 1 and 2 but lets the tight layout algorithm
     determine the space between columns 2 and 3.
-wratios, hratios : float or sequence, optional
-    Passed to :class:`~ultraplot.gridspec.GridSpec`, denotes the width and height
-    ratios for the subplot grid. Length of `wratios` must match the number
-    of columns, and length of `hratios` must match the number of rows.
-width_ratios, height_ratios
-    Aliases for `wratios`, `hratios`. Included for
-    consistency with `matplotlib.gridspec.GridSpec`.
+width_ratios, height_ratios : float or sequence, optional
+    Passed to :class:`~ultraplot.gridspec.GridSpec`, and denote the width and
+    height ratios for the subplot grid. Length of `width_ratios` must match the
+    number of columns, and length of `height_ratios` must match the number of rows.
 wpad, hpad, pad : unit-spec or sequence, optional
     The tight layout padding between columns, rows, and both, respectively.
     Unlike ``space``, these control the padding between subplot content
@@ -529,8 +527,8 @@ class GridSpec(mgridspec.GridSpec):
                 right=right,
                 top=top,
                 bottom=bottom,
-                wratios=self._wratios_total,
-                hratios=self._hratios_total,
+                width_ratios=self._wratios_total,
+                height_ratios=self._hratios_total,
                 wpanels=[bool(val) for val in self._wpanels],
                 hpanels=[bool(val) for val in self._hpanels],
             )
@@ -1377,6 +1375,7 @@ class GridSpec(mgridspec.GridSpec):
         else:
             warnings._warn_ultraplot(f"Auto resize failed. Invalid figsize {figsize}.")
 
+    @_alias_kwargs("gridspec")
     def _update_params(
         self,
         *,
@@ -1400,8 +1399,6 @@ class GridSpec(mgridspec.GridSpec):
         outerpad=None,
         innerpad=None,
         panelpad=None,
-        hratios=None,
-        wratios=None,
         width_ratios=None,
         height_ratios=None,
     ):
@@ -1484,8 +1481,8 @@ class GridSpec(mgridspec.GridSpec):
         wspace = _not_none(wspace, space)
         hspace = units(hspace, "em", "in")
         wspace = units(wspace, "em", "in")
-        hratios = _not_none(hratios=hratios, height_ratios=height_ratios)
-        wratios = _not_none(wratios=wratios, width_ratios=width_ratios)
+        hratios = height_ratios
+        wratios = width_ratios
         _assign_vector("hpad", hpad, space=True)
         _assign_vector("wpad", wpad, space=True)
         _assign_vector("hspace", hspace, space=True)
