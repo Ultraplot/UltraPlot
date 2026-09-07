@@ -27,7 +27,6 @@ classifiers = [
 dependencies = [
   "matplotlib>=3.9,<3.11",
   "numpy>=1.26.0",
-  "pycirclize>=1.10.1",
   "typing-extensions; python_version < '3.12'",
 ]
 dynamic = ["version"]
@@ -38,6 +37,9 @@ dynamic = ["version"]
 "Source Code" = "https://github.com/ultraplot/ultraplot"
 
 [project.optional-dependencies]
+circos = [
+  "pycirclize>=1.10.1",
+]
 docs = [
   "jupyter",
   "jupytext",
