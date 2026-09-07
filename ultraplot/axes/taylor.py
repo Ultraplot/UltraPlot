@@ -11,7 +11,8 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 
 from ..config import rc
-from ..internals import _alias_kwargs, _not_none, _pop_rc, docstring
+from ..internals import _not_none, _pop_rc, docstring, _alias_kwargs
+from . import shared
 from .polar import PolarAxes
 
 __all__ = ["TaylorAxes"]
@@ -491,6 +492,7 @@ class TaylorAxes(PolarAxes):
         self._update_taylor_std_ticklabels()
         super().draw(renderer, *args, **kwargs)
 
+    @shared._format_wrapper
     @docstring._snippet_manager
     @_alias_kwargs("taylor.format")
     def format(

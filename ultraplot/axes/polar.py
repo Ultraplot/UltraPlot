@@ -494,6 +494,7 @@ class PolarAxes(shared._SharedAxes, plot.PlotAxes, mpolar.PolarAxes):
         self._refresh_polar_label_geometry("r")
         return super().get_tightbbox(renderer, *args, **kwargs)
 
+    @shared._format_wrapper
     @docstring._snippet_manager
     @_alias_kwargs("polar.format")
     def format(

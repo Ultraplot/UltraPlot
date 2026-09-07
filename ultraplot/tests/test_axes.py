@@ -658,9 +658,9 @@ def test_subset_format():
     axs[1:].format(title=["c", "d", "e"])  # allowed but does not use e
     assert axs[-1].get_title() == "d"
     assert axs[0].get_title() == ""
-    # Shorter than number of axs
-    with pytest.raises(ValueError):
-        axs.format(title=["a"])
+    # Short title sequences update the first axes and preserve the remainder.
+    axs.format(title=["a"])
+    assert [ax.get_title() for ax in axs] == ["a", "c", "d"]
 
 
 def test_unsharing():

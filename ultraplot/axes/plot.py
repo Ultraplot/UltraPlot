@@ -32,6 +32,7 @@ import numpy.ma as ma
 from numpy.typing import ArrayLike
 from packaging import version
 
+from .. import _sharing as psharing
 from .. import colors as pcolors
 from .. import constructor, utils
 from ..config import rc
@@ -3957,7 +3958,8 @@ class PlotAxes(base.Axes):
         # pandas DataFrame specifically is passed to hist, boxplot, or violinplot, rows
         # of data assumed! Converting to ndarray necessary.
         if kw_format:
-            self.format(**kw_format)
+            with psharing.preserve_axis_sharing():
+                self.format(**kw_format)
         ys = tuple(map(inputs._to_numpy_array, ys))
         if x is not None:  # pie() and hist()
             x = inputs._to_numpy_array(x)
@@ -4065,7 +4067,8 @@ class PlotAxes(base.Axes):
 
             # Apply formatting
             if kw_format:
-                self.format(**kw_format)
+                with psharing.preserve_axis_sharing():
+                    self.format(**kw_format)
 
         # Apply title for legend or colorbar
         if autoguide and autoformat:
@@ -5305,10 +5308,8 @@ class PlotAxes(base.Axes):
         """
         objs = self._call_native("loglog", *args, **kwargs)
         if rc["formatter.log"]:
-            self.format(
-                xformatter="log",
-                yformatter="log",
-            )
+            with psharing.preserve_axis_sharing():
+                self.format(xformatter="log", yformatter="log")
         return objs
 
     @docstring._snippet_manager
@@ -5319,9 +5320,8 @@ class PlotAxes(base.Axes):
 
         objs = self._call_native("semilogy", *args, **kwargs)
         if rc["formatter.log"]:
-            self.format(
-                yformatter="log",
-            )
+            with psharing.preserve_axis_sharing():
+                self.format(yformatter="log")
         return objs
 
     @docstring._snippet_manager
@@ -5331,9 +5331,8 @@ class PlotAxes(base.Axes):
         """
         objs = self._call_native("semilogx", *args, **kwargs)
         if rc["formatter.log"]:
-            self.format(
-                xformatter="log",
-            )
+            with psharing.preserve_axis_sharing():
+                self.format(xformatter="log")
         return objs
 
     @inputs._preprocess_or_redirect("x", "y", allow_extra=True)
@@ -7390,7 +7389,8 @@ class PlotAxes(base.Axes):
             kw["xtickminor"] = False
         if self.yaxis.isDefault_minloc:
             kw["ytickminor"] = False
-        self.format(**kw)
+        with psharing.preserve_axis_sharing():
+            self.format(**kw)
         return obj
 
     @inputs._preprocess_or_redirect("x", "y", "u", "v", ("c", "color", "colors"))
