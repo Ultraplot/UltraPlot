@@ -155,7 +155,9 @@ def test_level_alias_is_consumed_before_native_plot_call() -> None:
     "method, alias, location",
     [("twiny", "xloc", "bottom"), ("twinx", "yloc", "left")],
 )
-def test_format_alias_is_consumed_before_twin_axes_init(method, alias, location) -> None:
+def test_format_alias_is_consumed_before_twin_axes_init(
+    method, alias, location
+) -> None:
     """A twin's legacy spine location must override its canonical default."""
     _, ax = uplt.subplots()
     twin = getattr(ax, method)(**{alias: location, "ticks": 2.5})
