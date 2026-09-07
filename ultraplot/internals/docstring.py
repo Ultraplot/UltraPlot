@@ -23,43 +23,46 @@ Utilities for modifying ultraplot docstrings.
 # ... print(*_iter_doc(uplt))
 import inspect
 import re
+from typing import Any, Callable, TypeVar, cast, overload
 
 from . import ic  # noqa: F401
 
+_F = TypeVar("_F", bound=Callable[..., Any])
+_T = TypeVar("_T")
 
-def _obfuscate_kwargs(func):
+
+def _obfuscate_kwargs(func: _F) -> _F:
     """
-    Obfuscate keyword args.
+    Mark keyword arguments as compact in generated API documentation.
     """
     return _obfuscate_signature(func, lambda **kwargs: None)
 
 
-def _obfuscate_params(func):
+def _obfuscate_params(func: _F) -> _F:
     """
-    Obfuscate all parameters.
+    Mark all parameters as compact in generated API documentation.
     """
     return _obfuscate_signature(func, lambda *args, **kwargs: None)
 
 
-def _obfuscate_signature(func, dummy):
+def _obfuscate_signature(func: _F, dummy: Callable[..., Any]) -> _F:
     """
-    Obfuscate a misleading or incomplete call signature.
-    Instead users should inspect the parameter table.
+    Mark a misleading or incomplete signature as compact in generated docs.
+
+    The callable's actual signature remains available to Python and language
+    servers; Sphinx reads the marker below when rendering API headings.
     """
-    # Obfuscate signature by converting to *args **kwargs. Note this does
-    # not change behavior of function! Copy parameters from a dummy function
-    # because I'm too lazy to figure out inspect.Parameters API
-    # See: https://stackoverflow.com/a/33112180/4970632
-    sig = inspect.signature(func)
-    sig_repl = inspect.signature(dummy)
-    func.__signature__ = sig.replace(parameters=tuple(sig_repl.parameters.values()))
+    # Keep the compact signature available to documentation tooling without
+    # changing the callable's runtime signature. Sphinx uses this marker to
+    # avoid filling API headings with inherited or dynamically routed options.
+    setattr(func, "__ultraplot_doc_signature__", str(inspect.signature(dummy)))
     return func
 
 
-def _concatenate_inherited(func, prepend_summary=False):
+def _concatenate_inherited(func: _F, prepend_summary: bool = False) -> _F:
     """
     Concatenate docstrings from a matplotlib axes method with a ultraplot
-    axes method and obfuscate the call signature.
+    axes method and mark its generated-documentation signature as compact.
     """
     import matplotlib.axes as maxes
     import matplotlib.figure as mfigure
@@ -102,7 +105,7 @@ Matplotlib documentation
 """
 
     # Return docstring
-    # NOTE: Also obfuscate parameters to avoid partial coverage of call signatures
+    # Keep generated API headings compact to avoid showing partial call signatures.
     func.__doc__ = inspect.cleandoc(doc)
     func = _obfuscate_params(func)
     return func
@@ -143,7 +146,13 @@ class _SnippetManager(dict):
             return dict.__getitem__(self, key)
         raise KeyError(key)
 
-    def __call__(self, obj):
+    @overload
+    def __call__(self, obj: str) -> str: ...
+
+    @overload
+    def __call__(self, obj: _T) -> _T: ...
+
+    def __call__(self, obj: _T | str) -> _T | str:
         """
         Add snippets to the string or object using ``%(name)s`` substitution. Here
         ``%(name)s`` is used rather than ``.format`` to support invalid identifiers.
@@ -151,9 +160,12 @@ class _SnippetManager(dict):
         if isinstance(obj, str):
             obj %= self  # add snippets to a string
         else:
-            obj.__doc__ = inspect.getdoc(obj)  # also dedents the docstring
-            if obj.__doc__:
-                obj.__doc__ %= self  # insert snippets after dedent
+            documented = cast(Any, obj)
+            documented.__doc__ = inspect.getdoc(
+                documented
+            )  # also dedents the docstring
+            if documented.__doc__:
+                documented.__doc__ %= self  # insert snippets after dedent
         return obj
 
     def __setitem__(self, key, value):

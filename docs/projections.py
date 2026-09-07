@@ -273,13 +273,13 @@ axs.format(
 #      projections global extent by calling :meth:`~cartopy.mpl.geoaxes.GeoAxes.set_global`.
 #      This is a deviation from cartopy, which determines map boundaries automatically
 #      based on the coordinates of the plotted content. To revert to cartopy's
-#      default behavior, set :rcraw:`geo.extent` to ``'auto`` or pass ``extent='auto'``
+#      default behavior, set :rcraw:`geo.extent` to ``'auto'`` or pass ``extent='auto'``
 #      to :func:`~ultraplot.axes.GeoAxes.format`.
 #    * By default, UltraPlot gives circular boundaries to polar cartopy and basemap
 #      projections like :class:`~cartopy.crs.NorthPolarStereo` (see `this example
 #      <https://cartopy.readthedocs.io/stable/gallery/lines_and_polygons/always_circular_stereo.html>`__
 #      from the cartopy website). To disable this feature, set :rcraw:`geo.round` to
-#      ``False`` or pass ``round=False` to :func:`~ultraplot.axes.GeoAxes.format`. Please note
+#      ``False`` or pass ``round=False`` to :func:`~ultraplot.axes.GeoAxes.format`. Please note
 #      that older versions of cartopy cannot add gridlines to maps bounded by circles.
 #    * To make things more consistent, the :class:`~ultraplot.constructor.Proj` constructor
 #      function lets you supply native `PROJ <https://proj.org>`__ keyword names
@@ -332,7 +332,7 @@ uplt.rc.reset()
 # (i.e., Plate Carrée) coordinates the *default* coordinate system for all plotting
 # commands by internally passing ``transform=ccrs.PlateCarree()`` to cartopy commands
 # and ``latlon=True`` to basemap commands. And again, when `basemap`_ is the backend,
-# plotting is done "cartopy-style" by calling methods from the `ultraplot.axes.GeoAxes`
+# plotting is done "cartopy-style" by calling methods from the :class:`~ultraplot.axes.GeoAxes`
 # instance rather than the :class:`~mpl_toolkits.basemap.Basemap` instance.
 #
 # To ensure that a 2D :class:`~ultraplot.axes.PlotAxes` command like

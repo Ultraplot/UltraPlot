@@ -838,6 +838,7 @@ class Configurator(MutableMapping, dict):
         self._setting_handlers = {}
         self._init(local=local, user=user, default=default, **kwargs)
 
+    @docstring._snippet_manager
     def register_handler(
         self, name: str, func: Callable[[Any], Dict[str, Any]]
     ) -> None:

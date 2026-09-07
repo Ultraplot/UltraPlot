@@ -10,8 +10,11 @@ they form a single cohesive concern and are imported throughout the package.
 
 import functools
 import inspect
+from typing import Any, Callable, TypeVar, cast
 
 from . import warnings
+
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 __all__ = [
     "_not_none",
@@ -376,7 +379,7 @@ def _not_none(*args, default=None, **kwargs):
     return first
 
 
-def _alias_kwargs(scope=None, **aliases):
+def _alias_kwargs(scope=None, **aliases) -> Callable[[_F], _F]:
     """
     Fold keyword-argument aliases into their canonical names before a call.
 
@@ -397,7 +400,7 @@ def _alias_kwargs(scope=None, **aliases):
     else:
         groups = _get_alias_groups(scope, aliases)
 
-    def decorator(func):
+    def decorator(func: _F) -> _F:
         signature = inspect.signature(func)
 
         @functools.wraps(func)
@@ -419,7 +422,7 @@ def _alias_kwargs(scope=None, **aliases):
             else (scope,) if scope is not None else ()
         )
         wrapper._ultraplot_aliases = dict(groups)
-        return wrapper
+        return cast(_F, wrapper)
 
     return decorator
 

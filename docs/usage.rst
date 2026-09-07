@@ -10,13 +10,31 @@
 
 .. _usage:
 
-=============
+===============
 Using UltraPlot
-=============
+===============
 
-This page offers a condensed overview of UltraPlot's features. It is populated
-with links to the :ref:`API reference` and :ref:`User Guide <ug_basics>`.
-For a more in-depth discussion, see :ref:`why`.
+This page is an orientation to UltraPlot's main concepts and building blocks.
+For a hands-on start, make a :doc:`first figure <first_figure>` and then use
+the :doc:`recipes` and :ref:`User Guide <ug_basics>` to explore the features
+that fit your workflow. The :ref:`API reference` is the detailed reference;
+for design context and motivation, see :doc:`Why UltraPlot <why_ultraplot>`.
+
+.. _usage_first_figure:
+
+Your first finished figure
+==========================
+
+The recommended learning path is deliberately short:
+
+#. :doc:`Install UltraPlot <install>` and import it as ``uplt``.
+#. Follow the :doc:`first figure <first_figure>` walkthrough to create, format, and save a
+   complete figure.
+#. Try a related :doc:`recipe <recipes>`, then open the guide for the plot
+   type or feature you want to add.
+
+You can continue using familiar Matplotlib plotting methods and objects while
+adopting UltraPlot's figure layout and formatting helpers incrementally.
 
 .. _usage_background:
 

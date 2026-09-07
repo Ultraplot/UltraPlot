@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Custom :rc: and :rcraw: roles for rc settings.
+Custom roles used by UltraPlot documentation.
 """
 
 import os
@@ -57,10 +57,22 @@ def rc_role(name, rawtext, text, lineno, inliner, options={}, content=[]):  # no
     return node_list, []
 
 
+def mpltype_role(name, rawtext, text, lineno, inliner, options={}, content=[]):  # noqa: U100
+    """
+    Render Matplotlib's ``:mpltype:`` annotations as inline literals.
+
+    Matplotlib uses this role in inherited docstrings, but its documentation
+    extension is not loaded by this project. Registering it locally prevents
+    unresolved-role warnings and visibly broken API markup.
+    """
+    return [nodes.literal(rawtext, text)], []
+
+
 def setup(app):
     """
     Set up the roles.
     """
     app.add_role("rc", rc_role)
     app.add_role("rcraw", rc_raw_role)
+    app.add_role("mpltype", mpltype_role)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

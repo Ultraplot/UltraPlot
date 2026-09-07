@@ -1,6 +1,16 @@
 """Tests for the shared style docstrings in ``ultraplot.internals.docstring``."""
 
+import inspect
+
 import ultraplot as uplt
+from ultraplot.axes import (
+    Axes,
+    CartesianAxes,
+    GeoAxes,
+    PolarAxes,
+    TaylorAxes,
+)
+from ultraplot.figure import Figure
 from ultraplot.internals import docstring
 
 
@@ -45,6 +55,92 @@ def test_method_docstring_fully_substituted() -> None:
     assert "linewidth : unit-spec" in doc
     assert "Aliases:" not in doc
     assert "%(artist" not in doc
+
+
+def test_public_docstrings_with_snippets_are_fully_substituted() -> None:
+    """Public methods must not expose internal snippet placeholders."""
+    for obj in (uplt.axes.PlotAxes.circos, uplt.Configurator.register_handler):
+        doc = obj.__doc__ or ""
+        assert "%(" not in doc
+
+    assert "Create a Circos instance using pyCirclize." in (
+        uplt.axes.PlotAxes.circos.__doc__ or ""
+    )
+    assert "Register a callback function to be executed" in (
+        uplt.Configurator.register_handler.__doc__ or ""
+    )
+
+
+def test_geo_format_folds_alias_entries() -> None:
+    # Canonical locator entries stay in the docstring; compatibility spellings
+    # are documented centrally in docs/aliases.rst.
+    geo = docstring._snippet_manager["geo.format"]
+    assert "Aliases for" not in geo
+    assert "lonlocator, latlocator : locator-spec" in geo
+    assert "lonminorlocator_kw, latminorlocator_kw : optional" in geo
+    assert "Aliases:" not in geo
+
+
+def test_compact_doc_markers_preserve_runtime_signatures() -> None:
+    """Documentation presentation must not alter callable introspection."""
+
+    def keyword_only(*, explicit=None, **kwargs):
+        return explicit, kwargs
+
+    def positional(first, second=None):
+        return first, second
+
+    keyword_signature = inspect.signature(keyword_only)
+    positional_signature = inspect.signature(positional)
+    assert docstring._obfuscate_kwargs(keyword_only) is keyword_only
+    assert docstring._obfuscate_params(positional) is positional
+    assert inspect.signature(keyword_only) == keyword_signature
+    assert inspect.signature(positional) == positional_signature
+    assert keyword_only.__ultraplot_doc_signature__ == "(**kwargs)"
+    assert positional.__ultraplot_doc_signature__ == "(*args, **kwargs)"
+
+
+def test_format_implementation_signatures_remain_visible() -> None:
+    """Format methods retain their declared signatures for tools and editors."""
+    cases = (
+        (Axes, "title"),
+        (CartesianAxes, "xlim"),
+        (PolarAxes, "r0"),
+        (GeoAxes, "lonlim"),
+        (TaylorAxes, "corrlabel"),
+    )
+    for cls, representative_parameter in cases:
+        signature = inspect.signature(cls.format)
+        assert signature == cls._format_signatures[cls]
+        assert representative_parameter in signature.parameters
+        assert cls.format.__ultraplot_doc_signature__ == "(**kwargs)"
+
+    assert inspect.signature(Figure.format) == Figure._format_signature
+    assert "suptitle" in inspect.signature(Figure.format).parameters
+    assert Figure.format.__ultraplot_doc_signature__ == "(**kwargs)"
+
+    figure_signature = inspect.signature(Figure)
+    assert "refnum" in figure_signature.parameters
+    assert Figure.__init__.__ultraplot_doc_signature__ == "(**kwargs)"
+
+
+def test_snippet_manager_preserves_callable_signature() -> None:
+    """Docstring expansion acts as a typed identity decorator."""
+
+    @docstring._snippet_manager
+    def documented(value, *, option=None):
+        """Return the input value."""
+        return value, option
+
+    assert str(inspect.signature(documented)) == "(value, *, option=None)"
+
+
+def test_inherited_docstrings_preserve_callable_signature() -> None:
+    """Matplotlib docstring concatenation only compacts the Sphinx heading."""
+    signature = inspect.signature(Axes.legend)
+    assert "handles" in signature.parameters
+    assert "labels" in signature.parameters
+    assert Axes.legend.__ultraplot_doc_signature__ == "(*args, **kwargs)"
 
 
 def test_geo_format_uses_only_canonical_entries() -> None:

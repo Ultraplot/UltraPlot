@@ -130,6 +130,37 @@ When adding a new submodule, make sure it is compatible with the lazy loader:
 By following these steps, your module will integrate cleanly with the lazy loading
 system without requiring manual registry updates.
 
+Editor type information and docstrings
+--------------------------------------
+
+UltraPlot ships generated ``.pyi`` files so static analysis tools such as Pylance
+and Pyrefly can see the public API and fully expanded docstrings without importing
+the package. The runtime modules remain the source of truth and continue to use the
+lazy loader.
+
+After changing a Python signature, annotation, public import, or docstring snippet,
+install the pinned typing tools, regenerate the stubs from the repository root, and
+commit the updated ``.pyi`` files:
+
+.. code-block:: bash
+
+   pip install -e ".[typing]"
+   python tools/generate_stubs.py
+
+Installation does not generate or modify these files. Release artifacts include the
+stubs that were generated and checked into the repository. The generator runs
+Pyrefly against an isolated source-only package, merges its inferred annotations
+into a complete syntax-derived representation of the package, and statically
+expands registered docstring snippets. This preserves declarations that Pyrefly
+cannot discover through decorators or lazy loading.
+
+To rerun inference and verify that every committed stub is up to date without
+changing files, run:
+
+.. code-block:: bash
+
+   python tools/generate_stubs.py --check
+
 
 .. _contrib_pr:
 

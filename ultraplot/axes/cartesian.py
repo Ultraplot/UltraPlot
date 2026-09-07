@@ -6,7 +6,7 @@ The standard Cartesian axes used for most ultraplot figures.
 import copy
 import inspect
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union, cast
 
 import matplotlib.axis as maxis
 import matplotlib.dates as mdates
@@ -42,6 +42,8 @@ from ._formatting import (
 from . import plot, shared
 
 __all__ = ["CartesianAxes"]
+
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 
 # Tuple of date converters
@@ -1860,6 +1862,20 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         return super().get_tightbbox(renderer, *args, **kwargs)
 
 
+def _capture_explicit_format_keys(func: _F) -> _F:
+    """
+    Preserve raw keyword names before Python binds them to the format signature.
+    """
+
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        kwargs.setdefault("_explicit_format_keys", set(kwargs))
+        return func(self, *args, **kwargs)
+
+    return cast(_F, wrapper)
+
+
+# tmp
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__, altx, and alty
 CartesianAxes._format_signatures[CartesianAxes] = inspect.signature(

@@ -13,6 +13,7 @@
 
 # Import statements
 import datetime
+import inspect
 import logging
 import os
 import re
@@ -637,5 +638,20 @@ def process_docstring(app, what, name, obj, options, lines):
             pass
 
 
+def process_signature(
+    app, what, name, obj, options, signature, return_annotation
+):
+    """Use compact signatures marked by UltraPlot only in generated docs."""
+    marked = getattr(obj, "__ultraplot_doc_signature__", None)
+    if marked is None and inspect.ismethod(obj):
+        marked = getattr(obj.__func__, "__ultraplot_doc_signature__", None)
+    if marked is None and inspect.isclass(obj):
+        marked = getattr(obj.__init__, "__ultraplot_doc_signature__", None)
+    if marked is not None:
+        return marked, return_annotation
+    return signature, return_annotation
+
+
 def setup(app):
     app.connect("autodoc-process-docstring", process_docstring)
+    app.connect("autodoc-process-signature", process_signature)
