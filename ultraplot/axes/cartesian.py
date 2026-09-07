@@ -726,7 +726,7 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # Format parent and child axes
         with psharing.preserve_axis_sharing():
             self.format(
-                **{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)},
+                **{f"{sx}spineloc": OPPOSITE_SIDE.get(kwargs[f"{sx}spineloc"], None)},
             )
         setattr(ax, f"_alt{sx}_parent", self)
         getattr(ax, f"{sy}axis").set_visible(False)

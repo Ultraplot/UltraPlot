@@ -3,6 +3,7 @@
 import inspect
 
 import numpy as np
+import pytest
 
 import ultraplot as uplt
 from ultraplot.axes.base import Axes
@@ -74,7 +75,7 @@ def test_largest_migrated_signature_has_thirteen_fewer_parameters() -> None:
 
 def test_figure_init_signature_contains_only_canonical_names() -> None:
     names = _parameter_names(inspect.signature(inspect.unwrap(Figure.__init__)))
-    assert len(names) == 36
+    assert len(names) == 42
     assert names.isdisjoint({"ref", "aspect", "axwidth", "axheight", "width", "height"})
 
 
@@ -150,8 +151,12 @@ def test_level_alias_is_consumed_before_native_plot_call() -> None:
     assert mesh is not None
 
 
-def test_format_alias_is_consumed_before_twin_axes_init() -> None:
+@pytest.mark.parametrize(
+    "method, alias, location",
+    [("twiny", "xloc", "bottom"), ("twinx", "yloc", "left")],
+)
+def test_format_alias_is_consumed_before_twin_axes_init(method, alias, location) -> None:
     """A twin's legacy spine location must override its canonical default."""
     _, ax = uplt.subplots()
-    twin = ax.twiny(xloc="bottom", ticks=2.5)
+    twin = getattr(ax, method)(**{alias: location, "ticks": 2.5})
     assert twin is not None
