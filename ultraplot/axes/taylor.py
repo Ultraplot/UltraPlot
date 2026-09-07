@@ -11,7 +11,7 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 
 from ..config import rc
-from ..internals import _not_none, _pop_rc, docstring
+from ..internals import _not_none, _pop_rc, docstring, _alias_kwargs
 from . import shared
 from .polar import PolarAxes
 
@@ -30,7 +30,7 @@ thetaunit : {'corr', 'deg', 'rad'}, default: 'corr'
 quadrant : {1, 2, 3, 4} or str, default: 1
     The quadrant used for the Taylor diagram. Quadrants follow the Cartesian
     convention: ``1`` is upper right and ``4`` is lower right.
-corrlocator, corrlines, corrticks : float or sequence of float, optional
+corrlocator : float or sequence of float, optional
     Correlation coefficients used for the angular gridlines.
 labelcolor, labelsize, labelweight : optional
     Label text properties.
@@ -494,6 +494,7 @@ class TaylorAxes(PolarAxes):
 
     @shared._format_wrapper
     @docstring._snippet_manager
+    @_alias_kwargs("taylor.format")
     def format(
         self,
         *,
@@ -503,8 +504,6 @@ class TaylorAxes(PolarAxes):
         thetaunit=None,
         quadrant=None,
         corrlocator=None,
-        corrlines=None,
-        corrticks=None,
         xlabel_kw=None,
         ylabel_kw=None,
         corrlabel_kw=None,
@@ -549,10 +548,7 @@ class TaylorAxes(PolarAxes):
                         )
                     )
                 self._taylor_thetaunit = thetaunit
-            corrs = _not_none(
-                corrlocator=corrlocator, corrlines=corrlines, corrticks=corrticks
-            )
-            self._update_taylor_ticks(corrs)
+            self._update_taylor_ticks(corrlocator)
             self._update_taylor_labels(
                 xlabel=xlabel,
                 ylabel=ylabel,

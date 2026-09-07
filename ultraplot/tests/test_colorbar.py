@@ -10,6 +10,40 @@ from matplotlib.transforms import Bbox
 import ultraplot as uplt
 
 
+@pytest.mark.parametrize("placement", ["outer", "inset", "inset_side", "figure"])
+def test_colorbar_shrink_alias_matches_length(placement):
+    bounds = []
+    for keyword in ("length", "shrink"):
+        fig, ax = uplt.subplots()
+        if placement == "inset_side":
+            ax = ax.inset_axes([0.2, 0.2, 0.5, 0.5])
+        target = fig if placement == "figure" else ax
+        loc = "upper right" if placement == "inset" else "right"
+        length = "4em" if placement == "inset" else 0.4
+        cb = target.colorbar("magma", loc=loc, **{keyword: length})
+        fig.canvas.draw()
+        bounds.append(cb.ax.get_position().bounds)
+    np.testing.assert_allclose(bounds[0], bounds[1])
+
+
+@pytest.mark.parametrize("keyword", ["length", "shrink"])
+def test_colorbar_length_with_explicit_cax(keyword):
+    fig, ax = uplt.subplots()
+    mappable = ax.imshow(np.arange(4).reshape(2, 2))
+    cax = fig.add_axes([0.85, 0.2, 0.05, 0.6])
+    cb = fig.colorbar(mappable, cax=cax, **{keyword: 0.4})
+    assert cb.ax is cax
+    fig.canvas.draw()
+
+
+@pytest.mark.parametrize("target", ["axes", "figure"])
+def test_colorbar_length_and_shrink_conflict(target):
+    fig, ax = uplt.subplots()
+    target = fig if target == "figure" else ax
+    with pytest.raises(TypeError, match="aliases.*length"):
+        target.colorbar("magma", length=0.4, shrink=0.5)
+
+
 def test_colorbar_defers_external_mode():
     """
     External mode should defer on-the-fly colorbar creation until explicitly requested.
