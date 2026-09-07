@@ -18,7 +18,7 @@ import numpy as np
 from . import axes as paxes
 from .axes._formatting import pop_axis_format_kwargs
 from .config import rc
-from .internals import _not_none, _pop_rc, docstring, ic, warnings
+from .internals import _alias_kwargs, _not_none, _pop_rc, docstring, ic, warnings
 from .utils import _fontsize_to_pt, units
 try:
     from . import ultralayout
@@ -93,7 +93,7 @@ between successive rows and columns and hides "panel slots" from indexing."""
 - `ultra_layout`: Whether to use the UltraLayout constraint solver.
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
 - `wspace, hspace, space`: The fixed space between grid columns, rows, and both, respectively.
-- `wratios, hratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), denotes the width and height ratios for the subplot grid.
+- `width_ratios, height_ratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), and denote the width and height ratios for the subplot grid.
 - `wpad, hpad, pad`: The tight layout padding between columns, rows, and both, respectively.
 - `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
 - `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
@@ -227,7 +227,7 @@ size. Either way always update the subplot positions."""
 gridspec and figure parameters. May or may not need to be applied."""
         ...
 
-    def _update_params(self, *, ultra_layout: Incomplete=None, left: Incomplete=None, bottom: Incomplete=None, right: Incomplete=None, top: Incomplete=None, wspace: Incomplete=None, hspace: Incomplete=None, space: Incomplete=None, wpad: Incomplete=None, hpad: Incomplete=None, pad: Incomplete=None, wequal: Incomplete=None, hequal: Incomplete=None, equal: Incomplete=None, wgroup: Incomplete=None, hgroup: Incomplete=None, group: Incomplete=None, outerpad: Incomplete=None, innerpad: Incomplete=None, panelpad: Incomplete=None, hratios: Incomplete=None, wratios: Incomplete=None, width_ratios: Incomplete=None, height_ratios: Incomplete=None) -> None:
+    def _update_params(self, *, ultra_layout: Incomplete=None, left: Incomplete=None, bottom: Incomplete=None, right: Incomplete=None, top: Incomplete=None, wspace: Incomplete=None, hspace: Incomplete=None, space: Incomplete=None, wpad: Incomplete=None, hpad: Incomplete=None, pad: Incomplete=None, wequal: Incomplete=None, hequal: Incomplete=None, equal: Incomplete=None, wgroup: Incomplete=None, hgroup: Incomplete=None, group: Incomplete=None, outerpad: Incomplete=None, innerpad: Incomplete=None, panelpad: Incomplete=None, width_ratios: Incomplete=None, height_ratios: Incomplete=None) -> None:
         """Update the user-specified properties."""
         ...
 
@@ -238,7 +238,7 @@ Parameters
 ----------
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
 - `wspace, hspace, space`: The fixed space between grid columns, rows, and both, respectively.
-- `wratios, hratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), denotes the width and height ratios for the subplot grid.
+- `width_ratios, height_ratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), and denote the width and height ratios for the subplot grid.
 - `wpad, hpad, pad`: The tight layout padding between columns, rows, and both, respectively.
 - `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
 - `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
@@ -304,7 +304,7 @@ Parameters
 ----------
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
 - `wspace, hspace, space`: The fixed space between grid columns, rows, and both, respectively.
-- `wratios, hratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), denotes the width and height ratios for the subplot grid.
+- `width_ratios, height_ratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), and denote the width and height ratios for the subplot grid.
 - `wpad, hpad, pad`: The tight layout padding between columns, rows, and both, respectively.
 - `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
 - `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
@@ -516,7 +516,7 @@ Parameters
 - `titlepad`: The padding for the inner and outer titles and a-b-c labels.
 - `titleabove`: Whether to try to put outer titles and a-b-c labels above panels, colorbars, or legends that are above the axes.
 - `abctitlepad`: The horizontal padding between a-b-c labels and titles in the same location.
-- `ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle`: Shorthands for the below keywords.
+- `lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle`: See the full API documentation.
 - `lowerlefttitle, lowercentertitle, lowerrighttitle`: Additional titles in specific positions (see `title` for details).
 - `a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle`: [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), - Additional settings applied to…
 - `**kwargs`: Passed to the projection-specific ``format`` command for each axes.
@@ -524,7 +524,6 @@ Parameters
 - `leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad`: : [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad) The padding between the labels and the axes content.
 - `leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad`: : [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad) The padding between side labels and a shared spanning axis label on…
 - `leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw`: Additional settings used to update the labels with ``text.update()``.
-- `figtitle`: Alias for `suptitle`.
 - `suptitle`: The figure "super" title, centered between the left edge of the leftmost subplot and the right edge of the rightmost subplot.
 - `suptitlepad`: The padding between the super title and the axes content.
 - `suptitle_kw`: Additional settings used to update the super title with ``text.update()``.
@@ -542,7 +541,8 @@ Parameters
 - `xbounds, ybounds`: The x and y axis data bounds within which to draw the spines.
 - `xtickrange, ytickrange`: The x and y axis data ranges within which major tick marks are labelled.
 - `xwraprange, ywraprange`: The x and y axis data ranges with which major tick mark values are wrapped.
-- _96 additional parameter groups are documented online._
+- `xspineloc, yspineloc`: The x and y spine locations.
+- _89 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.SubplotGrid.html#ultraplot.gridspec.SubplotGrid.format)"""
         ...
@@ -789,8 +789,8 @@ Parameters
 ----------
 - `bounds`: The (left, bottom, width, height) coordinates for the axes.
 - `transform`: The transform used to interpret the bounds.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `zorder`: The [zorder](https://matplotlib.org/stable/gallery/misc/zorder_demo.html) of the axes.
 - `zoom`: Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.

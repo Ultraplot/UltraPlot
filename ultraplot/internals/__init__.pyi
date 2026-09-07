@@ -12,7 +12,7 @@ try:
 except ImportError:
     ic = ...
 from . import warnings
-from .kwargs import _alias_kwargs, _alias_maps, _get_aliases, _get_signature, _kwargs_to_args, _not_none, _pop_kwargs, _pop_params, _pop_props, _signature_cached, _INTERNAL_POP_PARAMS
+from .kwargs import _alias_kwargs, _alias_maps, _alias_registry, _canonicalize_kwargs, _format_alias_reference, _figure_format_alias_scopes, _format_alias_scopes, _get_aliases, _get_signature, _kwargs_to_args, _not_none, _pop_kwargs, _pop_params, _pop_props, _signature_cached, _INTERNAL_POP_PARAMS
 
 def _get_rc_matplotlib() -> Incomplete:
     ...

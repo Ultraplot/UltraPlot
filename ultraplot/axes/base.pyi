@@ -39,7 +39,7 @@ from .. import legend as plegend
 from .. import ticker as pticker
 from ..colorbar import UltraColorbar, _anchor_inset_colorbar_bounds, _apply_inset_colorbar_layout, _determine_label_rotation, _get_axis_for, _get_colorbar_long_axis, _legacy_inset_colorbar_bounds, _reflow_inset_colorbar_frame, _register_inset_colorbar_reflow, _solve_inset_colorbar_bounds
 from ..config import rc
-from ..internals import _kwargs_to_args, _not_none, _pop_kwargs, _pop_params, _pop_props, _pop_rc, _translate_loc, _version_mpl, docstring, guides, ic, labels, rcsetup, warnings
+from ..internals import _alias_kwargs, _canonicalize_kwargs, _format_alias_scopes, _kwargs_to_args, _not_none, _pop_kwargs, _pop_params, _pop_props, _pop_rc, _translate_loc, _version_mpl, docstring, guides, ic, labels, rcsetup, warnings
 from ..ultralayout import KIWI_AVAILABLE, ColorbarLayoutSolver
 from ..utils import _fontsize_to_pt, edges, units
 try:
@@ -174,7 +174,7 @@ Implements basic universal features."""
 - `titlepad`: The padding for the inner and outer titles and a-b-c labels.
 - `titleabove`: Whether to try to put outer titles and a-b-c labels above panels, colorbars, or legends that are above the axes.
 - `abctitlepad`: The horizontal padding between a-b-c labels and titles in the same location.
-- `ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle`: Shorthands for the below keywords.
+- `lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle`: See the full API documentation.
 - `lowerlefttitle, lowercentertitle, lowerrighttitle`: Additional titles in specific positions (see `title` for details).
 - `a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle`: [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), - Additional settings applied to…
 - `rc_mode`: The context mode passed to [context](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.config.Configurator.html#ultraplot.config.Configurator.context).
@@ -184,7 +184,7 @@ Implements basic universal features."""
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html)"""
         ...
 
-    def _add_inset_axes(self, bounds: Incomplete, transform: Incomplete=None, *, proj: Incomplete=None, projection: Incomplete=None, zoom: Incomplete=None, zoom_kw: Incomplete=None, zorder: Incomplete=None, **kwargs: Incomplete) -> Axes:
+    def _add_inset_axes(self, bounds: Incomplete, transform: Incomplete=None, *, projection: Incomplete=None, zoom: Incomplete=None, zoom_kw: Incomplete=None, zorder: Incomplete=None, **kwargs: Incomplete) -> Axes:
         """Add an inset axes using arbitrary projection."""
         ...
 
@@ -201,10 +201,10 @@ user add handles to location lists with successive calls."""
         """Add a panel to be filled by an "outer" colorbar or legend."""
         ...
 
-    def _add_colorbar(self, mappable: Incomplete, values: Incomplete=None, *, loc: Optional[str]=None, align: Optional[str]=None, space: Optional[Union[float, str]]=None, pad: Optional[Union[float, str]]=None, width: Optional[Union[float, str]]=None, length: Optional[Union[float, str]]=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, shrink: Optional[Union[float, str]]=None, label: Incomplete=None, title: Incomplete=None, reverse: Incomplete=False, rotation: Incomplete=None, grid: Incomplete=None, edges: Incomplete=None, drawedges: Incomplete=None, extend: Incomplete=None, extendsize: Incomplete=None, extendfrac: Incomplete=None, ticks: Incomplete=None, locator: Incomplete=None, locator_kw: Incomplete=None, format: Incomplete=None, formatter: Incomplete=None, ticklabels: Incomplete=None, formatter_kw: Incomplete=None, minorticks: Incomplete=None, minorlocator: Incomplete=None, minorlocator_kw: Incomplete=None, tickminor: Incomplete=None, ticklen: Incomplete=None, ticklenratio: Incomplete=None, tickdir: Incomplete=None, tickdirection: Incomplete=None, tickwidth: Incomplete=None, tickwidthratio: Incomplete=None, ticklabelsize: Incomplete=None, ticklabelweight: Incomplete=None, ticklabelcolor: Incomplete=None, labelloc: Incomplete=None, labellocation: Incomplete=None, labelsize: Incomplete=None, labelweight: Incomplete=None, labelcolor: Incomplete=None, c: Incomplete=None, color: Incomplete=None, lw: Incomplete=None, linewidth: Incomplete=None, edgefix: Incomplete=None, rasterized: Incomplete=None, frame: Optional[bool]=None, frameon: Optional[bool]=None, outline: Union[bool, None]=None, labelrotation: Union[str, float]=None, center_levels: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _add_colorbar(self, mappable: Incomplete, values: Incomplete=None, *, loc: Optional[str]=None, align: Optional[str]=None, space: Optional[Union[float, str]]=None, pad: Optional[Union[float, str]]=None, width: Optional[Union[float, str]]=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, length: Optional[Union[float, str]]=None, label: Incomplete=None, reverse: Incomplete=False, rotation: Incomplete=None, drawedges: Incomplete=None, extend: Incomplete=None, extendsize: Incomplete=None, extendfrac: Incomplete=None, ticks: Incomplete=None, locator_kw: Incomplete=None, format: Incomplete=None, formatter_kw: Incomplete=None, minorticks: Incomplete=None, minorlocator_kw: Incomplete=None, tickminor: Incomplete=None, ticklen: Incomplete=None, ticklenratio: Incomplete=None, tickdirection: Incomplete=None, tickwidth: Incomplete=None, tickwidthratio: Incomplete=None, ticklabelsize: Incomplete=None, ticklabelweight: Incomplete=None, ticklabelcolor: Incomplete=None, labellocation: Incomplete=None, labelsize: Incomplete=None, labelweight: Incomplete=None, labelcolor: Incomplete=None, color: Incomplete=None, linewidth: Incomplete=None, edgefix: Incomplete=None, rasterized: Incomplete=None, frameon: Optional[bool]=None, outline: Union[bool, None]=None, labelrotation: Union[str, float]=None, center_levels: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         ...
 
-    def _add_legend(self, handles: Incomplete=None, labels: Incomplete=None, *, loc: Incomplete=None, align: Incomplete=None, width: Incomplete=None, pad: Incomplete=None, space: Incomplete=None, frame: Incomplete=None, frameon: Incomplete=None, ncol: Incomplete=None, ncols: Incomplete=None, alphabetize: Incomplete=False, center: Incomplete=None, order: Incomplete=None, label: Incomplete=None, title: Incomplete=None, fontsize: Incomplete=None, fontweight: Incomplete=None, fontcolor: Incomplete=None, titlefontsize: Incomplete=None, titlefontweight: Incomplete=None, titlefontcolor: Incomplete=None, handle_kw: Incomplete=None, handler_map: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Incomplete) -> Incomplete:
+    def _add_legend(self, handles: Incomplete=None, labels: Incomplete=None, *, loc: Incomplete=None, align: Incomplete=None, width: Incomplete=None, pad: Incomplete=None, space: Incomplete=None, frameon: Incomplete=None, ncols: Incomplete=None, alphabetize: Incomplete=False, center: Incomplete=None, order: Incomplete=None, label: Incomplete=None, title: Incomplete=None, fontsize: Incomplete=None, fontweight: Incomplete=None, fontcolor: Incomplete=None, titlefontsize: Incomplete=None, titlefontweight: Incomplete=None, titlefontcolor: Incomplete=None, handle_kw: Incomplete=None, handler_map: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Incomplete) -> Incomplete:
         ...
 
     def _apply_title_above(self) -> None:
@@ -289,7 +289,7 @@ objects whose data values span a natural colormap range)."""
         """Return the axes and adjusted keyword args for a panel-filling colorbar."""
         ...
 
-    def _parse_colorbar_inset(self, loc: Incomplete=None, bbox_to_anchor: Incomplete=None, width: Incomplete=None, length: Incomplete=None, shrink: Incomplete=None, frame: Incomplete=None, frameon: Incomplete=None, label: Incomplete=None, labelsize: Incomplete=None, pad: Incomplete=None, tickloc: Incomplete=None, ticklocation: Incomplete=None, orientation: Incomplete=None, labelloc: Incomplete=None, labelrotation: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _parse_colorbar_inset(self, loc: Incomplete=None, bbox_to_anchor: Incomplete=None, width: Incomplete=None, length: Incomplete=None, frameon: Incomplete=None, label: Incomplete=None, labelsize: Incomplete=None, pad: Incomplete=None, tickloc: Incomplete=None, ticklocation: Incomplete=None, orientation: Incomplete=None, labelloc: Incomplete=None, labelrotation: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Return the axes and adjusted keyword args for an inset colorbar."""
         ...
 
@@ -297,7 +297,7 @@ objects whose data values span a natural colormap range)."""
         """Add and return a colorbar axes positioned relative to this axes."""
         ...
 
-    def _parse_colorbar_inset_side(self, loc: Incomplete=None, align: Incomplete=None, width: Incomplete=None, length: Incomplete=None, shrink: Incomplete=None, space: Incomplete=None, pad: Incomplete=None, tickloc: Incomplete=None, ticklocation: Incomplete=None, orientation: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _parse_colorbar_inset_side(self, loc: Incomplete=None, align: Incomplete=None, width: Incomplete=None, length: Incomplete=None, space: Incomplete=None, pad: Incomplete=None, tickloc: Incomplete=None, ticklocation: Incomplete=None, orientation: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Return the axes and adjusted keyword args for a side colorbar on an inset axes."""
         ...
 
@@ -396,7 +396,7 @@ target : {'x', 'y'}, optional
         Which axis labels to share ('x' for x-axis, 'y' for     y-axis)"""
         ...
 
-    def format(self, *, title: Incomplete=None, title_kw: Incomplete=None, abc_kw: Incomplete=None, ltitle: Incomplete=None, lefttitle: Incomplete=None, ctitle: Incomplete=None, centertitle: Incomplete=None, rtitle: Incomplete=None, righttitle: Incomplete=None, ultitle: Incomplete=None, upperlefttitle: Incomplete=None, uctitle: Incomplete=None, uppercentertitle: Incomplete=None, urtitle: Incomplete=None, upperrighttitle: Incomplete=None, lltitle: Incomplete=None, lowerlefttitle: Incomplete=None, lctitle: Incomplete=None, lowercentertitle: Incomplete=None, lrtitle: Incomplete=None, lowerrighttitle: Incomplete=None, share_xlabels: Incomplete=None, share_ylabels: Incomplete=None, **kwargs: Incomplete) -> None:
+    def format(self, *, title: Incomplete=None, title_kw: Incomplete=None, abc_kw: Incomplete=None, lefttitle: Incomplete=None, centertitle: Incomplete=None, righttitle: Incomplete=None, upperlefttitle: Incomplete=None, uppercentertitle: Incomplete=None, upperrighttitle: Incomplete=None, lowerlefttitle: Incomplete=None, lowercentertitle: Incomplete=None, lowerrighttitle: Incomplete=None, share_xlabels: Incomplete=None, share_ylabels: Incomplete=None, **kwargs: Incomplete) -> None:
         """Modify the a-b-c label, axes title(s), and background patch, and call [ultraplot.figure.Figure.format](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format) on the axes figure.
 
 Parameters
@@ -411,14 +411,13 @@ Parameters
 - `titlepad`: The padding for the inner and outer titles and a-b-c labels.
 - `titleabove`: Whether to try to put outer titles and a-b-c labels above panels, colorbars, or legends that are above the axes.
 - `abctitlepad`: The horizontal padding between a-b-c labels and titles in the same location.
-- `ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle`: Shorthands for the below keywords.
+- `lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle`: See the full API documentation.
 - `lowerlefttitle, lowercentertitle, lowerrighttitle`: Additional titles in specific positions (see `title` for details).
 - `a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle`: [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), - Additional settings applied to…
 - `leftlabels, toplabels, rightlabels, bottomlabels`: Labels for the subplots lying along the left, top, right, and bottom edges of the figure.
 - `leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad`: : [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad) The padding between the labels and the axes content.
 - `leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad`: : [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad) The padding between side labels and a shared spanning axis label on…
 - `leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw`: Additional settings used to update the labels with ``text.update()``.
-- `figtitle`: Alias for `suptitle`.
 - `suptitle`: The figure "super" title, centered between the left edge of the leftmost subplot and the right edge of the rightmost subplot.
 - `suptitlepad`: The padding between the super title and the axes content.
 - `suptitle_kw`: Additional settings used to update the super title with ``text.update()``.
@@ -543,8 +542,8 @@ Parameters
 ----------
 - `bounds`: The (left, bottom, width, height) coordinates for the axes.
 - `transform`: The transform used to interpret the bounds.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `zorder`: The [zorder](https://matplotlib.org/stable/gallery/misc/zorder_demo.html) of the axes.
 - `zoom`: Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.
@@ -561,8 +560,8 @@ Parameters
 ----------
 - `bounds`: The (left, bottom, width, height) coordinates for the axes.
 - `transform`: The transform used to interpret the bounds.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `zorder`: The [zorder](https://matplotlib.org/stable/gallery/misc/zorder_demo.html) of the axes.
 - `zoom`: Whether to draw lines indicating the inset zoom using `~Axes.indicate_inset_zoom`.
@@ -580,16 +579,16 @@ This will replace previously drawn zoom indicators.
 Parameters
 -----------
 linewidth : unit-spec, default: [patch.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=patch.linewidth)
-    The edge width of the patch(es). Aliases: ``lw``, ``linewidths``.
+    The edge width of the patch(es).
     If float, units are points. If string, interpreted by [units](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.utils.units.html).
 linestyle : str, default: '-'
-    The edge style of the patch(es). Aliases: ``ls``, ``linestyles``.
+    The edge style of the patch(es).
 edgecolor : color-spec, default: 'none'
-    The edge color of the patch(es). Aliases: ``ec``, ``edgecolors``.
+    The edge color of the patch(es).
 facecolor : color-spec, optional
-    The face color of the patch(es). The property `cycle` is used by default. Aliases: ``fc``, ``facecolors``, ``fillcolor``, ``fillcolors``.
+    The face color of the patch(es). The property `cycle` is used by default.
 alpha : float, optional
-    The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default. Aliases: ``a``, ``alphas``.
+    The opacity of the patch(es). Inferred from `facecolor` and `edgecolor` by default.
 zorder : float, default: 3.5
     The [zorder](https://matplotlib.org/stable/gallery/misc/zorder_demo.html) of
     the indicators. Should be greater than the zorder of elements in the parent axes.
@@ -644,7 +643,7 @@ Parameters
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.panel_axes)"""
         ...
 
-    def colorbar(self, mappable: Incomplete, values: Incomplete=None, loc: Incomplete=None, location: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def colorbar(self, mappable: Incomplete, values: Incomplete=None, loc: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Add an inset colorbar or an outer colorbar along the edge of the axes.
 
 Parameters
@@ -655,56 +654,56 @@ Parameters
 - `norm`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
 - `norm_kw`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
 - `vmin, vmax`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
-- `label, title`: The colorbar label.
+- `label`: The colorbar label.
 - `reverse`: Whether to reverse the direction of the colorbar.
 - `rotation`: The tick label rotation.
-- `grid, edges, drawedges`: Whether to draw "grid" dividers between each distinct color.
+- `drawedges`: Whether to draw "grid" dividers between each distinct color.
 - `extend`: Direction for drawing colorbar "extensions" (i.e.
 - `extendfrac`: The length of the colorbar "extensions" relative to the length of the colorbar.
 - `extendsize`: The length of the colorbar "extensions" in physical units.
 - `extendrect`: Whether to draw colorbar "extensions" as rectangles.
-- `locator, ticks`: Used to determine the colorbar tick positions.
+- `ticks`: Used to determine the colorbar tick positions.
 - `locator_kw`: Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
+- `minorticks`: As with `ticks` but for the minor ticks.
 - `minorlocator_kw`: As with `locator_kw`, but for the minor ticks.
-- `format, formatter, ticklabels`: The tick label format.
+- `format`: The tick label format.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
-- `frame, frameon`: For inset colorbars, indicates whether to draw a background "frame", just like [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
+- `frameon`: For inset colorbars, indicates whether to draw a background "frame", just like [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
 - `tickminor`: Whether to add minor ticks using [minorticks_on](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorbar.ColorbarBase.minorticks_on.html).
 - `tickloc, ticklocation`: Where to draw tick marks on the colorbar.
-- `tickdir, tickdirection`: Direction of major and minor colorbar ticks.
+- `tickdirection`: Direction of major and minor colorbar ticks.
 - `ticklen`: Major tick lengths for the colorbar ticks.
 - `ticklenratio`: Relative scaling of `ticklen` used to determine minor tick lengths.
 - `tickwidth`: Major tick widths for the colorbar ticks.
 - `tickwidthratio`: Relative scaling of `tickwidth` used to determine minor tick widths.
 - `ticklabelcolor, ticklabelsize, ticklabelweight`: The font color, size, and weight for colorbar tick labels
-- `labelloc, labellocation`: The colorbar label location.
+- `labellocation`: The colorbar label location.
 - `labelcolor, labelsize, labelweight`: The font color, size, and weight for the colorbar label.
 - `a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth`: For inset colorbars only.
-- `lw, linewidth, c, color`: Controls the line width and edge color for both the colorbar outline and the level dividers.
+- `linewidth, color`: Controls the line width and edge color for both the colorbar outline and the level dividers.
 - `edgefix`: Whether to fix the common issue where white lines appear between adjacent patches in saved vector graphics (this can slow down figure rendering).
 - `rasterize`: Whether to rasterize the colorbar solids.
 - `outline`: Controls the visibility of the outer colorbar outline.
-- `labelrotation`: Controls the rotation of the colorbar label.
-- _1 additional parameter groups are documented online._
+- _2 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar)"""
         ...
 
-    def legend(self, handles: Incomplete=None, labels: Incomplete=None, loc: Incomplete=None, location: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Incomplete) -> Incomplete:
+    def legend(self, handles: Incomplete=None, labels: Incomplete=None, loc: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Incomplete) -> Incomplete:
         """Add an inset legend or outer legend along the edge of the axes.
 
 Parameters
 ----------
 - `handles`: List of matplotlib artists, or a list of lists of artist instances (see the `center` keyword).
 - `labels`: A matching list of string labels or ``None`` placeholders, or a matching list of lists (see the `center` keyword).
-- `loc, location`: The legend location.
+- `loc`: The legend location.
 - `width`: For outer legends only.
 - `queue`: If ``True`` and `loc` is the same as an existing legend, the input arguments are added to a queue and this function returns ``None``.
 - `space`: For outer legends only.
 - `pad`: For outer legends, this is the [tight layout padding](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight) between the legend and the subplot (default is [subplots.panelpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=subplots.panelpad)).
 - `align`: For outer legends only.
-- `frame, frameon`: Toggles the legend frame.
-- `ncol, ncols`: The number of columns.
+- `frameon`: Toggles the legend frame.
+- `ncols`: The number of columns.
 - `order`: Whether legend handles are drawn in row-major (``'C'``) or column-major (``'F'``) order.
 - `center`: Whether to center each legend row individually.
 - `alphabetize`: Whether to alphabetize the legend entries according to the legend labels.
@@ -717,9 +716,7 @@ Parameters
 - `handle_kw`: Additional properties used to override legend handles, e.g.
 - `handler_map`: A dictionary mapping instances or types to a legend handler.
 - `**kwargs`: Passed to [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
-- `loc`: The location of the legend.
 - `bbox_to_anchor`: Box that is used to position the legend in conjunction with *loc*.
-- `ncols`: The number of columns that the legend has.
 - `prop`: The font properties of the legend.
 - `fontsize`: The font size of the legend.
 - `labelcolor`: The color of the text in the legend.
@@ -729,9 +726,11 @@ Parameters
 - `markerscale`: The relative size of legend markers compared to the originally drawn ones.
 - `markerfirst`: If *True*, legend marker is placed to the left of the legend label.
 - `reverse`: If *True*, the legend labels are displayed in reverse order from the input.
-- `frameon`: Whether the legend should be drawn on a patch (frame).
 - `fancybox`: Whether round edges should be enabled around the `.FancyBboxPatch` which makes up the legend's background.
-- _18 additional parameter groups are documented online._
+- `shadow`: Whether to draw a shadow behind the legend.
+- `framealpha`: The alpha transparency of the legend's background.
+- `facecolor`: The legend's background color.
+- _15 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend)"""
         ...

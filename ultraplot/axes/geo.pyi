@@ -29,7 +29,7 @@ from .. import constructor
 from .. import proj as pproj
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import _not_none, _pop_params, _pop_props, _pop_rc, _version_cartopy, docstring, ic, labels, warnings
+from ..internals import _alias_kwargs, _not_none, _pop_params, _pop_props, _pop_rc, _version_cartopy, docstring, ic, labels, warnings
 from ..utils import units
 from . import plot, shared
 try:
@@ -448,6 +448,7 @@ matplotlib-recognized axes subclass names ``proj='cartopy'``, ``proj='geo'``, or
 ``proj='geographic'`` with a `~cartopy.crs.Projection` `map_projection` keyword
 argument, or pass ``proj='basemap'`` with a `~mpl_toolkits.basemap.Basemap`
 `map_projection` keyword argument."""
+    _format_sharing_exclude = frozenset({'labelpad', 'labelcolor', 'labelsize', 'labelweight'})
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Parameters
@@ -745,11 +746,11 @@ map boundary is initialized, so we force initialization here."""
         """Update the latitude gridline cutoff."""
         ...
 
-    def _format_update_major_locators(self, *, lonlocator: Any, lonlines: Any, latlocator: Any, latlines: Any, lonlocator_kw: MutableMapping | None, lonlines_kw: MutableMapping | None, latlocator_kw: MutableMapping | None, latlines_kw: MutableMapping | None) -> None:
+    def _format_update_major_locators(self, *, lonlocator: Any, latlocator: Any, lonlocator_kw: MutableMapping | None, latlocator_kw: MutableMapping | None) -> None:
         """Update major longitude/latitude locators."""
         ...
 
-    def _format_update_minor_locators(self, *, lonminorlocator: Any, lonminorlines: Any, latminorlocator: Any, latminorlines: Any, lonminorlocator_kw: MutableMapping | None, lonminorlines_kw: MutableMapping | None, latminorlocator_kw: MutableMapping | None, latminorlines_kw: MutableMapping | None) -> None:
+    def _format_update_minor_locators(self, *, lonminorlocator: Any, latminorlocator: Any, lonminorlocator_kw: MutableMapping | None, latminorlocator_kw: MutableMapping | None) -> None:
         """Update minor longitude/latitude locators."""
         ...
 
@@ -769,7 +770,7 @@ map boundary is initialized, so we force initialization here."""
         """Apply tick length updates, including any extent refresh for geoticks."""
         ...
 
-    def format(self, *, aspect: str | float | None=None, abcanchor: str | None=None, extent: str | None=None, round: bool | None=None, lonlim: tuple[float | None, float | None] | None=None, latlim: tuple[float | None, float | None] | None=None, boundinglat: float | None=None, longrid: bool | None=None, latgrid: bool | None=None, longridminor: bool | None=None, latgridminor: bool | None=None, ticklen: Any=None, lonticklen: Any=None, latticklen: Any=None, latmax: float | None=None, nsteps: int | None=None, lonlocator: Any=None, lonlines: Any=None, latlocator: Any=None, latlines: Any=None, lonminorlocator: Any=None, lonminorlines: Any=None, latminorlocator: Any=None, latminorlines: Any=None, lonlocator_kw: MutableMapping | None=None, lonlines_kw: MutableMapping | None=None, latlocator_kw: MutableMapping | None=None, latlines_kw: MutableMapping | None=None, lonminorlocator_kw: MutableMapping | None=None, lonminorlines_kw: MutableMapping | None=None, latminorlocator_kw: MutableMapping | None=None, latminorlines_kw: MutableMapping | None=None, lonformatter: Any=None, latformatter: Any=None, lonformatter_kw: MutableMapping | None=None, latformatter_kw: MutableMapping | None=None, labels: Any=None, latlabels: Any=None, lonlabels: Any=None, rotatelabels: bool | None=None, labelrotation: float | None=None, lonlabelrotation: float | None=None, latlabelrotation: float | None=None, loninline: bool | None=None, latinline: bool | None=None, inlinelabels: bool | None=None, dms: bool | None=None, labelpad: Any=None, labelcolor: Any=None, labelsize: Any=None, labelweight: Any=None, **kwargs: Any) -> None:
+    def format(self, *, aspect: str | float | None=None, abcanchor: str | None=None, extent: str | None=None, round: bool | None=None, lonlim: tuple[float | None, float | None] | None=None, latlim: tuple[float | None, float | None] | None=None, boundinglat: float | None=None, longrid: bool | None=None, latgrid: bool | None=None, longridminor: bool | None=None, latgridminor: bool | None=None, ticklen: Any=None, lonticklen: Any=None, latticklen: Any=None, latmax: float | None=None, nsteps: int | None=None, lonlocator: Any=None, latlocator: Any=None, lonminorlocator: Any=None, latminorlocator: Any=None, lonlocator_kw: MutableMapping | None=None, latlocator_kw: MutableMapping | None=None, lonminorlocator_kw: MutableMapping | None=None, latminorlocator_kw: MutableMapping | None=None, lonformatter: Any=None, latformatter: Any=None, lonformatter_kw: MutableMapping | None=None, latformatter_kw: MutableMapping | None=None, labels: Any=None, latlabels: Any=None, lonlabels: Any=None, rotatelabels: bool | None=None, labelrotation: float | None=None, lonlabelrotation: float | None=None, latlabelrotation: float | None=None, loninline: bool | None=None, latinline: bool | None=None, inlinelabels: bool | None=None, dms: bool | None=None, labelpad: Any=None, labelcolor: Any=None, labelsize: Any=None, labelweight: Any=None, **kwargs: Any) -> None:
         """Modify map limits, longitude and latitude gridlines, geographic features, and more.
 
 Parameters
@@ -810,7 +811,7 @@ Parameters
 - `abc`: The "a-b-c" subplot label style.
 - `abcloc, titleloc`: Strings indicating the location for the a-b-c label and main title.
 - `abcborder, titleborder`: Whether to draw a white border around titles and a-b-c labels positioned inside the axes.
-- _21 additional parameter groups are documented online._
+- _20 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html#ultraplot.axes.GeoAxes.format)"""
         ...

@@ -24,7 +24,7 @@ from . import proj as pproj
 from . import scale as pscale
 from . import ticker as pticker
 from .config import rc
-from .internals import _not_none, _pop_props, _version_cartopy, _version_mpl, ic, warnings
+from .internals import _alias_kwargs, _not_none, _pop_props, _version_cartopy, _version_mpl, ic, warnings
 from .utils import to_hex, to_rgba
 try:
     from mpl_toolkits.basemap import Basemap
@@ -146,7 +146,6 @@ class Cycle(cycler.Cycler):
 Parameters
 ----------
 - `*args`: Positional arguments control the *colors* in the `~cycler.Cycler` object.
-- `N`: Shorthand for `samples`.
 - `samples`: For [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html)\\ s, this is the number of colors to select.
 - `c, color, colors`: A sequence of colors passed as keyword arguments.
 - `linewidth, linestyle, dashes, alpha, marker, markersize, markeredgewidth, markeredgecolor, markerfacecolor`: Lists of [Line2D](https://matplotlib.org/stable/api/_as_gen/matplotlib.lines.Line2D.html) properties that can be added to the `~cycler.Cycler` instance.
@@ -154,7 +153,7 @@ Parameters
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html)"""
 
-    def __init__(self, *args: Incomplete, N: Incomplete=None, samples: Incomplete=None, name: Incomplete=None, **kwargs: Incomplete) -> None:
+    def __init__(self, *args: Incomplete, samples: Incomplete=None, name: Incomplete=None, **kwargs: Incomplete) -> None:
         ...
 
     def _parse_basic_properties(self, kwargs: Incomplete) -> Incomplete:
@@ -237,7 +236,7 @@ def _warn_basemap_deprecated() -> Incomplete:
     """Warn that the basemap backend is deprecated."""
     ...
 
-def Proj(name: Incomplete, backend: Incomplete=None, lon0: Incomplete=None, lon_0: Incomplete=None, lat0: Incomplete=None, lat_0: Incomplete=None, lonlim: Incomplete=None, latlim: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+def Proj(name: Incomplete, backend: Incomplete=None, lon0: Incomplete=None, lat0: Incomplete=None, lonlim: Incomplete=None, latlim: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
     """Return a `cartopy.crs.Projection` or `~mpl_toolkits.basemap.Basemap` instance.
 
 Parameters
@@ -245,7 +244,6 @@ Parameters
 - `name`: The projection name or projection class instance.
 - `backend`: Whether to return a cartopy `~cartopy.crs.Projection` instance or a basemap `~mpl_toolkits.basemap.Basemap` instance.
 - `lon0, lat0`: The central projection longitude and latitude.
-- `lon_0, lat_0`: Aliases for `lon0`, `lat0`.
 - `lonlim`: The longitude limits.
 - `latlim`: The latitude limits.
 - `**kwargs`: Passed to the cartopy `~cartopy.crs.Projection` or basemap `~mpl_toolkits.basemap.Basemap` class.

@@ -23,12 +23,13 @@ try:
 except:
     from typing_extensions import override
 from . import axes as paxes
-from .axes._formatting import axis_format_requires_layout, pop_axis_format_kwargs
+from .axes._formatting import GENERIC_AXIS_FORMAT_KEYS, axis_format_requires_layout, pop_axis_format_kwargs
+from . import _sharing as psharing
 from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
 from .config import rc, rc_matplotlib
-from .internals import _alias_kwargs, _not_none, _pop_params, _pop_rc, _translate_loc, context, docstring, ic, labels, warnings
+from .internals import _alias_kwargs, _canonicalize_kwargs, _not_none, _pop_params, _pop_rc, _translate_loc, context, docstring, ic, labels, warnings
 from ._layout import _LayoutTransaction
 from ._subplots import SubplotManager
 from .utils import _Crawler, units
@@ -80,7 +81,7 @@ class Figure(mfigure.Figure):
         """Return repr(self)."""
         ...
 
-    def __init__(self, *, refnum: Incomplete=None, refaspect: Incomplete=None, refwidth: Incomplete=None, refheight: Incomplete=None, figwidth: Incomplete=None, figheight: Incomplete=None, journal: Incomplete=None, sharex: Incomplete=None, sharey: Incomplete=None, share: Incomplete=None, spanx: Incomplete=None, spany: Incomplete=None, span: Incomplete=None, alignx: Incomplete=None, aligny: Incomplete=None, align: Incomplete=None, left: Incomplete=None, right: Incomplete=None, top: Incomplete=None, bottom: Incomplete=None, wspace: Incomplete=None, hspace: Incomplete=None, space: Incomplete=None, tight: Incomplete=None, outerpad: Incomplete=None, innerpad: Incomplete=None, panelpad: Incomplete=None, wpad: Incomplete=None, hpad: Incomplete=None, pad: Incomplete=None, wequal: Incomplete=None, hequal: Incomplete=None, equal: Incomplete=None, wgroup: Incomplete=None, hgroup: Incomplete=None, group: Incomplete=None, **kwargs: Incomplete) -> None:
+    def __init__(self, *, refnum: Incomplete=None, refaspect: Incomplete=None, refwidth: Incomplete=None, refheight: Incomplete=None, figwidth: Incomplete=None, figheight: Incomplete=None, journal: Incomplete=None, sharex: Incomplete=None, sharey: Incomplete=None, share: Incomplete=None, sharexlabels: Incomplete=None, shareylabels: Incomplete=None, sharexlimits: Incomplete=None, shareylimits: Incomplete=None, sharexticklabels: Incomplete=None, shareyticklabels: Incomplete=None, spanx: Incomplete=None, spany: Incomplete=None, span: Incomplete=None, alignx: Incomplete=None, aligny: Incomplete=None, align: Incomplete=None, left: Incomplete=None, right: Incomplete=None, top: Incomplete=None, bottom: Incomplete=None, wspace: Incomplete=None, hspace: Incomplete=None, space: Incomplete=None, tight: Incomplete=None, outerpad: Incomplete=None, innerpad: Incomplete=None, panelpad: Incomplete=None, wpad: Incomplete=None, hpad: Incomplete=None, pad: Incomplete=None, wequal: Incomplete=None, hequal: Incomplete=None, equal: Incomplete=None, wgroup: Incomplete=None, hgroup: Incomplete=None, group: Incomplete=None, **kwargs: Incomplete) -> None:
         """Parameters
 ----------
 - `refnum`: The reference subplot number.
@@ -89,6 +90,9 @@ class Figure(mfigure.Figure):
 - `figwidth, figheight`: The figure width and height.
 - `figsize`: Tuple specifying the figure ``(width, height)``.
 - `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `sharexlabels, shareylabels`: Override whether the x or y axis-title text (``xlabel`` or ``ylabel``) is shared.
+- `sharexlimits, shareylimits`: Override whether limits, scales, tick locations, and formatters are shared.
+- `sharexticklabels, shareyticklabels`: Override whether tick labels are suppressed on interior axes.
 - `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
 - `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
@@ -104,7 +108,6 @@ class Figure(mfigure.Figure):
 - `leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad`: : [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad) The padding between the labels and the axes content.
 - `leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad`: : [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad) The padding between side labels and a shared spanning axis label on…
 - `leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw`: Additional settings used to update the labels with ``text.update()``.
-- `figtitle`: Alias for `suptitle`.
 - `suptitle`: The figure "super" title, centered between the left edge of the leftmost subplot and the right edge of the rightmost subplot.
 - `suptitlepad`: The padding between the super title and the axes content.
 - `suptitle_kw`: Additional settings used to update the super title with ``text.update()``.
@@ -133,7 +136,7 @@ returns the resolved (figwidth, figheight)."""
         """Normalize a share setting to an integer level and auto flag."""
         ...
 
-    def _init_sharing(self, *, sharex: Incomplete, sharey: Incomplete, share: Incomplete, spanx: Incomplete, spany: Incomplete, span: Incomplete, alignx: Incomplete, aligny: Incomplete, align: Incomplete) -> None:
+    def _init_sharing(self, *, sharex: Incomplete, sharey: Incomplete, share: Incomplete, sharexlabels: Incomplete, shareylabels: Incomplete, sharexlimits: Incomplete, shareylimits: Incomplete, sharexticklabels: Incomplete, shareyticklabels: Incomplete, spanx: Incomplete, spany: Incomplete, span: Incomplete, alignx: Incomplete, aligny: Incomplete, align: Incomplete) -> None:
         """Resolve share, span, and align settings."""
         ...
 
@@ -389,6 +392,88 @@ measurements through the active relative-outset store."""
     def _unshare_axes(self) -> None:
         ...
 
+    def _axis_sharing_enabled(self, which: Incomplete) -> bool:
+        """Return whether any sharing component is enabled for an axis."""
+        ...
+
+    @staticmethod
+    def _normalize_axis_directions(axis: Incomplete) -> Incomplete:
+        """Normalize a public x/y axis selector."""
+        ...
+
+    def get_axis_sharing(self, axis: Incomplete=None) -> dict[str, dict[str, Any]] | dict[str, Any]:
+        """Return the active axis-sharing state.
+
+Parameters
+----------
+axis : {'x', 'y', 'both', 'xy', 'yx'}, optional
+    Axis direction. Passing ``None`` or ``'both'`` returns states for
+    both directions.
+
+Returns
+-------
+dict
+    For one direction, a dictionary containing ``level``, ``labels``,
+    ``limits``, ``ticklabels``, and ``auto``. For both directions, a
+    dictionary mapping ``'x'`` and ``'y'`` to those state dictionaries.
+
+Notes
+-----
+``labels`` refers to axis-title text (``xlabel`` and ``ylabel``), while
+``ticklabels`` controls suppression of tick labels on interior axes.
+The component booleans are authoritative. ``level`` is the highest active
+legacy sharing level and may not fully describe non-cumulative overrides.
+
+See also
+--------
+Figure.set_axis_sharing"""
+        ...
+
+    def set_axis_sharing(self, axis: Incomplete='both', *, level: Incomplete=None, labels: Incomplete=None, limits: Incomplete=None, ticklabels: Incomplete=None) -> None:
+        """Set or restore axis-sharing components after figure creation.
+
+Parameters
+----------
+axis : {'x', 'y', 'both', 'xy', 'yx'}, default: 'both'
+    Axis direction to update.
+level : {0, False, 1, 'labels', 'labs', 2, 'limits', 'lims', 3, True, 4, 'all', 'auto'}, optional
+    Apply a standard sharing preset. Individual component arguments
+    override the corresponding part of the preset.
+labels : bool, optional
+    Share axis-title text (``xlabel`` or ``ylabel``).
+limits : bool, optional
+    Share limits, scales, tick locations, and formatters.
+ticklabels : bool, optional
+    Suppress tick labels on interior axes.
+
+Notes
+-----
+Local or sparse ``format`` calls can reduce sharing in the affected
+direction. Use this method to deliberately restore it, for example
+``fig.set_axis_sharing('x', level=3)``.
+
+See also
+--------
+Figure.get_axis_sharing
+Figure.format"""
+        ...
+
+    def _sync_axis_sharing_level(self, which: Incomplete) -> None:
+        """Synchronize the legacy level with the active sharing components."""
+        ...
+
+    def _update_axis_sharing_for_format(self, which: Incomplete, *, labels: Incomplete=False, limits: Incomplete=False, ticklabels: Incomplete=False) -> None:
+        """Disable sharing components contradicted by local format values."""
+        ...
+
+    def _restore_axis_ticklabels(self, which: Incomplete) -> None:
+        """Restore labels hidden only by subplot tick-label sharing."""
+        ...
+
+    def _rebuild_axis_sharing(self, which: Incomplete) -> None:
+        """Rebuild axis relationships from the orthogonal sharing flags."""
+        ...
+
     def _toggle_axis_sharing(self, *, which: Incomplete='y', share: Incomplete=True, panels: Incomplete=False, children: Incomplete=False, hidden: Incomplete=False) -> None:
         """Share or unshare axes in the figure along a given direction.
 
@@ -639,11 +724,10 @@ Handle generation currently reuses the semantic legend builder used by
 Parameters
 ----------
 - `rect`: The (left, bottom, width, height) dimensions of the axes in figure-relative coordinates.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `**kwargs`: Passed to the ultraplot class [ultraplot.axes.CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html), [ultraplot.axes.PolarAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html), [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html), or [ultraplot.axes.ThreeAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.ThreeAxes.html).
-- `projection`: The projection type of the `~.axes.Axes`.
 - `polar`: If True, equivalent to projection='polar'.
 - `axes_class`: The `.axes.Axes` subclass that is instantiated.
 - `sharex, sharey`: Share the x or y [axis](https://matplotlib.org/stable/api/_as_gen/matplotlib.axis.html) with sharex and/or sharey.
@@ -660,11 +744,10 @@ Parameters
 - `*args`: The subplot location specifier.
 - `number`: The axes number used for a-b-c labeling.
 - `autoshare`: Whether to automatically share the *x* and *y* axes with subplots spanning the same rows and columns based on the figure-wide `sharex` and `sharey` settings.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `**kwargs`: Passed to the ultraplot class [ultraplot.axes.CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html), [ultraplot.axes.PolarAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html), [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html), or [ultraplot.axes.ThreeAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.ThreeAxes.html).
-- `projection`: The projection type of the subplot (`~.axes.Axes`).
 - `polar`: If True, equivalent to projection='polar'.
 - `axes_class`: The `.axes.Axes` subclass that is instantiated.
 - `sharex, sharey`: Share the x or y [axis](https://matplotlib.org/stable/api/_as_gen/matplotlib.axis.html) with sharex and/or sharey.
@@ -681,8 +764,8 @@ Parameters
 - `*args`: The subplot location specifier.
 - `number`: The axes number used for a-b-c labeling.
 - `autoshare`: Whether to automatically share the *x* and *y* axes with subplots spanning the same rows and columns based on the figure-wide `sharex` and `sharey` settings.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `**kwargs`: Passed to the ultraplot class [ultraplot.axes.CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html), [ultraplot.axes.PolarAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html), [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html), or [ultraplot.axes.ThreeAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.ThreeAxes.html).
 
@@ -697,12 +780,12 @@ Parameters
 - `array`: The subplot grid specifier.
 - `nrows, ncols`: The number of rows and columns in the subplot grid.
 - `order`: Whether subplots are numbered in column-major (``'C'``) or row-major (``'F'``) order.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
 - `wspace, hspace, space`: The fixed space between grid columns, rows, and both, respectively.
-- `wratios, hratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), denotes the width and height ratios for the subplot grid.
+- `width_ratios, height_ratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), and denote the width and height ratios for the subplot grid.
 - `wpad, hpad, pad`: The tight layout padding between columns, rows, and both, respectively.
 - `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
 - `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
@@ -715,6 +798,9 @@ Parameters
 - `figwidth, figheight`: The figure width and height.
 - `figsize`: Tuple specifying the figure ``(width, height)``.
 - `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `sharexlabels, shareylabels`: Override whether the x or y axis-title text (``xlabel`` or ``ylabel``) is shared.
+- `sharexlimits, shareylimits`: Override whether limits, scales, tick locations, and formatters are shared.
+- `sharexticklabels, shareyticklabels`: Override whether tick labels are suppressed on interior axes.
 - `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
 - `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
 - `tight`: Whether automatic calls to `~Figure.auto_layout` should include [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight).
@@ -732,12 +818,12 @@ Parameters
 - `array`: The subplot grid specifier.
 - `nrows, ncols`: The number of rows and columns in the subplot grid.
 - `order`: Whether subplots are numbered in column-major (``'C'``) or row-major (``'F'``) order.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
 - `wspace, hspace, space`: The fixed space between grid columns, rows, and both, respectively.
-- `wratios, hratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), denotes the width and height ratios for the subplot grid.
+- `width_ratios, height_ratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), and denote the width and height ratios for the subplot grid.
 - `wpad, hpad, pad`: The tight layout padding between columns, rows, and both, respectively.
 - `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
 - `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
@@ -750,6 +836,9 @@ Parameters
 - `figwidth, figheight`: The figure width and height.
 - `figsize`: Tuple specifying the figure ``(width, height)``.
 - `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `sharexlabels, shareylabels`: Override whether the x or y axis-title text (``xlabel`` or ``ylabel``) is shared.
+- `sharexlimits, shareylimits`: Override whether limits, scales, tick locations, and formatters are shared.
+- `sharexticklabels, shareyticklabels`: Override whether tick labels are suppressed on interior axes.
 - `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
 - `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
 - `tight`: Whether automatic calls to `~Figure.auto_layout` should include [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight).
@@ -783,7 +872,7 @@ resize : bool, optional
     or the figure was resized manually with an interactive backend."""
         ...
 
-    def format(self, axs: Incomplete=None, *, figtitle: Incomplete=None, suptitle: Incomplete=None, suptitle_kw: Incomplete=None, llabels: Incomplete=None, leftlabels: Incomplete=None, leftlabels_kw: Incomplete=None, rlabels: Incomplete=None, rightlabels: Incomplete=None, rightlabels_kw: Incomplete=None, blabels: Incomplete=None, bottomlabels: Incomplete=None, bottomlabels_kw: Incomplete=None, tlabels: Incomplete=None, toplabels: Incomplete=None, toplabels_kw: Incomplete=None, rowlabels: Incomplete=None, collabels: Incomplete=None, includepanels: Incomplete=None, **kwargs: Incomplete) -> None:
+    def format(self, axs: Incomplete=None, *, suptitle: Incomplete=None, suptitle_kw: Incomplete=None, leftlabels: Incomplete=None, leftlabels_kw: Incomplete=None, rightlabels: Incomplete=None, rightlabels_kw: Incomplete=None, bottomlabels: Incomplete=None, bottomlabels_kw: Incomplete=None, toplabels: Incomplete=None, toplabels_kw: Incomplete=None, includepanels: Incomplete=None, **kwargs: Incomplete) -> None:
         """Modify figure-wide labels and call ``format`` for the input axes.
 
 Parameters
@@ -793,7 +882,6 @@ Parameters
 - `leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad`: : [leftlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.pad), [toplabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.pad), [rightlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.pad), [bottomlabel.pad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.pad) The padding between the labels and the axes content.
 - `leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad`: : [leftlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=leftlabel.sharedpad), [toplabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=toplabel.sharedpad), [rightlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=rightlabel.sharedpad), [bottomlabel.sharedpad](https://ultraplot.readthedocs.io/en/stable/search.html?q=bottomlabel.sharedpad) The padding between side labels and a shared spanning axis label on…
 - `leftlabels_kw, toplabels_kw, rightlabels_kw, bottomlabels_kw`: Additional settings used to update the labels with ``text.update()``.
-- `figtitle`: Alias for `suptitle`.
 - `suptitle`: The figure "super" title, centered between the left edge of the leftmost subplot and the right edge of the rightmost subplot.
 - `suptitlepad`: The padding between the super title and the axes content.
 - `suptitle_kw`: Additional settings used to update the super title with ``text.update()``.
@@ -808,7 +896,7 @@ Parameters
 - `titlepad`: The padding for the inner and outer titles and a-b-c labels.
 - `titleabove`: Whether to try to put outer titles and a-b-c labels above panels, colorbars, or legends that are above the axes.
 - `abctitlepad`: The horizontal padding between a-b-c labels and titles in the same location.
-- `ltitle, ctitle, rtitle, ultitle, uctitle, urtitle, lltitle, lctitle, lrtitle`: Shorthands for the below keywords.
+- `lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle`: See the full API documentation.
 - `lowerlefttitle, lowercentertitle, lowerrighttitle`: Additional titles in specific positions (see `title` for details).
 - `a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle`: [axes.alpha](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.alpha) (default: 1.0), [axes.facecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.facecolor) (default: white), [axes.edgecolor](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.edgecolor) (default: black), [axes.linewidth](https://ultraplot.readthedocs.io/en/stable/search.html?q=axes.linewidth) (default: 0.6), - Additional settings applied to…
 - `aspect`: The data aspect ratio.
@@ -824,18 +912,18 @@ Parameters
 - `xbounds, ybounds`: The x and y axis data bounds within which to draw the spines.
 - `xtickrange, ytickrange`: The x and y axis data ranges within which major tick marks are labelled.
 - `xwraprange, ywraprange`: The x and y axis data ranges with which major tick mark values are wrapped.
-- _97 additional parameter groups are documented online._
+- `xspineloc, yspineloc`: The x and y spine locations.
+- _90 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.format)"""
         ...
 
-    def colorbar(self, mappable: Incomplete, values: Incomplete=None, loc: Optional[str]=None, location: Optional[str]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, span: Optional[Union[int, Tuple[int, int]]]=None, space: Optional[Union[float, str]]=None, pad: Optional[Union[float, str]]=None, width: Optional[Union[float, str]]=None, **kwargs: Incomplete) -> Incomplete:
+    def colorbar(self, mappable: Incomplete, values: Incomplete=None, loc: Optional[str]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, span: Optional[Union[int, Tuple[int, int]]]=None, space: Optional[Union[float, str]]=None, pad: Optional[Union[float, str]]=None, width: Optional[Union[float, str]]=None, **kwargs: Incomplete) -> Incomplete:
         """Add a colorbar along the side of the figure.
 
 Parameters
 ----------
-- `length`: The colorbar length.
-- `shrink`: Alias for `length`.
+- `length`: The colorbar length (also accepted as ``shrink``).
 - `width`: The colorbar width.
 - `loc`: The colorbar location.
 - `space`: The fixed space between the colorbar and the subplot grid edge.
@@ -846,36 +934,37 @@ Parameters
 - `norm`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
 - `norm_kw`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
 - `vmin, vmax`: Ignored if `mappable` is a [ScalarMappable](https://matplotlib.org/stable/api/_as_gen/matplotlib.cm.ScalarMappable.html).
-- `label, title`: The colorbar label.
+- `label`: The colorbar label.
 - `reverse`: Whether to reverse the direction of the colorbar.
 - `rotation`: The tick label rotation.
-- `grid, edges, drawedges`: Whether to draw "grid" dividers between each distinct color.
+- `drawedges`: Whether to draw "grid" dividers between each distinct color.
 - `extend`: Direction for drawing colorbar "extensions" (i.e.
 - `extendfrac`: The length of the colorbar "extensions" relative to the length of the colorbar.
 - `extendsize`: The length of the colorbar "extensions" in physical units.
 - `extendrect`: Whether to draw colorbar "extensions" as rectangles.
-- `locator, ticks`: Used to determine the colorbar tick positions.
+- `ticks`: Used to determine the colorbar tick positions.
 - `locator_kw`: Keyword arguments passed to [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
+- `minorticks`: As with `ticks` but for the minor ticks.
 - `minorlocator_kw`: As with `locator_kw`, but for the minor ticks.
-- `format, formatter, ticklabels`: The tick label format.
+- `format`: The tick label format.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
-- `frame, frameon`: For inset colorbars, indicates whether to draw a background "frame", just like [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
+- `frameon`: For inset colorbars, indicates whether to draw a background "frame", just like [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
 - `tickminor`: Whether to add minor ticks using [minorticks_on](https://matplotlib.org/stable/api/_as_gen/matplotlib.colorbar.ColorbarBase.minorticks_on.html).
 - `tickloc, ticklocation`: Where to draw tick marks on the colorbar.
-- `tickdir, tickdirection`: Direction of major and minor colorbar ticks.
+- `tickdirection`: Direction of major and minor colorbar ticks.
 - `ticklen`: Major tick lengths for the colorbar ticks.
 - `ticklenratio`: Relative scaling of `ticklen` used to determine minor tick lengths.
 - `tickwidth`: Major tick widths for the colorbar ticks.
 - `tickwidthratio`: Relative scaling of `tickwidth` used to determine minor tick widths.
 - `ticklabelcolor, ticklabelsize, ticklabelweight`: The font color, size, and weight for colorbar tick labels
-- `labelloc, labellocation`: The colorbar label location.
+- `labellocation`: The colorbar label location.
 - `labelcolor, labelsize, labelweight`: The font color, size, and weight for the colorbar label.
-- _22 additional parameter groups are documented online._
+- _19 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.colorbar)"""
         ...
 
-    def legend(self, handles: Incomplete=None, labels: Incomplete=None, loc: Incomplete=None, location: Incomplete=None, row: Incomplete=None, col: Incomplete=None, rows: Incomplete=None, cols: Incomplete=None, span: Incomplete=None, space: Incomplete=None, pad: Incomplete=None, width: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def legend(self, handles: Incomplete=None, labels: Incomplete=None, loc: Incomplete=None, row: Incomplete=None, col: Incomplete=None, rows: Incomplete=None, cols: Incomplete=None, span: Incomplete=None, space: Incomplete=None, pad: Incomplete=None, width: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Add a legend along the side of the figure.
 
 Parameters
@@ -888,8 +977,8 @@ Parameters
 - `span`: Integer(s) indicating the span of the legend across rows and columns of subplots.
 - `align`: For outer legends only.
 - `width`: The space allocated for the legend box.
-- `frame, frameon`: Toggles the legend frame.
-- `ncol, ncols`: The number of columns.
+- `frameon`: Toggles the legend frame.
+- `ncols`: The number of columns.
 - `order`: Whether legend handles are drawn in row-major (``'C'``) or column-major (``'F'``) order.
 - `center`: Whether to center each legend row individually.
 - `alphabetize`: Whether to alphabetize the legend entries according to the legend labels.
@@ -903,7 +992,6 @@ Parameters
 - `handler_map`: A dictionary mapping instances or types to a legend handler.
 - `**kwargs`: Passed to [legend](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.legend.html).
 - `bbox_to_anchor`: Box that is used to position the legend in conjunction with *loc*.
-- `ncols`: The number of columns that the legend has.
 - `prop`: The font properties of the legend.
 - `fontsize`: The font size of the legend.
 - `labelcolor`: The color of the text in the legend.
@@ -913,10 +1001,11 @@ Parameters
 - `markerscale`: The relative size of legend markers compared to the originally drawn ones.
 - `markerfirst`: If *True*, legend marker is placed to the left of the legend label.
 - `reverse`: If *True*, the legend labels are displayed in reverse order from the input.
-- `frameon`: Whether the legend should be drawn on a patch (frame).
 - `fancybox`: Whether round edges should be enabled around the `.FancyBboxPatch` which makes up the legend's background.
 - `shadow`: Whether to draw a shadow behind the legend.
-- _17 additional parameter groups are documented online._
+- `framealpha`: The alpha transparency of the legend's background.
+- `facecolor`: The legend's background color.
+- _15 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.legend)"""
         ...

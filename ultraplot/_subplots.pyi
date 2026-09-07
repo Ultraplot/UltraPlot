@@ -13,7 +13,7 @@ import numpy as np
 from . import axes as paxes
 from . import constructor
 from . import gridspec as pgridspec
-from .internals import _not_none, _pop_params, warnings
+from .internals import _alias_kwargs, _canonicalize_kwargs, _figure_format_alias_scopes, _not_none, _pop_params, warnings
 from .figure import Figure
 
 class SubplotManager:
@@ -51,7 +51,7 @@ longer attached to it."""
         """Handle deprecation of basemap and cartopy package."""
         ...
 
-    def parse_proj(self, proj: Incomplete=None, projection: Incomplete=None, proj_kw: Incomplete=None, projection_kw: Incomplete=None, backend: Incomplete=None, basemap: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def parse_proj(self, projection: Incomplete=None, projection_kw: Incomplete=None, backend: Incomplete=None, basemap: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Translate user-input projection into a registered matplotlib axes class."""
         ...
 
@@ -59,7 +59,7 @@ longer attached to it."""
         """The driver function for adding single subplots."""
         ...
 
-    def add_subplots(self, array: Incomplete=None, nrows: Incomplete=1, ncols: Incomplete=1, order: Incomplete='C', proj: Incomplete=None, projection: Incomplete=None, proj_kw: Incomplete=None, projection_kw: Incomplete=None, backend: Incomplete=None, basemap: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def add_subplots(self, array: Incomplete=None, nrows: Incomplete=1, ncols: Incomplete=1, order: Incomplete='C', projection: Incomplete=None, projection_kw: Incomplete=None, backend: Incomplete=None, basemap: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """The driver function for adding multiple subplots."""
         ...
 

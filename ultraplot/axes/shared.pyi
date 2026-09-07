@@ -4,8 +4,11 @@
 An axes used to jointly format Cartesian and polar axes.
 """
 from _typeshed import Incomplete
+import contextvars
+import functools
 import numpy as np
 from ..config import rc
+from .._sharing import AXIS_LABEL_FORMAT_KEYS, axis_supports_format_key, axis_sharing_updates_enabled, get_axis_sharing_format_keys, restore_axis_sharing, snapshot_axis_sharing, update_sharing_for_format_keys, validate_axis_format_values
 from ..internals import ic
 from ..internals import _pop_kwargs
 from ..utils import _fontsize_to_pt, _not_none, units
@@ -14,10 +17,19 @@ try:
     from typing import override
 except ImportError:
     from typing_extensions import override
+_active_format_axes = contextvars.ContextVar('active_format_axes', default=())
+
+def _format_wrapper(method: Incomplete=None, *, exclude: Incomplete=(), capture_explicit: Incomplete=False) -> Incomplete:
+    """Decorate a public format method with transactional sharing updates."""
+    ...
 
 class _SharedAxes(object):
     """Mix-in class with methods shared between [CartesianAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html)
 and [PolarAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html)."""
+
+    def _update_format_sharing(self, format_keys: Incomplete) -> None:
+        """Apply sharing effects for one explicit axes-level format call."""
+        ...
 
     @staticmethod
     def _min_max_lim(key: Incomplete, min_: Incomplete=None, max_: Incomplete=None, lim: Incomplete=None) -> Incomplete:

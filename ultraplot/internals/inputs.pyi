@@ -11,6 +11,7 @@ import numpy as np
 import numpy.ma as ma
 from . import ic
 from . import _not_none, warnings
+from .kwargs import _alias_kwargs
 try:
     from cartopy.crs import PlateCarree
 except ModuleNotFoundError:
@@ -121,7 +122,7 @@ def _dist_clean(distribution: Incomplete) -> Incomplete:
 Handles np.ndarrays where the ndarray is a list of lists of variable sizes."""
     ...
 
-def _dist_reduce(data: Incomplete, *, mean: Incomplete=None, means: Incomplete=None, median: Incomplete=None, medians: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+def _dist_reduce(data: Incomplete, *, means: Incomplete=None, medians: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
     """Reduce statistical distributions to means and medians. Tack on a
 distribution keyword argument for processing down the line."""
     ...

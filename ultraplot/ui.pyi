@@ -10,7 +10,7 @@ from . import figure as pfigure
 from . import gridspec as pgridspec
 from ._subplots import SubplotManager
 from .figure import Figure
-from .internals import _not_none, _pop_params, _pop_props, _pop_rc, docstring, ic
+from .internals import _canonicalize_kwargs, _figure_format_alias_scopes, _format_alias_scopes, _not_none, _pop_params, _pop_props, _pop_rc, docstring, ic
 __all__ = ['figure', 'subplot', 'subplots', 'show', 'close', 'switch_backend', 'ion', 'ioff', 'isinteractive']
 _pyplot_docstring = ...
 
@@ -74,6 +74,9 @@ Parameters
 - `figwidth, figheight`: The figure width and height.
 - `figsize`: Tuple specifying the figure ``(width, height)``.
 - `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `sharexlabels, shareylabels`: Override whether the x or y axis-title text (``xlabel`` or ``ylabel``) is shared.
+- `sharexlimits, shareylimits`: Override whether limits, scales, tick locations, and formatters are shared.
+- `sharexticklabels, shareyticklabels`: Override whether tick labels are suppressed on interior axes.
 - `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
 - `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
@@ -101,6 +104,9 @@ Parameters
 - `figwidth, figheight`: The figure width and height.
 - `figsize`: Tuple specifying the figure ``(width, height)``.
 - `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `sharexlabels, shareylabels`: Override whether the x or y axis-title text (``xlabel`` or ``ylabel``) is shared.
+- `sharexlimits, shareylimits`: Override whether limits, scales, tick locations, and formatters are shared.
+- `sharexticklabels, shareyticklabels`: Override whether tick labels are suppressed on interior axes.
 - `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
 - `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
@@ -125,12 +131,12 @@ Parameters
 - `array`: The subplot grid specifier.
 - `nrows, ncols`: The number of rows and columns in the subplot grid.
 - `order`: Whether subplots are numbered in column-major (``'C'``) or row-major (``'F'``) order.
-- `proj, projection`: The map projection specification(s).
-- `proj_kw, projection_kw`: Keyword arguments passed to `Basemap` or `Projection` classes on instantiation.
+- `projection`: The map projection specification(s).
+- `projection_kw`: Keyword arguments passed to `~mpl_toolkits.basemap.Basemap` or cartopy `~cartopy.crs.Projection` classes on instantiation.
 - `backend`: Whether to use `Basemap` or `Projection` for map projections.
 - `left, right, top, bottom`: The fixed space between the subplots and the figure edge.
 - `wspace, hspace, space`: The fixed space between grid columns, rows, and both, respectively.
-- `wratios, hratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), denotes the width and height ratios for the subplot grid.
+- `width_ratios, height_ratios`: Passed to [GridSpec](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.gridspec.GridSpec.html), and denote the width and height ratios for the subplot grid.
 - `wpad, hpad, pad`: The tight layout padding between columns, rows, and both, respectively.
 - `wequal, hequal, equal`: Whether to make the tight layout algorithm apply equal spacing between columns, rows, or both.
 - `wgroup, hgroup, group`: Whether to make the tight layout algorithm just consider spaces between adjacent subplots instead of entire columns and rows of subplots.
@@ -143,6 +149,9 @@ Parameters
 - `figwidth, figheight`: The figure width and height.
 - `figsize`: Tuple specifying the figure ``(width, height)``.
 - `sharex, sharey, share`: The axis sharing "level" for the *x* axis, *y* axis, or both axes.
+- `sharexlabels, shareylabels`: Override whether the x or y axis-title text (``xlabel`` or ``ylabel``) is shared.
+- `sharexlimits, shareylimits`: Override whether limits, scales, tick locations, and formatters are shared.
+- `sharexticklabels, shareyticklabels`: Override whether tick labels are suppressed on interior axes.
 - `spanx, spany, span`: Whether to use "spanning" axis labels for the *x* axis, *y* axis, or both axes.
 - `alignx, aligny, align`: Whether to ["align" axis labels](https://matplotlib.org/stable/gallery/subplots_axes_and_figures/align_labels_demo.html) for the *x* axis, *y* axis, or both axes.
 - `tight`: Whether automatic calls to `~Figure.auto_layout` should include [tight layout adjustments](https://ultraplot.readthedocs.io/en/stable/search.html?q=ug_tight).

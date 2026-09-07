@@ -10,6 +10,7 @@ where subplot 3 should be nicely centered between subplots 1 and 2.
 from _typeshed import Incomplete
 from typing import Dict, List, Optional, Tuple
 import numpy as np
+from .internals import _alias_kwargs
 try:
     from kiwisolver import Solver, Variable
     KIWI_AVAILABLE = True
@@ -43,7 +44,7 @@ This solver computes aesthetically pleasing positions for subplots in
 non-orthogonal arrangements by using constraint satisfaction, providing
 a superior layout experience for complex subplot arrangements."""
 
-    def __init__(self, array: np.ndarray, figwidth: float=10.0, figheight: float=8.0, wspace: Optional[List[float]]=None, hspace: Optional[List[float]]=None, left: float=0.125, right: float=0.125, top: float=0.125, bottom: float=0.125, wratios: Optional[List[float]]=None, hratios: Optional[List[float]]=None, wpanels: Optional[List[bool]]=None, hpanels: Optional[List[bool]]=None) -> None:
+    def __init__(self, array: np.ndarray, figwidth: float=10.0, figheight: float=8.0, wspace: Optional[List[float]]=None, hspace: Optional[List[float]]=None, left: float=0.125, right: float=0.125, top: float=0.125, bottom: float=0.125, width_ratios: Optional[List[float]]=None, height_ratios: Optional[List[float]]=None, wpanels: Optional[List[bool]]=None, hpanels: Optional[List[bool]]=None) -> None:
         """Initialize the UltraLayout solver.
 
 Parameters
@@ -56,7 +57,7 @@ wspace, hspace : list of float, optional
     Spacing between columns and rows in inches
 left, right, top, bottom : float
     Margins in inches
-wratios, hratios : list of float, optional
+width_ratios, height_ratios : list of float, optional
     Width and height ratios for columns and rows
 wpanels, hpanels : list of bool, optional
     Flags indicating panel columns or rows with fixed widths/heights."""
@@ -93,7 +94,7 @@ class ColorbarLayoutSolver:
         """Solve the constraint system and return inset and frame bounds."""
         ...
 
-def compute_ultra_positions(array: np.ndarray, figwidth: float=10.0, figheight: float=8.0, wspace: Optional[List[float]]=None, hspace: Optional[List[float]]=None, left: float=0.125, right: float=0.125, top: float=0.125, bottom: float=0.125, wratios: Optional[List[float]]=None, hratios: Optional[List[float]]=None, wpanels: Optional[List[bool]]=None, hpanels: Optional[List[bool]]=None) -> Dict[int, Tuple[float, float, float, float]]:
+def compute_ultra_positions(array: np.ndarray, figwidth: float=10.0, figheight: float=8.0, wspace: Optional[List[float]]=None, hspace: Optional[List[float]]=None, left: float=0.125, right: float=0.125, top: float=0.125, bottom: float=0.125, width_ratios: Optional[List[float]]=None, height_ratios: Optional[List[float]]=None, wpanels: Optional[List[bool]]=None, hpanels: Optional[List[bool]]=None) -> Dict[int, Tuple[float, float, float, float]]:
     """Compute subplot positions using UltraLayout for non-orthogonal layouts.
 
 Parameters
@@ -106,7 +107,7 @@ wspace, hspace : list of float, optional
     Spacing between columns and rows in inches
 left, right, top, bottom : float
     Margins in inches
-wratios, hratios : list of float, optional
+width_ratios, height_ratios : list of float, optional
     Width and height ratios for columns and rows
 wpanels, hpanels : list of bool, optional
     Flags indicating panel columns or rows with fixed widths/heights.
@@ -125,7 +126,7 @@ Examples
 (0.25, 0.125, 0.5, 0.35)"""
     ...
 
-def get_grid_positions_ultra(array: np.ndarray, figwidth: float, figheight: float, wspace: Optional[List[float]]=None, hspace: Optional[List[float]]=None, left: float=0.125, right: float=0.125, top: float=0.125, bottom: float=0.125, wratios: Optional[List[float]]=None, hratios: Optional[List[float]]=None, wpanels: Optional[List[bool]]=None, hpanels: Optional[List[bool]]=None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def get_grid_positions_ultra(array: np.ndarray, figwidth: float, figheight: float, wspace: Optional[List[float]]=None, hspace: Optional[List[float]]=None, left: float=0.125, right: float=0.125, top: float=0.125, bottom: float=0.125, width_ratios: Optional[List[float]]=None, height_ratios: Optional[List[float]]=None, wpanels: Optional[List[bool]]=None, hpanels: Optional[List[bool]]=None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Get grid line positions using UltraLayout.
 
 This returns arrays of grid line positions similar to GridSpec.get_grid_positions(),
@@ -141,7 +142,7 @@ wspace, hspace : list of float, optional
     Spacing between columns and rows in inches
 left, right, top, bottom : float
     Margins in inches
-wratios, hratios : list of float, optional
+width_ratios, height_ratios : list of float, optional
     Width and height ratios for columns and rows
 wpanels, hpanels : list of bool, optional
     Flags indicating panel columns or rows with fixed widths/heights.

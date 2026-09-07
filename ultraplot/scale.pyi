@@ -11,7 +11,7 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 import numpy.ma as ma
 from . import ticker as pticker
-from .internals import _not_none, _version_mpl, ic, warnings
+from .internals import _canonicalize_kwargs, _not_none, _version_mpl, ic, warnings
 __all__ = ['CutoffScale', 'ExpScale', 'FuncScale', 'InverseScale', 'LinearScale', 'LogitScale', 'LogScale', 'MercatorLatitudeScale', 'PowerScale', 'SineLatitudeScale', 'SymmetricalLogScale']
 
 def _parse_logscale_args(*keys: Incomplete, **kwargs: Incomplete) -> Incomplete:
@@ -94,10 +94,6 @@ subs : sequence of int, default: ``[1 2 3 4 5 6 7 8 9]``
     Default *minor* tick locations are on these multiples of each power
     of the base. For example, ``subs=(1, 2, 5)`` draws ticks on 1, 2,
     5, 10, 20, 50, 100, 200, 500, etc.
-basex, basey, nonposx, nonposy, subsx, subsy
-    Aliases for the above keywords. These used to be conditional
-    on the *name* of the axis.
-
 See also
 --------
 ultraplot.constructor.Scale"""
@@ -129,10 +125,6 @@ subs : sequence of int, default: ``[1 2 3 4 5 6 7 8 9]``
     Default *minor* tick locations are on these multiples of each power
     of the base. For example, ``subs=(1, 2, 5)`` draws ticks on 1, 2,
     5, 10, 20, 50, 100, 200, 500, etc.
-basex, basey, linthreshx, linthreshy, linscalex, linscaley, subsx, subsy
-    Aliases for the above keywords. These keywords used to be
-    conditional on the name of the axis.
-
 See also
 --------
 ultraplot.constructor.Scale"""

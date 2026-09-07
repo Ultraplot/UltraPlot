@@ -31,10 +31,11 @@ import numpy as np
 import numpy.ma as ma
 from numpy.typing import ArrayLike
 from packaging import version
+from .. import _sharing as psharing
 from .. import colors as pcolors
 from .. import constructor, utils
 from ..config import rc
-from ..internals import _get_aliases, _not_none, _pop_kwargs, _pop_params, _pop_props, _version_mpl, context, docstring, guides, ic, inputs, warnings
+from ..internals import _alias_kwargs, _canonicalize_kwargs, _get_aliases, _not_none, _pop_kwargs, _pop_params, _pop_props, _version_mpl, context, docstring, guides, ic, inputs, warnings
 from ..utils import units
 from . import base
 try:
@@ -626,33 +627,33 @@ pycirclize.Circos
         """Call the plotting method separately for "negative" and "positive" data."""
         ...
 
-    def _add_auto_labels(self, obj: Incomplete, cobj: Incomplete=None, labels: Incomplete=False, labels_kw: Incomplete=None, fmt: Incomplete=None, formatter: Incomplete=None, formatter_kw: Incomplete=None, precision: Incomplete=None) -> None:
+    def _add_auto_labels(self, obj: Incomplete, cobj: Incomplete=None, labels: Incomplete=False, labels_kw: Incomplete=None, formatter: Incomplete=None, formatter_kw: Incomplete=None, precision: Incomplete=None) -> None:
         """Add number labels. Default formatter is [SimpleFormatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.SimpleFormatter.html)
 with a default maximum precision of ``3`` decimal places."""
         ...
 
-    def _add_quadmesh_labels(self, obj: Incomplete, fmt: Incomplete, *, c: Incomplete=None, color: Incomplete=None, colors: Incomplete=None, size: Incomplete=None, fontsize: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _add_quadmesh_labels(self, obj: Incomplete, fmt: Incomplete, *, color: Incomplete=None, fontsize: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Add labels to QuadMesh cells with support for shade-dependent text colors.
 Values are inferred from the unnormalized mesh cell color."""
         ...
 
-    def _add_collection_labels(self, obj: Incomplete, fmt: Incomplete, *, c: Incomplete=None, color: Incomplete=None, colors: Incomplete=None, size: Incomplete=None, fontsize: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _add_collection_labels(self, obj: Incomplete, fmt: Incomplete, *, color: Incomplete=None, fontsize: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Add labels to pcolor boxes with support for shade-dependent text colors.
 Values are inferred from the unnormalized grid box color."""
         ...
 
-    def _add_contour_labels(self, obj: Incomplete, cobj: Incomplete, fmt: Incomplete, *, c: Incomplete=None, color: Incomplete=None, colors: Incomplete=None, size: Incomplete=None, fontsize: Incomplete=None, inline_spacing: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _add_contour_labels(self, obj: Incomplete, cobj: Incomplete, fmt: Incomplete, *, colors: Incomplete=None, fontsize: Incomplete=None, inline_spacing: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Add labels to contours with support for shade-dependent filled contour labels.
 Text color is inferred from filled contour object and labels are always drawn
 on unfilled contour object (otherwise errors crop up)."""
         ...
 
-    def _add_error_bars(self, x: Incomplete, y: Incomplete, *_: Incomplete, distribution: Incomplete=None, default_barstds: Incomplete=False, default_boxstds: Incomplete=False, default_barpctiles: Incomplete=False, default_boxpctiles: Incomplete=False, default_marker: Incomplete=False, bars: Incomplete=None, boxes: Incomplete=None, barstd: Incomplete=None, barstds: Incomplete=None, barpctile: Incomplete=None, barpctiles: Incomplete=None, bardata: Incomplete=None, boxstd: Incomplete=None, boxstds: Incomplete=None, boxpctile: Incomplete=None, boxpctiles: Incomplete=None, boxdata: Incomplete=None, capsize: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _add_error_bars(self, x: Incomplete, y: Incomplete, *_: Incomplete, distribution: Incomplete=None, default_barstds: Incomplete=False, default_boxstds: Incomplete=False, default_barpctiles: Incomplete=False, default_boxpctiles: Incomplete=False, default_marker: Incomplete=False, barstds: Incomplete=None, barpctiles: Incomplete=None, bardata: Incomplete=None, boxstds: Incomplete=None, boxpctiles: Incomplete=None, boxdata: Incomplete=None, capsize: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Add up to 2 error indicators: thick "boxes" and thin "bars". The ``default``
 keywords toggle default range indicators when distributions are passed."""
         ...
 
-    def _add_error_shading(self, x: Incomplete, y: Incomplete, *_: Incomplete, distribution: Incomplete=None, color_key: Incomplete='color', shade: Incomplete=None, shadestd: Incomplete=None, shadestds: Incomplete=None, shadepctile: Incomplete=None, shadepctiles: Incomplete=None, shadedata: Incomplete=None, fade: Incomplete=None, fadestd: Incomplete=None, fadestds: Incomplete=None, fadepctile: Incomplete=None, fadepctiles: Incomplete=None, fadedata: Incomplete=None, shadelabel: Incomplete=False, fadelabel: Incomplete=False, **kwargs: Incomplete) -> Incomplete:
+    def _add_error_shading(self, x: Incomplete, y: Incomplete, *_: Incomplete, distribution: Incomplete=None, color_key: Incomplete='color', shadestds: Incomplete=None, shadepctiles: Incomplete=None, shadedata: Incomplete=None, fadestds: Incomplete=None, fadepctiles: Incomplete=None, fadedata: Incomplete=None, shadelabel: Incomplete=False, fadelabel: Incomplete=False, **kwargs: Incomplete) -> Incomplete:
         """Add up to 2 error indicators: more opaque "shading" and less opaque "fading"."""
         ...
 
@@ -741,7 +742,7 @@ existing ``N x 3``/``N x 4`` path and reserve this override for the 1D
 numeric case only."""
         ...
 
-    def _parse_cmap(self, *args: Incomplete, cmap: Incomplete=None, cmap_kw: Incomplete=None, c: Incomplete=None, color: Incomplete=None, colors: Incomplete=None, norm: Incomplete=None, norm_kw: Incomplete=None, extend: Incomplete=None, vmin: Incomplete=None, vmax: Incomplete=None, discrete: Incomplete=None, default_cmap: Incomplete=None, default_discrete: Incomplete=True, skip_autolev: Incomplete=False, min_levels: Incomplete=None, plot_lines: Incomplete=False, plot_contours: Incomplete=False, center_levels: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _parse_cmap(self, *args: Incomplete, cmap: Incomplete=None, cmap_kw: Incomplete=None, colors: Incomplete=None, norm: Incomplete=None, norm_kw: Incomplete=None, extend: Incomplete=None, vmin: Incomplete=None, vmax: Incomplete=None, discrete: Incomplete=None, default_cmap: Incomplete=None, default_discrete: Incomplete=True, skip_autolev: Incomplete=False, min_levels: Incomplete=None, plot_lines: Incomplete=False, plot_contours: Incomplete=False, center_levels: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Parse colormap and normalizer arguments.
 
 Parameters
@@ -846,15 +847,13 @@ levels : list of float
     Unused arguments."""
         ...
 
-    def _parse_level_vals(self, *args: Incomplete, N: Incomplete=None, levels: Incomplete=None, values: Incomplete=None, extend: Incomplete=None, positive: Incomplete=False, negative: Incomplete=False, nozero: Incomplete=False, norm: Incomplete=None, norm_kw: Incomplete=None, vmin: Incomplete=None, vmax: Incomplete=None, skip_autolev: Incomplete=False, min_levels: Incomplete=None, center_levels: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _parse_level_vals(self, *args: Incomplete, levels: Incomplete=None, values: Incomplete=None, extend: Incomplete=None, positive: Incomplete=False, negative: Incomplete=False, nozero: Incomplete=False, norm: Incomplete=None, norm_kw: Incomplete=None, vmin: Incomplete=None, vmax: Incomplete=None, skip_autolev: Incomplete=False, min_levels: Incomplete=None, center_levels: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Return levels resulting from a wide variety of keyword options.
 
 Parameters
 ----------
 *args
     The sample data. Passed to `_parse_level_lim`.
-N
-    Shorthand for `levels`.
 levels : int or sequence of float, optional
     The levels list or (approximate) number of levels to create.
 values : int or sequence of float, optional
@@ -934,14 +933,12 @@ Parameters
 - `linestyle`: The style of the line(s).
 - `color`: The color of the line(s).
 - `alpha`: The opacity of the line(s).
-- `mean, means`: Whether to plot the means of each column for 2D `y` coordinates.
-- `median, medians`: Whether to plot the medians of each column for 2D `y` coordinates.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `means`: Whether to plot the means of each column for 2D `y` coordinates.
+- `medians`: Whether to plot the medians of each column for 2D `y` coordinates.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -949,10 +946,8 @@ Parameters
 - `boxm, boxmarker`: Whether to draw a small marker in the middle of the box denoting the mean or median position.
 - `boxms, boxmarkersize`: The marker size for the `boxmarker` marker in points ** 2.
 - `boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor`: Color, face color, and edge color for the `boxmarker` marker.
-- `shade`: Shorthand for `shadestd`.
-- `shadestd, shadestds, shadepctile, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
-- `fade`: Shorthand for `fadestd`.
-- `fadestd, fadestds, fadepctile, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
+- `shadestds, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
+- `fadestds, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
 - `shadec, shadecolor, fadec, fadecolor`: Colors for the different shaded regions.
 - `shadez, shadezorder, fadez, fadezorder`: The "zorder" for the different shaded regions.
 - `shadea, shadealpha, fadea, fadealpha`: The opacity for the different shaded regions.
@@ -961,7 +956,11 @@ Parameters
 - `shadelabel, fadelabel`: Labels for the shaded regions to be used as separate legend entries.
 - `inbounds`: Whether to restrict the default `y` (`x`) axis limits to account for only in-bounds data when the `x` (`y`) axis limits have been locked.
 - `label, value`: The single legend label or colorbar coordinate to be used for this plotted element.
-- _6 additional parameter groups are documented online._
+- `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
+- `colorbar`: If not ``None``, this is a location specifying where to draw an *inset* or *outer* colorbar from the resulting object(s).
+- `colorbar_kw`: Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
+- `legend`: Location specifying where to draw an *inset* or *outer* legend from the resulting object(s).
+- _2 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.line)"""
         ...
@@ -980,14 +979,12 @@ Parameters
 - `linestyle`: The style of the line(s).
 - `color`: The color of the line(s).
 - `alpha`: The opacity of the line(s).
-- `mean, means`: Whether to plot the means of each column for 2D `x` coordinates.
-- `median, medians`: Whether to plot the medians of each column for 2D `x` coordinates.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `means`: Whether to plot the means of each column for 2D `x` coordinates.
+- `medians`: Whether to plot the medians of each column for 2D `x` coordinates.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -995,10 +992,8 @@ Parameters
 - `boxm, boxmarker`: Whether to draw a small marker in the middle of the box denoting the mean or median position.
 - `boxms, boxmarkersize`: The marker size for the `boxmarker` marker in points ** 2.
 - `boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor`: Color, face color, and edge color for the `boxmarker` marker.
-- `shade`: Shorthand for `shadestd`.
-- `shadestd, shadestds, shadepctile, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
-- `fade`: Shorthand for `fadestd`.
-- `fadestd, fadestds, fadepctile, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
+- `shadestds, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
+- `fadestds, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
 - `shadec, shadecolor, fadec, fadecolor`: Colors for the different shaded regions.
 - `shadez, shadezorder, fadez, fadezorder`: The "zorder" for the different shaded regions.
 - `shadea, shadealpha, fadea, fadealpha`: The opacity for the different shaded regions.
@@ -1007,7 +1002,11 @@ Parameters
 - `shadelabel, fadelabel`: Labels for the shaded regions to be used as separate legend entries.
 - `inbounds`: Whether to restrict the default `y` (`x`) axis limits to account for only in-bounds data when the `x` (`y`) axis limits have been locked.
 - `label, value`: The single legend label or colorbar coordinate to be used for this plotted element.
-- _6 additional parameter groups are documented online._
+- `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
+- `colorbar`: If not ``None``, this is a location specifying where to draw an *inset* or *outer* colorbar from the resulting object(s).
+- `colorbar_kw`: Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
+- `legend`: Location specifying where to draw an *inset* or *outer* legend from the resulting object(s).
+- _2 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.linex)"""
         ...
@@ -1026,7 +1025,7 @@ Parameters
 - `n_bins`: Number of bins to use to reduce the overlap between points.
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
@@ -1042,12 +1041,10 @@ Parameters
 - `negative`: If ``True``, the normaliation range or discrete colormap levels are negative with a minimum at zero.
 - `nozero`: If ``True``, ``0`` is removed from the level list.
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
-- `median, medians`: Whether to plot the medians of each column for 2D `y` coordinates.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `medians`: Whether to plot the medians of each column for 2D `y` coordinates.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -1055,9 +1052,11 @@ Parameters
 - `boxm, boxmarker`: Whether to draw a small marker in the middle of the box denoting the mean or median position.
 - `boxms, boxmarkersize`: The marker size for the `boxmarker` marker in points ** 2.
 - `boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor`: Color, face color, and edge color for the `boxmarker` marker.
-- `shadestd, shadestds, shadepctile, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
-- `fade`: Shorthand for `fadestd`.
-- _11 additional parameter groups are documented online._
+- `fadestds, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
+- `shadec, shadecolor, fadec, fadecolor`: Colors for the different shaded regions.
+- `shadez, shadezorder, fadez, fadezorder`: The "zorder" for the different shaded regions.
+- `shadea, shadealpha, fadea, fadealpha`: The opacity for the different shaded regions.
+- _7 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.beeswarm)"""
         ...
@@ -1084,13 +1083,12 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -1106,7 +1104,8 @@ Parameters
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths`: The marker edge width(s).
 - `edgecolors, markeredgecolor, markeredgecolors`: The marker edge color(s).
-- _32 additional parameter groups are documented online._
+- `means`: Whether to plot the means of each column for 2D `x` coordinates.
+- _27 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.lollipop)"""
         ...
@@ -1130,13 +1129,12 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -1152,7 +1150,8 @@ Parameters
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths`: The marker edge width(s).
 - `edgecolors, markeredgecolor, markeredgecolors`: The marker edge color(s).
-- _32 additional parameter groups are documented online._
+- `means`: Whether to plot the means of each column for 2D `x` coordinates.
+- _27 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.lollipoph)"""
         ...
@@ -1321,14 +1320,12 @@ Parameters
 - `linestyle`: The style of the line(s).
 - `color`: The color of the line(s).
 - `alpha`: The opacity of the line(s).
-- `mean, means`: Whether to plot the means of each column for 2D `y` coordinates.
-- `median, medians`: Whether to plot the medians of each column for 2D `y` coordinates.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `means`: Whether to plot the means of each column for 2D `y` coordinates.
+- `medians`: Whether to plot the medians of each column for 2D `y` coordinates.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -1336,10 +1333,8 @@ Parameters
 - `boxm, boxmarker`: Whether to draw a small marker in the middle of the box denoting the mean or median position.
 - `boxms, boxmarkersize`: The marker size for the `boxmarker` marker in points ** 2.
 - `boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor`: Color, face color, and edge color for the `boxmarker` marker.
-- `shade`: Shorthand for `shadestd`.
-- `shadestd, shadestds, shadepctile, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
-- `fade`: Shorthand for `fadestd`.
-- `fadestd, fadestds, fadepctile, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
+- `shadestds, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
+- `fadestds, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
 - `shadec, shadecolor, fadec, fadecolor`: Colors for the different shaded regions.
 - `shadez, shadezorder, fadez, fadezorder`: The "zorder" for the different shaded regions.
 - `shadea, shadealpha, fadea, fadealpha`: The opacity for the different shaded regions.
@@ -1348,7 +1343,11 @@ Parameters
 - `shadelabel, fadelabel`: Labels for the shaded regions to be used as separate legend entries.
 - `inbounds`: Whether to restrict the default `y` (`x`) axis limits to account for only in-bounds data when the `x` (`y`) axis limits have been locked.
 - `label, value`: The single legend label or colorbar coordinate to be used for this plotted element.
-- _9 additional parameter groups are documented online._
+- `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
+- `colorbar`: If not ``None``, this is a location specifying where to draw an *inset* or *outer* colorbar from the resulting object(s).
+- `colorbar_kw`: Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
+- `legend`: Location specifying where to draw an *inset* or *outer* legend from the resulting object(s).
+- _5 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.plot)"""
         ...
@@ -1367,14 +1366,12 @@ Parameters
 - `linestyle`: The style of the line(s).
 - `color`: The color of the line(s).
 - `alpha`: The opacity of the line(s).
-- `mean, means`: Whether to plot the means of each column for 2D `x` coordinates.
-- `median, medians`: Whether to plot the medians of each column for 2D `x` coordinates.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `means`: Whether to plot the means of each column for 2D `x` coordinates.
+- `medians`: Whether to plot the medians of each column for 2D `x` coordinates.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -1382,10 +1379,8 @@ Parameters
 - `boxm, boxmarker`: Whether to draw a small marker in the middle of the box denoting the mean or median position.
 - `boxms, boxmarkersize`: The marker size for the `boxmarker` marker in points ** 2.
 - `boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor`: Color, face color, and edge color for the `boxmarker` marker.
-- `shade`: Shorthand for `shadestd`.
-- `shadestd, shadestds, shadepctile, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
-- `fade`: Shorthand for `fadestd`.
-- `fadestd, fadestds, fadepctile, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
+- `shadestds, shadepctiles, shadedata`: As with `barstd`, `barpctile`, and `bardata`, but using *shading* to indicate the error range.
+- `fadestds, fadepctiles, fadedata`: As with `shadestd`, `shadepctile`, and `shadedata`, but for an additional, more faded, *secondary* shaded region.
 - `shadec, shadecolor, fadec, fadecolor`: Colors for the different shaded regions.
 - `shadez, shadezorder, fadez, fadezorder`: The "zorder" for the different shaded regions.
 - `shadea, shadealpha, fadea, fadealpha`: The opacity for the different shaded regions.
@@ -1394,7 +1389,11 @@ Parameters
 - `shadelabel, fadelabel`: Labels for the shaded regions to be used as separate legend entries.
 - `inbounds`: Whether to restrict the default `y` (`x`) axis limits to account for only in-bounds data when the `x` (`y`) axis limits have been locked.
 - `label, value`: The single legend label or colorbar coordinate to be used for this plotted element.
-- _6 additional parameter groups are documented online._
+- `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
+- `colorbar`: If not ``None``, this is a location specifying where to draw an *inset* or *outer* colorbar from the resulting object(s).
+- `colorbar_kw`: Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
+- `legend`: Location specifying where to draw an *inset* or *outer* legend from the resulting object(s).
+- _2 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.plotx)"""
         ...
@@ -1523,7 +1522,7 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
@@ -1542,7 +1541,7 @@ Parameters
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.parametric)"""
         ...
 
-    def _apply_lines(self, xs: Incomplete, ys1: Incomplete, ys2: Incomplete, colors: Incomplete, *, vert: Incomplete=True, stack: Incomplete=None, stacked: Incomplete=None, negpos: Incomplete=False, **kwargs: Incomplete) -> Incomplete:
+    def _apply_lines(self, xs: Incomplete, ys1: Incomplete, ys2: Incomplete, colors: Incomplete, *, vert: Incomplete=True, stacked: Incomplete=None, negpos: Incomplete=False, **kwargs: Incomplete) -> Incomplete:
         """Plot vertical or hotizontal lines at each point."""
         ...
 
@@ -1554,7 +1553,7 @@ Parameters
 - `*args`: The data passed as positional or keyword arguments.
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
-- `stack, stacked`: Whether to "stack" lines from successive columns of y data or plot lines on top of each other.
+- `stacked`: Whether to "stack" lines from successive columns of y data or plot lines on top of each other.
 - `cycle`: The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `linewidth`: The width of the line(s).
@@ -1583,7 +1582,7 @@ Parameters
 - `*args`: The data passed as positional or keyword arguments.
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
-- `stack, stacked`: Whether to "stack" lines from successive columns of x data or plot lines on top of each other.
+- `stacked`: Whether to "stack" lines from successive columns of x data or plot lines on top of each other.
 - `cycle`: The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `linewidth`: The width of the line(s).
@@ -1628,13 +1627,12 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -1650,10 +1648,11 @@ Parameters
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths`: The marker edge width(s).
 - `edgecolors, markeredgecolor, markeredgecolors`: The marker edge color(s).
-- `mean, means`: Whether to plot the means of each column for 2D `y` coordinates.
-- `median, medians`: Whether to plot the medians of each column for 2D `y` coordinates.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- _38 additional parameter groups are documented online._
+- `means`: Whether to plot the means of each column for 2D `y` coordinates.
+- `medians`: Whether to plot the medians of each column for 2D `y` coordinates.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
+- _33 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.scatter)"""
         ...
@@ -1674,13 +1673,12 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -1696,15 +1694,16 @@ Parameters
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths`: The marker edge width(s).
 - `edgecolors, markeredgecolor, markeredgecolors`: The marker edge color(s).
-- `mean, means`: Whether to plot the means of each column for 2D `x` coordinates.
-- `median, medians`: Whether to plot the medians of each column for 2D `x` coordinates.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- _29 additional parameter groups are documented online._
+- `means`: Whether to plot the means of each column for 2D `x` coordinates.
+- `medians`: Whether to plot the medians of each column for 2D `x` coordinates.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
+- _24 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.scatterx)"""
         ...
 
-    def _apply_fill(self, xs: Incomplete, ys1: Incomplete, ys2: Incomplete, where: Incomplete, *, vert: Incomplete=True, negpos: Incomplete=None, stack: Incomplete=None, stacked: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _apply_fill(self, xs: Incomplete, ys1: Incomplete, ys2: Incomplete, where: Incomplete, *, vert: Incomplete=True, negpos: Incomplete=None, stacked: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Apply area shading using `fill_between` or `fill_betweenx`.
 
 This is the internal implementation for `fill_between`, `fill_betweenx`,
@@ -1752,7 +1751,7 @@ is provided."""
 Parameters
 ----------
 - `*args`: The data passed as positional or keyword arguments.
-- `stack, stacked`: Whether to "stack" area patches from successive columns of y data or plot area patches on top of each other.
+- `stacked`: Whether to "stack" area patches from successive columns of y data or plot area patches on top of each other.
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `where`: A boolean mask for the points that should be shaded.
@@ -1784,7 +1783,7 @@ Parameters
 Parameters
 ----------
 - `*args`: The data passed as positional or keyword arguments.
-- `stack, stacked`: Whether to "stack" area patches from successive columns of x data or plot area patches on top of each other.
+- `stacked`: Whether to "stack" area patches from successive columns of x data or plot area patches on top of each other.
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `where`: A boolean mask for the points that should be shaded.
@@ -1816,7 +1815,7 @@ Parameters
 Parameters
 ----------
 - `*args`: The data passed as positional or keyword arguments.
-- `stack, stacked`: Whether to "stack" area patches from successive columns of y data or plot area patches on top of each other.
+- `stacked`: Whether to "stack" area patches from successive columns of y data or plot area patches on top of each other.
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `where`: A boolean mask for the points that should be shaded.
@@ -1853,7 +1852,7 @@ Parameters
 Parameters
 ----------
 - `*args`: The data passed as positional or keyword arguments.
-- `stack, stacked`: Whether to "stack" area patches from successive columns of x data or plot area patches on top of each other.
+- `stacked`: Whether to "stack" area patches from successive columns of x data or plot area patches on top of each other.
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `where`: A boolean mask for the points that should be shaded.
@@ -1909,7 +1908,7 @@ Parameters
 widths are much more convenient for users."""
         ...
 
-    def _apply_bar(self, xs: Incomplete, hs: Incomplete, ws: Incomplete, bs: Incomplete, *, absolute_width: Incomplete=None, stack: Incomplete=None, stacked: Incomplete=None, negpos: Incomplete=False, orientation: Incomplete='vertical', **kwargs: Incomplete) -> Incomplete:
+    def _apply_bar(self, xs: Incomplete, hs: Incomplete, ws: Incomplete, bs: Incomplete, *, absolute_width: Incomplete=None, stacked: Incomplete=None, negpos: Incomplete=False, orientation: Incomplete='vertical', **kwargs: Incomplete) -> Incomplete:
         """Apply bar or barh command. Support default "minima" at zero."""
         ...
 
@@ -1927,7 +1926,7 @@ Parameters
 - `width`: The width(s) of the bars.
 - `bottom`: The coordinate(s) of the bottom edge of the bars.
 - `absolute_width`: Whether to make the `width` units *absolute*.
-- `stack, stacked`: Whether to "stack" bars from successive columns of y data or plot bars side-by-side in groups.
+- `stacked`: Whether to "stack" bars from successive columns of y data or plot bars side-by-side in groups.
 - `bar_labels`: Whether to show the height values for vertical bars or width values for horizontal bars.
 - `bar_labels_kw`: Keywords to format the bar_labels, see [bar_label](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar_label.html).
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
@@ -1942,14 +1941,12 @@ Parameters
 - `negpos`: Whether to shade bars where ``height >= 0`` with `poscolor` and where ``height < 0`` with `negcolor`.
 - `negcolor, poscolor`: Colors to use for the negative and positive bars.
 - `edgefix`: Whether to fix the common issue where white lines appear between adjacent patches in saved vector graphics (this can slow down figure rendering).
-- `mean, means`: Whether to plot the means of each column for 2D `y` coordinates.
-- `median, medians`: Whether to plot the medians of each column for 2D `y` coordinates.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `means`: Whether to plot the means of each column for 2D `y` coordinates.
+- `medians`: Whether to plot the medians of each column for 2D `y` coordinates.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -1959,7 +1956,9 @@ Parameters
 - `boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor`: Color, face color, and edge color for the `boxmarker` marker.
 - `inbounds`: Whether to restrict the default `y` (`x`) axis limits to account for only in-bounds data when the `x` (`y`) axis limits have been locked.
 - `label, value`: The single legend label or colorbar coordinate to be used for this plotted element.
-- _17 additional parameter groups are documented online._
+- `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
+- `colorbar`: If not ``None``, this is a location specifying where to draw an *inset* or *outer* colorbar from the resulting object(s).
+- _15 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.bar)"""
         ...
@@ -1973,7 +1972,7 @@ Parameters
 - `width`: The width(s) of the bars.
 - `left`: The coordinate(s) of the left edge of the bars.
 - `absolute_width`: Whether to make the `width` units *absolute*.
-- `stack, stacked`: Whether to "stack" bars from successive columns of x data or plot bars side-by-side in groups.
+- `stacked`: Whether to "stack" bars from successive columns of x data or plot bars side-by-side in groups.
 - `bar_labels`: Whether to show the height values for vertical bars or width values for horizontal bars.
 - `bar_labels_kw`: Keywords to format the bar_labels, see [bar_label](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar_label.html).
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
@@ -1988,14 +1987,12 @@ Parameters
 - `negpos`: Whether to shade bars where ``height >= 0`` with `poscolor` and where ``height < 0`` with `negcolor`.
 - `negcolor, poscolor`: Colors to use for the negative and positive bars.
 - `edgefix`: Whether to fix the common issue where white lines appear between adjacent patches in saved vector graphics (this can slow down figure rendering).
-- `mean, means`: Whether to plot the means of each column for 2D `x` coordinates.
-- `median, medians`: Whether to plot the medians of each column for 2D `x` coordinates.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `means`: Whether to plot the means of each column for 2D `x` coordinates.
+- `medians`: Whether to plot the medians of each column for 2D `x` coordinates.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -2005,12 +2002,14 @@ Parameters
 - `boxmc, boxmarkercolor, boxmec, boxmarkeredgecolor`: Color, face color, and edge color for the `boxmarker` marker.
 - `inbounds`: Whether to restrict the default `y` (`x`) axis limits to account for only in-bounds data when the `x` (`y`) axis limits have been locked.
 - `label, value`: The single legend label or colorbar coordinate to be used for this plotted element.
-- _17 additional parameter groups are documented online._
+- `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
+- `colorbar`: If not ``None``, this is a location specifying where to draw an *inset* or *outer* colorbar from the resulting object(s).
+- _15 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.barh)"""
         ...
 
-    def pie(self, x: Incomplete, explode: Incomplete, *, labelpad: Incomplete=None, labeldistance: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def pie(self, x: Incomplete, explode: Incomplete, *, labeldistance: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Plot a pie chart.
 
 Parameters
@@ -2028,7 +2027,7 @@ Parameters
 - `edgefix`: Whether to fix the common issue where white lines appear between adjacent patches in saved vector graphics (this can slow down figure rendering).
 - `label, value`: The single legend label or colorbar coordinate to be used for this plotted element.
 - `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
-- `labelpad, labeldistance`: The distance at which labels are drawn in radial coordinates.
+- `labeldistance`: The distance at which labels are drawn in radial coordinates.
 - `x`: The wedge sizes.
 - `explode`: If not *None*, is a ``len(x)`` array which specifies the fraction of the radius with which to offset each wedge.
 - `labels`: A sequence of strings providing the labels for each wedge
@@ -2036,7 +2035,6 @@ Parameters
 - `hatch`: Hatching pattern applied to all pie wedges or sequence of patterns through which the chart will cycle.
 - `autopct`: If not *None*, *autopct* is a string or function used to label the wedges with their numeric value.
 - `pctdistance`: The relative distance along the radius at which the text generated by *autopct* is drawn.
-- `labeldistance`: The relative distance along the radius at which the labels are drawn.
 - `shadow`: If bool, whether to draw a shadow beneath the pie.
 - `startangle`: The angle by which the start of the pie is rotated, counterclockwise from the x-axis.
 - `radius`: The radius of the pie.
@@ -2064,7 +2062,7 @@ Parameters
         """Apply fixed tick locations/labels without appending duplicates on shared axes."""
         ...
 
-    def _apply_boxplot(self, x: Incomplete, y: Incomplete, *, mean: Incomplete=None, means: Incomplete=None, vert: Incomplete=True, fill: Incomplete=None, filled: Incomplete=None, marker: Incomplete=None, markersize: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _apply_boxplot(self, x: Incomplete, y: Incomplete, *, means: Incomplete=None, vert: Incomplete=True, fill: Incomplete=None, marker: Incomplete=None, markersize: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Apply the box plot."""
         ...
 
@@ -2077,7 +2075,7 @@ Parameters
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `fill`: Whether to fill the box with a color.
-- `mean, means`: If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
+- `means`: If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
 - `cycle`: The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `linewidth`: The edge width of the patch(es).
@@ -2104,7 +2102,7 @@ Parameters
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `fill`: Whether to fill the box with a color.
-- `mean, means`: If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
+- `means`: If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
 - `cycle`: The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `linewidth`: The edge width of the patch(es).
@@ -2131,7 +2129,7 @@ Parameters
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `fill`: Whether to fill the box with a color.
-- `mean, means`: If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
+- `means`: If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
 - `cycle`: The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `linewidth`: The edge width of the patch(es).
@@ -2177,7 +2175,7 @@ Parameters
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `fill`: Whether to fill the box with a color.
-- `mean, means`: If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
+- `means`: If ``True``, this passes ``showmeans=True`` and ``meanline=True`` to [matplotlib.axes.Axes.boxplot](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.boxplot.html).
 - `cycle`: The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
 - `cycle_kw`: Passed to [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html).
 - `linewidth`: The edge width of the patch(es).
@@ -2195,7 +2193,7 @@ Parameters
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.boxploth)"""
         ...
 
-    def _apply_violinplot(self, x: Incomplete, y: Incomplete, vert: Incomplete=True, mean: Incomplete=None, means: Incomplete=None, median: Incomplete=None, medians: Incomplete=None, showmeans: Incomplete=None, showmedians: Incomplete=None, showextrema: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _apply_violinplot(self, x: Incomplete, y: Incomplete, vert: Incomplete=True, means: Incomplete=None, medians: Incomplete=None, showextrema: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Apply the violinplot."""
         ...
 
@@ -2218,12 +2216,10 @@ Parameters
 - `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
 - `showmeans, showmedians`: Interpreted as ``means=True`` and ``medians=True`` when passed.
 - `showextrema`: Interpreted as ``barpctiles=True`` when passed (i.e.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -2255,12 +2251,10 @@ Parameters
 - `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
 - `showmeans, showmedians`: Interpreted as ``means=True`` and ``medians=True`` when passed.
 - `showextrema`: Interpreted as ``barpctiles=True`` when passed (i.e.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -2292,12 +2286,10 @@ Parameters
 - `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
 - `showmeans, showmedians`: Interpreted as ``means=True`` and ``medians=True`` when passed.
 - `showextrema`: Interpreted as ``barpctiles=True`` when passed (i.e.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -2314,7 +2306,9 @@ Parameters
 - `showmeans`: Whether to show the mean with a line.
 - `showmedians`: Whether to show the median with a line.
 - `quantiles`: If not None, set a list of floats in interval [0, 1] for each violin, which stands for the quantiles that will be rendered for that violin.
-- _3 additional parameter groups are documented online._
+- `points`: The number of points to evaluate each of the gaussian kernel density estimations at.
+- `bw_method`: The method used to calculate the estimator bandwidth.
+- _1 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.violinplot)"""
         ...
@@ -2338,12 +2332,10 @@ Parameters
 - `labels, values`: The legend labels or colorbar coordinates used for each plotted element.
 - `showmeans, showmedians`: Interpreted as ``means=True`` and ``medians=True`` when passed.
 - `showextrema`: Interpreted as ``barpctiles=True`` when passed (i.e.
-- `bars`: Shorthand for `barstd`, `barstds`.
-- `barstd, barstds`: Valid only if `mean` or `median` is ``True``.
-- `barpctile, barpctiles`: Valid only if `mean` or `median` is ``True``.
+- `barstds`: Valid only if `mean` or `median` is ``True``.
+- `barpctiles`: Valid only if `mean` or `median` is ``True``.
 - `bardata`: Valid only if `mean` and `median` are ``False``.
-- `boxes`: Shorthand for `boxstd`, `boxstds`.
-- `boxstd, boxstds, boxpctile, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
+- `boxstds, boxpctiles, boxdata`: As with `barstd`, `barpctile`, and `bardata`, but for *thicker error bars* representing a smaller interval than the thin error bars.
 - `capsize`: The cap size for thin error bars in points.
 - `barz, barzorder, boxz, boxzorder`: The "zorder" for the thin and thick error bars.
 - `barc, barcolor, boxc, boxcolor`: Colors for the thin and thick error bars.
@@ -2429,7 +2421,7 @@ Parameters
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.ridgelineh)"""
         ...
 
-    def _apply_hist(self, xs: Incomplete, bins: Incomplete, *, width: Incomplete=None, rwidth: Incomplete=None, stack: Incomplete=None, stacked: Incomplete=None, fill: Incomplete=None, filled: Incomplete=None, histtype: Incomplete=None, orientation: Incomplete='vertical', kde: Incomplete=False, kde_kw: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
+    def _apply_hist(self, xs: Incomplete, bins: Incomplete, *, rwidth: Incomplete=None, stacked: Incomplete=None, fill: Incomplete=None, histtype: Incomplete=None, orientation: Incomplete='vertical', kde: Incomplete=False, kde_kw: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
         """Apply the histogram."""
         ...
 
@@ -2442,11 +2434,11 @@ Parameters
 - `bins`: The bin count or exact bin edges.
 - `weights`: The weights associated with each point.
 - `histtype`: The histogram type.
-- `width, rwidth`: The bar width(s) for bar-type histograms relative to the bin size.
-- `stack, stacked`: Whether to "stack" successive columns of x data for bar-type histograms or show side-by-side in groups.
+- `rwidth`: The bar width(s) for bar-type histograms relative to the bin size.
+- `stacked`: Whether to "stack" successive columns of x data for bar-type histograms or show side-by-side in groups.
 - `kde`: Whether to overlay a gaussian kernel density estimate of each column of data.
 - `kde_kw`: Settings for the kernel density estimate.
-- `fill, filled`: Whether to "fill" step-type histograms or just plot the edges.
+- `fill`: Whether to "fill" step-type histograms or just plot the edges.
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cycle`: The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
@@ -2471,10 +2463,9 @@ Parameters
 - `bottom`: Location of the bottom of each bin, i.e.
 - `align`: The horizontal alignment of the histogram bars.
 - `orientation`: If 'horizontal', `~.Axes.barh` will be used for bar-type histograms and the *bottom* kwarg will be the left edges.
-- `rwidth`: The relative width of the bars as a fraction of the bin width.
 - `log`: If ``True``, the histogram axis will be set to a log scale.
 - `color`: Color or sequence of colors, one per dataset.
-- _2 additional parameter groups are documented online._
+- `label`: String, or sequence of strings to match multiple datasets.
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.hist)"""
         ...
@@ -2488,11 +2479,11 @@ Parameters
 - `bins`: The bin count or exact bin edges.
 - `weights`: The weights associated with each point.
 - `histtype`: The histogram type.
-- `width, rwidth`: The bar width(s) for bar-type histograms relative to the bin size.
-- `stack, stacked`: Whether to "stack" successive columns of x data for bar-type histograms or show side-by-side in groups.
+- `rwidth`: The bar width(s) for bar-type histograms relative to the bin size.
+- `stacked`: Whether to "stack" successive columns of x data for bar-type histograms or show side-by-side in groups.
 - `kde`: Whether to overlay a gaussian kernel density estimate of each column of data.
 - `kde_kw`: Settings for the kernel density estimate.
-- `fill, filled`: Whether to "fill" step-type histograms or just plot the edges.
+- `fill`: Whether to "fill" step-type histograms or just plot the edges.
 - `data`: A dict-like dataset container (e.g., [DataFrame](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) or [Dataset](https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html)).
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cycle`: The cycle specifer, passed to the [Cycle](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Cycle.html) constructor.
@@ -2526,14 +2517,13 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2548,14 +2538,15 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 - `precision`: The maximum number of decimal places for number labels generated with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 - `colorbar`: If not ``None``, this is a location specifying where to draw an *inset* or *outer* colorbar from the resulting object(s).
 - `colorbar_kw`: Extra keyword args for the call to [colorbar](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.colorbar).
 - `legend`: Location specifying where to draw an *inset* or *outer* legend from the resulting object(s).
 - `legend_kw`: Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
-- _7 additional parameter groups are documented online._
+- `**kwargs`: Passed to [hist2d](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hist2d.html).
+- _6 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.hist2d)"""
         ...
@@ -2571,14 +2562,13 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2593,7 +2583,7 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 - `precision`: The maximum number of decimal places for number labels generated with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
 - `colorbar`: If not ``None``, this is a location specifying where to draw an *inset* or *outer* colorbar from the resulting object(s).
@@ -2601,7 +2591,8 @@ Parameters
 - `legend`: Location specifying where to draw an *inset* or *outer* legend from the resulting object(s).
 - `legend_kw`: Extra keyword args for the call to [legend](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend).
 - `**kwargs`: Passed to [hexbin](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.hexbin.html).
-- _14 additional parameter groups are documented online._
+- `x, y`: The data positions.
+- _13 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.hexbin)"""
         ...
@@ -2619,14 +2610,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2645,9 +2635,10 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
-- _20 additional parameter groups are documented online._
+- `precision`: The maximum number of decimal places for number labels generated with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
+- _18 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.contour)"""
         ...
@@ -2665,14 +2656,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2691,9 +2681,10 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
-- _20 additional parameter groups are documented online._
+- `precision`: The maximum number of decimal places for number labels generated with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
+- _18 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.contourf)"""
         ...
@@ -2711,14 +2702,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2738,8 +2728,9 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
-- _14 additional parameter groups are documented online._
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
+- _13 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.pcolor)"""
         ...
@@ -2757,14 +2748,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2784,8 +2774,9 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
-- _14 additional parameter groups are documented online._
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
+- _13 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.pcolormesh)"""
         ...
@@ -2803,14 +2794,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2830,8 +2820,9 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
-- _11 additional parameter groups are documented online._
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
+- _10 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.pcolorfast)"""
         ...
@@ -2850,14 +2841,13 @@ Parameters
 - `aspect`: Modify the axes aspect ratio.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2877,7 +2867,8 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- _8 additional parameter groups are documented online._
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- _7 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.heatmap)"""
         ...
@@ -2896,13 +2887,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2942,13 +2933,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -2988,13 +2979,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -3025,13 +3016,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -3070,14 +3061,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -3096,9 +3086,10 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
-- _13 additional parameter groups are documented online._
+- `precision`: The maximum number of decimal places for number labels generated with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
+- _11 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.tricontour)"""
         ...
@@ -3116,14 +3107,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -3143,8 +3133,9 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
-- _15 additional parameter groups are documented online._
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
+- _13 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.tricontourf)"""
         ...
@@ -3162,14 +3153,13 @@ Parameters
 - `globe`: For [ultraplot.axes.GeoAxes](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.GeoAxes.html) only.
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -3189,8 +3179,9 @@ Parameters
 - `label`: The legend label to be used for this object.
 - `labels`: Whether to apply labels to contours and grid boxes.
 - `labels_kw`: Ignored if `labels` is ``False``.
-- `formatter, fmt`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
-- _12 additional parameter groups are documented online._
+- `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
+- `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
+- _11 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.tripcolor)"""
         ...
@@ -3205,14 +3196,13 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -3236,7 +3226,8 @@ Parameters
 - `interpolation_stage`: Supported values: - 'data': Interpolation is carried out on the data provided by the user This is useful if interpolating between pixels during upsampling.
 - `alpha`: The alpha blending value, between 0 (transparent) and 1 (opaque).
 - `origin`: Place the [0, 0] index of the array in the upper left or lower left corner of the Axes.
-- _5 additional parameter groups are documented online._
+- `extent`: The bounding box in data coordinates that the image will fill.
+- _4 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.imshow)"""
         ...
@@ -3251,14 +3242,13 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.
@@ -3290,14 +3280,13 @@ Parameters
 - `autoformat`: Whether the `x` axis labels, `y` axis labels, axis formatters, axes titles, legend titles, and colorbar labels are automatically configured when a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html)…
 - `cmap`: The colormap specifer, passed to the [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html) constructor function.
 - `cmap_kw`: Passed to [Colormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Colormap.html).
-- `c, color, colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
+- `colors`: The color(s) used to create a [DiscreteColormap](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteColormap.html).
 - `norm`: The data value normalizer, passed to the [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html) constructor function.
 - `norm_kw`: Passed to [Norm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.constructor.Norm.html).
 - `extend`: Direction for drawing colorbar "extensions" indicating out-of-bounds data on the end of the colorbar.
 - `discrete`: If ``False``, then [DiscreteNorm](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.colors.DiscreteNorm.html) is not applied to the colormap.
 - `sequential, diverging, cyclic, qualitative`: Boolean arguments used if `cmap` is not passed.
 - `vmin, vmax`: The minimum and maximum color scale values used with the `norm` normalizer.
-- `N`: Shorthand for `levels`.
 - `levels`: The number of level edges or a sequence of level edges.
 - `values`: The number of level centers or a sequence of level centers.
 - `center_levels`: If set to true, the discrete color bar bins will be centered on the level values instead of using the level values as the edges of the discrete bins.

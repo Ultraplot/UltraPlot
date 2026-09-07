@@ -11,8 +11,9 @@ import matplotlib.ticker as mticker
 import numpy as np
 from . import ic
 from . import warnings
+from .kwargs import _alias_registry
 REMOVE_AFTER_FLUSH = ('pad', 'space', 'width', 'length', 'shrink', 'align', 'queue')
-GUIDE_ALIASES = (('title', 'label'), ('locator', 'ticks'), ('format', 'formatter', 'ticklabels'))
+GUIDE_ALIASES = ...
 
 def _add_guide_kw(name: Incomplete, kwargs: Incomplete, **opts: Incomplete) -> None:
     """Add to the `colorbar_kw` or `legend_kw` dict if there are no conflicts."""

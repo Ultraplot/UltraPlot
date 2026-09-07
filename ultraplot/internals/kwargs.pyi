@@ -14,25 +14,47 @@ import inspect
 from typing import Any, Callable, TypeVar, cast
 from . import warnings
 _F = TypeVar('_F', bound=Callable[..., Any])
-__all__ = ['_not_none', '_alias_kwargs', '_alias_maps', '_get_aliases', '_kwargs_to_args', '_pop_kwargs', '_pop_params', '_pop_props']
+__all__ = ['_not_none', '_alias_kwargs', '_alias_registry', '_canonicalize_kwargs', '_format_alias_reference', '_figure_format_alias_scopes', '_format_alias_scopes', '_alias_maps', '_get_aliases', '_kwargs_to_args', '_pop_kwargs', '_pop_params', '_pop_props']
+_alias_registry = {'figure.init': {'refnum': ('ref',), 'refaspect': ('aspect',), 'refwidth': ('axwidth',), 'refheight': ('axheight',), 'figwidth': ('width',), 'figheight': ('height',)}, 'axes.format': {'lefttitle': ('ltitle',), 'centertitle': ('ctitle',), 'righttitle': ('rtitle',), 'upperlefttitle': ('ultitle',), 'uppercentertitle': ('uctitle',), 'upperrighttitle': ('urtitle',), 'lowerlefttitle': ('lltitle',), 'lowercentertitle': ('lctitle',), 'lowerrighttitle': ('lrtitle',)}, 'cartesian.format': {'xspineloc': ('xloc',), 'yspineloc': ('yloc',), 'xformatter': ('xticklabels',), 'yformatter': ('yticklabels',), 'xlocator': ('xticks',), 'ylocator': ('yticks',), 'xminorlocator': ('xminorticks',), 'yminorlocator': ('yminorticks',)}, 'geo.format': {'lonlocator': ('lonlines',), 'latlocator': ('latlines',), 'lonminorlocator': ('lonminorlines',), 'latminorlocator': ('latminorlines',), 'lonlocator_kw': ('lonlines_kw',), 'latlocator_kw': ('latlines_kw',), 'lonminorlocator_kw': ('lonminorlines_kw',), 'latminorlocator_kw': ('latminorlines_kw',)}, 'polar.format': {'thetalocator': ('thetalines',), 'rlocator': ('rlines',), 'thetaminorlocator': ('thetaminorlines',), 'rminorlocator': ('rminorlines',), 'thetaformatter': ('thetalabels',), 'rformatter': ('rlabels',)}, 'taylor.format': {'corrlocator': ('corrlines', 'corrticks')}, 'figure.format': {'suptitle': ('figtitle',), 'leftlabels': ('llabels', 'rowlabels'), 'rightlabels': ('rlabels',), 'bottomlabels': ('blabels',), 'toplabels': ('tlabels', 'collabels')}, 'colorbar': {'loc': ('location',), 'drawedges': ('grid', 'edges'), 'length': ('shrink',), 'label': ('title',), 'labellocation': ('labelloc',), 'ticks': ('locator',), 'format': ('formatter', 'ticklabels'), 'minorticks': ('minorlocator',), 'color': ('c',), 'linewidth': ('lw',), 'tickdirection': ('tickdir',), 'frameon': ('frame',)}, 'legend': {'loc': ('location',), 'ncols': ('ncol',), 'frameon': ('frame',)}, 'gridspec': {'width_ratios': ('wratios',), 'height_ratios': ('hratios',)}, 'subplot': {'projection': ('proj',), 'projection_kw': ('proj_kw',)}, 'inset': {'projection': ('proj',)}, 'cycle': {'samples': ('N',)}, 'projection': {'lon0': ('lon_0',), 'lat0': ('lat_0',)}, 'scale.log': {'base': ('basex', 'basey'), 'nonpos': ('nonposx', 'nonposy'), 'subs': ('subsx', 'subsy')}, 'scale.symlog': {'base': ('basex', 'basey'), 'linthresh': ('linthreshx', 'linthreshy'), 'linscale': ('linscalex', 'linscaley'), 'subs': ('subsx', 'subsy')}, 'plot.labels': {'formatter': ('fmt',)}, 'plot.text': {'color': ('c', 'colors'), 'fontsize': ('size',)}, 'plot.contour_labels': {'colors': ('c', 'color'), 'fontsize': ('size',)}, 'plot.error_bars': {'barstds': ('bars', 'barstd'), 'barpctiles': ('barpctile',), 'boxstds': ('boxes', 'boxstd'), 'boxpctiles': ('boxpctile',)}, 'plot.error_shading': {'shadestds': ('shade', 'shadestd'), 'shadepctiles': ('shadepctile',), 'fadestds': ('fade', 'fadestd'), 'fadepctiles': ('fadepctile',)}, 'plot.colormap': {'colors': ('c', 'color')}, 'plot.levels': {'levels': ('N',)}, 'plot.stacked': {'stacked': ('stack',)}, 'plot.statistics': {'means': ('mean',), 'medians': ('median',)}, 'plot.boxplot': {'means': ('showmeans',), 'fill': ('filled',)}, 'plot.violinplot': {'means': ('showmeans',), 'medians': ('showmedians',)}, 'plot.hist': {'rwidth': ('width',), 'stacked': ('stack',), 'fill': ('filled',)}, 'plot.pie': {'labeldistance': ('labelpad',)}}
+_format_alias_scopes = ('axes.format', 'cartesian.format', 'geo.format', 'polar.format', 'taylor.format')
+_figure_format_alias_scopes = ('figure.format', *_format_alias_scopes)
+
+def _get_alias_groups(scope: Incomplete=None, aliases: Incomplete=None) -> Incomplete:
+    """Return validated canonical-to-legacy alias groups."""
+    ...
+
+def _canonicalize_kwargs(scope: Incomplete, kwargs: Incomplete, *, aliases: Incomplete=None, provided: Incomplete=(), warn: Incomplete=False) -> Incomplete:
+    """Return a copy of *kwargs* with legacy names translated to canonical names.
+
+Only explicitly registered spellings are translated. Supplying two spellings
+for one parameter raises ``TypeError``, matching Matplotlib's alias handling.
+The input mapping is never mutated. Translation is intentionally silent during
+the compatibility stage; a later deprecation can opt into warnings with
+``warn=True`` without changing call signatures or registry data."""
+    ...
+
+def _format_alias_table(rows: Incomplete) -> Incomplete:
+    """Format alias rows as a simple RST table."""
+    ...
+
+def _format_alias_reference() -> str:
+    """Return the registered compatibility aliases as grouped RST tables."""
+    ...
 
 def _not_none(*args: Incomplete, default: Incomplete=None, **kwargs: Incomplete) -> Incomplete:
     """Return the first non-``None`` value. This is used with keyword arg aliases and
 for setting default values. Use `kwargs` to issue warnings when multiple passed."""
     ...
 
-def _alias_kwargs(**aliases: Incomplete) -> Callable[[_F], _F]:
+def _alias_kwargs(scope: Incomplete=None, **aliases: Incomplete) -> Callable[[_F], _F]:
     """Fold keyword-argument aliases into their canonical names before a call.
 
-Each keyword maps a canonical parameter name to a tuple of accepted synonyms,
-e.g. ``@_alias_kwargs(figwidth=("width",), refnum=("ref",))``. A synonym passed
-by the caller is renamed to its canonical name. Passing a canonical together
-with a synonym (or two synonyms) warns and keeps the canonical / first value,
-matching the precedence and warning of `_not_none`. This replaces the repetitive
-``x = _not_none(x=x, y=y)`` boilerplate at the top of aliased functions.
+Pass a registry scope, e.g. ``@_alias_kwargs("figure.init")``. Inline mappings
+remain available for small private helpers, but public compatibility aliases
+should live in `_alias_registry` so they can be documented and audited.
 
-This handles keyword aliases only: a canonical argument passed *positionally*
-is not deduplicated against its synonyms, and a synonym must not shadow a
+This handles keyword aliases only. Canonical arguments passed positionally
+are included in duplicate detection, and a synonym must not shadow a
 different real parameter of the wrapped function."""
     ...
 _alias_maps = {'rgba': {'red': ('r',), 'green': ('g',), 'blue': ('b',), 'alpha': ('a',)}, 'hsla': {'hue': ('h',), 'saturation': ('s', 'c', 'chroma'), 'luminance': ('l',), 'alpha': ('a',)}, 'patch': {'alpha': ('a', 'alphas', 'fa', 'facealpha', 'facealphas', 'fillalpha', 'fillalphas'), 'color': ('c', 'colors'), 'edgecolor': ('ec', 'edgecolors'), 'facecolor': ('fc', 'facecolors', 'fillcolor', 'fillcolors'), 'hatch': ('h', 'hatching'), 'linestyle': ('ls', 'linestyles'), 'linewidth': ('lw', 'linewidths', 'ew', 'edgewidth', 'edgewidths'), 'zorder': ('z', 'zorders')}, 'line': {'alpha': ('a', 'alphas'), 'color': ('c', 'colors'), 'dashes': ('d', 'dash'), 'drawstyle': ('ds', 'drawstyles'), 'fillstyle': ('fs', 'fillstyles', 'mfs', 'markerfillstyle', 'markerfillstyles'), 'linestyle': ('ls', 'linestyles'), 'linewidth': ('lw', 'linewidths'), 'marker': ('m', 'markers'), 'markersize': ('s', 'ms', 'markersizes'), 'markeredgewidth': ('ew', 'edgewidth', 'edgewidths', 'mew', 'markeredgewidths'), 'markeredgecolor': ('ec', 'edgecolor', 'edgecolors', 'mec', 'markeredgecolors'), 'markerfacecolor': ('fc', 'facecolor', 'facecolors', 'fillcolor', 'fillcolors', 'mc', 'markercolor', 'markercolors', 'mfc', 'markerfacecolors'), 'zorder': ('z', 'zorders')}, 'collection': {'alpha': ('a', 'alphas'), 'colors': ('c', 'color'), 'edgecolors': ('ec', 'edgecolor', 'mec', 'markeredgecolor', 'markeredgecolors'), 'facecolors': ('fc', 'facecolor', 'fillcolor', 'fillcolors', 'mc', 'markercolor', 'markercolors', 'mfc', 'markerfacecolor', 'markerfacecolors'), 'linestyles': ('ls', 'linestyle'), 'linewidths': ('lw', 'linewidth', 'ew', 'edgewidth', 'edgewidths', 'mew', 'markeredgewidth', 'markeredgewidths'), 'marker': ('m', 'markers'), 'sizes': ('s', 'ms', 'markersize', 'markersizes'), 'zorder': ('z', 'zorders')}, 'text': {'color': ('c', 'fontcolor'), 'fontfamily': ('family', 'name', 'fontname'), 'fontsize': ('size',), 'fontstretch': ('stretch',), 'fontstyle': ('style',), 'fontvariant': ('variant',), 'fontweight': ('weight',), 'fontproperties': ('fp', 'font', 'font_properties'), 'zorder': ('z', 'zorders')}}

@@ -17,7 +17,7 @@ from matplotlib import legend as mlegend
 from matplotlib import legend_handler as mhandler
 from matplotlib.markers import MarkerStyle
 from .config import rc
-from .internals import _not_none, _pop_props, docstring, guides, inputs, rcsetup
+from .internals import _alias_kwargs, _not_none, _pop_props, docstring, guides, inputs, rcsetup
 from .utils import _fontsize_to_pt, units
 try:
     from typing import override
@@ -586,7 +586,7 @@ Public docs live on `Axes.geolegend`."""
         """Mapping between panel side + align and matplotlib legend loc strings."""
         ...
 
-    def _resolve_inputs(self, handles: Incomplete=None, labels: Incomplete=None, *, loc: Incomplete=None, align: Incomplete=None, width: Incomplete=None, pad: Incomplete=None, space: Incomplete=None, frame: Incomplete=None, frameon: Incomplete=None, ncol: Incomplete=None, ncols: Incomplete=None, alphabetize: Incomplete=False, center: Incomplete=None, order: Incomplete=None, label: Incomplete=None, title: Incomplete=None, fontsize: Incomplete=None, fontweight: Incomplete=None, fontcolor: Incomplete=None, titlefontsize: Incomplete=None, titlefontweight: Incomplete=None, titlefontcolor: Incomplete=None, handle_kw: Incomplete=None, handler_map: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Any) -> Incomplete:
+    def _resolve_inputs(self, handles: Incomplete=None, labels: Incomplete=None, *, loc: Incomplete=None, align: Incomplete=None, width: Incomplete=None, pad: Incomplete=None, space: Incomplete=None, frameon: Incomplete=None, ncols: Incomplete=None, alphabetize: Incomplete=False, center: Incomplete=None, order: Incomplete=None, label: Incomplete=None, title: Incomplete=None, fontsize: Incomplete=None, fontweight: Incomplete=None, fontcolor: Incomplete=None, titlefontsize: Incomplete=None, titlefontweight: Incomplete=None, titlefontcolor: Incomplete=None, handle_kw: Incomplete=None, handler_map: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Any) -> Incomplete:
         """Normalize inputs, apply rc defaults, and convert units."""
         ...
 
@@ -609,6 +609,6 @@ Public docs live on `Axes.geolegend`."""
         """Register legend for guide tracking and return the public object."""
         ...
 
-    def add(self, handles: Incomplete=None, labels: Incomplete=None, *, loc: Incomplete=None, align: Incomplete=None, width: Incomplete=None, pad: Incomplete=None, space: Incomplete=None, frame: Incomplete=None, frameon: Incomplete=None, ncol: Incomplete=None, ncols: Incomplete=None, alphabetize: Incomplete=False, center: Incomplete=None, order: Incomplete=None, label: Incomplete=None, title: Incomplete=None, fontsize: Incomplete=None, fontweight: Incomplete=None, fontcolor: Incomplete=None, titlefontsize: Incomplete=None, titlefontweight: Incomplete=None, titlefontcolor: Incomplete=None, handle_kw: Incomplete=None, handler_map: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Incomplete) -> Incomplete:
+    def add(self, handles: Incomplete=None, labels: Incomplete=None, *, loc: Incomplete=None, align: Incomplete=None, width: Incomplete=None, pad: Incomplete=None, space: Incomplete=None, frameon: Incomplete=None, ncols: Incomplete=None, alphabetize: Incomplete=False, center: Incomplete=None, order: Incomplete=None, label: Incomplete=None, title: Incomplete=None, fontsize: Incomplete=None, fontweight: Incomplete=None, fontcolor: Incomplete=None, titlefontsize: Incomplete=None, titlefontweight: Incomplete=None, titlefontcolor: Incomplete=None, handle_kw: Incomplete=None, handler_map: Incomplete=None, span: Optional[Union[int, Tuple[int, int]]]=None, row: Optional[int]=None, col: Optional[int]=None, rows: Optional[Union[int, Tuple[int, int]]]=None, cols: Optional[Union[int, Tuple[int, int]]]=None, **kwargs: Incomplete) -> Incomplete:
         """The driver function for adding axes legends."""
         ...

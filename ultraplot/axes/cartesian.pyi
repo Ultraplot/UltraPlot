@@ -5,7 +5,6 @@ The standard Cartesian axes used for most ultraplot figures.
 """
 from _typeshed import Incomplete
 import copy
-import functools
 import inspect
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Optional, Tuple, TypeVar, Union, cast
@@ -14,11 +13,12 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as mticker
 import numpy as np
 from packaging import version
+from .. import _sharing as psharing
 from .. import constructor
 from .. import scale as pscale
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import _not_none, _pop_params, _pop_rc, _version_mpl, docstring, ic, labels, warnings
+from ..internals import _alias_kwargs, _canonicalize_kwargs, _format_alias_scopes, _not_none, _pop_params, _pop_rc, _version_mpl, docstring, ic, labels, warnings
 from ..utils import units
 from ._formatting import CARTESIAN_PARENT_FILTER_KEYS, axis_format_requires_layout, get_axis_style_fields, pop_axis_format_kwargs
 from . import plot, shared
@@ -117,7 +117,6 @@ to axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/st
 - `xbounds, ybounds`: The x and y axis data bounds within which to draw the spines.
 - `xtickrange, ytickrange`: The x and y axis data ranges within which major tick marks are labelled.
 - `xwraprange, ywraprange`: The x and y axis data ranges with which major tick mark values are wrapped.
-- `xloc, yloc`: Shorthands for `xspineloc`, `yspineloc`.
 - `xspineloc, yspineloc`: The x and y spine locations.
 - `xtickloc, ytickloc`: Which x and y axis spines should have major and minor tick marks.
 - `xticklabelloc, yticklabelloc`: Which x and y axis spines should have major tick labels.
@@ -129,17 +128,18 @@ to axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/st
 - `xgrid, ygrid, grid`: Whether to draw major gridlines on the x and y axis.
 - `xgridminor, ygridminor, gridminor`: Whether to draw minor gridlines for the x and y axis.
 - `xtickminor, ytickminor, tickminor`: Whether to draw minor ticks on the x and y axes.
-- `xticks, yticks`: Aliases for `xlocator`, `ylocator`.
 - `xlocator, ylocator`: Used to determine the x and y axis tick mark positions.
 - `xlocator_kw, ylocator_kw`: Keyword arguments passed to the [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
-- `xminorticks, yminorticks`: Aliases for `xminorlocator`, `yminorlocator`.
 - `xminorlocator, yminorlocator`: As for `xlocator`, `ylocator`, but for the minor ticks.
-- `xticklabels, yticklabels`: Aliases for `xformatter`, `yformatter`.
 - `xformatter, yformatter`: Used to determine the x and y axis tick label string format.
 - `xformatter_kw, yformatter_kw`: Keyword arguments passed to the [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 - `xcolor, ycolor, color`: Color for the x and y axis spines, ticks, tick labels, and axis labels.
 - `xgridcolor, ygridcolor, gridcolor`: Color for the x and y axis major and minor gridlines.
-- _30 additional parameter groups are documented online._
+- `xlinewidth, ylinewidth, linewidth`: Line width for the x and y axis spines and major ticks.
+- `xtickcolor, ytickcolor, tickcolor`: Color for the x and y axis ticks.
+- `xticklen, yticklen, ticklen`: Major tick lengths for the x and y axis.
+- `xticklenratio, yticklenratio, ticklenratio`: Relative scaling of `xticklen` and `yticklen` used to determine minor tick lengths.
+- _26 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html)"""
         ...
@@ -306,7 +306,7 @@ positions will be adjusted at draw-time with figure._align_axislabels."""
         """Resolve formatting parameters for a single axis (x or y)."""
         ...
 
-    def format(self, *, aspect: Incomplete=None, xloc: Incomplete=None, yloc: Incomplete=None, xspineloc: Incomplete=None, yspineloc: Incomplete=None, xoffsetloc: Incomplete=None, yoffsetloc: Incomplete=None, xwraprange: Incomplete=None, ywraprange: Incomplete=None, xreverse: Incomplete=None, yreverse: Incomplete=None, xlim: Incomplete=None, ylim: Incomplete=None, xmin: Incomplete=None, ymin: Incomplete=None, xmax: Incomplete=None, ymax: Incomplete=None, xscale: Incomplete=None, yscale: Incomplete=None, xbounds: Incomplete=None, ybounds: Incomplete=None, xmargin: Incomplete=None, ymargin: Incomplete=None, xrotation: Incomplete=None, yrotation: Incomplete=None, xformatter: Incomplete=None, yformatter: Incomplete=None, xticklabels: Incomplete=None, yticklabels: Incomplete=None, xticks: Incomplete=None, yticks: Incomplete=None, xlocator: Incomplete=None, ylocator: Incomplete=None, xminorticks: Incomplete=None, yminorticks: Incomplete=None, xminorlocator: Incomplete=None, yminorlocator: Incomplete=None, xcolor: Incomplete=None, ycolor: Incomplete=None, xlinewidth: Incomplete=None, ylinewidth: Incomplete=None, xtickloc: Incomplete=None, ytickloc: Incomplete=None, fixticks: Incomplete=False, xtickdir: Incomplete=None, ytickdir: Incomplete=None, xtickminor: Incomplete=None, ytickminor: Incomplete=None, xtickrange: Incomplete=None, ytickrange: Incomplete=None, xtickcolor: Incomplete=None, ytickcolor: Incomplete=None, xticklen: Incomplete=None, yticklen: Incomplete=None, xticklenratio: Incomplete=None, yticklenratio: Incomplete=None, xtickwidth: Incomplete=None, ytickwidth: Incomplete=None, xtickwidthratio: Incomplete=None, ytickwidthratio: Incomplete=None, xticklabelloc: Incomplete=None, yticklabelloc: Incomplete=None, xticklabeldir: Incomplete=None, yticklabeldir: Incomplete=None, xticklabelpad: Incomplete=None, yticklabelpad: Incomplete=None, xticklabelcolor: Incomplete=None, yticklabelcolor: Incomplete=None, xticklabelsize: Incomplete=None, yticklabelsize: Incomplete=None, xticklabelweight: Incomplete=None, yticklabelweight: Incomplete=None, xlabel: Incomplete=None, ylabel: Incomplete=None, xlabelloc: Incomplete=None, ylabelloc: Incomplete=None, xlabelpad: Incomplete=None, ylabelpad: Incomplete=None, xlabelcolor: Incomplete=None, ylabelcolor: Incomplete=None, xlabelsize: Incomplete=None, ylabelsize: Incomplete=None, xlabelweight: Incomplete=None, ylabelweight: Incomplete=None, xgrid: Incomplete=None, ygrid: Incomplete=None, xgridminor: Incomplete=None, ygridminor: Incomplete=None, xgridcolor: Incomplete=None, ygridcolor: Incomplete=None, xlabel_kw: Incomplete=None, ylabel_kw: Incomplete=None, xscale_kw: Incomplete=None, yscale_kw: Incomplete=None, xlocator_kw: Incomplete=None, ylocator_kw: Incomplete=None, xformatter_kw: Incomplete=None, yformatter_kw: Incomplete=None, xminorlocator_kw: Incomplete=None, yminorlocator_kw: Incomplete=None, **kwargs: Incomplete) -> None:
+    def format(self, *, aspect: Incomplete=None, xspineloc: Incomplete=None, yspineloc: Incomplete=None, xoffsetloc: Incomplete=None, yoffsetloc: Incomplete=None, xwraprange: Incomplete=None, ywraprange: Incomplete=None, xreverse: Incomplete=None, yreverse: Incomplete=None, xlim: Incomplete=None, ylim: Incomplete=None, xmin: Incomplete=None, ymin: Incomplete=None, xmax: Incomplete=None, ymax: Incomplete=None, xscale: Incomplete=None, yscale: Incomplete=None, xbounds: Incomplete=None, ybounds: Incomplete=None, xmargin: Incomplete=None, ymargin: Incomplete=None, xrotation: Incomplete=None, yrotation: Incomplete=None, xformatter: Incomplete=None, yformatter: Incomplete=None, xlocator: Incomplete=None, ylocator: Incomplete=None, xminorlocator: Incomplete=None, yminorlocator: Incomplete=None, xcolor: Incomplete=None, ycolor: Incomplete=None, xlinewidth: Incomplete=None, ylinewidth: Incomplete=None, xtickloc: Incomplete=None, ytickloc: Incomplete=None, fixticks: Incomplete=False, xtickdir: Incomplete=None, ytickdir: Incomplete=None, xtickminor: Incomplete=None, ytickminor: Incomplete=None, xtickrange: Incomplete=None, ytickrange: Incomplete=None, xtickcolor: Incomplete=None, ytickcolor: Incomplete=None, xticklen: Incomplete=None, yticklen: Incomplete=None, xticklenratio: Incomplete=None, yticklenratio: Incomplete=None, xtickwidth: Incomplete=None, ytickwidth: Incomplete=None, xtickwidthratio: Incomplete=None, ytickwidthratio: Incomplete=None, xticklabelloc: Incomplete=None, yticklabelloc: Incomplete=None, xticklabeldir: Incomplete=None, yticklabeldir: Incomplete=None, xticklabelpad: Incomplete=None, yticklabelpad: Incomplete=None, xticklabelcolor: Incomplete=None, yticklabelcolor: Incomplete=None, xticklabelsize: Incomplete=None, yticklabelsize: Incomplete=None, xticklabelweight: Incomplete=None, yticklabelweight: Incomplete=None, xlabel: Incomplete=None, ylabel: Incomplete=None, xlabelloc: Incomplete=None, ylabelloc: Incomplete=None, xlabelpad: Incomplete=None, ylabelpad: Incomplete=None, xlabelcolor: Incomplete=None, ylabelcolor: Incomplete=None, xlabelsize: Incomplete=None, ylabelsize: Incomplete=None, xlabelweight: Incomplete=None, ylabelweight: Incomplete=None, xgrid: Incomplete=None, ygrid: Incomplete=None, xgridminor: Incomplete=None, ygridminor: Incomplete=None, xgridcolor: Incomplete=None, ygridcolor: Incomplete=None, xlabel_kw: Incomplete=None, ylabel_kw: Incomplete=None, xscale_kw: Incomplete=None, yscale_kw: Incomplete=None, xlocator_kw: Incomplete=None, ylocator_kw: Incomplete=None, xformatter_kw: Incomplete=None, yformatter_kw: Incomplete=None, xminorlocator_kw: Incomplete=None, yminorlocator_kw: Incomplete=None, **kwargs: Incomplete) -> None:
         """Modify axes limits, axis scales, axis labels, spine locations, tick locations, tick labels, and more.
 
 Parameters
@@ -324,7 +324,6 @@ Parameters
 - `xbounds, ybounds`: The x and y axis data bounds within which to draw the spines.
 - `xtickrange, ytickrange`: The x and y axis data ranges within which major tick marks are labelled.
 - `xwraprange, ywraprange`: The x and y axis data ranges with which major tick mark values are wrapped.
-- `xloc, yloc`: Shorthands for `xspineloc`, `yspineloc`.
 - `xspineloc, yspineloc`: The x and y spine locations.
 - `xtickloc, ytickloc`: Which x and y axis spines should have major and minor tick marks.
 - `xticklabelloc, yticklabelloc`: Which x and y axis spines should have major tick labels.
@@ -336,18 +335,19 @@ Parameters
 - `xgrid, ygrid, grid`: Whether to draw major gridlines on the x and y axis.
 - `xgridminor, ygridminor, gridminor`: Whether to draw minor gridlines for the x and y axis.
 - `xtickminor, ytickminor, tickminor`: Whether to draw minor ticks on the x and y axes.
-- `xticks, yticks`: Aliases for `xlocator`, `ylocator`.
 - `xlocator, ylocator`: Used to determine the x and y axis tick mark positions.
 - `xlocator_kw, ylocator_kw`: Keyword arguments passed to the [matplotlib.ticker.Locator](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Locator.html) class.
-- `xminorticks, yminorticks`: Aliases for `xminorlocator`, `yminorlocator`.
 - `xminorlocator, yminorlocator`: As for `xlocator`, `ylocator`, but for the minor ticks.
-- `xticklabels, yticklabels`: Aliases for `xformatter`, `yformatter`.
 - `xformatter, yformatter`: Used to determine the x and y axis tick label string format.
 - `xformatter_kw, yformatter_kw`: Keyword arguments passed to the [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 - `xcolor, ycolor, color`: Color for the x and y axis spines, ticks, tick labels, and axis labels.
 - `xgridcolor, ygridcolor, gridcolor`: Color for the x and y axis major and minor gridlines.
 - `xlinewidth, ylinewidth, linewidth`: Line width for the x and y axis spines and major ticks.
-- _38 additional parameter groups are documented online._
+- `xtickcolor, ytickcolor, tickcolor`: Color for the x and y axis ticks.
+- `xticklen, yticklen, ticklen`: Major tick lengths for the x and y axis.
+- `xticklenratio, yticklenratio, ticklenratio`: Relative scaling of `xticklen` and `yticklen` used to determine minor tick lengths.
+- `xtickwidthratio, ytickwidthratio, tickwidthratio`: Relative scaling of `xtickwidth` and `ytickwidth` used to determine minor tick widths.
+- _33 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.CartesianAxes.html#ultraplot.axes.CartesianAxes.format)"""
         ...

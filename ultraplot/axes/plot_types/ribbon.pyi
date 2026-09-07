@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import patches as mpatches
 from matplotlib import path as mpath
+from ... import _sharing as psharing
 
 def _ribbon_path(x0: float, y0: float, x1: float, y1: float, thickness: float, curvature: float) -> mpath.Path:
     ...

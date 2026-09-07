@@ -10,7 +10,8 @@ import matplotlib.ticker as mticker
 import matplotlib.transforms as mtransforms
 import numpy as np
 from ..config import rc
-from ..internals import _not_none, _pop_rc, docstring
+from ..internals import _not_none, _pop_rc, docstring, _alias_kwargs
+from . import shared
 from .polar import PolarAxes
 __all__ = ['TaylorAxes']
 _format_docstring = ...
@@ -37,7 +38,7 @@ axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/stabl
 - `corrlabel`: Label for the correlation-coefficient grid.
 - `thetaunit`: Units used for the angular grid labels.
 - `quadrant`: The quadrant used for the Taylor diagram.
-- `corrlocator, corrlines, corrticks`: Correlation coefficients used for the angular gridlines.
+- `corrlocator`: Correlation coefficients used for the angular gridlines.
 - `labelcolor, labelsize, labelweight`: Label text properties.
 - `r0`: The radial origin.
 - `theta0`: The zero azimuth location.
@@ -53,10 +54,8 @@ axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/stabl
 - `thetalocator, rlocator`: Used to determine the azimuthal and radial gridline positions.
 - `thetalocator_kw, rlocator_kw`: The azimuthal and radial locator settings.
 - `thetaminorlocator, rminorlocator`: As for `thetalocator`, `rlocator`, but for the minor gridlines.
-- `thetaminorticks, rminorticks`: Aliases for `thetaminorlocator`, `rminorlocator`.
 - `rlabelpos`: The azimuth at which radial coordinates are labeled.
 - `thetaformatter, rformatter`: Used to determine the azimuthal and radial label format.
-- `thetalabels, rlabels`: Aliases for `thetaformatter`, `rformatter`.
 - `thetaformatter_kw, rformatter_kw`: The azimuthal and radial label formatter settings.
 - `thetalabel, rlabel`: Polar-aware axis labels rendered via [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html).
 - `thetalabelloc`: Center theta angle (in degrees) for ``thetalabel``.
@@ -68,7 +67,9 @@ axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/stabl
 - `labelsize, gridlabelsize`: Font size for the gridline labels.
 - `labelweight, gridlabelweight`: Font weight for the gridline labels.
 - `title`: The axes title.
-- _15 additional parameter groups are documented online._
+- `abc`: The "a-b-c" subplot label style.
+- `abcloc, titleloc`: Strings indicating the location for the a-b-c label and main title.
+- _13 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.TaylorAxes.html)"""
         ...
@@ -148,7 +149,7 @@ UltraPlot's reference-width autosizing and creates excessive left margin."""
         """Draw after refreshing Taylor-specific standard-deviation tick labels."""
         ...
 
-    def format(self, *, xlabel: Incomplete=None, ylabel: Incomplete=None, corrlabel: Incomplete=None, thetaunit: Incomplete=None, quadrant: Incomplete=None, corrlocator: Incomplete=None, corrlines: Incomplete=None, corrticks: Incomplete=None, xlabel_kw: Incomplete=None, ylabel_kw: Incomplete=None, corrlabel_kw: Incomplete=None, labelpad: Incomplete=None, labelcolor: Incomplete=None, labelsize: Incomplete=None, labelweight: Incomplete=None, **kwargs: Incomplete) -> None:
+    def format(self, *, xlabel: Incomplete=None, ylabel: Incomplete=None, corrlabel: Incomplete=None, thetaunit: Incomplete=None, quadrant: Incomplete=None, corrlocator: Incomplete=None, xlabel_kw: Incomplete=None, ylabel_kw: Incomplete=None, corrlabel_kw: Incomplete=None, labelpad: Incomplete=None, labelcolor: Incomplete=None, labelsize: Incomplete=None, labelweight: Incomplete=None, **kwargs: Incomplete) -> None:
         """Modify Taylor diagram labels, correlation gridlines, and polar settings.
 
 Parameters
@@ -157,7 +158,7 @@ Parameters
 - `corrlabel`: Label for the correlation-coefficient grid.
 - `thetaunit`: Units used for the angular grid labels.
 - `quadrant`: The quadrant used for the Taylor diagram.
-- `corrlocator, corrlines, corrticks`: Correlation coefficients used for the angular gridlines.
+- `corrlocator`: Correlation coefficients used for the angular gridlines.
 - `labelcolor, labelsize, labelweight`: Label text properties.
 - `r0`: The radial origin.
 - `theta0`: The zero azimuth location.
@@ -173,10 +174,8 @@ Parameters
 - `thetalocator, rlocator`: Used to determine the azimuthal and radial gridline positions.
 - `thetalocator_kw, rlocator_kw`: The azimuthal and radial locator settings.
 - `thetaminorlocator, rminorlocator`: As for `thetalocator`, `rlocator`, but for the minor gridlines.
-- `thetaminorticks, rminorticks`: Aliases for `thetaminorlocator`, `rminorlocator`.
 - `rlabelpos`: The azimuth at which radial coordinates are labeled.
 - `thetaformatter, rformatter`: Used to determine the azimuthal and radial label format.
-- `thetalabels, rlabels`: Aliases for `thetaformatter`, `rformatter`.
 - `thetaformatter_kw, rformatter_kw`: The azimuthal and radial label formatter settings.
 - `thetalabel, rlabel`: Polar-aware axis labels rendered via [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html).
 - `thetalabelloc`: Center theta angle (in degrees) for ``thetalabel``.
@@ -189,7 +188,9 @@ Parameters
 - `labelweight, gridlabelweight`: Font weight for the gridline labels.
 - `title`: The axes title.
 - `abc`: The "a-b-c" subplot label style.
-- _23 additional parameter groups are documented online._
+- `abcloc, titleloc`: Strings indicating the location for the a-b-c label and main title.
+- `abcborder, titleborder`: Whether to draw a white border around titles and a-b-c labels positioned inside the axes.
+- _20 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.TaylorAxes.html#ultraplot.axes.TaylorAxes.format)"""
         ...

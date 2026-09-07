@@ -13,6 +13,7 @@ import matplotlib.transforms as mtransforms
 from matplotlib import cbook, container
 from ..config import rc
 from ..internals import _pop_rc, warnings
+from . import shared
 from .cartesian import CartesianAxes
 __all__ = ['ExternalAxesContainer']
 _ABOVE_AXES_TITLE_LOCS = {'left', 'center', 'right'}

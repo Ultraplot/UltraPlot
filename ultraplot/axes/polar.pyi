@@ -16,7 +16,7 @@ from matplotlib.font_manager import FontProperties
 from .. import constructor
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import _not_none, _pop_rc, docstring, ic
+from ..internals import _alias_kwargs, _not_none, _pop_rc, docstring, ic
 from . import plot, shared
 __all__ = ['PolarAxes']
 _POLAR_LABEL_NPOINTS = 50
@@ -53,10 +53,8 @@ to axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/st
 - `thetalocator, rlocator`: Used to determine the azimuthal and radial gridline positions.
 - `thetalocator_kw, rlocator_kw`: The azimuthal and radial locator settings.
 - `thetaminorlocator, rminorlocator`: As for `thetalocator`, `rlocator`, but for the minor gridlines.
-- `thetaminorticks, rminorticks`: Aliases for `thetaminorlocator`, `rminorlocator`.
 - `rlabelpos`: The azimuth at which radial coordinates are labeled.
 - `thetaformatter, rformatter`: Used to determine the azimuthal and radial label format.
-- `thetalabels, rlabels`: Aliases for `thetaformatter`, `rformatter`.
 - `thetaformatter_kw, rformatter_kw`: The azimuthal and radial label formatter settings.
 - `thetalabel, rlabel`: Polar-aware axis labels rendered via [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html).
 - `thetalabelloc`: Center theta angle (in degrees) for ``thetalabel``.
@@ -74,7 +72,9 @@ to axes-creation commands like [add_axes](https://ultraplot.readthedocs.io/en/st
 - `abcbbox, titlebbox`: Whether to draw a white bbox around titles and a-b-c labels positioned inside the axes.
 - `abcpad`: Horizontal offset to shift the a-b-c label position.
 - `abc_kw, title_kw`: Additional settings used to update the a-b-c label and title with ``text.update()``.
-- _9 additional parameter groups are documented online._
+- `titlepad`: The padding for the inner and outer titles and a-b-c labels.
+- `titleabove`: Whether to try to put outer titles and a-b-c labels above panels, colorbars, or legends that are above the axes.
+- _7 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html)"""
         ...
@@ -203,7 +203,7 @@ matplotlib.axis.Axis.get_tightbbox
 matplotlib.spines.Spine.get_window_extent"""
         ...
 
-    def format(self, *, r0: Incomplete=None, theta0: Incomplete=None, thetadir: Incomplete=None, thetamin: Incomplete=None, thetamax: Incomplete=None, thetalim: Incomplete=None, rmin: Incomplete=None, rmax: Incomplete=None, rlim: Incomplete=None, thetagrid: Incomplete=None, rgrid: Incomplete=None, thetagridminor: Incomplete=None, rgridminor: Incomplete=None, thetagridcolor: Incomplete=None, rgridcolor: Incomplete=None, rlabelpos: Incomplete=None, rscale: Incomplete=None, rborder: Incomplete=None, thetalocator: Incomplete=None, rlocator: Incomplete=None, thetalines: Incomplete=None, rlines: Incomplete=None, thetalocator_kw: Incomplete=None, rlocator_kw: Incomplete=None, thetaminorlocator: Incomplete=None, rminorlocator: Incomplete=None, thetaminorlines: Incomplete=None, rminorlines: Incomplete=None, thetaminorlocator_kw: Incomplete=None, rminorlocator_kw: Incomplete=None, thetaformatter: Incomplete=None, rformatter: Incomplete=None, thetalabels: Incomplete=None, rlabels: Incomplete=None, thetaformatter_kw: Incomplete=None, rformatter_kw: Incomplete=None, labelpad: Incomplete=None, labelsize: Incomplete=None, labelcolor: Incomplete=None, labelweight: Incomplete=None, thetalabel: Incomplete=None, rlabel: Incomplete=None, thetalabelloc: Incomplete=None, rlabelloc: Incomplete=None, thetalabel_kw: Incomplete=None, rlabel_kw: Incomplete=None, **kwargs: Incomplete) -> None:
+    def format(self, *, r0: Incomplete=None, theta0: Incomplete=None, thetadir: Incomplete=None, thetamin: Incomplete=None, thetamax: Incomplete=None, thetalim: Incomplete=None, rmin: Incomplete=None, rmax: Incomplete=None, rlim: Incomplete=None, thetagrid: Incomplete=None, rgrid: Incomplete=None, thetagridminor: Incomplete=None, rgridminor: Incomplete=None, thetagridcolor: Incomplete=None, rgridcolor: Incomplete=None, rlabelpos: Incomplete=None, rscale: Incomplete=None, rborder: Incomplete=None, thetalocator: Incomplete=None, rlocator: Incomplete=None, thetalocator_kw: Incomplete=None, rlocator_kw: Incomplete=None, thetaminorlocator: Incomplete=None, rminorlocator: Incomplete=None, thetaminorlocator_kw: Incomplete=None, rminorlocator_kw: Incomplete=None, thetaformatter: Incomplete=None, rformatter: Incomplete=None, thetaformatter_kw: Incomplete=None, rformatter_kw: Incomplete=None, labelpad: Incomplete=None, labelsize: Incomplete=None, labelcolor: Incomplete=None, labelweight: Incomplete=None, thetalabel: Incomplete=None, rlabel: Incomplete=None, thetalabelloc: Incomplete=None, rlabelloc: Incomplete=None, thetalabel_kw: Incomplete=None, rlabel_kw: Incomplete=None, **kwargs: Incomplete) -> None:
         """Modify axes limits, radial and azimuthal gridlines, and more.
 
 Parameters
@@ -222,10 +222,8 @@ Parameters
 - `thetalocator, rlocator`: Used to determine the azimuthal and radial gridline positions.
 - `thetalocator_kw, rlocator_kw`: The azimuthal and radial locator settings.
 - `thetaminorlocator, rminorlocator`: As for `thetalocator`, `rlocator`, but for the minor gridlines.
-- `thetaminorticks, rminorticks`: Aliases for `thetaminorlocator`, `rminorlocator`.
 - `rlabelpos`: The azimuth at which radial coordinates are labeled.
 - `thetaformatter, rformatter`: Used to determine the azimuthal and radial label format.
-- `thetalabels, rlabels`: Aliases for `thetaformatter`, `rformatter`.
 - `thetaformatter_kw, rformatter_kw`: The azimuthal and radial label formatter settings.
 - `thetalabel, rlabel`: Polar-aware axis labels rendered via [CurvedText](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.text.CurvedText.html).
 - `thetalabelloc`: Center theta angle (in degrees) for ``thetalabel``.
@@ -244,7 +242,9 @@ Parameters
 - `abcpad`: Horizontal offset to shift the a-b-c label position.
 - `abc_kw, title_kw`: Additional settings used to update the a-b-c label and title with ``text.update()``.
 - `titlepad`: The padding for the inner and outer titles and a-b-c labels.
-- _17 additional parameter groups are documented online._
+- `titleabove`: Whether to try to put outer titles and a-b-c labels above panels, colorbars, or legends that are above the axes.
+- `abctitlepad`: The horizontal padding between a-b-c labels and titles in the same location.
+- _14 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PolarAxes.html#ultraplot.axes.PolarAxes.format)"""
         ...
