@@ -379,7 +379,7 @@ def _not_none(*args, default=None, **kwargs):
     return first
 
 
-def _alias_kwargs(scope=None, **aliases)-> Callable[[_F], _F]:
+def _alias_kwargs(scope=None, **aliases) -> Callable[[_F], _F]:
     """
     Fold keyword-argument aliases into their canonical names before a call.
 

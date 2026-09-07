@@ -143,6 +143,8 @@ def test_inherited_docstrings_preserve_callable_signature() -> None:
     assert "handles" in signature.parameters
     assert "labels" in signature.parameters
     assert Axes.legend.__ultraplot_doc_signature__ == "(*args, **kwargs)"
+
+
 def test_geo_format_uses_only_canonical_entries() -> None:
     # Compatibility spellings live in the generated alias reference instead of
     # competing with canonical parameters in each function's primary docs.
