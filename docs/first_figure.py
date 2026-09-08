@@ -187,7 +187,7 @@ series2 = np.cos(time) * np.exp(-time / 5)
 # right-hand panels receive approximately square plotting areas.
 layout = [[1, 2], [1, 3]]
 
-# 3. Create the figure
+# 2. Create the figure
 # Apply a Robinson projection only to the first panel.
 fig, axs = uplt.subplots(
     layout,
@@ -199,7 +199,7 @@ fig, axs = uplt.subplots(
     hspace='13em',
 )
 
-# 4. Geographic data
+# 3. Geographic data
 m = axs[0].contourf(
     lon, lat, geo_data,
     cmap='marine',
@@ -266,7 +266,7 @@ axs[0].colorbar(
     labelsize = 14
 )
 
-# 5. Scatter data with inset
+# 4. Scatter data with inset
 x = rng.rand(100)
 y = x + rng.randn(100) * 0.2
 
@@ -300,7 +300,7 @@ ax_ins.format(
     ytickminor=False,
 )
 
-# 6. Time series
+# 5. Time series
 axs[2].plot(time, series1, label='Model Alpha')
 axs[2].plot(time, series2, label='Model Beta')
 
@@ -324,7 +324,7 @@ axs[2].legend(
     ncols = 1,
 )
 
-# 7. Figure-wide formatting
+# 6. Figure-wide formatting
 fig.format(
     suptitle='Putting It All Together',
     suptitle_kw={'fontsize': 15},
