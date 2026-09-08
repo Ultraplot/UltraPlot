@@ -18,6 +18,12 @@ pyCirclize-based plots require the optional ``circos`` extra:
 
 The ``docs`` extra also includes pyCirclize for building the documentation.
 
+To install all optional dependency groups (``circos``, ``docs``, and ``stats``):
+
+.. code-block:: bash
+
+   pip install 'ultraplot[all]'
+
 Likewise, an existing installation of ultraplot can be upgraded to the latest version with:
 
 .. code-block:: bash
