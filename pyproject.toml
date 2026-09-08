@@ -4,7 +4,7 @@ description = "A succinct matplotlib wrapper for making beautiful, publication-q
 readme = "README.rst"
 requires-python = ">=3.10,<3.15"
 license = "MIT"
-license-files = ["LICENSE"]
+license-files = ["LICENSE.txt"]
 authors = [
   { name = "Casper van Elteren", email = "caspervanelteren@gmail.com" },
   { name = "Luke Davis", email = "lukelbd@gmail.com" },
@@ -25,7 +25,7 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "matplotlib>=3.9,<3.11",
+  "matplotlib>=3.9,<3.12",
   "numpy>=1.26.0",
   "typing-extensions; python_version < '3.12'",
 ]
@@ -49,6 +49,7 @@ docs = [
   "lxml-html-clean",
   "markdown",
   "mpltern",
+  "pycirclize>=1.10.1",
   # Floors below are the versions that work with Sphinx 9, which removed
   # sphinx.ext.autosummary.get_documenter. Without them pip is free to pair a
   # current Sphinx with an extension that cannot import it, and the build
@@ -100,4 +101,4 @@ version_file_template = "__version__ = '{version}'\n"
 
 [tool.ultraplot.core_versions]
 python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
-matplotlib = ["3.9", "3.10"]
+matplotlib = ["3.9", "3.10", "3.11"]

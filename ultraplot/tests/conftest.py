@@ -32,6 +32,12 @@ def rng():
     return np.random.default_rng(SEED)
 
 
+@pytest.fixture
+def basemap_backend():
+    """Basemap is optional and excluded from Matplotlib 3.11 environments."""
+    return pytest.importorskip("mpl_toolkits.basemap")
+
+
 @pytest.fixture(autouse=True)
 def close_figures_after_test(request):
     # Start from a clean rc state.
