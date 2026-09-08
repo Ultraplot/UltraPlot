@@ -243,12 +243,26 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--environment-output", type=Path)
     parser.add_argument("--matplotlib-version")
+    parser.add_argument("--python-version")
+    parser.add_argument("--baseline-pyproject", type=Path)
     parser.add_argument(
         "--format",
         choices=("json", "github-output"),
         default="json",
     )
     args = parser.parse_args()
+
+    if args.baseline_pyproject is not None:
+        if args.python_version is None or args.matplotlib_version is None:
+            parser.error(
+                "--baseline-pyproject requires --python-version and --matplotlib-version"
+            )
+        baseline = load_pyproject(args.baseline_pyproject)
+        supported = args.python_version in supported_python_versions(
+            baseline
+        ) and args.matplotlib_version in supported_matplotlib_versions(baseline)
+        print(f"baseline-supported={str(supported).lower()}")
+        return 0
 
     if args.environment_output is not None:
         if args.matplotlib_version is None:

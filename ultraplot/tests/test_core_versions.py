@@ -203,3 +203,35 @@ def test_coverage_runs_the_supported_version_matrix():
     assert "matplotlib=${{ matrix.matplotlib-version }}" in coverage
     assert "--environment-output" in coverage
     assert "--cov=ultraplot --cov-branch" in coverage
+
+
+@pytest.mark.parametrize(
+    "python_version,matplotlib_version,expected",
+    [("3.14", "3.10", True), ("3.14", "3.11", False), ("3.15", "3.10", False)],
+)
+def test_baseline_support_uses_base_metadata(
+    tmp_path, python_version, matplotlib_version, expected
+):
+    """A new supported version must not run the older base's incompatible tests."""
+    baseline = tmp_path / "pyproject.toml"
+    baseline.write_text(
+        '[project]\nrequires-python = ">=3.10,<3.15"\n'
+        'dependencies = ["matplotlib>=3.9,<3.11"]\n',
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(VERSION_SUPPORT),
+            "--baseline-pyproject",
+            str(baseline),
+            "--python-version",
+            python_version,
+            "--matplotlib-version",
+            matplotlib_version,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert result.stdout.strip() == f"baseline-supported={str(expected).lower()}"
