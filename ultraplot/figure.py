@@ -3126,6 +3126,8 @@ class Figure(mfigure.Figure):
         align = self._normalize_title_alignment(loc)
 
         if group is None:
+            # Use axes-title defaults rather than Figure.text's font.size.
+            color = rc["title.color"]
             artist = self.text(
                 0.5,
                 0.0,
@@ -3134,6 +3136,10 @@ class Figure(mfigure.Figure):
                 ha=align,
                 va="baseline",
                 zorder=3.5,
+                fontsize=rc["title.size"],
+                fontweight=rc["title.weight"],
+                fontfamily=rc["font.family"],
+                color=rc["text.color"] if color == "auto" else color,
             )
             group = {"axes": axes, "artist": artist, "pad": None, "y": None}
             self._subset_title_dict[key] = group

@@ -223,7 +223,9 @@ def test_subplotgrid_format_title_accepts_standard_title_locations(loc, ha):
 
 def test_subplotgrid_format_title_matches_axes_title_top_gap():
     fig, axs = uplt.subplots(ncols=3)
-    axs[0].format(title="Single")
+    # Compare identical glyphs: baseline-aligned titles can have different
+    # bounding-box descents with Matplotlib 3.11's font metrics.
+    axs[0].format(title="Shared")
     subset = axs[1:]
     subset.format(title="Shared")
     fig.canvas.draw()
@@ -231,6 +233,7 @@ def test_subplotgrid_format_title_matches_axes_title_top_gap():
     renderer = fig._get_renderer()
     single = axs[0]._title_dict["center"]
     shared = next(iter(fig._subset_title_dict.values()))["artist"]
+    assert single.get_fontsize() == shared.get_fontsize()
     single_top = fig.transFigure.transform((0, axs[0].get_position().y1))[1]
     shared_top = fig.transFigure.transform((0, axs[1].get_position().y1))[1]
     single_gap = single.get_window_extent(renderer).y0 - single_top

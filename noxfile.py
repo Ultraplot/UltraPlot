@@ -71,6 +71,10 @@ def _mamba_env_name(python_version: str, matplotlib_version: str) -> str:
 def _ensure_mamba_env(
     session: nox.Session, python_version: str, matplotlib_version: str
 ) -> str:
+    if tuple(map(int, matplotlib_version.split("."))) >= (3, 11) and tuple(
+        map(int, python_version.split("."))
+    ) < (3, 11):
+        session.skip("Matplotlib 3.11 requires Python 3.11 or newer.")
     root = _mamba_root()
     env_name = _mamba_env_name(python_version, matplotlib_version)
     env_path = root / "envs" / env_name

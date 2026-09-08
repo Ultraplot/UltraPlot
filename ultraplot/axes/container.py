@@ -7,18 +7,54 @@ around external axes classes, allowing them to be used within ultraplot's
 figure system while maintaining their native functionality.
 """
 
+from types import MethodType
+
 import matplotlib.axes as maxes
 import matplotlib.transforms as mtransforms
+import numpy as np
 from matplotlib import cbook, container
 
 from ..config import rc
-from ..internals import _pop_rc, warnings
+from ..internals import _pop_rc, _version_mpl, warnings
 from . import shared
 from .cartesian import CartesianAxes
 
 __all__ = ["ExternalAxesContainer"]
 
 _ABOVE_AXES_TITLE_LOCS = {"left", "center", "right"}
+
+
+def _ternary_ticklabel_points(axis, renderer):
+    """Adapt mpltern's tick-label bounds to Matplotlib 3.11 text layouts.
+
+    Bound only to the container's axes; do not patch mpltern globally.
+    """
+    axes = axis.axes
+    points = []
+    for sibling in (axes.taxis, axes.laxis, axes.raxis):
+        for tick in sibling._update_ticks():
+            for label in (tick.label1, tick.label2):
+                if not label.get_visible():
+                    continue
+                position = label.get_transform().transform(label.get_position())
+                if not label.get_text():
+                    points.append(position)
+                    continue
+                # This is the same text-aligned box used by Text's bbox patch.
+                _, _, (corner, (width, height)) = label._get_layout(renderer)
+                transform = (
+                    mtransforms.Affine2D()
+                    .rotate_deg(label.get_rotation())
+                    .translate(*(position + corner))
+                )
+                points.extend(
+                    transform.transform(
+                        [(0, 0), (width, 0), (width, height), (0, height)]
+                    )
+                )
+    vertices = axes._get_hexagonal_vertices()
+    points.extend(axes._ternary2display_transform.transform(vertices))
+    return np.asarray(points)
 
 
 class ExternalAxesContainer(CartesianAxes):
@@ -277,6 +313,19 @@ class ExternalAxesContainer(CartesianAxes):
                     [rect.x0, rect.y0, rect.width, rect.height],
                     **external_kwargs,
                 )
+
+            if (
+                _version_mpl >= "3.11"
+                and self._external_axes_class.__module__.startswith("mpltern")
+            ):
+                for axis in (
+                    self._external_axes.taxis,
+                    self._external_axes.laxis,
+                    self._external_axes.raxis,
+                ):
+                    axis._get_points_surrounding_hexagon = MethodType(
+                        _ternary_ticklabel_points, axis
+                    )
 
             # Note: Most axes classes automatically register themselves with the figure
             # during __init__. We need to REMOVE them from fig.axes so that ultraplot
