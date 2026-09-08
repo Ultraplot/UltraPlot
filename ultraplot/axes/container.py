@@ -316,7 +316,17 @@ class ExternalAxesContainer(CartesianAxes):
 
             if (
                 _version_mpl >= "3.11"
-                and self._external_axes_class.__module__.startswith("mpltern")
+                and any(
+                    base.__module__.startswith("mpltern.")
+                    for base in self._external_axes_class.__mro__
+                )
+                and all(
+                    hasattr(
+                        getattr(self._external_axes, name, None),
+                        "_get_points_surrounding_hexagon",
+                    )
+                    for name in ("taxis", "laxis", "raxis")
+                )
             ):
                 for axis in (
                     self._external_axes.taxis,
