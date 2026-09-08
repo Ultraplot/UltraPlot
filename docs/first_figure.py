@@ -62,7 +62,7 @@ image = np.outer(np.sin(x / 2), np.cos(x / 3))
 
 fig, axs = uplt.subplots(ncols=2, share=False, refwidth=2.4)
 axs[0].plot(x, signal, label="signal")
-mesh = axs[1].imshow(image, origin="lower", aspect="auto")
+axs[1].imshow(image, origin="lower", aspect="auto")
 fig.show()
 
 
