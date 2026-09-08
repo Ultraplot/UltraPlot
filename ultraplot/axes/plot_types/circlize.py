@@ -14,6 +14,7 @@ from matplotlib.projections.polar import PolarAxes as MplPolarAxes
 
 from ... import constructor
 from ...config import rc
+from ...internals import warnings
 
 #: Settings ``pycirclize.config`` writes into the global rcParams the moment it
 #: is imported. Importing a library must not change how unrelated figures are
@@ -36,6 +37,9 @@ def _import_pycirclize():
     restore = {key: mpl.rcParams[key] for key in _PYCIRCLIZE_RC_LEAKS}
     try:
         return _import_pycirclize_unguarded()
+    except ImportError as exc:
+        warnings._warn_ultraplot(str(exc))
+        raise
     finally:
         for key, value in restore.items():
             if mpl.rcParams[key] != value:
