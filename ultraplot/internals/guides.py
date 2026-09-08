@@ -11,6 +11,7 @@ import numpy as np
 
 from . import ic  # noqa: F401
 from . import warnings
+from .kwargs import _alias_registry
 
 # Global constants
 REMOVE_AFTER_FLUSH = (
@@ -22,10 +23,10 @@ REMOVE_AFTER_FLUSH = (
     "align",
     "queue",
 )
-GUIDE_ALIASES = (
-    ("title", "label"),
-    ("locator", "ticks"),
-    ("format", "formatter", "ticklabels"),
+GUIDE_ALIASES = tuple(
+    (canonical, *aliases)
+    for scope in ("colorbar", "legend")
+    for canonical, aliases in _alias_registry[scope].items()
 )
 
 

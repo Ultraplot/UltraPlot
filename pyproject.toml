@@ -35,7 +35,6 @@ classifiers = [
 dependencies= [
     "numpy>=1.26.0",
     "matplotlib>=3.9,<3.11",
-    "pycirclize>=1.10.1",
     "typing-extensions; python_version < '3.12'",
 ]
 dynamic = ["version"]
@@ -71,12 +70,19 @@ filterwarnings = [
 ]
 mpl-default-style = { axes.prop_cycle = "cycler('color', ['#4c72b0ff', '#55a868ff', '#c44e52ff', '#8172b2ff', '#ccb974ff', '#64b5cdff'])" }
 [project.optional-dependencies]
+all = [
+    "ultraplot[circos,docs,stats]",
+]
+circos = [
+    "pycirclize>=1.10.1",
+]
 docs = [
     "jupyter",
     "jupytext",
     "lxml-html-clean",
     "markdown",
     "mpltern",
+    "pycirclize>=1.10.1",
     # Floors below are the versions that work with Sphinx 9, which removed
     # sphinx.ext.autosummary.get_documenter. Without them pip is free to pair a
     # current Sphinx with an extension that cannot import it, and the build

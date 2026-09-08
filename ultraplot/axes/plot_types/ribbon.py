@@ -14,6 +14,8 @@ import pandas as pd
 from matplotlib import patches as mpatches
 from matplotlib import path as mpath
 
+from ... import _sharing as psharing
+
 
 def _ribbon_path(
     x0: float,
@@ -329,7 +331,12 @@ def ribbon_diagram(
         )
         period_text.append(text)
 
-    ax.format(xlim=(0, 1), ylim=(0, 1), grid=False)
+    with psharing.preserve_axis_sharing():
+        ax.format(
+            xlim=(0, 1),
+            ylim=(0, 1),
+            grid=False,
+        )
     ax.axis("off")
     return {
         "node_patches": node_patches,

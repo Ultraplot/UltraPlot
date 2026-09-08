@@ -22,6 +22,11 @@ from . import warnings
 from .kwargs import (  # noqa: F401
     _alias_kwargs,
     _alias_maps,
+    _alias_registry,
+    _canonicalize_kwargs,
+    _format_alias_reference,
+    _figure_format_alias_scopes,
+    _format_alias_scopes,
     _get_aliases,
     _get_signature,
     _kwargs_to_args,
