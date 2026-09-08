@@ -19,3 +19,6 @@ repos:
     rev: v1.5.2
     hooks:
       - id: tombi-format
+        args: ["--offline"]
+      - id: tombi-lint
+        args: ["--offline"]
