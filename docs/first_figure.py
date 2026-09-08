@@ -147,7 +147,7 @@ image = np.outer(np.sin(x / 2), np.cos(x / 3))
 
 fig, axs = uplt.subplots(ncols=2, share=False, refwidth=2.4)
 axs[0].plot(x, signal, label="signal")
-mesh = axs[1].imshow(image, origin="lower", aspect="auto", colorbar = "ur", colorbar_kw = dict(label = "Intensity"))
+axs[1].imshow(image, origin="lower", aspect="auto", colorbar = "ur", colorbar_kw = dict(label = "Intensity"))
 axs[0].format(title="Signal", xlabel="angle", ylabel="value")
 axs[1].format(title="Image", xlabel="column", ylabel="row")
 fig.format(suptitle="A first UltraPlot figure")
