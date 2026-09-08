@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import importlib.util
 import re
+import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = ROOT / "pyproject.toml"
@@ -148,3 +152,54 @@ def test_publish_workflow_python_is_supported():
     match = re.search(r'python-version:\s*"(\d+\.\d+)"', text)
     assert match is not None
     assert match.group(1) in supported
+
+
+@pytest.mark.parametrize("matplotlib_version", ["3.9", "3.10", "3.11", "4.0"])
+def test_environment_omits_only_incompatible_basemap(matplotlib_version):
+    support = _load_version_support()
+    environment = (
+        "dependencies:\n"
+        "  # basemap is an optional backend\n"
+        "  - basemap >=1.4.1\n"
+        "  - basemap-data\n"
+        "  - matplotlib>=3.9\n"
+        "  - cartopy\n"
+        "  - pip:\n"
+        "      - mpltern\n"
+        "      - pycirclize\n"
+    )
+    result = support.environment_for_matplotlib(environment, matplotlib_version)
+    expected = environment
+    if matplotlib_version in ("3.11", "4.0"):
+        expected = expected.replace("  - basemap >=1.4.1\n", "")
+    assert result == expected
+
+
+@pytest.mark.parametrize("matplotlib_version", ["3.9", "3.11"])
+def test_environment_cli_writes_version_specific_yaml(tmp_path, matplotlib_version):
+    output = tmp_path / "generated" / "environment.yml"
+    subprocess.run(
+        [
+            sys.executable,
+            str(VERSION_SUPPORT),
+            "--matplotlib-version",
+            matplotlib_version,
+            "--environment-output",
+            str(output),
+        ],
+        check=True,
+    )
+    environment = output.read_text(encoding="utf-8")
+    assert ("  - basemap >=1.4.1\n" in environment) == (matplotlib_version == "3.9")
+    assert "      - mpltern\n" in environment
+    assert "      - pycirclize\n" in environment
+
+
+def test_coverage_runs_the_supported_version_matrix():
+    """New Matplotlib branches must contribute to the uploaded coverage."""
+    text = MAIN_WORKFLOW.read_text(encoding="utf-8")
+    coverage = text.split("\n  coverage:\n", 1)[1].split("\n  build:\n", 1)[0]
+    assert "fromJson(needs.get-versions.outputs.test-matrix)" in coverage
+    assert "matplotlib=${{ matrix.matplotlib-version }}" in coverage
+    assert "--environment-output" in coverage
+    assert "--cov=ultraplot --cov-branch" in coverage

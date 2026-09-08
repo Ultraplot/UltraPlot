@@ -83,19 +83,26 @@ def _ensure_mamba_env(
     exe = _mamba_exe(session)
     env = os.environ.copy()
     env["MAMBA_ROOT_PREFIX"] = str(root)
-    session.run(
-        exe,
-        "create",
-        "-y",
-        "-n",
-        env_name,
-        "-f",
-        str(PROJECT_ROOT / "environment.yml"),
-        f"python={python_version}",
-        f"matplotlib={matplotlib_version}",
-        external=True,
-        env=env,
+    environment = _load_version_support().environment_for_matplotlib(
+        (PROJECT_ROOT / "environment.yml").read_text(encoding="utf-8"),
+        matplotlib_version,
     )
+    with tempfile.TemporaryDirectory() as tmpdir:
+        environment_path = Path(tmpdir) / "environment.yml"
+        environment_path.write_text(environment, encoding="utf-8")
+        session.run(
+            exe,
+            "create",
+            "-y",
+            "-n",
+            env_name,
+            "-f",
+            str(environment_path),
+            f"python={python_version}",
+            f"matplotlib={matplotlib_version}",
+            external=True,
+            env=env,
+        )
     return env_name
 
 

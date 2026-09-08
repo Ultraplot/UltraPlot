@@ -53,9 +53,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Prepare compatible test environment
+        run: >-
+          python3 tools/ci/version_support.py
+          --matplotlib-version '${{ inputs.matplotlib-version }}'
+          --environment-output '${{ runner.temp }}/ultraplot-environment.yml'
+
       - uses: mamba-org/setup-micromamba@v3.2.1
         with:
-          environment-file: ./environment.yml
+          environment-file: ${{ runner.temp }}/ultraplot-environment.yml
           init-shell: bash
           condarc-file: ./.github/micromamba-condarc.yml
           post-cleanup: none
@@ -69,6 +75,14 @@ jobs:
       - name: Build Ultraplot
         run: |
           pip install --no-build-isolation --no-deps .
+          python - <<'PY'
+          import sys
+          import matplotlib, mpltern, pycirclize
+          assert sys.version_info[:2] == tuple(map(int, '${{ inputs.python-version }}'.split('.')))
+          assert matplotlib.__version__.startswith('${{ inputs.matplotlib-version }}.')
+          print('Python executable:', sys.executable)
+          print('Matplotlib:', matplotlib.__version__)
+          PY
 
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
@@ -100,9 +114,15 @@ jobs:
 
       - uses: actions/checkout@v7
 
+      - name: Prepare compatible test environment
+        run: >-
+          python3 tools/ci/version_support.py
+          --matplotlib-version '${{ inputs.matplotlib-version }}'
+          --environment-output '${{ runner.temp }}/ultraplot-environment.yml'
+
       - uses: mamba-org/setup-micromamba@v3.2.1
         with:
-          environment-file: ./environment.yml
+          environment-file: ${{ runner.temp }}/ultraplot-environment.yml
           init-shell: bash
           condarc-file: ./.github/micromamba-condarc.yml
           post-cleanup: none
