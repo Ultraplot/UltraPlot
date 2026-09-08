@@ -20,7 +20,6 @@
 import numpy as np
 import ultraplot as uplt
 
-
 # %% [raw] raw_mimetype="text/restructuredtext"
 # Labelled line
 # -------------

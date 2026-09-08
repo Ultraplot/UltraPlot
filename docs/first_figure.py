@@ -119,7 +119,13 @@ image = np.outer(np.sin(x / 2), np.cos(x / 3))
 
 fig, axs = uplt.subplots(ncols=2, share=False, refwidth=2.4)
 axs[0].plot(x, signal, label="signal")
-axs[1].imshow(image, origin="lower", aspect="auto", colorbar = "lr", colorbar_kw = dict(label = "Intensity"))
+axs[1].imshow(
+    image,
+    origin="lower",
+    aspect="auto",
+    colorbar="lr",
+    colorbar_kw=dict(label="Intensity"),
+)
 axs[0].format(title="Signal", xlabel="angle", ylabel="value")
 axs[1].format(title="Image", xlabel="column", ylabel="row")
 fig.format(suptitle="A first UltraPlot figure")
@@ -147,7 +153,13 @@ image = np.outer(np.sin(x / 2), np.cos(x / 3))
 
 fig, axs = uplt.subplots(ncols=2, share=False, refwidth=2.4)
 axs[0].plot(x, signal, label="signal")
-axs[1].imshow(image, origin="lower", aspect="auto", colorbar = "ur", colorbar_kw = dict(label = "Intensity"))
+axs[1].imshow(
+    image,
+    origin="lower",
+    aspect="auto",
+    colorbar="ur",
+    colorbar_kw=dict(label="Intensity"),
+)
 axs[0].format(title="Signal", xlabel="angle", ylabel="value")
 axs[1].format(title="Image", xlabel="column", ylabel="row")
 fig.format(suptitle="A first UltraPlot figure")
@@ -191,18 +203,20 @@ layout = [[1, 2], [1, 3]]
 # Apply a Robinson projection only to the first panel.
 fig, axs = uplt.subplots(
     layout,
-    proj={1: 'robin'},
+    proj={1: "robin"},
     share=0,
     refnum=2,
     refwidth=1.5,
     wratios=(4, 1),
-    hspace='13em',
+    hspace="13em",
 )
 
 # 3. Geographic data
 m = axs[0].contourf(
-    lon, lat, geo_data,
-    cmap='marine',
+    lon,
+    lat,
+    geo_data,
+    cmap="marine",
     levels=15,
 )
 
@@ -213,8 +227,8 @@ axs[0].format(
     lonlines=120,
     latlines=45,
     labelsize=12,
-    title='Global Spatial Anomaly',
-    title_kw={'fontsize': 14},
+    title="Global Spatial Anomaly",
+    title_kw={"fontsize": 14},
 )
 
 # A geographic callout is useful for showing a local-scale pattern without
@@ -227,111 +241,106 @@ paris_value = np.hypot(paris_lon - paris[0], paris_lat - paris[1])
 paris_ax = axs[0].hawkeye(
     (0.43, 0.68),
     size=0.45,
-    anchor='ur',
-    proj='merc',
+    anchor="ur",
+    proj="merc",
     extent=(-0.8, 5.5, 46.8, 50.8),
-    shape='circle',
-    target='circle',
-    connector='line',
-    color='red7',
-    indicator_kw={'linewidth': 1.4},
+    shape="circle",
+    target="circle",
+    connector="line",
+    color="red7",
+    indicator_kw={"linewidth": 1.4},
 )
-paris_ax.format(land=True, landcolor='gray8', borders=True)
+paris_ax.format(land=True, landcolor="gray8", borders=True)
 paris_ax.scatter(
     paris_lon,
     paris_lat,
     c=paris_value,
-    cmap='fire',
+    cmap="fire",
     markersize=24,
-    edgecolor='white',
+    edgecolor="white",
     linewidth=0.35,
-    transform='cyl',
-    absolute_size = True,
+    transform="cyl",
+    absolute_size=True,
 )
 paris_ax.plot(
     *paris,
-    marker='*',
+    marker="*",
     markersize=9,
-    color='red7',
-    markeredgecolor='white',
+    color="red7",
+    markeredgecolor="white",
     markeredgewidth=0.6,
-    transform='cyl',
+    transform="cyl",
 )
 
-axs[0].colorbar(
-    m,
-    loc='b',
-    label='Anomaly magnitude',
-    length=0.8,
-    labelsize = 14
-)
+axs[0].colorbar(m, loc="b", label="Anomaly magnitude", length=0.8, labelsize=14)
 
 # 4. Scatter data with inset
 x = rng.rand(100)
 y = x + rng.randn(100) * 0.2
 
 axs[1].scatter(
-    x, y,
+    x,
+    y,
     c=x,
-    cmap='fire',
+    cmap="fire",
     markersize=15,
     alpha=0.7,
 )
 
 axs[1].format(
-    title='Correlation Profile',
-    xlabel='Predictor',
-    ylabel='Response',
+    title="Correlation Profile",
+    xlabel="Predictor",
+    ylabel="Response",
     xlocator=(0, 0.5, 1),
     ylocator=(0, 0.5, 1),
     xtickminor=False,
     ytickminor=False,
     ticklabelsize=10,
     labelsize=12,
-    title_kw={'fontsize': 12},
+    title_kw={"fontsize": 12},
 )
 
 ax_ins = axs[1].inset([0.55, 0.55, 0.35, 0.35], zoom=False)
-ax_ins.hist(x, bins=10, color='gray5', edgecolor='black')
+ax_ins.hist(x, bins=10, color="gray5", edgecolor="black")
 ax_ins.format(
-    titleloc='uc',
+    titleloc="uc",
     grid=False,
     xtickminor=False,
     ytickminor=False,
 )
 
 # 5. Time series
-axs[2].plot(time, series1, label='Model Alpha')
-axs[2].plot(time, series2, label='Model Beta')
+axs[2].plot(time, series1, label="Model Alpha")
+axs[2].plot(time, series2, label="Model Beta")
 
 axs[2].format(
-    title='Temporal Decay',
-    xlabel='Time (s)',
-    ylabel='Amplitude',
+    title="Temporal Decay",
+    xlabel="Time (s)",
+    ylabel="Amplitude",
     xlocator=(0, 5, 10),
     ylocator=(-0.5, 0, 0.5, 1),
     xtickminor=False,
     ytickminor=False,
     ticklabelsize=10,
     labelsize=12,
-    title_kw={'fontsize': 12},
+    title_kw={"fontsize": 12},
 )
 
 axs[2].legend(
-    loc='ur',
+    loc="ur",
     frame=False,
     fontsize=6,
-    ncols = 1,
+    ncols=1,
 )
 
 # 6. Figure-wide formatting
 fig.format(
-    suptitle='Putting It All Together',
-    suptitle_kw={'fontsize': 15},
+    suptitle="Putting It All Together",
+    suptitle_kw={"fontsize": 15},
     abc=True,
-    abcloc='ul',
-    abcstyle='(a)',
-    abc_kw={'fontsize': 11},
+    abcloc="ul",
+    abcstyle="(a)",
+    abc_kw={"fontsize": 11},
 )
 
-fig.save('complex_figure.png', dpi=150)
+fig.save("complex_figure.png", dpi=150)
