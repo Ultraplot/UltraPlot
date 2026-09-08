@@ -46,8 +46,7 @@
 # %%
 import numpy as np
 
-SEED = 51423
-rng = np.random.RandomState(SEED)
+rng = np.random.RandomState(51423)
 x = np.linspace(0, 10, 100)
 line = np.sin(x) + 0.08 * rng.randn(x.size)
 image = np.outer(np.sin(x / 2), np.cos(x / 3))
