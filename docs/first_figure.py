@@ -122,7 +122,6 @@ axs[0].plot(x, signal, label="signal")
 mesh = axs[1].imshow(image, origin="lower", aspect="auto", colorbar = "lr", colorbar_kw = dict(label = "Intensity"))
 axs[0].format(title="Signal", xlabel="angle", ylabel="value")
 axs[1].format(title="Image", xlabel="column", ylabel="row")
-#
 fig.format(suptitle="A first UltraPlot figure")
 fig.legend(loc="b")
 fig.show()
