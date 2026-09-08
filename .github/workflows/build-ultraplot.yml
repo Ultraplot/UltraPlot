@@ -53,9 +53,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Prepare compatible test environment
+        run: >-
+          python3 tools/ci/version_support.py
+          --matplotlib-version '${{ inputs.matplotlib-version }}'
+          --environment-output '${{ runner.temp }}/ultraplot-environment.yml'
+
       - uses: mamba-org/setup-micromamba@v3.2.1
         with:
-          environment-file: ./environment.yml
+          environment-file: ${{ runner.temp }}/ultraplot-environment.yml
           init-shell: bash
           condarc-file: ./.github/micromamba-condarc.yml
           post-cleanup: none
@@ -69,6 +75,14 @@ jobs:
       - name: Build Ultraplot
         run: |
           pip install --no-build-isolation --no-deps .
+          python - <<'PY'
+          import sys
+          import matplotlib, mpltern, pycirclize
+          assert sys.version_info[:2] == tuple(map(int, '${{ inputs.python-version }}'.split('.')))
+          assert matplotlib.__version__.startswith('${{ inputs.matplotlib-version }}.')
+          print('Python executable:', sys.executable)
+          print('Matplotlib:', matplotlib.__version__)
+          PY
 
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
@@ -100,9 +114,15 @@ jobs:
 
       - uses: actions/checkout@v7
 
+      - name: Prepare compatible test environment
+        run: >-
+          python3 tools/ci/version_support.py
+          --matplotlib-version '${{ inputs.matplotlib-version }}'
+          --environment-output '${{ runner.temp }}/ultraplot-environment.yml'
+
       - uses: mamba-org/setup-micromamba@v3.2.1
         with:
-          environment-file: ./environment.yml
+          environment-file: ${{ runner.temp }}/ultraplot-environment.yml
           init-shell: bash
           condarc-file: ./.github/micromamba-condarc.yml
           post-cleanup: none
@@ -128,11 +148,26 @@ jobs:
           echo "base_sha=${BASE_SHA}" >> "${GITHUB_OUTPUT}"
           echo "Resolved baseline ref=${BASE_REF} sha=${BASE_SHA}"
 
+      - name: Check baseline version support
+        id: baseline-support
+        run: |
+          git show '${{ steps.baseline-ref.outputs.base_sha }}:pyproject.toml' > '${{ runner.temp }}/baseline-pyproject.toml'
+          python tools/ci/version_support.py \
+            --baseline-pyproject '${{ runner.temp }}/baseline-pyproject.toml' \
+            --python-version '${{ inputs.python-version }}' \
+            --matplotlib-version '${{ inputs.matplotlib-version }}' >> "$GITHUB_OUTPUT"
+
+      - name: Explain unavailable baseline
+        if: steps.baseline-support.outputs.baseline-supported != 'true'
+        run: |
+          echo '::notice::Image comparison skipped: the base commit does not support this Python/Matplotlib pair. PR tests still run in the coverage job.'
+          echo 'Image comparison skipped for Python ${{ inputs.python-version }} / Matplotlib ${{ inputs.matplotlib-version }}: base commit ${{ steps.baseline-ref.outputs.base_sha }} does not support this pair. The coverage job still tests the PR on this pair.' >> "$GITHUB_STEP_SUMMARY"
+
       # Cache Baseline Figures (Restore step)
       - name: Cache Baseline Figures
         id: cache-baseline
         uses: actions/cache@v6
-        if: ${{ env.IS_PR }}
+        if: env.IS_PR == 'true' && steps.baseline-support.outputs.baseline-supported == 'true'
         with:
           path: ./ultraplot/tests/baseline # The directory to cache
           # Key is based on OS, Python/Matplotlib versions, and the base commit SHA
@@ -143,7 +178,7 @@ jobs:
       # Conditional Baseline Generation (Only runs on cache miss)
       - name: Generate baseline from main
         # Skip this step if the cache was found (cache-hit is true)
-        if: steps.cache-baseline.outputs.cache-hit != 'true' || !env.IS_PR
+        if: steps.baseline-support.outputs.baseline-supported == 'true' && (steps.cache-baseline.outputs.cache-hit != 'true' || env.IS_PR != 'true')
         run: |
           mkdir -p ultraplot/tests/baseline
           echo "TEST_MODE=${TEST_MODE}"
@@ -219,6 +254,7 @@ jobs:
 
       # Image Comparison (Uses cached or newly generated baseline)
       - name: Image Comparison Ultraplot
+        if: steps.baseline-support.outputs.baseline-supported == 'true'
         run: |
           set -uo pipefail
           # This workflow runs in a login shell (bash -el), which executes
