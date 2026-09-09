@@ -3,7 +3,7 @@
 Generate the visual plot-type index for the documentation.
 
 Reuses the icon registry the cheatsheet is built from, so the docs page, the
-cheatsheet and the poster all show the same thumbnails and cannot drift apart.
+cheatsheet show the same thumbnails and cannot drift apart.
 Writes ``docs/plot_types.rst`` and copies the icons to ``docs/_static``.
 
     micromamba run -n ultraplot-dev python tools/cheatsheet/docs_index.py
@@ -163,10 +163,11 @@ def ensure_icons():
     present and complete, which is the usual case for a local rebuild.
     """
     source = os.path.join(HERE, "assets", "icons")
-    have = len([f for f in os.listdir(source)]) if os.path.isdir(source) else 0
-    if have >= len(ICONS):
+    wanted = {slug(name) + ".png" for name in ICONS}
+    missing = [name for name in wanted if not os.path.isfile(os.path.join(source, name))]
+    if not missing:
         return
-    print(f"  rendering {len(ICONS)} icons (found {have})")
+    print(f"  rendering {len(ICONS)} icons ({len(missing)} PNGs missing)")
     import icons as icons_module
 
     cwd = os.getcwd()
@@ -188,7 +189,7 @@ def copy_icons():
     wanted = {slug(name) + ".png" for name in ICONS}
     count = 0
     for entry in sorted(os.listdir(source)):
-        if entry.endswith(".png"):
+        if entry in wanted:
             shutil.copy2(os.path.join(source, entry), os.path.join(STATIC, entry))
             count += 1
     # Renaming or dropping a command would otherwise leave its icon behind, and

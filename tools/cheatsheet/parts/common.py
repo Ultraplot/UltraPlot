@@ -3,8 +3,8 @@
 Shared style and helpers for the cheatsheet figure parts.
 
 Each part script renders one asset with UltraPlot and drops it in ``assets/``.
-The Typst document is what assembles them, so nothing here knows about page
-layout — only about drawing one small, self-contained figure well.
+The draw.io generator assembles them; these helpers only render individual
+figures.
 """
 
 from __future__ import annotations
@@ -21,10 +21,6 @@ ASSETS = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets"
 )
 
-#: Section rails, sampled along ``batlow`` so the sheet is colored by the thing
-#: it documents. Kept in step with the palette in ``cheatsheet.typ``.
-RAILS = ["#011959", "#144d62", "#3c6d56", "#828231", "#b0455a"]
-
 INK = "#101720"
 INK_SOFT = "#47535f"
 INK_FAINT = "#7e8c99"
@@ -33,7 +29,7 @@ SUNK = "#eef1f5"
 RULE = "#c9d2dc"
 ACCENT = "#3b638c"
 
-#: Assets are rendered at this resolution. Typst scales them down to their box,
+#: Assets are rendered at this resolution. The page scales them down to their box,
 #: so oversampling keeps small strokes crisp in print.
 DPI = 300
 
@@ -69,6 +65,11 @@ def save(fig, name, *, dpi=DPI, transparent=False):
     path = os.path.join(ASSETS, name)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     fig.save(path, dpi=dpi, transparent=transparent)
+    # Keep a raster companion for draw.io while preserving the SVG master.
+    if path.endswith(".svg"):
+        fig.save(path[:-4] + ".png", dpi=dpi, transparent=transparent)
+    elif path.endswith(".png"):
+        fig.save(path[:-4] + ".svg", transparent=transparent)
     uplt.close(fig)
     print(f"  {os.path.relpath(path, os.path.dirname(ASSETS))}")
     return path
@@ -115,8 +116,8 @@ ICON_DENSITY = "fire"
 ICON_DIVERGING = "roma"
 
 #: Stroke and marker sizes that survive being scaled to 10 mm.
-ICON_LW = 1.7
-ICON_MS = 11.0
+ICON_LW = 2.4
+ICON_MS = 19.0
 
 #: Data margin inside an icon. Small, so the drawing reaches the edges: the
 #: tile on the page supplies the frame, and empty padding inside it just makes
