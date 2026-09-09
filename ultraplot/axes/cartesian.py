@@ -4,7 +4,6 @@ The standard Cartesian axes used for most ultraplot figures.
 """
 
 import copy
-import functools
 import inspect
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple, Union
@@ -15,11 +14,15 @@ import matplotlib.ticker as mticker
 import numpy as np
 from packaging import version
 
+from .. import _sharing as psharing
 from .. import constructor
 from .. import scale as pscale
 from .. import ticker as pticker
 from ..config import rc
 from ..internals import (
+    _alias_kwargs,
+    _canonicalize_kwargs,
+    _format_alias_scopes,
     _not_none,
     _pop_params,
     _pop_rc,
@@ -104,8 +107,6 @@ xwraprange, ywraprange : 2-tuple of float, optional
     example, ``xwraprange=(0, 3)`` causes the values 0 through 9 to be formatted as
     0, 1, 2, 0, 1, 2, 0, 1, 2, 0. See `~ultraplot.ticker.AutoFormatter` for details. This
     can be combined with `xtickrange` and `ytickrange` to make "stacked" line plots.
-xloc, yloc : optional
-    Shorthands for `xspineloc`, `yspineloc`.
 xspineloc, yspineloc : {'b', 't', 'l', 'r', 'bottom', 'top', 'left', 'right', \
 'both', 'neither', 'none', 'zero', 'center'} or 2-tuple, optional
     The x and y spine locations. Applied with `~matplotlib.spines.Spine.set_position`.
@@ -144,8 +145,6 @@ xgridminor, ygridminor, gridminor : bool, default: :rc:`gridminor`
 xtickminor, ytickminor, tickminor : bool, default: :rc:`tick.minor`
     Whether to draw minor ticks on the x and y axes.
     Use the keyword `tickminor` to toggle both.
-xticks, yticks : optional
-    Aliases for `xlocator`, `ylocator`.
 xlocator, ylocator : locator-spec, optional
     Used to determine the x and y axis tick mark positions. Passed
     to the `~ultraplot.constructor.Locator` constructor.  Can be float,
@@ -153,14 +152,10 @@ xlocator, ylocator : locator-spec, optional
     Use ``[]``, ``'null'``, or ``'none'`` for no ticks.
 xlocator_kw, ylocator_kw : dict-like, optional
     Keyword arguments passed to the `matplotlib.ticker.Locator` class.
-xminorticks, yminorticks : optional
-    Aliases for `xminorlocator`, `yminorlocator`.
 xminorlocator, yminorlocator : optional
     As for `xlocator`, `ylocator`, but for the minor ticks.
 xminorlocator_kw, yminorlocator_kw
     As for `xlocator_kw`, `ylocator_kw`, but for the minor locator.
-xticklabels, yticklabels : optional
-    Aliases for `xformatter`, `yformatter`.
 xformatter, yformatter : formatter-spec, optional
     Used to determine the x and y axis tick label string format.
     Passed to the `~ultraplot.constructor.Formatter` constructor.
@@ -545,8 +540,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         level = 3 if panel_group else sharing_level
 
-        # Handle axis label sharing (level > 0)
-        if level > 0:
+        # Handle axis-title sharing independently from numeric sharing.
+        share_labels = panel_group or getattr(
+            self.figure, f"_share{axis_name}_labels", level > 0
+        )
+        if share_labels:
             if self.figure._is_share_label_group_member(self, axis_name):
                 pass
             elif self.figure._is_share_label_group_member(shared_axis, axis_name):
@@ -556,8 +554,11 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
                 labels._transfer_label(axis.label, shared_axis_obj.label)
                 axis.label.set_visible(False)
 
-        # Handle tick label sharing (level > 2)
-        if level > 2:
+        # Handle tick-label suppression independently from numeric sharing.
+        share_ticklabels = panel_group or getattr(
+            self.figure, f"_share{axis_name}_ticklabels", level > 2
+        )
+        if share_ticklabels:
             label_visibility = self._determine_tick_label_visibility(
                 axis,
                 shared_axis,
@@ -683,16 +684,27 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         # To restore matplotlib behavior, which draws "child" artists on top simply
         # because the axes was created after the "parent" one, use the inset_axes
         # zorder of 4 and make the background transparent.
+        kwargs = _canonicalize_kwargs(_format_alias_scopes, kwargs)
         sy = "y" if sx == "x" else "x"
         sig = self._format_signatures[CartesianAxes]
         keys = tuple(key[1:] for key in sig.parameters if key[0] == sx)
-        kwargs = {
-            (sx + key if key in keys else key): val for key, val in kwargs.items()
-        }  # noqa: E501
-        if f"{sy}spineloc" not in kwargs:  # acccount for aliases
-            kwargs.setdefault(f"{sy}loc", "neither")
-        if f"{sx}spineloc" not in kwargs:  # account for aliases
-            kwargs.setdefault(f"{sx}loc", "top" if sx == "x" else "right")
+        normalized = {}
+        for key, value in kwargs.items():
+            if key == "loc":
+                key = f"{sx}spineloc"
+            elif key in keys:
+                key = sx + key
+            else:
+                candidate = _canonicalize_kwargs(
+                    _format_alias_scopes, {sx + key: value}
+                )
+                candidate_key = next(iter(candidate))
+                if candidate_key in sig.parameters:
+                    key = candidate_key
+            normalized[key] = value
+        kwargs = normalized
+        kwargs.setdefault(f"{sy}spineloc", "neither")
+        kwargs.setdefault(f"{sx}spineloc", "top" if sx == "x" else "right")
         kwargs.setdefault(f"autoscale{sy}_on", getattr(self, f"get_autoscale{sy}_on")())
         kwargs.setdefault(f"share{sy}", self)
 
@@ -712,7 +724,10 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         self._twinned_axes.join(self, ax)
 
         # Format parent and child axes
-        self.format(**{f"{sx}loc": OPPOSITE_SIDE.get(kwargs[f"{sx}loc"], None)})
+        with psharing.preserve_axis_sharing():
+            self.format(
+                **{f"{sx}spineloc": OPPOSITE_SIDE.get(kwargs[f"{sx}spineloc"], None)},
+            )
         setattr(ax, f"_alt{sx}_parent", self)
         getattr(ax, f"{sy}axis").set_visible(False)
         getattr(ax, "patch").set_visible(False)
@@ -874,25 +889,21 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         """
         # Share panels across *different* subplots
         super()._sharex_setup(sharex)
-        # Get the axis sharing level
-        level = (
-            3
-            if self._panel_sharex_group and self._is_panel_group_member(sharex)
-            else self.figure._sharex
-        )
-        if level not in range(5):  # must be internal error
-            raise ValueError(f"Invalid sharing level sharex={level!r}.")
+        panel_group = self._panel_sharex_group and self._is_panel_group_member(sharex)
         if sharex in (None, self) or not isinstance(sharex, CartesianAxes):
             return
         # Share future axis label changes. Implemented in _apply_axis_sharing().
         # Matplotlib only uses these attributes in __init__() and cla() to share
         # tickers -- all other builtin sharing features derives from shared x axes
-        if level > 0 and labels:
+        share_labels = panel_group or self.figure._sharex_labels
+        share_limits = panel_group or self.figure._sharex_limits
+        share_ticklabels = panel_group or self.figure._sharex_ticklabels
+        if (share_labels and labels) or (share_limits and limits) or share_ticklabels:
             self._sharex = sharex
         # Share future axis tickers, limits, and scales
         # NOTE: Only difference between levels 2 and 3 is level 3 hides tick
         # labels. But this is done after the fact -- tickers are still shared.
-        if level > 1 and limits:
+        if share_limits and limits:
             self._sharex_limits(sharex)
 
     def _sharey_setup(self, sharey, *, labels=True, limits=True):
@@ -902,18 +913,15 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         """
         # NOTE: See _sharex_setup for notes
         super()._sharey_setup(sharey)
-        level = (
-            3
-            if self._panel_sharey_group and self._is_panel_group_member(sharey)
-            else self.figure._sharey
-        )
-        if level not in range(5):  # must be internal error
-            raise ValueError(f"Invalid sharing level sharey={level!r}.")
+        panel_group = self._panel_sharey_group and self._is_panel_group_member(sharey)
         if sharey in (None, self) or not isinstance(sharey, CartesianAxes):
             return
-        if level > 0 and labels:
+        share_labels = panel_group or self.figure._sharey_labels
+        share_limits = panel_group or self.figure._sharey_limits
+        share_ticklabels = panel_group or self.figure._sharey_ticklabels
+        if (share_labels and labels) or (share_limits and limits) or share_ticklabels:
             self._sharey = sharey
-        if level > 1 and limits:
+        if share_limits and limits:
             self._sharey_limits(sharey)
 
     def _apply_log_formatter_on_scale(self, s):
@@ -1222,7 +1230,6 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             labelloc = _validate_loc(labelloc, label_opts, "axis label")
             axis.set_label_position(labelloc)
         if offsetloc is not None:
-            offsetloc = _not_none(offsetloc, options[0])
             if hasattr(axis, "set_offset_position"):  # y axis (and future x axis?)
                 axis.set_offset_position(offsetloc)
             elif s == "x" and _version_mpl >= "3.3":  # ugly x axis kludge
@@ -1443,10 +1450,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
             rc.find(f"{axis}tick.direction", context=True),
         )
 
-        locator = _not_none(get("locator"), p.get(f"{axis}ticks"))
-        minorlocator = _not_none(get("minorlocator"), p.get(f"{axis}minorticks"))
-
-        formatter = _not_none(get("formatter"), p.get(f"{axis}ticklabels"))
+        locator = get("locator")
+        minorlocator = get("minorlocator")
+        formatter = get("formatter")
 
         # Tick minor default logic
         tickminor = get("tickminor")
@@ -1581,13 +1587,13 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
 
         return _AxisFormatConfig(**config_kwargs)
 
+    @shared._format_wrapper(capture_explicit=True)
     @docstring._snippet_manager
+    @_alias_kwargs("cartesian.format")
     def format(
         self,
         *,
         aspect=None,
-        xloc=None,
-        yloc=None,
         xspineloc=None,
         yspineloc=None,
         xoffsetloc=None,
@@ -1612,14 +1618,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         yrotation=None,
         xformatter=None,
         yformatter=None,
-        xticklabels=None,
-        yticklabels=None,
-        xticks=None,
-        yticks=None,
         xlocator=None,
         ylocator=None,
-        xminorticks=None,
-        yminorticks=None,
         xminorlocator=None,
         yminorlocator=None,
         xcolor=None,
@@ -1860,24 +1860,9 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         return super().get_tightbbox(renderer, *args, **kwargs)
 
 
-def _capture_explicit_format_keys(func):
-    """
-    Preserve raw keyword names before Python binds them to the format signature.
-    """
-
-    @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        kwargs.setdefault("_explicit_format_keys", set(kwargs))
-        return func(self, *args, **kwargs)
-
-    return wrapper
-
-
-# tmp
 # Apply signature obfuscation after storing previous signature
 # NOTE: This is needed for __init__, altx, and alty
 CartesianAxes._format_signatures[CartesianAxes] = inspect.signature(
     CartesianAxes.format
 )  # noqa: E501
-CartesianAxes.format = _capture_explicit_format_keys(CartesianAxes.format)
 CartesianAxes.format = docstring._obfuscate_kwargs(CartesianAxes.format)

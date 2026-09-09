@@ -11,6 +11,8 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+from .internals import _alias_kwargs
+
 try:
     from kiwisolver import Solver, Variable
 
@@ -147,6 +149,7 @@ class UltraLayoutSolver:
     a superior layout experience for complex subplot arrangements.
     """
 
+    @_alias_kwargs("gridspec")
     def __init__(
         self,
         array: np.ndarray,
@@ -158,8 +161,8 @@ class UltraLayoutSolver:
         right: float = 0.125,
         top: float = 0.125,
         bottom: float = 0.125,
-        wratios: Optional[List[float]] = None,
-        hratios: Optional[List[float]] = None,
+        width_ratios: Optional[List[float]] = None,
+        height_ratios: Optional[List[float]] = None,
         wpanels: Optional[List[bool]] = None,
         hpanels: Optional[List[bool]] = None,
     ):
@@ -176,7 +179,7 @@ class UltraLayoutSolver:
             Spacing between columns and rows in inches
         left, right, top, bottom : float
             Margins in inches
-        wratios, hratios : list of float, optional
+        width_ratios, height_ratios : list of float, optional
             Width and height ratios for columns and rows
         wpanels, hpanels : list of bool, optional
             Flags indicating panel columns or rows with fixed widths/heights.
@@ -211,15 +214,15 @@ class UltraLayoutSolver:
             self.hspace = list(hspace)
 
         # Set up ratios
-        if wratios is None:
+        if width_ratios is None:
             self.wratios = [1.0] * self.ncols
         else:
-            self.wratios = list(wratios)
+            self.wratios = list(width_ratios)
 
-        if hratios is None:
+        if height_ratios is None:
             self.hratios = [1.0] * self.nrows
         else:
-            self.hratios = list(hratios)
+            self.hratios = list(height_ratios)
 
         # Set up panel flags (True for fixed-width panel slots).
         if wpanels is None:
@@ -511,6 +514,7 @@ class ColorbarLayoutSolver:
         }
 
 
+@_alias_kwargs("gridspec")
 def compute_ultra_positions(
     array: np.ndarray,
     figwidth: float = 10.0,
@@ -521,8 +525,8 @@ def compute_ultra_positions(
     right: float = 0.125,
     top: float = 0.125,
     bottom: float = 0.125,
-    wratios: Optional[List[float]] = None,
-    hratios: Optional[List[float]] = None,
+    width_ratios: Optional[List[float]] = None,
+    height_ratios: Optional[List[float]] = None,
     wpanels: Optional[List[bool]] = None,
     hpanels: Optional[List[bool]] = None,
 ) -> Dict[int, Tuple[float, float, float, float]]:
@@ -539,7 +543,7 @@ def compute_ultra_positions(
         Spacing between columns and rows in inches
     left, right, top, bottom : float
         Margins in inches
-    wratios, hratios : list of float, optional
+    width_ratios, height_ratios : list of float, optional
         Width and height ratios for columns and rows
     wpanels, hpanels : list of bool, optional
         Flags indicating panel columns or rows with fixed widths/heights.
@@ -567,14 +571,15 @@ def compute_ultra_positions(
         right,
         top,
         bottom,
-        wratios,
-        hratios,
+        width_ratios,
+        height_ratios,
         wpanels,
         hpanels,
     )
     return solver.solve()
 
 
+@_alias_kwargs("gridspec")
 def get_grid_positions_ultra(
     array: np.ndarray,
     figwidth: float,
@@ -585,8 +590,8 @@ def get_grid_positions_ultra(
     right: float = 0.125,
     top: float = 0.125,
     bottom: float = 0.125,
-    wratios: Optional[List[float]] = None,
-    hratios: Optional[List[float]] = None,
+    width_ratios: Optional[List[float]] = None,
+    height_ratios: Optional[List[float]] = None,
     wpanels: Optional[List[bool]] = None,
     hpanels: Optional[List[bool]] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -606,7 +611,7 @@ def get_grid_positions_ultra(
         Spacing between columns and rows in inches
     left, right, top, bottom : float
         Margins in inches
-    wratios, hratios : list of float, optional
+    width_ratios, height_ratios : list of float, optional
         Width and height ratios for columns and rows
     wpanels, hpanels : list of bool, optional
         Flags indicating panel columns or rows with fixed widths/heights.
@@ -626,8 +631,8 @@ def get_grid_positions_ultra(
         right,
         top,
         bottom,
-        wratios,
-        hratios,
+        width_ratios,
+        height_ratios,
         wpanels,
         hpanels,
     )

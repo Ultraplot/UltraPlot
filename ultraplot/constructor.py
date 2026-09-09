@@ -34,6 +34,7 @@ from . import scale as pscale
 from . import ticker as pticker
 from .config import rc
 from .internals import (
+    _alias_kwargs,
     _not_none,
     _pop_props,
     _version_cartopy,
@@ -880,8 +881,6 @@ class Cycle(cycler.Cycler):
 
         If the last positional argument is numeric, it is used for the
         `samples` keyword argument.
-    N
-        Shorthand for `samples`.
     samples : float or sequence of float, optional
         For :class:`~ultraplot.colors.DiscreteColormap`\\ s, this is the number of
         colors to select. For example, ``Cycle('538', 4)`` returns the first 4
@@ -934,9 +933,9 @@ markeredgecolors, markerfacecolors
     ultraplot.utils.get_colors
     """
 
-    def __init__(self, *args, N=None, samples=None, name=None, **kwargs):
+    @_alias_kwargs("cycle")
+    def __init__(self, *args, samples=None, name=None, **kwargs):
         cycler_props = self._parse_basic_properties(kwargs)
-        samples = _not_none(samples=samples, N=N)  # trigger Colormap default
         if not args:
             self._handle_empty_args(cycler_props, kwargs)
         elif self._is_all_cyclers(args):
@@ -1495,13 +1494,12 @@ def _warn_basemap_deprecated():
     )
 
 
+@_alias_kwargs("projection")
 def Proj(
     name,
     backend=None,
     lon0=None,
-    lon_0=None,
     lat0=None,
-    lat_0=None,
     lonlim=None,
     latlim=None,
     **kwargs,
@@ -1592,8 +1590,6 @@ def Proj(
     lon0, lat0 : float, optional
         The central projection longitude and latitude. These are translated to
         `central_longitude`, `central_latitude` for cartopy projections.
-    lon_0, lat_0 : float, optional
-        Aliases for `lon0`, `lat0`.
     lonlim : 2-tuple of float, optional
         The longitude limits. Translated to `min_longitude` and `max_longitude` for
         cartopy projections and `llcrnrlon` and `urcrnrlon` for basemap projections.
@@ -1667,8 +1663,6 @@ def Proj(
     # Parse input arguments
     # NOTE: Underscores are permitted for consistency with cartopy only here.
     # In format() underscores are not allowed for constistency with reset of API.
-    lon0 = _not_none(lon0=lon0, lon_0=lon_0)
-    lat0 = _not_none(lat0=lat0, lat_0=lat_0)
     lonlim = _not_none(lonlim, default=(None, None))
     latlim = _not_none(latlim, default=(None, None))
     is_crs = Projection is not object and isinstance(name, Projection)

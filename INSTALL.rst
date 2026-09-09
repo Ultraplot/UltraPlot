@@ -10,13 +10,19 @@ with ``pip`` or ``conda`` as follows:
    pip install ultraplot
    conda install -c conda-forge ultraplot
 
-The default install includes optional features (for example, pyCirclize-based plots).
-For a minimal install, use ``--no-deps`` and install the core requirements:
+pyCirclize-based plots require the optional ``circos`` extra:
 
 .. code-block:: bash
 
-   pip install ultraplot --no-deps
-   pip install -r requirements-minimal.txt
+   pip install 'ultraplot[circos]'
+
+The ``docs`` extra also includes pyCirclize for building the documentation.
+
+To install all optional dependency groups (``circos``, ``docs``, and ``stats``):
+
+.. code-block:: bash
+
+   pip install 'ultraplot[all]'
 
 Likewise, an existing installation of ultraplot can be upgraded to the latest version with:
 

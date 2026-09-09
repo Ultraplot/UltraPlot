@@ -20,6 +20,7 @@ from . import axes as paxes
 from .axes._formatting import pop_axis_format_kwargs
 from .config import rc
 from .internals import (
+    _alias_kwargs,
     _not_none,
     _pop_rc,
     docstring,
@@ -71,13 +72,10 @@ wspace, hspace, space : unit-spec or sequence, default: None
     layout algorithm. For example, ``subplots(ncols=3, tight=True, wspace=(2, None))``
     fixes the space between columns 1 and 2 but lets the tight layout algorithm
     determine the space between columns 2 and 3.
-wratios, hratios : float or sequence, optional
-    Passed to :class:`~ultraplot.gridspec.GridSpec`, denotes the width and height
-    ratios for the subplot grid. Length of `wratios` must match the number
-    of columns, and length of `hratios` must match the number of rows.
-width_ratios, height_ratios
-    Aliases for `wratios`, `hratios`. Included for
-    consistency with `matplotlib.gridspec.GridSpec`.
+width_ratios, height_ratios : float or sequence, optional
+    Passed to :class:`~ultraplot.gridspec.GridSpec`, and denote the width and
+    height ratios for the subplot grid. Length of `width_ratios` must match the
+    number of columns, and length of `height_ratios` must match the number of rows.
 wpad, hpad, pad : unit-spec or sequence, optional
     The tight layout padding between columns, rows, and both, respectively.
     Unlike ``space``, these control the padding between subplot content
@@ -529,8 +527,8 @@ class GridSpec(mgridspec.GridSpec):
                 right=right,
                 top=top,
                 bottom=bottom,
-                wratios=self._wratios_total,
-                hratios=self._hratios_total,
+                width_ratios=self._wratios_total,
+                height_ratios=self._hratios_total,
                 wpanels=[bool(val) for val in self._wpanels],
                 hpanels=[bool(val) for val in self._hpanels],
             )
@@ -1073,21 +1071,23 @@ class GridSpec(mgridspec.GridSpec):
             space = self._labelspace + self._xticklabelspace + self._xtickspace
         elif key == "wspace_total":
             pad = _not_none(pad, self._innerpad)
-            share = _not_none(share, fig._sharey, 0)
+            share_labels = fig._sharey_labels if share is None else share >= 1
+            share_ticklabels = fig._sharey_ticklabels if share is None else share >= 3
             space = self._ytickspace
-            if share < 3:
+            if not share_ticklabels:
                 space += self._yticklabelspace
-            if share < 1:
+            if not share_labels:
                 space += self._labelspace
         elif key == "hspace_total":
             pad = _not_none(pad, self._innerpad)
-            share = _not_none(share, fig._sharex, 0)
+            share_labels = fig._sharex_labels if share is None else share >= 1
+            share_ticklabels = fig._sharex_ticklabels if share is None else share >= 3
             space = self._xtickspace
             if title:
                 space += self._titlespace
-            if share < 3:
+            if not share_ticklabels:
                 space += self._xticklabelspace
-            if share < 1:
+            if not share_labels:
                 space += self._labelspace
         else:
             raise ValueError(f"Invalid space key {key!r}.")
@@ -1377,6 +1377,7 @@ class GridSpec(mgridspec.GridSpec):
         else:
             warnings._warn_ultraplot(f"Auto resize failed. Invalid figsize {figsize}.")
 
+    @_alias_kwargs("gridspec")
     def _update_params(
         self,
         *,
@@ -1400,8 +1401,6 @@ class GridSpec(mgridspec.GridSpec):
         outerpad=None,
         innerpad=None,
         panelpad=None,
-        hratios=None,
-        wratios=None,
         width_ratios=None,
         height_ratios=None,
     ):
@@ -1484,8 +1483,8 @@ class GridSpec(mgridspec.GridSpec):
         wspace = _not_none(wspace, space)
         hspace = units(hspace, "em", "in")
         wspace = units(wspace, "em", "in")
-        hratios = _not_none(hratios=hratios, height_ratios=height_ratios)
-        wratios = _not_none(wratios=wratios, width_ratios=width_ratios)
+        hratios = height_ratios
+        wratios = width_ratios
         _assign_vector("hpad", hpad, space=True)
         _assign_vector("wpad", wpad, space=True)
         _assign_vector("hspace", hspace, space=True)
@@ -2062,6 +2061,20 @@ class SubplotGrid(MutableSequence, list):
         **kwargs
             Passed to the projection-specific ``format`` command for each axes.
             Valid only if every axes in the grid belongs to the same class.
+            Axes-format arguments may be dictionaries mapping one-based positions
+            in this grid to values, for example ``title={1: 'First', (2, 3):
+            'Others'}``. Dictionaries with string keys remain ordinary style
+            dictionaries.
+
+        Notes
+        -----
+        Formatting a subset with parameters that require independent axis labels,
+        limits, scales, locators, formatters, or tick locations may reduce the
+        corresponding sharing component for the entire figure. A scalar label on a
+        multi-axes subset can instead form a shared label group for that subset.
+        Inspect or restore sharing with
+        `~ultraplot.figure.Figure.get_axis_sharing` and
+        `~ultraplot.figure.Figure.set_axis_sharing`.
 
         Other parameters
         ----------------
@@ -2081,20 +2094,8 @@ class SubplotGrid(MutableSequence, list):
         ultraplot.config.Configurator.context
         """
 
-        def _supports_implicit_label_share(target):
-            compatible_sides = {
-                "x": {"top", "bottom"},
-                "y": {"left", "right"},
-            }
-            for ax in axes:
-                side = getattr(ax, "_panel_side", None)
-                if side is None:
-                    continue
-                if side not in compatible_sides[target]:
-                    return False
-            return True
-
-        # Implicit label sharing for subset format calls
+        # Explicit group clearing is grid-owned. Figure.format handles implicit
+        # scalar subset groups after it successfully dispatches all axes values.
         share_xlabels = kwargs.get("share_xlabels", None)
         share_ylabels = kwargs.get("share_ylabels", None)
         xlabel = kwargs.get("xlabel", None)
@@ -2122,18 +2123,6 @@ class SubplotGrid(MutableSequence, list):
         kwargs.update(signature_axis_kwargs)
         kwargs.update(generic_axis_kwargs)
         with rc.context(rc_kw, mode=rc_mode):
-            implicit_share_xlabels = (
-                is_subset
-                and share_xlabels is None
-                and xlabel is not None
-                and _supports_implicit_label_share("x")
-            )
-            implicit_share_ylabels = (
-                is_subset
-                and share_ylabels is None
-                and ylabel is not None
-                and _supports_implicit_label_share("y")
-            )
             if len(self) > 1:
                 if share_xlabels is False:
                     self.figure._clear_share_label_groups(self, target="x")
@@ -2143,10 +2132,6 @@ class SubplotGrid(MutableSequence, list):
                     self.figure._clear_share_label_groups(self, target="x")
                 if not is_subset and share_ylabels is None and ylabel is not None:
                     self.figure._clear_share_label_groups(self, target="y")
-                if implicit_share_xlabels:
-                    self.figure._register_share_label_group(self, target="x")
-                if implicit_share_ylabels:
-                    self.figure._register_share_label_group(self, target="y")
             self.figure.format(axs=self, **kwargs)
             if shared_subset_title:
                 self.figure._update_subset_title(
@@ -2156,12 +2141,6 @@ class SubplotGrid(MutableSequence, list):
                     pad=shared_title_pad,
                     **(shared_title_kw or {}),
                 )
-            # Refresh groups after labels are set
-            if len(self) > 1:
-                if implicit_share_xlabels:
-                    self.figure._register_share_label_group(self, target="x")
-                if implicit_share_ylabels:
-                    self.figure._register_share_label_group(self, target="y")
 
     def share_labels(self, *, axis="x"):
         """

@@ -8,6 +8,14 @@ from matplotlib import ticker as mticker
 import ultraplot as uplt
 
 
+@pytest.fixture(autouse=True)
+def require_optional_backend(request):
+    """Skip only Basemap parameter cases when the legacy backend is absent."""
+    callspec = getattr(request.node, "callspec", None)
+    if callspec is not None and callspec.params.get("backend") == "basemap":
+        request.getfixturevalue("basemap_backend")
+
+
 @pytest.mark.parametrize(
     ("aspect", "expected"),
     (("auto", "auto"), ("equal", 1.0), (2.0, 2.0)),
@@ -194,7 +202,7 @@ def test_geographic_single_projection():
 
 
 @pytest.mark.mpl_image_compare
-def test_geographic_multiple_projections():
+def test_geographic_multiple_projections(basemap_backend):
     fig = uplt.figure(share=0)
     # Add projections
     gs = uplt.GridSpec(ncols=2, nrows=3, hratios=(1, 1, 1.4))
@@ -223,7 +231,7 @@ def test_geographic_multiple_projections():
 
 
 @pytest.mark.mpl_image_compare
-def test_drawing_in_projection_without_globe(rng):
+def test_drawing_in_projection_without_globe(rng, basemap_backend):
     # Fake data with unusual longitude seam location and without coverage over poles
     offset = -40
     lon = uplt.arange(offset, 360 + offset - 1, 60)
@@ -258,7 +266,7 @@ def test_drawing_in_projection_without_globe(rng):
 
 
 @pytest.mark.mpl_image_compare
-def test_drawing_in_projection_with_globe(rng):
+def test_drawing_in_projection_with_globe(rng, basemap_backend):
     # Fake data with unusual longitude seam location and without coverage over poles
     offset = -40
     lon = uplt.arange(offset, 360 + offset - 1, 60)
@@ -293,7 +301,7 @@ def test_drawing_in_projection_with_globe(rng):
 
 
 @pytest.mark.mpl_image_compare
-def test_geoticks():
+def test_geoticks(basemap_backend):
 
     lonlim = (-140, 60)
     latlim = (-10, 50)
@@ -573,7 +581,9 @@ def test_toggle_gridliner_labels():
     assert gl.top_labels == True
     uplt.close(fig)
 
-    # Basemap backend
+
+def test_toggle_gridliner_labels_basemap_collections(basemap_backend):
+    """Toggle labels on legacy Basemap collections independently of Cartopy."""
     fig, ax = uplt.subplots(proj="cyl", backend="basemap")
     ax.format(land=True, labels="both")  # need this otherwise no labels are printed
     ax[0]._toggle_gridliner_labels(
@@ -804,7 +814,9 @@ def test_format_shared_ticks_sync():
     before_lon = ax[0]._get_lonticklocs()
     before_lat = ax[0]._get_latticklocs()
 
-    ax[1].format(lonlines=2, latlines=1)
+    # This test exercises synchronized shared ticks, so format the whole grid.
+    # Formatting ax[1] now deliberately requests independent local tick state.
+    ax.format(lonlines=2, latlines=1)
 
     after_left_lon = ax[0]._get_lonticklocs()
     after_left_lat = ax[0]._get_latticklocs()
@@ -829,7 +841,7 @@ def test_format_shared_ticks_sync():
     assert np.allclose(left_gridliner.xlocator.tick_values(100, 105), after_left_lon)
     assert np.allclose(left_gridliner.ylocator.tick_values(30, 35), after_left_lat)
 
-    ax[1].format(lonminorlines=0.5, latminorlines=0.5)
+    ax.format(lonminorlines=0.5, latminorlines=0.5)
     assert np.allclose(
         ax[0]._lonaxis.get_minorticklocs(), ax[1]._lonaxis.get_minorticklocs()
     )
@@ -838,7 +850,7 @@ def test_format_shared_ticks_sync():
     )
 
     formatter = mticker.FormatStrFormatter("%.1f")
-    ax[1].format(lonformatter=formatter, latformatter=formatter)
+    ax.format(lonformatter=formatter, latformatter=formatter)
     lonformatter = ax[1]._lonaxis.get_major_formatter()
     latformatter = ax[1]._lataxis.get_major_formatter()
     assert ax[0]._lonaxis.get_major_formatter() is lonformatter
@@ -860,7 +872,7 @@ def test_sync_shared_tick_state_guards():
     uplt.close(fig)
 
 
-def test_turn_off_tick_labels_basemap():
+def test_turn_off_tick_labels_basemap(basemap_backend):
     """
     Check if we can toggle the labels off for GeoAxes
     with a basemap backend.
@@ -924,7 +936,7 @@ def test_get_gridliner_labels_cartopy():
     uplt.close(fig)
 
 
-def test_get_gridliner_labels_basemap():
+def test_get_gridliner_labels_basemap(basemap_backend):
     fig, ax = uplt.subplots(proj="cyl", backend="basemap")
     ax.format(labels="both", lonlines=30, latlines=30)
     fig.canvas.draw()  # ensure labels are positioned
@@ -936,7 +948,7 @@ def test_get_gridliner_labels_basemap():
     uplt.close(fig)
 
 
-def test_toggle_gridliner_labels_basemap():
+def test_toggle_gridliner_labels_basemap(basemap_backend):
     fig, ax = uplt.subplots(proj="cyl", backend="basemap")
     ax[0].format(labels="both", lonlines=30, latlines=30)
     fig.canvas.draw()
@@ -1135,6 +1147,9 @@ def test_sharing_levels(level):
             lonlim=lonlim * axi.number,
             latlim=latlim * axi.number,
         )
+    assert fig._sharex == fig._sharey == min(level, 1)
+    assert not fig._sharex_limits and not fig._sharey_limits
+    assert not fig._sharex_ticklabels and not fig._sharey_ticklabels
 
     fig.canvas.draw()
     for idx, axi in enumerate(ax):
@@ -1151,12 +1166,10 @@ def test_sharing_levels(level):
         )
 
         assert_views_are_sharing(axi)
-        # When we share the labels but not the limits,
-        # we expect all ticks to be on
-        if level > 2:
-            assert s == 2
-        else:
-            assert s == 4
+        # The explicit per-axes limits above override both limit sharing and
+        # the associated interior tick-label suppression, regardless of the
+        # sharing level requested when the figure was created.
+        assert s == 4
     uplt.close(fig)
 
 
@@ -1374,7 +1387,7 @@ def test_choropleth_length_mismatch_raises():
     uplt.close(fig)
 
 
-def test_choropleth_basemap_rejects_non_platecarree_transform():
+def test_choropleth_basemap_rejects_non_platecarree_transform(basemap_backend):
     ccrs = pytest.importorskip("cartopy.crs")
     sgeom = pytest.importorskip("shapely.geometry")
 
