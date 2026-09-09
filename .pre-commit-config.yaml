@@ -14,3 +14,11 @@ repos:
     rev: 26.5.1
     hooks:
       - id: black
+
+  - repo: https://github.com/tombi-toml/tombi-pre-commit
+    rev: v1.5.2
+    hooks:
+      - id: tombi-format
+        args: ["--offline"]
+      - id: tombi-lint
+        args: ["--offline"]

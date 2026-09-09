@@ -2976,7 +2976,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         # Adjust the above-axes positions with builtin algorithm
         # WARNING: Make sure the name of this private function doesn't change
-        super()._update_title_position(renderer)
+        self._update_native_title_position(renderer)
 
         # Sync the title position with the a-b-c label position
         aobj = self._title_dict["abc"]
@@ -3411,6 +3411,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             self._inset_colorbar_needs_reflow = False
             # Re-draw synchronously so the current render pass sees reflowed bounds.
             super().draw(renderer, *args, **kwargs)
+
+    def _update_native_title_position(self, renderer):
+        """Apply the native axes title positioning algorithm."""
+        super()._update_title_position(renderer)
 
     def get_tightbbox(self, renderer, *args, **kwargs):
         # Perform extra post-processing steps
