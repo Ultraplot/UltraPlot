@@ -139,7 +139,25 @@ jobs:
           name: visual-baseline
           path: ultraplot/tests/baseline
 
-      # Image Comparison (Uses cached or newly generated baseline)
+      - name: Download canonical visual baseline
+        uses: actions/download-artifact@v7
+        with:
+          name: visual-baseline
+          path: ${{ runner.temp }}/visual-baseline
+
+      - name: Extract canonical visual baseline
+        run: |
+          rm -rf ultraplot/tests/baseline
+          mkdir -p ultraplot/tests
+
+          tar -C ultraplot/tests \
+            -xf "${RUNNER_TEMP}/visual-baseline/visual-baseline.tar"
+
+          echo "Downloaded baseline:"
+          find ultraplot/tests/baseline -type f | head
+          echo "Total images: $(find ultraplot/tests/baseline -type f -name '*.png' | wc -l)"
+
+          # Image Comparison (Uses cached or newly generated baseline)
       - name: Image Comparison Ultraplot
         if: steps.baseline-support.outputs.baseline-supported == 'true'
         run: |
