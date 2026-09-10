@@ -482,7 +482,7 @@ def get_api(symbol: str) -> dict[str, Any]:
 
     try:
         source_line = inspect.getsourcelines(unwrapped)[1]
-    except (OSError, TypeError):
+    except (OSError, TypeError, ValueError):
         source_line = None
 
     try:
@@ -532,7 +532,7 @@ def get_source(
 
     try:
         source = inspect.getsource(obj)
-    except (OSError, TypeError):
+    except (OSError, TypeError, ValueError):
         source = None
 
     try:
@@ -542,7 +542,7 @@ def get_source(
 
     try:
         source_line = inspect.getsourcelines(obj)[1]
-    except (OSError, TypeError):
+    except (OSError, TypeError, ValueError):
         source_line = None
 
     return {
@@ -600,7 +600,8 @@ def _mcp_server_command() -> list[str]:
     # Useful when testing directly from the source checkout.
     return [
         sys.executable,
-        str(Path(__file__).resolve()),
+        "-m",
+        "ultraplot.mcp",
     ]
 
 
