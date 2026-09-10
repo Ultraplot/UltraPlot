@@ -112,7 +112,7 @@ pyCirclize-based plots require the optional ``circos`` extra:
 
 The ``docs`` extra also includes pyCirclize for building the documentation.
 
-To install all optional dependency groups (``circos``, ``docs``, and ``stats``):
+To install the ``circos``, ``docs``, and ``stats`` dependency groups together:
 
 .. code-block:: bash
 
@@ -130,6 +130,42 @@ To install a development version of UltraPlot, you can use
 ``pip install git+https://github.com/ultraplot/ultraplot.git``
 or clone the repository and run ``pip install -e .``
 inside the ``ultraplot`` folder.
+
+MCP server
+==========
+
+UltraPlot includes a Model Context Protocol (MCP) server that lets AI assistants
+search documentation and examples, inspect the live Python API, and read source
+code and release notes.
+
+From a checkout containing the MCP implementation, install the optional ``mcp``
+extra in the Python environment you want the server to use:
+
+.. code-block:: bash
+
+   pip install -e '.[mcp]'
+
+To register the server with an installed Codex CLI, run:
+
+.. code-block:: bash
+
+   ultraplot-mcp install codex
+
+Restart Codex after registration. Try asking it to search the UltraPlot
+examples for shared colorbars or inspect ``ultraplot.subplots``.
+
+For other MCP clients, configure a stdio server with ``ultraplot-mcp`` as the
+command and no arguments. Use the executable's absolute path if the client does
+not inherit your Python environment's ``PATH``. Running ``ultraplot-mcp`` starts
+the server; ``ultraplot-mcp --help`` lists the available commands.
+
+Documentation tools read the checkout's ``docs`` directory. If documentation
+lives elsewhere, set ``ULTRAPLOT_MCP_DOCS`` to its absolute path in the MCP
+client's server environment. Documentation is not currently bundled in the
+Python package; API and source inspection use the installed UltraPlot version.
+
+Citing UltraPlot
+===============
 
 If you use UltraPlot in your research, please cite the latest release metadata in
 ``CITATION.cff``. GitHub can export this metadata as BibTeX from the

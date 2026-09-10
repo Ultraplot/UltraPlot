@@ -65,9 +65,15 @@ docs = [
   "sphinx-sitemap",
   "typing-extensions"
 ]
+mcp = [
+  "mcp>=2.1,<3",
+]
 stats = [
   "scipy",
 ]
+
+[project.scripts]
+ultraplot-mcp = "ultraplot.mcp:main"
 
 [build-system]
 requires = [
