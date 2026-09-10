@@ -36,6 +36,9 @@ dynamic = ["version"]
 "Issue Tracker" = "https://github.com/ultraplot/ultraplot/issues"
 "Source Code" = "https://github.com/ultraplot/ultraplot"
 
+[project.scripts]
+ultraplot-mcp = "ultraplot.mcp:main"
+
 [project.optional-dependencies]
 all = [
   "ultraplot[circos,docs,stats]",
@@ -71,9 +74,6 @@ mcp = [
 stats = [
   "scipy",
 ]
-
-[project.scripts]
-ultraplot-mcp = "ultraplot.mcp:main"
 
 [build-system]
 requires = [

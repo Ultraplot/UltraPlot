@@ -236,7 +236,7 @@ client's server environment. Documentation is not currently bundled in the
 Python package; API and source inspection use the installed UltraPlot version.
 
 Citing UltraPlot
-===============
+================
 
 If you use UltraPlot in your research, please cite the latest release metadata in
 ``CITATION.cff``. GitHub can export this metadata as BibTeX from the
