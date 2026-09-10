@@ -209,11 +209,79 @@ jobs:
           files: ./coverage.xml
           name: codecov-pr-python${{ matrix.python-version }}-mpl${{ matrix.matplotlib-version }}
 
+  visual-baseline:
+    needs:
+      - run-if-changes
+      - select-tests
+    if: always() && needs.run-if-changes.outputs.run == 'true'
+    runs-on: ubuntu-latest
+
+    env:
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve baseline commit
+        id: baseline
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          echo "sha=${BASE_SHA}" >> "$GITHUB_OUTPUT"
+          git checkout "${BASE_SHA}"
+
+      - uses: mamba-org/setup-micromamba@v3.2.1
+        with:
+          environment-file: ./environment.yml
+          init-shell: bash
+          condarc-file: ./.github/micromamba-condarc.yml
+          create-args: >-
+            --verbose
+            python=3.12
+            matplotlib=3.10.9
+          cache-environment: true
+          cache-downloads: false
+
+      - name: Generate canonical visual baseline
+        shell: bash -el {0}
+        run: |
+          pip install --no-build-isolation --no-deps .
+
+          python -c \
+            "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
+
+          mkdir -p ultraplot/tests/baseline
+
+          pytest \
+            -n 4 \
+            --dist loadfile \
+            --tb=short \
+            --disable-warnings \
+            -W ignore \
+            -m mpl_image_compare \
+            --mpl-generate-path=./ultraplot/tests/baseline \
+            --mpl-default-style="./ultraplot.yml" \
+            ultraplot/tests
+
+      - name: Upload canonical baseline
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-baseline
+          path: ultraplot/tests/baseline
+          if-no-files-found: error
   build:
     needs:
       - get-versions
       - run-if-changes
       - select-tests
+      - visual-baseline
     if: always() && needs.run-if-changes.outputs.run == 'true' && needs.get-versions.result == 'success' && needs.select-tests.result == 'success'
     strategy:
       matrix:
