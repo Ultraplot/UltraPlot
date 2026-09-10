@@ -87,7 +87,6 @@ jobs:
   compare-baseline:
     name: Compare baseline Python ${{ inputs.python-version }} with MPL ${{ inputs.matplotlib-version }}
     runs-on: ubuntu-latest
-    continue-on-error: true
     env:
       IS_PR: ${{ github.event_name == 'pull_request' }}
       TEST_MODE: ${{ inputs.test-mode }}
@@ -133,12 +132,6 @@ jobs:
           cache-environment: true
           cache-downloads: false
 
-      - name: Download canonical baseline
-        uses: actions/download-artifact@v7
-        with:
-          name: visual-baseline
-          path: ultraplot/tests/baseline
-
       - name: Download canonical visual baseline
         uses: actions/download-artifact@v7
         with:
@@ -153,13 +146,29 @@ jobs:
           tar -C ultraplot/tests \
             -xf "${RUNNER_TEMP}/visual-baseline/visual-baseline.tar"
 
-          echo "Downloaded baseline:"
-          find ultraplot/tests/baseline -type f | head
-          echo "Total images: $(find ultraplot/tests/baseline -type f -name '*.png' | wc -l)"
+          COUNT=$(find ultraplot/tests/baseline -type f -name '*.png' | wc -l)
+          echo "Extracted ${COUNT} baseline images"
+          if [ "${COUNT}" -eq 0 ]; then
+            echo "::error::Downloaded baseline contains no PNG files"
+            exit 1
+          fi
 
-          # Image Comparison (Uses cached or newly generated baseline)
+      - name: Prepare selected test nodeids
+        run: |
+          : > /tmp/pr_selected_nodeids.txt
+          if [ "${TEST_MODE}" = "selected" ] && [ -n "${TEST_NODEIDS}" ]; then
+            python - <<'PY'
+          import json
+          import os
+
+          nodeids = json.loads(os.environ.get("TEST_NODEIDS") or "[]")
+          with open("/tmp/pr_selected_nodeids.txt", "w", encoding="utf-8") as fh:
+              for nodeid in nodeids:
+                  fh.write(f"{nodeid}\n")
+          print(f"Prepared {len(nodeids)} selected nodeids")
+          PY
+          fi
       - name: Image Comparison Ultraplot
-        if: steps.baseline-support.outputs.baseline-supported == 'true'
         run: |
           set -uo pipefail
           # This workflow runs in a login shell (bash -el), which executes
