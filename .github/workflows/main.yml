@@ -68,23 +68,35 @@ jobs:
           echo "Test map cache miss; generating map from tests."
           pip install --no-build-isolation --no-deps .
           mkdir -p .ci
+
           pytest -q --tb=short --disable-warnings -n auto -p pytest_cov \
-            --cov=ultraplot --cov-branch --cov-context=test --cov-report= \
+            --cov=ultraplot \
+            --cov-branch \
+            --cov-context=test \
+            --cov-report= \
             ultraplot/tests
-          python tools/ci/build_test_map.py --coverage-file .coverage --output .ci/test-map.json --root .
+
+          python tools/ci/build_test_map.py \
+            --coverage-file .coverage \
+            --output .ci/test-map.json \
+            --root .
 
       - name: Select impacted tests
         id: select
         run: |
           if [ "${{ github.event_name }}" != "pull_request" ]; then
-            echo "mode=full" >> $GITHUB_OUTPUT
-            echo "tests=[]" >> $GITHUB_OUTPUT
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+            echo "tests=[]" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} > .ci/changed.txt
+          git diff --name-only \
+            ${{ github.event.pull_request.base.sha }} \
+            ${{ github.sha }} > .ci/changed.txt
+
           echo "Changed files:"
           cat .ci/changed.txt || true
+
           echo "Test map exists:"
           if [ -f .ci/test-map.json ]; then
             echo "yes (size=$(wc -c < .ci/test-map.json))"
@@ -106,11 +118,21 @@ jobs:
 
           python - <<'PY' > .ci/selection.out
           import json
-          data = json.load(open(".ci/selection.json", "r", encoding="utf-8"))
+
+          with open(".ci/selection.json", encoding="utf-8") as fh:
+              data = json.load(fh)
+
           print(f"mode={data['mode']}")
-          print("tests=" + json.dumps(data.get("tests", []), separators=(",", ":")))
+          print(
+              "tests="
+              + json.dumps(
+                  data.get("tests", []),
+                  separators=(",", ":"),
+              )
+          )
           PY
-          cat .ci/selection.out >> $GITHUB_OUTPUT
+
+          cat .ci/selection.out >> "$GITHUB_OUTPUT"
 
   get-versions:
     runs-on: ubuntu-latest
@@ -136,22 +158,190 @@ jobs:
           echo "Detected Python versions: $(echo "$OUTPUT" | jq -c '.python_versions')"
           echo "Detected Matplotlib versions: $(echo "$OUTPUT" | jq -c '.matplotlib_versions')"
           echo "Detected test matrix: $(echo "$OUTPUT" | jq -c '.test_matrix')"
-          python tools/ci/version_support.py --format github-output >> $GITHUB_OUTPUT
 
-  coverage:
-    name: Coverage Python ${{ matrix.python-version }} / MPL ${{ matrix.matplotlib-version }}
+          python tools/ci/version_support.py \
+            --format github-output >> "$GITHUB_OUTPUT"
+
+  #
+  # Generate ONE canonical set of images.
+  #
+  # test-matrix[0] is deliberately the oldest supported
+  # Python + Matplotlib combination.
+  #
+  visual-baseline:
+    name: Generate canonical visual baseline
     runs-on: ubuntu-latest
+
     needs:
       - run-if-changes
       - get-versions
-    if: always() && needs.run-if-changes.outputs.run == 'true' && needs.get-versions.result == 'success' && github.event_name == 'pull_request'
+
+    if: >-
+      always() &&
+      needs.run-if-changes.outputs.run == 'true' &&
+      needs.get-versions.result == 'success'
+
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    env:
+      PYTEST_WORKERS: 4
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+
+      BASELINE_PYTHON: >-
+        ${{ fromJson(needs.get-versions.outputs.test-matrix)[0]['python-version'] }}
+
+      BASELINE_MATPLOTLIB: >-
+        ${{ fromJson(needs.get-versions.outputs.test-matrix)[0]['matplotlib-version'] }}
+
+    steps:
+      - name: Set up swap space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      #
+      # Build the environment description while still on the PR/current
+      # branch, i.e. from the version contract that produced our matrix.
+      #
+      - name: Prepare baseline environment
+        run: |
+          echo "Baseline Python: ${BASELINE_PYTHON}"
+          echo "Baseline Matplotlib: ${BASELINE_MATPLOTLIB}"
+
+          python3 tools/ci/version_support.py \
+            --matplotlib-version "${BASELINE_MATPLOTLIB}" \
+            --environment-output "${RUNNER_TEMP}/ultraplot-baseline-environment.yml"
+
+      - name: Create baseline environment
+        uses: mamba-org/setup-micromamba@v3.2.1
+        with:
+          environment-file: ${{ runner.temp }}/ultraplot-baseline-environment.yml
+          init-shell: bash
+          condarc-file: ./.github/micromamba-condarc.yml
+          post-cleanup: none
+          create-args: >-
+            --verbose
+            python=${{ env.BASELINE_PYTHON }}
+            matplotlib=${{ env.BASELINE_MATPLOTLIB }}
+          cache-environment: true
+          cache-downloads: false
+
+      #
+      # For a PR, the expected images must come from the base commit,
+      # not from the PR itself.
+      #
+      # For a push to main/devel we use the pushed commit. This still
+      # lets the newer matrix entries be compared against rendering
+      # produced by the minimum supported environment.
+      #
+      - name: Checkout baseline commit
+        id: baseline
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${GITHUB_SHA}"
+          fi
+
+          echo "sha=${BASE_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Generating baseline from ${BASE_SHA}"
+
+          git checkout --detach "${BASE_SHA}"
+
+      - name: Install baseline UltraPlot
+        run: |
+          pip install --no-build-isolation --no-deps .
+
+          python - <<'PY'
+          import sys
+          import matplotlib
+
+          print("Python:", sys.version)
+          print("Matplotlib:", matplotlib.__version__)
+          PY
+
+      - name: Generate visual baseline
+        run: |
+          rm -rf ultraplot/tests/baseline
+          mkdir -p ultraplot/tests/baseline
+
+          python -c \
+            "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
+
+          echo "Generating baseline from:"
+          echo "  commit:     ${{ steps.baseline.outputs.sha }}"
+          echo "  Python:     ${BASELINE_PYTHON}"
+          echo "  Matplotlib: ${BASELINE_MATPLOTLIB}"
+
+          pytest \
+            -n "${PYTEST_WORKERS}" \
+            --dist loadfile \
+            --tb=short \
+            --disable-warnings \
+            -W ignore \
+            -m mpl_image_compare \
+            --mpl-generate-path=./ultraplot/tests/baseline \
+            --mpl-default-style=./ultraplot.yml \
+            ultraplot/tests
+
+      - name: Show generated baseline
+        run: |
+          echo "Generated baseline images:"
+          find ultraplot/tests/baseline \
+            -type f \
+            -name '*.png' \
+            | sort
+
+          COUNT=$(find ultraplot/tests/baseline -type f -name '*.png' | wc -l)
+
+          echo ""
+          echo "Total images: ${COUNT}"
+
+          if [ "${COUNT}" -eq 0 ]; then
+            echo "::error::No baseline images were generated"
+            exit 1
+          fi
+
+      - name: Upload visual baseline
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-baseline
+          path: ultraplot/tests/baseline/
+          if-no-files-found: error
+          compression-level: 0
+          overwrite: true
+
+  coverage:
+    name: Coverage Python ${{ matrix.python-version }} / MPL ${{ matrix.matplotlib-version }}
+
+    runs-on: ubuntu-latest
+
+    needs:
+      - run-if-changes
+      - get-versions
+
+    if: >-
+      always() &&
+      needs.run-if-changes.outputs.run == 'true' &&
+      needs.get-versions.result == 'success' &&
+      github.event_name == 'pull_request'
+
     strategy:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.get-versions.outputs.test-matrix) }}
+
     defaults:
       run:
         shell: bash -el {0}
+
     steps:
       - name: Set up swap space
         uses: pierotofy/set-swap-space@master
@@ -190,16 +380,42 @@ jobs:
           python - <<'PY'
           import sys
           from importlib.metadata import version
-          import matplotlib, mpltern, pycirclize
-          assert sys.version_info[:2] == tuple(map(int, '${{ matrix.python-version }}'.split('.')))
-          assert matplotlib.__version__.startswith('${{ matrix.matplotlib-version }}.')
+
+          import matplotlib
+          import mpltern
+          import pycirclize
+
+          expected_python = tuple(
+              map(int, '${{ matrix.python-version }}'.split('.'))
+          )
+
+          assert sys.version_info[:2] == expected_python
+          assert matplotlib.__version__.startswith(
+              '${{ matrix.matplotlib-version }}.'
+          )
+
           print('Python executable:', sys.executable)
-          for package in ('matplotlib', 'mpltern', 'pycirclize', 'cartopy'):
+
+          for package in (
+              'matplotlib',
+              'mpltern',
+              'pycirclize',
+              'cartopy',
+          ):
               print(f'{package}: {version(package)}')
           PY
-          pytest -q --tb=short --disable-warnings -n auto -p pytest_cov \
-            --cov=ultraplot --cov-branch --cov-context=test \
-            --cov-report=xml:coverage.xml --cov-report= \
+
+          pytest \
+            -q \
+            --tb=short \
+            --disable-warnings \
+            -n auto \
+            -p pytest_cov \
+            --cov=ultraplot \
+            --cov-branch \
+            --cov-context=test \
+            --cov-report=xml:coverage.xml \
+            --cov-report= \
             ultraplot/tests
 
       - name: Upload coverage reports to Codecov
@@ -207,91 +423,43 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
-          name: codecov-pr-python${{ matrix.python-version }}-mpl${{ matrix.matplotlib-version }}
+          name: >-
+            codecov-pr-python${{ matrix.python-version }}-mpl${{ matrix.matplotlib-version }}
 
-  visual-baseline:
-    needs:
-      - run-if-changes
-      - select-tests
-    if: always() && needs.run-if-changes.outputs.run == 'true'
-    runs-on: ubuntu-latest
-
-    env:
-      PYTHONHASHSEED: "0"
-      MPLBACKEND: Agg
-
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Resolve baseline commit
-        id: baseline
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          else
-            BASE_SHA="${{ github.event.before }}"
-          fi
-
-          echo "sha=${BASE_SHA}" >> "$GITHUB_OUTPUT"
-          git checkout "${BASE_SHA}"
-
-      - uses: mamba-org/setup-micromamba@v3.2.1
-        with:
-          environment-file: ./environment.yml
-          init-shell: bash
-          condarc-file: ./.github/micromamba-condarc.yml
-          create-args: >-
-            --verbose
-            python=3.12
-            matplotlib=3.10.9
-          cache-environment: true
-          cache-downloads: false
-
-      - name: Generate canonical visual baseline
-        shell: bash -el {0}
-        run: |
-          pip install --no-build-isolation --no-deps .
-
-          python -c \
-            "import ultraplot as plt; plt.config.Configurator()._save_yaml('ultraplot.yml')"
-
-          mkdir -p ultraplot/tests/baseline
-
-          pytest \
-            -n 4 \
-            --dist loadfile \
-            --tb=short \
-            --disable-warnings \
-            -W ignore \
-            -m mpl_image_compare \
-            --mpl-generate-path=./ultraplot/tests/baseline \
-            --mpl-default-style="./ultraplot.yml" \
-            ultraplot/tests
-
-      - name: Upload canonical baseline
-        uses: actions/upload-artifact@v7
-        with:
-          name: visual-baseline
-          path: ultraplot/tests/baseline
-          if-no-files-found: error
+  #
+  # IMPORTANT:
+  #
+  # Every matrix invocation waits for visual-baseline.
+  # Therefore visual-baseline is guaranteed to exist before the
+  # reusable workflow attempts to download it.
+  #
   build:
     needs:
       - get-versions
       - run-if-changes
       - select-tests
       - visual-baseline
-    if: always() && needs.run-if-changes.outputs.run == 'true' && needs.get-versions.result == 'success' && needs.select-tests.result == 'success'
+
+    if: >-
+      always() &&
+      needs.run-if-changes.outputs.run == 'true' &&
+      needs.get-versions.result == 'success' &&
+      needs.select-tests.result == 'success' &&
+      needs.visual-baseline.result == 'success'
+
     strategy:
       matrix:
         include: ${{ fromJson(needs.get-versions.outputs.test-matrix) }}
       fail-fast: false
       max-parallel: 4
+
     uses: ./.github/workflows/build-ultraplot.yml
+
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }}-${{ matrix.matplotlib-version }}
+      group: >-
+        ${{ github.workflow }}-${{ github.ref }}-${{ matrix.python-version }}-${{ matrix.matplotlib-version }}
       cancel-in-progress: false
+
     with:
       python-version: ${{ matrix.python-version }}
       matplotlib-version: ${{ matrix.matplotlib-version }}
@@ -302,6 +470,7 @@ jobs:
     needs:
       - build
       - coverage
+      - visual-baseline
       - run-if-changes
     if: always()
     runs-on: ubuntu-latest
@@ -309,11 +478,19 @@ jobs:
       - run: |
           if [[ '${{ needs.run-if-changes.outputs.run }}' == 'false' ]]; then
             echo "No changes detected, tests skipped."
+            exit 0
+          fi
+
+          if [[ '${{ needs.visual-baseline.result }}' != 'success' ]]; then
+            echo "Visual baseline generation failed."
+            exit 1
+          fi
+
+          if [[ '${{ needs.build.result }}' == 'success' ]] && \
+             [[ '${{ needs.coverage.result }}' == 'success' || \
+                '${{ needs.coverage.result }}' == 'skipped' ]]; then
+            echo "All tests passed successfully!"
           else
-            if [[ '${{ needs.build.result }}' == 'success' && ( '${{ needs.coverage.result }}' == 'success' || '${{ needs.coverage.result }}' == 'skipped' ) ]]; then
-              echo "All tests passed successfully!"
-            else
-              echo "Tests failed!"
-              exit 1
-            fi
+            echo "Tests failed!"
+            exit 1
           fi
