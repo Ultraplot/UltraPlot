@@ -97,16 +97,24 @@ mpl_fig.show()
 # %%
 import ultraplot as uplt
 
-uplt_fig, uplt_axs = uplt.subplots(ncols=2, share=False, refwidth=2.3)
-uplt_axs[0].plot(x, line, label="signal", color="tab:blue")
-uplt_mesh = uplt_axs[1].imshow(image, origin="lower", aspect="auto", cmap="viridis")
-uplt_axs[0].format(title="Line", xlabel="x", ylabel="value")
-uplt_axs[0].legend(loc="ur")
-uplt_axs[1].format(title="Image", xlabel="column", ylabel="row")
-uplt_fig.format(suptitle="The same two-panel figure")
-uplt_fig.colorbar(uplt_mesh, loc="r", label="intensity")
-uplt_fig.show()
-
+fig, ax = uplt.subplots(ncols=2, share=False, refwidth=2.3)
+ax[0].plot(x, line, label="signal", color="tab:blue")
+ax[1].imshow(
+    image,
+    origin="lower",
+    aspect="auto",
+    cmap="viridis",
+    colorbar="r",
+    colorbar_kw=dict(label="Intensity"),
+)
+ax.format(
+    title=["Line", "Image"],
+    xlabel=["x", "column"],
+    ylabel=["value", "row"],
+)
+ax[0].legend(loc="ur")
+fig.format(suptitle="The same two-panel figure")
+fig.show()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # The takeaway
