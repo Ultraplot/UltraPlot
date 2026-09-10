@@ -418,13 +418,19 @@ jobs:
             --cov-report= \
             ultraplot/tests
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v7
+      - name: Pack visual baseline
+        run: |
+          tar -C ultraplot/tests \
+            -cf "${RUNNER_TEMP}/visual-baseline.tar" \
+            baseline
+
+      - name: Upload visual baseline
+        uses: actions/upload-artifact@v7
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
-          name: >-
-            codecov-pr-python${{ matrix.python-version }}-mpl${{ matrix.matplotlib-version }}
+          name: visual-baseline
+          path: ${{ runner.temp }}/visual-baseline.tar
+          if-no-files-found: error
+          compression-level: 0
 
   #
   # IMPORTANT:
