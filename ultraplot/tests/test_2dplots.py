@@ -11,18 +11,39 @@ from matplotlib.colors import Normalize
 import ultraplot as uplt, warnings
 
 
-@pytest.mark.skip("not sure what this does")
-@pytest.mark.mpl_image_compare
 def test_colormap_vcenter(rng):
     """
-    Test colormap vcenter.
+    Test that explicit `vcenter` configures a diverging normalizer centered at `vcenter`.
     """
     fig, axs = uplt.subplots(ncols=3)
     data = 10 * rng.random((10, 10)) - 3
-    axs[0].pcolor(data, vcenter=0)
-    axs[1].pcolor(data, vcenter=1)
-    axs[2].pcolor(data, vcenter=2)
-    return fig
+    m0 = axs[0].pcolor(data, vcenter=0)
+    m1 = axs[1].pcolor(data, vcenter=1)
+    m2 = axs[2].pcolor(data, vcenter=2)
+
+    # In discrete mode (default), m.norm is DiscreteNorm wrapping DivergingNorm (_norm)
+    assert m0.norm._norm.vcenter == pytest.approx(0)
+    assert m1.norm._norm.vcenter == pytest.approx(1)
+    assert m2.norm._norm.vcenter == pytest.approx(2)
+
+    # The underlying diverging norm maps vcenter to 0.5 (center of colormap)
+    assert m0.norm._norm(0) == pytest.approx(0.5)
+    assert m1.norm._norm(1) == pytest.approx(0.5)
+    assert m2.norm._norm(2) == pytest.approx(0.5)
+
+    # Verify continuous mode (discrete=False) where DivergingNorm is directly used
+    _, ax = uplt.subplots()
+    m_cont = ax.pcolor(data, vcenter=1.5, discrete=False)
+    assert isinstance(m_cont.norm, uplt.DivergingNorm)
+    assert m_cont.norm.vcenter == pytest.approx(1.5)
+    assert m_cont.norm(1.5) == pytest.approx(0.5)
+
+    # Verify passing vcenter via norm_kw works identically
+    _, ax_kw = uplt.subplots()
+    m_kw = ax_kw.pcolor(data, norm_kw={"vcenter": 1.5}, discrete=False)
+    assert isinstance(m_kw.norm, uplt.DivergingNorm)
+    assert m_kw.norm.vcenter == pytest.approx(1.5)
+    assert m_kw.norm(1.5) == pytest.approx(0.5)
 
 
 @pytest.mark.mpl_image_compare

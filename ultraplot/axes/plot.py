@@ -4168,6 +4168,7 @@ class PlotAxes(base.Axes):
         extend=None,
         vmin=None,
         vmax=None,
+        vcenter=None,
         discrete=None,
         default_cmap=None,
         default_discrete=True,
@@ -4193,6 +4194,8 @@ class PlotAxes(base.Axes):
             The colormap extend setting.
         vmin, vmax : float, optional
             The normalization range.
+        vcenter : float, optional
+            The center value for diverging normalizers.
         sequential, diverging, cyclic, qualitative : bool, optional
             Toggle various colormap types.
         discrete : bool, optional
@@ -4227,19 +4230,26 @@ class PlotAxes(base.Axes):
         # with explicit vmin/vmax is ambiguous. String / single-element list or
         # tuple specs are just names for ``constructor.Norm`` and accept
         # vmin/vmax as kwargs.
-        if (vmin is not None or vmax is not None) and isinstance(
+        if (vmin is not None or vmax is not None or vcenter is not None) and isinstance(
             norm, mcolors.Normalize
         ):
             raise ValueError(
-                "If 'norm' is a Normalize instance, 'vmin' and 'vmax' must not be "
+                "If 'norm' is a Normalize instance, 'vmin', 'vmax', and 'vcenter' must not be "
                 "set. Pass them through the Normalize constructor, or specify "
-                "'norm' as a string / list / tuple to let vmin and vmax apply."
+                "'norm' as a string / list / tuple to let vmin, vmax, and vcenter apply."
             )
         if isinstance(norm, mcolors.Normalize):
             vmin = norm.vmin
             vmax = norm.vmax
         vmin = _not_none(vmin=vmin, norm_kw_vmin=norm_kw.pop("vmin", None))
         vmax = _not_none(vmax=vmax, norm_kw_vmax=norm_kw.pop("vmax", None))
+        vcenter = _not_none(
+            vcenter=vcenter, norm_kw_vcenter=norm_kw.pop("vcenter", None)
+        )
+        if vcenter is not None:
+            norm_kw["vcenter"] = vcenter
+            if norm is None:
+                norm = "diverging"
         extend = _not_none(extend, "neither")
         modes = {
             key: kwargs.pop(key, None)
