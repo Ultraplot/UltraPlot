@@ -69,3 +69,8 @@ ultraplot/_version.py
 tools/cheatsheet/assets/
 docs/_static/plot_types/
 tools/cheatsheet/ultraplot_cheatsheet.png
+tools/cheatsheet/ultraplot_cheatsheet-code.png
+tools/cheatsheet/ultraplot_cheatsheet-reference.png
+tools/cheatsheet/ultraplot_cheatsheet-beginner.png
+tools/cheatsheet/ultraplot_cheatsheet-intermediate.png
+tools/cheatsheet/ultraplot_cheatsheet-advanced.png

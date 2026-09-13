@@ -30,23 +30,24 @@ ET.register_namespace("", SVG_NS)
 
 
 class Sheet:
-    def __init__(self):
+    def __init__(self, width=WIDTH, height=HEIGHT):
+        self.width, self.height = width, height
         self.document = ET.Element("mxfile", host="app.diagrams.net", type="device")
         diagram = ET.SubElement(self.document, "diagram", id="ultraplot-reference", name="UltraPlot cheatsheet")
-        model = ET.SubElement(diagram, "mxGraphModel", dx=str(WIDTH), dy=str(HEIGHT),
+        model = ET.SubElement(diagram, "mxGraphModel", dx=str(width), dy=str(height),
                               grid="1", gridSize="10", page="1", pageScale="1",
-                              pageWidth=str(WIDTH), pageHeight=str(HEIGHT), background="#ffffff",
+                              pageWidth=str(width), pageHeight=str(height), background="#ffffff",
                               math="0", shadow="0")
         self.root = ET.SubElement(model, "root")
         ET.SubElement(self.root, "mxCell", id="0")
         ET.SubElement(self.root, "mxCell", id="1", parent="0")
-        self.svg = ET.Element(f"{{{SVG_NS}}}svg", width=str(WIDTH), height=str(HEIGHT),
-                              viewBox=f"0 0 {WIDTH} {HEIGHT}")
+        self.svg = ET.Element(f"{{{SVG_NS}}}svg", width=str(width), height=str(height),
+                              viewBox=f"0 0 {width} {height}")
         self.count = 1
-        self.rect(0, 0, WIDTH, HEIGHT, "#ffffff", "none")
+        self.rect(0, 0, width, height, "#ffffff", "none")
 
     def cell(self, x, y, w, h, value, style):
-        assert x >= 0 and y >= 0 and x + w <= WIDTH and y + h <= HEIGHT
+        assert x >= 0 and y >= 0 and x + w <= self.width and y + h <= self.height
         self.count += 1
         cell = ET.SubElement(self.root, "mxCell", id=str(self.count), value=value,
                              style=style, vertex="1", parent="1")
@@ -300,6 +301,16 @@ def main():
     parser.add_argument("--png", action="store_true", help="also render the SVG preview using CairoSVG")
     args = parser.parse_args()
     sheet = build()
+    from code_page import build as build_code_page, write_previews
+    code_sheet = build_code_page()
+    sheet.document.append(code_sheet.document.find("diagram"))
+    from reference_page import build as build_reference_page
+    reference_sheet = build_reference_page()
+    sheet.document.append(reference_sheet.document.find("diagram"))
+    from level_pages import build_all as build_level_pages
+    level_sheets = build_level_pages()
+    for _, level_sheet in level_sheets:
+        sheet.document.append(level_sheet.document.find("diagram"))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     ET.indent(sheet.document)
     ET.ElementTree(sheet.document).write(args.output, encoding="utf-8", xml_declaration=True)
@@ -313,6 +324,10 @@ def main():
         cairosvg.svg2png(url=str(svg), write_to=str(png),
                          output_width=WIDTH * 2, output_height=HEIGHT * 2)
         print(png)
+    write_previews(code_sheet, args.output, args.png)
+    write_previews(reference_sheet, args.output, args.png, suffix="-reference")
+    for level, level_sheet in level_sheets:
+        write_previews(level_sheet, args.output, args.png, suffix="-" + level)
 
 
 if __name__ == "__main__":
