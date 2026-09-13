@@ -76,6 +76,39 @@ print("ok")
     assert out == "ok"
 
 
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "from ultraplot import *",
+        "uplt.setup(eager=True)",
+        'uplt.rc["ultraplot.eager_import"] = True; uplt.setup()',
+        "uplt.__all__",
+    ],
+)
+def test_public_imports_do_not_load_optional_mcp(statement):
+    code = """
+import importlib.abc
+import sys
+
+class BlockMCP(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname == "mcp" or fullname.startswith("mcp."):
+            raise ModuleNotFoundError("MCP is not installed", name=fullname)
+
+sys.meta_path.insert(0, BlockMCP())
+import ultraplot as uplt
+"""
+    code += statement + "\n"
+    code += """
+assert "mcp" not in uplt.__all__
+assert "ultraplot.mcp" not in sys.modules
+assert "mcp" not in sys.modules
+assert callable(uplt.subplots)
+print("ok")
+"""
+    assert _run(code) == "ok"
+
+
 def test_dir_populates_attr_map(monkeypatch):
     import ultraplot as uplt
 

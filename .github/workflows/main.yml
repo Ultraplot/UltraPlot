@@ -183,7 +183,7 @@ jobs:
 
       - name: Build Ultraplot
         run: |
-          pip install --no-build-isolation --no-deps .
+          pip install --no-build-isolation ".[mcp]"
 
       - name: Run full coverage suite
         run: |

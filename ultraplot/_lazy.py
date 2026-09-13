@@ -97,7 +97,8 @@ class LazyLoader:
         protected.add("figure")
 
         for path in base.glob("*.py"):
-            if path.name.startswith("_") or path.name == "setup.py":
+            # The MCP CLI is an optional integration, not part of the plotting API.
+            if path.name.startswith("_") or path.name in {"setup.py", "mcp.py"}:
                 continue
             module_name = path.stem
             if module_name in protected:
