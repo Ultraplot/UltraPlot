@@ -1,0 +1,2 @@
+# Cheatsheet sources and exports are repository assets, not pip distribution files.
+prune tools/cheatsheet

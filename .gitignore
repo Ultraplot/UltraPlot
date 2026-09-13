@@ -64,3 +64,8 @@ ultraplot/_version.py
 
 # Nox build directories
 .nox/*
+
+# Generated docs and draw.io assets. The edited diagram remains a repository asset.
+tools/cheatsheet/assets/
+docs/_static/plot_types/
+tools/cheatsheet/ultraplot_cheatsheet.png

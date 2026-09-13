@@ -98,7 +98,7 @@ ignore = [
 ]
 
 [tool.setuptools]
-packages = { find = { exclude = ["docs*", "baseline*", "logo*"] } }
+packages = { find = { exclude = ["docs*", "baseline*", "logo*", "tools*"] } }
 include-package-data = true
 
 [tool.setuptools_scm]
