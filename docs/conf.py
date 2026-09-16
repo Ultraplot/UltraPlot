@@ -234,6 +234,7 @@ extensions = [
     "sphinx.ext.autodoc",  # include documentation from docstrings
     "sphinx_design",
     "sphinx.ext.doctest",  # >>> examples
+    "sphinxcontrib.drawio",
     "sphinx.ext.extlinks",  # for :pr:, :issue:, :commit:
     "sphinx.ext.autosectionlabel",  # use :ref:`Heading` for any heading
     "sphinx.ext.todo",  # Todo headers and todo:: directives
@@ -249,6 +250,12 @@ extensions = [
     "nbsphinx",  # parse rst books
     "sphinx_gallery.gen_gallery",
 ]
+
+drawio_headless = "auto"
+drawio_builder_export_format = {
+    "html": "svg",
+}
+
 if not FAST_PREVIEW:
     extensions.append("sphinx_sitemap")
 if HAVE_ULTRAPLOT_THEME_EXT:
