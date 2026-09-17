@@ -6,6 +6,7 @@ dependencies:
   - numpy
   - matplotlib>=3.9
   - ffmpeg  # animation encoder for ultraplot.animation
+  # CI/Nox omit Basemap for Matplotlib >=3.11; retain legacy/docs coverage here.
   - basemap >=1.4.1
   - cartopy
   - xarray
@@ -24,4 +25,5 @@ dependencies:
   - markdown
   - requests
   - pip:
+      - mpltern
       - pycirclize

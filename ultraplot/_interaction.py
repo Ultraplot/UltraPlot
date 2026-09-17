@@ -203,7 +203,10 @@ class _SurfaceProxyRecipe:
 
 
 def _surface_geometry_signature(surface):
-    vector = getattr(surface, "_vec", None)
+    # Matplotlib 3.11 stores polygons in _faces instead of the flattened _vec.
+    vector = getattr(surface, "_faces", None)
+    if vector is None:
+        vector = getattr(surface, "_vec", None)
     return (id(vector), getattr(vector, "shape", None))
 
 

@@ -38,6 +38,13 @@ def _interval_key(values):
     return tuple(np.asarray(values).reshape(-1).tolist())
 
 
+def _formatter_locs(formatter):
+    """Read cached locations without the deprecated 3.11 public alias."""
+    if hasattr(formatter, "_locs"):
+        return formatter._locs
+    return getattr(formatter, "locs", ())
+
+
 @dataclass(frozen=True)
 class _AxisTickState:
     """State that can affect ``Axis._update_ticks`` within one canvas draw."""
@@ -186,7 +193,7 @@ class _AxisTickCache:
 
     @staticmethod
     def _copy_formatter_locs(formatter):
-        locs = getattr(formatter, "locs", ())
+        locs = _formatter_locs(formatter)
         try:
             return np.array(locs, copy=True)
         except Exception:
@@ -334,8 +341,8 @@ class _LayoutExtentStore:
                     id(axis.minor.formatter),
                     id(converter),
                     id(units),
-                    _interval_key(getattr(axis.major.formatter, "locs", ())),
-                    _interval_key(getattr(axis.minor.formatter, "locs", ())),
+                    _interval_key(_formatter_locs(axis.major.formatter)),
+                    _interval_key(_formatter_locs(axis.minor.formatter)),
                 )
             )
         return _AxesExtentState(

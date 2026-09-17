@@ -443,11 +443,12 @@ def test_connector_points_at_the_annotated_point(crowded):
             fontsize=7,
             avoid_overlap=True,
         )
-    ax.auto_align_text(arrows=True, min_arrow_dist=0)
+    # Disable endpoint shortening when testing the exact data anchor.
+    ax.auto_align_text(arrows=dict(shrinkB=0), min_arrow_dist=0)
     fig.canvas.draw()
     assert ax._align_arrows
     targets = {tuple(np.round(p.get_path().vertices[-1], 6)) for p in ax._align_arrows}
-    assert targets & {tuple(np.round(xy, 6)) for xy in zip(x, y)}
+    assert targets <= {tuple(np.round(xy, 6)) for xy in zip(x, y)}
 
 
 def test_min_arrow_dist_suppresses_short_connectors(crowded):

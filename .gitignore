@@ -26,6 +26,8 @@ docs/_static/*
 !docs/_static/alias-explorer-v3.js
 !docs/_static/alias-map.svg
 !docs/_static/why_plots/
+!docs/_static/example_plots/
+!docs/_static/example_plots/data_aware_example.svg
 *.html
 docs/gallery/
 docs/sg_execution_times.rst

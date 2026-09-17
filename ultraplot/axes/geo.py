@@ -42,6 +42,7 @@ from ..internals import (
     _pop_props,
     _pop_rc,
     _version_cartopy,
+    _version_mpl,
     docstring,
     ic,  # noqa: F401
     labels,
@@ -4025,6 +4026,39 @@ class _CartopyAxes(GeoAxes, _GeoAxes):
         """
         super().draw(renderer, *args, **kwargs)
         self._adjust_panel_positions(tol=self._PANEL_TOL)
+
+    def _update_native_title_position(self, renderer: Any) -> None:
+        """Place titles above visible grid labels, ignoring empty bboxes."""
+        if _version_mpl < "3.11":
+            return super()._update_native_title_position(renderer)
+        maxes.Axes._update_title_position(self, renderer)
+        if self._autotitlepos is not None and not self._autotitlepos:
+            return
+        top = -np.inf
+        gridliners = (
+            [a for a in self.artists if isinstance(a, cgridliner.Gridliner)]
+            if _version_cartopy >= "0.23"
+            else self._gridliners
+        )
+        for gl in gridliners:
+            if not (gl.top_labels or gl.geo_labels):
+                continue
+            gl._draw_gridliner(renderer=renderer)
+            for label in gl.top_label_artists + gl.geo_label_artists:
+                # Matplotlib 3.11 returns Bbox.null() for invisible text.
+                # Its ymax is infinite, so it must not move the titles.
+                if not label.get_visible():
+                    continue
+                bbox = label.get_tightbbox(renderer)
+                if bbox is not None and np.isfinite(bbox.extents).all():
+                    top = max(top, bbox.ymax)
+        if not np.isfinite(top):
+            return
+        y = self.transAxes.inverted().transform((0, top))[1]
+        if y > 1:
+            for title in (self.title, self._left_title, self._right_title):
+                x, current_y = title.get_position()
+                title.set_position((x, max(current_y, y)))
 
     def get_tightbbox(self, renderer: Any, *args: Any, **kwargs: Any) -> Any:
         # Perform extra post-processing steps

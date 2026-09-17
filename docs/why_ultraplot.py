@@ -46,8 +46,7 @@
 # %%
 import numpy as np
 
-SEED = 51423
-rng = np.random.RandomState(SEED)
+rng = np.random.RandomState(51423)
 x = np.linspace(0, 10, 100)
 line = np.sin(x) + 0.08 * rng.randn(x.size)
 image = np.outer(np.sin(x / 2), np.cos(x / 3))
@@ -82,9 +81,11 @@ mpl_fig.show()
 # The UltraPlot approach
 # ----------------------
 #
-# Notice that the actual drawing commands (``plot`` and ``imshow``) are identical
-# to the Matplotlib version above. The magic happens with ``uplt.subplots`` and
-# the ``format`` method.
+# Notice that the actual drawing commands,
+# :meth:`~ultraplot.axes.PlotAxes.plot` and
+# :meth:`~ultraplot.axes.PlotAxes.imshow`, are identical to the Matplotlib
+# version above. UltraPlot adds :func:`~ultraplot.ui.subplots` for figure
+# construction and :meth:`~ultraplot.axes.Axes.format` for panel formatting.
 #
 # Instead of scattering setter methods across your script, UltraPlot lets you
 # define figure layouts and shared labels cohesively. As your figures grow in
@@ -96,16 +97,24 @@ mpl_fig.show()
 # %%
 import ultraplot as uplt
 
-uplt_fig, uplt_axs = uplt.subplots(ncols=2, share=False, refwidth=2.3)
-uplt_axs[0].plot(x, line, label="signal", color="tab:blue")
-uplt_mesh = uplt_axs[1].imshow(image, origin="lower", aspect="auto", cmap="viridis")
-uplt_axs[0].format(title="Line", xlabel="x", ylabel="value")
-uplt_axs[0].legend(loc="ur")
-uplt_axs[1].format(title="Image", xlabel="column", ylabel="row")
-uplt_fig.format(suptitle="The same two-panel figure")
-uplt_fig.colorbar(uplt_mesh, loc="r", label="intensity")
-uplt_fig.show()
-
+fig, ax = uplt.subplots(ncols=2, share=False, refwidth=2.3)
+ax[0].plot(x, line, label="signal", color="tab:blue")
+ax[1].imshow(
+    image,
+    origin="lower",
+    aspect="auto",
+    cmap="viridis",
+    colorbar="r",
+    colorbar_kw=dict(label="Intensity"),
+)
+ax.format(
+    title=["Line", "Image"],
+    xlabel=["x", "column"],
+    ylabel=["value", "row"],
+)
+ax[0].legend(loc="ur")
+fig.format(suptitle="The same two-panel figure")
+fig.show()
 
 # %% [raw] raw_mimetype="text/restructuredtext"
 # The takeaway
@@ -114,9 +123,14 @@ uplt_fig.show()
 # UltraPlot does not reinvent the wheel—it just makes it easier to steer. A good
 # mental model for your workflow looks like this:
 #
-# * Use standard Matplotlib axes methods (``plot``, ``imshow``, ``scatter``) to draw the data.
-# * Use ``axs.format()`` to apply consistent labels, ticks, and styling at the panel level.
-# * Use ``fig.format()`` for global aesthetics and unified figure guides (like shared colorbars).
+# * Use standard axes methods such as :meth:`~ultraplot.axes.PlotAxes.plot`,
+#   :meth:`~ultraplot.axes.PlotAxes.imshow`, and
+#   :meth:`~ultraplot.axes.PlotAxes.scatter` to draw data.
+# * Use :meth:`~ultraplot.axes.Axes.format` through ``axs.format()`` to apply
+#   consistent labels, ticks, and styling at the panel level.
+# * Use :meth:`~ultraplot.figure.Figure.format` through ``fig.format()`` for
+#   global aesthetics, and :meth:`~ultraplot.figure.Figure.colorbar` for a
+#   shared colorbar.
 #
 # For a single, fast plot, stick with Matplotlib. When layout scaling and repetitive
 # formatting become a chore, let UltraPlot handle the heavy lifting.

@@ -8,7 +8,12 @@ import pytest
 from matplotlib import ticker as mticker
 from matplotlib import transforms as mtransforms
 from matplotlib.animation import FuncAnimation
-from matplotlib.backend_bases import FigureCanvasBase, MouseEvent, TimerBase
+from matplotlib.backend_bases import (
+    FigureCanvasBase,
+    MouseEvent,
+    NavigationToolbar2,
+    TimerBase,
+)
 from PIL import Image
 
 import ultraplot as uplt
@@ -1156,7 +1161,8 @@ def test_navigation_preview_tracks_mouse_press_and_release(projection):
     values = np.linspace(0, 10, 5_000)
     if projection is None:
         line = ax.plot(values, np.sin(values))[0]
-        ax.set_navigate_mode("PAN")
+        toolbar = NavigationToolbar2(fig.canvas)
+        toolbar.pan()
         original_size = len(line.get_xdata())
     else:
         line = ax.plot(np.cos(values), np.sin(values), values)[0]

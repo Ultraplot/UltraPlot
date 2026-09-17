@@ -25,7 +25,7 @@ import matplotlib as mpl
 import matplotlib.colors as mcolors
 import matplotlib.font_manager as mfonts
 import matplotlib.mathtext  # noqa: F401
-import matplotlib.style.core as mstyle
+import matplotlib.style as mstyle
 import numpy as np
 from matplotlib import RcParams
 
@@ -59,6 +59,11 @@ __all__ = [
 ]
 
 # Constants
+if hasattr(mstyle, "_STYLE_BLACKLIST"):  # Matplotlib >= 3.11
+    _STYLE_BLACKLIST = mstyle._STYLE_BLACKLIST
+else:
+    from matplotlib.style.core import STYLE_BLACKLIST as _STYLE_BLACKLIST
+
 COLORS_KEEP = ("red", "green", "blue", "cyan", "yellow", "magenta", "white", "black")
 
 _ULTRAPLOT_STYLES = {
@@ -293,7 +298,7 @@ def _filter_style_dict(rcdict, warn=True):
     # you import ultraplot in jupyter notebooks. So apply retroactively.
     rcdict_filtered = {}
     for key in rcdict:
-        if key in mstyle.STYLE_BLACKLIST:
+        if key in _STYLE_BLACKLIST:
             if warn:
                 warnings._warn_ultraplot(
                     f"Dictionary includes a parameter, {key!r}, that is not related "

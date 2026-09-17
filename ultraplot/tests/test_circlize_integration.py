@@ -177,8 +177,11 @@ def test_import_pycirclize_error_message(monkeypatch):
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(Path, "is_dir", lambda self: False)
     sys.modules.pop("pycirclize", None)
-    with pytest.raises(ImportError, match="pycirclize is required for circos plots"):
-        circlize_mod._import_pycirclize()
+    with pytest.warns(UserWarning, match=r"pip install 'ultraplot\[circos\]'"):
+        with pytest.raises(
+            ImportError, match="pycirclize is required for circos plots"
+        ):
+            circlize_mod._import_pycirclize()
 
 
 def test_resolve_defaults_with_existing_objects(fake_pycirclize):

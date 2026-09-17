@@ -188,11 +188,16 @@ jobs:
             --progress-bar no
 
   coverage:
-    name: Coverage
+    name: Coverage Python ${{ matrix.python-version }} / MPL ${{ matrix.matplotlib-version }}
     runs-on: ubuntu-latest
     needs:
       - run-if-changes
-    if: always() && needs.run-if-changes.outputs.run == 'true' && github.event_name == 'pull_request'
+      - get-versions
+    if: always() && needs.run-if-changes.outputs.run == 'true' && needs.get-versions.result == 'success' && github.event_name == 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.get-versions.outputs.test-matrix) }}
     defaults:
       run:
         shell: bash -el {0}
@@ -206,25 +211,41 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Prepare compatible coverage environment
+        run: >-
+          python3 tools/ci/version_support.py
+          --matplotlib-version '${{ matrix.matplotlib-version }}'
+          --environment-output '${{ runner.temp }}/ultraplot-environment.yml'
+
       - uses: mamba-org/setup-micromamba@v3.2.1
         with:
-          environment-file: ./environment.yml
+          environment-file: ${{ runner.temp }}/ultraplot-environment.yml
           init-shell: bash
           condarc-file: ./.github/micromamba-condarc.yml
           post-cleanup: none
           create-args: >-
             --verbose
-            python=3.10
-            matplotlib=3.9
+            python=${{ matrix.python-version }}
+            matplotlib=${{ matrix.matplotlib-version }}
           cache-environment: true
           cache-downloads: false
 
       - name: Build Ultraplot
         run: |
-          pip install --no-build-isolation --no-deps .
+          pip install --no-build-isolation ".[mcp]"
 
       - name: Run full coverage suite
         run: |
+          python - <<'PY'
+          import sys
+          from importlib.metadata import version
+          import matplotlib, mpltern, pycirclize
+          assert sys.version_info[:2] == tuple(map(int, '${{ matrix.python-version }}'.split('.')))
+          assert matplotlib.__version__.startswith('${{ matrix.matplotlib-version }}.')
+          print('Python executable:', sys.executable)
+          for package in ('matplotlib', 'mpltern', 'pycirclize', 'cartopy'):
+              print(f'{package}: {version(package)}')
+          PY
           pytest -q --tb=short --disable-warnings -n auto -p pytest_cov \
             --cov=ultraplot --cov-branch --cov-context=test \
             --cov-report=xml:coverage.xml --cov-report= \
@@ -235,7 +256,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
-          name: codecov-pr-python3.10-mpl3.9
+          name: codecov-pr-python${{ matrix.python-version }}-mpl${{ matrix.matplotlib-version }}
 
   build:
     needs:
@@ -261,6 +282,7 @@ jobs:
   build-success:
     needs:
       - build
+      - coverage
       - run-if-changes
       - stubs
     if: always()

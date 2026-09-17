@@ -482,7 +482,12 @@ class AutoFormatter(mticker.ScalarFormatter):
 
             # Format with precision below floating point error
             x -= getattr(self, "offset", 0)  # guard against API change
-            x /= 10 ** getattr(self, "orderOfMagnitude", 0)  # guard against API change
+            order = (
+                self._orderOfMagnitude
+                if hasattr(self, "_orderOfMagnitude")
+                else getattr(self, "orderOfMagnitude", 0)
+            )
+            x /= 10**order
             precision_true = max(0, self._decimal_place(x))
             precision_max = max(0, np.finfo(type(x)).precision - precision_offset)
             precision = min(precision_true, precision_max)
