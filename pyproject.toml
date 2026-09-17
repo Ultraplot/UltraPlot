@@ -36,20 +36,6 @@ dynamic = ["version"]
 "Issue Tracker" = "https://github.com/ultraplot/ultraplot/issues"
 "Source Code" = "https://github.com/ultraplot/ultraplot"
 
-[tool.setuptools]
-packages = {find = {exclude=["docs*", "baseline*", "logo*"]}}
-include-package-data = true
-
-[tool.setuptools.package-data]
-ultraplot = ["py.typed", "*.pyi", "**/*.pyi"]
-
-[tool.setuptools_scm]
-write_to = "ultraplot/_version.py"
-write_to_template = "__version__ = '{version}'\n"
-
-[tool.ultraplot.core_versions]
-python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
-matplotlib = ["3.9", "3.10"]
 [project.scripts]
 ultraplot-mcp = "ultraplot.mcp:main"
 
@@ -89,6 +75,11 @@ stats = [
   "scipy",
 ]
 
+typing = [
+  "basedpyright==1.31.4",
+  "pyrefly==1.2.0",
+]
+
 [build-system]
 requires = [
   "setuptools>=80",
@@ -105,34 +96,6 @@ filterwarnings = [
   "ignore:'resetCache' deprecated - use 'reset_cache':DeprecationWarning:matplotlib._fontconfig_pattern",
 ]
 mpl-default-style = { axes.prop_cycle = "cycler('color', ['#4c72b0ff', '#55a868ff', '#c44e52ff', '#8172b2ff', '#ccb974ff', '#64b5cdff'])" }
-[project.optional-dependencies]
-typing = [
-    "basedpyright==1.31.4",
-    "pyrefly==1.2.0",
-]
-docs = [
-    "jupyter",
-    "jupytext",
-    "lxml-html-clean",
-    "markdown",
-    "mpltern",
-    # Floors below are the versions that work with Sphinx 9, which removed
-    # sphinx.ext.autosummary.get_documenter. Without them pip is free to pair a
-    # current Sphinx with an extension that cannot import it, and the build
-    # dies with "Extension error (sphinx_automodapi.automodsumm)".
-    "nbsphinx>=0.9.8",          # 0.9.7 declares sphinx<8.2
-    "sphinx",
-    "sphinx-autoapi",
-    "sphinx-automodapi>=0.22",  # 0.19 imports the removed get_documenter
-    "sphinx-copybutton",
-    "sphinx-design>=0.7",       # 0.6.1 declares sphinx<9
-    "sphinx-gallery",
-    "shibuya",
-    "sphinx-sitemap",
-    "typing-extensions"
-]
-stats = [
-    "scipy",
 
 [tool.ruff.lint]
 ignore = [
@@ -143,10 +106,13 @@ ignore = [
 packages = { find = { exclude = ["docs*", "baseline*", "logo*"] } }
 include-package-data = true
 
+[tool.setuptools.package-data]
+ultraplot = ["py.typed", "*.pyi", "**/*.pyi"]
+
 [tool.setuptools_scm]
 version_file = "ultraplot/_version.py"
 version_file_template = "__version__ = '{version}'\n"
 
 [tool.ultraplot.core_versions]
 python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
-matplotlib = ["3.9", "3.10", "3.11"]
+matplotlib = ["3.9", "3.10"]
