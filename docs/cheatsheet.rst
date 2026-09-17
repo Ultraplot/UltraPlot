@@ -10,38 +10,38 @@ To highlight the capabilities in a bird's eye view, we have included a few Matpl
 General Overview 
 ================
 
-.. drawio-image:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
+.. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
    :page: 1
 
 =================
 Every day recipes
 =================
-.. drawio-image:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
+.. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
    :page: 2
 
 
 ===============
 Quick Reference
 ===============
-.. drawio-image:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
+.. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
    :page: 3
 
 =========
 Beginners
 =========
-.. drawio-image:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
+.. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
    :page: 4
 
 ============
 Intermediate
 ============
-.. drawio-image:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
+.. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
    :page: 5
 
 
 ======
 Expert
 ======
-.. drawio-image:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
+.. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
    :page: 6
 
