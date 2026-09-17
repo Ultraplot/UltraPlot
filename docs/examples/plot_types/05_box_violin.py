@@ -35,5 +35,4 @@ axs[1].violinplot(data.T, lw=1, cycle="flatui")
 axs[1].format(title="Violin plot", xlabel="Distribution", ylabel="Value")
 
 axs.format(suptitle="Statistical distributions")
-uplt.show(block=1)
 fig.show()
