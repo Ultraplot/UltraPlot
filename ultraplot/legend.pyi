@@ -271,16 +271,18 @@ Properties:
     clip_path: Patch or (Path, Transform) or None
     color: [color](https://matplotlib.org/stable/search.html?q=color)
     edgecolor or ec: [color](https://matplotlib.org/stable/search.html?q=color) or None
+    edgegapcolor: [color](https://matplotlib.org/stable/search.html?q=color) or None
     facecolor or fc: [color](https://matplotlib.org/stable/search.html?q=color) or None
     figure: [Figure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.Figure.html) or [SubFigure](https://matplotlib.org/stable/api/_as_gen/matplotlib.figure.SubFigure.html)
     fill: bool
     gid: str
     hatch: {'/', '\\\\', '|', '-', '+', 'x', 'o', 'O', '.', '*'}
     hatch_linewidth: unknown
+    hatchcolor: [color](https://matplotlib.org/stable/search.html?q=color) or 'edge' or None
     in_layout: bool
     joinstyle: `.JoinStyle` or {'miter', 'round', 'bevel'}
     label: object
-    linestyle or ls: {'-', '--', '-.', ':', '', (offset, on-off-seq), ...}
+    linestyle or ls: {'-', '--', '-.', ':', '', ...} or (offset, on-off-seq)
     linewidth or lw: float or None
     mouseover: bool
     path_effects: list of `.AbstractPathEffect`
@@ -492,6 +494,7 @@ class Legend(mlegend.Legend):
 - `framealpha`: The alpha transparency of the legend's background.
 - `facecolor`: The legend's background color.
 - `edgecolor`: The legend's background patch edge color.
+- `linewidth`: The legend's background patch edge linewidth.
 - `mode`: If *mode* is set to ``"expand"`` the legend will be horizontally expanded to fill the Axes area (or *bbox_to_anchor* if defines the legend's size).
 - `bbox_transform`: The transform for the bounding box (*bbox_to_anchor*).
 - `title`: The legend's title.
@@ -506,7 +509,7 @@ class Legend(mlegend.Legend):
 - `borderaxespad`: The pad between the Axes and legend border, in font-size units.
 - `columnspacing`: The spacing between columns, in font-size units.
 - `handler_map`: The custom dictionary mapping instances or types to a legend handler.
-- `draggable`: Whether the legend can be dragged with the mouse.
+- _1 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.legend.Legend.html)"""
         ...

@@ -184,14 +184,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class PowerScale(_Scale, mscale.ScaleBase):
@@ -253,14 +256,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class InvertedPowerTransform(mtransforms.Transform):
@@ -301,14 +307,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class ExpScale(_Scale, mscale.ScaleBase):
@@ -390,14 +399,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class InvertedExpTransform(mtransforms.Transform):
@@ -438,14 +450,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class MercatorLatitudeScale(_Scale, mscale.ScaleBase):
@@ -518,14 +533,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class InvertedMercatorLatitudeTransform(mtransforms.Transform):
@@ -566,14 +584,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class SineLatitudeScale(_Scale, mscale.ScaleBase):
@@ -641,14 +662,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class InvertedSineLatitudeTransform(mtransforms.Transform):
@@ -689,14 +713,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class CutoffScale(_Scale, mscale.ScaleBase):
@@ -775,14 +802,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 class InverseScale(_Scale, mscale.ScaleBase):
@@ -842,14 +872,17 @@ always a no-op.
 Parameters
 ----------
 values : array
-    The input values as an array of length `input_dims` or
-    shape (N, `input_dims`).
+    The input values as an array of length
+    [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html) or
+    shape (N, [input_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.input_dims.html)).
 
 Returns
 -------
 array
-    The output values as an array of length `output_dims` or
-    shape (N, `output_dims`), depending on the input."""
+    The output values as an array of length
+    [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html) or shape
+    (N, [output_dims](https://matplotlib.org/stable/api/_as_gen/matplotlib.transforms.Transform.output_dims.html)),
+    depending on the input."""
         ...
 
 def _scale_factory(scale: Incomplete, axis: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:

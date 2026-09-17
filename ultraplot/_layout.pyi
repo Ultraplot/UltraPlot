@@ -28,6 +28,10 @@ def _interval_key(values: Incomplete) -> Incomplete:
     """Convert a numerical interval to an immutable exact cache key."""
     ...
 
+def _formatter_locs(formatter: Incomplete) -> Incomplete:
+    """Read cached locations without the deprecated 3.11 public alias."""
+    ...
+
 @dataclass(frozen=True)
 class _AxisTickState:
     """State that can affect ``Axis._update_ticks`` within one canvas draw."""

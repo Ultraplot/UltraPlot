@@ -29,7 +29,7 @@ from .. import constructor
 from .. import proj as pproj
 from .. import ticker as pticker
 from ..config import rc
-from ..internals import _alias_kwargs, _not_none, _pop_params, _pop_props, _pop_rc, _version_cartopy, docstring, ic, labels, warnings
+from ..internals import _alias_kwargs, _not_none, _pop_params, _pop_props, _pop_rc, _version_cartopy, _version_mpl, docstring, ic, labels, warnings
 from ..utils import units
 from . import plot, shared
 try:
@@ -975,6 +975,10 @@ projections. This was developed from [this cartopy example](https://cartopy.read
 Cartopy's apply_aspect() can shrink the main axes to enforce the projection
 aspect ratio. Panels occupy separate gridspec slots, so we reposition them
 after the main axes has applied its aspect but before the panel axes are drawn."""
+        ...
+
+    def _update_native_title_position(self, renderer: Any) -> None:
+        """Place titles above visible grid labels, ignoring empty bboxes."""
         ...
 
     def get_tightbbox(self, renderer: Any, *args: Any, **kwargs: Any) -> Any:

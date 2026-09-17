@@ -8,15 +8,23 @@ around external axes classes, allowing them to be used within ultraplot's
 figure system while maintaining their native functionality.
 """
 from _typeshed import Incomplete
+from types import MethodType
 import matplotlib.axes as maxes
 import matplotlib.transforms as mtransforms
+import numpy as np
 from matplotlib import cbook, container
 from ..config import rc
-from ..internals import _pop_rc, warnings
+from ..internals import _pop_rc, _version_mpl, warnings
 from . import shared
 from .cartesian import CartesianAxes
 __all__ = ['ExternalAxesContainer']
 _ABOVE_AXES_TITLE_LOCS = {'left', 'center', 'right'}
+
+def _ternary_ticklabel_points(axis: Incomplete, renderer: Incomplete) -> Incomplete:
+    """Adapt mpltern's tick-label bounds to Matplotlib 3.11 text layouts.
+
+Bound only to the container's axes; do not patch mpltern globally."""
+    ...
 
 class ExternalAxesContainer(CartesianAxes):
     """Container axes that wraps an external axes instance.

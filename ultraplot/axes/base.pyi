@@ -444,6 +444,10 @@ Notes
 This method is overridden in the Artist subclasses."""
         ...
 
+    def _update_native_title_position(self, renderer: Incomplete) -> None:
+        """Apply the native axes title positioning algorithm."""
+        ...
+
     def get_tightbbox(self, renderer: Incomplete, *args: Incomplete, **kwargs: Incomplete) -> Incomplete:
         """Return the tight bounding box of the Axes, including axis and their
 decorators (xlabel, title, etc).
@@ -730,7 +734,7 @@ Parameters
 - `shadow`: Whether to draw a shadow behind the legend.
 - `framealpha`: The alpha transparency of the legend's background.
 - `facecolor`: The legend's background color.
-- _15 additional parameter groups are documented online._
+- _16 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.Axes.html#ultraplot.axes.Axes.legend)"""
         ...

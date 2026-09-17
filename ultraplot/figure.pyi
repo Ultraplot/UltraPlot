@@ -1005,7 +1005,7 @@ Parameters
 - `shadow`: Whether to draw a shadow behind the legend.
 - `framealpha`: The alpha transparency of the legend's background.
 - `facecolor`: The legend's background color.
-- _15 additional parameter groups are documented online._
+- _16 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.figure.Figure.html#ultraplot.figure.Figure.legend)"""
         ...

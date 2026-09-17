@@ -11,6 +11,7 @@ from typing import Any, Callable, Mapping, Optional, Sequence, Union
 from matplotlib.projections.polar import PolarAxes as MplPolarAxes
 from ... import constructor
 from ...config import rc
+from ...internals import warnings
 _PYCIRCLIZE_RC_LEAKS = ('savefig.bbox', 'savefig.pad_inches', 'svg.fonttype')
 
 def _import_pycirclize() -> Incomplete:

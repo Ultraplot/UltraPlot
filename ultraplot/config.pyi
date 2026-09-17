@@ -18,11 +18,15 @@ import matplotlib as mpl
 import matplotlib.colors as mcolors
 import matplotlib.font_manager as mfonts
 import matplotlib.mathtext
-import matplotlib.style.core as mstyle
+import matplotlib.style as mstyle
 import numpy as np
 from matplotlib import RcParams
 from .internals import _not_none, _pop_kwargs, _pop_props, _translate_grid, _version_mpl, docstring, ic, rcsetup, warnings
 __all__ = ['Configurator', 'rc', 'rc_ultraplot', 'rc_matplotlib', 'use_style', 'config_inline_backend', 'register_cmaps', 'register_cycles', 'register_colors', 'register_fonts']
+if hasattr(mstyle, '_STYLE_BLACKLIST'):
+    _STYLE_BLACKLIST = mstyle._STYLE_BLACKLIST
+else:
+    from matplotlib.style.core import STYLE_BLACKLIST as _STYLE_BLACKLIST
 COLORS_KEEP = ('red', 'green', 'blue', 'cyan', 'yellow', 'magenta', 'white', 'black')
 _ULTRAPLOT_STYLES = {'poster': {'font.size': 14, 'axes.titlesize': 18, 'axes.labelsize': 16, 'xtick.labelsize': 13, 'ytick.labelsize': 13, 'legend.fontsize': 13, 'figure.titlesize': 20, 'lines.linewidth': 2.0, 'lines.markersize': 6, 'figure.facecolor': 'none', 'savefig.facecolor': 'none', 'savefig.edgecolor': 'none'}, 'dark_background': {'figure.facecolor': '#000000', 'figure.edgecolor': '#000000', 'axes.facecolor': '#000000', 'axes.edgecolor': '#cbd5e1', 'axes.labelcolor': '#f8fafc', 'text.color': '#f8fafc', 'xtick.color': '#cbd5e1', 'ytick.color': '#cbd5e1', 'grid.color': '#475569', 'grid.alpha': 0.35, 'legend.facecolor': '#000000', 'legend.edgecolor': '#475569', 'savefig.facecolor': '#000000', 'savefig.edgecolor': '#000000', 'axes.prop_cycle': cycler.cycler(color=('#60a5fa', '#f59e0b', '#34d399', '#f472b6', '#a78bfa', '#f87171'))}}
 _rc_docstring = ...

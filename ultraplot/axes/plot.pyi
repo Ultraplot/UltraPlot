@@ -2040,7 +2040,7 @@ Parameters
 - `radius`: The radius of the pie.
 - `counterclock`: Specify fractions direction, clockwise or counterclockwise.
 - `wedgeprops`: Dict of arguments passed to each `.patches.Wedge` of the pie.
-- `textprops`: Dict of arguments to pass to the text objects.
+- `textprops`: Dict of arguments to pass to the `.Text` objects.
 - `center`: The coordinates of the center of the chart.
 - `frame`: Plot Axes frame with the chart if true.
 - `rotatelabels`: Rotate each label to the angle of the corresponding slice if true.
@@ -2308,7 +2308,7 @@ Parameters
 - `quantiles`: If not None, set a list of floats in interval [0, 1] for each violin, which stands for the quantiles that will be rendered for that violin.
 - `points`: The number of points to evaluate each of the gaussian kernel density estimations at.
 - `bw_method`: The method used to calculate the estimator bandwidth.
-- _1 additional parameter groups are documented online._
+- _2 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.violinplot)"""
         ...
@@ -2638,7 +2638,7 @@ Parameters
 - `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 - `precision`: The maximum number of decimal places for number labels generated with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
-- _18 additional parameter groups are documented online._
+- _19 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.contour)"""
         ...
@@ -2684,7 +2684,7 @@ Parameters
 - `formatter`: The [Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) used to format number labels.
 - `formatter_kw`: Keyword arguments passed to [matplotlib.ticker.Formatter](https://matplotlib.org/stable/api/_as_gen/matplotlib.ticker.Formatter.html) class.
 - `precision`: The maximum number of decimal places for number labels generated with the default formatter [Simpleformatter](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.ticker.Simpleformatter.html).
-- _18 additional parameter groups are documented online._
+- _19 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.contourf)"""
         ...
@@ -2958,7 +2958,7 @@ Parameters
 - `angles`: Method for determining the angle of the arrows.
 - `pivot`: The part of the arrow that is anchored to the *X*, *Y* grid.
 - `scale`: Scales the length of the arrow inversely.
-- `scale_units`: The physical image unit, which is used for rendering the scaled arrow data *U*, *V*.
+- `scale_units`: The physical image unit, which is used for rendering the scaled arrow data U, V.
 - `units`: Affects the arrow size (except for the length).
 - _7 additional parameter groups are documented online._
 
@@ -3043,7 +3043,7 @@ Parameters
 - `arrowsize`: Scaling factor for the arrow size.
 - `arrowstyle`: Arrow style specification.
 - `minlength`: Minimum length of streamline in axes coordinates.
-- _5 additional parameter groups are documented online._
+- _8 additional parameter groups are documented online._
 
 [Full API documentation](https://ultraplot.readthedocs.io/en/stable/api/ultraplot.axes.PlotAxes.html#ultraplot.axes.PlotAxes.streamplot)"""
         ...

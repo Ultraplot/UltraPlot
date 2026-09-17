@@ -366,8 +366,20 @@ paired with `IndexLocator` or [FixedLocator](https://matplotlib.org/stable/api/_
         ...
 
     def __call__(self, x: Incomplete, pos: Incomplete=None) -> Incomplete:
-        """Return the format for tick value *x* at position pos.
-``pos=None`` indicates an unspecified location."""
+        """Return the tick label strings for value *x* at tick index *pos*.
+
+This is the low-level formatting primitive for a single tick in
+the context of multiple ticks. Any context-dependent state
+(e.g. locs, offset, order of magnitude) must already be configured,
+typically by a prior call to ``format_ticks`` or ``set_locs``.
+
+*pos* defines the index into ``self.locs`` so that the format can
+depend on the location. ``pos=None`` indicates an unspecified
+location.
+
+The output may contain mathtext or LaTeX markup.
+
+Subclasses must override this method."""
         ...
 
 class SciFormatter(mticker.Formatter):
@@ -479,8 +491,20 @@ units : str, default: 'days since 2000-01-01'
         ...
 
     def __call__(self, x: Incomplete, pos: Incomplete=None) -> Incomplete:
-        """Return the format for tick value *x* at position pos.
-``pos=None`` indicates an unspecified location."""
+        """Return the tick label strings for value *x* at tick index *pos*.
+
+This is the low-level formatting primitive for a single tick in
+the context of multiple ticks. Any context-dependent state
+(e.g. locs, offset, order of magnitude) must already be configured,
+typically by a prior call to ``format_ticks`` or ``set_locs``.
+
+*pos* defines the index into ``self.locs`` so that the format can
+depend on the location. ``pos=None`` indicates an unspecified
+location.
+
+The output may contain mathtext or LaTeX markup.
+
+Subclasses must override this method."""
         ...
 
 class AutoCFDatetimeFormatter(mticker.Formatter):
@@ -493,8 +517,20 @@ class AutoCFDatetimeFormatter(mticker.Formatter):
         ...
 
     def __call__(self, x: Incomplete, pos: Incomplete=0) -> Incomplete:
-        """Return the format for tick value *x* at position pos.
-``pos=None`` indicates an unspecified location."""
+        """Return the tick label strings for value *x* at tick index *pos*.
+
+This is the low-level formatting primitive for a single tick in
+the context of multiple ticks. Any context-dependent state
+(e.g. locs, offset, order of magnitude) must already be configured,
+typically by a prior call to ``format_ticks`` or ``set_locs``.
+
+*pos* defines the index into ``self.locs`` so that the format can
+depend on the location. ``pos=None`` indicates an unspecified
+location.
+
+The output may contain mathtext or LaTeX markup.
+
+Subclasses must override this method."""
         ...
 
 class AutoCFDatetimeLocator(mticker.Locator):
