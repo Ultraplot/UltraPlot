@@ -234,7 +234,6 @@ extensions = [
     "sphinx.ext.autodoc",  # include documentation from docstrings
     "sphinx_design",
     "sphinx.ext.doctest",  # >>> examples
-    "sphinxcontrib.drawio",
     "sphinx.ext.extlinks",  # for :pr:, :issue:, :commit:
     "sphinx.ext.autosectionlabel",  # use :ref:`Heading` for any heading
     "sphinx.ext.todo",  # Todo headers and todo:: directives
@@ -247,6 +246,7 @@ extensions = [
     "sphinx_automodapi.automodapi",  # fork of automodapi
     "sphinx_copybutton",  # add copy button to code
     "_ext.notoc",
+    "_ext.drawio",
     "nbsphinx",  # parse rst books
     "sphinx_gallery.gen_gallery",
 ]

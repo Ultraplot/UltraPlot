@@ -63,7 +63,6 @@ docs = [
   "sphinx-automodapi>=0.22",  # 0.19 imports the removed get_documenter
   "sphinx-copybutton",
   "sphinx-design>=0.7",  # 0.6.1 declares sphinx<9
-  "sphinxcontrib-drawio",
   "sphinx-gallery",
   "shibuya",
   "sphinx-sitemap",
