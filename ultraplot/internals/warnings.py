@@ -7,8 +7,11 @@ import functools
 import re
 import sys
 import warnings
+from typing import Any, Callable, TypeVar, cast
 
 from . import ic  # noqa: F401
+
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 # Internal modules omitted from warning message
 REGEX_INTERNAL = re.compile(r"\A(matplotlib|mpl_toolkits|ultraplot)\.")
@@ -92,14 +95,14 @@ def _rename_objs(version, **kwargs):
         return tuple(objs)
 
 
-def _rename_kwargs(version, **kwargs_rename):
+def _rename_kwargs(version, **kwargs_rename) -> Callable[[_F], _F]:
     """
     Emit a basic deprecation warning after removing or renaming keyword argument(s).
     Each key should be an old keyword, and each argument should be the new keyword
     or *instructions* for what to use instead.
     """
 
-    def _decorator(func_orig):
+    def _decorator(func_orig: _F) -> _F:
         @functools.wraps(func_orig)
         def _deprecate_kwargs_wrapper(*args, **kwargs):
             for key_old, key_new in kwargs_rename.items():
@@ -118,6 +121,6 @@ def _rename_kwargs(version, **kwargs_rename):
                 )
             return func_orig(*args, **kwargs)
 
-        return _deprecate_kwargs_wrapper
+        return cast(_F, _deprecate_kwargs_wrapper)
 
     return _decorator
