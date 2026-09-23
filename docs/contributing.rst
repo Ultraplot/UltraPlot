@@ -148,7 +148,7 @@ verify the packaged source:
 
 .. code-block:: bash
 
-   pip install .
+   pip install --no-build-isolation .
    python tools/ci/check_installed_docstrings.py
 
 The installed-package check ensures registered snippet placeholders are gone from

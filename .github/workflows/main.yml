@@ -161,11 +161,24 @@ jobs:
           pip install ".[typing]"
           mkdir -p /tmp/ultraplot-static
           cp tools/ci/static_consumer.py /tmp/ultraplot-static/consumer.py
+          cp tools/ci/check_installed_docstrings.py /tmp/ultraplot-static/check_docstrings.py
           (
             cd /tmp/ultraplot-static
-            basedpyright consumer.py --level error
+            basedpyright consumer.py --outputjson > basedpyright.json || true
+            python - <<'PY'
+          import json
+
+          report = json.load(open("/tmp/ultraplot-static/basedpyright.json", encoding="utf-8"))
+          summary = report["summary"]
+          print(
+              f"BasedPyright: {summary['errorCount']} errors, "
+              f"{summary['warningCount']} warnings"
           )
-          python tools/ci/check_installed_docstrings.py
+          if summary["errorCount"]:
+              raise SystemExit(1)
+          PY
+            python check_docstrings.py
+          )
 
   coverage:
     name: Coverage Python ${{ matrix.python-version }} / MPL ${{ matrix.matplotlib-version }}
