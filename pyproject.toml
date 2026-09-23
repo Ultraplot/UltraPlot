@@ -81,11 +81,11 @@ typing = [
 
 [build-system]
 requires = [
-  "setuptools>=80",
-  "setuptools-scm>=8",
   # Build-time docstring materialization imports UltraPlot in an isolated copy.
   "matplotlib>=3.9,<3.12",
   "numpy>=1.26.0",
+  "setuptools>=80",
+  "setuptools-scm>=8",
   "typing-extensions; python_version < '3.12'",
 ]
 build-backend = "setuptools.build_meta"
