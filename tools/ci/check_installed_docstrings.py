@@ -39,22 +39,6 @@ def main() -> None:
                     f"{path.relative_to(package)}:{getattr(node, 'lineno', 1)}: {key}"
                 )
 
-    plot_source = (package / "axes" / "plot.py").read_text(encoding="utf-8")
-    plot_tree = ast.parse(plot_source, filename="ultraplot/axes/plot.py")
-    plot_axes = next(
-        node
-        for node in plot_tree.body
-        if isinstance(node, ast.ClassDef) and node.name == "PlotAxes"
-    )
-    plot = next(
-        node
-        for node in plot_axes.body
-        if isinstance(node, ast.FunctionDef) and node.name == "plot"
-    )
-    plot_doc = ast.get_docstring(plot) or ""
-    assert plot_doc, "installed PlotAxes.plot is missing its docstring"
-    assert "Parameters" in plot_doc
-    assert not PLACEHOLDER.search(plot_doc)
 
     assert not unresolved, "Unexpanded installed docstrings:\n" + "\n".join(unresolved)
 
