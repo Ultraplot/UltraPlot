@@ -8,7 +8,7 @@ import re
 import sys
 from pathlib import Path
 
-_PLACEHOLDER = re.compile(r"%\\(([^)]+)\\)s")
+_PLACEHOLDER = re.compile(r"%\(([^)]+)\)s")
 
 
 def _iter_docstring_literals(node):

@@ -157,7 +157,7 @@ class _SnippetManager(dict):
         Add snippets to the string or object using ``%(name)s`` substitution. Here
         ``%(name)s`` is used rather than ``.format`` to support invalid identifiers.
         """
-        pattern = re.compile(r"%\\([^)]+\\)s")
+        pattern = re.compile(r"%\([^)]+\)s")
         if isinstance(obj, str):
             if pattern.search(obj):
                 obj %= self  # add snippets to a string
