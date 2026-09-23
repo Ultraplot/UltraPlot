@@ -143,7 +143,7 @@ jobs:
           python tools/ci/version_support.py --format github-output >> $GITHUB_OUTPUT
 
   static-api:
-    name: Static API and wheel docstrings
+    name: Static API and installed docstrings
     runs-on: ubuntu-latest
     needs:
       - run-if-changes
@@ -158,7 +158,7 @@ jobs:
 
       - name: Install built package and check static API
         run: |
-          pip install --no-build-isolation ".[typing]"
+          pip install ".[typing]"
           mkdir -p /tmp/ultraplot-static
           cp tools/ci/static_consumer.py /tmp/ultraplot-static/consumer.py
           (
