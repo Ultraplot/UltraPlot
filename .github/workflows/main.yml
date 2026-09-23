@@ -22,7 +22,8 @@ jobs:
               - 'environment.yml'
               - '.github/workflows/**'
               - 'tools/ci/**'
-              - 'tools/generate_stubs.py'
+              - 'tools/expand_docstrings.py'
+              - 'setup.py'
 
   select-tests:
     runs-on: ubuntu-latest
@@ -100,7 +101,8 @@ jobs:
             --always-full 'pyproject.toml' \
             --always-full 'environment.yml' \
             --always-full 'ultraplot/__init__.py' \
-            --always-full 'tools/generate_stubs.py' \
+            --always-full 'tools/expand_docstrings.py' \
+            --always-full 'setup.py' \
             --ignore 'docs/**' \
             --ignore 'README.rst'
           echo "Selection output:"
@@ -140,8 +142,8 @@ jobs:
           echo "Detected test matrix: $(echo "$OUTPUT" | jq -c '.test_matrix')"
           python tools/ci/version_support.py --format github-output >> $GITHUB_OUTPUT
 
-  stubs:
-    name: Static API stubs
+  static-api:
+    name: Static API and wheel docstrings
     runs-on: ubuntu-latest
     needs:
       - run-if-changes
@@ -154,38 +156,18 @@ jobs:
           python-version: "3.13"
           cache: pip
 
-      - name: Install UltraPlot and typing tools
-        run: pip install -e ".[typing]"
-
-      - name: Verify generated stubs
-        run: python tools/generate_stubs.py --check
-
-      - name: Check Pylance-compatible consumption
-        run: basedpyright tools/ci/stub_consumer.py --level error
-
-      - name: Check Pyrefly consumption and generated syntax
+      - name: Check source-level static API
         run: |
-          pyrefly check tools/ci/stub_consumer.py \
-            --search-path . \
-            --python-interpreter-path "$(command -v python)" \
-            --progress-bar no
-          pyrefly check 'ultraplot/**/*.pyi' \
-            --search-path . \
-            --python-interpreter-path "$(command -v python)" \
-            --ignore-missing-imports icecream \
-            --ignore-missing-imports cartopy \
-            --ignore-missing-imports cartopy.crs \
-            --ignore-missing-imports cartopy.feature \
-            --ignore-missing-imports cartopy.io \
-            --ignore-missing-imports cartopy.mpl.feature_artist \
-            --ignore-missing-imports cartopy.mpl.geoaxes \
-            --ignore-missing-imports cartopy.mpl.gridliner \
-            --ignore-missing-imports cartopy.mpl.path \
-            --ignore-missing-imports cartopy.mpl.ticker \
-            --ignore-missing-imports cftime \
-            --ignore-missing-imports mpl_toolkits.basemap \
-            --ignore-missing-imports matplotlib.fontconfig_pattern \
-            --progress-bar no
+          pip install -e ".[typing]"
+          basedpyright tools/ci/static_consumer.py --level error
+
+      - name: Build isolated wheel
+        run: |
+          python -m pip install build
+          python -m build --wheel
+
+      - name: Verify wheel docstrings are statically expanded
+        run: python tools/ci/check_wheel_docstrings.py dist/*.whl
 
   coverage:
     name: Coverage Python ${{ matrix.python-version }} / MPL ${{ matrix.matplotlib-version }}
@@ -284,7 +266,7 @@ jobs:
       - build
       - coverage
       - run-if-changes
-      - stubs
+      - static-api
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -292,7 +274,7 @@ jobs:
           if [[ '${{ needs.run-if-changes.outputs.run }}' == 'false' ]]; then
             echo "No changes detected, tests skipped."
           else
-            if [[ '${{ needs.build.result }}' == 'success' && '${{ needs.stubs.result }}' == 'success' ]]; then
+            if [[ '${{ needs.build.result }}' == 'success' && '${{ needs.static-api.result }}' == 'success' ]]; then
               echo "All tests passed successfully!"
             else
               echo "Tests failed!"

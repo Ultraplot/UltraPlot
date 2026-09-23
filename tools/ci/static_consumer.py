@@ -1,4 +1,4 @@
-"""Representative lazy public imports consumed by static type checkers."""
+"""Representative public imports consumed by a static type checker."""
 
 import ultraplot as uplt
 

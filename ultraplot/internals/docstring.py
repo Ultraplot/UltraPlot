@@ -157,14 +157,16 @@ class _SnippetManager(dict):
         Add snippets to the string or object using ``%(name)s`` substitution. Here
         ``%(name)s`` is used rather than ``.format`` to support invalid identifiers.
         """
+        pattern = re.compile(r"%\\([^)]+\\)s")
         if isinstance(obj, str):
-            obj %= self  # add snippets to a string
+            if pattern.search(obj):
+                obj %= self  # add snippets to a string
         else:
             documented = cast(Any, obj)
             documented.__doc__ = inspect.getdoc(
                 documented
             )  # also dedents the docstring
-            if documented.__doc__:
+            if documented.__doc__ and pattern.search(documented.__doc__):
                 documented.__doc__ %= self  # insert snippets after dedent
         return obj
 

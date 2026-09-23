@@ -133,34 +133,26 @@ system without requiring manual registry updates.
 Editor type information and docstrings
 --------------------------------------
 
-UltraPlot ships generated ``.pyi`` files so static analysis tools such as Pylance
-and Pyrefly can see the public API and fully expanded docstrings without importing
-the package. The runtime modules remain the source of truth and continue to use the
-lazy loader.
+UltraPlot keeps reusable docstring fragments in the runtime snippet registry so the
+source tree stays DRY. Release wheels expand those snippets into ordinary literal
+Python docstrings during the build. Static analysis tools such as Pylance can
+therefore read complete hover documentation from an installed wheel without
+UltraPlot maintaining a parallel set of .pyi files.
 
-After changing a Python signature, annotation, public import, or docstring snippet,
-install the pinned typing tools, regenerate the stubs from the repository root, and
-commit the updated ``.pyi`` files:
+The checked-in .py files remain the only authored representation. Editable installs
+continue to use runtime snippet expansion, while normal wheel installs contain the
+same Python implementation with the docstring literals already expanded.
 
-.. code-block:: bash
-
-   pip install -e ".[typing]"
-   python tools/generate_stubs.py
-
-Installation does not generate or modify these files. Release artifacts include the
-stubs that were generated and checked into the repository. The generator runs
-Pyrefly against an isolated source-only package, merges its inferred annotations
-into a complete syntax-derived representation of the package, and statically
-expands registered docstring snippets. This preserves declarations that Pyrefly
-cannot discover through decorators or lazy loading.
-
-To rerun inference and verify that every committed stub is up to date without
-changing files, run:
+After changing docstring snippets or the build expansion logic, build a wheel and
+verify the packaged source:
 
 .. code-block:: bash
 
-   python tools/generate_stubs.py --check
+   python -m build --wheel
+   python tools/ci/check_wheel_docstrings.py dist/*.whl
 
+The wheel check ensures registered snippet placeholders are gone from callable
+docstrings and that no generated stub files are shipped.
 
 .. _contrib_pr:
 
