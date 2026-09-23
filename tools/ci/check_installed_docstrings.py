@@ -52,8 +52,9 @@ def main() -> None:
         if isinstance(node, ast.FunctionDef) and node.name == "plot"
     )
     plot_doc = ast.get_docstring(plot) or ""
-    assert "Plot standard lines" in plot_doc
+    assert plot_doc, "installed PlotAxes.plot is missing its docstring"
     assert "Parameters" in plot_doc
+    assert not PLACEHOLDER.search(plot_doc)
 
     assert not unresolved, "Unexpanded installed docstrings:\n" + "\n".join(unresolved)
 
