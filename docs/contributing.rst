@@ -148,11 +148,11 @@ verify the packaged source:
 
 .. code-block:: bash
 
-   python -m build --wheel
-   python tools/ci/check_wheel_docstrings.py dist/*.whl
+   pip install --no-build-isolation .
+   python tools/ci/check_installed_docstrings.py
 
-The wheel check ensures registered snippet placeholders are gone from callable
-docstrings and that no generated stub files are shipped.
+The installed-package check ensures registered snippet placeholders are gone from
+callable docstrings and that no generated stub files are shipped.
 
 .. _contrib_pr:
 

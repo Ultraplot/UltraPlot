@@ -156,18 +156,16 @@ jobs:
           python-version: "3.13"
           cache: pip
 
-      - name: Check source-level static API
+      - name: Install built package and check static API
         run: |
-          pip install -e ".[typing]"
-          basedpyright tools/ci/static_consumer.py --level error
-
-      - name: Build isolated wheel
-        run: |
-          python -m pip install build
-          python -m build --wheel
-
-      - name: Verify wheel docstrings are statically expanded
-        run: python tools/ci/check_wheel_docstrings.py dist/*.whl
+          pip install --no-build-isolation ".[typing]"
+          mkdir -p /tmp/ultraplot-static
+          cp tools/ci/static_consumer.py /tmp/ultraplot-static/consumer.py
+          (
+            cd /tmp/ultraplot-static
+            basedpyright consumer.py --level error
+          )
+          python tools/ci/check_installed_docstrings.py
 
   coverage:
     name: Coverage Python ${{ matrix.python-version }} / MPL ${{ matrix.matplotlib-version }}

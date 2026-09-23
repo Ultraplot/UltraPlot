@@ -102,9 +102,7 @@ def expand_package(package_root: Path) -> int:
             del sys.modules[name]
     sys.path.insert(0, str(build_root))
     try:
-        snippets = importlib.import_module(
-            "ultraplot.internals.docstring"
-        )._snippet_manager
+        snippets = importlib.import_module("ultraplot.internals.docstring")._snippet_manager
         changed = 0
         for path in sorted(package_root.rglob("*.py")):
             if "__pycache__" in path.parts:

@@ -1,7 +1,7 @@
 """Setuptools hooks used only while building distribution artifacts."""
 
-from pathlib import Path
 import runpy
+from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_py import build_py as _build_py
