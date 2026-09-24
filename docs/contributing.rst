@@ -130,6 +130,29 @@ When adding a new submodule, make sure it is compatible with the lazy loader:
 By following these steps, your module will integrate cleanly with the lazy loading
 system without requiring manual registry updates.
 
+Editor type information and docstrings
+--------------------------------------
+
+UltraPlot keeps reusable docstring fragments in the runtime snippet registry so the
+source tree stays DRY. Release wheels expand those snippets into ordinary literal
+Python docstrings during the build. Static analysis tools such as Pylance can
+therefore read complete hover documentation from an installed wheel without
+UltraPlot maintaining a parallel set of .pyi files.
+
+The checked-in .py files remain the only authored representation. Editable installs
+continue to use runtime snippet expansion, while normal wheel installs contain the
+same Python implementation with the docstring literals already expanded.
+
+After changing docstring snippets or the build expansion logic, build a wheel and
+verify the packaged source:
+
+.. code-block:: bash
+
+   pip install --no-build-isolation .
+   python tools/ci/check_installed_docstrings.py
+
+The installed-package check ensures registered snippet placeholders are gone from
+callable docstrings and that no generated stub files are shipped.
 
 .. _contrib_pr:
 

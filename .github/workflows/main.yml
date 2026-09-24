@@ -22,6 +22,8 @@ jobs:
               - 'environment.yml'
               - '.github/workflows/**'
               - 'tools/ci/**'
+              - 'tools/expand_docstrings.py'
+              - 'setup.py'
 
   select-tests:
     runs-on: ubuntu-latest
@@ -99,6 +101,8 @@ jobs:
             --always-full 'pyproject.toml' \
             --always-full 'environment.yml' \
             --always-full 'ultraplot/__init__.py' \
+            --always-full 'tools/expand_docstrings.py' \
+            --always-full 'setup.py' \
             --ignore 'docs/**' \
             --ignore 'README.rst'
           echo "Selection output:"
@@ -137,6 +141,44 @@ jobs:
           echo "Detected Matplotlib versions: $(echo "$OUTPUT" | jq -c '.matplotlib_versions')"
           echo "Detected test matrix: $(echo "$OUTPUT" | jq -c '.test_matrix')"
           python tools/ci/version_support.py --format github-output >> $GITHUB_OUTPUT
+
+  static-api:
+    name: Static API and installed docstrings
+    runs-on: ubuntu-latest
+    needs:
+      - run-if-changes
+    if: always() && needs.run-if-changes.outputs.run == 'true'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install built package and check static API
+        run: |
+          pip install ".[typing]"
+          mkdir -p /tmp/ultraplot-static
+          cp tools/ci/static_consumer.py /tmp/ultraplot-static/consumer.py
+          cp tools/ci/check_installed_docstrings.py /tmp/ultraplot-static/check_docstrings.py
+          (
+            cd /tmp/ultraplot-static
+            basedpyright consumer.py --outputjson > basedpyright.json || true
+            python - <<'PY'
+          import json
+
+          report = json.load(open("/tmp/ultraplot-static/basedpyright.json", encoding="utf-8"))
+          summary = report["summary"]
+          print(
+              f"BasedPyright: {summary['errorCount']} errors, "
+              f"{summary['warningCount']} warnings"
+          )
+          if summary["errorCount"]:
+              raise SystemExit(1)
+          PY
+            python check_docstrings.py
+          )
 
   coverage:
     name: Coverage Python ${{ matrix.python-version }} / MPL ${{ matrix.matplotlib-version }}
@@ -235,6 +277,7 @@ jobs:
       - build
       - coverage
       - run-if-changes
+      - static-api
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -242,7 +285,7 @@ jobs:
           if [[ '${{ needs.run-if-changes.outputs.run }}' == 'false' ]]; then
             echo "No changes detected, tests skipped."
           else
-            if [[ '${{ needs.build.result }}' == 'success' && ( '${{ needs.coverage.result }}' == 'success' || '${{ needs.coverage.result }}' == 'skipped' ) ]]; then
+            if [[ '${{ needs.build.result }}' == 'success' && '${{ needs.static-api.result }}' == 'success' ]]; then
               echo "All tests passed successfully!"
             else
               echo "Tests failed!"
