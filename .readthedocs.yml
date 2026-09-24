@@ -5,6 +5,8 @@ version: 2
 # Set the OS and build tools
 build:
   os: ubuntu-22.04
+  apt_packages:
+    - xvfb
   tools:
     python: "mambaforge-latest"
 

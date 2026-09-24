@@ -139,6 +139,7 @@ For details, see the full :doc:`User guide <usage>` and
    usage
    recipes
    gallery/index
+   cheatsheet
 
 .. toctree::
    :maxdepth: 1
@@ -146,6 +147,7 @@ For details, see the full :doc:`User guide <usage>` and
    :hidden:
 
    basics
+   plot_types
    subplots
    cartesian
    data_aware
