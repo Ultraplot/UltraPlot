@@ -57,16 +57,9 @@ try:
     import cartopy.mpl.gridliner as cgridliner
     from cartopy.crs import Projection
     from cartopy.mpl.geoaxes import GeoAxes as _GeoAxes
-    from shapely.geometry import (
-        GeometryCollection,
-        LineString,
-        MultiLineString,
-        Polygon,
-    )
 except ModuleNotFoundError:
     ccrs = cfeature = cgridliner = None
     _GeoAxes = Projection = object
-    GeometryCollection = LineString = MultiLineString = Polygon = object
 
 try:
     from mpl_toolkits.basemap import Basemap
@@ -847,212 +840,6 @@ if cgridliner is not None and hasattr(cgridliner, "Label"):  # only recent versi
                 x_range = np.asarray(x_range) + lon_0
             return x_range, y_range
 
-        @staticmethod
-        def _ultraplot_intersection_pairs(
-            geometry: Any,
-        ) -> Iterator[tuple[np.ndarray, np.ndarray]]:
-            """
-            Yield boundary endpoints and adjacent interior points from a clipped gridline.
-            """
-            if isinstance(geometry, LineString):
-                coords = np.asarray(geometry.coords, dtype=float)
-                if len(coords) >= 2:
-                    yield coords[0], coords[1]
-                    if not np.allclose(coords[0], coords[-1]):
-                        yield coords[-1], coords[-2]
-            elif isinstance(geometry, (MultiLineString, GeometryCollection)):
-                for geom in geometry.geoms:
-                    yield from _CartopyGridliner._ultraplot_intersection_pairs(geom)
-
-        def _ultraplot_tick_sides(self, xylabel: str, which: str) -> set[str]:
-            """
-            Return map sides selected for longitude/latitude boundary ticks.
-            """
-            sides = {
-                loc
-                for loc in ("left", "right", "bottom", "top")
-                if self._draw_this_label(xylabel, loc)
-            }
-            if sides:
-                return sides
-
-            # If labels are disabled, retain matplotlib's ordinary tick-side defaults
-            # (bottom for x, left for y) and any explicit tick-position changes.
-            axis = self.axes.xaxis if xylabel == "x" else self.axes.yaxis
-            tick_kw = getattr(axis, f"_{which}_tick_kw", {})
-            side1, side2 = (
-                ("bottom", "top") if xylabel == "x" else ("left", "right")
-            )
-            sides = set()
-            if tick_kw.get("tick1On", True):
-                sides.add(side1)
-            if tick_kw.get("tick2On", False):
-                sides.add(side2)
-            return sides
-
-        def _ultraplot_tick_segments(
-            self, xylabel: str, spec: Mapping[str, Any], renderer: Any
-        ) -> list[np.ndarray]:
-            """
-            Build display-coordinate tick segments at gridline/boundary intersections.
-            """
-            lon_lim, lat_lim = self._axes_domain()
-            crs = self.crs
-            n_steps = self.n_steps
-            lon_ticks = self.xlocator.tick_values(lon_lim[0], lon_lim[1])
-            lat_ticks = self.ylocator.tick_values(lat_lim[0], lat_lim[1])
-            lon_ticks = [
-                value
-                for value in lon_ticks
-                if max(lon_lim[0], crs.x_limits[0])
-                <= value
-                <= min(lon_lim[1], crs.x_limits[1])
-            ]
-            lat_ticks = [
-                value
-                for value in lat_ticks
-                if max(lat_lim[0], crs.y_limits[0])
-                <= value
-                <= min(lat_lim[1], crs.y_limits[1])
-            ]
-
-            if xylabel == "x":
-                lat_min, lat_max = lat_lim
-                if lat_ticks:
-                    lat_min = min(lat_min, min(lat_ticks))
-                    lat_max = max(lat_max, max(lat_ticks))
-                lines = np.empty((len(lon_ticks), n_steps, 2))
-                lines[:, :, 0] = np.asarray(lon_ticks)[:, np.newaxis]
-                lines[:, :, 1] = np.linspace(lat_min, lat_max, n_steps)[
-                    np.newaxis, :
-                ]
-            else:
-                lon_min, lon_max = lon_lim
-                if lon_ticks:
-                    lon_min = min(lon_min, min(lon_ticks))
-                    lon_max = max(lon_max, max(lon_ticks))
-                lines = np.empty((len(lat_ticks), n_steps, 2))
-                lines[:, :, 0] = np.linspace(lon_min, lon_max, n_steps)[
-                    np.newaxis, :
-                ]
-                lines[:, :, 1] = np.asarray(lat_ticks)[:, np.newaxis]
-
-            geo_spine = self.axes.spines["geo"]
-            geo_spine.get_window_extent(renderer)
-            boundary_path = geo_spine.get_path().transformed(
-                geo_spine.get_transform()
-            )
-            boundary = Polygon(boundary_path.vertices)
-            transform = self._crs_transform().transform
-
-            length = float(spec["length"])
-            length = (
-                renderer.points_to_pixels(length)
-                if renderer is not None
-                else length * self.axes.figure.dpi / 72
-            )
-            if length <= 0:
-                return []
-            which = spec["which"]
-            sides = self._ultraplot_tick_sides(xylabel, which)
-            if not sides:
-                return []
-
-            axis = self.axes.xaxis if xylabel == "x" else self.axes.yaxis
-            tick_kw = getattr(axis, f"_{which}_tick_kw", {})
-            direction = tick_kw.get("tickdir", "out")
-            segments = []
-            for line_coords in lines:
-                line_coords = transform(line_coords)
-                line_coords = line_coords[np.isfinite(line_coords).all(axis=1)]
-                if len(line_coords) < 2:
-                    continue
-                line = LineString(line_coords)
-                if not line.intersects(boundary):
-                    continue
-                clipped = line.intersection(boundary)
-                for point, inside in self._ultraplot_intersection_pairs(clipped):
-                    vector = np.asarray(point) - np.asarray(inside)
-                    norm = np.linalg.norm(vector)
-                    if not np.isfinite(norm) or norm == 0:
-                        continue
-                    vector = vector / norm
-                    angle = np.degrees(np.arctan2(vector[1], vector[0]))
-                    if self._get_loc_from_angle(angle) not in sides:
-                        continue
-                    point = np.asarray(point, dtype=float)
-                    if direction == "in":
-                        segment = np.stack((point, point - length * vector))
-                    elif direction == "inout":
-                        half = 0.5 * length * vector
-                        segment = np.stack((point - half, point + half))
-                    else:
-                        segment = np.stack((point, point + length * vector))
-                    segments.append(segment)
-            return segments
-
-        def _update_ultraplot_ticks(self, renderer: Any) -> None:
-            """
-            Update custom tick artists used by non-rectangular projections.
-            """
-            specs = getattr(self, "_ultraplot_tick_specs", {})
-            artists = getattr(self, "_ultraplot_tick_artists", None)
-            if artists is None:
-                artists = self._ultraplot_tick_artists = {}
-
-            for xylabel in ("x", "y"):
-                spec = specs.get(xylabel)
-                artist = artists.get(xylabel)
-                if spec is None:
-                    if artist is not None:
-                        artist.set_visible(False)
-                    continue
-
-                if artist is None:
-                    artist = mcollections.LineCollection(
-                        [],
-                        transform=mtransforms.IdentityTransform(),
-                        clip_on=False,
-                    )
-                    artist.set_figure(self.axes.figure)
-                    artist.axes = self.axes
-                    artists[xylabel] = artist
-
-                segments = self._ultraplot_tick_segments(xylabel, spec, renderer)
-                axis = self.axes.xaxis if xylabel == "x" else self.axes.yaxis
-                which = spec["which"]
-                ticks = (
-                    axis.get_major_ticks(1)
-                    if which == "major"
-                    else axis.get_minor_ticks(1)
-                )
-                if ticks:
-                    tickline = ticks[0].tick1line
-                    artist.set_color(tickline.get_color())
-                    artist.set_linewidth(tickline.get_markeredgewidth())
-                    artist.set_alpha(tickline.get_alpha())
-                artist.set_zorder(self.axes.spines["geo"].get_zorder())
-                artist.set_segments(segments)
-                artist.set_visible(bool(segments))
-
-        def get_visible_children(self) -> list[Any]:
-            """Return gridliner children including UltraPlot boundary ticks."""
-            parent = super()
-            if hasattr(parent, "get_visible_children"):
-                children = list(parent.get_visible_children())
-            else:
-                children = [
-                    *self.xline_artists,
-                    *self.yline_artists,
-                    *self.label_artists,
-                ]
-                children = [child for child in children if child.get_visible()]
-            ticks = getattr(self, "_ultraplot_tick_artists", {})
-            children.extend(
-                artist for artist in ticks.values() if artist.get_visible()
-            )
-            return children
-
         def _draw_gridliner(self, *args: Any, **kwargs: Any) -> Any:  # noqa: E306
             result = super()._draw_gridliner(*args, **kwargs)
             if _version_cartopy >= "0.18":
@@ -1062,10 +849,6 @@ if cgridliner is not None and hasattr(cgridliner, "Label"):  # only recent versi
                         if not getattr(collection, "_cartopy_fix", False):
                             collection.get_paths().pop(-1)
                             collection._cartopy_fix = True
-            renderer = kwargs.get("renderer", None)
-            if renderer is None and len(args) >= 3:
-                renderer = args[2]
-            self._update_ultraplot_ticks(renderer)
             return result
 
 else:
@@ -3113,24 +2896,24 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         latticklen = _not_none(latticklen, ticklen)
 
         if lonticklen or latticklen:
-            rectilinear = _is_rectilinear_projection(self)
-            if rectilinear or self._name == "cartopy":
+            # Only add warning when ticks are given
+            if _is_rectilinear_projection(self):
                 self._add_geoticks("x", lonticklen, ticklen)
                 self._add_geoticks("y", latticklen, ticklen)
-                # Native ticks can modify limits on rectangular maps, so restore the
-                # tracked geographic extent. Curved maps use independent artists.
-                if rectilinear:
-                    if latlim == (None, None):
-                        latlim = self._lataxis.get_view_interval()
-                    if lonlim == (None, None):
-                        lonlim = self._lonaxis.get_view_interval()
-                    self._update_extent(
-                        lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
-                    )
+                # If latlim is set to None it resets
+                # the view; this affects the visible range
+                # we need to force this to prevent
+                # side effects
+                if latlim == (None, None):
+                    latlim = self._lataxis.get_view_interval()
+                if lonlim == (None, None):
+                    lonlim = self._lonaxis.get_view_interval()
+                self._update_extent(
+                    lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
+                )
             else:
                 warnings._warn_ultraplot(
-                    f"Non-rectilinear basemap ticks are not supported. Ignoring "
-                    f"{lonticklen=} and {latticklen=} settings."
+                    f"Projection is not rectilinear. Ignoring {lonticklen=} and {latticklen=} settings."
                 )
 
     # Format flow:
@@ -3503,52 +3286,31 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
         Notes
         -----
-        Rectangular Cartopy projections use native CRS-aware ticks. Curved Cartopy
-        projections instead draw short segments at gridline/map-boundary
-        intersections so tick geometry follows the projected gridline locally.
+        This method handles proper tick mark drawing for geographic projections
+        while respecting the current gridline settings.
         """
+
         size = _not_none(itick, ticklen)
+        # Skip if no tick size specified
         if size is None:
             return
-
         # Convert unit spec to points and apply rc scaling factor.
-        major_size = units(size) * rc["tick.len"]
-        sizes = [
-            major_size,
-            _MINOR_TICK_SCALE * major_size
-            if isinstance(major_size, (int, float))
-            else major_size,
-        ]
+        size = units(size) * rc["tick.len"]
+
         ax = getattr(self, f"{x_or_y}axis")
+
+        # Get the tick positions based on the backend gridliner (adapter-aware).
         adapter = self._gridliner_adapter("major")
         is_basemap = self._name == "basemap"
-        rectilinear = _is_rectilinear_projection(self)
-
-        if self._name == "cartopy" and not rectilinear:
-            # Cartopy's set_xticks/set_yticks only support rectangular projection
-            # transforms. For curved boundaries, let each gridliner create display-
-            # coordinate tick segments at its own boundary intersections during draw.
-            for tick_size, which in zip(sizes, ("major", "minor")):
-                gl = getattr(self, f"_gridlines_{which}", None)
-                if gl is None:
-                    continue
-                specs = getattr(gl, "_ultraplot_tick_specs", None)
-                if specs is None:
-                    specs = gl._ultraplot_tick_specs = {}
-                specs[x_or_y] = {"length": tick_size, "which": which}
-            gl = getattr(self, "_gridlines_major", None)
-            if gl is not None and hasattr(gl, f"{x_or_y}padding"):
-                setattr(gl, f"{x_or_y}padding", _GRIDLINER_PAD_SCALE * major_size)
-            self.stale = True
-            return
-
         tick_positions = self._gridliner_tick_positions(x_or_y, which="major")
         if is_basemap:
             # Turn off the ticks otherwise they are double for basemap.
             ax.set_major_formatter(mticker.NullFormatter())
 
-        # Cartopy gridliner positions are geographic longitude/latitude coordinates,
-        # while the native matplotlib axes use projection coordinates.
+        # Always show the ticks. Cartopy gridliner positions are geographic
+        # longitude/latitude coordinates, while the native matplotlib axes use
+        # projection coordinates. Let cartopy perform the conversion so shifted
+        # rectangular projections (e.g. PlateCarree with lon0 != 0) remain aligned.
         if self._name == "cartopy":
             crs = ccrs.PlateCarree(globe=self.projection.globe)
             if x_or_y == "x":
@@ -3559,11 +3321,18 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             ax.set_ticks(tick_positions)
         ax.set_visible(True)
 
-        # Grid alpha is controlled through the separate geographic gridliner artist.
+        # Note: set grid_alpha to 0 as it is controlled through the gridlines_major
+        # object (which is not the same ticker)
         params = ax.get_tick_params()
-        for tick_size, which in zip(sizes, ("major", "minor")):
-            params.update({"length": tick_size})
+        # Minor ticks are shortened relative to major ticks.
+        sizes = [
+            size,
+            _MINOR_TICK_SCALE * size if isinstance(size, (int, float)) else size,
+        ]
+        for size, which in zip(sizes, ["major", "minor"]):
+            params.update({"length": size})
             params.pop("grid_alpha", None)
+            # Avoid overriding gridliner label toggles via tick_params defaults.
             for key in ("labeltop", "labelbottom", "labelleft", "labelright"):
                 params.pop(key, None)
             self.tick_params(
@@ -3572,13 +3341,16 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 grid_alpha=0,
                 **params,
             )
-
+        # Apply tick parameters
+        # Move the labels outwards if specified
         gl = getattr(self, "_gridlines_major", None)
         if gl is not None and hasattr(gl, f"{x_or_y}padding"):
-            setattr(gl, f"{x_or_y}padding", _GRIDLINER_PAD_SCALE * major_size)
+            # Cartopy gridliner padding is in points; scale matches tick size visually.
+            setattr(gl, f"{x_or_y}padding", _GRIDLINER_PAD_SCALE * size)
         elif is_basemap and isinstance(adapter, _BasemapGridlinerAdapter):
+            # For basemap backends, emulate the label placement like cartopy.
             self._add_gridline_labels(
-                ax, (adapter.lonlines, adapter.latlines), padding=major_size
+                ax, (adapter.lonlines, adapter.latlines), padding=size
             )
 
         self.stale = True
