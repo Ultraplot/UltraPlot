@@ -2900,17 +2900,17 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             if _is_rectilinear_projection(self):
                 self._add_geoticks("x", lonticklen, ticklen)
                 self._add_geoticks("y", latticklen, ticklen)
-                # If latlim is set to None it resets
-                # the view; this affects the visible range
-                # we need to force this to prevent
-                # side effects
-                if latlim == (None, None):
-                    latlim = self._lataxis.get_view_interval()
-                if lonlim == (None, None):
-                    lonlim = self._lonaxis.get_view_interval()
-                self._update_extent(
-                    lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
-                )
+                # Basemap still installs ticks through Axis.set_ticks(), which can
+                # expand native limits. Cartopy uses FixedLocator and therefore
+                # does not need (and must not receive) this extent reset.
+                if self._name == "basemap":
+                    if latlim == (None, None):
+                        latlim = self._lataxis.get_view_interval()
+                    if lonlim == (None, None):
+                        lonlim = self._lonaxis.get_view_interval()
+                    self._update_extent(
+                        lonlim=lonlim, latlim=latlim, boundinglat=boundinglat
+                    )
             else:
                 warnings._warn_ultraplot(
                     f"Projection is not rectilinear. Ignoring {lonticklen=} and {latticklen=} settings."
@@ -3307,8 +3307,28 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             # Turn off the ticks otherwise they are double for basemap.
             ax.set_major_formatter(mticker.NullFormatter())
 
-        # Always show the ticks
-        ax.set_ticks(tick_positions)
+        # Always show the ticks. Cartopy gridliner positions are geographic
+        # longitude/latitude coordinates, while the native matplotlib axes use
+        # projection coordinates. Transform them explicitly and install a fixed
+        # locator rather than calling Axis.set_ticks(), which would expand the view
+        # limits to include every tick. Out-of-view fixed ticks are harmless because
+        # Matplotlib filters them at draw time.
+        if self._name == "cartopy":
+            zeros = np.zeros_like(tick_positions)
+            vertices = (
+                np.column_stack((tick_positions, zeros))
+                if x_or_y == "x"
+                else np.column_stack((zeros, tick_positions))
+            )
+            projected = _project_vertices(
+                self,
+                vertices,
+                transform=ccrs.PlateCarree(globe=self.projection.globe),
+            )[:, "xy".index(x_or_y)]
+            projected = projected[np.isfinite(projected)]
+            ax.set_major_locator(mticker.FixedLocator(projected))
+        else:
+            ax.set_ticks(tick_positions)
         ax.set_visible(True)
 
         # Note: set grid_alpha to 0 as it is controlled through the gridlines_major
@@ -4575,14 +4595,14 @@ def _choropleth_iter_rings(geometry: Any) -> Iterator[Any]:
     )
 
 
-def _choropleth_project_vertices(
+def _project_vertices(
     ax: GeoAxes,
     vertices: Any,
     *,
     transform: Any = None,
 ) -> np.ndarray:
     """
-    Project polygon-ring vertices into the target map coordinate system.
+    Project coordinate vertices into the target map coordinate system.
     """
     vertices = np.asarray(vertices, dtype=float)
     xy = vertices[:, :2]
@@ -4590,7 +4610,9 @@ def _choropleth_project_vertices(
         src = transform
         if src is None:
             if ccrs is None:
-                raise RuntimeError("choropleth() requires cartopy for cartopy GeoAxes.")
+                raise RuntimeError(
+                    "Cartopy is required to project Cartopy coordinates."
+                )
             src = ccrs.PlateCarree()
         out = ax.projection.transform_points(src, xy[:, 0], xy[:, 1])
         return np.asarray(out[:, :2], dtype=float)
@@ -4631,7 +4653,7 @@ def _choropleth_geometry_path(
 
     paths = []
     for ring in _choropleth_iter_rings(geometry):
-        projected = _choropleth_project_vertices(ax, ring, transform=transform)
+        projected = _project_vertices(ax, ring, transform=transform)
         path = _choropleth_close_path(projected)
         if path is not None:
             paths.append(path)
