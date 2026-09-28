@@ -1698,6 +1698,7 @@ def test_sharing_cartopy_with_colorbar(rng):
 
 
 @pytest.mark.parametrize("proj", ("cyl", "merc", "lcyl", "mill"))
+@pytest.mark.parametrize("ticklen", (0.5, 1, 2))
 @pytest.mark.parametrize(
     ("lonlim", "latlim"),
     [
@@ -1705,7 +1706,9 @@ def test_sharing_cartopy_with_colorbar(rng):
         ((95, 200), (10, 40)),
     ],
 )
-def test_geoticks_rectangular_projection_coordinates(proj, lonlim, latlim):
+def test_geoticks_rectangular_projection_coordinates(
+    proj, ticklen, lonlim, latlim
+):
     """
     Geographic ticks should be transformed into native projection coordinates.
     """
@@ -1718,11 +1721,17 @@ def test_geoticks_rectangular_projection_coordinates(proj, lonlim, latlim):
         coast=True,
         lonlabels=True,
         latlabels=True,
-        ticklen=1,
+        ticklen=ticklen,
         **kwargs,
     )
 
     ax = axs[0]
+    xlim = np.asarray(ax.get_xlim())
+    ylim = np.asarray(ax.get_ylim())
+    assert np.all(np.isfinite(xlim))
+    assert np.all(np.isfinite(ylim))
+    assert np.diff(xlim)[0] > 0
+    assert np.diff(ylim)[0] > 0
     crs = uplt.axes.geo.ccrs.PlateCarree()
     lon_ticks = ax._gridliner_tick_positions("x", which="major")
     lat_ticks = ax._gridliner_tick_positions("y", which="major")
