@@ -3314,18 +3314,19 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
         # such as Mercator where near-polar latitude ticks map to enormous y values;
         # passing those to Axis.set_ticks() would expand the axes and break layout.
         if self._name == "cartopy":
-            crs = ccrs.PlateCarree(globe=self.projection.globe)
             zeros = np.zeros_like(tick_positions)
-            if x_or_y == "x":
-                projected = self.projection.transform_points(
-                    crs, tick_positions, zeros
-                )[:, 0]
-                vmin, vmax = sorted(self.get_xlim())
-            else:
-                projected = self.projection.transform_points(
-                    crs, zeros, tick_positions
-                )[:, 1]
-                vmin, vmax = sorted(self.get_ylim())
+            vertices = (
+                np.column_stack((tick_positions, zeros))
+                if x_or_y == "x"
+                else np.column_stack((zeros, tick_positions))
+            )
+            projected = _project_vertices(
+                self,
+                vertices,
+                transform=ccrs.PlateCarree(globe=self.projection.globe),
+            )[:, "xy".index(x_or_y)]
+            limits = self.get_xlim() if x_or_y == "x" else self.get_ylim()
+            vmin, vmax = sorted(limits)
             mask = np.isfinite(projected) & (projected >= vmin) & (projected <= vmax)
             ax.set_major_locator(mticker.FixedLocator(projected[mask]))
         else:
@@ -4596,14 +4597,14 @@ def _choropleth_iter_rings(geometry: Any) -> Iterator[Any]:
     )
 
 
-def _choropleth_project_vertices(
+def _project_vertices(
     ax: GeoAxes,
     vertices: Any,
     *,
     transform: Any = None,
 ) -> np.ndarray:
     """
-    Project polygon-ring vertices into the target map coordinate system.
+    Project coordinate vertices into the target map coordinate system.
     """
     vertices = np.asarray(vertices, dtype=float)
     xy = vertices[:, :2]
@@ -4652,7 +4653,7 @@ def _choropleth_geometry_path(
 
     paths = []
     for ring in _choropleth_iter_rings(geometry):
-        projected = _choropleth_project_vertices(ax, ring, transform=transform)
+        projected = _project_vertices(ax, ring, transform=transform)
         path = _choropleth_close_path(projected)
         if path is not None:
             paths.append(path)
