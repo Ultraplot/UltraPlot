@@ -1697,6 +1697,47 @@ def test_sharing_cartopy_with_colorbar(rng):
     return fig
 
 
+@pytest.mark.parametrize(
+    ("lonlim", "latlim"),
+    [
+        (None, None),
+        ((95, 200), (10, 40)),
+    ],
+)
+def test_geoticks_shifted_cylindrical_projection(lonlim, latlim):
+    """
+    Geographic ticks should be transformed into native projection coordinates.
+    """
+    pytest.importorskip("cartopy")
+    fig, axs = uplt.subplots(proj="cyl", proj_kw={"lon0": 180})
+    kwargs = {}
+    if lonlim is not None:
+        kwargs.update(lonlim=lonlim, latlim=latlim)
+    axs.format(
+        coast=True,
+        lonlabels=True,
+        latlabels=True,
+        ticklen=1,
+        **kwargs,
+    )
+
+    ax = axs[0]
+    lon_ticks = ax._gridliner_tick_positions("x", which="major")
+    expected = ax.projection.transform_points(
+        uplt.axes.geo.ccrs.PlateCarree(),
+        lon_ticks,
+        np.zeros_like(lon_ticks),
+    )[:, 0]
+    assert np.allclose(
+        np.sort(np.asarray(ax.get_xticks())),
+        np.sort(expected),
+        atol=1e-6,
+    )
+
+    fig.canvas.draw()
+    uplt.close(fig)
+
+
 def test_consistent_range():
     """
     Check if the extent of the axes is consistent
