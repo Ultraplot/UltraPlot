@@ -4612,15 +4612,15 @@ def _project_vertices(
         src = transform
         if src is None:
             if ccrs is None:
-                raise RuntimeError("choropleth() requires cartopy for cartopy GeoAxes.")
+                raise RuntimeError("Cartopy is required to project Cartopy coordinates.")
             src = ccrs.PlateCarree()
         out = ax.projection.transform_points(src, xy[:, 0], xy[:, 1])
         return np.asarray(out[:, :2], dtype=float)
 
     if transform is not None and not _is_platecarree_crs(transform):
         raise ValueError(
-            "Basemap choropleth() only supports longitude-latitude input "
-            "coordinates. Use transform=None or cartopy.crs.PlateCarree()."
+            "Basemap coordinate projection only supports longitude-latitude input. "
+            "Use transform=None or cartopy.crs.PlateCarree()."
         )
     x, y = ax.projection(xy[:, 0], xy[:, 1])
     return np.column_stack((np.asarray(x, dtype=float), np.asarray(y, dtype=float)))
