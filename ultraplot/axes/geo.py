@@ -4612,7 +4612,9 @@ def _project_vertices(
         src = transform
         if src is None:
             if ccrs is None:
-                raise RuntimeError("Cartopy is required to project Cartopy coordinates.")
+                raise RuntimeError(
+                    "Cartopy is required to project Cartopy coordinates."
+                )
             src = ccrs.PlateCarree()
         out = ax.projection.transform_points(src, xy[:, 0], xy[:, 1])
         return np.asarray(out[:, :2], dtype=float)
