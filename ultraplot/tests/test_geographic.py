@@ -1697,6 +1697,112 @@ def test_sharing_cartopy_with_colorbar(rng):
     return fig
 
 
+@pytest.mark.parametrize("proj", ("cyl", "merc", "lcyl", "mill"))
+@pytest.mark.parametrize("ticklen", (0.5, 1, 2))
+@pytest.mark.parametrize(
+    ("lonlim", "latlim"),
+    [
+        (None, None),
+        ((95, 200), (10, 40)),
+    ],
+)
+def test_geoticks_rectangular_projection_coordinates(proj, ticklen, lonlim, latlim):
+    """
+    Geographic ticks should be transformed into native projection coordinates.
+    """
+    pytest.importorskip("cartopy")
+    fig, axs = uplt.subplots(proj=proj, proj_kw={"lon0": 180})
+    kwargs = {}
+    if lonlim is not None:
+        kwargs.update(lonlim=lonlim, latlim=latlim)
+    axs.format(
+        coast=True,
+        lonlabels=True,
+        latlabels=True,
+        ticklen=ticklen,
+        **kwargs,
+    )
+
+    ax = axs[0]
+    xlim = np.asarray(ax.get_xlim())
+    ylim = np.asarray(ax.get_ylim())
+    assert np.all(np.isfinite(xlim))
+    assert np.all(np.isfinite(ylim))
+    assert np.diff(xlim)[0] > 0
+    assert np.diff(ylim)[0] > 0
+    crs = uplt.axes.geo.ccrs.PlateCarree(globe=ax.projection.globe)
+    lon_ticks = ax._gridliner_tick_positions("x", which="major")
+    lat_ticks = ax._gridliner_tick_positions("y", which="major")
+    expected_x = ax.projection.transform_points(
+        crs,
+        lon_ticks,
+        np.zeros_like(lon_ticks),
+    )[:, 0]
+    expected_y = ax.projection.transform_points(
+        crs,
+        np.zeros_like(lat_ticks),
+        lat_ticks,
+    )[:, 1]
+    expected_x = expected_x[np.isfinite(expected_x)]
+    expected_y = expected_y[np.isfinite(expected_y)]
+    assert np.allclose(
+        np.sort(np.asarray(ax.get_xticks())),
+        np.sort(expected_x),
+        atol=1e-6,
+    )
+    assert np.allclose(
+        np.sort(np.asarray(ax.get_yticks())),
+        np.sort(expected_y),
+        atol=1e-6,
+    )
+
+    fig.canvas.draw()
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("proj", ("cyl", "merc", "lcyl", "mill"))
+def test_geoticks_do_not_change_projected_view_limits(proj):
+    """
+    Adding geographic ticks must not expand the native projected view limits.
+    """
+    pytest.importorskip("cartopy")
+    fig, axs = uplt.subplots(proj=proj, proj_kw={"lon0": 180})
+    ax = axs[0]
+    ax.format(coast=True, lonlabels=True, latlabels=True)
+    before_xlim = np.asarray(ax.get_xlim()).copy()
+    before_ylim = np.asarray(ax.get_ylim()).copy()
+
+    ax.format(ticklen=2)
+
+    assert np.allclose(ax.get_xlim(), before_xlim, atol=1e-6)
+    assert np.allclose(ax.get_ylim(), before_ylim, atol=1e-6)
+    fig.canvas.draw()
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("proj", ("robin", "moll", "ortho"))
+def test_geoticks_non_rectilinear_projection_unchanged(proj):
+    """
+    Tick lengths remain unsupported on curved projections and must not alter ticks.
+    """
+    pytest.importorskip("cartopy")
+    fig, axs = uplt.subplots(proj=proj)
+    ax = axs[0]
+    xticks = np.asarray(ax.get_xticks()).copy()
+    yticks = np.asarray(ax.get_yticks()).copy()
+
+    with pytest.warns(
+        uplt.warnings.UltraPlotWarning,
+        match="Projection is not rectilinear",
+    ):
+        ax.format(ticklen=1)
+
+    assert np.array_equal(np.asarray(ax.get_xticks()), xticks)
+    assert np.array_equal(np.asarray(ax.get_yticks()), yticks)
+    fig.canvas.draw()
+    uplt.close(fig)
+
+
 def test_consistent_range():
     """
     Check if the extent of the axes is consistent
