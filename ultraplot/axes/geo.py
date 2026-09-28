@@ -3307,8 +3307,18 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
             # Turn off the ticks otherwise they are double for basemap.
             ax.set_major_formatter(mticker.NullFormatter())
 
-        # Always show the ticks
-        ax.set_ticks(tick_positions)
+        # Always show the ticks. Cartopy gridliner positions are geographic
+        # longitude/latitude coordinates, while the native matplotlib axes use
+        # projection coordinates. Let cartopy perform the conversion so shifted
+        # rectangular projections (e.g. PlateCarree with lon0 != 0) remain aligned.
+        if self._name == "cartopy":
+            crs = ccrs.PlateCarree(globe=self.projection.globe)
+            if x_or_y == "x":
+                self.set_xticks(tick_positions, crs=crs)
+            else:
+                self.set_yticks(tick_positions, crs=crs)
+        else:
+            ax.set_ticks(tick_positions)
         ax.set_visible(True)
 
         # Note: set grid_alpha to 0 as it is controlled through the gridlines_major
