@@ -1752,36 +1752,25 @@ def test_geoticks_rectangular_projection_coordinates(proj, lonlim, latlim):
 
 
 @pytest.mark.parametrize("proj", ("robin", "moll", "ortho"))
-def test_geoticks_non_rectilinear_projection(proj):
+def test_geoticks_non_rectilinear_projection_unchanged(proj):
     """
-    Curved projections should draw finite boundary ticks with the requested length.
+    Tick lengths remain unsupported on curved projections and must not alter ticks.
     """
     pytest.importorskip("cartopy")
     fig, axs = uplt.subplots(proj=proj)
-    axs.format(
-        coast=True,
-        lonlines=60,
-        latlines=30,
-        lonlabels="all",
-        latlabels="all",
-        ticklen=1,
-    )
+    ax = axs[0]
+    xticks = np.asarray(ax.get_xticks()).copy()
+    yticks = np.asarray(ax.get_yticks()).copy()
+
+    with pytest.warns(
+        uplt.warnings.UltraPlotWarning,
+        match="Projection is not rectilinear",
+    ):
+        ax.format(ticklen=1)
+
+    assert np.array_equal(np.asarray(ax.get_xticks()), xticks)
+    assert np.array_equal(np.asarray(ax.get_yticks()), yticks)
     fig.canvas.draw()
-
-    renderer = fig.canvas.get_renderer()
-    gl = axs[0]._gridlines_major
-    artists = gl._ultraplot_tick_artists
-    specs = gl._ultraplot_tick_specs
-    for xylabel in ("x", "y"):
-        segments = artists[xylabel].get_segments()
-        assert segments
-        lengths = np.array(
-            [np.linalg.norm(segment[1] - segment[0]) for segment in segments]
-        )
-        expected = renderer.points_to_pixels(specs[xylabel]["length"])
-        assert np.all(np.isfinite(lengths))
-        assert np.allclose(lengths, expected, rtol=1e-6, atol=1e-6)
-
     uplt.close(fig)
 
 
