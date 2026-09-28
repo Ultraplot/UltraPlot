@@ -1751,6 +1751,40 @@ def test_geoticks_rectangular_projection_coordinates(proj, lonlim, latlim):
     uplt.close(fig)
 
 
+@pytest.mark.parametrize("proj", ("robin", "moll", "ortho"))
+def test_geoticks_non_rectilinear_projection(proj):
+    """
+    Curved projections should draw finite boundary ticks with the requested length.
+    """
+    pytest.importorskip("cartopy")
+    fig, axs = uplt.subplots(proj=proj)
+    axs.format(
+        coast=True,
+        lonlines=60,
+        latlines=30,
+        lonlabels="all",
+        latlabels="all",
+        ticklen=1,
+    )
+    fig.canvas.draw()
+
+    renderer = fig.canvas.get_renderer()
+    gl = axs[0]._gridlines_major
+    artists = gl._ultraplot_tick_artists
+    specs = gl._ultraplot_tick_specs
+    for xylabel in ("x", "y"):
+        segments = artists[xylabel].get_segments()
+        assert segments
+        lengths = np.array(
+            [np.linalg.norm(segment[1] - segment[0]) for segment in segments]
+        )
+        expected = renderer.points_to_pixels(specs[xylabel]["length"])
+        assert np.all(np.isfinite(lengths))
+        assert np.allclose(lengths, expected, rtol=1e-6, atol=1e-6)
+
+    uplt.close(fig)
+
+
 def test_consistent_range():
     """
     Check if the extent of the axes is consistent
