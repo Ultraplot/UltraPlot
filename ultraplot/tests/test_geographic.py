@@ -1697,6 +1697,7 @@ def test_sharing_cartopy_with_colorbar(rng):
     return fig
 
 
+@pytest.mark.parametrize("proj", ("cyl", "merc", "lcyl", "mill"))
 @pytest.mark.parametrize(
     ("lonlim", "latlim"),
     [
@@ -1704,12 +1705,12 @@ def test_sharing_cartopy_with_colorbar(rng):
         ((95, 200), (10, 40)),
     ],
 )
-def test_geoticks_shifted_cylindrical_projection(lonlim, latlim):
+def test_geoticks_rectangular_projection_coordinates(proj, lonlim, latlim):
     """
     Geographic ticks should be transformed into native projection coordinates.
     """
     pytest.importorskip("cartopy")
-    fig, axs = uplt.subplots(proj="cyl", proj_kw={"lon0": 180})
+    fig, axs = uplt.subplots(proj=proj, proj_kw={"lon0": 180})
     kwargs = {}
     if lonlim is not None:
         kwargs.update(lonlim=lonlim, latlim=latlim)
@@ -1722,15 +1723,27 @@ def test_geoticks_shifted_cylindrical_projection(lonlim, latlim):
     )
 
     ax = axs[0]
+    crs = uplt.axes.geo.ccrs.PlateCarree()
     lon_ticks = ax._gridliner_tick_positions("x", which="major")
-    expected = ax.projection.transform_points(
-        uplt.axes.geo.ccrs.PlateCarree(),
+    lat_ticks = ax._gridliner_tick_positions("y", which="major")
+    expected_x = ax.projection.transform_points(
+        crs,
         lon_ticks,
         np.zeros_like(lon_ticks),
     )[:, 0]
+    expected_y = ax.projection.transform_points(
+        crs,
+        np.zeros_like(lat_ticks),
+        lat_ticks,
+    )[:, 1]
     assert np.allclose(
         np.sort(np.asarray(ax.get_xticks())),
-        np.sort(expected),
+        np.sort(expected_x),
+        atol=1e-6,
+    )
+    assert np.allclose(
+        np.sort(np.asarray(ax.get_yticks())),
+        np.sort(expected_y),
         atol=1e-6,
     )
 
