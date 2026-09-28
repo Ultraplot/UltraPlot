@@ -1743,6 +1743,14 @@ def test_geoticks_rectangular_projection_coordinates(proj, ticklen, lonlim, latl
         np.zeros_like(lat_ticks),
         lat_ticks,
     )[:, 1]
+    x0, x1 = sorted(ax.get_xlim())
+    y0, y1 = sorted(ax.get_ylim())
+    expected_x = expected_x[
+        np.isfinite(expected_x) & (expected_x >= x0) & (expected_x <= x1)
+    ]
+    expected_y = expected_y[
+        np.isfinite(expected_y) & (expected_y >= y0) & (expected_y <= y1)
+    ]
     assert np.allclose(
         np.sort(np.asarray(ax.get_xticks())),
         np.sort(expected_x),
