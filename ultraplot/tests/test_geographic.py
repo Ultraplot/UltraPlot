@@ -1706,9 +1706,7 @@ def test_sharing_cartopy_with_colorbar(rng):
         ((95, 200), (10, 40)),
     ],
 )
-def test_geoticks_rectangular_projection_coordinates(
-    proj, ticklen, lonlim, latlim
-):
+def test_geoticks_rectangular_projection_coordinates(proj, ticklen, lonlim, latlim):
     """
     Geographic ticks should be transformed into native projection coordinates.
     """
