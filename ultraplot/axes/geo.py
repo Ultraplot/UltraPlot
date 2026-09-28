@@ -57,7 +57,12 @@ try:
     import cartopy.mpl.gridliner as cgridliner
     from cartopy.crs import Projection
     from cartopy.mpl.geoaxes import GeoAxes as _GeoAxes
-    from shapely.geometry import GeometryCollection, LineString, MultiLineString, Polygon
+    from shapely.geometry import (
+        GeometryCollection,
+        LineString,
+        MultiLineString,
+        Polygon,
+    )
 except ModuleNotFoundError:
     ccrs = cfeature = cgridliner = None
     _GeoAxes = Projection = object
@@ -843,7 +848,9 @@ if cgridliner is not None and hasattr(cgridliner, "Label"):  # only recent versi
             return x_range, y_range
 
         @staticmethod
-        def _ultraplot_intersection_pairs(geometry: Any) -> Iterator[tuple[np.ndarray, np.ndarray]]:
+        def _ultraplot_intersection_pairs(
+            geometry: Any,
+        ) -> Iterator[tuple[np.ndarray, np.ndarray]]:
             """
             Yield boundary endpoints and adjacent interior points from a clipped gridline.
             """
@@ -916,19 +923,25 @@ if cgridliner is not None and hasattr(cgridliner, "Label"):  # only recent versi
                     lat_max = max(lat_max, max(lat_ticks))
                 lines = np.empty((len(lon_ticks), n_steps, 2))
                 lines[:, :, 0] = np.asarray(lon_ticks)[:, np.newaxis]
-                lines[:, :, 1] = np.linspace(lat_min, lat_max, n_steps)[np.newaxis, :]
+                lines[:, :, 1] = np.linspace(lat_min, lat_max, n_steps)[
+                    np.newaxis, :
+                ]
             else:
                 lon_min, lon_max = lon_lim
                 if lon_ticks:
                     lon_min = min(lon_min, min(lon_ticks))
                     lon_max = max(lon_max, max(lon_ticks))
                 lines = np.empty((len(lat_ticks), n_steps, 2))
-                lines[:, :, 0] = np.linspace(lon_min, lon_max, n_steps)[np.newaxis, :]
+                lines[:, :, 0] = np.linspace(lon_min, lon_max, n_steps)[
+                    np.newaxis, :
+                ]
                 lines[:, :, 1] = np.asarray(lat_ticks)[:, np.newaxis]
 
             geo_spine = self.axes.spines["geo"]
             geo_spine.get_window_extent(renderer)
-            boundary_path = geo_spine.get_path().transformed(geo_spine.get_transform())
+            boundary_path = geo_spine.get_path().transformed(
+                geo_spine.get_transform()
+            )
             boundary = Polygon(boundary_path.vertices)
             transform = self._crs_transform().transform
 
@@ -1050,8 +1063,8 @@ if cgridliner is not None and hasattr(cgridliner, "Label"):  # only recent versi
                             collection.get_paths().pop(-1)
                             collection._cartopy_fix = True
             renderer = kwargs.get("renderer", None)
-            if renderer is None and args:
-                renderer = args[-1]
+            if renderer is None and len(args) >= 3:
+                renderer = args[2]
             self._update_ultraplot_ticks(renderer)
             return result
 
