@@ -3327,7 +3327,7 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
                 )[:, 1]
                 vmin, vmax = sorted(self.get_ylim())
             mask = np.isfinite(projected) & (projected >= vmin) & (projected <= vmax)
-            ax.set_ticks(projected[mask])
+            ax.set_major_locator(mticker.FixedLocator(projected[mask]))
         else:
             ax.set_ticks(tick_positions)
         ax.set_visible(True)
