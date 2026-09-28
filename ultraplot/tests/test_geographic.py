@@ -1766,6 +1766,26 @@ def test_geoticks_rectangular_projection_coordinates(proj, ticklen, lonlim, latl
     uplt.close(fig)
 
 
+@pytest.mark.parametrize("proj", ("cyl", "merc", "lcyl", "mill"))
+def test_geoticks_do_not_change_projected_view_limits(proj):
+    """
+    Adding geographic ticks must not expand the native projected view limits.
+    """
+    pytest.importorskip("cartopy")
+    fig, axs = uplt.subplots(proj=proj, proj_kw={"lon0": 180})
+    ax = axs[0]
+    ax.format(coast=True, lonlabels=True, latlabels=True)
+    before_xlim = np.asarray(ax.get_xlim()).copy()
+    before_ylim = np.asarray(ax.get_ylim()).copy()
+
+    ax.format(ticklen=2)
+
+    assert np.allclose(ax.get_xlim(), before_xlim, atol=1e-6)
+    assert np.allclose(ax.get_ylim(), before_ylim, atol=1e-6)
+    fig.canvas.draw()
+    uplt.close(fig)
+
+
 @pytest.mark.parametrize("proj", ("robin", "moll", "ortho"))
 def test_geoticks_non_rectilinear_projection_unchanged(proj):
     """
