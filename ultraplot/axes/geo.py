@@ -3309,14 +3309,25 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
 
         # Always show the ticks. Cartopy gridliner positions are geographic
         # longitude/latitude coordinates, while the native matplotlib axes use
-        # projection coordinates. Let cartopy perform the conversion so shifted
-        # rectangular projections (e.g. PlateCarree with lon0 != 0) remain aligned.
+        # projection coordinates. Transform them explicitly, then retain only
+        # positions inside the current native view. This matters for projections
+        # such as Mercator where near-polar latitude ticks map to enormous y values;
+        # passing those to Axis.set_ticks() would expand the axes and break layout.
         if self._name == "cartopy":
             crs = ccrs.PlateCarree(globe=self.projection.globe)
+            zeros = np.zeros_like(tick_positions)
             if x_or_y == "x":
-                self.set_xticks(tick_positions, crs=crs)
+                projected = self.projection.transform_points(
+                    crs, tick_positions, zeros
+                )[:, 0]
+                vmin, vmax = sorted(self.get_xlim())
             else:
-                self.set_yticks(tick_positions, crs=crs)
+                projected = self.projection.transform_points(
+                    crs, zeros, tick_positions
+                )[:, 1]
+                vmin, vmax = sorted(self.get_ylim())
+            mask = np.isfinite(projected) & (projected >= vmin) & (projected <= vmax)
+            ax.set_ticks(projected[mask])
         else:
             ax.set_ticks(tick_positions)
         ax.set_visible(True)
