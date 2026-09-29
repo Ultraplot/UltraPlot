@@ -3110,8 +3110,9 @@ class ColormapDatabase(mcm.ColormapRegistry):
         # Work around for mpl 3.11.2 as it is not allowed to
         # this piece of code will allow look up to both occur in our flattened representation (e.g. 'fire') as well as the original "Fire"
         try:
+            key = self._translate_deprecated(key)
             key = self._translate_key(key, mirror=True)
-        except (KeyError, TypeError):
+        except (KeyError, TypeError, ValueError):
             return False
         return key in self._cmaps
 
