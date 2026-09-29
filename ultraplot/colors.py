@@ -3114,7 +3114,20 @@ class ColormapDatabase(mcm.ColormapRegistry):
             key = self._translate_key(key, mirror=True)
         except (KeyError, TypeError, ValueError):
             return False
-        return key in self._cmaps
+
+        # Directly registered colormap
+        if self._has_item(key):
+            return True
+
+        # Dynamically generated shifted colormap
+        if key.endswith("_s"):
+            key = key.removesuffix("_s")
+
+        # Dynamically generated reversed colormap
+        if key.endswith("_r"):
+            key = key.removesuffix("_r")
+
+        return self._has_item(key)
 
     def _translate_deprecated(self, key):
         """
