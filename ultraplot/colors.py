@@ -536,7 +536,7 @@ def _make_segment_data(values, coords=None, ratios=None):
         coords = np.atleast_1d(coords)
         if ratios is not None:
             warnings._warn_ultraplot(
-                f"Segment coordinates were provided, ignoring " f"ratios={ratios!r}."
+                f"Segment coordinates were provided, ignoring ratios={ratios!r}."
             )
         if len(coords) != len(values) or coords[0] != 0 or coords[-1] != 1:
             raise ValueError(f"Coordinates must range from 0 to 1, got {coords!r}.")
@@ -793,8 +793,7 @@ class _Colormap(object):
             data = "\n".join(" ".join(f"{num:0.6f}" for num in line) for line in data)
         else:
             raise ValueError(
-                f"Invalid extension {ext!r}. Options are: "
-                "'hex', 'txt', 'rgb', 'rgba'."
+                f"Invalid extension {ext!r}. Options are: 'hex', 'txt', 'rgb', 'rgba'."
             )
         return data
 
@@ -3106,6 +3105,15 @@ class ColormapDatabase(mcm.ColormapRegistry):
         # The colormap is initialized with all the base colormaps.
         # These are converted to ultraplot's own colormap objects
         # on the fly when they are first accessed.
+
+    def __contains__(self, key):
+        # Work around for mpl 3.11.2 as it is not allowed to
+        # this piece of code will allow look up to both occur in our flattened representation (e.g. 'fire') as well as the original "Fire"
+        try:
+            key = self._translate_key(key, mirror=True)
+        except (KeyError, TypeError):
+            return False
+        return key in self._cmaps
 
     def _translate_deprecated(self, key):
         """
