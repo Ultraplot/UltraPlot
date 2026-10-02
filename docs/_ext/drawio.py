@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import html
-import json
 from pathlib import Path
 import urllib.parse
 import xml.etree.ElementTree as ET
@@ -10,6 +10,7 @@ import zlib
 
 from docutils import nodes
 from docutils.parsers.rst import Directive, directives
+from sphinx.util.osutil import relative_uri
 
 
 def _decode_diagram(diagram: ET.Element) -> str:
@@ -70,6 +71,37 @@ def _get_page(path: Path, selector: str | None) -> str:
     )
 
 
+class drawio_node(nodes.General, nodes.Element):
+    pass
+
+
+def _visit_drawio_html(self, node):
+    # Write at HTML translation time so cached doctrees also recreate assets
+    # when the output directory is cleaned. Content hashes allow browser caching.
+    xml = node["xml"]
+    digest = hashlib.sha256(xml.encode("utf-8")).hexdigest()
+    asset = f"_drawio/{digest}.xml"
+    path = Path(self.builder.outdir) / asset
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(xml, encoding="utf-8")
+    url = relative_uri(self.builder.get_target_uri(self.builder.current_docname), asset)
+    classes = html.escape(" ".join(["drawio-lazy", *node["classes"]]), quote=True)
+    url = html.escape(url, quote=True)
+    self.body.append(
+        f'<div class="{classes}" data-drawio-url="{url}" '
+        'style="min-height:24rem" aria-busy="true">'
+        f'<a href="{url}">Load diagram</a>'
+        '<noscript> (JavaScript is required to view this diagram.)</noscript>'
+        '</div>'
+    )
+    raise nodes.SkipNode
+
+
+def _skip_drawio(self, node):
+    raise nodes.SkipNode
+
+
 class DrawioDirective(Directive):
     required_arguments = 1
     has_content = False
@@ -97,41 +129,34 @@ class DrawioDirective(Directive):
         except (ET.ParseError, ValueError) as exc:
             raise self.error(str(exc)) from exc
 
-        config = {
-            "xml": xml,
-            "resize": True,
-            "fit": True,
-            "nav": False,
-            "lightbox": False,
-            "toolbar": "",
-        }
+        node = drawio_node()
+        node["xml"] = xml
+        node["classes"] = self.options.get("class", [])
+        return [node]
 
-        classes = ["mxgraph", *self.options.get("class", [])]
 
-        # data-mxgraph is an HTML attribute, so escape the complete JSON string.
-        payload = html.escape(
-            json.dumps(config, separators=(",", ":")),
-            quote=True,
-        )
-
-        markup = (
-            f'<div class="{" ".join(classes)}" '
-            f'data-mxgraph="{payload}"></div>'
-        )
-
-        return [nodes.raw("", markup, format="html")]
+def _copy_loader(app, exception):
+    if exception is None and app.builder.format == "html":
+        target = Path(app.outdir) / "_static" / "drawio-lazy.js"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(Path(__file__).with_name("drawio-lazy.js").read_bytes())
 
 
 def setup(app):
     app.add_directive("drawio", DrawioDirective)
 
-    # Official diagrams.net viewer.
-    app.add_js_file(
-        "https://viewer.diagrams.net/js/viewer-static.min.js"
+    app.add_node(
+        drawio_node,
+        html=(_visit_drawio_html, None),
+        latex=(_skip_drawio, None),
+        text=(_skip_drawio, None),
     )
+    # Copy our loader without requiring changes to html_static_path.
+    app.connect("build-finished", _copy_loader)
+    app.add_js_file("drawio-lazy.js", loading_method="defer")
 
     return {
-        "version": "1.0",
+        "version": "2.0",
         "parallel_read_safe": True,
         "parallel_write_safe": True,
     }

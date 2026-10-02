@@ -11,37 +11,37 @@ General Overview
 ================
 
 .. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
-   :page: 1
+   :page: UltraPlot cheatsheet
 
 =================
 Every day recipes
 =================
 .. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
-   :page: 2
+   :page: UltraPlot code recipes
 
 
 ===============
 Quick Reference
 ===============
 .. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
-   :page: 3
+   :page: UltraPlot quick reference
 
 =========
 Beginners
 =========
 .. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
-   :page: 4
+   :page: Beginner · start here
 
 ============
 Intermediate
 ============
 .. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
-   :page: 5
+   :page: Intermediate · layout & guides
 
 
 ======
 Expert
 ======
 .. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
-   :page: 6
+   :page: Advanced · specialist tools
 

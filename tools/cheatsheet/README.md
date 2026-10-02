@@ -132,6 +132,22 @@ the docs rather than just their SVG counterparts.
 The cheatsheet stays in the repository but is excluded from wheels and source
 distributions. Docs builds should run from a repository checkout.
 
+The `drawio` Sphinx directive writes each selected page to a content-hashed XML
+file under `_drawio/`, rather than embedding its SVG images in the HTML. The
+small `docs/_ext/drawio-lazy.js` loader downloads and renders pages within 300 px
+of the viewport; the diagrams.net viewer is loaded once, on demand. Repeated
+pages share the same asset and unchanged pages can be cached by the browser.
+Failed downloads show a retry button. Without JavaScript, a link to the source
+XML remains available. This does not change the editable diagram or require
+exporting previews through the draw.io desktop application.
+
+Run the extension integration tests with:
+
+```bash
+pytest tools/cheatsheet/tests/test_drawio_docs.py
+node --test tools/cheatsheet/tests/test_drawio_lazy.cjs
+```
+
 To repair SVG seams without rebuilding a manually edited diagram:
 
 ```bash
