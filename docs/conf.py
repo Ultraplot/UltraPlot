@@ -66,6 +66,8 @@ FAST_PREVIEW = os.environ.get("UPLT_DOCS_FAST_PREVIEW", "").strip().lower() in {
 }
 if not FAST_PREVIEW:
     run([sys.executable, "_scripts/fetch_releases.py"], check=False)
+    # Visual plot-type index: thumbnails plus the page that arranges them.
+    run([sys.executable, "_scripts/build_plot_types.py"], check=False)
 
 # Docs theme selector. Default to Shibuya, but keep env override for A/B checks.
 DOCS_THEME = os.environ.get("UPLT_DOCS_THEME", "shibuya").strip().lower()
@@ -245,9 +247,16 @@ extensions = [
     "sphinx_automodapi.automodapi",  # fork of automodapi
     "sphinx_copybutton",  # add copy button to code
     "_ext.notoc",
+    "_ext.drawio",
     "nbsphinx",  # parse rst books
     "sphinx_gallery.gen_gallery",
 ]
+
+drawio_headless = "auto"
+drawio_builder_export_format = {
+    "html": "svg",
+}
+
 if not FAST_PREVIEW:
     extensions.append("sphinx_sitemap")
 if HAVE_ULTRAPLOT_THEME_EXT:
