@@ -135,7 +135,10 @@ distributions. Docs builds should run from a repository checkout.
 The `drawio` Sphinx directive writes each selected page to a content-hashed XML
 file under `_drawio/`, rather than embedding its SVG images in the HTML. The
 small `docs/_ext/drawio-lazy.js` loader downloads and renders pages within 300 px
-of the viewport; the diagrams.net viewer is loaded once, on demand. Repeated
+of the viewport; the diagrams.net viewer is loaded once, on demand. The loader
+temporarily suppresses RequireJS AMD detection while loading the standalone
+viewer so its bundled DOMPurify and pako libraries expose the browser globals
+it requires, then restores AMD detection on success or download failure. Repeated
 pages share the same asset and unchanged pages can be cached by the browser.
 Failed downloads show a retry button. Without JavaScript, a link to the source
 XML remains available. This does not change the editable diagram or require

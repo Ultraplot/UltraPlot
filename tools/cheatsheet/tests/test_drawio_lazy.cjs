@@ -38,6 +38,8 @@ function harness({ observer = true } = {}) {
   }
   vm.runInNewContext(loader, context);
   const ready = () => {
+    context.window.DOMPurify = {};
+    context.window.pako = {};
     context.window.GraphViewer = { createViewerForElement(el) { renders.push(JSON.parse(el.attrs["data-mxgraph"])); } };
     scripts[0].onload();
   };
@@ -71,6 +73,8 @@ test("failed viewer requests can be retried", async () => {
   assert.equal(h.elements[0].dataset.loading, undefined);
   h.elements[0].children[0].click();
   assert.equal(h.scripts.length, 2);
+  h.context.window.DOMPurify = {};
+  h.context.window.pako = {};
   h.context.window.GraphViewer = { createViewerForElement() {} };
   h.scripts[1].onload();
   await tick();
@@ -83,6 +87,30 @@ test("browsers without IntersectionObserver still load diagrams", async () => {
   h.ready();
   await tick();
   assert.equal(h.renders.length, 2);
+});
+
+test("RequireJS AMD registration is suppressed for the standalone viewer and restored", async () => {
+  const h = harness();
+  const amd = {};
+  h.context.window.define = () => {};
+  h.context.window.define.amd = amd;
+  h.elements[0].link.click({ preventDefault() {} });
+  assert.equal(h.context.window.define.amd, undefined);
+  h.ready();
+  await tick();
+  assert.equal(h.context.window.define.amd, amd);
+  assert.equal(h.renders.length, 1);
+});
+
+test("RequireJS AMD registration is restored after a failed download", async () => {
+  const h = harness();
+  const amd = {};
+  h.context.window.define = () => {};
+  h.context.window.define.amd = amd;
+  h.elements[0].link.click({ preventDefault() {} });
+  h.scripts[0].onerror();
+  await tick();
+  assert.equal(h.context.window.define.amd, amd);
 });
 
 test("HTTP failures show a retry button and reuse the loaded viewer", async () => {

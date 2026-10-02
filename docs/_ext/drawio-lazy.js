@@ -3,13 +3,27 @@
   "use strict";
   let viewerPromise;
   function viewer() {
-    if (window.GraphViewer) return Promise.resolve();
+    if (window.GraphViewer && window.DOMPurify && window.pako) return Promise.resolve();
     if (!viewerPromise) {
       viewerPromise = new Promise((resolve, reject) => {
         const script = document.createElement("script");
+        // The standalone viewer bundles DOMPurify, pako and Spinner as UMD
+        // libraries but consumes their browser globals. Sphinx's RequireJS
+        // otherwise captures them as anonymous AMD modules instead.
+        const define = window.define;
+        const amd = define && define.amd;
+        if (amd) define.amd = undefined;
+        const restoreAMD = () => {
+          if (amd) define.amd = amd;
+        };
         script.src = "https://viewer.diagrams.net/js/viewer-static.min.js";
-        script.onload = () => window.GraphViewer ? resolve() : reject(new Error("Viewer unavailable"));
+        script.onload = () => {
+          restoreAMD();
+          if (window.GraphViewer && window.DOMPurify && window.pako) resolve();
+          else reject(new Error("Viewer dependencies unavailable"));
+        };
         script.onerror = () => {
+          restoreAMD();
           script.remove();
           reject(new Error("Viewer download failed"));
         };
