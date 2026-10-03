@@ -49,7 +49,8 @@
         viewer(),
       ]);
       element.setAttribute("data-mxgraph", JSON.stringify({
-        xml, resize: true, fit: true, nav: false, lightbox: false, toolbar: "",
+        xml, resize: true, fit: true, nav: false, lightbox: true,
+        toolbar: "zoom lightbox", "toolbar-nohide": true, editable: false,
       }));
       element.replaceChildren();
       window.GraphViewer.createViewerForElement(element);

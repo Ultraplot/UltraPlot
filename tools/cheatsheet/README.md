@@ -144,6 +144,10 @@ Failed downloads show a retry button. Without JavaScript, a link to the source
 XML remains available. This does not change the editable diagram or require
 exporting previews through the draw.io desktop application.
 
+Each rendered sheet has an always-visible zoom and expand toolbar. The expand
+control opens the viewer's full-screen lightbox, where readers can zoom and pan
+the diagram; Escape or the close control returns to the documentation page.
+
 Run the extension integration tests with:
 
 ```bash

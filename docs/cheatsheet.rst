@@ -5,6 +5,9 @@ They say don't change a winning team. With UltraPlot we use Matplotlib's object 
 add to it essential quality of life improvements to make high quality publication ready plots.
 To highlight the capabilities in a bird's eye view, we have included a few Matplotlib style cheat sheets below. 
 
+Use the expand icon in each sheet's toolbar to open a full-screen view, then
+zoom in to read the details. Press :kbd:`Esc` or use the close icon to return.
+
 
 ================
 General Overview 
@@ -44,4 +47,3 @@ Expert
 ======
 .. drawio:: ../tools/cheatsheet/ultraplot_cheatsheet.drawio
    :page: Advanced · specialist tools
-
