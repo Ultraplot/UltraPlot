@@ -30,10 +30,7 @@ def test_build_docstring_expansion_preserves_numpy_indentation(tmp_path):
     )
     snippets = {
         "params": (
-            "first : int\n"
-            "    First value.\n"
-            "second : str\n"
-            "    Second value."
+            "first : int\n" "    First value.\n" "second : str\n" "    Second value."
         )
     }
 
