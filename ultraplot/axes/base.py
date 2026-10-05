@@ -89,8 +89,7 @@ ABC_STRING = "abcdefghijklmnopqrstuvwxyz"
 
 # Projection docstring
 _proj_docstring = """
-projection :
-str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
+projection : str, `cartopy.crs.Projection`, or `~mpl_toolkits.basemap.Basemap`, optional
     The map projection specification(s). If ``'cart'`` or ``'cartesian'``
     (the default), a :class:`~ultraplot.axes.CartesianAxes` is created. If ``'polar'``,
     a :class:`~ultraplot.axes.PolarAxes` is created. Otherwise, the argument is
