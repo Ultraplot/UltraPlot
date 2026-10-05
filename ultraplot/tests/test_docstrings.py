@@ -20,7 +20,7 @@ def test_build_docstring_expansion_preserves_numpy_indentation(tmp_path):
     package_root.mkdir()
     path = package_root / "example.py"
     path.write_text(
-        'def example():\n'
+        "def example():\n"
         '    """Summary.\n'
         "\n"
         "    Parameters\n"
