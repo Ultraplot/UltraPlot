@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+import inspect
 import re
 import sys
 from pathlib import Path
@@ -62,12 +63,12 @@ def _rewrite_file(path: Path, package_root: Path, snippets) -> int:
     if not literals:
         return 0
 
-    expanded = [_expand(node.value, snippets) for node in literals]
+    expanded = [_expand(inspect.cleandoc(node.value), snippets) for node in literals]
     if any(missing for _, missing in expanded):
         # Some registries live in the module containing the documented object,
         # so import only when a key cannot be resolved from the central registry.
         importlib.import_module(_module_name(package_root, path))
-        expanded = [_expand(node.value, snippets) for node in literals]
+        expanded = [_expand(inspect.cleandoc(node.value), snippets) for node in literals]
 
     lines = source.splitlines(keepends=True)
     offsets = []

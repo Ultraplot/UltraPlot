@@ -232,7 +232,7 @@ nrows, ncols : int, default: 1
     The number of rows and columns in the subplot grid. Ignored
     if `array` was passed. Use these arguments for simple subplot grids.
 order : {'C', 'F'}, default: 'C'
-    Whether subplots are numbered in column-major (``'C'``) or row-major (``'F'``)
+    Whether subplots are numbered in row-major (``'C'``) or column-major (``'F'``)
     order. Analogous to `numpy.array` ordering. This controls the order that
     subplots appear in the `SubplotGrid` returned by this function, and the order
     of subplot a-b-c labels (see `~ultraplot.axes.Axes.format`).
