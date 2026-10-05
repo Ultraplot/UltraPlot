@@ -62,4 +62,3 @@ def test_subplots_parameter_docstrings_are_numpy_style():
         "Whether subplots are numbered in row-major (``'C'``) "
         "or column-major (``'F'``)"
     ) in doc
-
