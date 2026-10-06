@@ -172,7 +172,7 @@ Add an inset axes.
 This is similar to `matplotlib.axes.Axes.inset_axes`.
 
 Parameters
------------
+----------
 bounds : 4-tuple of float or (4-tuple, transform)
     The (left, bottom, width, height) coordinates for the axes. To specify the
     coordinate system alongside the coordinates, pass ``(bounds, transform)``.
@@ -192,17 +192,17 @@ zoom_kw : dict, optional
     Passed to `~Axes.indicate_inset_zoom`.
 
 Other parameters
------------------
+----------------
 **kwargs
     Passed to `ultraplot.axes.Axes`.
 
 Returns
---------
+-------
 ultraplot.axes.Axes
     The inset axes.
 
 See also
----------
+--------
 Axes.indicate_inset_zoom
 matplotlib.axes.Axes.inset_axes
 matplotlib.axes.Axes.indicate_inset
@@ -213,18 +213,18 @@ Add indicators denoting the zoom range of the inset axes.
 This will replace previously drawn zoom indicators.
 
 Parameters
------------
+----------
 %(artist.patch)s
 zorder : float, default: 3.5
     The `zorder <https://matplotlib.org/stable/gallery/misc/zorder_demo.html>`__ of
     the indicators. Should be greater than the zorder of elements in the parent axes.
 
 Other parameters
------------------
+----------------
 **kwargs
     Passed to `~matplotlib.patches.Patch`.
 
-Note
+Notes
 -----
 This command must be called from the inset axes rather than the parent axes.
 It is called automatically when ``zoom=True`` is passed to `~Axes.inset_axes`
@@ -232,7 +232,7 @@ and whenever the axes are drawn (so the line positions always track the axis
 limits even if they are later changed).
 
 See also
----------
+--------
 matplotlib.axes.Axes.indicate_inset
 matplotlib.axes.Axes.indicate_inset_zoom
 """
@@ -256,7 +256,7 @@ _panel_docstring = """
 Add a panel axes.
 
 Parameters
------------
+----------
 side : str, optional
     The panel location. Valid location keys are as follows.
 
@@ -294,13 +294,13 @@ share : bool, default: True
     is determined by figure-wide `sharex` and `sharey` settings.
 
 Other parameters
------------------
+----------------
 **kwargs
     Passed to `ultraplot.axes.CartesianAxes`. Supports all valid
     `~ultraplot.axes.CartesianAxes.format` keywords.
 
 Returns
---------
+-------
 ultraplot.axes.CartesianAxes
     The panel axes.
 """
@@ -367,13 +367,11 @@ titleabove : bool, default: :rc:`title.above`
 abctitlepad : float, default: :rc:`abc.titlepad`
     The horizontal padding between a-b-c labels and titles in the same location.
     %(units.pt)s
-lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle : str or sequence, optional
-lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
+lefttitle, centertitle, righttitle, upperlefttitle, uppercentertitle, upperrighttitle, lowerlefttitle, lowercentertitle, lowerrighttitle : str or sequence, optional
     Additional titles in specific positions (see `title` for details). This works as
     an alternative to the ``ax.format(title='Title', titleloc=loc)`` workflow and
     permits adding more than one title-like label for a single axes.
-a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default:
-    :rc:`axes.alpha` (default: 1.0), :rc:`axes.facecolor` (default: white), :rc:`axes.edgecolor` (default: black), :rc:`axes.linewidth` (default: 0.6), -
+a, alpha, fc, facecolor, ec, edgecolor, lw, linewidth, ls, linestyle : default: :rc:`axes.alpha` (default: 1.0), :rc:`axes.facecolor` (default: white), :rc:`axes.edgecolor` (default: black), :rc:`axes.linewidth` (default: 0.6)
     Additional settings applied to the background patch, and their
     shorthands. Their defaults values are the ``'axes'`` properties.
 """
@@ -382,12 +380,10 @@ leftlabels, toplabels, rightlabels, bottomlabels : sequence of str, optional
     Labels for the subplots lying along the left, top, right, and
     bottom edges of the figure. The length of each list must match
     the number of subplots along the corresponding edge.
-leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, default
-: :rc:`leftlabel.pad`, :rc:`toplabel.pad`, :rc:`rightlabel.pad`, :rc:`bottomlabel.pad`
+leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad : float or unit-spec, default: :rc:`leftlabel.pad`, :rc:`toplabel.pad`, :rc:`rightlabel.pad`, :rc:`bottomlabel.pad`
     The padding between the labels and the axes content.
     %(units.pt)s
-leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad : float or unit-spec, default
-: :rc:`leftlabel.sharedpad`, :rc:`toplabel.sharedpad`, :rc:`rightlabel.sharedpad`, :rc:`bottomlabel.sharedpad`
+leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad : float or unit-spec, default: :rc:`leftlabel.sharedpad`, :rc:`toplabel.sharedpad`, :rc:`rightlabel.sharedpad`, :rc:`bottomlabel.sharedpad`
     The padding between side labels and a shared spanning axis label on the
     same side. The spanning label is placed outside the side labels.
     %(units.pt)s
@@ -510,11 +506,11 @@ ticks : locator-spec, optional
     and `~ultraplot.ticker.DiscreteLocator` is used for discrete color levels.
 locator_kw : dict-like, optional
     Keyword arguments passed to `matplotlib.ticker.Locator` class.
-minorticks
+minorticks : locator-spec, optional
     As with `ticks` but for the minor ticks. By default
     `~matplotlib.ticker.AutoMinorLocator` is used for continuous color levels
     and `~ultraplot.ticker.DiscreteLocator` is used for discrete color levels.
-minorlocator_kw
+minorlocator_kw : dict-like, optional
     As with `locator_kw`, but for the minor ticks.
 format : formatter-spec, optional
     The tick label format. Passed to the `~ultraplot.constructor.Formatter`
@@ -547,7 +543,7 @@ ticklabelcolor, ticklabelsize, ticklabelweight: default: :rc:`tick.labelcolor`, 
 labellocation : {'bottom', 'top', 'left', 'right'}
     The colorbar label location. Inherits from `tickloc` by default. Default is toward
     the outside of the subplot for outer colorbars and ``'bottom'`` for inset colorbars.
-labelcolor, labelsize, labelweight: default: :rc:`label.color`, :rc:`label.size`, and :rc:`label.weight`.
+labelcolor, labelsize, labelweight : default: :rc:`label.color`, :rc:`label.size`, and :rc:`label.weight`.
     The font color, size, and weight for the colorbar label.
 a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth : default: :rc:`colorbar.framealpha`, :rc:`colorbar.framecolor`
     For inset colorbars only. Controls the transparency and color of
@@ -560,15 +556,16 @@ rasterize : bool, default: :rc:`colorbar.rasterized`
     Whether to rasterize the colorbar solids. The matplotlib default was ``True``
     but ultraplot changes this to ``False`` since rasterization can cause misalignment
     between the color patches and the colorbar outline.
-outline : bool, None default : None
+outline : bool, optional, default None
     Controls the visibility of the outer colorbar outline. When set to False,
     the spines of the colorbar are hidden. If set to `None` it uses the
     `rc['colorbar.outline']` value.
 labelrotation : str, float, default: None
-    Controls the rotation of the colorbar label. When set to None it takes on the value of `rc["colorbar.labelrotation"]`. When set to auto it produces a sensible default where the rotation is adjusted to where the colorbar is located. For example, a horizontal colorbar with a label to the left or right will match the horizontal alignment and rotate the label to 0 degrees. Users can provide a float to rotate to any arbitrary angle.
-
-
-
+    Controls the rotation of the colorbar label.
+    When set to None it takes on the value of `rc["colorbar.labelrotation"]`.
+    When set to auto it produces a sensible default where the rotation is adjusted to where the colorbar is located.
+    For example, a horizontal colorbar with a label to the left or right will match the horizontal alignment and rotate the label to 0 degrees.
+    Users can provide a float to rotate to any arbitrary angle.
 **kwargs
     Passed to `~matplotlib.figure.Figure.colorbar`.
 """
@@ -607,7 +604,7 @@ labels : list of str, optional
     from the artists in the tuple (if there are multiple unique labels in the tuple
     group of artists, the tuple group is expanded into unique legend entries --
     otherwise, the tuple group elements are drawn on top of eachother). For details
-    on matplotlib legend handlers and tuple groups, see the matplotlib `legend guide
+    on matplotlib legend handlers and tuple groups, see the matplotlib `legend guide \
 <https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html>`__.
 """
 _legend_kwargs_docstring = """
@@ -640,7 +637,8 @@ titlefontsize, titlefontweight, titlefontcolor : optional
 borderpad, borderaxespad, handlelength, handleheight, handletextpad,  labelspacing, columnspacing : unit-spec, optional
     Various matplotlib `~matplotlib.axes.Axes.legend` spacing arguments.
     %(units.em)s
-a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth: default: :rc:`legend.framealpha`, :rc:`legend.facecolor`, :rc:`legend.edgecolor`, :rc:`axes.linewidth` The opacity, face color, edge color, and edge width for the legend frame.
+a, alpha, framealpha, fc, facecolor, framecolor, ec, edgecolor, ew, edgewidth : default: :rc:`legend.framealpha`, :rc:`legend.facecolor`, :rc:`legend.edgecolor`, :rc:`axes.linewidth`
+    The opacity, face color, edge color, and edge width for the legend frame.
 c, color, lw, linewidth, m, marker, ls, linestyle, dashes, ms, markersize : optional
     Properties used to override the legend handles. For example, for a
     legend describing variations in line style ignoring variations
@@ -3187,7 +3185,7 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         axes : list of int or list of Axes, optional
                 The axes indices or Axes objects to share labels between
         target : {'x', 'y'}, optional
-                Which axis labels to share ('x' for x-axis, 'y' for     y-axis)
+                Which axis labels to share ('x' for x-axis, 'y' for y-axis)
         """
         if axes is False:
             self.figure._clear_share_label_groups([self], target=target)
@@ -3607,47 +3605,48 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         Parameters
         ----------
         %(axes.colorbar_args)s
-            loc : int or str, default: :rc:`colorbar.loc`
-                The colorbar location. Valid location keys are shown in the below table.
+        loc : int or str, default: :rc:`colorbar.loc`
+            The colorbar location. Valid location keys are shown in the below table.
 
-                .. _colorbar_table:
+            .. _colorbar_table:
 
-                ==================  =======================================
-                Location            Valid keys
-                ==================  =======================================
-                outer left          ``'left'``, ``'l'``
-                outer right         ``'right'``, ``'r'``
-                outer bottom        ``'bottom'``, ``'b'``
-                outer top           ``'top'``, ``'t'``
-                default inset       ``'best'``, ``'inset'``, ``'i'``, ``0``
-                upper right inset   ``'upper right'``, ``'ur'``, ``1``
-                upper left inset    ``'upper left'``, ``'ul'``, ``2``
-                lower left inset    ``'lower left'``, ``'ll'``, ``3``
-                lower right inset   ``'lower right'``, ``'lr'``, ``4``
-                "filled"            ``'fill'``
-                ==================  =======================================
+            ==================  =======================================
+            Location            Valid keys
+            ==================  =======================================
+            outer left          ``'left'``, ``'l'``
+            outer right         ``'right'``, ``'r'``
+            outer bottom        ``'bottom'``, ``'b'``
+            outer top           ``'top'``, ``'t'``
+            default inset       ``'best'``, ``'inset'``, ``'i'``, ``0``
+            upper right inset   ``'upper right'``, ``'ur'``, ``1``
+            upper left inset    ``'upper left'``, ``'ul'``, ``2``
+            lower left inset    ``'lower left'``, ``'ll'``, ``3``
+            lower right inset   ``'lower right'``, ``'lr'``, ``4``
+            "filled"            ``'fill'``
+            ==================  =======================================
 
-            length : float or unit-spec, default: :rc:`colorbar.length` or :rc:`colorbar.insetlength`
-                The colorbar length (also accepted as ``shrink``). For outer colorbars,
-                units are relative to the axes width or height (default is
-                :rcraw:`colorbar.length`). For inset
-                colorbars, floats interpreted as em-widths and strings interpreted
-                by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
-            width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth`
-                The colorbar width. For outer colorbars, floats are interpreted as inches
-                (default is :rcraw:`colorbar.width`). For inset colorbars, floats are
-                interpreted as em-widths (default is :rcraw:`colorbar.insetwidth`).
-                Strings are interpreted by `~ultraplot.utils.units`.
-            %(axes.colorbar_space)s
-                Has no visible effect if `length` is ``1``.
-            bbox_to_anchor : 2-tuple, 4-tuple, or `matplotlib.transforms.Bbox`, optional
-                For inset colorbars, anchor the full colorbar footprint using the
-                same semantics as `~matplotlib.axes.Axes.legend`. The colorbar
-                `loc` selects the corresponding anchor corner. Outer colorbar
-                placement is unchanged.
-            Other parameters
-            ----------------
-            %(axes.colorbar_kwargs)s
+        length : float or unit-spec, default: :rc:`colorbar.length` or :rc:`colorbar.insetlength`
+            The colorbar length (also accepted as ``shrink``). For outer colorbars,
+            units are relative to the axes width or height (default is
+            :rcraw:`colorbar.length`). For inset
+            colorbars, floats interpreted as em-widths and strings interpreted
+            by `~ultraplot.utils.units` (default is :rcraw:`colorbar.insetlength`).
+        width : unit-spec, default: :rc:`colorbar.width` or :rc:`colorbar.insetwidth`
+            The colorbar width. For outer colorbars, floats are interpreted as inches
+            (default is :rcraw:`colorbar.width`). For inset colorbars, floats are
+            interpreted as em-widths (default is :rcraw:`colorbar.insetwidth`).
+            Strings are interpreted by `~ultraplot.utils.units`.
+        %(axes.colorbar_space)s
+            Has no visible effect if `length` is ``1``.
+        bbox_to_anchor : 2-tuple, 4-tuple, or `matplotlib.transforms.Bbox`, optional
+            For inset colorbars, anchor the full colorbar footprint using the
+            same semantics as `~matplotlib.axes.Axes.legend`. The colorbar
+            `loc` selects the corresponding anchor corner. Outer colorbar
+            placement is unchanged.
+
+        Other parameters
+        ----------------
+        %(axes.colorbar_kwargs)s
 
         See also
         --------
@@ -3818,10 +3817,15 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             Whether to render connector lines through the markers. Falls back
             to :rc:`legend.cat.line`. Setting a non-default ``linestyle``
             implicitly enables this.
+
         Other parameters
         ----------------
         %(legend.semantic_style_kwargs)s
         %(legend.semantic_handle_kw)s
+
+        Notes
+        -----
+        %(legend.semantic_style_notes)s
 
         See also
         --------
@@ -3847,10 +3851,15 @@ class Axes(_ExternalModeMixin, maxes.Axes):
             :rc:`legend.cat.line`.
         marker, color
             %(legend.semantic_style_arg)s
+
         Other parameters
         ----------------
         %(legend.semantic_style_kwargs)s
         %(legend.semantic_handle_kw)s
+
+        Notes
+        -----
+        %(legend.semantic_style_notes)s
 
         See also
         --------
@@ -3915,6 +3924,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         %(legend.semantic_style_kwargs)s
         %(legend.semantic_handle_kw)s
 
+        Notes
+        -----
+        %(legend.semantic_style_notes)s
+
         See also
         --------
         Axes.catlegend
@@ -3959,6 +3972,10 @@ class Axes(_ExternalModeMixin, maxes.Axes):
         ----------------
         %(legend.semantic_num_style_kwargs)s
         %(legend.semantic_handle_kw)s
+
+        Notes
+        -----
+        %(legend.semantic_num_style_notes)s
 
         See also
         --------
@@ -4010,6 +4027,8 @@ class Axes(_ExternalModeMixin, maxes.Axes):
 
         Notes
         -----
+        %(legend.semantic_num_style_notes)s
+
         Geometry legend entries use normalized patch proxies inside the legend
         handle box rather than reusing the original map artist directly. This
         preserves the general geometry shape and copied patch styling, but very

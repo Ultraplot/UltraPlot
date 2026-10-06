@@ -298,8 +298,8 @@ layers : dict-like, optional
 **kwargs
     Patch properties passed to `matplotlib.sankey.Sankey.add` in Matplotlib mode.
 
-Layered defaults
-----------------
+Notes
+-----
 Layered mode uses :rc:`sankey.nodepad`, :rc:`sankey.nodewidth`,
 :rc:`sankey.margin`, :rc:`sankey.flow.alpha`, :rc:`sankey.flow.curvature`,
 and :rc:`sankey.node.facecolor` when not set explicitly.
@@ -556,11 +556,9 @@ capsize : float, default: :rc:`errorbar.capsize`
     The cap size for thin error bars in points.
 barz, barzorder, boxz, boxzorder : float, default: 2.5
     The "zorder" for the thin and thick error bars.
-barc, barcolor, boxc, boxcolor \
-: color-spec, default: :rc:`boxplot.whiskerprops.color`
+barc, barcolor, boxc, boxcolor : color-spec, default: :rc:`boxplot.whiskerprops.color`
     Colors for the thin and thick error bars.
-barlw, barlinewidth, boxlw, boxlinewidth \
-: float, default: :rc:`boxplot.whiskerprops.linewidth`
+barlw, barlinewidth, boxlw, boxlinewidth : float, default: :rc:`boxplot.whiskerprops.linewidth`
     Line widths for the thin and thick error bars, in points. The default for boxes
     is 4 times :rcraw:`boxplot.whiskerprops.linewidth`.
 boxm, boxmarker : bool or marker-spec, default: 'o'
@@ -991,8 +989,7 @@ s, size, ms, markersize : float or array-like or unit-spec, optional
     The marker size area(s). If this is an array matching the shape of `x` and `y`,
     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
     is processed by `~ultraplot.utils.units` and represents the width rather than area.
-c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors \
-: array-like or color-spec, optional
+c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : array-like or color-spec, optional
     The marker color(s). If this is an array matching the shape of `x` and `y`,
     the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
     this should be a valid matplotlib color. To pass explicit RGB(A) colors,
@@ -1022,11 +1019,9 @@ Other parameters
 %(plot.levels_manual)s
 %(plot.levels_auto)s
 %(plot.cycle)s
-lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths \
-: float or sequence, optional
+lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths : float or sequence, optional
     The marker edge width(s).
-edgecolors, markeredgecolor, markeredgecolors \
-: color-spec or sequence, optional
+edgecolors, markeredgecolor, markeredgecolors : color-spec or sequence, optional
     The marker edge color(s).
 %(plot.error_means_{y})s
 %(plot.error_bars)s
@@ -1051,65 +1046,62 @@ Beeswarm plot with `SHAP-style <https://shap.readthedocs.io/en/latest/generated/
 
 Parameters
 ----------
-data: array-like
+data : array-like
     The data to be plotted.  It is assumed the shape of `data` is (N, M) where N is the number of points and M is the number of features.
-levels: array-like, optional
+levels : array-like, optional
     The levels to use for the beeswarm plot. If not provided, the levels are automatically determined based on the data.
-n_bins: int or array-like, default: 50
+n_bins : int or array-like, default: 50
     Number of bins to use to reduce the overlap between points.
     Bins are used to determine how crowded the points are for each level of the `y` coordinate.
- s, size, ms, markersize : float or array-like or unit-spec, optional
-     The marker size area(s). If this is an array matching the shape of `x` and `y`,
-     the units are scaled by `smin` and `smax`. If this contains unit string(s), it
-     is processed by `~ultraplot.utils.units` and represents the width rather than area.
- c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors \
- : array-like or color-spec, optional
-     The marker color(s). If this is an array matching the shape of `x` and `y`,
-     the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
-     this should be a valid matplotlib color.
- smin, smax : float, optional
-     The minimum and maximum marker size area in units ``points ** 2``. Ignored
-     if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
-     `smax` is the square of :rc:`lines.markersize`.
- area_size : bool, default: True
-     Whether the marker sizes `s` are scaled by area or by radius. The default
-     ``True`` is consistent with matplotlib. When `absolute_size` is ``True``,
-     the `s` units are ``points ** 2`` if `area_size` is ``True`` and ``points``
-     if `area_size` is ``False``.
- absolute_size : bool, default: True or False
-     Whether `s` should be taken to represent "absolute" marker sizes in units
-     ``points`` or ``points ** 2`` or "relative" marker sizes scaled by `smin`
-     and `smax`. Default is ``True`` if `s` is scalar and ``False`` if `s` is
-     array-like or `smin` or `smax` were passed.
- %(plot.vmin_vmax)s
- %(plot.args_1d_shared)s
+s, size, ms, markersize : float or array-like or unit-spec, optional
+    The marker size area(s). If this is an array matching the shape of `x` and `y`,
+    the units are scaled by `smin` and `smax`. If this contains unit string(s), it
+    is processed by `~ultraplot.utils.units` and represents the width rather than area.
+c, color, colors, mc, markercolor, markercolors, fc, facecolor, facecolors : array-like or color-spec, optional
+    The marker color(s). If this is an array matching the shape of `x` and `y`,
+    the colors are generated using `cmap`, `norm`, `vmin`, and `vmax`. Otherwise,
+    this should be a valid matplotlib color.
+smin, smax : float, optional
+    The minimum and maximum marker size area in units ``points ** 2``. Ignored
+    if `absolute_size` is ``True``. Default value for `smin` is ``1`` and for
+    `smax` is the square of :rc:`lines.markersize`.
+area_size : bool, default: True
+    Whether the marker sizes `s` are scaled by area or by radius. The default
+    ``True`` is consistent with matplotlib. When `absolute_size` is ``True``,
+    the `s` units are ``points ** 2`` if `area_size` is ``True`` and ``points``
+    if `area_size` is ``False``.
+absolute_size : bool, default: True or False
+    Whether `s` should be taken to represent "absolute" marker sizes in units
+    ``points`` or ``points ** 2`` or "relative" marker sizes scaled by `smin`
+    and `smax`. Default is ``True`` if `s` is scalar and ``False`` if `s` is
+    array-like or `smin` or `smax` were passed.
+%(plot.vmin_vmax)s
+%(plot.args_1d_shared)s
 
- Other parameters
- ----------------
- %(plot.cmap_norm)s
- %(plot.levels_manual)s
- %(plot.levels_auto)s
- %(plot.cycle)s
- lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths \
- : float or sequence, optional
-     The marker edge width(s).
- edgecolors, markeredgecolor, markeredgecolors \
- : color-spec or sequence, optional
-     The marker edge color(s).
- %(plot.error_means_{y})s
- %(plot.error_bars)s
- %(plot.error_shading)s
- %(plot.inbounds)s
- %(plot.labels_1d)s
- %(plot.guide)s
- **kwargs
-     Passed to `~matplotlib.axes.Axes.scatter`.
+Other parameters
+----------------
+%(plot.cmap_norm)s
+%(plot.levels_manual)s
+%(plot.levels_auto)s
+%(plot.cycle)s
+lw, linewidth, linewidths, mew, markeredgewidth, markeredgewidths : float or sequence, optional
+    The marker edge width(s).
+edgecolors, markeredgecolor, markeredgecolors : color-spec or sequence, optional
+    The marker edge color(s).
+%(plot.error_means_{y})s
+%(plot.error_bars)s
+%(plot.error_shading)s
+%(plot.inbounds)s
+%(plot.labels_1d)s
+%(plot.guide)s
+**kwargs
+    Passed to `~matplotlib.axes.Axes.scatter`.
 
- See also
- --------
- PlotAxes.scatter
- PlotAxes.scatterx
- matplotlib.axes.Axes.scatter
+See also
+--------
+PlotAxes.scatter
+PlotAxes.scatterx
+matplotlib.axes.Axes.scatter
 """
 docstring._snippet_manager["plot.beeswarm"] = _beeswarm_docstring.format(y="y")
 
@@ -1231,10 +1223,16 @@ edgecolors, markeredgecolor, markeredgecolors \
 **kwargs
     Passed to `~matplotlib.axes.Axes.scatter`.
 
-See for more info on the grouping behavior :func:`~ultraplot.PlotAxes.bar`, and for formatting :func:`~ultraplot.PlotAxes.scatter`.
 Returns
 -------
-List of ~matplotlib.collections.PatchCollection, and a ~matplotlib.collections.LineCollection
+tuple
+    The list of marker collections and the stem line collection. The stems are
+    horizontal when calling `~PlotAxes.lollipoph`.
+
+See also
+--------
+PlotAxes.bar : More information on grouping behavior.
+PlotAxes.scatter : More information on marker formatting.
 """
 docstring._snippet_manager["plot.lollipop"] = _lollipop_docstring.format(which="x")
 docstring._snippet_manager["plot.lollipoph"] = _lollipop_docstring.format(which="y")
@@ -1711,9 +1709,11 @@ label_kw : dict, default: {}
     font color, background color, alignment, etc (see :func:`networkx.drawing.nx_pylab.draw_networkx_labels`).
 rescale : bool,  None, default: None.
     When set to none it checks for `rc["graph.rescale"]` which defaults to `True`. This performs a rescale such that the node position is within a [0, 1] x [0, 1] box.
+
 Returns
 -------
-Nodes, edges, labels output from the networkx drawing functions.
+tuple
+    Nodes, edges, and labels returned by the networkx drawing functions.
 
 See also
 --------

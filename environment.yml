@@ -16,6 +16,7 @@ dependencies:
   - pytest-mpl
   - pytest-cov
   - pytest-xdist
+  - numpydoc
   - pip
   - pint
   - pre-commit

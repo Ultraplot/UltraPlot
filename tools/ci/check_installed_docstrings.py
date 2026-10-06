@@ -5,9 +5,12 @@ from __future__ import annotations
 import ast
 import inspect
 import re
+import warnings
 from collections.abc import Iterator
 from importlib.metadata import distribution
 from pathlib import Path
+
+from numpydoc.docscrape import NumpyDocString
 
 PLACEHOLDER = re.compile(r"%\(([^)]+)\)s")
 _NUMPY_DOCSTRINGS = {
@@ -103,6 +106,44 @@ def _check_numpy_docstrings(filename: str, tree: ast.Module) -> None:
             raise AssertionError(f"{filename}:{name}: {exc}") from exc
 
 
+def _check_numpy_structure(doc: str) -> None:
+    """Reject malformed sections and entries across all owned package docstrings."""
+    doc = inspect.cleandoc(doc)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        parsed = NumpyDocString(doc)
+    # Napoleon, used by our Sphinx build, supports Important as an admonition.
+    unexpected = [
+        str(warning.message).splitlines()[0]
+        for warning in caught
+        if str(warning.message).splitlines()[0] != "Unknown section Important"
+    ]
+    assert not unexpected, "; ".join(unexpected)
+    for section in ("Parameters", "Other Parameters", "Returns", "Yields"):
+        for entry in parsed[section]:
+            assert (
+                entry.desc
+            ), f"Missing description in {section}: {entry.name or entry.type}"
+
+    headings = {name.lower() for name in parsed.keys()}
+    lines = doc.splitlines()
+    section = ""
+    for index, (line, underline) in enumerate(zip(lines, lines[1:])):
+        if not underline.strip() or set(underline.strip()) != {"-"}:
+            continue
+        heading = line.strip().lower()
+        if heading not in headings and heading != "important":
+            continue
+        # Code samples may themselves contain a nested NumPy-style docstring.
+        if section == "examples" and line.startswith(" "):
+            continue
+        assert line == line.lstrip(), f"Indented section: {line.strip()}"
+        assert (
+            index == 0 or not lines[index - 1].strip()
+        ), f"Missing blank line before section: {line}"
+        section = heading
+
+
 def main() -> None:
     package = Path(distribution("ultraplot").locate_file("ultraplot"))
     assert package.is_dir(), f"installed package not found: {package}"
@@ -118,6 +159,14 @@ def main() -> None:
         if path.parent == package:
             _check_numpy_docstrings(path.name, tree)
         for node, doc in _iter_docstrings(tree):
+            if not {"tests", "externals"}.intersection(path.relative_to(package).parts):
+                try:
+                    _check_numpy_structure(doc)
+                except (AssertionError, ValueError) as exc:
+                    location = (
+                        f"{path.relative_to(package)}:{getattr(node, 'lineno', 1)}"
+                    )
+                    raise AssertionError(f"{location}: {exc}") from exc
             for key in PLACEHOLDER.findall(doc):
                 # This one is syntax documentation inside the manager itself.
                 if path.name == "docstring.py" and key == "name":

@@ -204,6 +204,7 @@ class LogScale(_Scale, mscale.LogScale):
             Default *minor* tick locations are on these multiples of each power
             of the base. For example, ``subs=(1, 2, 5)`` draws ticks on 1, 2,
             5, 10, 20, 50, 100, 200, 500, etc.
+
         See also
         --------
         ultraplot.constructor.Scale
@@ -245,6 +246,7 @@ class SymmetricalLogScale(_Scale, mscale.SymmetricalLogScale):
             Default *minor* tick locations are on these multiples of each power
             of the base. For example, ``subs=(1, 2, 5)`` draws ticks on 1, 2,
             5, 10, 20, 50, 100, 200, 500, etc.
+
         See also
         --------
         ultraplot.constructor.Scale
@@ -792,8 +794,8 @@ class CutoffScale(_Scale, mscale.ScaleBase):
         --------
         ultraplot.constructor.Scale
 
-        Example
-        -------
+        Examples
+        --------
         >>> import ultraplot as uplt
         >>> import numpy as np
         >>> scale = uplt.CutoffScale(10, 0.5)  # move slower above 10

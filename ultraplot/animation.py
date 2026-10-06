@@ -593,10 +593,6 @@ class _FastSaveMixin:
             update function, so anything else changed per frame (titles, ticks,
             axes limits) will not appear. Pass ``False`` to redraw everything.
 
-        Other Parameters
-        ----------------
-        See `matplotlib.animation.Animation.save`.
-
         See also
         --------
         matplotlib.animation.Animation.save

@@ -98,8 +98,6 @@ docstring._snippet_manager["ticker.auto"] = _auto_docstring
 docstring._snippet_manager["ticker.call"] = _formatter_call
 
 _dms_docstring = """
-Parameters
-----------
 dms : bool, default: False
     Locate the ticks on clean degree-minute-second intervals and format the
     ticks with minutes and seconds instead of decimals.
@@ -283,6 +281,8 @@ class DegreeLocator(mticker.MaxNLocator):
     @docstring._snippet_manager
     def __init__(self, *args, **kwargs):
         """
+        Parameters
+        ----------
         %(ticker.dms)s
         """
         super().__init__(*args, **kwargs)
@@ -321,10 +321,9 @@ class LongitudeLocator(DegreeLocator):
     @docstring._snippet_manager
     def __init__(self, lon0=0, *args, **kwargs):
         """
-        %(ticker.dms)s
-
         Parameters
         ----------
+        %(ticker.dms)s
         lon0 : float, default=0
             The central longitude around which the longitude labels are centered.
             This parameter adjusts the alignment of the longitude gridlines and
@@ -342,6 +341,8 @@ class LatitudeLocator(DegreeLocator):
     @docstring._snippet_manager
     def __init__(self, *args, **kwargs):
         """
+        Parameters
+        ----------
         %(ticker.dms)s
         """
         super().__init__(*args, **kwargs)
@@ -394,8 +395,8 @@ class AutoFormatter(mticker.ScalarFormatter):
         ultraplot.constructor.Formatter
         ultraplot.ticker.SimpleFormatter
 
-        Note
-        ----
+        Notes
+        -----
         `matplotlib.ticker.ScalarFormatter` determines the number of
         significant digits based on the axis limits, and therefore may
         truncate digits while formatting ticks on highly non-linear axis
@@ -799,8 +800,8 @@ class FracFormatter(mticker.Formatter):
         number : float, default: 1
             The constant value, e.g. `numpy.pi`.
 
-        Note
-        ----
+        Notes
+        -----
         The fractions shown by this formatter are resolved using the builtin
         `fractions.Fraction` class and `fractions.Fraction.limit_denominator`.
 
@@ -1352,6 +1353,8 @@ class DegreeFormatter(_CartopyFormatter, _PlateCarreeFormatter):
     @docstring._snippet_manager
     def __init__(self, *args, **kwargs):
         """
+        Parameters
+        ----------
         %(ticker.dms)s
         """
         super().__init__(*args, **kwargs)
@@ -1393,6 +1396,8 @@ class LatitudeFormatter(_CartopyFormatter, LatitudeFormatter):
     @docstring._snippet_manager
     def __init__(self, *args, **kwargs):
         """
+        Parameters
+        ----------
         %(ticker.dms)s
         """
         super().__init__(*args, **kwargs)

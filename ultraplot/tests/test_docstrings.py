@@ -77,6 +77,20 @@ def test_build_docstring_expansion_preserves_numpy_indentation(tmp_path: Path) -
             },
         ),
         ("gridspec.py", {"GridSpec.__init__": uplt.GridSpec.__init__}),
+        (
+            "ticker.py",
+            {
+                f"{name}.__init__": getattr(uplt, name).__init__
+                for name in (
+                    "DegreeLocator",
+                    "LongitudeLocator",
+                    "LatitudeLocator",
+                    "DegreeFormatter",
+                    "LongitudeFormatter",
+                    "LatitudeFormatter",
+                )
+            },
+        ),
     ],
 )
 def test_materialized_public_docstrings_match_runtime(
@@ -156,3 +170,132 @@ def test_subplots_parameter_docstrings_are_numpy_style() -> None:
         "Whether subplots are numbered in row-major (``'C'``) "
         "or column-major (``'F'``)"
     ) in doc
+
+
+def _load_installed_docstring_checker() -> dict:
+    path = (
+        Path(__file__).resolve().parents[2]
+        / "tools"
+        / "ci"
+        / "check_installed_docstrings.py"
+    )
+    return runpy.run_path(str(path))
+
+
+def test_package_docstring_structure() -> None:
+    """Expand every owned source docstring and check its actual parser output."""
+    expand = _load_docstring_expander()["_expand"]
+    checker = _load_installed_docstring_checker()
+    package = Path(uplt.__file__).resolve().parent
+    for path in package.rglob("*.py"):
+        if {"tests", "externals"}.intersection(path.relative_to(package).parts):
+            continue
+        tree = ast.parse(path.read_bytes())
+        for node, doc in checker["_iter_docstrings"](tree):
+            expanded, _ = expand(inspect.cleandoc(doc), docstring._snippet_manager)
+            try:
+                checker["_check_numpy_structure"](expanded)
+            except (AssertionError, ValueError) as exc:
+                raise AssertionError(
+                    f"{path.name}:{getattr(node, 'lineno', 1)}: {exc}"
+                ) from exc
+
+
+@pytest.mark.parametrize(
+    "doc",
+    [
+        "Parameters\n----------\nfirst : int\n    First.\n\nParameters\n----------\nsecond : int\n    Second.",
+        "Parameters\n----------\nfirst : int\n    First.\nReturns\n-------\nint\n    Result.",
+        "Parameters\n-----------\nfirst : int\n    First.",
+        "Parameters\n----------\nfirst : int\nsecond : int\n    Second.",
+        "Summary.\n\n    Other parameters\n    ----------------\n    first : int\n        First.\n\nNotes\n-----\nA note.",
+    ],
+)
+def test_package_docstring_check_rejects_structural_errors(doc: str) -> None:
+    check = _load_installed_docstring_checker()["_check_numpy_structure"]
+    with pytest.raises((AssertionError, ValueError)):
+        check(doc)
+
+
+@pytest.mark.parametrize(
+    ("obj", "section", "expected"),
+    [
+        (uplt.LongitudeLocator.__init__, "Parameters", {"dms", "lon0"}),
+        (uplt.LongitudeFormatter.__init__, "Parameters", {"dms", "lon0"}),
+        (
+            uplt.Figure.__init__,
+            "Other Parameters",
+            {
+                "leftlabelpad, toplabelpad, rightlabelpad, bottomlabelpad",
+                "leftlabelsharedpad, toplabelsharedpad, rightlabelsharedpad, bottomlabelsharedpad",
+            },
+        ),
+        (
+            uplt.Axes.colorbar,
+            "Parameters",
+            {"loc", "length", "width", "bbox_to_anchor"},
+        ),
+        (
+            uplt.PlotAxes.beeswarm,
+            "Parameters",
+            {"s, size, ms, markersize", "area_size", "absolute_size"},
+        ),
+        (uplt.PlotAxes.beeswarm, "Other Parameters", {"norm", "**kwargs"}),
+        (uplt.Axes.catlegend, "Other Parameters", {"handle_kw", "add", "**kwargs"}),
+    ],
+)
+def test_shared_parameters_remain_separate_entries(
+    obj: Callable[..., object], section: str, expected: set[str]
+) -> None:
+    parse = _load_installed_docstring_checker()["NumpyDocString"]
+    parsed = parse(inspect.getdoc(obj))
+    entries = {entry.name: entry for entry in parsed[section]}
+    assert expected <= entries.keys()
+    assert all(entries[name].desc for name in expected)
+
+
+@pytest.mark.parametrize(
+    "name", ["catlegend", "entrylegend", "sizelegend", "numlegend", "geolegend"]
+)
+def test_semantic_legend_styles_are_documented_as_parameters(name: str) -> None:
+    parse = _load_installed_docstring_checker()["NumpyDocString"]
+    parsed = parse(inspect.getdoc(getattr(uplt.Axes, name)))
+    entries = {entry.name: entry for entry in parsed["Other Parameters"]}
+    assert {"handle_kw", "add", "**kwargs"} <= entries.keys()
+    style_entries = {
+        key: entry
+        for key, entry in entries.items()
+        if key not in {"handle_kw", "add", "**kwargs"}
+    }
+    keywords = {keyword.strip() for key in style_entries for keyword in key.split(",")}
+    assert {"linewidth", "linestyle", "alpha", "antialiased"} <= keywords
+    if name in {"catlegend", "entrylegend", "sizelegend"}:
+        assert {
+            "markersize",
+            "markeredgewidth",
+            "s",
+            "fillstyle",
+            "marker_transform",
+        } <= keywords
+    else:
+        assert {
+            "facecolor",
+            "edgecolor",
+            "hatch",
+            "fill",
+            "joinstyle",
+            "capstyle",
+        } <= keywords
+    assert all(entry.type and entry.desc for entry in style_entries.values())
+    notes = "\n".join(parsed["Notes"])
+    assert "keywords can be passed directly or through" in notes
+    assert "A style value resolved per legend entry" in notes
+    assert "Plural" in notes
+
+
+def test_package_docstring_check_preserves_sphinx_admonitions() -> None:
+    from sphinx.ext.napoleon.docstring import NumpyDocstring
+
+    doc = "Important\n---------\nKeep this note visible."
+    _load_installed_docstring_checker()["_check_numpy_structure"](doc)
+    assert ".. important:: Keep this note visible." in str(NumpyDocstring(doc))

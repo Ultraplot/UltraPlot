@@ -1615,8 +1615,8 @@ class GridSpec(mgridspec.GridSpec):
         spacing and using physical units for the spacing terms. The resulting
         positions include "hidden" panel rows and columns.
 
-        Note
-        ----
+        Notes
+        -----
         The physical units for positioning grid cells are converted from em-widths to
         inches when the `GridSpec` is instantiated. This means that subsequent changes
         to :rcraw:`font.size` will have no effect on the spaces. This is consistent
@@ -1954,8 +1954,8 @@ class SubplotGrid(MutableSequence[paxes.Axes], list[paxes.Axes]):
             The axes. If the index included slices then
             another `SubplotGrid` is returned.
 
-        Example
-        -------
+        Examples
+        --------
         >>> import ultraplot as uplt
         >>> fig, axs = uplt.subplots(nrows=3, ncols=3)
         >>> axs[5]  # the subplot in the second row, third column
