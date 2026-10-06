@@ -7,12 +7,13 @@ import importlib
 import inspect
 import re
 import sys
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 _PLACEHOLDER = re.compile(r"%\(([^)]+)\)s")
 
 
-def _iter_docstring_literals(node):
+def _iter_docstring_literals(node: ast.AST) -> Iterator[ast.Constant]:
     """Yield string literal nodes that are actual Python docstrings."""
     body = getattr(node, "body", ())
     if body:
@@ -37,11 +38,11 @@ def _module_name(package_root: Path, path: Path) -> str:
     return ".".join((package_root.name, *parts))
 
 
-def _expand(text: str, snippets) -> tuple[str, bool]:
+def _expand(text: str, snippets: Mapping[str, object]) -> tuple[str, bool]:
     """Expand registered placeholders and report whether unknown keys remain."""
     missing = False
 
-    def replace(match):
+    def replace(match: re.Match[str]) -> str:
         nonlocal missing
         try:
             return str(snippets[match.group(1)])
@@ -52,7 +53,27 @@ def _expand(text: str, snippets) -> tuple[str, bool]:
     return _PLACEHOLDER.sub(replace, text), missing
 
 
-def _rewrite_file(path: Path, package_root: Path, snippets) -> int:
+def _docstring_literal(text: str, indent: str) -> bytes:
+    """Render readable source without interpreting backslashes or quote sequences."""
+    # Without a later nonblank line, cleandoc would retain the closing-line indent.
+    if not any(line.strip() for line in text.splitlines()[1:]):
+        return repr(text).encode("utf-8")
+    escaped = (
+        text.replace("\\", "\\\\")
+        .replace('"""', '\\"\\"\\"')
+        .replace("\r", "\\r")
+        .replace("\x00", "\\x00")
+    )
+    lines = escaped.split("\n")
+    body = lines[0] + "".join(
+        f"\n{indent}{line}" if line else "\n" for line in lines[1:]
+    )
+    return f'"""{body}\n{indent}"""'.encode()
+
+
+def _rewrite_file(
+    path: Path, package_root: Path, snippets: Mapping[str, object]
+) -> int:
     source = path.read_bytes()
     tree = ast.parse(source, filename=str(path))
     literals = [
@@ -68,7 +89,9 @@ def _rewrite_file(path: Path, package_root: Path, snippets) -> int:
         # Some registries live in the module containing the documented object,
         # so import only when a key cannot be resolved from the central registry.
         importlib.import_module(_module_name(package_root, path))
-        expanded = [_expand(inspect.cleandoc(node.value), snippets) for node in literals]
+        expanded = [
+            _expand(inspect.cleandoc(node.value), snippets) for node in literals
+        ]
 
     lines = source.splitlines(keepends=True)
     offsets = []
@@ -83,7 +106,9 @@ def _rewrite_file(path: Path, package_root: Path, snippets) -> int:
             continue
         start = offsets[node.lineno - 1] + node.col_offset
         end = offsets[node.end_lineno - 1] + node.end_col_offset
-        replacements.append((start, end, repr(text).encode("utf-8")))
+        line = lines[node.lineno - 1]
+        indent = line[: len(line) - len(line.lstrip())].decode("utf-8")
+        replacements.append((start, end, _docstring_literal(text, indent)))
 
     for start, end, replacement in reversed(replacements):
         source = source[:start] + replacement + source[end:]
@@ -103,7 +128,9 @@ def expand_package(package_root: Path) -> int:
             del sys.modules[name]
     sys.path.insert(0, str(build_root))
     try:
-        snippets = importlib.import_module("ultraplot.internals.docstring")._snippet_manager
+        snippets = importlib.import_module(
+            "ultraplot.internals.docstring"
+        )._snippet_manager
         changed = 0
         for path in sorted(package_root.rglob("*.py")):
             if "__pycache__" in path.parts:
