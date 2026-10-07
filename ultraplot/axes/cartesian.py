@@ -264,8 +264,8 @@ Returns
 ultraplot.axes.CartesianAxes
     The resulting axes.
 
-Note
-----
+Notes
+-----
 This enforces the following default settings:
 
 * Places the old {x} axis on the {x1} and the new {x}
@@ -1709,8 +1709,8 @@ class CartesianAxes(shared._SharedAxes, plot.PlotAxes):
         ultraplot.figure.Figure.format
         ultraplot.config.Configurator.context
 
-        Note
-        ----
+        Notes
+        -----
         If you plot something with a `datetime64 \
 <https://docs.scipy.org/doc/numpy/reference/arrays.datetime.html>`__,
         `pandas.Timestamp`, `pandas.DatetimeIndex`, `datetime.date`, `datetime.time`,

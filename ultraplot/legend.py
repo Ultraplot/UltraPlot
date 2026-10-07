@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
+import inspect
 from typing import Any, Iterable, Optional, Tuple, Union
 
 import matplotlib.patches as mpatches
@@ -998,12 +999,17 @@ def _style_lookup(style, key, index, default=None, *, prop=None):
 
     Parameters
     ----------
-    style : the style value (scalar, list, dict)
-    key : dict key when `style` is a mapping (typically a label)
-    index : list index when `style` is a sequence
-    default : fallback value
-    prop : optional attribute name; if it belongs to _COLOR_KEYS,
-           the function treats color-like sequences as single colors.
+    style : scalar, sequence, or mapping
+        The style value to resolve.
+    key : object
+        Dictionary key when `style` is a mapping (typically a label).
+    index : int
+        List index when `style` is a sequence.
+    default : object, optional
+        The fallback value.
+    prop : str, optional
+        Attribute name. If it belongs to ``_COLOR_KEYS``, treat color-like
+        sequences as single colors.
     """
     if style is None:
         return default
@@ -1804,49 +1810,66 @@ A style value resolved per legend entry. Accepts a **scalar** (applied
     ``color=(0.5, 0.5, 0.5)`` behave the same."""
 
 _semantic_style_kwargs_docstring = """\
-Common style keywords accepted via ``handle_kw`` or ``**kwargs``:
-
-``color`` / ``c``
+color, c : color-spec or sequence or mapping, optional
     Marker (and line, when ``line=True``) color. ``c`` is the short alias.
-``marker`` / ``m``
+marker, m : marker-spec or sequence or mapping, optional
     Marker spec. Set to ``None`` or ``""`` to suppress the marker.
-``markersize`` / ``ms``, ``markeredgewidth`` / ``mew``
-    Marker dimensions. ``markersize`` / ``ms`` denote marker diameter in points.
-``s`` / ``size`` / ``sizes``
+markersize, ms : float or sequence or mapping, optional
+    Marker diameter in points.
+markeredgewidth, mew : float or sequence or mapping, optional
+    Marker edge width in points.
+s, size, sizes : float or sequence or mapping, optional
     Scatter-style marker areas, converted to marker diameters for the legend
     handle. Use ``markersize`` / ``ms`` when specifying diameters directly.
-``markerfacecolor`` / ``mfc``, ``markeredgecolor`` / ``mec``, ``markerfacecoloralt`` / ``mfcalt``
+markerfacecolor, mfc, markeredgecolor, mec, markerfacecoloralt, mfcalt : color-spec or sequence or mapping, optional
     Marker fills and edges.
-``linestyle`` / ``ls``, ``linewidth`` / ``lw``
+linestyle, ls : str or tuple or sequence or mapping, optional
     Connector line styling. Setting a non-default ``linestyle`` implicitly
     enables ``line=True``.
-``alpha``, ``antialiased`` / ``aa``, ``fillstyle`` / ``fs``
-    Generic appearance.
-``marker_capstyle``, ``marker_joinstyle``, ``marker_transform``
-    Advanced ``MarkerStyle`` properties; wrapped into the rendered marker.
+linewidth, lw : float or sequence or mapping, optional
+    Connector line width in points.
+alpha : float or sequence or mapping, optional
+    Opacity of the handles.
+antialiased, aa : bool or sequence or mapping, optional
+    Whether the handles are antialiased.
+fillstyle, fs : str or sequence or mapping, optional
+    Marker fill style.
+marker_capstyle, marker_joinstyle : str or sequence or mapping, optional
+    Cap and join styles for the rendered ``MarkerStyle``.
+marker_transform : `~matplotlib.transforms.Transform` or sequence or mapping, optional
+    Transform applied to the rendered ``MarkerStyle``."""
+
+_semantic_style_notes_docstring = """\
+Common style keywords can be passed directly or through ``handle_kw``.
 
 Plural forms (``colors``, ``markers``, ``edgecolors``, ``facecolors``,
 ``linestyles``, ``linewidths``) are accepted as synonyms for the singular
 per-entry form for backward compatibility. ``sizes`` is accepted as a
 scatter-style area alias.
-Each value accepts the scalar / sequence / mapping forms described in
-``%(legend.semantic_style_arg)s``."""
+"""
 
 _semantic_num_style_kwargs_docstring = """\
-Patch-style keywords accepted via ``handle_kw`` or ``**kwargs``:
-
-``facecolor`` / ``fc``, ``edgecolor`` / ``ec``, ``color`` / ``c``
+facecolor, fc, edgecolor, ec, color, c : color-spec or sequence or mapping, optional
     Patch fills and edges.
-``linewidth`` / ``lw``, ``linestyle`` / ``ls``
-    Patch outline styling.
-``alpha``, ``antialiased`` / ``aa``, ``hatch``, ``fill``,
-``joinstyle``, ``capstyle``
-    Generic patch appearance.
+linewidth, lw : float or sequence or mapping, optional
+    Patch outline width in points.
+linestyle, ls : str or tuple or sequence or mapping, optional
+    Patch outline style.
+alpha : float or sequence or mapping, optional
+    Patch opacity.
+antialiased, aa, fill : bool or sequence or mapping, optional
+    Whether the patches are antialiased or filled.
+hatch : str or sequence or mapping, optional
+    Patch hatch pattern.
+joinstyle, capstyle : str or sequence or mapping, optional
+    Join and cap styles for the patch outlines."""
+
+_semantic_num_style_notes_docstring = """\
+Patch-style keywords can be passed directly or through ``handle_kw``.
 
 Plural collection forms (``colors``, ``facecolors``, ``edgecolors``,
 ``linestyles``, ``linewidths``) map to the singular per-entry form.
-Each value accepts the scalar / sequence / mapping forms described in
-``%(legend.semantic_style_arg)s``."""
+"""
 
 _semantic_handle_kw_docstring = """\
 handle_kw : dict, optional
@@ -1868,6 +1891,16 @@ docstring._snippet_manager["legend.semantic_style_kwargs"] = (
 )
 docstring._snippet_manager["legend.semantic_num_style_kwargs"] = (
     _semantic_num_style_kwargs_docstring
+)
+docstring._snippet_manager["legend.semantic_style_notes"] = (
+    _semantic_style_notes_docstring
+    + "\n"
+    + inspect.cleandoc(_semantic_style_arg_docstring)
+)
+docstring._snippet_manager["legend.semantic_num_style_notes"] = (
+    _semantic_num_style_notes_docstring
+    + "\n"
+    + inspect.cleandoc(_semantic_style_arg_docstring)
 )
 docstring._snippet_manager["legend.semantic_handle_kw"] = _semantic_handle_kw_docstring
 

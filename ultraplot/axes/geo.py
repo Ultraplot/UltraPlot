@@ -1539,8 +1539,8 @@ class GeoAxes(shared._SharedAxes, plot.PlotAxes):
     Axes subclass for plotting in geographic projections. Uses either cartopy
     or basemap as a "backend".
 
-    Note
-    ----
+    Notes
+    -----
     This subclass uses longitude and latitude as the default coordinate system for all
     plotting commands by internally passing ``transform=cartopy.crs.PlateCarree()`` to
     cartopy commands and ``latlon=True`` to basemap commands. Also, when using basemap

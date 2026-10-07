@@ -2017,8 +2017,8 @@ class PerceptualColormap(ContinuousColormap):
         **kwargs
             Passed to `matploitlib.colors.LinearSegmentedColormap`.
 
-        Example
-        -------
+        Examples
+        --------
         The below example generates a `PerceptualColormap` from a
         `segmentdata` dictionary that uses color names for the hue data,
         instead of channel values between ``0`` and ``360``.
@@ -2508,8 +2508,8 @@ class DiscreteNorm(mcolors.BoundaryNorm):
             Default tick labels to use for colorbars drawn with this normalizer. This
             is set to values when drawing on-the-fly colorbars.
 
-        Note
-        ----
+        Notes
+        -----
         This normalizer makes sure that levels always span the full range of
         colors in the colormap, whether `extend` is set to ``'min'``, ``'max'``,
         ``'neither'``, or ``'both'``. In matplotlib, when `extend` is not ``'both'``,
@@ -2685,15 +2685,15 @@ class SegmentedNorm(mcolors.Normalize):
         ultraplot.constructor.Norm
         ultraplot.colors.DiscreteNorm
 
-        Note
-        ----
+        Notes
+        -----
         The algorithm this normalizer uses to select normalized values
         in-between level list indices is adapted from the algorithm
         `~matplotlib.colors.LinearSegmentedColormap` uses to select channel
         values in-between segment data points (hence the name `SegmentedNorm`).
 
-        Example
-        -------
+        Examples
+        --------
         In the below example, unevenly spaced levels are passed to
         `~matplotlib.axes.Axes.contourf`, resulting in the automatic
         application of `SegmentedNorm`.

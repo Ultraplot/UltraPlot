@@ -218,8 +218,8 @@ _rc_register_handler_docstring = """
             should be valid ``matplotlib`` rc setting names, and the values
             will be applied to the ``rc_matplotlib`` object.
 
-        Example
-        -------
+        Examples
+        --------
         >>> def _cycle_handler(value):
         ...     # ... logic to create a cycler object from the value ...
         ...     return {'axes.prop_cycle': new_cycler}
@@ -1513,8 +1513,8 @@ class Configurator(MutableMapping, dict):
               `rc_ultraplot` settings are only returned if they are local to the
               "with as" block. This is used internally when formatting axes.
 
-        Note
-        ----
+        Notes
+        -----
         Context "modes" are primarily used internally but may also be useful for power
         users. Mode ``1`` is used when `~ultraplot.axes.Axes.format` is called during
         axes instantiation, and mode ``2`` is used when `~ultraplot.axes.Axes.format`
@@ -1522,8 +1522,8 @@ class Configurator(MutableMapping, dict):
         `~ultraplot.axes.Axes.format` from constantly looking up and re-applying
         unchanged settings and significantly increasing the runtime.
 
-        Example
-        -------
+        Examples
+        --------
         The below applies settings to axes in a specific figure using
         `~Configurator.context`.
 
