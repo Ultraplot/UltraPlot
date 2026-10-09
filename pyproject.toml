@@ -111,7 +111,6 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 ultraplot = [
-  ".opencode/goals/**/*",
   "cmaps/*",
   "colors/*",
   "cycles/*",
