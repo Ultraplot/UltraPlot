@@ -269,7 +269,23 @@ def run(args):
         "different" if "different" in e.get("comparison", {}).values() else "ok"
         for e in entries
     )
+    modes = {}
+    for mode in (() if args.baseline_only else args.modes):
+        subset = [e for e in entries if e["mode"] == mode]
+        differences = Counter(
+            key for e in subset for key, status in e.get("comparison", {}).items()
+            if status == "different"
+        )
+        modes[mode] = {
+            "cases": len(subset),
+            "errors": sum(e["status"] == "error" for e in subset),
+            "artist_geometry_matches": len(subset) - differences["artists"],
+            "legend_matches": len(subset) - differences["legend"],
+            "differences_by_field": dict(differences),
+        }
+        print(mode, modes[mode])
     report = {
+        "modes": modes,
         "versions": {
             "matplotlib": matplotlib.__version__, "seaborn": sns.__version__,
             "ultraplot": getattr(uplt, "__version__", None),
