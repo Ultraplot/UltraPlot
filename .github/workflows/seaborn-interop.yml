@@ -1,0 +1,36 @@
+name: Seaborn interoperability diagnostics
+
+on:
+  push:
+    branches:
+      - test/seaborn-statistics-interoperability
+    paths:
+      - tools/check_seaborn_interop.py
+      - .github/workflows/seaborn-interop.yml
+  workflow_dispatch:
+
+jobs:
+  seaborn-compat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install plotting dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[stats]' seaborn pandas
+      - name: Run all Seaborn statistical API comparisons
+        run: |
+          python tools/check_seaborn_interop.py \
+            --modes direct external native \
+            --output seaborn-interop-report.json
+      - name: Upload comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seaborn-interop-report
+          path: seaborn-interop-report.json
+          if-no-files-found: warn
