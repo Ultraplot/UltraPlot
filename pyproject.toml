@@ -76,7 +76,7 @@ stats = [
 ]
 
 typing = [
-  "basedpyright==1.40.1",
+  "basedpyright==1.40.2",
 ]
 
 [build-system]
