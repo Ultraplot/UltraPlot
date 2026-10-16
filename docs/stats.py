@@ -300,6 +300,17 @@ for ax, which, color, title in zip(axs, "lr", colors, titles):
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
+# Raincloud plots
+# ---------------
+# :meth:`~ultraplot.axes.PlotAxes.raincloud` combines a half violin, jittered
+# observations, and a narrow boxplot. Columns of arrays and DataFrames represent
+# distributions; a list of vectors also supports unequal sample sizes. Colours
+# and positions are coordinated across components. Use ``orientation='horizontal'``
+# to put values on the x axis, and ``cloud=False``, ``rain=False``, or ``box=False``
+# to disable individual components. ``seed`` makes the jitter reproducible.
+# The boxplot describes sample spread, not uncertainty in an estimated mean.
+# See the :ref:`sphx_glr_gallery_plot_types_13_raincloud.py` gallery example.
+#
 # .. _ug_ridgeline:
 #
 # Ridgeline plots
