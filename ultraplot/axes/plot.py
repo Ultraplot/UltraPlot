@@ -6722,6 +6722,116 @@ class PlotAxes(base.Axes):
         kwargs = _parse_vert(default_vert=False, **kwargs)
         return self._apply_violinplot(*args, **kwargs)
 
+    def raincloud(
+        self,
+        data,
+        *,
+        positions=None,
+        labels=None,
+        orientation="vertical",
+        side="high",
+        jitter=0.08,
+        offset=0.15,
+        cloud=True,
+        rain=True,
+        box=True,
+        seed=0,
+        color=None,
+        cycle=None,
+        cycle_kw=None,
+        cloud_kw=None,
+        rain_kw=None,
+        box_kw=None,
+    ):
+        """
+        Plot half violins, individual observations, and narrow boxplots.
+
+        Parameters
+        ----------
+        data : array-like, sequence of array-like, or DataFrame
+            A vector represents one distribution. Columns of a 2D array or
+            DataFrame represent distributions. A list or tuple of vectors
+            represents separate distributions, including unequal sample sizes.
+            Masked and non-finite observations are ignored. Empty groups retain
+            their positions and labels but are skipped with a warning.
+        positions : sequence of float, optional
+            Distinct group centres. Defaults to ``range(number_of_groups)``.
+        labels : sequence of str, optional
+            Group tick labels. Defaults to DataFrame column labels, if present.
+        orientation : {'vertical', 'horizontal'}, default: 'vertical'
+            Direction of the measured variable. For horizontal plots, group
+            centres lie on the y axis.
+        side : {'low', 'high'}, default: 'high'
+            Place the cloud below or above its group centre on the categorical
+            axis. Observations are placed on the opposite side.
+        jitter : float, default: 0.08
+            Half-width of uniform jitter in categorical-axis data units.
+        offset : float, default: 0.15
+            Distance of the cloud baseline and the centre of the observations
+            from the group centre, in categorical-axis data units.
+        cloud, rain, box : bool, default: True
+            Whether to draw each component. At least one must be enabled.
+            Boxplots show the median, interquartile range, and Tukey whiskers;
+            these are distribution summaries, not confidence intervals.
+        seed : int, numpy.random.Generator, or None, default: 0
+            Random seed for reproducible jitter, or a generator to use directly.
+            Does not change NumPy's global random state.
+        color : color-spec, optional
+            Colour shared by all groups. Otherwise each group uses one cycle
+            colour shared across its three components.
+        cycle : cycle-spec, optional
+            Property cycle used for group colours.
+        cycle_kw : dict, optional
+            Additional arguments for constructing the cycle.
+        cloud_kw, rain_kw, box_kw : dict, optional
+            Component options passed to `violinplot`, `scatter`, and `boxplot`,
+            respectively. Override default styling and widths. Layout options
+            such as positions and orientation must be supplied to this method.
+
+        Returns
+        -------
+        dict
+            ``cloud`` contains violin PolyCollections, ``rain`` contains scatter
+            PathCollections, and ``box`` contains boxplot artist dictionaries.
+            Each list follows input group order, with ``None`` for disabled
+            components or empty groups.
+
+        Examples
+        --------
+        >>> rng = np.random.default_rng(42)
+        >>> data = [rng.normal(size=80), rng.normal(1, size=60)]
+        >>> fig, ax = uplt.subplots()
+        >>> artists = ax.raincloud(data, labels=['Control', 'Treatment'])
+
+        See also
+        --------
+        PlotAxes.violinplot
+        PlotAxes.scatter
+        PlotAxes.boxplot
+        """
+        from .plot_types.raincloud import raincloud
+
+        return raincloud(
+            self,
+            data,
+            positions=positions,
+            labels=labels,
+            orientation=orientation,
+            side=side,
+            jitter=jitter,
+            offset=offset,
+            cloud=cloud,
+            rain=rain,
+            box=box,
+            seed=seed,
+            color=color,
+            cycle=cycle,
+            cycle_kw=cycle_kw,
+            cloud_kw=cloud_kw,
+            rain_kw=rain_kw,
+            box_kw=box_kw,
+        )
+
     def _apply_ridgeline(
         self,
         data,
