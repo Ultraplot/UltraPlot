@@ -6761,13 +6761,13 @@ class PlotAxes(base.Axes):
         autoformat=None,
         legend=None,
         legend_kw=None,
-        side="high",
-        jitter=0.08,
-        offset=0.15,
-        cloud=True,
-        rain=True,
-        box=True,
-        seed=0,
+        side=None,
+        jitter=None,
+        offset=None,
+        cloud=None,
+        rain=None,
+        box=None,
+        seed=None,
         color=None,
         cycle=None,
         cycle_kw=None,
@@ -6795,7 +6795,7 @@ class PlotAxes(base.Axes):
         labels : sequence of str, optional
             Group tick and legend labels. With automatic formatting, infer
             column labels from pandas or xarray input.
-        orientation : {'vertical', 'horizontal'}, default: 'vertical'
+        orientation : {'vertical', 'horizontal'}, default: :rc:`raincloud.orientation`
             Direction of the measured variable. For horizontal plots, group
             centres lie on the y axis.
         vert : bool, optional
@@ -6806,21 +6806,25 @@ class PlotAxes(base.Axes):
             Automatically add a legend using one representative per group.
         legend_kw : dict, optional
             Additional legend options, e.g. ``{'title': 'Condition'}``.
-        side : {'low', 'high'}, default: 'high'
+        side : {'low', 'high'}, default: :rc:`raincloud.side`
             Place the cloud below or above its group centre on the categorical
             axis. Observations are placed on the opposite side.
-        jitter : float, default: 0.08
+        jitter : float, default: :rc:`raincloud.jitter`
             Half-width of uniform jitter in categorical-axis data units.
-        offset : float, default: 0.15
+        offset : float, default: :rc:`raincloud.offset`
             Distance of the cloud baseline and the centre of the observations
             from the group centre, in categorical-axis data units.
-        cloud, rain, box : bool, default: True
-            Whether to draw each component. At least one must be enabled.
+        cloud, rain, box : bool, optional
+            Whether to draw each component. Defaults to :rc:`raincloud.cloud`,
+            :rc:`raincloud.rain`, and :rc:`raincloud.box`, respectively.
+            At least one must be enabled.
             Boxplots show the median, interquartile range, and Tukey whiskers;
             these are distribution summaries, not confidence intervals.
-        seed : int, numpy.random.Generator, or None, default: 0
+        seed : int, numpy.random.Generator, or None, optional
             Random seed for reproducible jitter, or a generator to use directly.
-            Does not change NumPy's global random state.
+            Defaults to :rc:`raincloud.seed`. Set that rc value to ``None`` or
+            pass a fresh generator for unseeded jitter. Does not change NumPy's
+            global random state.
         color : color-spec, optional
             Colour shared by all groups. Otherwise each group uses one cycle
             colour shared across its three components.
@@ -6835,6 +6839,9 @@ class PlotAxes(base.Axes):
             Artist aliases supported by these methods are accepted, e.g.
             ``rain_kw={'ms': 25, 'lw': 1}`` or
             ``cloud_kw={'fc': 'blue', 'ec': 'navy', 'lw': 1}``.
+            Defaults come from the ``raincloud.cloud.*``, ``raincloud.rain.*``,
+            and ``raincloud.box.*`` rc settings. Explicit component options take
+            precedence over these defaults.
 
         Returns
         -------
@@ -6869,9 +6876,11 @@ class PlotAxes(base.Axes):
             raise ValueError("orientation must be 'vertical' or 'horizontal'")
         orientation = (
             "vertical"
-            if _parse_vert(vert=vert, orientation=orientation, default_vert=True)[
-                "vert"
-            ]
+            if _parse_vert(
+                vert=vert,
+                orientation=orientation,
+                default_vert=rc["raincloud.orientation"] == "vertical",
+            )["vert"]
             else "horizontal"
         )
 

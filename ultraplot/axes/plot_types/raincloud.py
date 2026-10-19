@@ -7,7 +7,7 @@ import matplotlib.colors as mcolors
 
 from ... import _sharing as psharing, colors as pcolors
 from ...config import rc
-from ...internals import _canonicalize_kwargs, _pop_props, inputs, warnings
+from ...internals import _canonicalize_kwargs, _not_none, _pop_props, inputs, warnings
 
 
 def _resolve_color(color):
@@ -93,17 +93,17 @@ def raincloud(
     *,
     positions=None,
     labels=None,
-    orientation="vertical",
+    orientation=None,
     autoformat=None,
     legend=None,
     legend_kw=None,
-    side="high",
-    jitter=0.08,
-    offset=0.15,
-    cloud=True,
-    rain=True,
-    box=True,
-    seed=0,
+    side=None,
+    jitter=None,
+    offset=None,
+    cloud=None,
+    rain=None,
+    box=None,
+    seed=None,
     color=None,
     cycle=None,
     cycle_kw=None,
@@ -112,6 +112,14 @@ def raincloud(
     box_kw=None,
 ):
     """Draw the components of :meth:`PlotAxes.raincloud`."""
+    orientation = _not_none(orientation, rc["raincloud.orientation"])
+    side = _not_none(side, rc["raincloud.side"])
+    jitter = _not_none(jitter, rc["raincloud.jitter"])
+    offset = _not_none(offset, rc["raincloud.offset"])
+    cloud = _not_none(cloud, rc["raincloud.cloud"])
+    rain = _not_none(rain, rc["raincloud.rain"])
+    box = _not_none(box, rc["raincloud.box"])
+    seed = _not_none(seed, rc["raincloud.seed"])
     if orientation not in ("vertical", "horizontal"):
         raise ValueError("orientation must be 'vertical' or 'horizontal'")
     if side not in ("low", "high"):
@@ -220,9 +228,12 @@ def raincloud(
             )
             continue
         if cloud:
-            kw = {"widths": 0.6, **_group_options(styles[0], i, n)}
+            kw = {
+                "widths": rc["raincloud.cloud.width"],
+                **_group_options(styles[0], i, n),
+            }
             props = _pop_props(kw, "patch")
-            props.setdefault("alpha", 0.4)
+            props.setdefault("alpha", rc["raincloud.cloud.alpha"])
             before = set(ax.get_children())
             bodies = ax.violinplot(
                 [position + direction * offset],
@@ -250,12 +261,12 @@ def raincloud(
                 + rng.uniform(-jitter, jitter, values.size)
             )
             kw = {
-                "alpha": 0.5,
-                "linewidths": 0,
+                "alpha": rc["raincloud.rain.alpha"],
+                "linewidths": rc["raincloud.rain.linewidth"],
                 **_filter_point_style(styles[1], masks[i]),
             }
             if not any(key in kw for key in ("sizes", "size")):
-                kw["sizes"] = 12
+                kw["sizes"] = rc["raincloud.rain.markersize"]
             if not any(key in kw for key in ("colors", "facecolors")):
                 kw["colors"] = group_color
             coords = (locations, values) if vert else (values, locations)
@@ -263,10 +274,10 @@ def raincloud(
         if box:
             kw = {
                 "facecolor": group_color,
-                "widths": 0.12,
-                "fill": True,
-                "showfliers": False,
-                "zorder": 3,
+                "widths": rc["raincloud.box.width"],
+                "fill": rc["raincloud.box.fill"],
+                "showfliers": rc["raincloud.box.showfliers"],
+                "zorder": rc["raincloud.box.zorder"],
                 **_group_options(styles[2], i, n),
             }
             artists["box"][i] = ax.boxplot(

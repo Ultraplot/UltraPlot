@@ -441,3 +441,118 @@ def test_raincloud_per_group_widths_and_quantiles():
         )
         assert result["cloud_extras"][i]
     fig.canvas.draw()
+
+
+def test_raincloud_rc_layout_and_appearance():
+    fig, ax = uplt.subplots()
+    settings = {
+        "raincloud.orientation": "horizontal",
+        "raincloud.side": "low",
+        "raincloud.jitter": 0,
+        "raincloud.offset": 0.3,
+        "raincloud.cloud.width": 0.8,
+        "raincloud.cloud.alpha": 0.2,
+        "raincloud.rain.markersize": 36,
+        "raincloud.rain.linewidth": 1.5,
+        "raincloud.rain.alpha": 0.7,
+        "raincloud.box.width": 0.2,
+        "raincloud.box.fill": False,
+        "raincloud.box.showfliers": True,
+        "raincloud.box.zorder": 5,
+    }
+    with uplt.rc.context(settings):
+        result = ax.raincloud(np.r_[np.arange(8.0), 100])
+    points = result["rain"][0]
+    np.testing.assert_allclose(points.get_offsets()[:, 1], 0.3)
+    np.testing.assert_array_equal(points.get_sizes(), [36])
+    np.testing.assert_allclose(points.get_linewidths(), [1.5])
+    assert points.get_alpha() == 0.7
+    density = result["cloud"][0]
+    vertices = density.get_paths()[0].vertices[:, 1]
+    assert vertices.max() == pytest.approx(-0.3)
+    assert np.ptp(vertices) == pytest.approx(0.4)
+    assert density.get_alpha() == 0.2
+    box = result["box"][0]
+    assert np.ptp(box["boxes"][0].get_ydata()) == pytest.approx(0.2)
+    assert box["boxes"][0].get_zorder() == 5
+    np.testing.assert_array_equal(box["fliers"][0].get_xdata(), [100])
+    assert not ax.patches
+    fig.canvas.draw()
+
+
+def test_raincloud_explicit_options_override_rc():
+    fig, ax = uplt.subplots()
+    settings = {
+        "raincloud.orientation": "horizontal",
+        "raincloud.side": "low",
+        "raincloud.jitter": 0.5,
+        "raincloud.offset": 0.4,
+        "raincloud.rain.markersize": 40,
+        "raincloud.rain.linewidth": 3,
+        "raincloud.rain.alpha": 0.8,
+        "raincloud.cloud.alpha": 0.9,
+        "raincloud.box.fill": False,
+        "raincloud.box.width": 0.5,
+    }
+    with uplt.rc.context(settings):
+        result = ax.raincloud(
+            np.arange(8.0),
+            orientation="vertical",
+            side="high",
+            jitter=0,
+            offset=0,
+            rain_kw={"ms": 20, "lw": 1, "a": 0.3},
+            cloud_kw={"a": 0.25},
+            box_kw={"filled": True, "widths": 0.1},
+        )
+    points = result["rain"][0]
+    np.testing.assert_array_equal(points.get_offsets()[:, 0], np.zeros(8))
+    np.testing.assert_array_equal(points.get_sizes(), [20])
+    np.testing.assert_array_equal(points.get_linewidths(), [1])
+    assert points.get_alpha() == 0.3
+    assert result["cloud"][0].get_alpha() == 0.25
+    assert result["cloud"][0].get_paths()[0].vertices[:, 0].min() == 0
+    assert np.ptp(result["box"][0]["boxes"][0].get_xdata()) == pytest.approx(0.1)
+    assert len(ax.patches) == 1
+
+
+def test_raincloud_rc_visibility_and_explicit_false():
+    fig, axes = uplt.subplots(ncols=2)
+    with uplt.rc.context({"raincloud.cloud": False, "raincloud.box": False}):
+        first = axes[0].raincloud(np.arange(8.0))
+        second = axes[1].raincloud(np.arange(8.0), cloud=True, rain=False)
+    assert first["cloud"] == first["box"] == [None]
+    assert first["rain"][0] is not None
+    assert second["cloud"][0] is not None
+    assert second["rain"] == second["box"] == [None]
+
+
+def test_raincloud_rc_seed_and_generator_override():
+    fig, axes = uplt.subplots(ncols=3)
+    with uplt.rc.context({"raincloud.seed": 17}):
+        first = axes[0].raincloud(np.arange(8.0))
+        second = axes[1].raincloud(np.arange(8.0), seed=17)
+        third = axes[2].raincloud(np.arange(8.0), seed=np.random.default_rng(7))
+    np.testing.assert_array_equal(
+        first["rain"][0].get_offsets(), second["rain"][0].get_offsets()
+    )
+    assert not np.array_equal(
+        first["rain"][0].get_offsets(), third["rain"][0].get_offsets()
+    )
+
+
+def test_raincloud_rc_file_and_context_restore(tmp_path):
+    original = uplt.rc["raincloud.side"]
+    path = tmp_path / "raincloud.rc"
+    path.write_text(
+        "raincloud.side: low\nraincloud.cloud.alpha: 0.25\nraincloud.seed: None\n"
+    )
+    fig, ax = uplt.subplots()
+    with uplt.rc.context(file=str(path)):
+        result = ax.raincloud(np.arange(8.0))
+        assert uplt.rc["raincloud.seed"] is None
+        assert result["cloud"][0].get_alpha() == 0.25
+        assert result["cloud"][0].get_paths()[0].vertices[:, 0].max() == pytest.approx(
+            -0.15
+        )
+    assert uplt.rc["raincloud.side"] == original

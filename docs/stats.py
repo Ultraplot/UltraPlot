@@ -314,6 +314,11 @@ for ax, which, color, title in zip(axs, "lr", colors, titles):
 # Component dictionaries accept artist aliases and native options, e.g.
 # ``rain_kw={'ms': 20, 'lw': 0.5}`` and
 # ``box_kw={'medianprops': {'color': 'black', 'lw': 2}}``.
+# Layout, visibility, jitter seed, and component appearance defaults live under
+# ``raincloud.*`` rc settings. For example,
+# ``uplt.rc['raincloud.rain.markersize'] = 20`` changes observation marker areas
+# globally, or use ``uplt.rc.context`` to change defaults temporarily. Explicit
+# arguments and component dictionary entries override the rc defaults.
 # The boxplot describes sample spread, not uncertainty in an estimated mean.
 # See the :ref:`sphx_glr_gallery_plot_types_13_raincloud.py` gallery example.
 #
