@@ -6400,7 +6400,7 @@ class PlotAxes(base.Axes):
         )
         if fill is None:
             fill = fillcolor is not None or fillalpha is not None
-            fill = fill or kw.get("cycle") is not None
+            fill = fill or kw.get("cycle") is not None or kw.get("patch_artist", False)
 
         # Parse non-color properties
         # NOTE: Output dict keys are plural but we use singular for keyword args
@@ -6416,9 +6416,19 @@ class PlotAxes(base.Axes):
         ):
             prefix = key.rstrip("es")  # singular form
             props[key] = iprops = _pop_props(kw, "line", prefix=prefix)
-            iprops.setdefault("color", edgecolor)
+            patch_box = key == "boxes" and kw.get("patch_artist", False)
+            artist_type = mpatches.PathPatch if patch_box else mlines.Line2D
+            iprops.update(
+                cbook.normalize_kwargs(kw.pop(prefix + "props", {}), artist_type)
+            )
+            if patch_box:
+                if "color" not in iprops:
+                    iprops.setdefault("edgecolor", edgecolor)
+            else:
+                iprops.setdefault("color", edgecolor)
             iprops.setdefault("linewidth", linewidth)
-            iprops.setdefault("markeredgecolor", edgecolor)
+            if not patch_box:
+                iprops.setdefault("markeredgecolor", edgecolor)
 
         # Parse color properties
         x, y, kw = self._parse_1d_args(
@@ -6509,11 +6519,27 @@ class PlotAxes(base.Axes):
                     for key, value in aprops.items()
                 }
                 obj.update(iprops)
-                # "Filled" boxplot by adding patch beneath line path
-                if key == "boxes" and (
-                    fillcolor[i] is not None
-                    or fillalpha is not None
-                    or hatch[i] is not None
+                # Filled boxes may already be patches when patch_artist=True.
+                if key == "boxes" and isinstance(obj, mpatches.Patch):
+                    obj.set_fill(fill)
+                    if fillcolor[i] is not None and not {
+                        "facecolor",
+                        "color",
+                    }.intersection(aprops):
+                        obj.set_facecolor(fillcolor[i])
+                    if fillalpha is not None and "alpha" not in aprops:
+                        obj.set_alpha(fillalpha)
+                    if hatch[i] is not None:
+                        obj.set_hatch(hatch[i])
+                    artists.setdefault("patches", []).append(obj)
+                elif (
+                    key == "boxes"
+                    and fill
+                    and (
+                        fillcolor[i] is not None
+                        or fillalpha is not None
+                        or hatch[i] is not None
+                    )
                 ):
                     patch = mpatches.PathPatch(
                         obj.get_path(),
@@ -6523,6 +6549,7 @@ class PlotAxes(base.Axes):
                         hatch=hatch[i],
                     )
                     self.add_artist(patch)
+                    artists.setdefault("patches", []).append(patch)
                 # Outlier markers
                 if key == "fliers":
                     if marker is not None:
@@ -6724,11 +6751,16 @@ class PlotAxes(base.Axes):
 
     def raincloud(
         self,
-        data,
+        dataset=None,
         *,
+        data=None,
         positions=None,
         labels=None,
-        orientation="vertical",
+        orientation=None,
+        vert=None,
+        autoformat=None,
+        legend=None,
+        legend_kw=None,
         side="high",
         jitter=0.08,
         offset=0.15,
@@ -6748,19 +6780,32 @@ class PlotAxes(base.Axes):
 
         Parameters
         ----------
-        data : array-like, sequence of array-like, or DataFrame
+        dataset : array-like, sequence of array-like, DataFrame, or str
             A vector represents one distribution. Columns of a 2D array or
             DataFrame represent distributions. A list or tuple of vectors
             represents separate distributions, including unequal sample sizes.
             Masked and non-finite observations are ignored. Empty groups retain
             their positions and labels but are skipped with a warning.
+        data : mapping, optional
+            Resolve a string ``dataset`` as a key in this mapping, following
+            other plotting methods. ``raincloud(data=array)`` is also accepted
+            as an alternative to passing the observations positionally.
         positions : sequence of float, optional
             Distinct group centres. Defaults to ``range(number_of_groups)``.
         labels : sequence of str, optional
-            Group tick labels. Defaults to DataFrame column labels, if present.
+            Group tick and legend labels. With automatic formatting, infer
+            column labels from pandas or xarray input.
         orientation : {'vertical', 'horizontal'}, default: 'vertical'
             Direction of the measured variable. For horizontal plots, group
             centres lie on the y axis.
+        vert : bool, optional
+            Alternative to ``orientation``, as with box and violin plots.
+        autoformat : bool, optional
+            Infer labels from input metadata. Defaults to :rc:`autoformat`.
+        legend : bool or str, optional
+            Automatically add a legend using one representative per group.
+        legend_kw : dict, optional
+            Additional legend options, e.g. ``{'title': 'Condition'}``.
         side : {'low', 'high'}, default: 'high'
             Place the cloud below or above its group centre on the categorical
             axis. Observations are placed on the opposite side.
@@ -6798,6 +6843,8 @@ class PlotAxes(base.Axes):
             PathCollections, and ``box`` contains boxplot artist dictionaries.
             Each list follows input group order, with ``None`` for disabled
             components or empty groups.
+            Filled box patches are included under ``box[i]['patches']``.
+            Optional violin summary artists are available as ``cloud_extras``.
 
         Examples
         --------
@@ -6814,12 +6861,29 @@ class PlotAxes(base.Axes):
         """
         from .plot_types.raincloud import raincloud
 
+        if dataset is None:
+            dataset = data
+        elif data is not None:
+            dataset, positions = inputs._from_data(data, dataset, positions)
+        if orientation not in (None, "vertical", "horizontal"):
+            raise ValueError("orientation must be 'vertical' or 'horizontal'")
+        orientation = (
+            "vertical"
+            if _parse_vert(vert=vert, orientation=orientation, default_vert=True)[
+                "vert"
+            ]
+            else "horizontal"
+        )
+
         return raincloud(
             self,
-            data,
+            dataset,
             positions=positions,
             labels=labels,
             orientation=orientation,
+            autoformat=autoformat,
+            legend=legend,
+            legend_kw=legend_kw,
             side=side,
             jitter=jitter,
             offset=offset,

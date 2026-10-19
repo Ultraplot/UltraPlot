@@ -199,6 +199,18 @@ def icon_ridgeline(ax):
     ax.ridgeline(data, overlap=0.6, cmap=ICON_SEQUENTIAL, lw=0.7)
 
 
+def icon_raincloud(ax):
+    data = np.random.default_rng(42).normal(size=(45, 3)) + [0, 0.7, -0.5]
+    ax.raincloud(
+        data,
+        orientation="horizontal",
+        color=ICON_LINE,
+        rain_kw={"ms": 3},
+        cloud_kw={"lw": 0.5},
+        box_kw={"lw": 0.7},
+    )
+
+
 def icon_errorbars(ax):
     ax.plot(
         WAVE_X,
@@ -349,7 +361,7 @@ def icon_curved_quiver(ax):
         linewidth=1.4,
         arrowsize=1.2,
         arrow_at_end=True,
-        scale = 3,
+        scale=3,
     )
 
 
@@ -587,6 +599,13 @@ ICONS = {
     "violin": (icon_violin, None, SAME, None, "distribution"),
     "beeswarm": (icon_beeswarm, None, NEW, None, "distribution"),
     "ridgeline": (icon_ridgeline, None, NEW, None, "distribution"),
+    "raincloud": (
+        icon_raincloud,
+        None,
+        BETTER,
+        "violinplot + scatter + boxplot",
+        "distribution",
+    ),
     "errorbars": (
         icon_errorbars,
         None,

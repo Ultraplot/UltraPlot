@@ -308,6 +308,12 @@ for ax, which, color, title in zip(axs, "lr", colors, titles):
 # and positions are coordinated across components. Use ``orientation='horizontal'``
 # to put values on the x axis, and ``cloud=False``, ``rain=False``, or ``box=False``
 # to disable individual components. ``seed`` makes the jitter reproducible.
+# Use ``legend='r'`` for a group legend, and ``data=table`` to look up a named
+# input, e.g. ``ax.raincloud('samples', data={'samples': samples})``. Automatic
+# pandas/xarray labels respect :rc:`autoformat`; explicit ``labels`` override them.
+# Component dictionaries accept artist aliases and native options, e.g.
+# ``rain_kw={'ms': 20, 'lw': 0.5}`` and
+# ``box_kw={'medianprops': {'color': 'black', 'lw': 2}}``.
 # The boxplot describes sample spread, not uncertainty in an estimated mean.
 # See the :ref:`sphx_glr_gallery_plot_types_13_raincloud.py` gallery example.
 #

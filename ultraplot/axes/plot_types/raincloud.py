@@ -1,14 +1,44 @@
 """Composition of half violins, observations, and boxplots."""
 
-import numpy as np
+from numbers import Number
 
-from ...internals import _canonicalize_kwargs, _pop_props, warnings
+import numpy as np
+import matplotlib.colors as mcolors
+
+from ... import _sharing as psharing, colors as pcolors
+from ...config import rc
+from ...internals import _canonicalize_kwargs, _pop_props, inputs, warnings
+
+
+def _resolve_color(color):
+    """Match the (colormap, index) colour shorthand of other plot methods."""
+    if (
+        isinstance(color, tuple)
+        and len(color) == 2
+        and isinstance(color[0], (str, mcolors.Colormap))
+        and isinstance(color[1], Number)
+    ):
+        cmap, index = color
+        return mcolors.to_hex(
+            pcolors._cmap_database.get_cmap(cmap)(index), keep_alpha=True
+        )
+    return color
 
 
 def _component_style(options, category):
     """Resolve artist aliases before applying raincloud's component defaults."""
     style = dict(options or {})
     style.update(_pop_props(style, category))
+    for key in (
+        "color",
+        "facecolor",
+        "edgecolor",
+        "colors",
+        "facecolors",
+        "edgecolors",
+    ):
+        if key in style:
+            style[key] = _resolve_color(style[key])
     if category == "patch":
         # Box/violin wrappers style faces and edges separately rather than
         # accepting the generic Patch colour argument themselves.
@@ -19,6 +49,44 @@ def _component_style(options, category):
     return style
 
 
+def _filter_point_style(style, valid):
+    """Keep per-observation scatter properties aligned with cleaned values."""
+    style = dict(style)
+    for key in (
+        "sizes",
+        "size",
+        "colors",
+        "facecolors",
+        "edgecolors",
+        "linewidths",
+        "alpha",
+    ):
+        if key not in style:
+            continue
+        value = style[key]
+        if key in ("colors", "facecolors", "edgecolors") and mcolors.is_color_like(
+            value
+        ):
+            continue
+        array = np.asarray(value)
+        if array.ndim and array.shape[0] == valid.size:
+            style[key] = array[valid]
+    return style
+
+
+def _group_options(style, index, count):
+    """Select native box/violin options that contain one value per group."""
+    style = dict(style)
+    for key in ("widths", "capwidths"):
+        value = style.get(key)
+        if np.ndim(value) == 1 and len(value) == count:
+            style[key] = value[index]
+    quantiles = style.get("quantiles")
+    if quantiles is not None and len(quantiles) == count and np.ndim(quantiles[0]):
+        style["quantiles"] = quantiles[index]
+    return style
+
+
 def raincloud(
     ax,
     data,
@@ -26,6 +94,9 @@ def raincloud(
     positions=None,
     labels=None,
     orientation="vertical",
+    autoformat=None,
+    legend=None,
+    legend_kw=None,
     side="high",
     jitter=0.08,
     offset=0.15,
@@ -53,9 +124,19 @@ def raincloud(
 
     # Arrays and labelled tables use columns; sequences of vectors permit
     # unequal sample sizes, following Matplotlib's distribution convention.
-    columns = getattr(data, "columns", None)
-    if labels is None and columns is not None:
-        labels = list(columns)
+    autoformat = rc["autoformat"] if autoformat is None else autoformat
+    group_title = value_title = None
+    if not isinstance(data, (list, tuple)):
+        metadata = inputs._to_duck_array(data)
+        if autoformat:
+            value_title = inputs._meta_title(metadata)
+            if metadata.ndim == 2:
+                inferred = inputs._meta_labels(metadata, axis=1, always=False)
+                if inferred is not None:
+                    group_title = inputs._meta_title(inferred)
+                    if labels is None:
+                        labels = inputs._to_numpy_array(inferred).tolist()
+        data = inputs._to_numpy_array(metadata, strip_units=True)
     if isinstance(data, (list, tuple)):
         distributions = data if data and np.ndim(data[0]) else [data]
     else:
@@ -70,12 +151,14 @@ def raincloud(
             distributions = values.T
         else:
             raise ValueError("data must be one- or two-dimensional")
-    cleaned = []
+    cleaned, masks = [], []
     for values in distributions:
         if np.ndim(values) != 1:
             raise ValueError("Each distribution must be one-dimensional")
-        values = np.ma.masked_invalid(np.ma.asarray(values, dtype=float)).compressed()
-        cleaned.append(values)
+        values = np.ma.masked_invalid(np.ma.asarray(values, dtype=float))
+        valid = ~np.ma.getmaskarray(values)
+        masks.append(valid)
+        cleaned.append(values.compressed())
     n = len(cleaned)
     if not n or not any(values.size for values in cleaned):
         raise ValueError("No finite observations to plot")
@@ -117,6 +200,7 @@ def raincloud(
             )
 
     ax._parse_cycle(n, cycle=cycle, cycle_kw=cycle_kw)
+    color = _resolve_color(color)
     colors = [
         color if color is not None else ax._get_patches_for_fill.get_next_color()
         for _ in range(n)
@@ -125,6 +209,7 @@ def raincloud(
     vert = orientation == "vertical"
     direction = 1 if side == "high" else -1
     artists = {key: [None] * n for key in ("cloud", "rain", "box")}
+    handles = []
 
     for i, (position, values, group_color) in enumerate(
         zip(positions, cleaned, colors)
@@ -135,26 +220,40 @@ def raincloud(
             )
             continue
         if cloud:
-            kw = {"widths": 0.6, **styles[0]}
+            kw = {"widths": 0.6, **_group_options(styles[0], i, n)}
             props = _pop_props(kw, "patch")
             props.setdefault("alpha", 0.4)
+            before = set(ax.get_children())
             bodies = ax.violinplot(
                 [position + direction * offset],
-                values,
+                values[:, None],
                 vert=vert,
                 side=side,
                 fillcolor=group_color,
                 **kw,
             )
+            if isinstance(bodies, tuple):
+                bodies = bodies[0]
             artists["cloud"][i] = bodies[0]
             bodies[0].update(props)
+            extras = [
+                artist
+                for artist in ax.get_children()
+                if artist not in before and artist is not bodies[0]
+            ]
+            if extras:
+                artists.setdefault("cloud_extras", [None] * n)[i] = extras
         if rain:
             locations = (
                 position
                 - direction * offset
                 + rng.uniform(-jitter, jitter, values.size)
             )
-            kw = {"alpha": 0.5, "linewidths": 0, **styles[1]}
+            kw = {
+                "alpha": 0.5,
+                "linewidths": 0,
+                **_filter_point_style(styles[1], masks[i]),
+            }
             if not any(key in kw for key in ("sizes", "size")):
                 kw["sizes"] = 12
             if not any(key in kw for key in ("colors", "facecolors")):
@@ -168,7 +267,7 @@ def raincloud(
                 "fill": True,
                 "showfliers": False,
                 "zorder": 3,
-                **styles[2],
+                **_group_options(styles[2], i, n),
             }
             artists["box"][i] = ax.boxplot(
                 [position],
@@ -177,11 +276,32 @@ def raincloud(
                 manage_ticks=False,
                 **kw,
             )
+        if cloud:
+            handle = artists["cloud"][i]
+        elif rain:
+            handle = artists["rain"][i]
+        else:
+            group = artists["box"][i]
+            handle = (group.get("patches") or group["boxes"] or group["medians"])[0]
+        if labels is not None or legend:
+            handle.set_label(str(labels[i] if labels is not None else position))
+        handles.append(handle)
 
     axis = ax.xaxis if vert else ax.yaxis
     axis.set_ticks(positions)
     if labels is not None:
         axis.set_ticklabels(labels)
-    if columns is not None and columns.name and axis.isDefault_label:
-        axis.set_label_text(str(columns.name))
+    value_axis = ax.yaxis if vert else ax.xaxis
+    formatting = {}
+    if group_title and axis.isDefault_label:
+        formatting["xlabel" if vert else "ylabel"] = group_title
+    if value_title and value_axis.isDefault_label:
+        formatting["ylabel" if vert else "xlabel"] = value_title
+    if formatting:
+        with psharing.preserve_axis_sharing():
+            ax.format(**formatting)
+    legend_kw = dict(legend_kw or {})
+    if group_title:
+        legend_kw.setdefault("title", group_title)
+    ax._update_guide(handles, legend=legend, legend_kw=legend_kw)
     return artists
