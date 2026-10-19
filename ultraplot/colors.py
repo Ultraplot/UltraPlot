@@ -2093,8 +2093,10 @@ class PerceptualColormap(ContinuousColormap):
             self._lut[i, :3] = to_rgb(self._lut[i, :3], self._space)
         self._lut[: self.N, :3] = _clip_colors(self._lut[: self.N, :3], self._clip)
 
-        self._set_extremes()  # generally just used end values in segmentdata
         self._isinit = True
+        # Order here is important as
+        # mpl.3.11 only updates when init is set to true
+        self._set_extremes()  # generally just used end values in segmentdata
 
     @docstring._snippet_manager
     def set_gamma(self, gamma=None, gamma1=None, gamma2=None):
