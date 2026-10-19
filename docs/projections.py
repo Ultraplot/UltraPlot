@@ -675,7 +675,7 @@ import ultraplot as uplt
 # Set TeX Gyre Heros as the primary font but fall back to DejaVu Sans
 uplt.rc["font.family"] = ["TeX Gyre Heros", "DejaVu Sans"]
 uplt.rc.reso = "hi"
-fig = uplt.figure(refwidth=2.5)
+fig = uplt.figure(refwidth=2.5, share=0)
 ax = fig.subplot(121, proj="cyl")
 ax.format(lonlim=(-7.5, 2), latlim=(49.5, 59))
 ax = fig.subplot(122, proj="cyl")
