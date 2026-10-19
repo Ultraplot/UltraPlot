@@ -302,8 +302,8 @@ for ax, which, color, title in zip(axs, "lr", colors, titles):
 # %% [raw] raw_mimetype="text/restructuredtext"
 # Raincloud plots
 # ---------------
-# :meth:`~ultraplot.axes.PlotAxes.raincloud` combines a half violin, jittered
-# observations, and a narrow boxplot. Columns of arrays and DataFrames represent
+# :meth:`~ultraplot.axes.PlotAxes.raincloud` combines a half violin (the cloud), jittered
+# observations (the rain), and a narrow boxplot. Columns of arrays and DataFrames represent
 # distributions; a list of vectors also supports unequal sample sizes. Colours
 # and positions are coordinated across components. Use ``orientation='horizontal'``
 # to put values on the x axis, and ``cloud=False``, ``rain=False``, or ``box=False``
@@ -336,7 +336,7 @@ import ultraplot as uplt
 # Sample data with different distributions
 state = np.random.RandomState(51423)
 data = [state.normal(i, 1, 500) for i in range(5)]
-labels = [f"Distribution {i+1}" for i in range(5)]
+labels = [f"Distribution {i + 1}" for i in range(5)]
 
 # Create figure with two subplots
 fig, axs = uplt.subplots(ncols=2, figsize=(10, 5))
@@ -372,7 +372,7 @@ import ultraplot as uplt
 state = np.random.RandomState(51423)
 data1 = [state.normal(i * 0.5, 1, 400) for i in range(6)]
 data2 = [state.normal(i, 0.8, 400) for i in range(4)]
-labels1 = [f"Group {i+1}" for i in range(6)]
+labels1 = [f"Group {i + 1}" for i in range(6)]
 labels2 = ["Alpha", "Beta", "Gamma", "Delta"]
 
 # Create figure with vertical and horizontal orientations
