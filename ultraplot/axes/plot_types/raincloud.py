@@ -13,7 +13,7 @@ import matplotlib.colors as mcolors
 
 from ... import _sharing as psharing, colors as pcolors
 from ...config import rc
-from ...internals import _canonicalize_kwargs, _pop_props, inputs, warnings
+from ...internals import _canonicalize_kwargs, _not_none, _pop_props, inputs, warnings
 
 if TYPE_CHECKING:
     from ..plot import PlotAxes
@@ -125,14 +125,14 @@ def raincloud(
     box_kw: Mapping[str, Any] | None = None,
 ) -> dict[str, list[Any]]:
     """Draw the components of :meth:`PlotAxes.raincloud`."""
-    orientation = rc["raincloud.orientation"] if orientation is None else orientation
-    side = rc["raincloud.side"] if side is None else side
-    jitter = rc["raincloud.jitter"] if jitter is None else jitter
-    offset = rc["raincloud.offset"] if offset is None else offset
-    cloud = rc["raincloud.cloud"] if cloud is None else cloud
-    rain = rc["raincloud.rain"] if rain is None else rain
-    box = rc["raincloud.box"] if box is None else box
-    seed = rc["raincloud.seed"] if seed is None else seed
+    orientation = _not_none(orientation, rc["raincloud.orientation"])
+    side = _not_none(side, rc["raincloud.side"])
+    jitter = _not_none(jitter, rc["raincloud.jitter"])
+    offset = _not_none(offset, rc["raincloud.offset"])
+    cloud = _not_none(cloud, rc["raincloud.cloud"])
+    rain = _not_none(rain, rc["raincloud.rain"])
+    box = _not_none(box, rc["raincloud.box"])
+    seed = _not_none(seed, rc["raincloud.seed"])
     if orientation not in ("vertical", "horizontal"):
         raise ValueError("orientation must be 'vertical' or 'horizontal'")
     if side not in ("low", "high"):
