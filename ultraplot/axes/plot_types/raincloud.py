@@ -2,7 +2,21 @@
 
 import numpy as np
 
-from ...internals import warnings
+from ...internals import _canonicalize_kwargs, _pop_props, warnings
+
+
+def _component_style(options, category):
+    """Resolve artist aliases before applying raincloud's component defaults."""
+    style = dict(options or {})
+    style.update(_pop_props(style, category))
+    if category == "patch":
+        # Box/violin wrappers style faces and edges separately rather than
+        # accepting the generic Patch colour argument themselves.
+        color = style.pop("color", None)
+        if color is not None:
+            style.setdefault("facecolor", color)
+            style.setdefault("edgecolor", color)
+    return style
 
 
 def raincloud(
@@ -78,7 +92,11 @@ def raincloud(
         raise ValueError("positions must be distinct")
 
     # Layout belongs to this function; component dictionaries style the artists.
-    styles = [dict(kw or {}) for kw in (cloud_kw, rain_kw, box_kw)]
+    styles = [
+        _component_style(cloud_kw, "patch"),
+        _component_style(rain_kw, "collection"),
+        _canonicalize_kwargs("plot.boxplot", _component_style(box_kw, "patch")),
+    ]
     reserved = {
         "positions",
         "orientation",
@@ -117,35 +135,35 @@ def raincloud(
             )
             continue
         if cloud:
-            kw = {"fillcolor": group_color, "widths": 0.6, **styles[0]}
-            alpha = kw.pop("alpha", 0.4)
+            kw = {"widths": 0.6, **styles[0]}
+            props = _pop_props(kw, "patch")
+            props.setdefault("alpha", 0.4)
             bodies = ax.violinplot(
                 [position + direction * offset],
                 values,
                 vert=vert,
                 side=side,
+                fillcolor=group_color,
                 **kw,
             )
             artists["cloud"][i] = bodies[0]
-            bodies[0].set_alpha(alpha)
+            bodies[0].update(props)
         if rain:
             locations = (
                 position
                 - direction * offset
                 + rng.uniform(-jitter, jitter, values.size)
             )
-            kw = {
-                "color": group_color,
-                "s": 12,
-                "alpha": 0.5,
-                "linewidth": 0,
-                **styles[1],
-            }
+            kw = {"alpha": 0.5, "linewidths": 0, **styles[1]}
+            if not any(key in kw for key in ("sizes", "size")):
+                kw["sizes"] = 12
+            if not any(key in kw for key in ("colors", "facecolors")):
+                kw["colors"] = group_color
             coords = (locations, values) if vert else (values, locations)
             artists["rain"][i] = ax.scatter(*coords, **kw)
         if box:
             kw = {
-                "fillcolor": group_color,
+                "facecolor": group_color,
                 "widths": 0.12,
                 "fill": True,
                 "showfliers": False,

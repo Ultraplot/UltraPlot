@@ -6787,6 +6787,9 @@ class PlotAxes(base.Axes):
             Component options passed to `violinplot`, `scatter`, and `boxplot`,
             respectively. Override default styling and widths. Layout options
             such as positions and orientation must be supplied to this method.
+            Artist aliases supported by these methods are accepted, e.g.
+            ``rain_kw={'ms': 25, 'lw': 1}`` or
+            ``cloud_kw={'fc': 'blue', 'ec': 'navy', 'lw': 1}``.
 
         Returns
         -------

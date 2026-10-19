@@ -1,5 +1,7 @@
 """Check raincloud geometry, data preservation, and component composition."""
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -117,6 +119,102 @@ def test_raincloud_component_styles_are_not_mutated():
         result["cloud"][0].get_facecolor()[0, :3], to_rgba("red")[:3]
     )
     np.testing.assert_array_equal(result["rain"][0].get_sizes(), [35])
+
+
+@pytest.mark.parametrize(
+    "alias", ["s", "ms", "markersize", "markersizes", "size", "sizes"]
+)
+def test_raincloud_scatter_size_aliases(alias):
+    fig, ax = uplt.subplots()
+    style = {alias: 35}
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        result = ax.raincloud(np.arange(8.0), rain_kw=style)
+    np.testing.assert_array_equal(result["rain"][0].get_sizes(), [35])
+    assert style == {alias: 35}
+
+
+@pytest.mark.parametrize(
+    "alias", ["lw", "linewidth", "linewidths", "mew", "markeredgewidth"]
+)
+def test_raincloud_scatter_linewidth_aliases(alias):
+    fig, ax = uplt.subplots()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        result = ax.raincloud(np.arange(8.0), rain_kw={alias: 2})
+    np.testing.assert_array_equal(result["rain"][0].get_linewidths(), [2])
+
+
+@pytest.mark.parametrize(
+    "alias", ["c", "color", "colors", "fc", "facecolor", "facecolors", "mfc"]
+)
+def test_raincloud_scatter_colour_aliases(alias):
+    fig, ax = uplt.subplots()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        result = ax.raincloud(np.arange(8.0), rain_kw={alias: "red"})
+    np.testing.assert_allclose(
+        result["rain"][0].get_facecolor()[0, :3], to_rgba("red")[:3]
+    )
+
+
+def test_raincloud_scatter_artist_aliases():
+    fig, ax = uplt.subplots()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        result = ax.raincloud(np.arange(8.0), rain_kw={"a": 0.2, "z": 6, "ec": "navy"})
+    artist = result["rain"][0]
+    assert artist.get_alpha() == 0.2
+    assert artist.get_zorder() == 6
+    np.testing.assert_allclose(artist.get_edgecolor()[0], to_rgba("navy", alpha=0.2))
+
+
+@pytest.mark.parametrize("component", ["cloud", "box"])
+@pytest.mark.parametrize(
+    "aliases",
+    [
+        {"fc": "red", "ec": "navy", "lw": 2, "a": 0.2, "z": 6},
+        {
+            "fillcolor": "red",
+            "edgecolors": "navy",
+            "linewidths": 2,
+            "fillalpha": 0.2,
+            "zorders": 6,
+        },
+    ],
+)
+def test_raincloud_patch_style_aliases(component, aliases):
+    fig, ax = uplt.subplots()
+    original = dict(aliases)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        result = ax.raincloud(np.arange(8.0), **{component + "_kw": aliases})
+    assert aliases == original
+    artist = result[component][0] if component == "cloud" else ax.patches[0]
+    np.testing.assert_allclose(
+        np.asarray(artist.get_facecolor()).reshape(-1, 4)[0], to_rgba("red", alpha=0.2)
+    )
+    if component == "box":
+        artist = result[component][0]["boxes"][0]
+        np.testing.assert_allclose(to_rgba(artist.get_color()), to_rgba("navy"))
+    else:
+        np.testing.assert_allclose(
+            artist.get_edgecolor()[0], to_rgba("navy", alpha=0.2)
+        )
+    np.testing.assert_allclose(artist.get_linewidth(), 2)
+    assert artist.get_zorder() == 6
+
+
+@pytest.mark.parametrize("component", ["cloud", "box"])
+def test_raincloud_patch_generic_colour(component):
+    fig, ax = uplt.subplots()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        result = ax.raincloud(np.arange(8.0), **{component + "_kw": {"c": "red"}})
+    artist = result[component][0] if component == "cloud" else ax.patches[0]
+    np.testing.assert_allclose(
+        np.asarray(artist.get_facecolor()).reshape(-1, 4)[0, :3], to_rgba("red")[:3]
+    )
 
 
 @pytest.mark.parametrize(
