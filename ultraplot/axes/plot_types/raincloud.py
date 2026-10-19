@@ -1,16 +1,25 @@
 """Composition of half violins, observations, and boxplots."""
 
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
 from numbers import Number
+from typing import TYPE_CHECKING, Any, Literal
+
+from numpy.typing import ArrayLike, NDArray
 
 import numpy as np
 import matplotlib.colors as mcolors
 
 from ... import _sharing as psharing, colors as pcolors
 from ...config import rc
-from ...internals import _canonicalize_kwargs, _not_none, _pop_props, inputs, warnings
+from ...internals import _canonicalize_kwargs, _pop_props, inputs, warnings
+
+if TYPE_CHECKING:
+    from ..plot import PlotAxes
 
 
-def _resolve_color(color):
+def _resolve_color(color: Any) -> Any:
     """Match the (colormap, index) colour shorthand of other plot methods."""
     if (
         isinstance(color, tuple)
@@ -25,7 +34,9 @@ def _resolve_color(color):
     return color
 
 
-def _component_style(options, category):
+def _component_style(
+    options: Mapping[str, Any] | None, category: str
+) -> dict[str, Any]:
     """Resolve artist aliases before applying raincloud's component defaults."""
     style = dict(options or {})
     style.update(_pop_props(style, category))
@@ -49,7 +60,9 @@ def _component_style(options, category):
     return style
 
 
-def _filter_point_style(style, valid):
+def _filter_point_style(
+    style: Mapping[str, Any], valid: NDArray[np.bool_]
+) -> dict[str, Any]:
     """Keep per-observation scatter properties aligned with cleaned values."""
     style = dict(style)
     for key in (
@@ -74,7 +87,7 @@ def _filter_point_style(style, valid):
     return style
 
 
-def _group_options(style, index, count):
+def _group_options(style: Mapping[str, Any], index: int, count: int) -> dict[str, Any]:
     """Select native box/violin options that contain one value per group."""
     style = dict(style)
     for key in ("widths", "capwidths"):
@@ -88,38 +101,38 @@ def _group_options(style, index, count):
 
 
 def raincloud(
-    ax,
-    data,
+    ax: PlotAxes,
+    data: Any,
     *,
-    positions=None,
-    labels=None,
-    orientation=None,
-    autoformat=None,
-    legend=None,
-    legend_kw=None,
-    side=None,
-    jitter=None,
-    offset=None,
-    cloud=None,
-    rain=None,
-    box=None,
-    seed=None,
-    color=None,
-    cycle=None,
-    cycle_kw=None,
-    cloud_kw=None,
-    rain_kw=None,
-    box_kw=None,
-):
+    positions: ArrayLike | None = None,
+    labels: Sequence[Any] | None = None,
+    orientation: Literal["vertical", "horizontal"] | None = None,
+    autoformat: bool | None = None,
+    legend: bool | str | int | None = None,
+    legend_kw: Mapping[str, Any] | None = None,
+    side: Literal["low", "high"] | None = None,
+    jitter: float | None = None,
+    offset: float | None = None,
+    cloud: bool | None = None,
+    rain: bool | None = None,
+    box: bool | None = None,
+    seed: int | np.random.Generator | None = None,
+    color: Any = None,
+    cycle: Any = None,
+    cycle_kw: Mapping[str, Any] | None = None,
+    cloud_kw: Mapping[str, Any] | None = None,
+    rain_kw: Mapping[str, Any] | None = None,
+    box_kw: Mapping[str, Any] | None = None,
+) -> dict[str, list[Any]]:
     """Draw the components of :meth:`PlotAxes.raincloud`."""
-    orientation = _not_none(orientation, rc["raincloud.orientation"])
-    side = _not_none(side, rc["raincloud.side"])
-    jitter = _not_none(jitter, rc["raincloud.jitter"])
-    offset = _not_none(offset, rc["raincloud.offset"])
-    cloud = _not_none(cloud, rc["raincloud.cloud"])
-    rain = _not_none(rain, rc["raincloud.rain"])
-    box = _not_none(box, rc["raincloud.box"])
-    seed = _not_none(seed, rc["raincloud.seed"])
+    orientation = rc["raincloud.orientation"] if orientation is None else orientation
+    side = rc["raincloud.side"] if side is None else side
+    jitter = rc["raincloud.jitter"] if jitter is None else jitter
+    offset = rc["raincloud.offset"] if offset is None else offset
+    cloud = rc["raincloud.cloud"] if cloud is None else cloud
+    rain = rc["raincloud.rain"] if rain is None else rain
+    box = rc["raincloud.box"] if box is None else box
+    seed = rc["raincloud.seed"] if seed is None else seed
     if orientation not in ("vertical", "horizontal"):
         raise ValueError("orientation must be 'vertical' or 'horizontal'")
     if side not in ("low", "high"):

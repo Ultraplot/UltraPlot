@@ -199,7 +199,7 @@ def icon_ridgeline(ax):
     ax.ridgeline(data, overlap=0.6, cmap=ICON_SEQUENTIAL, lw=0.7)
 
 
-def icon_raincloud(ax):
+def icon_raincloud(ax: uplt.PlotAxes) -> None:
     data = np.random.default_rng(42).normal(size=(45, 3)) + [0, 0.7, -0.5]
     ax.raincloud(
         data,

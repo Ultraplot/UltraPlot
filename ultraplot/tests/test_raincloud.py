@@ -1,6 +1,10 @@
 """Check raincloud geometry, data preservation, and component composition."""
 
 import warnings
+from pathlib import Path
+from typing import Any
+
+from numpy.typing import ArrayLike
 
 import numpy as np
 import pandas as pd
@@ -12,7 +16,7 @@ import ultraplot as uplt
 
 @pytest.mark.parametrize("orientation", ["vertical", "horizontal"])
 @pytest.mark.parametrize("side,direction", [("low", -1), ("high", 1)])
-def test_raincloud_geometry(orientation, side, direction):
+def test_raincloud_geometry(orientation: str, side: str, direction: int) -> None:
     data = [np.linspace(-2, 2, 11), np.linspace(0, 3, 17)]
     positions = [2.0, 5.0]
     fig, ax = uplt.subplots()
@@ -48,7 +52,7 @@ def test_raincloud_geometry(orientation, side, direction):
     fig.canvas.draw()
 
 
-def test_raincloud_columns_and_cycle():
+def test_raincloud_columns_and_cycle() -> None:
     data = pd.DataFrame({"Alpha": [1, 2, 3], "Beta": [2, 4, 8]})
     data.columns.name = "Condition"
     fig, ax = uplt.subplots()
@@ -65,7 +69,7 @@ def test_raincloud_columns_and_cycle():
         )
 
 
-def test_raincloud_masks_empty_and_degenerate_groups():
+def test_raincloud_masks_empty_and_degenerate_groups() -> None:
     data = [
         np.ma.array([1.0, 999.0, 2.0, np.inf, np.nan], mask=[0, 1, 0, 0, 0]),
         [],
@@ -83,14 +87,14 @@ def test_raincloud_masks_empty_and_degenerate_groups():
 
 
 @pytest.mark.parametrize("component", ["cloud", "rain", "box"])
-def test_raincloud_disabled_components(component):
+def test_raincloud_disabled_components(component: str) -> None:
     fig, ax = uplt.subplots()
     result = ax.raincloud(np.arange(5.0), **{component: False})
     assert result[component] == [None]
     assert all(result[key][0] is not None for key in result if key != component)
 
 
-def test_raincloud_jitter_reproducible_without_global_rng():
+def test_raincloud_jitter_reproducible_without_global_rng() -> None:
     data = np.arange(12.0).reshape(6, 2)
     state = np.random.get_state()
     fig, axes = uplt.subplots(ncols=2)
@@ -104,7 +108,7 @@ def test_raincloud_jitter_reproducible_without_global_rng():
     assert state[2:] == after[2:]
 
 
-def test_raincloud_component_styles_are_not_mutated():
+def test_raincloud_component_styles_are_not_mutated() -> None:
     cloud_kw = {"alpha": 0.2, "widths": 0.8, "fillcolor": "red"}
     rain_kw = {"s": 35, "alpha": 0.7}
     box_kw = {"widths": 0.2, "showfliers": True}
@@ -124,7 +128,7 @@ def test_raincloud_component_styles_are_not_mutated():
 @pytest.mark.parametrize(
     "alias", ["s", "ms", "markersize", "markersizes", "size", "sizes"]
 )
-def test_raincloud_scatter_size_aliases(alias):
+def test_raincloud_scatter_size_aliases(alias: str) -> None:
     fig, ax = uplt.subplots()
     style = {alias: 35}
     with warnings.catch_warnings():
@@ -137,7 +141,7 @@ def test_raincloud_scatter_size_aliases(alias):
 @pytest.mark.parametrize(
     "alias", ["lw", "linewidth", "linewidths", "mew", "markeredgewidth"]
 )
-def test_raincloud_scatter_linewidth_aliases(alias):
+def test_raincloud_scatter_linewidth_aliases(alias: str) -> None:
     fig, ax = uplt.subplots()
     with warnings.catch_warnings():
         warnings.simplefilter("error", UserWarning)
@@ -148,7 +152,7 @@ def test_raincloud_scatter_linewidth_aliases(alias):
 @pytest.mark.parametrize(
     "alias", ["c", "color", "colors", "fc", "facecolor", "facecolors", "mfc"]
 )
-def test_raincloud_scatter_colour_aliases(alias):
+def test_raincloud_scatter_colour_aliases(alias: str) -> None:
     fig, ax = uplt.subplots()
     with warnings.catch_warnings():
         warnings.simplefilter("error", UserWarning)
@@ -158,7 +162,7 @@ def test_raincloud_scatter_colour_aliases(alias):
     )
 
 
-def test_raincloud_scatter_artist_aliases():
+def test_raincloud_scatter_artist_aliases() -> None:
     fig, ax = uplt.subplots()
     with warnings.catch_warnings():
         warnings.simplefilter("error", UserWarning)
@@ -183,7 +187,7 @@ def test_raincloud_scatter_artist_aliases():
         },
     ],
 )
-def test_raincloud_patch_style_aliases(component, aliases):
+def test_raincloud_patch_style_aliases(component: str, aliases: dict[str, Any]) -> None:
     fig, ax = uplt.subplots()
     original = dict(aliases)
     with warnings.catch_warnings():
@@ -206,7 +210,7 @@ def test_raincloud_patch_style_aliases(component, aliases):
 
 
 @pytest.mark.parametrize("component", ["cloud", "box"])
-def test_raincloud_patch_generic_colour(component):
+def test_raincloud_patch_generic_colour(component: str) -> None:
     fig, ax = uplt.subplots()
     with warnings.catch_warnings():
         warnings.simplefilter("error", UserWarning)
@@ -231,7 +235,7 @@ def test_raincloud_patch_generic_colour(component):
         ({"cloud_kw": {"side": "low"}}, "layout"),
     ],
 )
-def test_raincloud_invalid_options(kwargs, match):
+def test_raincloud_invalid_options(kwargs: dict[str, Any], match: str) -> None:
     fig, ax = uplt.subplots()
     with pytest.raises(ValueError, match=match):
         ax.raincloud(np.arange(5.0), **kwargs)
@@ -239,14 +243,14 @@ def test_raincloud_invalid_options(kwargs, match):
 
 
 @pytest.mark.parametrize("data", [[], [[], []], [np.nan, np.inf]])
-def test_raincloud_no_observations(data):
+def test_raincloud_no_observations(data: ArrayLike) -> None:
     fig, ax = uplt.subplots()
     with pytest.raises(ValueError, match="No finite observations"):
         ax.raincloud(data)
 
 
 @pytest.mark.parametrize("keyword", [False, True])
-def test_raincloud_data_lookup_and_keyword_input(keyword):
+def test_raincloud_data_lookup_and_keyword_input(keyword: bool) -> None:
     frame = pd.DataFrame({"A": [1, 2, 3], "B": [2, 4, 5]})
     frame.columns.name = "Condition"
     fig, ax = uplt.subplots()
@@ -261,7 +265,7 @@ def test_raincloud_data_lookup_and_keyword_input(keyword):
 
 
 @pytest.mark.parametrize("explicit", [False, True])
-def test_raincloud_respects_autoformat(explicit):
+def test_raincloud_respects_autoformat(explicit: bool) -> None:
     frame = pd.DataFrame({"A": [1, 2, 3], "B": [2, 4, 5]})
     frame.columns.name = "Condition"
     fig, ax = uplt.subplots()
@@ -272,7 +276,7 @@ def test_raincloud_respects_autoformat(explicit):
     assert [tick.get_text() for tick in ax.get_xticklabels()] == (labels or ["0", "1"])
 
 
-def test_raincloud_xarray_metadata_and_existing_labels():
+def test_raincloud_xarray_metadata_and_existing_labels() -> None:
     xr = pytest.importorskip("xarray")
     samples = xr.DataArray(
         np.arange(12.0).reshape(6, 2),
@@ -295,7 +299,7 @@ def test_raincloud_xarray_metadata_and_existing_labels():
 @pytest.mark.parametrize(
     "disabled", [{}, {"cloud": False}, {"cloud": False, "rain": False}]
 )
-def test_raincloud_legend_one_entry_per_group(disabled):
+def test_raincloud_legend_one_entry_per_group(disabled: dict[str, bool]) -> None:
     from matplotlib.legend import Legend
 
     fig, ax = uplt.subplots()
@@ -315,7 +319,7 @@ def test_raincloud_legend_one_entry_per_group(disabled):
     assert options == {"title": "Condition"}
 
 
-def test_raincloud_filters_observation_styles():
+def test_raincloud_filters_observation_styles() -> None:
     values = np.ma.array([1.0, 2.0, np.nan, 3.0, 4.0, 99.0], mask=[0, 0, 0, 0, 0, 1])
     sizes = np.arange(10.0, 70.0, 10.0)
     colours = np.arange(6.0)
@@ -338,7 +342,9 @@ def test_raincloud_filters_observation_styles():
         ("quantiles", [0.25, 0.75]),
     ],
 )
-def test_raincloud_violin_summary_options(option, value):
+def test_raincloud_violin_summary_options(
+    option: str, value: bool | list[float]
+) -> None:
     fig, ax = uplt.subplots()
     result = ax.raincloud(np.arange(8.0), cloud_kw={option: value})
     assert result["cloud"][0] in ax.collections
@@ -346,7 +352,7 @@ def test_raincloud_violin_summary_options(option, value):
     fig.canvas.draw()
 
 
-def test_raincloud_nested_boxplot_properties():
+def test_raincloud_nested_boxplot_properties() -> None:
     fig, ax = uplt.subplots()
     result = ax.raincloud(
         np.r_[np.arange(8.0), 100],
@@ -376,7 +382,7 @@ def test_raincloud_nested_boxplot_properties():
 
 
 @pytest.mark.parametrize("filled", [False, True])
-def test_raincloud_box_fill_and_patch_artist(filled):
+def test_raincloud_box_fill_and_patch_artist(filled: bool) -> None:
     fig, ax = uplt.subplots()
     result = ax.raincloud(
         np.arange(8.0),
@@ -394,7 +400,7 @@ def test_raincloud_box_fill_and_patch_artist(filled):
     assert len(ax.patches) == 1
 
 
-def test_raincloud_unfilled_boxes_and_hidden_box_legend():
+def test_raincloud_unfilled_boxes_and_hidden_box_legend() -> None:
     fig, ax = uplt.subplots()
     ax.raincloud(np.arange(8.0), box_kw={"filled": False})
     assert not ax.patches
@@ -405,7 +411,7 @@ def test_raincloud_unfilled_boxes_and_hidden_box_legend():
     fig.canvas.draw()
 
 
-def test_raincloud_colormap_colour_shorthand():
+def test_raincloud_colormap_colour_shorthand() -> None:
     fig, ax = uplt.subplots()
     result = ax.raincloud(np.arange(8.0), color=("reds", 0.6))
     expected = uplt.Colormap("reds")(0.6)
@@ -417,7 +423,7 @@ def test_raincloud_colormap_colour_shorthand():
     )
 
 
-def test_raincloud_subplot_grid_and_shared_ticks():
+def test_raincloud_subplot_grid_and_shared_ticks() -> None:
     fig, axes = uplt.subplots(ncols=2)
     axes.raincloud(np.arange(12.0).reshape(6, 2), labels=["A", "B"])
     for ax in axes:
@@ -426,7 +432,7 @@ def test_raincloud_subplot_grid_and_shared_ticks():
     fig.canvas.draw()
 
 
-def test_raincloud_per_group_widths_and_quantiles():
+def test_raincloud_per_group_widths_and_quantiles() -> None:
     fig, ax = uplt.subplots()
     result = ax.raincloud(
         np.arange(12.0).reshape(6, 2),
@@ -443,7 +449,7 @@ def test_raincloud_per_group_widths_and_quantiles():
     fig.canvas.draw()
 
 
-def test_raincloud_rc_layout_and_appearance():
+def test_raincloud_rc_layout_and_appearance() -> None:
     fig, ax = uplt.subplots()
     settings = {
         "raincloud.orientation": "horizontal",
@@ -480,7 +486,7 @@ def test_raincloud_rc_layout_and_appearance():
     fig.canvas.draw()
 
 
-def test_raincloud_explicit_options_override_rc():
+def test_raincloud_explicit_options_override_rc() -> None:
     fig, ax = uplt.subplots()
     settings = {
         "raincloud.orientation": "horizontal",
@@ -516,7 +522,7 @@ def test_raincloud_explicit_options_override_rc():
     assert len(ax.patches) == 1
 
 
-def test_raincloud_rc_visibility_and_explicit_false():
+def test_raincloud_rc_visibility_and_explicit_false() -> None:
     fig, axes = uplt.subplots(ncols=2)
     with uplt.rc.context({"raincloud.cloud": False, "raincloud.box": False}):
         first = axes[0].raincloud(np.arange(8.0))
@@ -527,7 +533,7 @@ def test_raincloud_rc_visibility_and_explicit_false():
     assert second["rain"] == second["box"] == [None]
 
 
-def test_raincloud_rc_seed_and_generator_override():
+def test_raincloud_rc_seed_and_generator_override() -> None:
     fig, axes = uplt.subplots(ncols=3)
     with uplt.rc.context({"raincloud.seed": 17}):
         first = axes[0].raincloud(np.arange(8.0))
@@ -541,7 +547,7 @@ def test_raincloud_rc_seed_and_generator_override():
     )
 
 
-def test_raincloud_rc_file_and_context_restore(tmp_path):
+def test_raincloud_rc_file_and_context_restore(tmp_path: Path) -> None:
     original = uplt.rc["raincloud.side"]
     path = tmp_path / "raincloud.rc"
     path.write_text(

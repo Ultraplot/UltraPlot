@@ -11,7 +11,7 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from numbers import Integral, Number
-from typing import Any, Iterable, Mapping, Optional, Sequence, TypeAlias, Union
+from typing import Any, Literal, Iterable, Mapping, Optional, Sequence, TypeAlias, Union
 
 import matplotlib as mpl
 import matplotlib.artist as martist
@@ -6751,30 +6751,30 @@ class PlotAxes(base.Axes):
 
     def raincloud(
         self,
-        dataset=None,
+        dataset: Any = None,
         *,
-        data=None,
-        positions=None,
-        labels=None,
-        orientation=None,
-        vert=None,
-        autoformat=None,
-        legend=None,
-        legend_kw=None,
-        side=None,
-        jitter=None,
-        offset=None,
-        cloud=None,
-        rain=None,
-        box=None,
-        seed=None,
-        color=None,
-        cycle=None,
-        cycle_kw=None,
-        cloud_kw=None,
-        rain_kw=None,
-        box_kw=None,
-    ):
+        data: Any = None,
+        positions: ArrayLike | None = None,
+        labels: Sequence[Any] | None = None,
+        orientation: Literal["vertical", "horizontal"] | None = None,
+        vert: bool | None = None,
+        autoformat: bool | None = None,
+        legend: bool | str | int | None = None,
+        legend_kw: Mapping[str, Any] | None = None,
+        side: Literal["low", "high"] | None = None,
+        jitter: float | None = None,
+        offset: float | None = None,
+        cloud: bool | None = None,
+        rain: bool | None = None,
+        box: bool | None = None,
+        seed: int | np.random.Generator | None = None,
+        color: Any = None,
+        cycle: Any = None,
+        cycle_kw: Mapping[str, Any] | None = None,
+        cloud_kw: Mapping[str, Any] | None = None,
+        rain_kw: Mapping[str, Any] | None = None,
+        box_kw: Mapping[str, Any] | None = None,
+    ) -> dict[str, list[Any]]:
         """
         Plot half violins, individual observations, and narrow boxplots.
 
