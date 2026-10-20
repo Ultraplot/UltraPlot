@@ -51,7 +51,11 @@ class TestFailureArtifacts(unittest.TestCase):
             encoding="utf-8",
         )
         (self.results / "junit.xml").write_text(
-            '<testsuite><testcase classname="module" name="test_failed"><failure/></testcase></testsuite>',
+            '<testsuite>'
+            '<testcase classname="module" name="test_passed"/>'
+            '<testcase classname="module" name="test_failed"><failure/></testcase>'
+            '<testcase classname="module" name="test_skipped"><skipped/></testcase>'
+            '</testsuite>',
             encoding="utf-8",
         )
 
@@ -63,10 +67,16 @@ class TestFailureArtifacts(unittest.TestCase):
             self.assertIn(filename, (self.output / "index.html").read_text())
         report = (self.output / "index.html").read_text(encoding="utf-8")
         self.assertIn("<h1>UltraPlot Image comparison</h1>", report)
-        self.assertIn("1 failed image comparisons; 1 JUnit failures/errors.", report)
+        self.assertIn("<h2>Failed comparisons (1)</h2>", report)
+        self.assertIn('<div class="count passed"><strong>1</strong>', report)
+        self.assertIn('<div class="count failed"><strong>1</strong>', report)
+        self.assertIn('<div class="count"><strong>0</strong>', report)
+        self.assertIn("<th scope=\"col\">RMS</th>", report)
         self.assertIn("<figcaption>Baseline</figcaption>", report)
         self.assertIn("<figcaption>Actual</figcaption>", report)
         self.assertIn("<figcaption>Difference</figcaption>", report)
+        self.assertIn('class="image-strip"', report)
+        self.assertIn("<summary>Test output</summary>", report)
         self.assertNotIn('id="search"', report)
         self.assertNotIn('id="lightbox"', report)
         self.assertIn("Image mismatch", report)
@@ -93,6 +103,22 @@ class TestFailureArtifacts(unittest.TestCase):
         self.assertIn("&lt;script&gt;", markup)
         self.assertIn("&lt;img src=x", markup)
 
+    def test_junit_counts_include_errors_and_exclude_skips(self) -> None:
+        from collect_failed_comparisons import junit_report
+
+        (self.results / "junit.xml").write_text(
+            '<testsuites><testsuite>'
+            '<testcase name="a"/>'
+            '<testcase name="b"><failure/></testcase>'
+            '<testcase name="c"><error/></testcase>'
+            '<testcase name="d"><skipped/></testcase>'
+            '</testsuite></testsuites>',
+            encoding="utf-8",
+        )
+        counts, failing = junit_report(self.results / "junit.xml")
+        self.assertEqual(counts, {"passed": 1, "failed": 1, "errors": 1})
+        self.assertEqual(failing, ["b", "c"])
+
     def test_non_image_junit_failure_keeps_diagnostics(self) -> None:
         (self.results / "junit.xml").write_text(
             '<testsuite><testcase classname="module" name="test_crash"><error/></testcase></testsuite>',
@@ -100,7 +126,10 @@ class TestFailureArtifacts(unittest.TestCase):
         )
         self.assertEqual(collect(self.results, self.output), 0)
         self.assertTrue((self.output / "junit.xml").is_file())
-        self.assertIn("module.test_crash", (self.output / "index.html").read_text())
+        markup = (self.output / "index.html").read_text(encoding="utf-8")
+        self.assertIn("module.test_crash", markup)
+        self.assertIn("No failed image comparisons; see JUnit failures below.", markup)
+        self.assertIn('<div class="count"><strong>1</strong>', markup)
 
 
 if __name__ == "__main__":
