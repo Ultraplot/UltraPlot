@@ -124,7 +124,7 @@ def collect(results_dir: Path, output_dir: Path) -> int:
             return html.escape(f"{value:.5g}" if isinstance(value, (int, float)) else str(value))
 
         test_name = html.escape(name)
-        status_text = html.escape(str(item.get("image_status") or "Failed").capitalize())
+        status_text = "Failed"
         diagnostic = html.escape(str(item.get("status_msg") or "No diagnostic text provided."))
         expanded = " open" if index == 0 else ""
         rows.extend([
