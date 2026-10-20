@@ -61,27 +61,19 @@ def collect(results_dir: Path, output_dir: Path) -> int:
         json.dumps(failed, indent=2) + "\n", encoding="utf-8"
     )
 
-    # The report is static and intentionally self-contained: it also works
-    # directly from an extracted GitHub Actions artifact without a web server.
-    cards = []
-    retained_images = 0
-    for name, item in sorted(
-        failed.items(),
-        key=lambda entry: (
-            -(float(entry[1]["rms"]) if entry[1].get("rms") is not None else -1),
-            entry[0],
-        ),
-    ):
+    # Copy only failed comparisons. Linked images can be opened at full size.
+    comparisons = []
+    for name, item in sorted(failed.items()):
         images = []
         for field, label in _IMAGE_FIELDS:
             raw_path = item.get(field)
             if not raw_path:
                 images.append(
-                    f'<figure class="image-panel">'
-                    f'<figcaption>{html.escape(label)}<span>Not available</span></figcaption>'
-                    f'<div class="image-frame missing">No image</div></figure>'
+                    f'<figure><figcaption>{html.escape(label)}</figcaption>'
+                    '<p class="missing">Not available</p></figure>'
                 )
                 continue
+
             relative_path = Path(raw_path)
             source = (results_dir / relative_path).resolve()
             if not source.is_relative_to(results_dir) or not source.is_file():
@@ -89,40 +81,28 @@ def collect(results_dir: Path, output_dir: Path) -> int:
             destination = output_dir / relative_path
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
-            retained_images += 1
+
             url = html.escape(quote(relative_path.as_posix(), safe="/"), quote=True)
-            escaped_label = html.escape(label, quote=True)
+            alt = html.escape(f"{label} image for {name}", quote=True)
             images.append(
-                f'<figure class="image-panel"><figcaption>{escaped_label}'
-                f'<span>Click to enlarge ↗</span></figcaption>'
-                f'<a class="image-frame" href="{url}" data-label="{escaped_label}"'
-                f' aria-label="Enlarge {escaped_label} image for {html.escape(name, quote=True)}">'
-                f'<img loading="lazy" src="{url}" alt="{escaped_label} image for '
-                f'{html.escape(name, quote=True)}"></a></figure>'
+                f'<figure><figcaption>{html.escape(label)}</figcaption>'
+                f'<a href="{url}"><img loading="lazy" src="{url}" alt="{alt}"></a></figure>'
             )
 
         metrics = []
-        for field, label in (("rms", "RMS difference"), ("tolerance", "Tolerance")):
+        for field, label in (("rms", "RMS"), ("tolerance", "Tolerance")):
             value = item.get(field)
             if value is not None:
                 display = f"{value:.3f}" if isinstance(value, (int, float)) else str(value)
-                metrics.append(
-                    f'<span class="metric"><span class="metric-label">{label}</span>'
-                    f'<span class="metric-value">{html.escape(display)}</span></span>'
-                )
-        if not metrics:
-            metrics.append('<span class="metric">No numerical comparison available</span>')
-        comparison_status = str(item.get("image_status") or "failed").upper()
-        cards.append(
-            f'<article class="comparison" data-test="{html.escape(name, quote=True)}">'
-            f'<div class="card-head"><div class="card-top"><div>'
-            f'<p class="test-caption">FAILING TEST</p><h3 class="test-name">{html.escape(name)}</h3>'
-            f'</div><span class="pill">{html.escape(comparison_status)}</span></div>'
-            f'<div class="metrics">{"".join(metrics)}</div></div>'
-            f'<div class="image-grid">{"".join(images)}</div>'
-            f'<details class="details"><summary>Diagnostic output</summary>'
+                metrics.append(f"{label}: {html.escape(display)}")
+
+        comparisons.append(
+            f'<section class="comparison"><h2><code>{html.escape(name)}</code></h2>'
+            f'<p class="metrics">{" · ".join(metrics) if metrics else "No numerical comparison available"}</p>'
+            f'<div class="images">{"".join(images)}</div>'
+            f'<details><summary>Error details</summary>'
             f'<pre>{html.escape(str(item.get("status_msg") or "No diagnostic text provided."))}</pre>'
-            f'</details></article>'
+            f'</details></section>'
         )
 
     # JUnit includes failures not covered by pytest-mpl (which have no images).
@@ -139,11 +119,10 @@ def collect(results_dir: Path, output_dir: Path) -> int:
     for marker, value in {
         "__ULTRAPLOT_IMAGE_COUNT__": str(len(failed)),
         "__ULTRAPLOT_JUNIT_COUNT__": str(len(test_failures)),
-        "__ULTRAPLOT_RETAINED_COUNT__": str(retained_images),
-        "__ULTRAPLOT_CARDS__": "\n".join(cards),
+        "__ULTRAPLOT_CARDS__": "\n".join(comparisons),
         "__ULTRAPLOT_JUNIT_DETAILS__": junit_details,
         "__ULTRAPLOT_JUNIT_DOWNLOAD__": (
-            '<a class="download" href="junit.xml" download>↓ JUnit XML</a>'
+            ' · <a href="junit.xml">junit.xml</a>'
             if junit.is_file() else ""
         ),
     }.items():
