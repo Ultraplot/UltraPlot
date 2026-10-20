@@ -61,6 +61,34 @@ class TestFailureArtifacts(unittest.TestCase):
         for filename in ("baseline.png", "result.png", "result-failed-diff.png"):
             self.assertTrue((self.output / failed / filename).is_file())
             self.assertIn(filename, (self.output / "index.html").read_text())
+        report = (self.output / "index.html").read_text(encoding="utf-8")
+        self.assertIn("See what changed.", report)
+        self.assertIn('id="search"', report)
+        self.assertIn('id="lightbox"', report)
+        self.assertIn('data-test="module.test_failed"', report)
+        self.assertIn("Image mismatch", report)
+        self.assertIn('href="results.json"', report)
+        self.assertNotIn("module.test_passed", report)
+        self.assertNotIn("__ULTRAPLOT_", report)
+
+    def test_html_escapes_untrusted_test_names(self) -> None:
+        failed = '<script>alert("bad")</script>'
+        (self.results / "results.json").write_text(
+            json.dumps({
+                failed: {
+                    "status": "failed",
+                    "status_msg": '<img src=x onerror="alert(1)">',
+                }
+            }),
+            encoding="utf-8",
+        )
+
+        self.assertEqual(collect(self.results, self.output), 1)
+        markup = (self.output / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn(failed, markup)
+        self.assertNotIn('<img src=x onerror="alert(1)">', markup)
+        self.assertIn("&lt;script&gt;", markup)
+        self.assertIn("&lt;img src=x", markup)
 
     def test_non_image_junit_failure_keeps_diagnostics(self) -> None:
         (self.results / "junit.xml").write_text(
