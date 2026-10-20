@@ -3,190 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>Visual regression report · UltraPlot</title>
+  <title>UltraPlot Image comparison</title>
   <style>
-    :root {
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #212940;
-      background: #f3f5f9;
-      font-synthesis: none;
+    body {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 24px;
+      font: 15px/1.5 system-ui, sans-serif;
+      color: #242424;
+      background: #fff;
     }
-    * { box-sizing: border-box; }
-    body { margin: 0; }
-    a { color: #3b56ba; }
-    button, input { font: inherit; }
-    button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visible {
-      outline: 3px solid #6485f6; outline-offset: 3px;
+    h1 { font-size: 1.7rem; margin: 0 0 8px; }
+    h2 { font-size: 1.1rem; margin: 0 0 8px; overflow-wrap: anywhere; }
+    a { color: #24589a; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .overview { color: #555; margin: 0 0 8px; }
+    .files { margin: 0 0 32px; font-size: .9rem; }
+    .comparison { padding: 22px 0 26px; border-top: 1px solid #ddd; }
+    .metrics { margin: 0 0 16px; color: #555; font-size: .9rem; }
+    .images { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    figure { margin: 0; min-width: 0; }
+    figcaption { margin-bottom: 8px; font-weight: 600; font-size: .9rem; }
+    figure a { display: block; }
+    figure img {
+      display: block;
+      max-width: 100%;
+      width: 100%;
+      height: auto;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
     }
-    .container { width: min(1440px, calc(100% - 48px)); margin: 0 auto; }
-    .masthead {
-      background: linear-gradient(112deg, #151d35 0%, #222d52 78%, #293965 100%);
-      color: #fff;
-      padding: 30px 0 78px;
+    .missing { color: #777; font-style: italic; }
+    details { margin-top: 14px; }
+    summary { cursor: pointer; }
+    pre {
+      font-size: .82rem;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      padding: 12px;
+      background: #f5f5f5;
+      border: 1px solid #e5e5e5;
     }
-    .topline { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
-    .brand { color: white; text-decoration: none; font-weight: 800; font-size: 1.07rem; letter-spacing: -.04em; }
-    .brand-mark {
-      display: inline-grid; place-items: center; margin-right: 8px;
-      height: 32px; width: 32px; border-radius: 10px; color: #192344; background: #c7f1ff;
-      font-size: 1.16rem;
+    .junit { border-top: 1px solid #ddd; padding-top: 16px; margin-bottom: 32px; }
+    .junit li { overflow-wrap: anywhere; }
+    @media (max-width: 700px) {
+      body { margin: 24px auto; padding: 0 16px; }
+      .images { grid-template-columns: 1fr; }
     }
-    .eyebrow { color: #aab8e3; letter-spacing: .16em; font-size: .70rem; font-weight: 800; text-transform: uppercase; }
-    .masthead h1 { font-size: clamp(2.1rem, 4vw, 3.7rem); line-height: 1.05; letter-spacing: -.05em; margin: 30px 0 14px; }
-    .lede { color: #c7d1ed; font-size: 1rem; max-width: 62ch; line-height: 1.65; margin: 0; }
-    .status {
-      display: inline-flex; align-items: center; gap: 8px; border: 1px solid #ff9fa4;
-      background: #5c3043; padding: 8px 12px; border-radius: 999px;
-      color: #ffe8e8; font-size: .75rem; font-weight: 800; letter-spacing: .04em;
-    }
-    .status::before { content: ""; height: 8px; width: 8px; border-radius: 50%; background: #ff8a94; }
-    .summary {
-      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;
-      margin-top: -43px; position: relative;
-    }
-    .stat {
-      border-radius: 15px; border: 1px solid #e3e7ef; background: #fff;
-      padding: 23px 25px; box-shadow: 0 8px 30px rgba(35, 50, 82, .055);
-    }
-    .stat-value { display: block; font-variant-numeric: tabular-nums; font-size: 2rem; font-weight: 800; line-height: 1.1; letter-spacing: -.04em; }
-    .stat:first-child .stat-value { color: #d44957; }
-    .stat-label { display: block; color: #68738b; font-size: .78rem; font-weight: 650; margin-top: 8px; }
-    .toolbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; flex-wrap: wrap; margin: 38px 0 20px; }
-    .toolbar h2 { font-size: 1.4rem; letter-spacing: -.035em; margin: 0 0 4px; }
-    .toolbar .hint { color: #68738b; font-size: .88rem; margin: 0; }
-    .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-    .search {
-      border: 1px solid #d7deeb; background: #fff; border-radius: 9px;
-      padding: 12px 15px; min-width: min(340px, 78vw); color: #24304b;
-    }
-    .download {
-      border: 1px solid #d5dced; background: #fff; border-radius: 9px;
-      text-decoration: none; color: #263655; padding: 12px 14px; font-size: .84rem; font-weight: 750;
-    }
-    .download:hover { border-color: #8095d5; }
-    .cards { display: grid; gap: 22px; margin-bottom: 28px; }
-    .comparison {
-      background: #fff; border: 1px solid #e0e5ef; border-radius: 16px;
-      box-shadow: 0 6px 26px rgba(35, 50, 82, .04); overflow: hidden;
-    }
-    .card-head { padding: 22px 26px; border-bottom: 1px solid #e8ecf3; }
-    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
-    .test-caption { font-size: .69rem; color: #7a859b; font-weight: 800; letter-spacing: .11em; margin: 0 0 8px; }
-    .test-name { margin: 0; font: 700 clamp(.92rem, 1.25vw, 1.12rem)/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
-    .pill { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 6px 9px; font-size: .7rem; font-weight: 800; color: #b33143; background: #fff0f1; }
-    .pill::before { content: "×"; font-size: .95rem; }
-    .metrics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 17px; }
-    .metric { display: inline-flex; align-items: center; gap: 8px; background: #f3f5f9; border-radius: 6px; padding: 7px 10px; font-size: .76rem; }
-    .metric-label { color: #7a849b; font-weight: 700; text-transform: uppercase; font-size: .65rem; letter-spacing: .04em; }
-    .metric-value { font-weight: 800; font-variant-numeric: tabular-nums; }
-    .image-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; padding: 20px 26px 26px; }
-    .image-panel { min-width: 0; margin: 0; }
-    .image-panel figcaption { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .72rem; color: #6c7790; font-weight: 800; letter-spacing: .075em; text-transform: uppercase; margin-bottom: 10px; }
-    .image-panel figcaption span:last-child { color: #97a1b4; letter-spacing: 0; font-size: .7rem; font-weight: 550; text-transform: none; }
-    .image-frame {
-      display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 3;
-      background-color: #f7f9fc; background-image: linear-gradient(45deg, #ebeff5 25%, transparent 25%), linear-gradient(-45deg, #ebeff5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ebeff5 75%), linear-gradient(-45deg, transparent 75%, #ebeff5 75%);
-      background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0;
-      border: 1px solid #e3e7f0; border-radius: 9px; overflow: hidden;
-      transition: box-shadow .18s, border-color .18s;
-    }
-    a.image-frame:hover { border-color: #637ecb; box-shadow: 0 0 0 3px rgba(99,126,203,.14); }
-    .image-frame img { max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; }
-    .image-frame.missing { color: #8793ab; font-size: .83rem; background: #f8f9fc; }
-    .details { border-top: 1px solid #e8ecf3; }
-    .details summary { cursor: pointer; padding: 16px 26px; font-weight: 750; color: #3d4e72; font-size: .86rem; }
-    .details summary:hover { background: #f8f9fc; }
-    .details pre { color: #344059; border-top: 1px solid #e8ecf3; background: #f8f9fc; padding: 18px 26px; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: .79rem/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; }
-    .junit { padding: 19px 23px; background: white; border: 1px solid #e0e5ef; border-radius: 12px; margin-bottom: 40px; }
-    .junit summary { font-size: .9rem; font-weight: 750; cursor: pointer; }
-    .junit li { padding: 5px 0; overflow-wrap: anywhere; }
-    .empty { border: 1px dashed #bdc6d9; text-align: center; padding: 45px 20px; border-radius: 14px; color: #69758e; background: #fff; }
-    footer { border-top: 1px solid #dfe4ed; padding: 25px 0 42px; color: #8690a4; font-size: .78rem; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    dialog { width: min(96vw, 1440px); max-height: 94vh; border: none; border-radius: 14px; box-shadow: 0 22px 100px #0008; padding: 16px; }
-    dialog::backdrop { background: rgba(9, 16, 33, .82); }
-    .lightbox-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-weight: 750; padding: 0 4px 12px; }
-    .lightbox-head button { border: 1px solid #d5dbea; border-radius: 7px; padding: 7px 13px; background: #fff; cursor: pointer; }
-    #lightbox-image { display: block; max-width: 100%; max-height: calc(94vh - 100px); object-fit: contain; margin: 0 auto; }
-    @media (max-width: 900px) { .image-grid { grid-template-columns: 1fr; } .image-frame { aspect-ratio: 16 / 9; } }
-    @media (max-width: 640px) { .container { width: min(100% - 28px, 1440px); } .summary { grid-template-columns: 1fr 1fr; gap: 9px; } .summary .stat:last-child { grid-column: 1 / -1; } .stat { padding: 15px; } .card-head { padding: 19px 16px; } .image-grid { padding: 16px; } .details summary { padding: 15px 16px; } .details pre { padding: 15px 16px; } .card-top { flex-wrap: wrap; } .masthead { padding-bottom: 70px; } }
-    @media (prefers-reduced-motion: reduce) { .image-frame { transition: none; } }
   </style>
 </head>
 <body>
-  <header class="masthead">
-    <div class="container">
-      <div class="topline">
-        <span class="brand"><span class="brand-mark">∿</span>UltraPlot <span style="font-weight:500;color:#aab8e3">/ CI diagnostics</span></span>
-        <span class="status">VISUAL REGRESSION DETECTED</span>
-      </div>
-      <div class="eyebrow" style="margin-top:34px">IMAGE COMPARISON RESULTS</div>
-      <h1>See what changed.</h1>
-      <p class="lede">A focused report of failing image tests, with the reference render, actual render, and pixel difference side by side. Passing images are not archived.</p>
-    </div>
-  </header>
-  <main class="container">
-    <div class="summary" aria-label="Run statistics">
-      <div class="stat"><span class="stat-value">__ULTRAPLOT_IMAGE_COUNT__</span><span class="stat-label">Failed comparisons</span></div>
-      <div class="stat"><span class="stat-value">__ULTRAPLOT_JUNIT_COUNT__</span><span class="stat-label">JUnit failures / errors</span></div>
-      <div class="stat"><span class="stat-value">__ULTRAPLOT_RETAINED_COUNT__</span><span class="stat-label">Images retained</span></div>
-    </div>
-    <div class="toolbar">
-      <div>
-        <h2>Failed test cases</h2>
-        <p class="hint" id="match-count">Showing __ULTRAPLOT_IMAGE_COUNT__ image comparisons</p>
-      </div>
-      <div class="controls">
-        <input class="search" id="search" type="search" placeholder="Search test names…" aria-label="Filter failing test cases">
-        <a class="download" href="results.json" download>↓ JSON report</a>
-        __ULTRAPLOT_JUNIT_DOWNLOAD__
-      </div>
-    </div>
-    <div class="cards" id="cards">
-      __ULTRAPLOT_CARDS__
-    </div>
-    <p class="empty" id="search-empty" hidden>No matching failed comparisons. Try a different search.</p>
+  <h1>UltraPlot Image comparison</h1>
+  <p class="overview">__ULTRAPLOT_IMAGE_COUNT__ failed image comparisons; __ULTRAPLOT_JUNIT_COUNT__ JUnit failures/errors.</p>
+  <p class="files"><a href="results.json">results.json</a>__ULTRAPLOT_JUNIT_DOWNLOAD__</p>
+  <main>
+    __ULTRAPLOT_CARDS__
     __ULTRAPLOT_JUNIT_DETAILS__
   </main>
-  <footer class="container"><span>UltraPlot · Visual regression diagnostics</span><span>Local, dependency-free report · click any image to inspect</span></footer>
-  <dialog id="lightbox" aria-label="Enlarged comparison image">
-    <div class="lightbox-head"><span id="lightbox-label">Image preview</span><button id="lightbox-close" type="button">Close ✕</button></div>
-    <img id="lightbox-image" alt="Enlarged comparison">
-  </dialog>
-  <script>
-    (function () {
-      const search = document.getElementById("search");
-      const cards = Array.from(document.querySelectorAll(".comparison"));
-      const counter = document.getElementById("match-count");
-      const empty = document.getElementById("search-empty");
-      search.addEventListener("input", function () {
-        const query = search.value.toLocaleLowerCase().trim();
-        let visible = 0;
-        cards.forEach(function (card) {
-          const match = card.dataset.test.toLocaleLowerCase().includes(query);
-          card.hidden = !match;
-          if (match) visible++;
-        });
-        counter.textContent = "Showing " + visible + " of " + cards.length + " image comparisons";
-        empty.hidden = visible !== 0;
-      });
-      const dialog = document.getElementById("lightbox");
-      const preview = document.getElementById("lightbox-image");
-      const label = document.getElementById("lightbox-label");
-      document.querySelectorAll("a.image-frame").forEach(function (link) {
-        link.addEventListener("click", function (event) {
-          if (!dialog.showModal || event.ctrlKey || event.metaKey || event.shiftKey) return;
-          event.preventDefault();
-          preview.src = link.href;
-          preview.alt = link.dataset.label;
-          label.textContent = link.dataset.label;
-          dialog.showModal();
-        });
-      });
-      document.getElementById("lightbox-close").addEventListener("click", function () { dialog.close(); });
-      dialog.addEventListener("click", function (event) { if (event.target === dialog) dialog.close(); });
-      dialog.addEventListener("close", function () { preview.removeAttribute("src"); });
-    }());
-  </script>
 </body>
 </html>
