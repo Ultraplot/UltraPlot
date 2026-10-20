@@ -360,6 +360,11 @@ jobs:
             exit "$status"
           fi
 
+      # Validate the standalone report rendering on each CI environment.
+      - name: Test failed-comparison report generator
+        if: always() && steps.baseline-support.outputs.baseline-supported == 'true'
+        run: python -m unittest discover -s tools/ci -p 'test_collect_failed_comparisons.py'
+
       # JSON mode does not save images for passing comparisons.
       - name: Collect failed image comparisons
         if: always() && steps.baseline-support.outputs.baseline-supported == 'true'
