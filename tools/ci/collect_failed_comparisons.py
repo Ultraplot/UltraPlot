@@ -61,12 +61,26 @@ def collect(results_dir: Path, output_dir: Path) -> int:
         json.dumps(failed, indent=2) + "\n", encoding="utf-8"
     )
 
+    # The report is static and intentionally self-contained: it also works
+    # directly from an extracted GitHub Actions artifact without a web server.
     cards = []
-    for name, item in failed.items():
+    retained_images = 0
+    for name, item in sorted(
+        failed.items(),
+        key=lambda entry: (
+            -(float(entry[1]["rms"]) if entry[1].get("rms") is not None else -1),
+            entry[0],
+        ),
+    ):
         images = []
         for field, label in _IMAGE_FIELDS:
             raw_path = item.get(field)
             if not raw_path:
+                images.append(
+                    f'<figure class="image-panel">'
+                    f'<figcaption>{html.escape(label)}<span>Not available</span></figcaption>'
+                    f'<div class="image-frame missing">No image</div></figure>'
+                )
                 continue
             relative_path = Path(raw_path)
             source = (results_dir / relative_path).resolve()
@@ -75,40 +89,65 @@ def collect(results_dir: Path, output_dir: Path) -> int:
             destination = output_dir / relative_path
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
+            retained_images += 1
             url = html.escape(quote(relative_path.as_posix(), safe="/"), quote=True)
+            escaped_label = html.escape(label, quote=True)
             images.append(
-                f'<figure><img loading="lazy" src="{url}" alt="{html.escape(label)}">'
-                f'<figcaption>{html.escape(label)}</figcaption></figure>'
+                f'<figure class="image-panel"><figcaption>{escaped_label}'
+                f'<span>Click to enlarge ↗</span></figcaption>'
+                f'<a class="image-frame" href="{url}" data-label="{escaped_label}"'
+                f' aria-label="Enlarge {escaped_label} image for {html.escape(name, quote=True)}">'
+                f'<img loading="lazy" src="{url}" alt="{escaped_label} image for '
+                f'{html.escape(name, quote=True)}"></a></figure>'
             )
-        rms = item.get("rms")
-        tolerance = item.get("tolerance")
-        metrics = f"RMS: {rms}; tolerance: {tolerance}" if rms is not None else ""
+
+        metrics = []
+        for field, label in (("rms", "RMS difference"), ("tolerance", "Tolerance")):
+            value = item.get(field)
+            if value is not None:
+                display = f"{value:.3f}" if isinstance(value, (int, float)) else str(value)
+                metrics.append(
+                    f'<span class="metric"><span class="metric-label">{label}</span>'
+                    f'<span class="metric-value">{html.escape(display)}</span></span>'
+                )
+        if not metrics:
+            metrics.append('<span class="metric">No numerical comparison available</span>')
+        comparison_status = str(item.get("image_status") or "failed").upper()
         cards.append(
-            f'<section><h2>{html.escape(name)}</h2><p>{html.escape(metrics)}</p>'
-            f'<div class="images">{"".join(images)}</div>'
-            f'<pre>{html.escape(item.get("status_msg") or "")}</pre></section>'
+            f'<article class="comparison" data-test="{html.escape(name, quote=True)}">'
+            f'<div class="card-head"><div class="card-top"><div>'
+            f'<p class="test-caption">FAILING TEST</p><h3 class="test-name">{html.escape(name)}</h3>'
+            f'</div><span class="pill">{html.escape(comparison_status)}</span></div>'
+            f'<div class="metrics">{"".join(metrics)}</div></div>'
+            f'<div class="image-grid">{"".join(images)}</div>'
+            f'<details class="details"><summary>Diagnostic output</summary>'
+            f'<pre>{html.escape(str(item.get("status_msg") or "No diagnostic text provided."))}</pre>'
+            f'</details></article>'
         )
 
-    # Test errors unrelated to MPL may not produce an image; retain their names
-    # and the complete JUnit diagnostics rather than silently hiding them.
-    junit_list = "".join(f"<li>{html.escape(name)}</li>" for name in test_failures)
-    markup = f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Failed UltraPlot image comparisons</title>
-<style>
-body{{max-width:1200px;margin:2rem auto;padding:0 1rem;font-family:system-ui,sans-serif;color:#222}}
-section{{border-top:1px solid #ccc;margin:2rem 0;padding-top:1rem}}
-h2{{overflow-wrap:anywhere;font-size:1.15rem}}
-.images{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}}
-figure{{margin:0}}img{{width:100%;height:auto;border:1px solid #ddd}}
-figcaption{{font-weight:600;margin:.5rem 0}}
-pre{{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f5f5;padding:1rem}}
-</style></head><body><h1>Failed UltraPlot image comparisons</h1>
-<p>{len(failed)} image comparisons failed; {len(test_failures)} JUnit failures/errors.
-See <a href="results.json">results.json</a> and <a href="junit.xml">junit.xml</a> for diagnostics.</p>
-<details><summary>Failed JUnit test names</summary><ul>{junit_list}</ul></details>
-{"".join(cards)}</body></html>
-"""
+    # JUnit includes failures not covered by pytest-mpl (which have no images).
+    junit_list = "".join(f"<li><code>{html.escape(name)}</code></li>" for name in test_failures)
+    junit_details = (
+        '<details class="junit"><summary>All JUnit failures / errors '
+        f'({len(test_failures)})</summary><ul>{junit_list}</ul></details>'
+        if test_failures else ""
+    )
+    template = Path(__file__).with_name("failed_comparisons_template.html").read_text(
+        encoding="utf-8"
+    )
+    markup = template
+    for marker, value in {
+        "__ULTRAPLOT_IMAGE_COUNT__": str(len(failed)),
+        "__ULTRAPLOT_JUNIT_COUNT__": str(len(test_failures)),
+        "__ULTRAPLOT_RETAINED_COUNT__": str(retained_images),
+        "__ULTRAPLOT_CARDS__": "\n".join(cards),
+        "__ULTRAPLOT_JUNIT_DETAILS__": junit_details,
+        "__ULTRAPLOT_JUNIT_DOWNLOAD__": (
+            '<a class="download" href="junit.xml" download>↓ JUnit XML</a>'
+            if junit.is_file() else ""
+        ),
+    }.items():
+        markup = markup.replace(marker, value)
     (output_dir / "index.html").write_text(markup, encoding="utf-8")
     print(f"Prepared {len(failed)} failed image comparisons in {output_dir}")
     return len(failed)
