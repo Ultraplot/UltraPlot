@@ -22,24 +22,13 @@ def test_inset_basic():
         ylabel="ylabel",
         xticks=0.2,
         yticks=0.2,
-        title="CI ARTIFACT SMOKE TEST — INTENTIONAL IMAGE MISMATCH",
+        title="Title",
         suptitle="Complex arrangement of panels",
         toplabels=("Column 1", "Column 2"),
         abc=True,
         abcloc="ul",
         titleloc="uc",
         titleabove=False,
-    )
-    # TEMPORARY: Force a visible mismatch against the base-branch image so
-    # PR #850 produces an image-comparison artifact. REMOVE BEFORE MERGING.
-    fig.text(
-        0.5,
-        0.5,
-        "EXPECTED CI IMAGE FAILURE",
-        ha="center",
-        va="center",
-        fontsize=28,
-        color="magenta",
     )
     return fig
 
