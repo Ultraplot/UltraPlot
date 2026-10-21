@@ -2084,13 +2084,19 @@ class PerceptualColormap(ContinuousColormap):
 
         # Make hues circular, set extremes i.e. copy HSL values
         self._lut = self._lut_hsl.copy()
-        self._set_extremes()  # generally just used end values in segmentdata
-        self._isinit = True
 
-        # Now convert values to RGB and clip colors
-        for i in range(self.N + 3):
+        # Convert the regular color entries to RGB
+        # Note: as of mpl 3.11 setting lut is not performed when
+        # updating set_extremes, as such there is an ordering effect
+        # here that we need to consider.
+        for i in range(self.N):
             self._lut[i, :3] = to_rgb(self._lut[i, :3], self._space)
-        self._lut[:, :3] = _clip_colors(self._lut[:, :3], self._clip)
+        self._lut[: self.N, :3] = _clip_colors(self._lut[: self.N, :3], self._clip)
+
+        self._isinit = True
+        # Order here is important as
+        # mpl.3.11 only updates when init is set to true
+        self._set_extremes()  # generally just used end values in segmentdata
 
     @docstring._snippet_manager
     def set_gamma(self, gamma=None, gamma1=None, gamma2=None):
