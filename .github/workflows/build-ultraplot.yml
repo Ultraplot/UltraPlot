@@ -299,7 +299,7 @@ jobs:
                 --mpl \
                 --mpl-baseline-path=./ultraplot/tests/baseline \
                 --mpl-results-path=./results/ \
-                --mpl-generate-summary=html \
+                --mpl-generate-summary=json \
                 --mpl-default-style="./ultraplot.yml" \
                 --junitxml=./results/junit.xml \
                 "${FILTERED_NODEIDS[@]}"
@@ -333,7 +333,7 @@ jobs:
               --mpl \
               --mpl-baseline-path=./ultraplot/tests/baseline \
               --mpl-results-path=./results/ \
-              --mpl-generate-summary=html \
+              --mpl-generate-summary=json \
               --mpl-default-style="./ultraplot.yml" \
               --junitxml=./results/junit.xml \
               ultraplot/tests
@@ -360,11 +360,20 @@ jobs:
             exit "$status"
           fi
 
-      # Return the html output of the comparison even if failed
+      # Validate the standalone report rendering on each CI environment.
+      - name: Test failed-comparison report generator
+        if: always() && steps.baseline-support.outputs.baseline-supported == 'true'
+        run: python -m unittest discover -s tools/ci -p 'test_collect_failed_comparisons.py'
+
+      # JSON mode does not save images for passing comparisons.
+      - name: Collect failed image comparisons
+        if: always() && steps.baseline-support.outputs.baseline-supported == 'true'
+        run: python tools/ci/collect_failed_comparisons.py --results results --output failed-comparisons
+
       - name: Upload comparison failures
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: failed-comparisons-${{ inputs.python-version }}-${{ inputs.matplotlib-version }}-${{ github.sha }}
-          path: results/*
+          path: failed-comparisons/
           if-no-files-found: ignore
