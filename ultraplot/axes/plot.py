@@ -11,7 +11,7 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from numbers import Integral, Number
-from typing import Any, Iterable, Mapping, Optional, Sequence, TypeAlias, Union
+from typing import Any, Literal, Iterable, Mapping, Optional, Sequence, TypeAlias, Union
 
 import matplotlib as mpl
 import matplotlib.artist as martist
@@ -6400,7 +6400,7 @@ class PlotAxes(base.Axes):
         )
         if fill is None:
             fill = fillcolor is not None or fillalpha is not None
-            fill = fill or kw.get("cycle") is not None
+            fill = fill or kw.get("cycle") is not None or kw.get("patch_artist", False)
 
         # Parse non-color properties
         # NOTE: Output dict keys are plural but we use singular for keyword args
@@ -6416,9 +6416,19 @@ class PlotAxes(base.Axes):
         ):
             prefix = key.rstrip("es")  # singular form
             props[key] = iprops = _pop_props(kw, "line", prefix=prefix)
-            iprops.setdefault("color", edgecolor)
+            patch_box = key == "boxes" and kw.get("patch_artist", False)
+            artist_type = mpatches.PathPatch if patch_box else mlines.Line2D
+            iprops.update(
+                cbook.normalize_kwargs(kw.pop(prefix + "props", {}), artist_type)
+            )
+            if patch_box:
+                if "color" not in iprops:
+                    iprops.setdefault("edgecolor", edgecolor)
+            else:
+                iprops.setdefault("color", edgecolor)
             iprops.setdefault("linewidth", linewidth)
-            iprops.setdefault("markeredgecolor", edgecolor)
+            if not patch_box:
+                iprops.setdefault("markeredgecolor", edgecolor)
 
         # Parse color properties
         x, y, kw = self._parse_1d_args(
@@ -6509,11 +6519,27 @@ class PlotAxes(base.Axes):
                     for key, value in aprops.items()
                 }
                 obj.update(iprops)
-                # "Filled" boxplot by adding patch beneath line path
-                if key == "boxes" and (
-                    fillcolor[i] is not None
-                    or fillalpha is not None
-                    or hatch[i] is not None
+                # Filled boxes may already be patches when patch_artist=True.
+                if key == "boxes" and isinstance(obj, mpatches.Patch):
+                    obj.set_fill(fill)
+                    if fillcolor[i] is not None and not {
+                        "facecolor",
+                        "color",
+                    }.intersection(aprops):
+                        obj.set_facecolor(fillcolor[i])
+                    if fillalpha is not None and "alpha" not in aprops:
+                        obj.set_alpha(fillalpha)
+                    if hatch[i] is not None:
+                        obj.set_hatch(hatch[i])
+                    artists.setdefault("patches", []).append(obj)
+                elif (
+                    key == "boxes"
+                    and fill
+                    and (
+                        fillcolor[i] is not None
+                        or fillalpha is not None
+                        or hatch[i] is not None
+                    )
                 ):
                     patch = mpatches.PathPatch(
                         obj.get_path(),
@@ -6523,6 +6549,7 @@ class PlotAxes(base.Axes):
                         hatch=hatch[i],
                     )
                     self.add_artist(patch)
+                    artists.setdefault("patches", []).append(patch)
                 # Outlier markers
                 if key == "fliers":
                     if marker is not None:
@@ -6721,6 +6748,165 @@ class PlotAxes(base.Axes):
         """
         kwargs = _parse_vert(default_vert=False, **kwargs)
         return self._apply_violinplot(*args, **kwargs)
+
+    def raincloud(
+        self,
+        dataset: Any = None,
+        *,
+        data: Any = None,
+        positions: ArrayLike | None = None,
+        labels: Sequence[Any] | None = None,
+        orientation: Literal["vertical", "horizontal"] | None = None,
+        vert: bool | None = None,
+        autoformat: bool | None = None,
+        legend: bool | str | int | None = None,
+        legend_kw: Mapping[str, Any] | None = None,
+        side: Literal["low", "high"] | None = None,
+        jitter: float | None = None,
+        offset: float | None = None,
+        cloud: bool | None = None,
+        rain: bool | None = None,
+        box: bool | None = None,
+        seed: int | np.random.Generator | None = None,
+        color: Any = None,
+        cycle: Any = None,
+        cycle_kw: Mapping[str, Any] | None = None,
+        cloud_kw: Mapping[str, Any] | None = None,
+        rain_kw: Mapping[str, Any] | None = None,
+        box_kw: Mapping[str, Any] | None = None,
+    ) -> dict[str, list[Any]]:
+        """
+        Plot half violins, individual observations, and narrow boxplots.
+
+        Parameters
+        ----------
+        dataset : array-like, sequence of array-like, DataFrame, or str
+            A vector represents one distribution. Columns of a 2D array or
+            DataFrame represent distributions. A list or tuple of vectors
+            represents separate distributions, including unequal sample sizes.
+            Masked and non-finite observations are ignored. Empty groups retain
+            their positions and labels but are skipped with a warning.
+        data : mapping, optional
+            Resolve a string ``dataset`` as a key in this mapping, following
+            other plotting methods. ``raincloud(data=array)`` is also accepted
+            as an alternative to passing the observations positionally.
+        positions : sequence of float, optional
+            Distinct group centres. Defaults to ``range(number_of_groups)``.
+        labels : sequence of str, optional
+            Group tick and legend labels. With automatic formatting, infer
+            column labels from pandas or xarray input.
+        orientation : {'vertical', 'horizontal'}, default: :rc:`raincloud.orientation`
+            Direction of the measured variable. For horizontal plots, group
+            centres lie on the y axis.
+        vert : bool, optional
+            Alternative to ``orientation``, as with box and violin plots.
+        autoformat : bool, optional
+            Infer labels from input metadata. Defaults to :rc:`autoformat`.
+        legend : bool or str, optional
+            Automatically add a legend using one representative per group.
+        legend_kw : dict, optional
+            Additional legend options, e.g. ``{'title': 'Condition'}``.
+        side : {'low', 'high'}, default: :rc:`raincloud.side`
+            Place the cloud below or above its group centre on the categorical
+            axis. Observations are placed on the opposite side.
+        jitter : float, default: :rc:`raincloud.jitter`
+            Half-width of uniform jitter in categorical-axis data units.
+        offset : float, default: :rc:`raincloud.offset`
+            Distance of the cloud baseline and the centre of the observations
+            from the group centre, in categorical-axis data units.
+        cloud, rain, box : bool, optional
+            Whether to draw each component. Defaults to :rc:`raincloud.cloud`,
+            :rc:`raincloud.rain`, and :rc:`raincloud.box`, respectively.
+            At least one must be enabled.
+            Boxplots show the median, interquartile range, and Tukey whiskers;
+            these are distribution summaries, not confidence intervals.
+        seed : int, numpy.random.Generator, or None, optional
+            Random seed for reproducible jitter, or a generator to use directly.
+            Defaults to :rc:`raincloud.seed`. Set that rc value to ``None`` or
+            pass a fresh generator for unseeded jitter. Does not change NumPy's
+            global random state.
+        color : color-spec, optional
+            Colour shared by all groups. Otherwise each group uses one cycle
+            colour shared across its three components.
+        cycle : cycle-spec, optional
+            Property cycle used for group colours.
+        cycle_kw : dict, optional
+            Additional arguments for constructing the cycle.
+        cloud_kw, rain_kw, box_kw : dict, optional
+            Component options passed to `violinplot`, `scatter`, and `boxplot`,
+            respectively. Override default styling and widths. Layout options
+            such as positions and orientation must be supplied to this method.
+            Artist aliases supported by these methods are accepted, e.g.
+            ``rain_kw={'ms': 25, 'lw': 1}`` or
+            ``cloud_kw={'fc': 'blue', 'ec': 'navy', 'lw': 1}``.
+            Defaults come from the ``raincloud.cloud.*``, ``raincloud.rain.*``,
+            and ``raincloud.box.*`` rc settings. Explicit component options take
+            precedence over these defaults.
+
+        Returns
+        -------
+        dict
+            ``cloud`` contains violin PolyCollections, ``rain`` contains scatter
+            PathCollections, and ``box`` contains boxplot artist dictionaries.
+            Each list follows input group order, with ``None`` for disabled
+            components or empty groups.
+            Filled box patches are included under ``box[i]['patches']``.
+            Optional violin summary artists are available as ``cloud_extras``.
+
+        Examples
+        --------
+        >>> rng = np.random.default_rng(42)
+        >>> data = [rng.normal(size=80), rng.normal(1, size=60)]
+        >>> fig, ax = uplt.subplots()
+        >>> artists = ax.raincloud(data, labels=['Control', 'Treatment'])
+
+        See also
+        --------
+        PlotAxes.violinplot
+        PlotAxes.scatter
+        PlotAxes.boxplot
+        """
+        from .plot_types.raincloud import raincloud
+
+        if dataset is None:
+            dataset = data
+        elif data is not None:
+            dataset, positions = inputs._from_data(data, dataset, positions)
+        if orientation not in (None, "vertical", "horizontal"):
+            raise ValueError("orientation must be 'vertical' or 'horizontal'")
+        orientation = (
+            "vertical"
+            if _parse_vert(
+                vert=vert,
+                orientation=orientation,
+                default_vert=rc["raincloud.orientation"] == "vertical",
+            )["vert"]
+            else "horizontal"
+        )
+
+        return raincloud(
+            self,
+            dataset,
+            positions=positions,
+            labels=labels,
+            orientation=orientation,
+            autoformat=autoformat,
+            legend=legend,
+            legend_kw=legend_kw,
+            side=side,
+            jitter=jitter,
+            offset=offset,
+            cloud=cloud,
+            rain=rain,
+            box=box,
+            seed=seed,
+            color=color,
+            cycle=cycle,
+            cycle_kw=cycle_kw,
+            cloud_kw=cloud_kw,
+            rain_kw=rain_kw,
+            box_kw=box_kw,
+        )
 
     def _apply_ridgeline(
         self,

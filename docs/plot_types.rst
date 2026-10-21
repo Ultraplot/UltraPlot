@@ -168,6 +168,14 @@ The shape and spread of a sample.
       :meth:`~ultraplot.axes.PlotAxes.ridgeline`
 
    .. grid-item-card::
+      :img-top: _static/plot_types/raincloud.png
+      :text-align: center
+
+      :meth:`~ultraplot.axes.PlotAxes.raincloud`
+
+      :doc:`example </gallery/plot_types/13_raincloud>`
+
+   .. grid-item-card::
       :img-top: _static/plot_types/errorbars.png
       :text-align: center
 

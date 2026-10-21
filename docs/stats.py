@@ -300,6 +300,28 @@ for ax, which, color, title in zip(axs, "lr", colors, titles):
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
+# Raincloud plots
+# ---------------
+# :meth:`~ultraplot.axes.PlotAxes.raincloud` combines a half violin (the cloud), jittered
+# observations (the rain), and a narrow boxplot. Columns of arrays and DataFrames represent
+# distributions; a list of vectors also supports unequal sample sizes. Colours
+# and positions are coordinated across components. Use ``orientation='horizontal'``
+# to put values on the x axis, and ``cloud=False``, ``rain=False``, or ``box=False``
+# to disable individual components. ``seed`` makes the jitter reproducible.
+# Use ``legend='r'`` for a group legend, and ``data=table`` to look up a named
+# input, e.g. ``ax.raincloud('samples', data={'samples': samples})``. Automatic
+# pandas/xarray labels respect :rc:`autoformat`; explicit ``labels`` override them.
+# Component dictionaries accept artist aliases and native options, e.g.
+# ``rain_kw={'ms': 20, 'lw': 0.5}`` and
+# ``box_kw={'medianprops': {'color': 'black', 'lw': 2}}``.
+# Layout, visibility, jitter seed, and component appearance defaults live under
+# ``raincloud.*`` rc settings. For example,
+# ``uplt.rc['raincloud.rain.markersize'] = 20`` changes observation marker areas
+# globally, or use ``uplt.rc.context`` to change defaults temporarily. Explicit
+# arguments and component dictionary entries override the rc defaults.
+# The boxplot describes sample spread, not uncertainty in an estimated mean.
+# See the :ref:`sphx_glr_gallery_plot_types_13_raincloud.py` gallery example.
+#
 # .. _ug_ridgeline:
 #
 # Ridgeline plots
@@ -325,7 +347,7 @@ import ultraplot as uplt
 # Sample data with different distributions
 state = np.random.RandomState(51423)
 data = [state.normal(i, 1, 500) for i in range(5)]
-labels = [f"Distribution {i+1}" for i in range(5)]
+labels = [f"Distribution {i + 1}" for i in range(5)]
 
 # Create figure with two subplots
 fig, axs = uplt.subplots(ncols=2, figsize=(10, 5))
@@ -361,7 +383,7 @@ import ultraplot as uplt
 state = np.random.RandomState(51423)
 data1 = [state.normal(i * 0.5, 1, 400) for i in range(6)]
 data2 = [state.normal(i, 0.8, 400) for i in range(4)]
-labels1 = [f"Group {i+1}" for i in range(6)]
+labels1 = [f"Group {i + 1}" for i in range(6)]
 labels2 = ["Alpha", "Beta", "Gamma", "Delta"]
 
 # Create figure with vertical and horizontal orientations

@@ -1992,6 +1992,68 @@ _rc_ultraplot_table = {
         _validate_float,
         "Z-order for internal political border lines.",
     ),
+    # Raincloud plot settings
+    "raincloud.orientation": (
+        "vertical",
+        _validate_belongs("vertical", "horizontal"),
+        "Direction of raincloud observations; categories lie on the other axis.",
+    ),
+    "raincloud.side": (
+        "high",
+        _validate_belongs("low", "high"),
+        "Side of each group centre occupied by the raincloud density.",
+    ),
+    "raincloud.jitter": (
+        0.08,
+        _validate_float,
+        "Half-width of raincloud point jitter in categorical-axis data units.",
+    ),
+    "raincloud.offset": (
+        0.15,
+        _validate_float,
+        "Offset of clouds and points from group centres in categorical-axis data units.",
+    ),
+    "raincloud.cloud": (
+        True,
+        _validate_bool,
+        "Whether to draw raincloud half violins.",
+    ),
+    "raincloud.rain": (True, _validate_bool, "Whether to draw raincloud observations."),
+    "raincloud.box": (True, _validate_bool, "Whether to draw raincloud boxplots."),
+    "raincloud.seed": (
+        0,
+        _validate_or_none(_validate_int),
+        "Random seed for raincloud jitter. None uses fresh random entropy.",
+    ),
+    "raincloud.cloud.width": (
+        0.6,
+        _validate_float,
+        "Full violin width before halving, in categorical-axis data units.",
+    ),
+    "raincloud.cloud.alpha": (0.4, _validate_float, "Raincloud density opacity."),
+    "raincloud.rain.markersize": (
+        12.0,
+        _validate_float,
+        "Raincloud observation marker area in points squared, as for scatter's s.",
+    ),
+    "raincloud.rain.linewidth": (
+        0.0,
+        _validate_pt,
+        "Raincloud observation marker edge width." + _addendum_pt,
+    ),
+    "raincloud.rain.alpha": (0.5, _validate_float, "Raincloud observation opacity."),
+    "raincloud.box.width": (
+        0.12,
+        _validate_float,
+        "Raincloud box width in categorical-axis data units.",
+    ),
+    "raincloud.box.fill": (True, _validate_bool, "Whether to fill raincloud boxes."),
+    "raincloud.box.showfliers": (
+        False,
+        _validate_bool,
+        "Whether raincloud boxplots show outlier markers as well as the rain.",
+    ),
+    "raincloud.box.zorder": (3.0, _validate_float, "Raincloud boxplot drawing order."),
     # Kernel density settings
     "kde.points": (
         200,
