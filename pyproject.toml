@@ -76,7 +76,7 @@ stats = [
 ]
 
 typing = [
-  "basedpyright==1.40.1",
+  "basedpyright==1.40.2",
 ]
 
 [build-system]
@@ -124,4 +124,4 @@ version_file_template = "__version__ = '{version}'\n"
 
 [tool.ultraplot.core_versions]
 python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
-matplotlib = ["3.9", "3.10"]
+# Matplotlib versions are inferred from project.dependencies to keep CI in sync.

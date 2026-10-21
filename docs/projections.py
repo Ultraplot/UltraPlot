@@ -516,6 +516,36 @@ fig.format(
 
 
 # %% [raw] raw_mimetype="text/restructuredtext"
+# .. note:: Cartopy gridline label placement
+#
+#    With the Cartopy backend, UltraPlot uses Cartopy's gridliner to position
+#    geographic labels. Cartopy can hide labels that would overlap; UltraPlot
+#    enables this by default through :rcraw:`grid.checkoverlap`. Therefore, a
+#    missing longitude label does not necessarily mean its meridian is misplaced.
+#
+#    To keep *all* labels, set ``uplt.rc["grid.checkoverlap"] = False`` before
+#    drawing the figure. This setting is checked at draw time and applies to
+#    all Cartopy axes drawn while it is active. Alternatively, use
+#    `lonlocator`, `latlocator`, `lonformatter`, or `latformatter` with
+#    :meth:`~ultraplot.axes.GeoAxes.format` to override the label density or
+#    formatting on individual axes. The two maps below have the same extent:
+#    the left has densely spaced meridians (some labels may be omitted), and
+#    the right uses an explicit, sparser locator.
+#
+# %%
+import ultraplot as uplt
+
+fig, axs = uplt.subplots(
+    ncols=2, proj="cyl", proj_kw={"lon0": 180}, refwidth=2.7, share=0
+)
+axs.format(
+    lonlim=(70, 220), latlim=(-30, 60), coast=True, lonlabels=True, lonlocator=20
+)
+axs[0].format(title="Cartopy: automatic overlap check")
+axs[1].format(title="UltraPlot: sparser labels", lonlocator=40)
+
+
+# %% [raw] raw_mimetype="text/restructuredtext"
 # .. _ug_geo_layout:
 #
 # Geographic axes in mixed subplot layouts
@@ -645,7 +675,7 @@ import ultraplot as uplt
 # Set TeX Gyre Heros as the primary font but fall back to DejaVu Sans
 uplt.rc["font.family"] = ["TeX Gyre Heros", "DejaVu Sans"]
 uplt.rc.reso = "hi"
-fig = uplt.figure(refwidth=2.5)
+fig = uplt.figure(refwidth=2.5, share=0)
 ax = fig.subplot(121, proj="cyl")
 ax.format(lonlim=(-7.5, 2), latlim=(49.5, 59))
 ax = fig.subplot(122, proj="cyl")
