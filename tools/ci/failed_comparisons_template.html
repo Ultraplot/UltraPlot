@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UltraPlot Image comparison</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #faf9f7;
+      --paper: #ffffff;
+      --ink: #27303b;
+      --muted: #677180;
+      --border: #e3e1dd;
+      --header: #2b2f36;
+      --passed: #288267;
+      --failed: #c95342;
+      --link: #216980;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--ink);
+      font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .page { width: min(1520px, calc(100% - 48px)); margin: 28px auto 48px; }
+    a { color: var(--link); }
+    a:hover { text-decoration-thickness: 2px; }
+    .banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 26px 30px;
+      background: var(--header);
+      color: #f9f8f6;
+      border-radius: 8px;
+    }
+    .banner h1 { font-size: clamp(1.35rem, 2.3vw, 1.95rem); letter-spacing: -.035em; margin: 0 0 3px; line-height: 1.2; }
+    .subtitle { margin: 0; color: #c6cbd0; }
+    .banner-right { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-left: auto; }
+    .metadata { color: #bfc6ce; text-align: right; font-size: .8rem; white-space: nowrap; }
+    .counts { display: flex; align-items: center; }
+    .count {
+      min-width: 84px;
+      text-align: center;
+      padding: 0 18px;
+      border-left: 1px solid #555a61;
+    }
+    .count strong { display: block; font-size: 1.55rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+    .count span { font-size: .79rem; color: #d1d3d6; }
+    .count.passed strong { color: #78d4ad; }
+    .count.failed strong { color: #f18a78; }
+    .report { margin-top: 24px; border: 1px solid var(--border); border-radius: 8px; background: var(--paper); overflow: hidden; }
+    .report-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 17px 22px;
+    }
+    .report-heading h2 { font-size: 1.12rem; margin: 0; }
+    .report-heading p { margin: 0; color: var(--muted); font-size: .84rem; }
+    .downloads { font-size: .84rem; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; min-width: 980px; border-collapse: collapse; table-layout: fixed; }
+    th {
+      text-align: left;
+      font-weight: 600;
+      font-size: .83rem;
+      padding: 12px 16px;
+      background: var(--header);
+      color: #f5f5f5;
+    }
+    th:nth-child(1) { width: 27%; }
+    th:nth-child(2) { width: 10%; }
+    th:nth-child(3) { width: 8%; }
+    th:nth-child(4) { width: 9%; }
+    th:nth-child(5) { width: 46%; }
+    td { padding: 15px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .test-name { font: 600 .86rem/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+    .status { font-weight: 600; white-space: nowrap; color: var(--failed); }
+    .status::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; background: var(--failed); border-radius: 50%; vertical-align: middle; }
+    .numeric { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .image-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    figure { margin: 0; min-width: 0; }
+    figcaption { font-size: .78rem; font-weight: 600; margin-bottom: 7px; color: #4a545f; }
+    figure a, figure .missing {
+      display: grid;
+      place-items: center;
+      min-height: 95px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    figure img { display: block; max-width: 100%; width: 100%; max-height: 170px; object-fit: contain; }
+    .missing { color: var(--muted); font-size: .8rem; }
+    .detail-row td { padding: 0 16px 16px; background: #fdfbf8; }
+    details { border: 1px solid #e9e5de; border-radius: 5px; }
+    summary { cursor: pointer; padding: 9px 13px; font-size: .85rem; font-weight: 600; }
+    pre {
+      margin: 0;
+      padding: 13px 16px;
+      border-top: 1px solid #e9e5de;
+      background: #f6f4f1;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font: .8rem/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    .no-images { text-align: center; color: var(--muted); padding: 28px; }
+    .junit { margin: 18px 22px 22px; }
+    .junit li { overflow-wrap: anywhere; margin: 5px 0; }
+    @media (max-width: 850px) {
+      .page { width: min(100% - 24px, 1520px); margin-top: 12px; }
+      .banner { padding: 22px 20px; }
+      .banner-right { margin-left: 0; }
+      .metadata { text-align: left; }
+      .count { padding: 0 14px; }
+      .report-heading { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="banner">
+      <div>
+        <h1>UltraPlot Image comparison</h1>
+        <p class="subtitle">pytest-mpl comparison results</p>
+      </div>
+      <div class="banner-right">
+        <div class="metadata">__ULTRAPLOT_GENERATED__<br>__ULTRAPLOT_ENVIRONMENT__</div>
+        <div class="counts" aria-label="Test counts">
+          <div class="count passed"><strong>__ULTRAPLOT_PASSED__</strong><span>Passed</span></div>
+          <div class="count failed"><strong>__ULTRAPLOT_FAILED__</strong><span>Failed</span></div>
+          <div class="count"><strong>__ULTRAPLOT_ERRORS__</strong><span>Errors</span></div>
+        </div>
+      </div>
+    </header>
+    <main class="report">
+      <div class="report-heading">
+        <div>
+          <h2>Failed comparisons (__ULTRAPLOT_IMAGE_COUNT__)</h2>
+          <p>Only failed image comparisons are included in this artifact.</p>
+        </div>
+        <div class="downloads">
+          <a href="results.json">JSON results</a>__ULTRAPLOT_JUNIT_DOWNLOAD__
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">Test name</th><th scope="col">Status</th><th scope="col">RMS</th><th scope="col">Tolerance</th><th scope="col">Images</th></tr>
+          </thead>
+          <tbody>
+            __ULTRAPLOT_ROWS__
+          </tbody>
+        </table>
+      </div>
+      __ULTRAPLOT_JUNIT_DETAILS__
+    </main>
+  </div>
+</body>
+</html>
