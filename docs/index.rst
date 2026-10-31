@@ -5,6 +5,9 @@
 **UltraPlot** is a succinct wrapper around `matplotlib <https://matplotlib.org/>`__
 for creating **publication-quality graphics** with a small, familiar API.
 
+.. raw:: html
+   :file: _templates/plot-carousel.html
+
 Start with a finished figure
 ############################
 
@@ -134,6 +137,7 @@ For details, see the full :doc:`User guide <usage>` and
    :hidden:
 
    install
+   mcp
    why_ultraplot
    first_figure
    usage
