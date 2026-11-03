@@ -21,6 +21,15 @@ from ...internals import warnings
 #: saved, so `_import_pycirclize` puts these back.
 _PYCIRCLIZE_RC_LEAKS = ("savefig.bbox", "savefig.pad_inches", "svg.fonttype")
 
+_PYCIRCLIZE_INSTALL_MESSAGE = (
+    "This plot requires the optional pyCirclize dependency, which is not "
+    "available in this Python environment. Chord diagrams, radar charts, "
+    "phylogenies, and Circos plots need it.\n"
+    "Install it in the environment running your code:\n"
+    "    pip install 'ultraplot[circos]'\n"
+    "Then restart Python or your notebook kernel and run the plot again."
+)
+
 
 def _import_pycirclize():
     """
@@ -56,17 +65,9 @@ def _import_pycirclize_unguarded():
             try:
                 import pycirclize
             except ImportError as exc2:
-                raise ImportError(
-                    "pycirclize is required for circos plots. Install it with "
-                    "`pip install 'ultraplot[circos]'` or ensure "
-                    "`pyCirclize/src` is on PYTHONPATH."
-                ) from exc2
+                raise ImportError(_PYCIRCLIZE_INSTALL_MESSAGE) from exc2
         else:
-            raise ImportError(
-                "pycirclize is required for circos plots. Install it with "
-                "`pip install 'ultraplot[circos]'` or ensure "
-                "`pyCirclize/src` is on PYTHONPATH."
-            ) from exc
+            raise ImportError(_PYCIRCLIZE_INSTALL_MESSAGE) from exc
     return pycirclize
 
 
