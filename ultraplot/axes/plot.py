@@ -11,7 +11,17 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from numbers import Integral, Number
-from typing import Any, Literal, Iterable, Mapping, Optional, Sequence, TypeAlias, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Iterable,
+    Mapping,
+    Optional,
+    Sequence,
+    TypeAlias,
+    Union,
+)
 
 import matplotlib as mpl
 import matplotlib.artist as martist
@@ -61,6 +71,16 @@ except ModuleNotFoundError:
     PlateCarree = object
 
 __all__ = ["PlotAxes"]
+
+if TYPE_CHECKING:
+    from .plot_types.treemap import (
+        Bounds,
+        TreemapColors,
+        TreemapData,
+        TreemapInput,
+        TreemapResult,
+        ValueFormat,
+    )
 
 
 # Constants
@@ -6751,25 +6771,25 @@ class PlotAxes(base.Axes):
 
     def treemap(
         self,
-        sizes,
-        labels=None,
+        sizes: "TreemapInput",
+        labels: Sequence[Any] | str | None = None,
         *,
-        data=None,
-        color=None,
-        cmap=None,
-        norm=None,
-        vmin=None,
-        vmax=None,
-        rect=(0, 0, 1, 1),
-        pad=0.008,
-        group_pad=0.018,
-        group_labels=True,
-        show_values=False,
-        value_format="{:g}",
-        text_kw=None,
-        group_kw=None,
-        **kwargs,
-    ):
+        data: "TreemapData | None" = None,
+        color: "TreemapColors | None" = None,
+        cmap: str | mcolors.Colormap | None = None,
+        norm: mcolors.Normalize | None = None,
+        vmin: float | None = None,
+        vmax: float | None = None,
+        rect: "Bounds | None" = None,
+        pad: float | None = None,
+        group_pad: float | None = None,
+        group_labels: bool | None = None,
+        show_values: bool | None = None,
+        value_format: "ValueFormat | None" = None,
+        text_kw: Mapping[str, Any] | None = None,
+        group_kw: Mapping[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> "TreemapResult":
         """Draw an area-proportional treemap of flat or hierarchical data.
 
         Requires Cartesian axes with linear scales.
@@ -6796,26 +6816,30 @@ class PlotAxes(base.Axes):
             Normalization for ``cmap``. Cannot be combined with vmin/vmax.
         vmin, vmax : float, optional
             Colormap bounds when ``norm`` is omitted.
-        rect : tuple of float, default: (0, 0, 1, 1)
+        rect : tuple of float, default: :rc:`treemap.rect`
             Bounding rectangle as (x, y, width, height), in data coordinates.
             The axes uses equal scaling so tile areas are not distorted.
-        pad, group_pad : float, default: 0.008, 0.018
+        pad, group_pad : float, default: :rc:`treemap.pad`, :rc:`treemap.group_pad`
             Gaps between leaf tiles and group frames in data coordinates.
             Padding and group headings reduce the visible area of each tile;
             use zero padding and ``group_labels=False`` for exact area ratios.
-        group_labels : bool, default: True
+        group_labels : bool, default: :rc:`treemap.group_labels`
             Reserve a header for each group name.
-        show_values : bool, default: False
+        show_values : bool, default: :rc:`treemap.show_values`
             Add the numeric size below each leaf label.
-        value_format : str or callable, default: '{:g}'
+        value_format : str or callable, default: :rc:`treemap.value_format`
             Format string or function used by ``show_values``.
         text_kw, group_kw : dict, optional
             Leaf text properties and group rectangle properties. Text is
             clipped to its tile. Other keyword arguments style leaf rectangles.
+            Explicit properties override the ``treemap.patch.*``,
+            ``treemap.group.*``, and ``treemap.text.*`` rc defaults. Group label
+            size and weight follow ``treemap.group.text.*``. Omitted options
+            are resolved from rc at call time; explicit False and zero win.
 
         Returns
         -------
-        dict
+        TreemapResult
             ``patches``, ``texts``, ``paths``, and ``values`` follow input leaf
             order, omitting zeros. ``texts`` includes None for unlabeled tiles.
             ``groups`` and ``group_texts`` contain group artists. ``mappable``

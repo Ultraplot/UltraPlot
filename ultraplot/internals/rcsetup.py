@@ -8,6 +8,7 @@ import re
 import sys
 from collections.abc import MutableMapping
 from numbers import Integral, Real
+from typing import Any, Callable
 
 import matplotlib as mpl
 import matplotlib.rcsetup as msetup
@@ -523,6 +524,39 @@ def _validate_tuple_float_2(value):
     if isinstance(value, (list, tuple)) and len(value) == 2:
         return tuple(_validate_float(item) for item in value)
     raise ValueError(f"Value must be a tuple/list of 2 floats, got {value!r}")
+
+
+def _validate_treemap_rect(value: Any) -> tuple[float, float, float, float]:
+    """Validate treemap bounds from Python values or a comma-separated rc entry."""
+    if isinstance(value, str):
+        value = value.strip("()[]").split(",")
+    array = np.asarray(value, dtype=float)
+    if array.shape != (4,) or not np.all(np.isfinite(array)) or np.any(array[2:] <= 0):
+        raise ValueError(
+            "treemap.rect must be (x, y, width, height) with positive dimensions."
+        )
+    return float(array[0]), float(array[1]), float(array[2]), float(array[3])
+
+
+def _validate_treemap_format(value: Any) -> str | Callable[[float], str]:
+    """Permit format strings in rc files and formatting callables in contexts."""
+    if isinstance(value, str) or callable(value):
+        return value
+    raise ValueError("treemap.value_format must be a format string or callable.")
+
+
+def _validate_nonnegative_float(value: Any) -> float:
+    value = _validate_float(value)
+    if not np.isfinite(value) or value < 0:
+        raise ValueError("Value must be finite and nonnegative.")
+    return value
+
+
+def _validate_treemap_alpha(value: Any) -> float:
+    value = _validate_nonnegative_float(value)
+    if value > 1:
+        raise ValueError("Opacity must be between zero and one.")
+    return value
 
 
 def _rst_table():
@@ -1991,6 +2025,74 @@ _rc_ultraplot_table = {
         ZLINES,
         _validate_float,
         "Z-order for internal political border lines.",
+    ),
+    # Treemap settings
+    "treemap.rect": (
+        (0.0, 0.0, 1.0, 1.0),
+        _validate_treemap_rect,
+        "Treemap bounds as (x, y, width, height).",
+    ),
+    "treemap.pad": (
+        0.008,
+        _validate_nonnegative_float,
+        "Gap between treemap leaves, in data coordinates.",
+    ),
+    "treemap.group_pad": (
+        0.018,
+        _validate_nonnegative_float,
+        "Padding around treemap groups, in data coordinates.",
+    ),
+    "treemap.group_labels": (
+        True,
+        _validate_bool,
+        "Whether treemap groups have labeled headers.",
+    ),
+    "treemap.show_values": (
+        False,
+        _validate_bool,
+        "Whether treemap leaves display their numeric size.",
+    ),
+    "treemap.value_format": (
+        "{:g}",
+        _validate_treemap_format,
+        "Format string or callable for treemap values.",
+    ),
+    "treemap.patch.edgecolor": ("white", _validate_color, "Treemap leaf edge color."),
+    "treemap.patch.linewidth": (
+        0.6,
+        _validate_pt,
+        "Treemap leaf edge width." + _addendum_pt,
+    ),
+    "treemap.group.edgecolor": ("white", _validate_color, "Treemap group edge color."),
+    "treemap.group.linewidth": (
+        1.2,
+        _validate_pt,
+        "Treemap group edge width." + _addendum_pt,
+    ),
+    "treemap.group.alpha": (
+        0.12,
+        _validate_treemap_alpha,
+        "Treemap group background opacity.",
+    ),
+    "treemap.text.size": (
+        9.0,
+        _validate_fontsize,
+        "Treemap leaf label font size." + _addendum_pt,
+    ),
+    "treemap.text.color": (
+        "auto",
+        functools.partial(_validate_color, alternative="auto"),
+        "Treemap leaf label color; auto selects dark or white text for contrast.",
+    ),
+    "treemap.group.text.size": (
+        10.0,
+        _validate_fontsize,
+        "Treemap group label font size." + _addendum_pt,
+    ),
+    "treemap.group.text.weight": (
+        "bold",
+        _validate_fontweight,
+        "Treemap group label font weight.",
     ),
     # Raincloud plot settings
     "raincloud.orientation": (

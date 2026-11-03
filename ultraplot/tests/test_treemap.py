@@ -1,5 +1,7 @@
 """Treemap area conservation, hierarchy, and public plotting behavior."""
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -183,5 +185,185 @@ def test_treemap_rejects_axes_that_distort_area(projection, scale):
         with pytest.raises(ValueError, match="Cartesian axes with linear scales"):
             ax.treemap([1, 2])
         assert list(ax.patches) == before
+    finally:
+        uplt.close(fig)
+
+
+def test_treemap_rc_layout_and_appearance() -> None:
+    settings = {
+        "treemap.rect": (2, 3, 2, 1),
+        "treemap.pad": 0.025,
+        "treemap.group_pad": 0.03,
+        "treemap.group_labels": True,
+        "treemap.show_values": True,
+        "treemap.value_format": "{:.1f} kg",
+        "treemap.patch.edgecolor": "navy",
+        "treemap.patch.linewidth": 2,
+        "treemap.group.edgecolor": "red",
+        "treemap.group.linewidth": 3,
+        "treemap.group.alpha": 0.4,
+        "treemap.text.size": 12,
+        "treemap.text.color": "purple",
+        "treemap.group.text.size": 14,
+        "treemap.group.text.weight": "normal",
+    }
+    before = {key: uplt.rc[key] for key in settings}
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    try:
+        with uplt.rc.context(settings):
+            result = ax.treemap({"Group": {"A": 3, "B": 1}})
+        assert {key: uplt.rc[key] for key in settings} == before
+        np.testing.assert_allclose(ax.get_xlim(), [2, 4])
+        np.testing.assert_allclose(ax.get_ylim(), [3, 4])
+        assert [text.get_text() for text in result["texts"]] == [
+            "A\n3.0 kg",
+            "B\n1.0 kg",
+        ]
+        for patch, text in zip(result["patches"], result["texts"]):
+            assert patch.get_linewidth() == 2
+            np.testing.assert_allclose(patch.get_edgecolor(), to_rgba("navy"))
+            assert text.get_fontsize() == 12
+            assert text.get_color() == "purple"
+        group = result["groups"][0]
+        assert group.get_alpha() == 0.4
+        assert group.get_linewidth() == 3
+        np.testing.assert_allclose(group.get_edgecolor(), to_rgba("red", 0.4))
+        header = result["group_texts"][0]
+        assert header.get_fontsize() == 14
+        assert header.get_fontweight() == "normal"
+        fig.canvas.draw()
+    finally:
+        uplt.close(fig)
+
+
+def test_treemap_explicit_options_and_aliases_override_rc() -> None:
+    settings = {
+        "treemap.rect": (5, 5, 2, 2),
+        "treemap.pad": 0.1,
+        "treemap.group_pad": 0.1,
+        "treemap.group_labels": True,
+        "treemap.show_values": True,
+        "treemap.patch.linewidth": 2,
+        "treemap.group.alpha": 0.5,
+        "treemap.text.color": "red",
+        "treemap.text.size": 20,
+    }
+    fig, ax = uplt.subplots()
+    try:
+        with uplt.rc.context(settings):
+            result = ax.treemap(
+                {"Group": {"A": 3, "B": 1}},
+                rect=(0, 0, 1, 1),
+                pad=0,
+                group_pad=0,
+                group_labels=False,
+                show_values=False,
+                lw=0,
+                text_kw={"c": "navy", "size": 8},
+                group_kw={"a": 0, "lw": 0},
+            )
+        _assert_tiling(result["patches"], (0, 0, 1, 1))
+        assert not result["group_texts"]
+        assert [text.get_text() for text in result["texts"]] == ["A", "B"]
+        assert all(p.get_linewidth() == 0 for p in result["patches"])
+        assert all(text.get_color() == "navy" for text in result["texts"])
+        assert all(text.get_fontsize() == 8 for text in result["texts"])
+        assert result["groups"][0].get_alpha() == 0
+        assert result["groups"][0].get_linewidth() == 0
+    finally:
+        uplt.close(fig)
+
+
+def test_treemap_rc_file_and_context_restore(tmp_path: Path) -> None:
+    path = tmp_path / "treemap.rc"
+    path.write_text(
+        "treemap.rect: 1, 2, 3, 4\n"
+        "treemap.pad: 0\n"
+        "treemap.group_labels: False\n"
+        "treemap.show_values: True\n"
+        "treemap.value_format: {:.1f}\n"
+        "treemap.text.color: navy\n"
+    )
+    before = uplt.rc["treemap.rect"]
+    fig, axs = uplt.subplots()
+    ax = axs[0]
+    try:
+        with uplt.rc.context(file=str(path)):
+            result = ax.treemap({"A": 3, "B": 1})
+            assert uplt.rc["treemap.rect"] == (1, 2, 3, 4)
+        assert uplt.rc["treemap.rect"] == before
+        _assert_tiling(result["patches"], (1, 2, 3, 4))
+        assert result["texts"][0].get_text() == "A\n3.0"
+        assert result["texts"][0].get_color() == "navy"
+    finally:
+        uplt.close(fig)
+
+
+def test_treemap_callable_rc_formatter_and_call_override() -> None:
+    fig, axs = uplt.subplots(ncols=2)
+    try:
+        with uplt.rc.context(
+            {
+                "treemap.value_format": lambda value: f"{value:.0f}kg",
+                "treemap.show_values": True,
+            }
+        ):
+            first = axs[0].treemap([3], labels=["A"])
+            second = axs[1].treemap([3], labels=["A"], value_format="{:.1f}")
+        assert first["texts"][0].get_text() == "A\n3kg"
+        assert second["texts"][0].get_text() == "A\n3.0"
+    finally:
+        uplt.close(fig)
+
+
+@pytest.mark.parametrize(
+    "key,value",
+    [
+        ("treemap.rect", (0, 0, 0, 1)),
+        ("treemap.rect", (0, 1)),
+        ("treemap.pad", -0.1),
+        ("treemap.group_pad", float("nan")),
+        ("treemap.group.alpha", 1.5),
+        ("treemap.value_format", 42),
+    ],
+)
+def test_treemap_rc_rejects_invalid_settings(key: str, value: object) -> None:
+    before = uplt.rc[key]
+    with pytest.raises(ValueError):
+        uplt.rc[key] = value
+    assert uplt.rc[key] == before
+
+
+def test_treemap_defaults_match_original_appearance() -> None:
+    fig, axs = uplt.subplots(ncols=2)
+    data = {"Group": {"A": 3, "B": 1}, "Other": 2}
+    try:
+        default = axs[0].treemap(data)
+        explicit = axs[1].treemap(
+            data,
+            rect=(0, 0, 1, 1),
+            pad=0.008,
+            group_pad=0.018,
+            group_labels=True,
+            show_values=False,
+            value_format="{:g}",
+            ec="white",
+            lw=0.6,
+            text_kw={"fontsize": 9},
+            group_kw={"ec": "white", "lw": 1.2, "alpha": 0.12},
+        )
+        for key in ("patches", "groups"):
+            for actual, expected in zip(default[key], explicit[key]):
+                np.testing.assert_allclose(
+                    actual.get_bbox().bounds, expected.get_bbox().bounds
+                )
+                np.testing.assert_allclose(
+                    actual.get_facecolor(), expected.get_facecolor()
+                )
+                assert actual.get_linewidth() == expected.get_linewidth()
+        for actual, expected in zip(default["texts"], explicit["texts"]):
+            assert actual.get_fontsize() == expected.get_fontsize()
+            assert actual.get_color() == expected.get_color()
     finally:
         uplt.close(fig)
