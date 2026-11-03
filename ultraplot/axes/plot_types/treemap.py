@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Hashable, Mapping, Sequence
+from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 import math
 from typing import TYPE_CHECKING, Any, TypeAlias, TypedDict, Union, cast
@@ -17,6 +17,11 @@ from numpy.typing import ArrayLike, NDArray
 from ... import constructor
 from ...config import rc
 from ...internals import _not_none, _pop_props
+from ...internals.rcsetup import (
+    _validate_nonnegative_float,
+    _validate_treemap_format,
+    _validate_treemap_rect,
+)
 
 if TYPE_CHECKING:
     from pandas import DataFrame, Series
@@ -54,6 +59,13 @@ class _Node:
     path: NodePath
     children: tuple[_Node, ...] = ()
 
+    def leaves(self) -> Iterator[_Node]:
+        if self.children:
+            for child in self.children:
+                yield from child.leaves()
+        elif self.value > 0:
+            yield self
+
 
 def _nodes(
     sizes: TreemapInput,
@@ -75,7 +87,9 @@ def _nodes(
                 total = math.fsum(child.value for child in children)
                 result.append(_Node(str(key), total, child_path, tuple(children)))
             else:
-                result.append(_Node(str(key), _value(value), child_path))
+                result.append(
+                    _Node(str(key), _validate_nonnegative_float(value), child_path)
+                )
     else:
         try:
             values = np.ma.asarray(sizes, dtype=float).filled(np.nan)
@@ -90,22 +104,12 @@ def _nodes(
         elif isinstance(labels, str) or len(labels) != len(values):
             raise ValueError("labels must have the same length as sizes.")
         result = [
-            _Node(str(label), _value(value), (index,))
+            _Node(str(label), _validate_nonnegative_float(value), (index,))
             for index, (value, label) in enumerate(zip(values, labels))
         ]
     if not result or not any(node.value > 0 for node in result):
         raise ValueError("sizes must contain at least one positive value.")
     return result
-
-
-def _value(value: Any) -> float:
-    try:
-        value = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("sizes must contain finite, nonnegative numbers.") from exc
-    if not math.isfinite(value) or value < 0:
-        raise ValueError("sizes must contain finite, nonnegative numbers.")
-    return value
 
 
 def _squarify(nodes: Sequence[_Node], rect: Bounds) -> list[tuple[_Node, Bounds]]:
@@ -126,29 +130,22 @@ def _squarify(nodes: Sequence[_Node], rect: Bounds) -> list[tuple[_Node, Bounds]
             side * side * largest / total**2, total**2 / (side * side * smallest)
         )
 
-    def place(
-        row: list[tuple[_Node, float]],
-        x: float,
-        y: float,
-        width: float,
-        height: float,
-    ) -> Bounds:
+    def place(row: list[tuple[_Node, float]], bounds: Bounds) -> Bounds:
+        x, y, width, height = bounds
         area = math.fsum(size for _, size in row)
-        if width >= height:
-            strip = area / height
-            offset = y
-            for node, size in row:
-                length = size / strip
-                result.append((node, (x, offset, strip, length)))
-                offset += length
-            return x + strip, y, max(0, width - strip), height
-        strip = area / width
-        offset = x
+        vertical = width >= height
+        strip = area / min(width, height)
+        offset = y if vertical else x
         for node, size in row:
             length = size / strip
-            result.append((node, (offset, y, length, strip)))
+            box = (x, offset, strip, length) if vertical else (offset, y, length, strip)
+            result.append((node, box))
             offset += length
-        return x, y + strip, width, max(0, height - strip)
+        return (
+            (x + strip, y, max(0, width - strip), height)
+            if vertical
+            else (x, y + strip, width, max(0, height - strip))
+        )
 
     row: list[tuple[_Node, float]] = []
     for node, area in zip(ordered, areas):
@@ -156,11 +153,11 @@ def _squarify(nodes: Sequence[_Node], rect: Bounds) -> list[tuple[_Node, Bounds]
         if row and worst(candidate, min(width, height)) > worst(
             row, min(width, height)
         ):
-            x, y, width, height = place(row, x, y, width, height)
+            x, y, width, height = place(row, (x, y, width, height))
             row = []
         row.append((node, area))
     if row:
-        place(row, x, y, width, height)
+        place(row, (x, y, width, height))
     return result
 
 
@@ -168,6 +165,16 @@ def _inset(rect: Bounds, pad: float) -> Bounds:
     x, y, width, height = rect
     inset = min(pad / 2, width * 0.2, height * 0.2)
     return x + inset, y + inset, width - 2 * inset, height - 2 * inset
+
+
+def _style(
+    category: str, kind: str, options: Mapping[str, Any] | None = None
+) -> dict[str, Any]:
+    """Canonicalize aliases before explicit properties override rc defaults."""
+    defaults = rc.category("treemap." + category)
+    props = dict(options or {})
+    props.update(_pop_props(props, kind))
+    return {**_pop_props(defaults, kind), **props}
 
 
 def treemap(
@@ -191,50 +198,25 @@ def treemap(
     **kwargs: Any,
 ) -> TreemapResult:
     """Resolve rc defaults and draw :meth:`PlotAxes.treemap`."""
-    rect = cast(Bounds, _not_none(rect, rc["treemap.rect"]))
-    pad = cast(float, _not_none(pad, rc["treemap.pad"]))
-    group_pad = cast(float, _not_none(group_pad, rc["treemap.group_pad"]))
+    rect = _validate_treemap_rect(_not_none(rect, rc["treemap.rect"]))
+    pad = _validate_nonnegative_float(_not_none(pad, rc["treemap.pad"]))
+    group_pad = _validate_nonnegative_float(
+        _not_none(group_pad, rc["treemap.group_pad"])
+    )
     group_labels = cast(bool, _not_none(group_labels, rc["treemap.group_labels"]))
     show_values = cast(bool, _not_none(show_values, rc["treemap.show_values"]))
-    value_format = cast(
-        ValueFormat, _not_none(value_format, rc["treemap.value_format"])
+    value_format = _validate_treemap_format(
+        _not_none(value_format, rc["treemap.value_format"])
     )
     if not ax.transData.is_affine:
         raise ValueError("treemap requires Cartesian axes with linear scales.")
     nodes = _nodes(sizes, labels)
-    rect_array = np.asarray(rect, dtype=float)
-    if (
-        rect_array.shape != (4,)
-        or not np.all(np.isfinite(rect_array))
-        or np.any(rect_array[2:] <= 0)
-    ):
-        raise ValueError("rect must be (x, y, width, height) with positive dimensions.")
-    rect = (
-        float(rect_array[0]),
-        float(rect_array[1]),
-        float(rect_array[2]),
-        float(rect_array[3]),
-    )
-    if not np.isfinite(pad) or pad < 0 or not np.isfinite(group_pad) or group_pad < 0:
-        raise ValueError("pad and group_pad must be finite and nonnegative.")
     if color is not None and cmap is not None:
         raise ValueError("Use either color or cmap, not both.")
-    if not callable(value_format) and not isinstance(value_format, str):
-        raise ValueError("value_format must be a format string or callable.")
-
-    leaves: list[_Node] = []
-
-    def collect(branch: Sequence[_Node]) -> None:
-        for node in branch:
-            if node.children:
-                collect(node.children)
-            elif node.value > 0:
-                leaves.append(node)
-
-    collect(nodes)
+    leaves = [leaf for node in nodes for leaf in node.leaves()]
     values = np.array([node.value for node in leaves])
     mappable: mcm.ScalarMappable | None = None
-    colors: dict[int, NDArray[np.float64]] = {}
+    colors: NDArray[np.float64] | None = None
     if cmap is not None:
         if norm is None:
             norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
@@ -243,59 +225,49 @@ def treemap(
         mappable = mcm.ScalarMappable(norm=norm, cmap=constructor.Colormap(cmap))
         mappable.set_array(values)
         mappable.autoscale_None()
-        colors = {
-            id(node): rgba for node, rgba in zip(leaves, mappable.to_rgba(values))
-        }
+        colors = mappable.to_rgba(values)
     elif color is not None:
-        rgba = mcolors.to_rgba_array(color)
-        if len(rgba) not in (1, len(leaves)):
+        colors = mcolors.to_rgba_array(color)
+        if len(colors) not in (1, len(leaves)):
             raise ValueError(
                 "color must be a single color or one color per nonzero leaf."
             )
-        colors = {id(node): rgba[i % len(rgba)] for i, node in enumerate(leaves)}
     elif norm is not None or vmin is not None or vmax is not None:
         raise ValueError("norm, vmin, and vmax require cmap.")
     cycle = constructor.Cycle(rc["cycle"]).by_key()["color"]
 
-    style: dict[str, Any] = dict(kwargs)
-    style.update(_pop_props(style, "patch"))
-    style.setdefault("edgecolor", rc["treemap.patch.edgecolor"])
-    style.setdefault("linewidth", rc["treemap.patch.linewidth"])
-    parent_style: dict[str, Any] = dict(group_kw or {})
-    parent_style.update(_pop_props(parent_style, "patch"))
-    parent_style.setdefault("edgecolor", rc["treemap.group.edgecolor"])
-    parent_style.setdefault("linewidth", rc["treemap.group.linewidth"])
-    parent_style.setdefault("alpha", rc["treemap.group.alpha"])
-    text_style: dict[str, Any] = dict(text_kw or {})
-    text_style.update(_pop_props(text_style, "text"))
-    text_style.setdefault("fontsize", rc["treemap.text.size"])
-    text_style.setdefault("color", rc["treemap.text.color"])
-    text_style.setdefault("ha", "center")
-    text_style.setdefault("va", "center")
-    text_style.setdefault("clip_on", True)
+    style = _style("patch", "patch", kwargs)
+    parent_style = _style("group", "patch", group_kw)
+    text_style: dict[str, Any] = {
+        "ha": "center",
+        "va": "center",
+        "clip_on": True,
+        **_style("text", "text", text_kw),
+    }
+    group_text_style = _style("group.text", "text")
+    group_text_style.update(ha="left", va="center", clip_on=True)
 
     # Format all values before drawing so a bad formatter leaves the axes untouched.
-    formatted: dict[int, str] = {}
+    labels = [node.label for node in leaves]
     if show_values:
-        for node in leaves:
-            formatted[id(node)] = str(
-                value_format(node.value)
-                if callable(value_format)
-                else value_format.format(node.value)
-            )
+        formatter = value_format if callable(value_format) else value_format.format
+        labels = [
+            "\n".join(filter(None, (node.label, str(formatter(node.value)))))
+            for node in leaves
+        ]
 
     result: TreemapResult = {
         "patches": [],
         "texts": [],
         "groups": [],
         "group_texts": [],
-        "paths": [],
-        "values": [],
+        "paths": [node.path for node in leaves],
+        "values": values.tolist(),
         "mappable": mappable,
     }
-    drawn: dict[int, tuple[Rectangle, Text | None]] = {}
+    tiles: dict[int, tuple[Bounds, NDArray[np.float64]]] = {}
 
-    def draw(
+    def layout(
         branch: Sequence[_Node], bounds: Bounds, base_color: TreemapColor | None = None
     ) -> None:
         for index, (node, box) in enumerate(_squarify(branch, bounds)):
@@ -314,52 +286,34 @@ def treemap(
                         inner[0],
                         inner[1] + inner[3] - header / 2,
                         node.label,
-                        fontsize=rc["treemap.group.text.size"],
-                        fontweight=rc["treemap.group.text.weight"],
-                        ha="left",
-                        va="center",
-                        clip_on=True,
+                        **group_text_style,
                     )
                     label.set_clip_path(patch)
                     result["group_texts"].append(label)
-                draw(node.children, (*inner[:3], inner[3] - header), hue)
+                layout(node.children, (*inner[:3], inner[3] - header), hue)
             else:
-                x, y, width, height = _inset(box, pad)
-                rgba = colors.get(id(node))
-                if rgba is None:
-                    # Related leaves share a hue, with gentle categorical shades.
-                    rgb = np.array(mcolors.to_rgb(hue))
-                    blend = 0.10 + 0.12 * (index % 4) if base_color is not None else 0
-                    rgba = rgb * (1 - blend) + blend
-                leaf_style: dict[str, Any] = {"facecolor": rgba, **style}
-                patch = Rectangle((x, y), width, height, **leaf_style)
-                ax.add_patch(patch)
-                text = node.label
-                if show_values:
-                    text = "\n".join(filter(None, [text, formatted[id(node)]]))
-                artist = None
-                if text:
-                    luminance = np.dot(
-                        patch.get_facecolor()[:3], [0.2126, 0.7152, 0.0722]
-                    )
-                    options = dict(text_style)
-                    if (
-                        isinstance(options["color"], str)
-                        and options["color"].lower() == "auto"
-                    ):
-                        options["color"] = "#18212b" if luminance > 0.5 else "white"
-                    artist = ax.text(x + width / 2, y + height / 2, text, **options)
-                    artist.set_clip_path(patch)
-                drawn[id(node)] = patch, artist
+                rgb = np.array(mcolors.to_rgb(hue))
+                blend = 0.10 + 0.12 * (index % 4) if base_color is not None else 0
+                tiles[id(node)] = _inset(box, pad), rgb * (1 - blend) + blend
 
-    draw(nodes, rect)
-    # Public results retain input order even though the layout sorts by size.
-    for node in leaves:
-        patch, text = drawn[id(node)]
+    layout(nodes, rect)
+    # Draw leaves in input order; only layout needs size sorting.
+    for index, (node, label) in enumerate(zip(leaves, labels)):
+        (x, y, width, height), default_color = tiles[id(node)]
+        rgba = default_color if colors is None else colors[index % len(colors)]
+        leaf_style: dict[str, Any] = {"facecolor": rgba, **style}
+        patch = Rectangle((x, y), width, height, **leaf_style)
+        ax.add_patch(patch)
+        text = None
+        if label:
+            options = dict(text_style)
+            if isinstance(options["color"], str) and options["color"].lower() == "auto":
+                luminance = np.dot(patch.get_facecolor()[:3], [0.2126, 0.7152, 0.0722])
+                options["color"] = "#18212b" if luminance > 0.5 else "white"
+            text = ax.text(x + width / 2, y + height / 2, label, **options)
+            text.set_clip_path(patch)
         result["patches"].append(patch)
         result["texts"].append(text)
-        result["paths"].append(node.path)
-        result["values"].append(node.value)
     ax.set_xlim(rect[0], rect[0] + rect[2])
     ax.set_ylim(rect[1], rect[1] + rect[3])
     ax.set_aspect("equal", adjustable="box")
