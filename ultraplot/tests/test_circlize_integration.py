@@ -166,7 +166,23 @@ def test_circos_bed_plot_toggle(fake_pycirclize, tmp_path):
     uplt.close(fig)
 
 
-def test_import_pycirclize_error_message(monkeypatch):
+@pytest.mark.parametrize(
+    "method, args, kwargs",
+    [
+        (None, (), {}),
+        ("circos", ({"A": 10},), {}),
+        ("chord_diagram", ({"A": {"A": 1}},), {}),
+        ("chord", ({"A": {"A": 1}},), {}),
+        ("radar_chart", ({"A": [1, 2]},), {"vmin": 0, "vmax": 3}),
+        ("radar", ({"A": [1, 2]},), {"vmin": 0, "vmax": 3}),
+        ("phylogeny", ("((A,B),C);",), {}),
+        ("circos_bed", ("missing.bed",), {}),
+        ("bed", ("missing.bed",), {}),
+    ],
+)
+def test_import_pycirclize_error_message(monkeypatch, method, args, kwargs):
+    """Every circular plot entry point explains how to install its dependency."""
+    fig, ax = uplt.subplots(proj="polar")
     orig_import = builtins.__import__
 
     def fake_import(name, *args, **kwargs):
@@ -176,12 +192,19 @@ def test_import_pycirclize_error_message(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setattr(Path, "is_dir", lambda self: False)
-    sys.modules.pop("pycirclize", None)
-    with pytest.warns(UserWarning, match=r"pip install 'ultraplot\[circos\]'"):
-        with pytest.raises(
-            ImportError, match="pycirclize is required for circos plots"
-        ):
-            circlize_mod._import_pycirclize()
+    monkeypatch.delitem(sys.modules, "pycirclize", raising=False)
+    try:
+        with pytest.warns(
+            UserWarning, match=r"pip install 'ultraplot\[circos\]'"
+        ) as caught:
+            with pytest.raises(ImportError, match="optional pyCirclize dependency"):
+                if method is None:
+                    circlize_mod._import_pycirclize()
+                else:
+                    getattr(ax, method)(*args, **kwargs)
+        assert "restart Python or your notebook kernel" in str(caught[0].message)
+    finally:
+        uplt.close(fig)
 
 
 def test_resolve_defaults_with_existing_objects(fake_pycirclize):

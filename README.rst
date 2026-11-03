@@ -104,20 +104,6 @@ UltraPlot is published on `PyPi <https://pypi.org/project/ultraplot/>`__ and
    pip install ultraplot
    conda install -c conda-forge ultraplot
 
-pyCirclize-based plots require the optional ``circos`` extra:
-
-.. code-block:: bash
-
-   pip install 'ultraplot[circos]'
-
-The ``docs`` extra also includes pyCirclize for building the documentation.
-
-To install the ``circos``, ``docs``, and ``stats`` dependency groups together:
-
-.. code-block:: bash
-
-   pip install 'ultraplot[all]'
-
 Likewise, an existing installation of UltraPlot can be upgraded
 to the latest version with:
 
