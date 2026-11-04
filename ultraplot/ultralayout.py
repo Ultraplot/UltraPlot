@@ -430,9 +430,15 @@ class UltraLayoutSolver:
 
             # Get the bounding box from the grid lines
             left = col_lefts[col_min]
-            right = col_rights[col_max]
+            right = max(left, col_rights[col_max])
             bottom = row_bottoms[row_max]
-            top = row_tops[row_min]
+            top = max(bottom, row_tops[row_min])
+
+            # Tight margins can exhaust a fixed-size figure (e.g. a title
+            # wider than the canvas). Match SubplotSpec's legacy behavior:
+            # collapse the visible axes instead of reversing its transform.
+            # Do not clamp individual tracks: these are virtual subdivisions
+            # and can be negative while their containing subplot stays valid.
 
             width = right - left
             height = top - bottom

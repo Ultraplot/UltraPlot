@@ -578,3 +578,44 @@ def test_staggered_spans_with_stacked_panels(side):
     )
     sizes *= fig.get_size_inches()
     np.testing.assert_allclose(sizes, 2.2, atol=1 / fig.dpi, rtol=0)
+
+
+@pytest.mark.parametrize("transpose", [False, True])
+@pytest.mark.parametrize("spanning", [False, True])
+def test_exhausted_figure_space_does_not_invert_axes(transpose, spanning):
+    """Oversized margins collapse visible spans instead of mirroring axes."""
+    layout = np.array([[1, 1, 2, 2], [0, 3, 3, 0]] if spanning else [[1, 2]])
+    if transpose:
+        layout = layout.T
+    positions = ultralayout.compute_ultra_positions(
+        layout,
+        figwidth=2,
+        figheight=2,
+        **({"top": 1, "bottom": 2} if transpose else {"left": 1, "right": 2}),
+    )
+    for left, bottom, width, height in positions.values():
+        assert np.isfinite((left, bottom, width, height)).all()
+        assert width >= 0
+        assert height >= 0
+        assert (height if transpose else width) == 0
+
+
+@pytest.mark.parametrize("transpose", [False, True])
+def test_wide_spacing_does_not_clamp_virtual_tracks(transpose):
+    """Large gaps may require negative subdivisions inside positive spans."""
+    layout = np.array([[1, 1, 2, 2, 3, 3], [0, 4, 4, 5, 5, 0]])
+    if transpose:
+        layout = layout.T
+    fig, axs = uplt.subplots(
+        layout,
+        refwidth=1,
+        refaspect=1,
+        tight=False,
+        **{("hspace" if transpose else "wspace"): "2in"},
+    )
+    fig.canvas.draw()
+    sizes = np.array(
+        [[ax.get_position().width, ax.get_position().height] for ax in axs]
+    )
+    sizes *= fig.get_size_inches()
+    np.testing.assert_allclose(sizes, 1, atol=1 / fig.dpi, rtol=0)
