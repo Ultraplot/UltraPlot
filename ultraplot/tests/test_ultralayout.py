@@ -402,3 +402,220 @@ def test_gridspec_copy_preserves_layout_array():
     assert gs2._layout_array is not None
     assert np.array_equal(gs1._layout_array, gs2._layout_array)
     assert gs1._use_ultra_layout == gs2._use_ultra_layout
+
+
+@pytest.mark.parametrize("transpose", [False, True])
+@pytest.mark.parametrize("tight", [False, True])
+@pytest.mark.parametrize("bars", [(), (0,), (0, 2, 3, 4), (0, 1, 2, 3, 4)])
+def test_staggered_spans_preserve_sizes_and_local_guide_gaps(transpose, tight, bars):
+    """A guide changes its own interface, not axes sizes or other row gaps."""
+    pytest.importorskip("kiwisolver")
+    layout = np.array([[1, 1, 2, 2, 3, 3], [0, 4, 4, 5, 5, 0]])
+    if transpose:
+        layout = layout.T
+    side = "bottom" if transpose else "right"
+    space_key = "hspace" if transpose else "wspace"
+    x = np.array([-10, -5, 0, 5, 10])
+    data = np.random.RandomState(51423).rand(5, 5)
+    for space in (0.1, 0.5):
+        fig, axs = uplt.subplots(
+            layout,
+            refwidth=2.2,
+            refaspect=1,
+            tight=tight,
+            **{space_key: f"{space}in"},
+        )
+        for i, ax in enumerate(axs):
+            kw = {}
+            if i in bars:
+                kw = dict(colorbar=side, colorbar_kw=dict(space="0.1in", width="0.2in"))
+            ax.contourf(x, x, data, **kw)
+        fig.canvas.draw()
+        size = fig.get_size_inches()
+        boxes = np.array([ax.get_position().bounds for ax in axs]) * np.tile(size, 2)
+        # Figure sizes are rounded up to pixels; allow at most one pixel.
+        np.testing.assert_allclose(boxes[:, 2:], 2.2, atol=1 / fig.dpi, rtol=0)
+        for first, second in ((0, 1), (1, 2), (3, 4)):
+            if transpose:
+                gap = boxes[first, 1] - boxes[second, 1] - boxes[second, 3]
+            else:
+                gap = boxes[second, 0] - boxes[first, 0] - boxes[first, 2]
+            assert gap == pytest.approx(space + (0.3 if first in bars else 0))
+        if not bars:
+            # Equal empty half-slots keep the shorter row/column centred.
+            dim = 1 if transpose else 0
+            outer_center = (boxes[0, dim] + boxes[2, dim] + boxes[0, dim + 2]) / 2
+            inner_center = (boxes[3, dim] + boxes[4, dim] + boxes[3, dim + 2]) / 2
+            assert inner_center == pytest.approx(outer_center)
+        for i in bars:
+            parent = axs[i].get_position()
+            panel = axs[i]._panel_dict[side][0].get_position()
+            if transpose:
+                assert panel.x0 == pytest.approx(parent.x0)
+                assert panel.width == pytest.approx(parent.width)
+            else:
+                assert panel.y0 == pytest.approx(parent.y0)
+                assert panel.height == pytest.approx(parent.height)
+        # Drawing again must not feed size changes back into tight layout.
+        fig.canvas.draw()
+        again = np.array([ax.get_position().bounds for ax in axs]) * np.tile(
+            fig.get_size_inches(), 2
+        )
+        np.testing.assert_allclose(again[:, 2:], boxes[:, 2:], atol=1 / fig.dpi, rtol=0)
+        uplt.close(fig)
+
+
+@pytest.mark.parametrize("transpose", [False, True])
+def test_staggered_spans_respect_nonuniform_spacing(transpose):
+    layout = np.array([[1, 1, 2, 2, 3, 3], [0, 4, 4, 5, 5, 0]])
+    if transpose:
+        layout = layout.T
+    fig, axs = uplt.subplots(
+        layout,
+        refwidth=2.2,
+        tight=False,
+        **{
+            ("hspace" if transpose else "wspace"): [
+                "0.05in",
+                "0.3in",
+                "0.2in",
+                "0.7in",
+                "0.1in",
+            ]
+        },
+    )
+    fig.canvas.draw()
+    boxes = np.array([ax.get_position().bounds for ax in axs]) * np.tile(
+        fig.get_size_inches(), 2
+    )
+    np.testing.assert_allclose(boxes[:, 2:], 2.2, atol=1 / fig.dpi, rtol=0)
+    for (a, b), expected in zip(((0, 1), (1, 2), (3, 4)), (0.3, 0.7, 0.2)):
+        gap = (
+            boxes[a, 1] - boxes[b, 1] - boxes[b, 3]
+            if transpose
+            else boxes[b, 0] - boxes[a, 0] - boxes[a, 2]
+        )
+        assert gap == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("ultra_layout", [False, True])
+@pytest.mark.parametrize("sizing", ["refwidth", "refheight", "figwidth", "figheight"])
+def test_spanning_reference_aspect_with_internal_spacing(ultra_layout, sizing):
+    """Reference and figure sizing agree with the actual reference axes box."""
+    fig, axs = uplt.subplots(
+        [[1, 1, 2], [3, 3, 2]],
+        refaspect=1.5,
+        ultra_layout=ultra_layout,
+        tight=False,
+        wspace="0.4in",
+        hspace="0.3in",
+        **{sizing: 2.2 if sizing.startswith("ref") else 7},
+    )
+    fig.canvas.draw()
+    size = fig.get_size_inches()
+    box = axs[0].get_position()
+    width, height = box.width * size[0], box.height * size[1]
+    assert width / height == pytest.approx(1.5, abs=0.01)
+    if sizing == "refwidth":
+        assert width == pytest.approx(2.2, abs=1 / fig.dpi)
+    elif sizing == "refheight":
+        assert height == pytest.approx(2.2, abs=1 / fig.dpi)
+    else:
+        assert size[0 if sizing == "figwidth" else 1] == pytest.approx(7)
+
+
+@pytest.mark.parametrize("transpose", [False, True])
+def test_spanning_axes_cover_adjacent_stack_with_panels(transpose):
+    """A larger span still covers smaller axes and the panel/gap between them."""
+    layout = np.array([[1, 2], [1, 3]])
+    if transpose:
+        layout = layout.T
+    fig, axs = uplt.subplots(layout, refwidth=2.2, tight=False, space="0.3in")
+    axs[1].panel_axes("right" if transpose else "bottom", width="0.2in", space="0.1in")
+    fig.canvas.draw()
+    span, first, last = [ax.get_position() for ax in axs]
+    if transpose:
+        assert span.x0 == pytest.approx(first.x0)
+        assert span.x1 == pytest.approx(last.x1)
+    else:
+        assert span.y1 == pytest.approx(first.y1)
+        assert span.y0 == pytest.approx(last.y0)
+
+
+def test_staggered_spans_with_panels_and_fixed_figure_size():
+    widths = []
+    for space in ("0.2in", "0.5in"):
+        fig, axs = uplt.subplots(
+            [[1, 1, 2, 2, 3, 3], [0, 4, 4, 5, 5, 0]],
+            figsize=(9, 6),
+            tight=False,
+            wspace=space,
+        )
+        for i in (0, 2, 3, 4):
+            axs[i].panel_axes("right", width="0.2in", space="0.1in")
+        fig.canvas.draw()
+        np.testing.assert_allclose(fig.get_size_inches(), (9, 6))
+        sizes = [ax.get_position().width * 9 for ax in axs]
+        np.testing.assert_allclose(sizes, sizes[0])
+        widths.append(sizes[0])
+        uplt.close(fig)
+    assert widths[1] < widths[0]
+
+
+@pytest.mark.parametrize("side", ["left", "right", "top", "bottom"])
+def test_staggered_spans_with_stacked_panels(side):
+    layout = np.array([[1, 1, 2, 2, 3, 3], [0, 4, 4, 5, 5, 0]])
+    if side in ("top", "bottom"):
+        layout = layout.T
+    fig, axs = uplt.subplots(layout, refwidth=2.2, tight=False, space="0.3in")
+    # Add guides in reverse axes order and stack two on each parent.
+    for i in (4, 3, 2, 0):
+        for _ in range(2):
+            axs[i].panel_axes(side, width="0.2in", space="0.1in")
+    fig.canvas.draw()
+    sizes = np.array(
+        [[ax.get_position().width, ax.get_position().height] for ax in axs]
+    )
+    sizes *= fig.get_size_inches()
+    np.testing.assert_allclose(sizes, 2.2, atol=1 / fig.dpi, rtol=0)
+
+
+@pytest.mark.parametrize("transpose", [False, True])
+@pytest.mark.parametrize("spanning", [False, True])
+def test_exhausted_figure_space_does_not_invert_axes(transpose, spanning):
+    """Oversized margins collapse visible spans instead of mirroring axes."""
+    layout = np.array([[1, 1, 2, 2], [0, 3, 3, 0]] if spanning else [[1, 2]])
+    if transpose:
+        layout = layout.T
+    positions = ultralayout.compute_ultra_positions(
+        layout,
+        figwidth=2,
+        figheight=2,
+        **({"top": 1, "bottom": 2} if transpose else {"left": 1, "right": 2}),
+    )
+    for left, bottom, width, height in positions.values():
+        assert np.isfinite((left, bottom, width, height)).all()
+        assert width >= 0
+        assert height >= 0
+        assert (height if transpose else width) == 0
+
+
+@pytest.mark.parametrize("transpose", [False, True])
+def test_wide_spacing_does_not_clamp_virtual_tracks(transpose):
+    """Large gaps may require negative subdivisions inside positive spans."""
+    layout = np.array([[1, 1, 2, 2, 3, 3], [0, 4, 4, 5, 5, 0]])
+    if transpose:
+        layout = layout.T
+    fig, axs = uplt.subplots(
+        layout,
+        refwidth=1,
+        refaspect=1,
+        tight=False,
+        **{("hspace" if transpose else "wspace"): "2in"},
+    )
+    fig.canvas.draw()
+    sizes = np.array(
+        [[ax.get_position().width, ax.get_position().height] for ax in axs]
+    )
+    sizes *= fig.get_size_inches()
+    np.testing.assert_allclose(sizes, 1, atol=1 / fig.dpi, rtol=0)

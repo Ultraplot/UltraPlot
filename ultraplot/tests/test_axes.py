@@ -355,6 +355,8 @@ def test_title_shifts_when_abc_overlaps_different_loc():
     fig.canvas.draw()
     assert title_obj.get_fontsize() == original_size
     assert title_obj.get_position()[0] > original_x
+    assert axs[0].get_position().width >= 0
+    assert axs[0].get_position().height >= 0
 
 
 def test_centered_title_does_not_shift_for_inset_abc():
@@ -445,6 +447,8 @@ def test_title_shifts_centered_left_of_abc():
     fig.canvas.draw()
     assert title_obj.get_fontsize() == original_size
     assert title_obj.get_position()[0] < original_x
+    assert axs[0].get_position().width >= 0
+    assert axs[0].get_position().height >= 0
     ticks = axs[0].get_xticks()
     assert ticks.size > 0
     xy = np.column_stack([ticks, np.zeros_like(ticks)])

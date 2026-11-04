@@ -139,6 +139,10 @@ axs.format(
 #   subplot spacing and the reference subplot aspect ratio `refaspect` (default
 #   is ``1`` unless the data aspect ratio is fixed -- see below). If both the
 #   width and height are specified, then `refaspect` is ignored.
+#   These sizes describe the visible reference axes, including when it spans
+#   several cells in a layout array. Changing `wspace` or `hspace` then changes
+#   the figure size to preserve the requested axes size. With a fixed `figsize`,
+#   increasing spacing instead reduces the space available for the axes.
 # * `figwidth` and `figheight` set the physical width and height of the figure.
 #   As in matplotlib, you can use `figsize` to set both at once. If just the width
 #   (height) is specified, then the height (width) is automatically adjusted, just

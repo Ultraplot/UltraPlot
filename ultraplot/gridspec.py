@@ -1310,6 +1310,21 @@ class GridSpec(mgridspec.GridSpec):
         else:
             self.update()
 
+    def _get_axis_sizes(
+        self, which, *, total=None, reference=None, reference_size=None
+    ):
+        """Return physical track sizes using the subplot span constraints."""
+        return ultralayout._solve_axis_sizes(
+            self._get_ultra_layout_array(),
+            1 if which == "w" else 0,
+            getattr(self, f"_{which}ratios_total"),
+            [bool(value) for value in getattr(self, f"_{which}panels")],
+            getattr(self, f"{which}space_total"),
+            total=total,
+            reference=reference,
+            reference_size=reference_size,
+        )
+
     def _update_figsize(self):
         """
         Return an updated auto layout figure size accounting for the
@@ -1323,20 +1338,44 @@ class GridSpec(mgridspec.GridSpec):
             return
         ss = ax.get_subplotspec().get_topmost_subplotspec()
         y1, y2, x1, x2 = ss._get_rows_columns()
-        # NOTE: Reference width/height should correspond to the span of the *axes*
-        # themselves. Spaces between rows/columns and adjacent panel slots should
-        # not reduce the target size; those are accounted for separately when the
-        # full figure size is rebuilt below.
-        refhspace = 0
-        refwspace = 0
-        refhpanel = 0
-        refwpanel = 0
-        refhsubplot = sum(
-            self.hratios_total[i] for i in range(y1, y2 + 1) if not self._hpanels[i]
-        )  # noqa: E501
-        refwsubplot = sum(
-            self.wratios_total[i] for i in range(x1, x2 + 1) if not self._wpanels[i]
-        )  # noqa: E501
+
+        def _get_size(which, *, figure_size=None, reference_size=None):
+            start, stop = (x1, x2) if which == "w" else (y1, y2)
+            margin = self.left + self.right if which == "w" else self.bottom + self.top
+            spaces = getattr(self, f"{which}space_total")
+            if self._use_ultra_layout:
+                sizes = self._get_axis_sizes(
+                    which,
+                    total=None if figure_size is None else figure_size - margin,
+                    reference=(start, stop),
+                    reference_size=reference_size,
+                )
+                figure_size = margin + sum(spaces) + sum(sizes)
+                reference_size = sum(sizes[start : stop + 1]) + sum(spaces[start:stop])
+            else:
+                # Legacy placement includes all gaps and panel tracks inside a
+                # spanning axes. Account for these in both sizing directions.
+                ratios = getattr(self, f"{which}ratios_total")
+                panels = getattr(self, f"_{which}panels")
+                weight = sum(ratios[i] for i in range(start, stop + 1) if not panels[i])
+                extra = sum(spaces[start:stop]) + sum(
+                    ratios[i] for i in range(start, stop + 1) if panels[i]
+                )
+                total_weight = self.gridwidth if which == "w" else self.gridheight
+                fixed = (
+                    self.spacewidth + self.panelwidth
+                    if which == "w"
+                    else self.spaceheight + self.panelheight
+                )
+                if reference_size is None:
+                    reference_size = (
+                        figure_size - fixed
+                    ) * weight / total_weight + extra
+                else:
+                    figure_size = (
+                        reference_size - extra
+                    ) * total_weight / weight + fixed
+            return figure_size, reference_size
 
         # Get the reference sizes
         # NOTE: The sizing arguments should have been normalized already
@@ -1349,16 +1388,14 @@ class GridSpec(mgridspec.GridSpec):
         refaspect = _not_none(fig._refaspect, fig._refaspect_default)
         if refheight is None and figheight is None:
             if figwidth is not None:
-                gridwidth = figwidth - self.spacewidth - self.panelwidth
-                refwidth = gridwidth * refwsubplot / self.gridwidth
+                _, refwidth = _get_size("w", figure_size=figwidth)
             if refwidth is not None:  # WARNING: do not change to elif!
                 refheight = refwidth / refaspect
             else:
                 raise RuntimeError("Figure size arguments are all missing.")
         if refwidth is None and figwidth is None:
             if figheight is not None:
-                gridheight = figheight - self.spaceheight - self.panelheight
-                refheight = gridheight * refhsubplot / self.gridheight
+                _, refheight = _get_size("h", figure_size=figheight)
             if refheight is not None:
                 refwidth = refheight * refaspect
             else:
@@ -1368,13 +1405,9 @@ class GridSpec(mgridspec.GridSpec):
         # NOTE: For e.g. [[1, 1, 2, 2], [0, 3, 3, 0]] we make sure to still scale the
         # reference axes like a square even though takes two columns of gridspec.
         if refheight is not None:
-            refheight -= refhspace + refhpanel
-            gridheight = refheight * self.gridheight / refhsubplot
-            figheight = gridheight + self.spaceheight + self.panelheight
+            figheight, _ = _get_size("h", reference_size=refheight)
         if refwidth is not None:
-            refwidth -= refwspace + refwpanel
-            gridwidth = refwidth * self.gridwidth / refwsubplot
-            figwidth = gridwidth + self.spacewidth + self.panelwidth
+            figwidth, _ = _get_size("w", reference_size=refwidth)
 
         # Snap explicit reference-driven sizes to the pixel grid to avoid
         # rounding the axes width below the requested reference size.
@@ -1637,6 +1670,20 @@ class GridSpec(mgridspec.GridSpec):
             )  # noqa: E501
         fig = _not_none(figure, self.figure)
         figwidth, figheight = fig.get_size_inches()
+        if self._use_ultra_layout:
+            widths = self._get_axis_sizes("w", total=figwidth - self.left - self.right)
+            heights = self._get_axis_sizes(
+                "h", total=figheight - self.top - self.bottom
+            )
+            xedges = np.cumsum(np.column_stack(([0, *self.wspace_total], widths)).flat)
+            yedges = np.cumsum(np.column_stack(([0, *self.hspace_total], heights)).flat)
+            lefts, rights = (
+                (self.left / figwidth + xedges / figwidth).reshape((-1, 2)).T
+            )
+            tops, bottoms = (
+                (1 - self.top / figheight - yedges / figheight).reshape((-1, 2)).T
+            )
+            return bottoms, tops, lefts, rights
         spacewidth, spaceheight = self.spacewidth, self.spaceheight
         panelwidth, panelheight = self.panelwidth, self.panelheight
         hratios, wratios = self.hratios_total, self.wratios_total
