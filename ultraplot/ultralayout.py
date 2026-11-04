@@ -140,6 +140,103 @@ def is_orthogonal_layout(array: np.ndarray) -> bool:
     return True
 
 
+def _solve_axis_sizes(
+    array,
+    axis,
+    ratios,
+    panels,
+    spaces,
+    *,
+    total=None,
+    reference=None,
+    reference_size=None,
+):
+    """Size grid tracks by their visible subplot spans, in physical units.
+
+    Panel tracks and gaps have fixed sizes. Ordinary tracks are subdivisions
+    of axes, not necessarily axes themselves: constraining their ratios would
+    let a gap or a panel inside a span change the size of that subplot.
+
+    Constrain the smallest subplot intervals to a common scale instead. A
+    larger interval containing these intervals inherits their sizes and the
+    intervening gaps, as in a conventional spanning subplot. The reference
+    span or the total extent fixes the scale. Any remaining freedom is resolved
+    by a least-squares preference for the original track ratios; this treats
+    equivalent left/right (or top/bottom) subdivisions symmetrically.
+    """
+    ratios = np.asarray(ratios, dtype=float)
+    panels = np.asarray(panels, dtype=bool)
+    spaces = np.asarray(spaces, dtype=float)
+    ordinary = np.flatnonzero(~panels)
+    fixed = np.where(panels, ratios, 0.0)
+    intervals = set()
+    for num in np.unique(array[array != 0]):
+        indices = np.where(array == num)[axis]
+        intervals.add((int(indices.min()), int(indices.max())))
+    minimal = [
+        (lo, hi)
+        for lo, hi in sorted(intervals)
+        if not any(lo <= a <= b <= hi and (a, b) != (lo, hi) for a, b in intervals)
+    ]
+    # Empty tracks still participate in the layout and retain their ratios.
+    if not minimal:
+        minimal = [(int(i), int(i)) for i in ordinary]
+
+    # Regular grids (including larger axes spanning a stack of smaller ones)
+    # have a scalar solution. Avoid a matrix decomposition on the common path.
+    if minimal == [(int(i), int(i)) for i in ordinary]:
+        if reference_size is None:
+            scale = (total - fixed.sum() - spaces.sum()) / ratios[ordinary].sum()
+        else:
+            lo, hi = reference
+            mask = (ordinary >= lo) & (ordinary <= hi)
+            offset = fixed[lo : hi + 1].sum() + spaces[lo:hi].sum()
+            scale = (reference_size - offset) / ratios[ordinary[mask]].sum()
+        fixed[ordinary] = ratios[ordinary] * scale
+        return fixed
+
+    def span(lo, hi):
+        mask = (ordinary >= lo) & (ordinary <= hi)
+        row = np.zeros(len(ordinary) + 1)
+        row[:-1] = mask
+        offset = fixed[lo : hi + 1].sum() + spaces[lo:hi].sum()
+        return row, offset, ratios[ordinary[mask]].sum()
+
+    rows, values = [], []
+    for lo, hi in minimal:
+        row, offset, weight = span(lo, hi)
+        if not weight:
+            continue
+        row[-1] = -weight
+        rows.append(row)
+        values.append(-offset)
+    if reference_size is None:
+        row, offset, _ = span(0, len(ratios) - 1)
+        value = total - offset
+    else:
+        row, offset, _ = span(*reference)
+        value = reference_size - offset
+    rows.append(row)
+    values.append(value)
+    matrix = np.asarray(rows)
+    values = np.asarray(values)
+    solution, _, rank, _ = np.linalg.lstsq(matrix, values, rcond=None)
+    # Minimize track-ratio error within the null space of the span constraints,
+    # rather than weakening the physical reference-size or spacing constraints.
+    if rank < matrix.shape[1]:
+        _, _, vectors = np.linalg.svd(matrix, full_matrices=True)
+        null = vectors[rank:].T
+        preference = np.column_stack((np.eye(len(ordinary)), -ratios[ordinary]))
+        correction = np.linalg.lstsq(
+            preference @ null, -preference @ solution, rcond=None
+        )[0]
+        solution += null @ correction
+    if not np.allclose(matrix @ solution, values, rtol=1e-9, atol=1e-9):
+        raise ValueError("Inconsistent subplot span sizes.")
+    fixed[ordinary] = solution[:-1]
+    return fixed
+
+
 class UltraLayoutSolver:
     """
     UltraLayout: Constraint-based layout solver using kiwisolver for subplot positioning.
@@ -284,54 +381,26 @@ class UltraLayoutSolver:
                 self.row_bottoms[i] == self.row_tops[i + 1] + spacing
             )
 
-        # 4. Width constraints (panel slots are fixed, remaining slots use ratios)
-        total_width = 1.0 - (self.left_margin + self.right_margin) / self.figwidth
-        if self.ncols > 1:
-            spacing_total = sum(self.wspace) / self.figwidth
-        else:
-            spacing_total = 0
-        available_width = total_width - spacing_total
-        fixed_width = 0.0
-        ratio_sum = 0.0
-        for i in range(self.ncols):
-            if self.wpanels[i]:
-                fixed_width += self.wratios[i] / self.figwidth
-            else:
-                ratio_sum += self.wratios[i]
-        remaining_width = max(0.0, available_width - fixed_width)
-        if ratio_sum == 0:
-            ratio_sum = 1.0
-
-        for i in range(self.ncols):
-            if self.wpanels[i]:
-                width = self.wratios[i] / self.figwidth
-            else:
-                width = remaining_width * self.wratios[i] / ratio_sum
+        # Size visible subplot spans, including any fixed slots inside them.
+        widths = _solve_axis_sizes(
+            self.array,
+            1,
+            self.wratios,
+            self.wpanels,
+            self.wspace,
+            total=self.figwidth - self.left_margin - self.right_margin,
+        )
+        heights = _solve_axis_sizes(
+            self.array,
+            0,
+            self.hratios,
+            self.hpanels,
+            self.hspace,
+            total=self.figheight - self.top_margin - self.bottom_margin,
+        )
+        for i, width in enumerate(widths / self.figwidth):
             self.solver.addConstraint(self.col_rights[i] == self.col_lefts[i] + width)
-
-        # 5. Height constraints (panel slots are fixed, remaining slots use ratios)
-        total_height = 1.0 - (self.top_margin + self.bottom_margin) / self.figheight
-        if self.nrows > 1:
-            spacing_total = sum(self.hspace) / self.figheight
-        else:
-            spacing_total = 0
-        available_height = total_height - spacing_total
-        fixed_height = 0.0
-        ratio_sum = 0.0
-        for i in range(self.nrows):
-            if self.hpanels[i]:
-                fixed_height += self.hratios[i] / self.figheight
-            else:
-                ratio_sum += self.hratios[i]
-        remaining_height = max(0.0, available_height - fixed_height)
-        if ratio_sum == 0:
-            ratio_sum = 1.0
-
-        for i in range(self.nrows):
-            if self.hpanels[i]:
-                height = self.hratios[i] / self.figheight
-            else:
-                height = remaining_height * self.hratios[i] / ratio_sum
+        for i, height in enumerate(heights / self.figheight):
             self.solver.addConstraint(self.row_tops[i] == self.row_bottoms[i] + height)
 
     def solve(self) -> Dict[int, Tuple[float, float, float, float]]:
@@ -353,55 +422,6 @@ class UltraLayoutSolver:
         col_rights = [v.value() for v in self.col_rights]
         row_tops = [v.value() for v in self.row_tops]
         row_bottoms = [v.value() for v in self.row_bottoms]
-        col_widths = [right - left for left, right in zip(col_lefts, col_rights)]
-        row_heights = [top - bottom for top, bottom in zip(row_tops, row_bottoms)]
-
-        base_wgap = None
-        for i in range(self.ncols - 1):
-            if not self.wpanels[i] and not self.wpanels[i + 1]:
-                gap = col_lefts[i + 1] - col_rights[i]
-                if base_wgap is None or gap < base_wgap:
-                    base_wgap = gap
-        if base_wgap is None:
-            base_wgap = 0.0
-
-        base_hgap = None
-        for i in range(self.nrows - 1):
-            if not self.hpanels[i] and not self.hpanels[i + 1]:
-                gap = row_bottoms[i] - row_tops[i + 1]
-                if base_hgap is None or gap < base_hgap:
-                    base_hgap = gap
-        if base_hgap is None:
-            base_hgap = 0.0
-
-        def _adjust_span(
-            spans: List[int],
-            start: float,
-            end: float,
-            sizes: List[float],
-            panels: List[bool],
-            base_gap: float,
-        ) -> Tuple[float, float]:
-            effective = [i for i in spans if not panels[i]]
-            if len(effective) <= 1:
-                return start, end
-            # Preserve normal gaps between non-panel slots while collapsing
-            # gaps introduced by panel slots inside the span.
-            gap_count = 0
-            for idx in range(len(spans) - 1):
-                i = spans[idx]
-                j = spans[idx + 1]
-                if not panels[i] and not panels[j]:
-                    gap_count += 1
-            desired = sum(sizes[i] for i in effective) + base_gap * gap_count
-            # Collapse inter-column/row gaps inside spans to keep widths consistent.
-            # This avoids widening subplots that cross internal panel slots.
-            full = end - start
-            if desired < full:
-                offset = 0.5 * (full - desired)
-                start = start + offset
-                end = start + desired
-            return start, end
 
         for num in self.subplot_nums:
             rows, cols = np.where(self.array == num)
@@ -413,26 +433,6 @@ class UltraLayoutSolver:
             right = col_rights[col_max]
             bottom = row_bottoms[row_max]
             top = row_tops[row_min]
-
-            span_cols = list(range(col_min, col_max + 1))
-            span_rows = list(range(row_min, row_max + 1))
-
-            left, right = _adjust_span(
-                span_cols,
-                left,
-                right,
-                col_widths,
-                self.wpanels,
-                base_wgap,
-            )
-            top, bottom = _adjust_span(
-                span_rows,
-                top,
-                bottom,
-                row_heights,
-                self.hpanels,
-                base_hgap,
-            )
 
             width = right - left
             height = top - bottom
