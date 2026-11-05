@@ -970,8 +970,12 @@ def test_align_spanning_axes_no_axes():
     uplt.close(fig)
 
 
-def test_aspect_row_spanning_layout():
-    fig, axs = uplt.subplots([[1, 2], [1, 3]])
+@pytest.mark.parametrize("dpi", [72, 100, 144])
+def test_aspect_row_spanning_layout(dpi):
+    # Auto sizing can already satisfy the reference aspect, leaving no span
+    # to remap (or just a platform-dependent pixel-rounding discrepancy).
+    # Use a deliberately tall slot so equal aspect must reduce its height.
+    fig, axs = uplt.subplots([[1, 2], [1, 3]], figsize=(4, 6), tight=False, dpi=dpi)
     axs[0].set_aspect("equal")
     axs[0].plot([0, 1], [0, 1])
     axs[1].plot([0, 1], [0, 1])
@@ -979,13 +983,20 @@ def test_aspect_row_spanning_layout():
     fig.canvas.draw()
     axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
     spans = fig._find_misaligned_spans(axes)
-    assert len(spans) >= 1
-    assert any(s[0] == "y" for s in spans)
+    assert len(spans) == 1
+    direction, _, _, slot, pos, ref_ax = spans[0]
+    assert direction == "y"
+    assert ref_ax is axs[0]
+    assert pos.height < slot.height
+    assert axs[1].get_position().y1 == pytest.approx(pos.y1)
+    assert axs[2].get_position().y0 == pytest.approx(pos.y0)
     uplt.close(fig)
 
 
-def test_aspect_col_spanning_layout():
-    fig, axs = uplt.subplots([[1, 1], [2, 3]])
+@pytest.mark.parametrize("dpi", [72, 100, 144])
+def test_aspect_col_spanning_layout(dpi):
+    # A fixed wide slot guarantees that equal aspect must reduce its width.
+    fig, axs = uplt.subplots([[1, 1], [2, 3]], figsize=(6, 4), tight=False, dpi=dpi)
     axs[0].set_aspect("equal")
     axs[0].plot([0, 1], [0, 1])
     axs[1].plot([0, 1], [0, 1])
@@ -993,8 +1004,36 @@ def test_aspect_col_spanning_layout():
     fig.canvas.draw()
     axes = list(fig._iter_axes(hidden=False, children=False, panels=False))
     spans = fig._find_misaligned_spans(axes)
-    assert len(spans) >= 1
-    assert any(s[0] == "x" for s in spans)
+    assert len(spans) == 1
+    direction, _, _, slot, pos, ref_ax = spans[0]
+    assert direction == "x"
+    assert ref_ax is axs[0]
+    assert pos.width < slot.width
+    assert axs[1].get_position().x0 == pytest.approx(pos.x0)
+    assert axs[2].get_position().x1 == pytest.approx(pos.x1)
+    uplt.close(fig)
+
+
+@pytest.mark.parametrize("transpose", [False, True])
+def test_aspect_spanning_layout_already_aligned(transpose):
+    layout = np.array([[1, 2], [1, 3]])
+    if transpose:
+        layout = layout.T
+    fig, axs = uplt.subplots(
+        layout,
+        refwidth=2,
+        refheight=2,
+        tight=False,
+        dpi=100,
+        left="0.5in",
+        right="0.5in",
+        top="0.5in",
+        bottom="0.5in",
+        space="0.5in",
+    )
+    axs[0].format(aspect="equal", xlim=(0, 1), ylim=(0, 1))
+    fig.canvas.draw()
+    assert fig._find_misaligned_spans(list(axs)) == []
     uplt.close(fig)
 
 
