@@ -1907,4 +1907,6 @@ rc_ultraplot = rcsetup._rc_ultraplot_default.copy()  # a validated rcParams-styl
 
 #: Instance of `Configurator`. This controls both `rc_matplotlib` and `rc_ultraplot`
 #: settings. See the :ref:`configuration guide <ug_config>` for details.
-rc = Configurator()
+# Create the shared object before importing subsystems that depend on it.
+# Package setup initializes its settings after registering colors and cycles.
+rc = Configurator(local=False, user=False, default=False)

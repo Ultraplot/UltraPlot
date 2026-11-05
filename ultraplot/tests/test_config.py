@@ -234,21 +234,80 @@ def test_cycle_mutation_does_not_corrupt_rcparams():
     assert all(value in allowed for value in observed)
 
 
-def _run_in_subprocess(code):
-    code = (
-        "import pathlib\n"
-        "import sys\n"
-        "sys.path.insert(0, str(pathlib.Path.cwd()))\n" + code
-    )
-    env = os.environ.copy()
+def _run_in_subprocess(code, *, cwd=None, env=None):
+    root = pathlib.Path(__file__).resolve().parents[2]
+    code = f"import sys\nsys.path.insert(0, {str(root)!r})\n" + code
+    env = {**os.environ, **(env or {})}
     env["MPLBACKEND"] = "Agg"
     return subprocess.run(
         [sys.executable, "-c", code],
         capture_output=True,
         text=True,
-        cwd=str(pathlib.Path(__file__).resolve().parents[2]),
+        cwd=str(cwd or root),
         env=env,
     )
+
+
+@pytest.mark.parametrize("location", ["user", "local"])
+@pytest.mark.parametrize("custom", [False, True])
+@pytest.mark.parametrize("overrides", [False, True])
+def test_startup_cycle_applies_to_first_plot(tmp_path, location, custom, overrides):
+    """Startup rc files must synchronize the cycle before the first axes exists."""
+    home = tmp_path / "home"
+    work = tmp_path / "work"
+    home.mkdir()
+    work.mkdir()
+    (tmp_path / "config").mkdir()
+    cycle = "startup_test" if custom else "qual1"
+    expected = (
+        ["#123456", "#abcdef"]
+        if custom
+        else ["#5bbe94", "#91be64", "#e5cf6c", "#e87b70"]
+    )
+    folder = home if location == "user" else work
+    content = f"cycle: {cycle}\nultraplot.check_for_latest_version: False\n"
+    if overrides:
+        content += (
+            "axes.prop_cycle: cycler('color', ['red', 'blue'])\n"
+            "patch.facecolor: green\n"
+        )
+    (folder / ".ultraplotrc").write_text(content)
+    if custom:
+        cycles = (
+            home / ".ultraplot" / "cycles"
+            if location == "user"
+            else work / "ultraplot_cycles"
+        )
+        cycles.mkdir(parents=True)
+        (cycles / f"{cycle}.hex").write_text(", ".join(expected) + "\n")
+    if overrides:
+        expected = ["#ff0000", "#0000ff"]
+    result = _run_in_subprocess(
+        "import matplotlib as mpl\n"
+        "from matplotlib.colors import to_hex\n"
+        "import ultraplot as uplt\n"
+        f"assert uplt.rc.cycle == {cycle!r}\n"
+        f"expected = {expected!r}\n"
+        "actual = [to_hex(c) for c in mpl.rcParams['axes.prop_cycle'].by_key()['color']]\n"
+        "assert actual[:len(expected)] == expected, actual\n"
+        + (
+            "assert to_hex(mpl.rcParams['patch.facecolor']) == '#008000'\n"
+            if overrides
+            else ""
+        )
+        + "fig, ax = uplt.subplots()\n"
+        "lines = ax.plot([[i] * len(expected) for i in range(3)])\n"
+        "actual = [to_hex(line.get_color()) for line in lines]\n"
+        "assert actual == expected, actual\n"
+        "uplt.close(fig)\n",
+        cwd=work,
+        env={
+            "HOME": str(home),
+            "XDG_CONFIG_HOME": str(tmp_path / "config"),
+            "MPLCONFIGDIR": str(tmp_path / "mpl"),
+        },
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_matplotlib_import_before_ultraplot_allows_rc_mutation():

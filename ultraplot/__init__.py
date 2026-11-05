@@ -225,6 +225,10 @@ def _setup():
         rcsetup.VALIDATE_REGISTERED_CMAPS = True
         rcsetup.VALIDATE_REGISTERED_COLORS = True
 
+        # Apply defaults and config files only after their handlers and the
+        # bundled, user, and local color registries are ready.
+        rc.reset()
+
         if rc["ultraplot.check_for_latest_version"]:
             from .utils import check_for_update
 
