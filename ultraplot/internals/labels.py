@@ -7,7 +7,7 @@ import matplotlib.patheffects as mpatheffects
 import matplotlib.text as mtext
 from matplotlib.font_manager import FontProperties
 
-from ..config import rc
+from .._config import rc
 
 from . import ic  # noqa: F401
 

@@ -40,7 +40,7 @@ _CM_SYMBOLS = frozenset(
 
 def _is_cm_mathtext_enabled():
     try:
-        from ..config import rc
+        from .._config import rc
     except ImportError:
         return False
     return bool(rc["mathtext.cm_symbols"])

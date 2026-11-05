@@ -15,7 +15,7 @@ import matplotlib.collections as mcollections
 import matplotlib.colors as mcolors
 
 from ... import _sharing as psharing, colors as pcolors
-from ...config import rc
+from ..._config import rc
 from ...internals import _canonicalize_kwargs, _not_none, _pop_props, inputs, warnings
 
 if TYPE_CHECKING:

@@ -18,7 +18,7 @@ from packaging import version
 
 from . import constructor, colors as pcolors
 from .internals import _alias_kwargs, _not_none, _pop_params, guides, warnings
-from .config import rc, _version_mpl
+from ._config import rc, _version_mpl
 from .ultralayout import KIWI_AVAILABLE, ColorbarLayoutSolver
 from . import ticker as pticker
 from .utils import units

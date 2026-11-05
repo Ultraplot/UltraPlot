@@ -35,7 +35,7 @@ _MS_PER_SECOND = 1_000
 def _preview_enabled():
     """Return the current runtime setting for approximate navigation frames."""
     # Keep this local to avoid config -> figure -> animation import cycles.
-    from .config import rc_ultraplot
+    from ._config import rc_ultraplot
 
     return rc_ultraplot["navigation.preview"]
 
