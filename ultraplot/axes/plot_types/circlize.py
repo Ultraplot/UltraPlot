@@ -13,7 +13,7 @@ from typing import Any, Callable, Mapping, Optional, Sequence, Union
 from matplotlib.projections.polar import PolarAxes as MplPolarAxes
 
 from ... import constructor
-from ...config import rc
+from ..._config import rc
 from ...internals import warnings
 
 #: Settings ``pycirclize.config`` writes into the global rcParams the moment it

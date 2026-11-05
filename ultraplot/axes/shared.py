@@ -10,7 +10,7 @@ import functools
 
 import numpy as np
 
-from ..config import rc
+from .._config import rc
 from .._sharing import (
     AXIS_LABEL_FORMAT_KEYS,
     axis_supports_format_key,

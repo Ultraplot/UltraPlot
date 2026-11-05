@@ -34,7 +34,7 @@ import ultraplot.colors as pcolors
 import ultraplot.proj as pproj
 import ultraplot.scale as pscale
 import ultraplot.ticker as pticker
-from .config import _rc as rc
+from ._config import rc
 from .internals import (
     _alias_kwargs,
     _not_none,
@@ -1800,6 +1800,6 @@ def Proj(
 
 # Direct submodule imports also need the registries and settings. Wait until
 # Cycle is defined, since applying rc settings may construct a cycle itself.
-from . import _setup
+from ._config import _initialize
 
-_setup()
+_initialize()

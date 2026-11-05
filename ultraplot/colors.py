@@ -31,7 +31,7 @@ import matplotlib.colors as mcolors
 import numpy as np
 import numpy.ma as ma
 
-from .config import _rc as rc
+from ._config import rc
 
 
 def _cycle_handler(value):

@@ -320,6 +320,13 @@ def test_startup_cycle_applies_to_first_plot(tmp_path, location, custom, overrid
         "from ultraplot.constructor import Cycle; "
         "assert len(Cycle('qual1')) > 0; from ultraplot.config import rc",
         "import ultraplot.scale; from ultraplot.config import rc",
+        "from ultraplot.config import rc_matplotlib, rc_ultraplot; "
+        "assert rc_matplotlib['font.size'] == 23; "
+        "assert rc_ultraplot['cycle'] == 'qual1'; "
+        "rc_matplotlib['font.size'] = 31; "
+        "import ultraplot as uplt; uplt.setup(eager=False); "
+        "assert rc_matplotlib['font.size'] == 31; "
+        "rc_matplotlib['font.size'] = 23; from ultraplot.config import rc",
     ],
 )
 def test_direct_config_import_initializes_once(tmp_path, statement):

@@ -35,7 +35,7 @@ from . import _sharing as psharing
 from . import constructor
 from . import gridspec as pgridspec
 from . import legend as plegend
-from .config import rc, rc_matplotlib
+from ._config import rc, rc_matplotlib
 from .internals import (
     _alias_kwargs,
     _canonicalize_kwargs,

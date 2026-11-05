@@ -18,7 +18,7 @@ from .. import _sharing as psharing
 from .. import constructor
 from .. import scale as pscale
 from .. import ticker as pticker
-from ..config import rc
+from .._config import rc
 from ..internals import (
     _alias_kwargs,
     _canonicalize_kwargs,

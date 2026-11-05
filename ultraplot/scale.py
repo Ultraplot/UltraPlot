@@ -105,7 +105,7 @@ class _Scale(object):
         # TODO: Always use only_if_default=True? Used only for dual axes right now
         # NOTE: We set isDefault_minloc to True when simply toggling minor ticks
         # on and off with CartesianAxes format command.
-        from .config import rc
+        from ._config import rc
 
         if not only_if_default or axis.isDefault_majloc:
             locator = copy.copy(self._default_major_locator)

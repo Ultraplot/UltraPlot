@@ -15,7 +15,7 @@ from matplotlib import legend as mlegend
 from matplotlib import legend_handler as mhandler
 from matplotlib.markers import MarkerStyle
 
-from .config import rc
+from ._config import rc
 from .internals import (
     _alias_kwargs,
     _not_none,

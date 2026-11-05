@@ -53,7 +53,7 @@ from ..colorbar import (
     _register_inset_colorbar_reflow,
     _solve_inset_colorbar_bounds,
 )
-from ..config import rc
+from .._config import rc
 from ..internals import (
     _alias_kwargs,
     _canonicalize_kwargs,
