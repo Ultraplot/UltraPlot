@@ -11,7 +11,7 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 import numpy.ma as ma
 
-from . import ticker as pticker
+import ultraplot.ticker as pticker
 from .internals import (
     _canonicalize_kwargs,
     _not_none,

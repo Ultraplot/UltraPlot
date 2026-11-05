@@ -1905,8 +1905,26 @@ rc_matplotlib = mpl.rcParams  # PEP8 4 lyfe
 #: validated and restricted to recognized setting names.
 rc_ultraplot = rcsetup._rc_ultraplot_default.copy()  # a validated rcParams-style dict
 
-#: Instance of `Configurator`. This controls both `rc_matplotlib` and `rc_ultraplot`
-#: settings. See the :ref:`configuration guide <ug_config>` for details.
 # Create the shared object before importing subsystems that depend on it.
 # Package setup initializes its settings after registering colors and cycles.
-rc = Configurator(local=False, user=False, default=False)
+_rc = Configurator(local=False, user=False, default=False)
+
+#: Instance of `Configurator`. This controls both `rc_matplotlib` and `rc_ultraplot`
+#: settings. See the :ref:`configuration guide <ug_config>` for details.
+rc: Configurator
+
+
+def __getattr__(name: str) -> Configurator:
+    if name != "rc":
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    # Public imports must expose a fully initialized configurator. Internal
+    # bootstrap imports use _rc so registration can finish before settings load.
+    from . import _setup
+
+    _setup()
+    return _rc
+
+
+def __dir__():
+    return sorted(set(globals()) | {"rc"})

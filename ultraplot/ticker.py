@@ -20,7 +20,7 @@ try:
 except ModuleNotFoundError:
     cftime = None
 
-from .config import rc
+from .config import _rc as rc
 from .internals import ic  # noqa: F401
 from .internals import _not_none, context, docstring
 

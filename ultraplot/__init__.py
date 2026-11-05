@@ -201,7 +201,7 @@ def _setup():
     success = False
     try:
         from .config import (
-            rc,
+            _rc as rc,
             register_cmaps,
             register_colors,
             register_cycles,

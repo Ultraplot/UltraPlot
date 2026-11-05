@@ -310,6 +310,53 @@ def test_startup_cycle_applies_to_first_plot(tmp_path, location, custom, overrid
     assert result.returncode == 0, result.stderr
 
 
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "from ultraplot.config import rc",
+        "import ultraplot.config as config; rc = config.rc",
+        "import ultraplot.colors; from ultraplot.config import rc",
+        "import ultraplot.ticker; from ultraplot.config import rc",
+        "from ultraplot.constructor import Cycle; "
+        "assert len(Cycle('qual1')) > 0; from ultraplot.config import rc",
+        "import ultraplot.scale; from ultraplot.config import rc",
+    ],
+)
+def test_direct_config_import_initializes_once(tmp_path, statement):
+    """Direct imports load rc files and later setup preserves user changes."""
+    home = tmp_path / "home"
+    home.mkdir()
+    (tmp_path / "config").mkdir()
+    (tmp_path / ".ultraplotrc").write_text(
+        "cycle: qual1\nfont.size: 23\nultraplot.check_for_latest_version: False\n"
+    )
+    result = _run_in_subprocess(
+        statement + "\n"
+        "import matplotlib as mpl\n"
+        "from matplotlib.colors import to_hex\n"
+        "assert rc.cycle == 'qual1', rc.cycle\n"
+        "import ultraplot.config as config\n"
+        "assert 'rc' in dir(config)\n"
+        "assert rc['font.size'] == 23, rc['font.size']\n"
+        "assert to_hex(mpl.rcParams['axes.prop_cycle'].by_key()['color'][0]) == '#5bbe94'\n"
+        "rc['font.size'] = 31\n"
+        "rc.cycle = 'colorblind'\n"
+        "import ultraplot as uplt\n"
+        "uplt.setup(eager=False)\n"
+        "uplt.setup(eager=False)\n"
+        "assert uplt.rc is rc\n"
+        "assert rc['font.size'] == 31, rc['font.size']\n"
+        "assert rc.cycle == 'colorblind', rc.cycle\n",
+        cwd=tmp_path,
+        env={
+            "HOME": str(home),
+            "XDG_CONFIG_HOME": str(tmp_path / "config"),
+            "MPLCONFIGDIR": str(tmp_path / "mpl"),
+        },
+    )
+    assert result.returncode == 0, result.stderr
+
+
 def test_matplotlib_import_before_ultraplot_allows_rc_mutation():
     """
     Import order regression test for issue #568.
