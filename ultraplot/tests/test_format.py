@@ -5,6 +5,7 @@ Test format and rc behavior.
 
 import locale, numpy as np, ultraplot as uplt, pytest
 import warnings
+from ultraplot.internals.warnings import UltraPlotWarning
 
 
 def test_format_is_the_only_entry_point():
@@ -77,23 +78,31 @@ def test_nested_format_uses_one_sharing_transaction(monkeypatch):
 #     assert uplt.rc["image.cmap"] == uplt.rc["cmap.sequential"] == "_magma_copy_r"
 
 
-@pytest.mark.skip(reason="This is failing on github but not locally")
 def test_ignored_keywords():
-    """
-    Test ignored keywords and functions.
-    """
+    """Legacy layout arguments emit specific UltraPlot warnings."""
     with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always", UltraPlotWarning)
         fig, ax = uplt.subplots(
             gridspec_kw={"left": 3},
             subplot_kw={"proj": "cart"},
             subplotpars={"left": 0.2},
         )
-    # only capture ultraplot warnings not general mpl warnings, e.g. deprecation warnings
-    record = [r for r in record if "UltraPlotWarning" in str(r)]
-    assert len(record) == 3
-    with warnings.catch_warnings(record=True) as record:
+    messages = [
+        str(item.message)
+        for item in record
+        if issubclass(item.category, UltraPlotWarning)
+    ]
+    for expected in (
+        "'gridspec_kw' is not necessary in ultraplot",
+        "'subplot_kw' is not necessary in ultraplot",
+        "Ignoring subplotpars=",
+    ):
+        assert any(expected in message for message in messages), messages
+    with pytest.warns(
+        UltraPlotWarning,
+        match=r"fig\.subplots_adjust\(\) has no effect on ultraplot figures",
+    ):
         fig.subplots_adjust(left=0.2)
-    assert len(record) == 1
 
 
 @pytest.mark.mpl_image_compare

@@ -1,18 +1,8 @@
 from matplotlib.mathtext import MathTextParser
-import pytest, ultraplot as uplt, matplotlib as mpl
+import ultraplot as uplt, matplotlib as mpl
 import ultraplot.internals.fonts as ufonts
 
 from unittest.mock import patch, MagicMock
-
-
-@pytest.mark.skip(reason="Only for reference, relies on class attributes")
-def test_replacement():
-    """
-    Test whether replaced the unicodes fonts
-    """
-    # This is just a reference and is already skipped
-    # The correct attribute name may have changed in the MathTextParser class
-    pass
 
 
 # Postscript names of the Computer Modern fonts used for symbol routing

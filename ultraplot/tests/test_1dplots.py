@@ -171,13 +171,33 @@ def test_column_iteration(rng):
     return fig
 
 
-@pytest.mark.skip("TODO")
-@pytest.mark.mpl_image_compare
-def test_bar_stack():
-    """
-    Test bar and area stacking.
-    """
-    # TODO: Add test here
+@pytest.mark.parametrize("method", ["bar", "barh"])
+def test_bar_stack(method):
+    """Each column starts at the preceding columns' sum at the same position."""
+    fig, ax = uplt.subplots()
+    positions = np.array([1, 2, 3])
+    values = np.array([[1, 2, 3], [4, 2, 1], [2, 3, 4]])
+    original = values.copy()
+    containers = getattr(ax, method)(positions, values, stacked=True)
+
+    assert len(containers) == values.shape[1]
+    for column, container in enumerate(containers):
+        assert len(container.patches) == len(positions)
+        bottoms, heights, centers = [], [], []
+        for patch in container.patches:
+            if method == "bar":
+                bottoms.append(patch.get_y())
+                heights.append(patch.get_height())
+                centers.append(patch.get_x() + patch.get_width() / 2)
+            else:
+                bottoms.append(patch.get_x())
+                heights.append(patch.get_width())
+                centers.append(patch.get_y() + patch.get_height() / 2)
+        np.testing.assert_allclose(bottoms, values[:, :column].sum(axis=1))
+        np.testing.assert_allclose(heights, values[:, column])
+        np.testing.assert_allclose(centers, positions)
+    np.testing.assert_array_equal(values, original)
+    fig.canvas.draw()
 
 
 @pytest.mark.mpl_image_compare
