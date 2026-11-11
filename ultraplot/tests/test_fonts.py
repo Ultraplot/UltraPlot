@@ -4,7 +4,6 @@ import ultraplot.internals.fonts as ufonts
 
 from unittest.mock import patch, MagicMock
 
-
 # Postscript names of the Computer Modern fonts used for symbol routing
 _CM_FONT_NAMES = {"Cmsy10", "Cmex10"}
 
