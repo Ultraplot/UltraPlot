@@ -10,7 +10,7 @@ import matplotlib.ticker as mticker
 import matplotlib.transforms as mtransforms
 import numpy as np
 
-from ..config import rc
+from .._config import rc
 from ..internals import _not_none, _pop_rc, docstring, _alias_kwargs
 from . import shared
 from .polar import PolarAxes

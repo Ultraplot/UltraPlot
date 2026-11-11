@@ -39,16 +39,16 @@ if TYPE_CHECKING:
     from .colors import PerceptualColormap as PerceptualColormap
     from .colors import SegmentedNorm as SegmentedNorm
     from .colors import _cmap_database as colormaps
-    from .config import config_inline_backend as config_inline_backend
-    from .config import Configurator as Configurator
-    from .config import rc as rc
-    from .config import rc_matplotlib as rc_matplotlib
-    from .config import rc_ultraplot as rc_ultraplot
-    from .config import register_cmaps as register_cmaps
-    from .config import register_colors as register_colors
-    from .config import register_cycles as register_cycles
-    from .config import register_fonts as register_fonts
-    from .config import use_style as use_style
+    from ._config import config_inline_backend as config_inline_backend
+    from ._config import Configurator as Configurator
+    from ._config import rc as rc
+    from ._config import rc_matplotlib as rc_matplotlib
+    from ._config import rc_ultraplot as rc_ultraplot
+    from ._config import register_cmaps as register_cmaps
+    from ._config import register_colors as register_colors
+    from ._config import register_cycles as register_cycles
+    from ._config import register_fonts as register_fonts
+    from ._config import use_style as use_style
     from .constructor import Colormap as Colormap
     from .constructor import Cycle as Cycle
     from .constructor import Formatter as Formatter
@@ -200,30 +200,9 @@ def _setup():
     _SETUP_RUNNING = True
     success = False
     try:
-        from .config import (
-            rc,
-            register_cmaps,
-            register_colors,
-            register_cycles,
-            register_fonts,
-        )
-        from .internals import (
-            fonts as _fonts,  # noqa: F401 - ensure mathtext override is active
-        )
-        from .internals import rcsetup, warnings
-        from .internals.benchmarks import _benchmark
+        from ._config import _initialize, rc
 
-        with _benchmark("cmaps"):
-            register_cmaps(default=True)
-        with _benchmark("cycles"):
-            register_cycles(default=True)
-        with _benchmark("colors"):
-            register_colors(default=True)
-        with _benchmark("fonts"):
-            register_fonts(default=True)
-
-        rcsetup.VALIDATE_REGISTERED_CMAPS = True
-        rcsetup.VALIDATE_REGISTERED_COLORS = True
+        _initialize()
 
         if rc["ultraplot.check_for_latest_version"]:
             from .utils import check_for_update
@@ -242,7 +221,7 @@ def setup(eager: Optional[bool] = None) -> None:
     """
     _setup()
     if eager is None:
-        from .config import rc
+        from ._config import rc
 
         eager = bool(rc["ultraplot.eager_import"])
     if eager:

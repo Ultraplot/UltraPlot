@@ -8,7 +8,7 @@ from matplotlib import colors as mcolors
 from matplotlib import patches as mpatches
 from matplotlib import path as mpath
 
-from ...config import rc
+from ..._config import rc
 from ...internals import _not_none
 
 

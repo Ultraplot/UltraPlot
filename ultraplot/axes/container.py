@@ -14,7 +14,7 @@ import matplotlib.transforms as mtransforms
 import numpy as np
 from matplotlib import cbook, container
 
-from ..config import rc
+from .._config import rc
 from ..internals import _pop_rc, _version_mpl, warnings
 from . import shared
 from .cartesian import CartesianAxes

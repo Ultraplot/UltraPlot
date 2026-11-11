@@ -35,7 +35,7 @@ from packaging import version
 from .. import _sharing as psharing
 from .. import colors as pcolors
 from .. import constructor, utils
-from ..config import rc
+from .._config import rc
 from ..internals import (
     _alias_kwargs,
     _canonicalize_kwargs,

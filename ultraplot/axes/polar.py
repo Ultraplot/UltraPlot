@@ -17,7 +17,7 @@ from matplotlib.font_manager import FontProperties
 
 from .. import constructor
 from .. import ticker as pticker
-from ..config import rc
+from .._config import rc
 from ..internals import (
     _alias_kwargs,
     _not_none,

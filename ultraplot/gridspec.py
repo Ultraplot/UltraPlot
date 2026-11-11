@@ -18,7 +18,7 @@ import numpy as np
 
 from . import axes as paxes
 from .axes._formatting import pop_axis_format_kwargs
-from .config import rc
+from ._config import rc
 from .internals import (
     _alias_kwargs,
     _not_none,

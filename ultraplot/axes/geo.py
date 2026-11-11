@@ -34,7 +34,7 @@ import numpy as np
 from .. import constructor
 from .. import proj as pproj
 from .. import ticker as pticker
-from ..config import rc
+from .._config import rc
 from ..internals import (
     _alias_kwargs,
     _not_none,

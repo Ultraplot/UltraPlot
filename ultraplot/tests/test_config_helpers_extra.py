@@ -4,7 +4,7 @@
 import numpy as np
 import pytest
 
-from ultraplot import config
+from ultraplot import _config as config
 from ultraplot.internals.warnings import UltraPlotWarning
 
 
