@@ -74,10 +74,10 @@ def _nodes(
 ) -> list[_Node]:
     """Validate the complete hierarchy before adding any artists."""
     if isinstance(sizes, Mapping) or (
-        getattr(sizes, "ndim", None) == 1 and hasattr(sizes, "items")
+        labels is None and getattr(sizes, "ndim", None) == 1 and hasattr(sizes, "items")
     ):
         if labels is not None:
-            raise ValueError("Mapping and Series inputs already supply their labels.")
+            raise ValueError("Mapping inputs already supply their labels.")
         result = []
         # Series is duck-typed so pandas remains an optional dependency.
         for key, value in cast(Mapping[Hashable, Any], sizes).items():
@@ -211,6 +211,8 @@ def treemap(
     if not ax.transData.is_affine:
         raise ValueError("treemap requires Cartesian axes with linear scales.")
     nodes = _nodes(sizes, labels)
+    style = _style("patch", "patch", kwargs)
+    color = _not_none(color=color, colors=style.pop("color", None))
     if color is not None and cmap is not None:
         raise ValueError("Use either color or cmap, not both.")
     leaves = [leaf for node in nodes for leaf in node.leaves()]
@@ -228,15 +230,10 @@ def treemap(
         colors = mappable.to_rgba(values)
     elif color is not None:
         colors = mcolors.to_rgba_array(color)
-        if len(colors) not in (1, len(leaves)):
-            raise ValueError(
-                "color must be a single color or one color per nonzero leaf."
-            )
+        if len(colors) == 0:
+            raise ValueError("color must contain at least one color.")
     elif norm is not None or vmin is not None or vmax is not None:
         raise ValueError("norm, vmin, and vmax require cmap.")
-    cycle = constructor.Cycle(rc["cycle"]).by_key()["color"]
-
-    style = _style("patch", "patch", kwargs)
     parent_style = _style("group", "patch", group_kw)
     text_style: dict[str, Any] = {
         "ha": "center",
@@ -256,6 +253,8 @@ def treemap(
             for node in leaves
         ]
 
+    style = ax._parse_cycle(sum(node.value > 0 for node in nodes), **style)
+
     result: TreemapResult = {
         "patches": [],
         "texts": [],
@@ -270,8 +269,17 @@ def treemap(
     def layout(
         branch: Sequence[_Node], bounds: Bounds, base_color: TreemapColor | None = None
     ) -> None:
-        for index, (node, box) in enumerate(_squarify(branch, bounds)):
-            hue = base_color if base_color is not None else cycle[index % len(cycle)]
+        # Sorting determines positions only. Assign colors in input order.
+        boxes = {id(node): box for node, box in _squarify(branch, bounds)}
+        for index, node in enumerate(node for node in branch if node.value > 0):
+            box = boxes[id(node)]
+            hue = base_color
+            if hue is None:
+                hue = (
+                    ax._get_patches_for_fill.get_next_color()
+                    if colors is None or node.children
+                    else "none"
+                )
             if node.children:
                 box = _inset(box, group_pad)
                 x, y, width, height = box

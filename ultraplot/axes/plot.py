@@ -6800,16 +6800,22 @@ class PlotAxes(base.Axes):
             Nonnegative tile sizes. Zero-sized leaves are omitted. A mapping
             supplies labels from its keys; nested mappings define groups, whose
             areas are proportional to the sum of their descendants. A Series
-            supplies labels from its index. Values must be finite, with at
-            least one positive value in each group. No extra package is needed.
-        labels : sequence of str, optional
-            Labels for a flat sequence, in input order.
-        data : mapping, optional
+            supplies labels from its index unless ``labels`` is given. Values
+            must be finite, with at least one positive value in each group.
+            No extra package is needed.
+        labels : sequence of str or str, optional
+            Labels for a flat sequence, in input order, or a column name in ``data``.
+        data : mapping or pandas.DataFrame, optional
             Look up string ``sizes`` and ``labels`` arguments in this object.
-        color : color or sequence of colors, optional
-            A single color or one color per nonzero leaf in input order.
+        color, colors, c : color or sequence of colors, optional
+            Colors for nonzero leaves in input order, repeated as needed.
             By default, top-level categories use the current cycle, and leaves
             within a group share shades of the group's color.
+        cycle : cycle-spec, optional
+            Property cycle for top-level categories, assigned in input order.
+            Uses the axes' current patch cycle by default.
+        cycle_kw : dict, optional
+            Keyword arguments passed to `~ultraplot.constructor.Cycle`.
         cmap : colormap, optional
             Color leaves by size. Mutually exclusive with ``color``.
         norm : matplotlib.colors.Normalize, optional
@@ -6850,6 +6856,8 @@ class PlotAxes(base.Axes):
         >>> fig, ax = uplt.subplots()
         >>> artists = ax.treemap({'A': 6, 'B': 3, 'C': 1}, show_values=True)
         >>> artists = ax.treemap({'Group': {'A': 6, 'B': 3}, 'Other': 1})
+        >>> data = {'amount': [2, 3, 4], 'name': ['A', 'B', 'C']}
+        >>> artists = ax.treemap('amount', labels='name', data=data, colors=['r', 'g'])
         """
         from .plot_types.treemap import treemap
 

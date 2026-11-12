@@ -91,14 +91,15 @@ def test_treemap_colormap_colorbar_and_zero_alignment():
     fig.canvas.draw()
 
 
-def test_treemap_series_and_lookup_data():
+@pytest.mark.parametrize("container", [dict, pd.DataFrame])
+def test_treemap_series_and_lookup_data(container):
     fig, axs = uplt.subplots(ncols=2)
     series = pd.Series([1, 3], index=["A", "B"])
     result = axs[0].treemap(series, color=["red", "blue"])
     assert result["paths"] == [("A",), ("B",)]
     for patch, color in zip(result["patches"], ["red", "blue"]):
         np.testing.assert_allclose(patch.get_facecolor(), to_rgba(color))
-    lookup = {"amount": [1, 3], "names": ["A", "B"]}
+    lookup = container({"amount": [1, 3], "names": ["A", "B"]})
     other = axs[1].treemap(
         "amount",
         labels="names",
@@ -107,6 +108,74 @@ def test_treemap_series_and_lookup_data():
         value_format="{:.1f}",
     )
     assert [text.get_text() for text in other["texts"]] == ["A\n1.0", "B\n3.0"]
+
+
+@pytest.mark.parametrize("keyword", ["color", "colors", "c"])
+@pytest.mark.parametrize("palette", [["r"], ["r", "g"], ["r", "g", "b", "k", "y"]])
+def test_treemap_palette_cycles_in_input_order(keyword, palette):
+    _, ax = uplt.subplots()
+    result = ax.treemap(
+        {"GroupA": {"a": 2, "zero": 0, "b": 3}, "GroupB": {"c": 4, "d": 5}},
+        **{keyword: palette},
+    )
+    assert result["paths"] == [
+        ("GroupA", "a"),
+        ("GroupA", "b"),
+        ("GroupB", "c"),
+        ("GroupB", "d"),
+    ]
+    for index, patch in enumerate(result["patches"]):
+        np.testing.assert_allclose(
+            patch.get_facecolor(), to_rgba(palette[index % len(palette)])
+        )
+
+
+def test_treemap_uses_current_patch_cycle_and_advances():
+    _, ax = uplt.subplots()
+    ax.set_prop_cycle(color=["r", "g", "b", "k"])
+    ax.bar([0], [1])
+    result = ax.treemap({"a": 2, "zero": 0, "b": 3})
+    for patch, color in zip(result["patches"], ["g", "b"]):
+        np.testing.assert_allclose(patch.get_facecolor(), to_rgba(color))
+    following = ax.treemap([1])
+    np.testing.assert_allclose(following["patches"][0].get_facecolor(), to_rgba("k"))
+
+
+@pytest.mark.parametrize("kwargs", [{"color": "r"}, {"cmap": "viridis"}])
+def test_treemap_explicit_leaf_colors_do_not_advance_cycle(kwargs):
+    _, ax = uplt.subplots()
+    ax.set_prop_cycle(color=["g", "b"])
+    ax.treemap([1, 2], **kwargs)
+    result = ax.treemap([1])
+    np.testing.assert_allclose(result["patches"][0].get_facecolor(), to_rgba("g"))
+
+
+def test_treemap_group_colors_do_not_depend_on_size_sorting():
+    _, axs = uplt.subplots(ncols=2)
+    first = axs[0].treemap(
+        {"A": {"a": 1, "b": 2}, "B": {"c": 3, "d": 4}}, cycle=["r", "g"]
+    )
+    second = axs[1].treemap(
+        {"A": {"a": 4, "b": 3}, "B": {"c": 2, "d": 1}}, cycle=["r", "g"]
+    )
+    for key in ("patches", "groups"):
+        np.testing.assert_allclose(
+            [p.get_facecolor() for p in first[key]],
+            [p.get_facecolor() for p in second[key]],
+        )
+    np.testing.assert_allclose(first["groups"][0].get_facecolor()[:3], to_rgba("r")[:3])
+    np.testing.assert_allclose(first["groups"][1].get_facecolor()[:3], to_rgba("g")[:3])
+
+
+def test_treemap_named_cycle_and_cycle_options():
+    _, ax = uplt.subplots()
+    options = {"reverse": True}
+    result = ax.treemap([1, 0, 3, 2], cycle="colorblind", cycle_kw=options)
+    expected = uplt.Cycle("colorblind", N=3, reverse=True).by_key()["color"]
+    np.testing.assert_allclose(
+        [p.get_facecolor() for p in result["patches"]],
+        [to_rgba(color) for color in expected],
+    )
 
 
 @pytest.mark.parametrize(
@@ -123,7 +192,8 @@ def test_treemap_series_and_lookup_data():
         ([1], {"pad": -1}),
         ([1], {"rect": (0, 0, 0, 1)}),
         ([1], {"color": "red", "cmap": "viridis"}),
-        ([1, 2], {"color": ["red", "blue", "green"]}),
+        ([1, 2], {"color": []}),
+        ([1], {"colors": ["r", "g"], "cmap": "viridis"}),
     ],
 )
 def test_treemap_invalid_data_does_not_add_artists(sizes, kwargs):
