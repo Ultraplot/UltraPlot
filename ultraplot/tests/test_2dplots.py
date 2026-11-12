@@ -11,18 +11,48 @@ from matplotlib.colors import Normalize
 import ultraplot as uplt, warnings
 
 
-@pytest.mark.skip("not sure what this does")
-@pytest.mark.mpl_image_compare
-def test_colormap_vcenter(rng):
-    """
-    Test colormap vcenter.
-    """
-    fig, axs = uplt.subplots(ncols=3)
-    data = 10 * rng.random((10, 10)) - 3
-    axs[0].pcolor(data, vcenter=0)
-    axs[1].pcolor(data, vcenter=1)
-    axs[2].pcolor(data, vcenter=2)
-    return fig
+@pytest.mark.parametrize("vcenter", [0, 1, 2])
+def test_colormap_vcenter(vcenter):
+    """A diverging norm maps its requested center to 0.5 and limits to 0 and 1."""
+    fig, ax = uplt.subplots()
+    data = np.array([[-3.0, 0.0], [2.0, 7.0]])
+    mesh = ax.pcolor(
+        data,
+        cmap="roma",
+        norm="div",
+        discrete=False,
+        norm_kw={"vcenter": vcenter, "fair": False},
+        vmin=-3,
+        vmax=7,
+    )
+    assert mesh.norm.vcenter == vcenter
+    np.testing.assert_allclose(mesh.norm([-3, vcenter, 7]), [0, 0.5, 1])
+    fig.canvas.draw()
+
+
+@pytest.mark.parametrize("vcenter", [0, 1, 2])
+@pytest.mark.parametrize("discrete", [True, False])
+@pytest.mark.parametrize("via_norm_kw", [False, True])
+def test_colormap_vcenter_keyword(vcenter, discrete, via_norm_kw):
+    """An explicit center selects a diverging norm in either color mode."""
+    fig, ax = uplt.subplots()
+    data = np.array([[0.0, 1.0], [2.0, 7.0]])
+    kwargs = {"norm_kw": {"vcenter": vcenter}} if via_norm_kw else {"vcenter": vcenter}
+    mesh = ax.pcolor(data, discrete=discrete, **kwargs)
+    norm = mesh.norm._norm if discrete else mesh.norm
+    assert isinstance(norm, uplt.DivergingNorm)
+    assert norm.vcenter == vcenter
+    assert norm(vcenter) == pytest.approx(0.5)
+    fig.canvas.draw()
+
+
+@pytest.mark.parametrize("via_norm_kw", [False, True])
+def test_colormap_vcenter_rejects_norm_instance(via_norm_kw):
+    """A separate center must not silently override an existing normalizer."""
+    _, ax = uplt.subplots()
+    kwargs = {"norm_kw": {"vcenter": 1}} if via_norm_kw else {"vcenter": 1}
+    with pytest.raises(ValueError, match="Normalize instance.*vcenter"):
+        ax.pcolor(np.array([[0.0, 1.0], [2.0, 7.0]]), norm=Normalize(), **kwargs)
 
 
 @pytest.mark.mpl_image_compare

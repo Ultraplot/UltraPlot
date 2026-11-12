@@ -13,7 +13,7 @@ import numpy as np
 
 from . import colors as pcolors
 from . import constructor, ui
-from .config import _get_data_folders, rc
+from ._config import _get_data_folders, rc
 from .internals import ic  # noqa: F401
 from .internals import _not_none, _version_mpl, docstring, warnings
 from .utils import to_rgb, to_xyz

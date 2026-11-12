@@ -492,7 +492,7 @@ def _dist_kde(
             f"but got {distribution.size}."
         )
     if coords is None:
-        from ..config import rc  # avoid a circular import at module load
+        from .._config import rc  # avoid a circular import at module load
 
         try:
             points = int(_not_none(points, rc["kde.points"]))
@@ -898,7 +898,7 @@ def _meta_units(data):
             return units
     # Get units from the quantity
     if ndarray is not Quantity and isinstance(data, Quantity):
-        from ..config import rc
+        from .._config import rc
 
         fmt = rc.unitformat
         try:

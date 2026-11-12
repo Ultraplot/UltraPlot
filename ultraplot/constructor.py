@@ -28,11 +28,13 @@ import matplotlib.ticker as mticker
 from matplotlib.ft2font import FT2Font
 import numpy as np
 
-from . import colors as pcolors
-from . import proj as pproj
-from . import scale as pscale
-from . import ticker as pticker
-from .config import rc
+# Import bootstrap dependencies directly, without invoking the public lazy API
+# and starting package setup while this module is still being defined.
+import ultraplot.colors as pcolors
+import ultraplot.proj as pproj
+import ultraplot.scale as pscale
+import ultraplot.ticker as pticker
+from ._config import rc
 from .internals import (
     _alias_kwargs,
     _not_none,
@@ -1794,3 +1796,10 @@ def Proj(
 
     proj._proj_backend = backend
     return proj
+
+
+# Direct submodule imports also need the registries and settings. Wait until
+# Cycle is defined, since applying rc settings may construct a cycle itself.
+from ._config import _initialize
+
+_initialize()

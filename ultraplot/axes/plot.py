@@ -45,7 +45,7 @@ from packaging import version
 from .. import _sharing as psharing
 from .. import colors as pcolors
 from .. import constructor, utils
-from ..config import rc
+from .._config import rc
 from ..internals import (
     _alias_kwargs,
     _canonicalize_kwargs,
@@ -661,6 +661,10 @@ norm : norm-spec, default: \
     Otherwise `~matplotlib.colors.Normalize` is used.
 norm_kw : dict-like, optional
     Passed to `~ultraplot.constructor.Norm`.
+vcenter : float, optional
+    The data value at the center of a diverging normalizer. If `norm` is omitted,
+    selects `~ultraplot.colors.DivergingNorm`. Also accepted in `norm_kw`.
+    For a pre-constructed normalizer, set the center in its constructor instead.
 extend : {'neither', 'both', 'min', 'max'}, default: 'neither'
     Direction for drawing colorbar "extensions" indicating
     out-of-bounds data on the end of the colorbar.
@@ -4191,6 +4195,7 @@ class PlotAxes(base.Axes):
         extend=None,
         vmin=None,
         vmax=None,
+        vcenter=None,
         discrete=None,
         default_cmap=None,
         default_discrete=True,
@@ -4216,6 +4221,9 @@ class PlotAxes(base.Axes):
             The colormap extend setting.
         vmin, vmax : float, optional
             The normalization range.
+        vcenter : float, optional
+            The central value for a diverging normalizer. Selects a diverging
+            normalizer when `norm` is not specified.
         sequential, diverging, cyclic, qualitative : bool, optional
             Toggle various colormap types.
         discrete : bool, optional
@@ -4263,6 +4271,18 @@ class PlotAxes(base.Axes):
             vmax = norm.vmax
         vmin = _not_none(vmin=vmin, norm_kw_vmin=norm_kw.pop("vmin", None))
         vmax = _not_none(vmax=vmax, norm_kw_vmax=norm_kw.pop("vmax", None))
+        vcenter = _not_none(
+            vcenter=vcenter, norm_kw_vcenter=norm_kw.pop("vcenter", None)
+        )
+        if vcenter is not None:
+            if isinstance(norm, mcolors.Normalize):
+                raise ValueError(
+                    "If 'norm' is a Normalize instance, 'vcenter' must not be "
+                    "set. Pass it through the Normalize constructor instead."
+                )
+            norm_kw["vcenter"] = vcenter
+            if norm is None:
+                norm = "diverging"
         extend = _not_none(extend, "neither")
         modes = {
             key: kwargs.pop(key, None)
