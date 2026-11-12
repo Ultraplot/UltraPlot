@@ -11,7 +11,17 @@ import re
 import sys
 from collections.abc import Callable, Iterable
 from numbers import Integral, Number
-from typing import Any, Literal, Iterable, Mapping, Optional, Sequence, TypeAlias, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Iterable,
+    Mapping,
+    Optional,
+    Sequence,
+    TypeAlias,
+    Union,
+)
 
 import matplotlib as mpl
 import matplotlib.artist as martist
@@ -61,6 +71,16 @@ except ModuleNotFoundError:
     PlateCarree = object
 
 __all__ = ["PlotAxes"]
+
+if TYPE_CHECKING:
+    from .plot_types.treemap import (
+        Bounds,
+        TreemapColors,
+        TreemapData,
+        TreemapInput,
+        TreemapResult,
+        ValueFormat,
+    )
 
 
 # Constants
@@ -6768,6 +6788,123 @@ class PlotAxes(base.Axes):
         """
         kwargs = _parse_vert(default_vert=False, **kwargs)
         return self._apply_violinplot(*args, **kwargs)
+
+    def treemap(
+        self,
+        sizes: "TreemapInput",
+        labels: Sequence[Any] | str | None = None,
+        *,
+        data: "TreemapData | None" = None,
+        color: "TreemapColors | None" = None,
+        cmap: str | mcolors.Colormap | None = None,
+        norm: mcolors.Normalize | None = None,
+        vmin: float | None = None,
+        vmax: float | None = None,
+        rect: "Bounds | None" = None,
+        pad: float | None = None,
+        group_pad: float | None = None,
+        group_labels: bool | None = None,
+        show_values: bool | None = None,
+        value_format: "ValueFormat | None" = None,
+        text_kw: Mapping[str, Any] | None = None,
+        group_kw: Mapping[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> "TreemapResult":
+        """Draw an area-proportional treemap of flat or hierarchical data.
+
+        Requires Cartesian axes with linear scales.
+
+        Parameters
+        ----------
+        sizes : sequence of float, mapping, or pandas.Series
+            Nonnegative tile sizes. Zero-sized leaves are omitted. A mapping
+            supplies labels from its keys; nested mappings define groups, whose
+            areas are proportional to the sum of their descendants. A Series
+            supplies labels from its index unless ``labels`` is given. Values
+            must be finite, with at least one positive value in each group.
+            No extra package is needed.
+        labels : sequence of str or str, optional
+            Labels for a flat sequence, in input order. A string is literal
+            text repeated for each tile, even when ``data`` is provided.
+            Pass column values explicitly, for example ``labels=df['name']``.
+        data : mapping or pandas.DataFrame, optional
+            Look up a string ``sizes`` argument in this object.
+        color, colors, c : color or sequence of colors, optional
+            Colors for nonzero leaves in input order, repeated as needed.
+            By default, top-level categories use the current cycle, and leaves
+            within a group share shades of the group's color.
+        cycle : cycle-spec, optional
+            Property cycle for top-level categories, assigned in input order.
+            Uses the axes' current patch cycle by default.
+        cycle_kw : dict, optional
+            Keyword arguments passed to `~ultraplot.constructor.Cycle`.
+        cmap : colormap, optional
+            Color leaves by size. Mutually exclusive with ``color``.
+        norm : matplotlib.colors.Normalize, optional
+            Normalization for ``cmap``. Cannot be combined with vmin/vmax.
+        vmin, vmax : float, optional
+            Colormap bounds when ``norm`` is omitted.
+        rect : tuple of float, default: :rc:`treemap.rect`
+            Bounding rectangle as (x, y, width, height), in data coordinates.
+            The axes uses equal scaling so tile areas are not distorted.
+        pad, group_pad : float, default: :rc:`treemap.pad`, :rc:`treemap.group_pad`
+            Gaps between leaf tiles and group frames in data coordinates.
+            Padding and group headings reduce the visible area of each tile;
+            use zero padding and ``group_labels=False`` for exact area ratios.
+        group_labels : bool, default: :rc:`treemap.group_labels`
+            Reserve a header for each group name.
+        show_values : bool, default: :rc:`treemap.show_values`
+            Add the numeric size below each leaf label.
+        value_format : str or callable, default: :rc:`treemap.value_format`
+            Format string or function used by ``show_values``.
+        text_kw, group_kw : dict, optional
+            Leaf text properties and group rectangle properties. Text is
+            clipped to its tile. Other keyword arguments style leaf rectangles.
+            Explicit properties override the ``treemap.patch.*``,
+            ``treemap.group.*``, and ``treemap.text.*`` rc defaults. Group label
+            size and weight follow ``treemap.group.text.*``. Omitted options
+            are resolved from rc at call time; explicit False and zero win.
+
+        Returns
+        -------
+        TreemapResult
+            ``patches``, ``texts``, ``paths``, and ``values`` follow input leaf
+            order, omitting zeros. ``texts`` includes None for unlabeled tiles.
+            ``groups`` and ``group_texts`` contain group artists. ``mappable``
+            is a ScalarMappable for a colorbar when using ``cmap``, else None.
+
+        Examples
+        --------
+        >>> fig, ax = uplt.subplots()
+        >>> artists = ax.treemap({'A': 6, 'B': 3, 'C': 1}, show_values=True)
+        >>> artists = ax.treemap({'Group': {'A': 6, 'B': 3}, 'Other': 1})
+        >>> data = {'amount': [2, 3, 4], 'name': ['A', 'B', 'C']}
+        >>> artists = ax.treemap('amount', labels=data['name'], data=data)
+        >>> artists = ax.treemap([2, 3, 4], labels='Category')
+        """
+        from .plot_types.treemap import treemap
+
+        if data is not None:
+            sizes, _ = inputs._from_data(data, sizes, None)
+        return treemap(
+            self,
+            sizes,
+            labels,
+            color=color,
+            cmap=cmap,
+            norm=norm,
+            vmin=vmin,
+            vmax=vmax,
+            rect=rect,
+            pad=pad,
+            group_pad=group_pad,
+            group_labels=group_labels,
+            show_values=show_values,
+            value_format=value_format,
+            text_kw=text_kw,
+            group_kw=group_kw,
+            **kwargs,
+        )
 
     def raincloud(
         self,
