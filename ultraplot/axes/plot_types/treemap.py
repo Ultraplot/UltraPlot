@@ -101,7 +101,9 @@ def _nodes(
             raise ValueError("sizes must be a one-dimensional numeric sequence.")
         if labels is None:
             labels = [""] * len(values)
-        elif isinstance(labels, str) or len(labels) != len(values):
+        elif isinstance(labels, str):
+            labels = [labels] * len(values)
+        if len(labels) != len(values):
             raise ValueError("labels must have the same length as sizes.")
         result = [
             _Node(str(label), _validate_nonnegative_float(value), (index,))

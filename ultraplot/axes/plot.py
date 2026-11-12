@@ -6824,9 +6824,11 @@ class PlotAxes(base.Axes):
             must be finite, with at least one positive value in each group.
             No extra package is needed.
         labels : sequence of str or str, optional
-            Labels for a flat sequence, in input order, or a column name in ``data``.
+            Labels for a flat sequence, in input order. A string is literal
+            text repeated for each tile, even when ``data`` is provided.
+            Pass column values explicitly, for example ``labels=df['name']``.
         data : mapping or pandas.DataFrame, optional
-            Look up string ``sizes`` and ``labels`` arguments in this object.
+            Look up a string ``sizes`` argument in this object.
         color, colors, c : color or sequence of colors, optional
             Colors for nonzero leaves in input order, repeated as needed.
             By default, top-level categories use the current cycle, and leaves
@@ -6877,12 +6879,13 @@ class PlotAxes(base.Axes):
         >>> artists = ax.treemap({'A': 6, 'B': 3, 'C': 1}, show_values=True)
         >>> artists = ax.treemap({'Group': {'A': 6, 'B': 3}, 'Other': 1})
         >>> data = {'amount': [2, 3, 4], 'name': ['A', 'B', 'C']}
-        >>> artists = ax.treemap('amount', labels='name', data=data, colors=['r', 'g'])
+        >>> artists = ax.treemap('amount', labels=data['name'], data=data)
+        >>> artists = ax.treemap([2, 3, 4], labels='Category')
         """
         from .plot_types.treemap import treemap
 
         if data is not None:
-            sizes, labels = inputs._from_data(data, sizes, labels)
+            sizes, _ = inputs._from_data(data, sizes, None)
         return treemap(
             self,
             sizes,

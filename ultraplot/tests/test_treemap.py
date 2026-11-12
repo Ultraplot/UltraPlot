@@ -102,12 +102,32 @@ def test_treemap_series_and_lookup_data(container):
     lookup = container({"amount": [1, 3], "names": ["A", "B"]})
     other = axs[1].treemap(
         "amount",
-        labels="names",
+        labels=lookup["names"],
         data=lookup,
         show_values=True,
         value_format="{:.1f}",
     )
     assert [text.get_text() for text in other["texts"]] == ["A\n1.0", "B\n3.0"]
+
+
+@pytest.mark.parametrize("container", [dict, pd.DataFrame])
+@pytest.mark.parametrize("lookup_sizes", [False, True])
+def test_treemap_string_labels_are_literal_with_data(container, lookup_sizes):
+    _, ax = uplt.subplots()
+    data = container({"amount": [2, 0, 3], "name": ["A", "B", "C"]})
+    sizes = "amount" if lookup_sizes else data["amount"]
+    result = ax.treemap(sizes, labels="name", data=data)
+    assert [text.get_text() for text in result["texts"]] == ["name", "name"]
+    assert result["values"] == [2, 3]
+
+
+def test_treemap_string_labels_repeat_without_data():
+    _, ax = uplt.subplots()
+    result = ax.treemap([2, 0, 3], labels="Category", show_values=True)
+    assert [text.get_text() for text in result["texts"]] == [
+        "Category\n2",
+        "Category\n3",
+    ]
 
 
 @pytest.mark.parametrize("keyword", ["color", "colors", "c"])
