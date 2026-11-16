@@ -55,6 +55,41 @@ def test_colormap_vcenter_rejects_norm_instance(via_norm_kw):
         ax.pcolor(np.array([[0.0, 1.0], [2.0, 7.0]]), norm=Normalize(), **kwargs)
 
 
+@pytest.mark.parametrize("method", ["contourf", "pcolormesh"])
+@pytest.mark.parametrize("cmap_name", ["RdBu", "fire"])
+@pytest.mark.parametrize("extend", ["neither", "min", "max", "both"])
+@pytest.mark.parametrize(
+    ("under", "over"),
+    [(None, None), ("black", None), (None, "green"), ("black", "green")],
+)
+def test_colormap_extreme_colors_reserve_correct_end(
+    method, cmap_name, extend, under, over
+):
+    """Custom extremes free their own endpoint without consuming the opposite one."""
+    cmap = uplt.Colormap(cmap_name).with_extremes(under=under, over=over)
+    samples = np.linspace(0, 1, 256)
+    original_colors = cmap(samples).copy()
+    levels = np.linspace(-1, 1, 7)
+    centers = 0.5 * (levels[:-1] + levels[1:])
+    data = np.tile(np.linspace(-1.5, 1.5, 9), (9, 1))
+    _, ax = uplt.subplots()
+    mappable = getattr(ax, method)(data, cmap=cmap, levels=levels, extend=extend)
+
+    # An automatic extension must remain distinct from the adjacent normal bin.
+    # A custom extension lets that normal bin use the full colormap endpoint.
+    for index, custom, extensions, endpoint in (
+        (0, under, ("min", "both"), 0.0),
+        (-1, over, ("max", "both"), 1.0),
+    ):
+        uses_endpoint = np.allclose(mappable.to_rgba(centers[index]), cmap(endpoint))
+        reserved = custom is None and extend in extensions
+        assert uses_endpoint == (not reserved)
+
+    np.testing.assert_allclose(mappable.to_rgba(-2.0), cmap.get_under())
+    np.testing.assert_allclose(mappable.to_rgba(2.0), cmap.get_over())
+    np.testing.assert_array_equal(mappable.cmap(samples), original_colors)
+
+
 @pytest.mark.mpl_image_compare
 def test_auto_diverging1(rng):
     """
