@@ -5035,8 +5035,8 @@ class PlotAxes(base.Axes):
                     unique = "neither"
             elif under is not None:  # turn off under-bounds unique bin
                 if extend == "both":
-                    unique = "min"
-                elif extend == "max":
+                    unique = "max"
+                elif extend == "min":
                     unique = "neither"
 
         # Generate DiscreteNorm for filled-contour style bins. For line contours
