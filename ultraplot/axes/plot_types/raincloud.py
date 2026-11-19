@@ -172,7 +172,7 @@ def _resolve_options(
 
 
 def _infer_metadata(
-    data: Any, labels: Sequence[Any] | None, autoformat: bool | None
+    data: Any, labels: Sequence[Any] | str | None, autoformat: bool | None
 ) -> tuple[Any, Sequence[Any] | None, str | None, str | None]:
     """Extract labelled-array metadata without overriding explicit labels."""
     autoformat = _not_none(autoformat, rc["autoformat"])
@@ -210,7 +210,7 @@ def _split_distributions(data: Any) -> Iterable[ArrayLike]:
 def _prepare_data(
     data: Any,
     positions: ArrayLike | None,
-    labels: Sequence[Any] | None,
+    labels: Sequence[Any] | str | None,
     autoformat: bool | None,
 ) -> _RaincloudData:
     """Clean observations and validate group labels and positions."""
@@ -226,8 +226,13 @@ def _prepare_data(
     n = len(cleaned)
     if not n or not any(values.size for values in cleaned):
         raise ValueError("No finite observations to plot")
-    if labels is not None and (isinstance(labels, str) or len(labels) != n):
-        raise ValueError("Number of labels must match number of distributions")
+    if isinstance(labels, str):
+        labels = [labels] * n
+    elif labels is not None:
+        if len(labels) != n:
+            raise ValueError("Number of labels must match number of distributions")
+        # Consume Series values in order, including those with non-default indices.
+        labels = list(labels)
     positions = (
         np.arange(n, dtype=float)
         if positions is None
@@ -477,7 +482,7 @@ def raincloud(
     data: Any,
     *,
     positions: ArrayLike | None = None,
-    labels: Sequence[Any] | None = None,
+    labels: Sequence[Any] | str | None = None,
     orientation: Literal["vertical", "horizontal"] | None = None,
     autoformat: bool | None = None,
     legend: bool | str | int | None = None,

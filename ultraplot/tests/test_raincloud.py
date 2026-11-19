@@ -562,3 +562,25 @@ def test_raincloud_rc_file_and_context_restore(tmp_path: Path) -> None:
             -0.15
         )
     assert uplt.rc["raincloud.side"] == original
+
+
+@pytest.mark.parametrize("use_column", [False, True])
+def test_raincloud_explicit_labels_with_data_lookup(use_column):
+    from matplotlib.legend import Legend
+
+    pd = pytest.importorskip("pandas")
+    frame = pd.DataFrame({"first": [1, 2, 3], "second": [3, 4, 5]})
+    names = pd.DataFrame({"name": ["Treatment", "Control"]}, index=[20, 10])
+    labels = names["name"] if use_column else "name"
+    expected = ["Treatment", "Control"] if use_column else ["name", "name"]
+    fig, ax = uplt.subplot()
+    ax.raincloud(
+        "samples",
+        data={"samples": frame, "name": names["name"]},
+        labels=labels,
+        legend=True,
+    )
+    fig.canvas.draw()
+    assert [t.get_text() for t in ax.get_xticklabels()] == expected
+    (legend,) = fig.findobj(Legend)
+    assert [t.get_text() for t in legend.get_texts()] == expected
