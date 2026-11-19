@@ -436,3 +436,54 @@ def test_treemap_extreme_size_range():
     middle = result["patches"][1]
     assert middle.get_width() * middle.get_height() == pytest.approx(1e-200, abs=0)
     _assert_tiling(result["patches"], (0, 0, 1, 1))
+
+
+@pytest.mark.parametrize(
+    "color,group_kw,expected",
+    [
+        ("none", {}, "#18212b"),
+        ((0, 0, 0, 0.05), {}, "#18212b"),
+        ("none", {"facecolor": "black", "alpha": 1}, "white"),
+    ],
+)
+def test_translucent_treemap_label_contrast(color, group_kw, expected):
+    fig, ax = uplt.subplot()
+    fig.set_facecolor("white")
+    result = ax.treemap({"Outer": {"Inner": {"a": 1}}}, color=color, group_kw=group_kw)
+    assert result["texts"][0].get_color() == expected
+    assert result["patches"][0].get_facecolor()[3] == to_rgba(color)[3]
+
+
+def test_failed_treemap_can_retry_on_same_axes():
+    _, axs = uplt.subplots(ncols=2)
+    for ax in axs:
+        ax.scatter([10], [20])
+    ax = axs[0]
+    artists = ax.get_children()
+    bounds = ax.dataLim.frozen()
+    with uplt.rc.context({"text.align": True}), pytest.raises(ValueError):
+        ax.treemap(
+            {"group": {"a": 1}}, cycle=["r", "b"], text_kw={"color": "bad-color"}
+        )
+    assert ax.get_children() == artists
+    assert ax.dataLim.bounds == bounds.bounds
+    np.testing.assert_equal(ax.dataLim.minpos, bounds.minpos)
+    assert not ax._align_texts
+    assert (
+        ax.treemap([1])["patches"][0].get_facecolor()
+        == axs[1].treemap([1])["patches"][0].get_facecolor()
+    )
+
+
+def test_nested_totals_larger_than_float_range():
+    _, ax = uplt.subplot()
+    result = ax.treemap(
+        {"Outer": {"Inner": {"a": 1e308, "b": 1e308}, "c": 1e308}, "d": 1e308},
+        pad=0,
+        group_pad=0,
+        group_labels=False,
+    )
+    assert result["values"] == [1e308] * 4
+    assert [p.get_width() * p.get_height() for p in result["patches"]] == pytest.approx(
+        [0.25] * 4
+    )

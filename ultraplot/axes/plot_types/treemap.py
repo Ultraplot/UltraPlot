@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
+from copy import copy
 from dataclasses import dataclass
+from fractions import Fraction
 import math
 from typing import TYPE_CHECKING, Any, TypeAlias, TypedDict, Union, cast
 
@@ -55,7 +58,7 @@ class TreemapResult(TypedDict):
 @dataclass
 class _Node:
     label: str
-    value: float
+    value: float | Fraction
     path: NodePath
     children: tuple[_Node, ...] = ()
 
@@ -84,7 +87,12 @@ def _nodes(
             child_path = (*path, key)
             if isinstance(value, Mapping):
                 children = _nodes(cast(TreemapHierarchy, value), path=child_path)
-                total = math.fsum(child.value for child in children)
+                try:
+                    total = math.fsum(child.value for child in children)
+                except OverflowError:
+                    # Only group totals can exceed float range. Preserve leaf
+                    # values for labels, formatting, and colormap normalization.
+                    total = sum(Fraction(child.value) for child in children)
                 result.append(_Node(str(key), total, child_path, tuple(children)))
             else:
                 result.append(
@@ -119,7 +127,10 @@ def _squarify(nodes: Sequence[_Node], rect: Bounds) -> list[tuple[_Node, Bounds]
     x, y, width, height = rect
     ordered = sorted((node for node in nodes if node.value > 0), key=lambda n: -n.value)
     scale = max(node.value for node in ordered)
-    weights = [node.value / scale for node in ordered]
+    if isinstance(scale, Fraction):
+        weights = [float(Fraction(node.value) / scale) for node in ordered]
+    else:
+        weights = [node.value / scale for node in ordered]
     # Use fractions of the remaining rectangle so rounding in a large strip
     # cannot inflate the dimensions of a much smaller tile that follows it.
     remaining = [0.0] * (len(weights) + 1)
@@ -186,6 +197,34 @@ def _style(
     return {**_pop_props(defaults, kind), **props}
 
 
+def _composite(foreground, background):
+    rgb = np.asarray(foreground[:3])
+    alpha = foreground[3]
+    return rgb * alpha + background * (1 - alpha)
+
+
+@contextmanager
+def _draw_transaction(ax):
+    """Restore artists, data bounds, and cycle positions if a style fails."""
+    existing = set(ax.get_children())
+    bounds = ax.dataLim.frozen()
+    ignore_limits = ax.ignore_existing_data_limits
+    cycles = ax._active_cycle, copy(ax._get_lines), copy(ax._get_patches_for_fill)
+    try:
+        yield
+    except Exception:
+        for artist in reversed(ax.get_children()):
+            if artist not in existing:
+                if isinstance(artist, Text):
+                    ax._register_align_text(artist, False)
+                artist.remove()
+        ax.dataLim.set(bounds)
+        ax.dataLim.minpos[:] = bounds.minpos
+        ax.ignore_existing_data_limits = ignore_limits
+        ax._active_cycle, ax._get_lines, ax._get_patches_for_fill = cycles
+        raise
+
+
 def treemap(
     ax: PlotAxes,
     sizes: TreemapInput,
@@ -240,7 +279,7 @@ def treemap(
         mappable.autoscale_None()
         colors = mappable.to_rgba(values)
     elif color is not None:
-        colors = mcolors.to_rgba_array(color)
+        colors = mcolors.to_rgba_array([color] if isinstance(color, str) else color)
         if len(colors) == 0:
             raise ValueError("color must contain at least one color.")
     parent_style = _style("group", "patch", group_kw)
@@ -262,8 +301,6 @@ def treemap(
             for node in leaves
         ]
 
-    style = ax._parse_cycle(sum(node.value > 0 for node in nodes), **style)
-
     result: TreemapResult = {
         "patches": [],
         "texts": [],
@@ -273,10 +310,13 @@ def treemap(
         "values": values.tolist(),
         "mappable": mappable,
     }
-    tiles: dict[int, tuple[Bounds, NDArray[np.float64]]] = {}
+    tiles: dict[int, tuple[Bounds, NDArray[np.float64], NDArray[np.float64]]] = {}
 
     def layout(
-        branch: Sequence[_Node], bounds: Bounds, base_color: TreemapColor | None = None
+        branch: Sequence[_Node],
+        bounds: Bounds,
+        background: NDArray[np.float64],
+        base_color: TreemapColor | None = None,
     ) -> None:
         # Sorting determines positions only. Assign colors in input order.
         boxes = {id(node): box for node, box in _squarify(branch, bounds)}
@@ -307,31 +347,46 @@ def treemap(
                     )
                     label.set_clip_path(patch)
                     result["group_texts"].append(label)
-                layout(node.children, (*inner[:3], inner[3] - header), hue)
+                layout(
+                    node.children,
+                    (*inner[:3], inner[3] - header),
+                    _composite(patch.get_facecolor(), background),
+                    hue,
+                )
             else:
                 rgba = np.array(mcolors.to_rgba(hue))
                 blend = 0.10 + 0.12 * (index % 4) if base_color is not None else 0
                 rgba[:3] = rgba[:3] * (1 - blend) + blend
-                tiles[id(node)] = _inset(box, pad), rgba
+                tiles[id(node)] = _inset(box, pad), rgba, background
 
-    layout(nodes, rect)
-    # Draw leaves in input order; only layout needs size sorting.
-    for index, (node, label) in enumerate(zip(leaves, labels)):
-        (x, y, width, height), default_color = tiles[id(node)]
-        rgba = default_color if colors is None else colors[index % len(colors)]
-        leaf_style: dict[str, Any] = {"facecolor": rgba, **style}
-        patch = Rectangle((x, y), width, height, **leaf_style)
-        ax.add_patch(patch)
-        text = None
-        if label:
-            options = dict(text_style)
-            if isinstance(options["color"], str) and options["color"].lower() == "auto":
-                luminance = np.dot(patch.get_facecolor()[:3], [0.2126, 0.7152, 0.0722])
-                options["color"] = "#18212b" if luminance > 0.5 else "white"
-            text = ax.text(x + width / 2, y + height / 2, label, **options)
-            text.set_clip_path(patch)
-        result["patches"].append(patch)
-        result["texts"].append(text)
+    # The axes frame is hidden for treemaps, exposing the figure background.
+    background = _composite(ax.figure.get_facecolor(), np.ones(3))
+    with _draw_transaction(ax):
+        style = ax._parse_cycle(sum(node.value > 0 for node in nodes), **style)
+        layout(nodes, rect, background)
+        # Draw leaves in input order; only layout needs size sorting.
+        for index, (node, label) in enumerate(zip(leaves, labels)):
+            (x, y, width, height), default_color, background = tiles[id(node)]
+            rgba = default_color if colors is None else colors[index % len(colors)]
+            leaf_style: dict[str, Any] = {"facecolor": rgba, **style}
+            patch = Rectangle((x, y), width, height, **leaf_style)
+            ax.add_patch(patch)
+            text = None
+            if label:
+                options = dict(text_style)
+                if (
+                    isinstance(options["color"], str)
+                    and options["color"].lower() == "auto"
+                ):
+                    luminance = np.dot(
+                        _composite(patch.get_facecolor(), background),
+                        [0.2126, 0.7152, 0.0722],
+                    )
+                    options["color"] = "#18212b" if luminance > 0.5 else "white"
+                text = ax.text(x + width / 2, y + height / 2, label, **options)
+                text.set_clip_path(patch)
+            result["patches"].append(patch)
+            result["texts"].append(text)
     ax.set_xlim(rect[0], rect[0] + rect[2])
     ax.set_ylim(rect[1], rect[1] + rect[3])
     ax.set_aspect("equal", adjustable="box")
