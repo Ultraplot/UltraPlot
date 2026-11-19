@@ -278,7 +278,7 @@ def treemap(
     leaves = [leaf for node in nodes for leaf in node.leaves()]
     values = np.array([node.value for node in leaves])
     mappable: mcm.ScalarMappable | None = None
-    colors: NDArray[np.float64] | None = None
+    colors: Sequence[Any] | NDArray[np.float64] | None = None
     if cmap is None and any(option is not None for option in (norm, vmin, vmax)):
         raise ValueError("norm, vmin, and vmax require cmap.")
     if cmap is not None:
@@ -291,7 +291,14 @@ def treemap(
         mappable.autoscale_None()
         colors = mappable.to_rgba(values)
     elif color is not None:
-        colors = mcolors.to_rgba_array([color] if isinstance(color, str) else color)
+        palette = [color] if isinstance(color, str) else color
+        colors = mcolors.to_rgba_array(palette)
+        # Matplotlib keeps "none" transparent even when the patch sets alpha.
+        # An RGBA tuple with alpha zero intentionally behaves differently.
+        if len(colors) == len(palette) and any(
+            isinstance(c, str) and c.lower() == "none" for c in palette
+        ):
+            colors = palette
         if len(colors) == 0:
             raise ValueError("color must contain at least one color.")
     parent_style = _style("group", "patch", group_kw)

@@ -4473,7 +4473,7 @@ class PlotAxes(base.Axes):
             Whether to simply return the property cycle or apply it. The cycle is
             only applied (and therefore reset) if it differs from the current one.
         """
-        cycle_kw = cycle_kw or {}
+        cycle_kw = dict(cycle_kw or {})
         # Ignore singular column plotting
         if ncycle != 1:
             cycle_kw.setdefault("N", ncycle)

@@ -191,6 +191,7 @@ def test_treemap_named_cycle_and_cycle_options():
     _, ax = uplt.subplots()
     options = {"reverse": True}
     result = ax.treemap([1, 0, 3, 2], cycle="colorblind", cycle_kw=options)
+    assert options == {"reverse": True}
     expected = uplt.Cycle("colorblind", N=3, reverse=True).by_key()["color"]
     np.testing.assert_allclose(
         [p.get_facecolor() for p in result["patches"]],
@@ -519,3 +520,11 @@ def test_group_heading_color(fill, alpha, ink, expected):
             {"Outer": {"Inner": {"A": 1}}}, group_kw={"fc": fill, "alpha": alpha}
         )
     assert [t.get_color() for t in result["group_texts"]] == [expected, expected]
+
+
+@pytest.mark.parametrize("palette", ["none", ["none", (1, 0, 0, 0)]])
+def test_none_fill_stays_transparent_with_patch_alpha(palette):
+    _, ax = uplt.subplot()
+    result = ax.treemap([1, 2, 3], colors=palette, alpha=0.5)
+    expected = [0, 0, 0] if isinstance(palette, str) else [0, 0.5, 0]
+    assert [patch.get_facecolor()[3] for patch in result["patches"]] == expected
