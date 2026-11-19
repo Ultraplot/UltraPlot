@@ -211,6 +211,8 @@ def test_treemap_named_cycle_and_cycle_options():
         ([1, 2], {"labels": ["A"]}),
         ([1], {"pad": -1}),
         ([1], {"rect": (0, 0, 0, 1)}),
+        ([1], {"rect": (1e308, 0, 1e308, 1)}),
+        ([1], {"rect": (0, 1e20, 1, 1)}),
         ([1], {"color": "red", "cmap": "viridis"}),
         ([1, 2], {"color": []}),
         ([1], {"colors": ["r"], "vmin": 0}),

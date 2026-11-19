@@ -535,7 +535,11 @@ def _validate_treemap_rect(value: Any) -> tuple[float, float, float, float]:
         raise ValueError(
             "treemap.rect must be (x, y, width, height) with positive dimensions."
         )
-    return float(array[0]), float(array[1]), float(array[2]), float(array[3])
+    x, y, width, height = map(float, array)
+    right, top = x + width, y + height
+    if not (x < right < float("inf") and y < top < float("inf")):
+        raise ValueError("treemap.rect endpoints must be finite and distinct.")
+    return x, y, width, height
 
 
 def _validate_treemap_format(value: Any) -> str | Callable[[float], str]:
