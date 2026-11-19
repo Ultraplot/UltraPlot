@@ -6839,7 +6839,8 @@ class PlotAxes(base.Axes):
         cycle_kw : dict, optional
             Keyword arguments passed to `~ultraplot.constructor.Cycle`.
         cmap : colormap, optional
-            Color leaves by size. Mutually exclusive with ``color``.
+            Color leaves by size. Mutually exclusive with explicit leaf colors,
+            including ``facecolor`` and its aliases.
         norm : matplotlib.colors.Normalize, optional
             Normalization for ``cmap``. Cannot be combined with vmin/vmax.
         vmin, vmax : float, optional
@@ -6862,7 +6863,7 @@ class PlotAxes(base.Axes):
             clipped to its tile. Other keyword arguments style leaf rectangles.
             Explicit properties override the ``treemap.patch.*``,
             ``treemap.group.*``, and ``treemap.text.*`` rc defaults. Group label
-            size and weight follow ``treemap.group.text.*``. Omitted options
+            color, size, and weight follow ``treemap.group.text.*``. Omitted options
             are resolved from rc at call time; explicit False and zero win.
 
         Returns

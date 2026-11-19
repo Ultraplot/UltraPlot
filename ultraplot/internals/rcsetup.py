@@ -2084,6 +2084,11 @@ _rc_ultraplot_table = {
         functools.partial(_validate_color, alternative="auto"),
         "Treemap leaf label color; auto selects dark or white text for contrast.",
     ),
+    "treemap.group.text.color": (
+        "auto",
+        functools.partial(_validate_color, alternative="auto"),
+        "Treemap group label color. Auto selects dark or white text for contrast.",
+    ),
     "treemap.group.text.size": (
         10.0,
         _validate_fontsize,

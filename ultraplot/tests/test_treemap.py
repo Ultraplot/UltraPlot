@@ -487,3 +487,33 @@ def test_nested_totals_larger_than_float_range():
     assert [p.get_width() * p.get_height() for p in result["patches"]] == pytest.approx(
         [0.25] * 4
     )
+
+
+@pytest.mark.parametrize(
+    "alias", ["facecolor", "fc", "facecolors", "fillcolor", "fillcolors"]
+)
+def test_leaf_facecolor_aliases(alias):
+    _, ax = uplt.subplot()
+    with pytest.raises(ValueError, match="color or cmap"):
+        ax.treemap([1, 2], cmap="viridis", **{alias: "red"})
+    result = ax.treemap([1, 3, 2], **{alias: ["r", "b"]})
+    assert [p.get_facecolor() for p in result["patches"]] == [to_rgba(c) for c in "rbr"]
+
+
+@pytest.mark.parametrize(
+    "fill,alpha,ink,expected",
+    [
+        ("black", 1, "auto", "white"),
+        ("black", 0.05, "auto", "#18212b"),
+        ("white", 1, "auto", "#18212b"),
+        ("black", 1, "orange", "orange"),
+    ],
+)
+def test_group_heading_color(fill, alpha, ink, expected):
+    fig, ax = uplt.subplot()
+    fig.set_facecolor("white")
+    with uplt.rc.context({"treemap.group.text.color": ink}):
+        result = ax.treemap(
+            {"Outer": {"Inner": {"A": 1}}}, group_kw={"fc": fill, "alpha": alpha}
+        )
+    assert [t.get_color() for t in result["group_texts"]] == [expected, expected]

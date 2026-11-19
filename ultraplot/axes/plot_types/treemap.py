@@ -203,6 +203,14 @@ def _composite(foreground, background):
     return rgb * alpha + background * (1 - alpha)
 
 
+def _label_style(style, background):
+    color = style["color"]
+    if isinstance(color, str) and color.lower() == "auto":
+        luminance = np.dot(background, [0.2126, 0.7152, 0.0722])
+        return {**style, "color": "#18212b" if luminance > 0.5 else "white"}
+    return style
+
+
 @contextmanager
 def _draw_transaction(ax):
     """Restore artists, data bounds, and cycle positions if a style fails."""
@@ -260,7 +268,11 @@ def treemap(
         raise ValueError("treemap requires Cartesian axes with linear scales.")
     nodes = _nodes(sizes, labels)
     style = _style("patch", "patch", kwargs)
-    color = _not_none(color=color, colors=style.pop("color", None))
+    color = _not_none(
+        color=color,
+        colors=style.pop("color", None),
+        facecolor=style.pop("facecolor", None),
+    )
     if color is not None and cmap is not None:
         raise ValueError("Use either color or cmap, not both.")
     leaves = [leaf for node in nodes for leaf in node.leaves()]
@@ -338,19 +350,20 @@ def treemap(
                 result["groups"].append(patch)
                 inner = _inset(box, group_pad)
                 header = min(0.05 * rect[3], inner[3] * 0.18) if group_labels else 0
+                group_background = _composite(patch.get_facecolor(), background)
                 if group_labels:
                     label = ax.text(
                         inner[0],
                         inner[1] + inner[3] - header / 2,
                         node.label,
-                        **group_text_style,
+                        **_label_style(group_text_style, group_background),
                     )
                     label.set_clip_path(patch)
                     result["group_texts"].append(label)
                 layout(
                     node.children,
                     (*inner[:3], inner[3] - header),
-                    _composite(patch.get_facecolor(), background),
+                    group_background,
                     hue,
                 )
             else:
@@ -373,16 +386,9 @@ def treemap(
             ax.add_patch(patch)
             text = None
             if label:
-                options = dict(text_style)
-                if (
-                    isinstance(options["color"], str)
-                    and options["color"].lower() == "auto"
-                ):
-                    luminance = np.dot(
-                        _composite(patch.get_facecolor(), background),
-                        [0.2126, 0.7152, 0.0722],
-                    )
-                    options["color"] = "#18212b" if luminance > 0.5 else "white"
+                options = _label_style(
+                    text_style, _composite(patch.get_facecolor(), background)
+                )
                 text = ax.text(x + width / 2, y + height / 2, label, **options)
                 text.set_clip_path(patch)
             result["patches"].append(patch)
