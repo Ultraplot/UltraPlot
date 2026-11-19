@@ -213,6 +213,9 @@ def test_treemap_named_cycle_and_cycle_options():
         ([1], {"rect": (0, 0, 0, 1)}),
         ([1], {"color": "red", "cmap": "viridis"}),
         ([1, 2], {"color": []}),
+        ([1], {"colors": ["r"], "vmin": 0}),
+        ([1], {"color": "red", "vmax": 10}),
+        ([1], {"color": "red", "norm": Normalize()}),
         ([1], {"colors": ["r", "g"], "cmap": "viridis"}),
     ],
 )
@@ -417,3 +420,19 @@ def test_treemap_defaults_match_original_appearance() -> None:
     for actual, expected in zip(default["texts"], explicit["texts"]):
         assert actual.get_fontsize() == expected.get_fontsize()
         assert actual.get_color() == expected.get_color()
+
+
+def test_treemap_preserves_patch_cycle_alpha():
+    _, ax = uplt.subplots()
+    ax.set_prop_cycle(color=[(0.2, 0.4, 0.6, 0.5)])
+    result = ax.treemap({"A": {"a": 1}, "B": 2})
+    assert [patch.get_facecolor()[3] for patch in result["patches"]] == [0.5, 0.5]
+
+
+def test_treemap_extreme_size_range():
+    _, ax = uplt.subplots()
+    result = ax.treemap([1e200, 1, 1e-200], pad=0)
+    assert result["values"] == [1e200, 1, 1e-200]
+    middle = result["patches"][1]
+    assert middle.get_width() * middle.get_height() == pytest.approx(1e-200, abs=0)
+    _assert_tiling(result["patches"], (0, 0, 1, 1))

@@ -120,46 +120,53 @@ def _squarify(nodes: Sequence[_Node], rect: Bounds) -> list[tuple[_Node, Bounds]
     ordered = sorted((node for node in nodes if node.value > 0), key=lambda n: -n.value)
     scale = max(node.value for node in ordered)
     weights = [node.value / scale for node in ordered]
-    total = math.fsum(weights)
-    areas = [weight / total * width * height for weight in weights]
+    # Use fractions of the remaining rectangle so rounding in a large strip
+    # cannot inflate the dimensions of a much smaller tile that follows it.
+    remaining = [0.0] * (len(weights) + 1)
+    for i in reversed(range(len(weights))):
+        remaining[i] = remaining[i + 1] + weights[i]
+
     result: list[tuple[_Node, Bounds]] = []
-
-    def worst(row: list[tuple[_Node, float]], side: float) -> float:
-        total = math.fsum(area for _, area in row)
-        smallest = min(area for _, area in row)
-        largest = max(area for _, area in row)
-        return max(
-            side * side * largest / total**2, total**2 / (side * side * smallest)
-        )
-
-    def place(row: list[tuple[_Node, float]], bounds: Bounds) -> Bounds:
-        x, y, width, height = bounds
-        area = math.fsum(size for _, size in row)
+    start = 0
+    while start < len(ordered):
         vertical = width >= height
-        strip = area / min(width, height)
-        offset = y if vertical else x
-        for node, size in row:
-            length = size / strip
-            box = (x, offset, strip, length) if vertical else (offset, y, length, strip)
-            result.append((node, box))
-            offset += length
-        return (
-            (x + strip, y, max(0, width - strip), height)
-            if vertical
-            else (x, y + strip, width, max(0, height - strip))
-        )
+        long, short = (width, height) if vertical else (height, width)
+        total = remaining[start]
+        if total == 0 or short == 0:
+            result.extend((node, (x, y, 0.0, 0.0)) for node in ordered[start:])
+            break
 
-    row: list[tuple[_Node, float]] = []
-    for node, area in zip(ordered, areas):
-        candidate = [*row, (node, area)]
-        if row and worst(candidate, min(width, height)) > worst(
-            row, min(width, height)
-        ):
-            x, y, width, height = place(row, (x, y, width, height))
-            row = []
-        row.append((node, area))
-    if row:
-        place(row, (x, y, width, height))
+        def worst(weight: float, smallest: float) -> float:
+            strip = long * (weight / total)
+            narrow = short * (smallest / weight)
+            wide = short * (weights[start] / weight)
+            return max(wide / strip, strip / narrow) if strip and narrow else math.inf
+
+        end = start + 1
+        weight = weights[start]
+        score = worst(weight, weight)
+        while end < len(ordered) and weights[end] > 0:
+            candidate = weight + weights[end]
+            next_score = worst(candidate, weights[end])
+            if next_score > score:
+                break
+            weight, score = candidate, next_score
+            end += 1
+
+        strip = long * min(1.0, weight / total)
+        offset = y if vertical else x
+        for i in range(start, end):
+            length = short * (weights[i] / weight)
+            box = (x, offset, strip, length) if vertical else (offset, y, length, strip)
+            result.append((ordered[i], box))
+            offset += length
+        if vertical:
+            x += strip
+            width = long * (remaining[end] / total)
+        else:
+            y += strip
+            height = long * (remaining[end] / total)
+        start = end
     return result
 
 
@@ -221,6 +228,8 @@ def treemap(
     values = np.array([node.value for node in leaves])
     mappable: mcm.ScalarMappable | None = None
     colors: NDArray[np.float64] | None = None
+    if cmap is None and any(option is not None for option in (norm, vmin, vmax)):
+        raise ValueError("norm, vmin, and vmax require cmap.")
     if cmap is not None:
         if norm is None:
             norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
@@ -234,8 +243,6 @@ def treemap(
         colors = mcolors.to_rgba_array(color)
         if len(colors) == 0:
             raise ValueError("color must contain at least one color.")
-    elif norm is not None or vmin is not None or vmax is not None:
-        raise ValueError("norm, vmin, and vmax require cmap.")
     parent_style = _style("group", "patch", group_kw)
     text_style: dict[str, Any] = {
         "ha": "center",
@@ -302,9 +309,10 @@ def treemap(
                     result["group_texts"].append(label)
                 layout(node.children, (*inner[:3], inner[3] - header), hue)
             else:
-                rgb = np.array(mcolors.to_rgb(hue))
+                rgba = np.array(mcolors.to_rgba(hue))
                 blend = 0.10 + 0.12 * (index % 4) if base_color is not None else 0
-                tiles[id(node)] = _inset(box, pad), rgb * (1 - blend) + blend
+                rgba[:3] = rgba[:3] * (1 - blend) + blend
+                tiles[id(node)] = _inset(box, pad), rgba
 
     layout(nodes, rect)
     # Draw leaves in input order; only layout needs size sorting.
