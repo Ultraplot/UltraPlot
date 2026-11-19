@@ -6913,7 +6913,7 @@ class PlotAxes(base.Axes):
         *,
         data: Any = None,
         positions: ArrayLike | None = None,
-        labels: Sequence[Any] | None = None,
+        labels: Sequence[Any] | str | None = None,
         orientation: Literal["vertical", "horizontal"] | None = None,
         vert: bool | None = None,
         autoformat: bool | None = None,
@@ -6950,9 +6950,11 @@ class PlotAxes(base.Axes):
             as an alternative to passing the observations positionally.
         positions : sequence of float, optional
             Distinct group centres. Defaults to ``range(number_of_groups)``.
-        labels : sequence of str, optional
-            Group tick and legend labels. With automatic formatting, infer
-            column labels from pandas or xarray input.
+        labels : str or sequence of str, optional
+            A string repeats as literal tick and legend text for each group.
+            A sequence supplies one label per distribution, in input order.
+            To use a column's values, pass it explicitly as ``labels=df["name"]``.
+            When omitted, automatic formatting infers labels from pandas or xarray.
         orientation : {'vertical', 'horizontal'}, default: :rc:`raincloud.orientation`
             Direction of the measured variable. For horizontal plots, group
             centres lie on the y axis.
